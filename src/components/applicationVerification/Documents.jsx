@@ -3,7 +3,7 @@ import React from 'react';
 function Documents({ data, updateField, index }) {
   return (
     <div className="mt-14">
-      <h1 className="roboto-font text-dark-gray text-start text-2xl font-semibold">Documents & Agreements</h1>
+      <h1 className="roboto-font text-textPrimary text-start text-2xl font-semibold">Documents & Agreements</h1>
       <div className="mt-8 grid gap-6">
         <div className="space-y-4">
           <div>

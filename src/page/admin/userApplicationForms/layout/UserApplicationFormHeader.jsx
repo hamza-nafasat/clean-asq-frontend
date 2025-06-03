@@ -19,7 +19,7 @@ const UserApplicationFormHeader = () => {
         </span>
       </div>
       <div className="flex items-center space-x-6">
-        <button className="roboto-font text-light-gray flex items-center rounded-sm border border-[#9A9A9A] px-4 py-2 text-[16px] font-medium hover:bg-gray-100">
+        <button className="roboto-font text-textLight flex items-center rounded-sm border border-[#9A9A9A] px-4 py-2 text-[16px] font-medium hover:bg-gray-100">
           <FaSave className="mr-2" />
           Save Progress
         </button>

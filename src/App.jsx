@@ -71,14 +71,13 @@ function App() {
         <Route
           path="/user-application-forms/*"
           element={
-            <ProtectedRoute user={userForm} role="form">
+            <ProtectedRoute user={user} role="admin">
               <UserApplicationForms />
             </ProtectedRoute>
           }
         >
           <Route path="application-verification" element={<ApplicationVerification />} />
           <Route path="company-information" element={<CompanyInformation />} />
-          
         </Route>
         <Route
           path="/applicants/*"

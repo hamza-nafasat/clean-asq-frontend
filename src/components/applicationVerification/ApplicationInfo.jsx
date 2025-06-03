@@ -3,7 +3,7 @@ import React from 'react';
 function ApplicationInfo({ data, updateField, index }) {
   return (
     <div className="mt-14">
-      <h1 className="roboto-font text-dark-gray text-start text-2xl font-semibold">Application Information</h1>
+      <h1 className="roboto-font text-textPrimary text-start text-2xl font-semibold">Application Information</h1>
       <div className="mt-8 grid gap-6">
         <div className="grid gap-4 md:grid-cols-2">
           <div>

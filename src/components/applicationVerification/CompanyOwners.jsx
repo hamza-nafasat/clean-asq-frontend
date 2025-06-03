@@ -3,7 +3,7 @@ import React from 'react';
 function CompanyOwners({ data, updateField, index }) {
   return (
     <div className="mt-14">
-      <h1 className="roboto-font text-dark-gray text-start text-2xl font-semibold">Company Owners</h1>
+      <h1 className="roboto-font text-textPrimary text-start text-2xl font-semibold">Company Owners</h1>
       <div className="mt-8 space-y-6">
         {data.owners?.map((owner, ownerIndex) => (
           <div key={ownerIndex} className="grid gap-4 md:grid-cols-2">

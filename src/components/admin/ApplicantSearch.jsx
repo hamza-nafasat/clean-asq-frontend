@@ -60,7 +60,7 @@ const ApplicantSearch = ({ onSearch }) => {
           value={searchTerm}
           onChange={handleSearch}
           placeholder="Search by client type..."
-          className="focus:border-medium focus:ring-medium w-full rounded-md border border-gray-300 py-2 pr-4 pl-10 text-sm focus:ring-1 focus:outline-none"
+          className="focus:border-secondary focus:ring-secondary w-full rounded-md border border-gray-300 py-2 pr-4 pl-10 text-sm focus:ring-1 focus:outline-none"
         />
         {(searchTerm || selectedType) && (
           <button

@@ -145,7 +145,7 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
             name={field}
             value={value}
             onChange={onChange}
-            className={`focus:border-medium focus:ring-medium /20 w-full rounded-md border px-4 py-2 text-sm shadow-sm transition focus:ring ${
+            className={`focus:border-secondary focus:ring-secondary /20 w-full rounded-md border px-4 py-2 text-sm shadow-sm transition focus:ring ${
               error ? 'border-red-500' : 'border-gray-300'
             }`}
           >
@@ -170,7 +170,7 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
           value={value}
           onChange={onChange}
           placeholder={`Enter ${labelText}`}
-          className={`focus:border-medium focus:ring-medium /20 w-full rounded-md border px-4 py-2 text-sm shadow-sm transition focus:ring ${
+          className={`focus:border-secondary focus:ring-secondary /20 w-full rounded-md border px-4 py-2 text-sm shadow-sm transition focus:ring ${
             error ? 'border-red-500' : 'border-gray-300'
           }`}
         />
@@ -260,7 +260,7 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
             value={filters.name || ''}
             onChange={e => onFilterChange('name', e.target.value)}
             placeholder="Enter name to search..."
-            className="focus:border-medium focus:ring-medium w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-1 focus:outline-none"
+            className="focus:border-secondary focus:ring-secondary w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-1 focus:outline-none"
           />
         </div>
         <div className="col-span-12 md:col-span-4">
@@ -268,7 +268,7 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
           <select
             value={filters.status}
             onChange={e => onFilterChange('status', e.target.value)}
-            className="focus:border-medium focus:ring-medium focus:outline-medium w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="focus:border-secondary focus:ring-secondary focus:outline-secondary w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="">All Statuses</option>
             {Object.values(APPLICANT_STATUS).map(status => (
@@ -285,13 +285,13 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
               type="date"
               value={filters.dateRange.start}
               onChange={e => onFilterChange('dateRange', { ...filters.dateRange, start: e.target.value })}
-              className="focus:border-medium focus:ring-medium focus:outline-medium rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="focus:border-secondary focus:ring-secondary focus:outline-secondary rounded-md border border-gray-300 px-3 py-2 text-sm"
             />
             <input
               type="date"
               value={filters.dateRange.end}
               onChange={e => onFilterChange('dateRange', { ...filters.dateRange, end: e.target.value })}
-              className="focus:border-medium focus:ring-medium focus:outline-medium rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="focus:border-secondary focus:ring-secondary focus:outline-secondary rounded-md border border-gray-300 px-3 py-2 text-sm"
             />
           </div>
         </div>

@@ -92,7 +92,7 @@ export default function UserApplicationDetail({ form, onClose }) {
   return (
     <div className="w-full rounded-lg bg-white p-6 shadow-lg">
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-medium text-2xl font-bold">{form.formType}</h2>
+        <h2 className="text-secondary text-2xl font-bold">{form.formType}</h2>
         <button onClick={onClose} className="rounded-full p-2 text-gray-500 hover:bg-gray-100">
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -118,7 +118,7 @@ export default function UserApplicationDetail({ form, onClose }) {
           </button>
           <button
             type="submit"
-            className="bg-medium hover:bg-light rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm"
+            className="bg-secondary hover:bg-light rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm"
           >
             Submit Application
           </button>

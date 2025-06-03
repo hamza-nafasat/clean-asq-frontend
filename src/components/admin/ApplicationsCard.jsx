@@ -188,12 +188,12 @@ export default function ApplicationsCard() {
             </div>
             <div className="mt-3 flex w-full flex-col items-center justify-between gap-3 md:mt-6 md:flex-row md:gap-4">
               <button
-                className="hover:bg-medium w-full rounded bg-[#15A090] px-5 py-2 font-semibold text-white shadow focus:outline-none md:w-auto"
+                className="hover:bg-secondary w-full rounded bg-[#15A090] px-5 py-2 font-semibold text-white shadow focus:outline-none md:w-auto"
                 onClick={() => handleCardClick(form)}
               >
                 Start Application
               </button>
-              {/* <button className="border-medium text-medium w-full rounded border bg-white px-5 py-2 font-semibold hover:bg-gray-50 focus:outline-none md:w-auto">
+              {/* <button className="border-secondary text-secondary w-full rounded border bg-white px-5 py-2 font-semibold hover:bg-gray-50 focus:outline-none md:w-auto">
                 Edit Structure
               </button> */}
             </div>

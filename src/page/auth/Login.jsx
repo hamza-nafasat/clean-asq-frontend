@@ -12,13 +12,13 @@ import Button from '@/components/shared/small/Button';
 
 const Login = () => {
   return (
-    <div className="montserrat-font flex md:flex-row flex-col h-screen w-full items-center justify-center bg-white gap-4 "> 
+    <div className="montserrat-font flex h-screen w-full flex-col items-center justify-center gap-4 bg-white md:flex-row">
       {/* Left Side */}
-      <div className="hidden md:flex flex-col justify-center h-full  mt-20 md:mt-1 ">
-        <h1 className="text-4xl font-bold mb-8">
-          Welcome <span className="text-medium">Back</span>
+      <div className="mt-20 hidden h-full flex-col justify-center md:mt-1 md:flex">
+        <h1 className="mb-8 text-4xl font-bold">
+          Welcome <span className="text-secondary">Back</span>
         </h1>
-        <p className="text-lg text-gray-500 font-semibold mb-8 max-w-md">
+        <p className="mb-8 max-w-md text-lg font-semibold text-gray-500">
           Sign in to your account to manage your giveaways, view analytics, and grow your email list.
         </p>
         {/* <ul className="space-y-4">
@@ -32,25 +32,43 @@ const Login = () => {
       </div>
 
       {/* Right Side */}
-      <div className="flex flex-col justify-center w-full md:w-1/2 max-w-md bg-white rounded-xl shadow-2xl p-10 ">
-        <h2 className="text-2xl font-bold mb-2">Sign in to your account</h2>
-        <p className="mb-6 text-md font-semibold">
-          Or <a href="#" className="text-blue-600 hover:underline text-medium">create a new account</a>
+      <div className="flex w-full max-w-md flex-col justify-center rounded-xl bg-white p-10 shadow-2xl md:w-1/2">
+        <h2 className="mb-2 text-2xl font-bold">Sign in to your account</h2>
+        <p className="text-md mb-6 font-semibold">
+          Or{' '}
+          <a href="#" className="text-secondary hover:underline">
+            create a new account
+          </a>
         </p>
         <form className="space-y-6" action="#" method="POST">
           <div>
-            <TextField type="email" label={'Email address'} containerClassName="bg-blue-50 !border-gray-300" className='!text-gray-500' />
+            <TextField
+              type="email"
+              label={'Email address'}
+              // containerClassName="bg-blue-50 !border-gray-300"
+              // className="!text-gray-500"
+            />
           </div>
           <div>
-            <TextField type="password" label={'Password'} containerClassName="bg-blue-50 !border-gray-300" className='!text-gray-500' />
+            <TextField
+              type="password"
+              label={'Password'}
+              // containerClassName="bg-blue-50 !border-gray-300"
+              // className="!text-gray-500"
+            />
           </div>
           <div className="flex items-center justify-between">
-            <label className="flex items-center text-sm text-gray-500 font-semibold">
+            <label className="flex items-center text-sm font-semibold text-gray-500">
               <input type="checkbox" className="mr-2" /> Remember me
             </label>
-            <a href="#" className="text-medium hover:underline text-sm font-semibold">Forgot password?</a>
+            <a href="#" className="text-secondary text-sm font-semibold hover:underline">
+              Forgot password?
+            </a>
           </div>
-          <Button label="Sign in" className="w-full bg-blue-600 hover:!bg-medium hover:!text-white text-medium !border !border-medium !rounded-[20px]" />
+          <Button
+            label="Sign in"
+            className="hover:!bg-secondary text-secondary !border-secondary w-full !rounded-[20px] !border bg-blue-600 hover:!text-white"
+          />
         </form>
         {/* <div className="flex items-center my-6">
           <div className="flex-grow h-px bg-gray-200" />
@@ -61,9 +79,11 @@ const Login = () => {
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="h-5 w-5 mr-2" />
           <span>Se connecter avec Google</span>
         </button> */}
-        <p className="mt-6 text-center text-sm text-gray-600 font-semibold">
+        <p className="mt-6 text-center text-sm font-semibold text-gray-600">
           Don't have an account yet?{' '}
-          <a href="#" className="text-medium  hover:underline font-semibold">Sign up</a>
+          <a href="#" className="text-secondary font-semibold hover:underline">
+            Sign up
+          </a>
         </p>
       </div>
     </div>

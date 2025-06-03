@@ -18,7 +18,7 @@ const Modal = ({ title, onClose, children, width, headingIcon }) => {
             {headingIcon && <span>{headingIcon}</span>}
             <h2 className="text-base font-semibold text-[#111111] md:text-xl">{title}</h2>
           </span>
-          <div className="bg-medium hover:bg-dark cursor-pointer rounded-full p-2" onClick={onClose}>
+          <div className="bg-primary hover:bg-secondary cursor-pointer rounded-full p-2" onClick={onClose}>
             <RxCross2 color="#fff" />
           </div>
         </div>

@@ -2,7 +2,7 @@
 /* @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,200..1000;1,200..1000&family=Odor+Mean+Chey&display=swap'); */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 @import 'tailwindcss';
-@import "tw-animate-css";
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 /* @tailwind base;
@@ -12,12 +12,12 @@
 :root {
   --poppins: 'Poppins', sans-serif;
   --light: #72ffe7;
-  --medium: #21ccb0;
-  --dark: #066969;
-  --dark-gray: #1B1B1B;
-  --medium-gray: #576275;
-  --light-gray: #636363;
-  
+  --secondary: #21ccb0;
+  --primary: #066969;
+  --textPrimary: #1b1b1b;
+  --textSecondary: #3b3b3b;
+  --textLight: #636363;
+
   --aside-grad: linear-gradient(180deg, #039099 0%, rgba(197, 31, 255, 0.88) 111.68%);
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -26,9 +26,9 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  /* --primary: oklch(0.205 0 0); */
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
+  /* --secondary: oklch(0.97 0 0); */
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
@@ -53,15 +53,15 @@
   --sidebar-ring: oklch(0.708 0 0);
   --montserrat-font: 'Montserrat', sans-serif;
   --roboto-font: 'Roboto', sans-serif;
-  --spanish-gray: #9A9A9A;
+  --spanish-gray: #9a9a9a;
 }
 @theme {
   --color-light: var(--light);
-  --color-medium: var(--medium);
-  --color-dark: var(--dark);
-  --color-dark-gray: var(--dark-gray);
-  --color-medium-gray: var(--medium-gray);
-  --color-light-gray: var(--light-gray);
+  --color-secondary: var(--secondary);
+  --color-primary: var(--primary);
+  --color-textPrimary: var(--textPrimary);
+  --color-textSecondary: var(--textSecondary);
+  --color-textLight: var(--textLight);
 }
 body {
   padding: 0;
