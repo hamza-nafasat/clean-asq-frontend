@@ -1,85 +1,81 @@
-import React from "react";
-import verificationImg from '../../../../assets/images/verificationImg.png'
+import React, { useState, useMemo } from 'react';
+import verificationImg from '../../../../assets/images/verificationImg.png';
+import Stepper from '../../../../components/Stepper/Stepper';
+import CompanyInformation from '@/components/applicationVerification/CompanyInformation';
+import Verification from '@/components/applicationVerification/Verification';
+import CompanyOwners from '@/components/applicationVerification/CompanyOwners';
+import BankInfo from '@/components/applicationVerification/BankInfo';
+import ProcessingInfo from '@/components/applicationVerification/ProcessingInfo';
+import ApplicationInfo from '@/components/applicationVerification/ApplicationInfo';
+import PlaceHolder from '@/components/applicationVerification/PlaceHolder';
+import Documents from '@/components/applicationVerification/Documents';
 
 const steps = [
-  "Verification",
-  "Company Information",
-  "Company Owners",
-  "Bank Account Information",
-  "Processing Information",
-  "Application Information",
-  "Documents & Agreements",
-  "Placeholders",
+  'Verification',
+  'Company Information',
+  'Company Owners',
+  'Bank Account Information',
+  'Processing Information',
+  'Application Information',
+  'Documents & Agreements',
+  'Placeholders',
 ];
 
 export default function ApplicationVerification() {
-  const currentStepIndex = 1; // Assuming Step 2 is the current step based on the screenshot
+  const [currentStep, setCurrentStep] = useState(0);
+  const [formData, setFormData] = useState([
+    { idType: '', idNumber: '' }, // Verification
+    { companyName: '', registrationNumber: '', businessAddress: '' }, // Company Information
+    { owners: [{ name: '', percentage: '' }] }, // Company Owners
+    { accountNumber: '', bankName: '', branchName: '' }, // Bank Account
+    { processingType: '', processingTime: '' }, // Processing Information
+    { applicationType: '', applicationPurpose: '' }, // Application Information
+    { documents: [], agreementAccepted: false }, // Documents & Agreements
+    { Placeholders: '', Placeholders: '' }, // Application Information
+  ]);
+
+  const updateField = (index, field, value) => {
+    setFormData(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const handleStepChange = step => {
+    setCurrentStep(step);
+  };
+
+  const handleComplete = () => {
+    // Handle form submission
+    console.log('Form submitted:', formData);
+  };
+
+  const stepComponents = useMemo(
+    () => [
+      <Verification key="verification" data={formData[0]} updateField={updateField} index={0} />,
+      <CompanyInformation key="company-info" data={formData[1]} updateField={updateField} index={1} />,
+      <CompanyOwners key="company-owners" data={formData[2]} updateField={updateField} index={2} />,
+      <BankInfo key="bank-account" data={formData[3]} updateField={updateField} index={3} />,
+      <ProcessingInfo key="processing-info" data={formData[4]} updateField={updateField} index={4} />,
+      <ApplicationInfo key="application-info" data={formData[5]} updateField={updateField} index={5} />,
+      <Documents key="documents" data={formData[6]} updateField={updateField} index={6} />,
+      <PlaceHolder key="Placeholders" data={formData[7]} updateField={updateField} index={6} />,
+    ],
+    [formData]
+  );
 
   return (
-    <div className="py-6 h-full bg-white px-6 rounded-[10px] ">
-      {/* Stepper */}
-      <div className="flex items-center justify-between mb-">
-        {steps.map((step, index) => (
-          <React.Fragment key={index}>
-            <div className="flex flex-col items-center">
-              <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center
-                ${index < currentStepIndex ? 'bg-[#15A090] border-[#15A090]' : index === currentStepIndex ? 'border-[#15A090]' : 'border-gray-300'}
-              `}>
-                {index < currentStepIndex ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : index === currentStepIndex ? (
-                  <div className="w-3 h-3 rounded-full bg-[#15A090]" />
-                ) : (
-                   <div className="w-3 h-3 rounded-full bg-gray-300" />
-                )}
-              </div>
-              <div className={`text-center mt-2 text-xs
-                ${index === currentStepIndex ? 'text-[#15A090]' : 'text-gray-500'}
-              `}>
-                {step}
-              </div>
-            </div>
-            {index < steps.length - 1 && (
-              <div className={`flex-auto border-t-2 mx-1
-                ${index < currentStepIndex ? 'border-[#15A090]' : 'border-gray-300'}
-              `} />
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-
-      {/* Main Content */}
-      <div className="text-center mt-14">
-        <h1 className="roboto-font font-semibold text-2xl text-dark-gray text-start ">
-          1-Application Verification
-        </h1>
-        <p className="mt-10 roboto-font font-semibold text-[18px] text-medium-gray">We need to Verify your identity</p>
-
-        {/* Illustration - Replace src with your asset */}
-        <div className="flex justify-center mt-11">
-          <img
-            src={verificationImg}
-            alt="Verification Illustration"
-            className="w-64 h-auto"
-          />
-        </div>
-
-        <button className="bg-teal-600 text-white px-6 py-2 rounded hover:bg-teal-700 mt-11">
-          Verify ID
-        </button>
-      </div>
-
-      {/* Navigation Buttons */}
-      <div className="flex justify-end gap-5 mt-12">
-        <button className="bg-gray-200 text-gray-400 px-6 py-2 rounded cursor-not-allowed">
-          &lt; Previous
-        </button>
-        <button className="bg-teal-600 text-white px-6 py-2 rounded hover:bg-teal-700">
-          Next &gt;
-        </button>
-      </div>
+    <div className="h-full rounded-[10px] bg-white px-6 py-6">
+      {/* Stepper Component */}
+      <Stepper
+        steps={steps}
+        currentStep={currentStep}
+        onStepChange={handleStepChange}
+        onComplete={handleComplete}
+        visibleSteps={5}
+        Children={stepComponents[currentStep]}
+      />
     </div>
   );
 }
