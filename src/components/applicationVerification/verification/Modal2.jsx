@@ -3,7 +3,7 @@ import verify from '../../../assets/images/verify.png';
 import TextField from '@/components/shared/small/TextField';
 import Button from '@/components/shared/small/Button';
 
-function Modal2() {
+function Modal2({ modal1Handle }) {
   return (
     <div className="m-3 flex flex-col items-center justify-center">
       <div>
@@ -18,7 +18,7 @@ function Modal2() {
           <TextField label={'Working Email Address'} type="email" />
         </div>
         <div className="flex items-end">
-          <Button className="h-[48px] w-[140px]" label={'Submit'} />
+          <Button onClick={modal1Handle} className="h-[48px] w-[140px]" label={'Submit'} />
         </div>
       </div>
     </div>

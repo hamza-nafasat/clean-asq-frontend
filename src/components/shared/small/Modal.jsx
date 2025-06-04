@@ -22,7 +22,7 @@ const Modal = ({ title, onClose, children, width, headingIcon }) => {
             <RxCross2 color="#fff" />
           </div>
         </div>
-        <div className="mt-4 w-full overflow-auto md:mt-6">{children}</div>
+        <div className="mt-2 w-full overflow-auto md:mt-6">{children}</div>
       </div>
     </div>
   );
