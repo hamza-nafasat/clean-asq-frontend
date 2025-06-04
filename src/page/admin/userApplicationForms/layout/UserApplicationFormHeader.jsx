@@ -9,7 +9,7 @@ import GridFill from '../../../.././assets/svgs/UserApplicationForm/GridFill';
 import minLogo from '../../../../assets/images/minLogo.png';
 const UserApplicationFormHeader = () => {
   return (
-    <div className="mx- mt-3 flex items-center justify-between rounded-[6px] bg-white px-6 py-4 shadow-sm">
+    <div className="mx- mt-3 flex h-[74px] items-center justify-between rounded-[6px] bg-white px-6 py-4 shadow-sm">
       <div className="flex items-center gap-4">
         <img src={minLogo} alt="logo" className="size-10" />
         {/* Placeholder for logo */}
