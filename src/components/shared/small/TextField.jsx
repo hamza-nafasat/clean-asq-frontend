@@ -7,7 +7,9 @@ const TextField = ({ cn, label, type = 'text', shadow = false, ...rest }) => {
       <input
         {...rest}
         type={type}
-        className={`${cn} mt-2 h-[45px] w-full rounded-lg border border-[#E9E9E980] bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none focus:ring-1 focus:ring-[#5570F1] md:h-[50px] md:text-base`}
+        className={`${cn} ${
+          label ? 'mt-2' : ''
+        } h-[45px] w-full rounded-lg border border-[#E9E9E980] bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none focus:ring-1 focus:ring-[#5570F1] md:h-[50px] md:text-base`}
       />
     </div>
   );
