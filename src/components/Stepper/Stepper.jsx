@@ -129,7 +129,7 @@ const Stepper = ({
           );
         })}
       </div>
-      {Children}
+      <div className="h-[calc(100vh-350px)]">{Children}</div>
 
       {/* Navigation Buttons */}
       <div className="mt-8 flex justify-end gap-5">

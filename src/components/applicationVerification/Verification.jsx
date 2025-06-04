@@ -42,7 +42,7 @@ function Verification() {
   };
 
   return (
-    <div className="mt-14 text-center">
+    <div className="mt-14 h-full overflow-auto text-center">
       <h1 className="roboto-font text-textPrimary text-start text-2xl font-semibold">Verification</h1>
       <p className="roboto-font text-textSecondary mt-10 text-[18px] font-semibold">We need to Verify your identity</p>
       <div className="mt-11 flex justify-center">
