@@ -5,7 +5,6 @@ import TextField from '@/components/shared/small/TextField';
 import React, { useState } from 'react';
 import { GoPlus } from 'react-icons/go';
 import PercentageSlider from '../companyOwner/PercentageSlider';
-// import PercentageSlider from '../companyOwner/PercentageSlider';
 
 function OwnerInformation({ showInfo, setShowInfo }) {
   const [addOwner, setAddOwner] = useState(false);
@@ -186,7 +185,9 @@ function OwnerInformation({ showInfo, setShowInfo }) {
             <div className="mt-3">
               <div className="flex flex-col gap-9">
                 <p className="text-[14px] text-[#1A1A1A]">What is your beneficialOwnership percentage?</p>
-                <div className="">"RangeInput "</div>
+                <div className="">
+                  <PercentageSlider />
+                </div>
               </div>
               <div className="mt-8">
                 <TextField label={'Please provide your social security number'} />

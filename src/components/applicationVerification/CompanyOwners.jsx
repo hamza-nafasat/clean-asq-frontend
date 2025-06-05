@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import OwnerInformation from './verification/OwnerInformation';
-import OwnerViewInfo from './verification/OwnerViewInfo';
+import OwnerInformation from './companyOwner/OwnerInformation';
+import OwnerViewInfo from './companyOwner/OwnerViewInfo';
 
 function CompanyOwners({ data, updateField, index }) {
   const [showInfo, setShowInfo] = useState(false);
