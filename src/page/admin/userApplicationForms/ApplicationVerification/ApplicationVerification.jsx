@@ -22,7 +22,7 @@ const steps = [
 ];
 
 export default function ApplicationVerification() {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(2);
   const [formData, setFormData] = useState([
     { idType: '', idNumber: '' }, // Verification
     { companyName: '', registrationNumber: '', businessAddress: '' }, // Company Information
@@ -31,7 +31,7 @@ export default function ApplicationVerification() {
     { processingType: '', processingTime: '' }, // Processing Information
     { applicationType: '', applicationPurpose: '' }, // Application Information
     { documents: [], agreementAccepted: false }, // Documents & Agreements
-    { Placeholders: '', Placeholders: '' }, // Application Information
+    { placeholder1: '', placeholder2: '' }, // Application Information
   ]);
 
   const updateField = (index, field, value) => {
@@ -60,7 +60,7 @@ export default function ApplicationVerification() {
       <ProcessingInfo key="processing-info" data={formData[4]} updateField={updateField} index={4} />,
       <ApplicationInfo key="application-info" data={formData[5]} updateField={updateField} index={5} />,
       <Documents key="documents" data={formData[6]} updateField={updateField} index={6} />,
-      <PlaceHolder key="Placeholders" data={formData[7]} updateField={updateField} index={6} />,
+      <PlaceHolder key="Placeholders" data={formData[7]} updateField={updateField} index={7} />,
     ],
     [formData]
   );

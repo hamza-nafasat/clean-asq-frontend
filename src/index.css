@@ -343,3 +343,27 @@ body {
     opacity: 1;
   }
 }
+
+.range-slider__range {
+  background-color: #066969 !important; /* Tailwind green-400 */
+}
+
+.range-slider__track {
+  background-color: #e5e7eb !important; /* Tailwind gray-200 */
+  height: 8px;
+  border-radius: 9999px;
+}
+
+.range-slider__thumb {
+  width: 20px;
+  height: 20px;
+  background-color: #066969 !important; /* Tailwind emerald-500 */
+  border-radius: 9999px;
+  border: 2px solid white;
+  box-shadow: 0 0 0 2px #10b98133;
+  transition: transform 0.2s ease;
+}
+
+.range-slider__thumb:hover {
+  transform: scale(1.2);
+}
