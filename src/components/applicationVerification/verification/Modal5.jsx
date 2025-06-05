@@ -76,7 +76,7 @@ function Modal5({ modal1Handle }) {
         {/* Signature Input Area */}
         <div
           ref={signatureContainerRef} // Attach the ref here
-          className="mb-4 border border-yellow-500 p-4"
+          className="mb-4 rounded-sm border-2 border-gray-500 p-4"
           style={{ minHeight: '150px' }}
         >
           {signatureMode === 'draw' && containerDimensions.width > 0 && containerDimensions.height > 0 ? (
@@ -92,10 +92,11 @@ function Modal5({ modal1Handle }) {
             />
           ) : signatureMode === 'type' ? (
             // Text field for typing signature
-            <TextField
-              placeholder="Type your Signature here"
-              label=""
-              onChange={e => console.log(e.target.value)} // Placeholder onChange
+            <input
+              type="text"
+              placeholder="Type your Signature here  "
+              className="signature-font focus:none h-[120px] w-full text-center outline-none"
+              onChange={e => console.log(e.target.value)}
             />
           ) : null}
         </div>

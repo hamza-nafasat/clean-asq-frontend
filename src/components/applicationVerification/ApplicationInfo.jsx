@@ -1,34 +1,21 @@
 import React from 'react';
+import TextField from '../shared/small/TextField';
+import { PiPhoneCallLight } from 'react-icons/pi';
 
 function ApplicationInfo({ data, updateField, index }) {
   return (
-    <div className="mt-14">
-      <h1 className="roboto-font text-textPrimary text-start text-2xl font-semibold">Application Information</h1>
-      <div className="mt-8 grid gap-6">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Application Type</label>
-            <select
-              value={data.applicationType || ''}
-              onChange={e => updateField(index, 'applicationType', e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-            >
-              <option value="">Select Application Type</option>
-              <option value="new">New Application</option>
-              <option value="renewal">Renewal</option>
-              <option value="modification">Modification</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Application Purpose</label>
-            <input
-              type="text"
-              value={data.applicationPurpose || ''}
-              onChange={e => updateField(index, 'applicationPurpose', e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-            />
-          </div>
+    <div className="mt-14 rounded-lg border p-6 shadow-md">
+      <h1 className="text-xl font-medium">Average Transaction</h1>
+      <h5 className="text-textSecondary text-base">Provide average trancation</h5>
+      <div className="flex flex-col gap-4">
+        <TextField label={'Full Name'} />
+        <TextField label={'Title'} />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <TextField label={'Phone Number'} cnLeft={'font-bold text-textSecondary'} leftIcon={<PiPhoneCallLight />} />
+          <TextField label={'Extension'} />
         </div>
+        <TextField label={'Email Address'} />
+        <TextField label={'Please provide your social security number'} />
       </div>
     </div>
   );

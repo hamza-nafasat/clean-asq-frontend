@@ -1,39 +1,17 @@
 import React from 'react';
+import TextField from '../shared/small/TextField';
+import { FiEye } from 'react-icons/fi';
 
 function BankInfo({ data, updateField, index }) {
   return (
-    <div className="mt-14">
-      <h1 className="roboto-font text-textPrimary text-start text-2xl font-semibold">Bank Account Information</h1>
-      <div className="mt-8 grid gap-6">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Account Number</label>
-            <input
-              type="text"
-              value={data.accountNumber || ''}
-              onChange={e => updateField(index, 'accountNumber', e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Bank Name</label>
-            <input
-              type="text"
-              value={data.bankName || ''}
-              onChange={e => updateField(index, 'bankName', e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-            />
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Branch Name</label>
-          <input
-            type="text"
-            value={data.branchName || ''}
-            onChange={e => updateField(index, 'branchName', e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-          />
-        </div>
+    <div className="mt-14 rounded-lg border p-6 shadow-md">
+      <h1 className="text-xl font-medium">Account Details</h1>
+      <h5 className="text-textSecondary text-base">Provide Account information.</h5>
+      <div className="mt-6 flex flex-col gap-4">
+        <TextField label={'Routing Number'} />
+        <TextField label={'Bank Name'} />
+        <TextField label={'Account Holder Name'} />
+        <TextField label={'Account Number'} rightIcon={<FiEye />} />
       </div>
     </div>
   );

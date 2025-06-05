@@ -1,15 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
-/* @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,200..1000;1,200..1000&family=Odor+Mean+Chey&display=swap'); */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap');
+
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
-/* @tailwind base;
-@tailwind components;
-@tailwind utilities; */
 
+.signature-font {
+  font-family: var(--alex-brush-font);
+  font-size: 50px; /* Optional: adjust for signature feel */
+}
 :root {
+  --alex-brush-font: 'Alex Brush', cursive;
   --poppins: 'Poppins', sans-serif;
   --light: #72ffe7;
   --secondary: #21ccb0;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Children } from 'react';
+import Button from '../shared/small/Button';
 
 const Stepper = ({
   steps,
@@ -133,28 +134,11 @@ const Stepper = ({
 
       {/* Navigation Buttons */}
       <div className="mt-8 flex justify-end gap-5">
-        {currentStep > 0 && (
-          <button
-            onClick={handlePrevious}
-            className="rounded bg-gray-200 px-6 py-2 text-gray-700 transition-colors hover:bg-gray-300"
-          >
-            &lt; Previous
-          </button>
-        )}
+        {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
         {currentStep < totalSteps - 1 ? (
-          <button
-            onClick={handleNext}
-            className="rounded bg-teal-600 px-6 py-2 text-white transition-colors hover:bg-teal-700"
-          >
-            Next &gt;
-          </button>
+          <Button label={'Next'} onClick={handleNext} />
         ) : (
-          <button
-            onClick={handleSubmit}
-            className="rounded bg-green-600 px-6 py-2 text-white transition-colors hover:bg-green-700"
-          >
-            Submit
-          </button>
+          <Button label={'Submit'} onClick={handleSubmit} />
         )}
       </div>
     </div>
