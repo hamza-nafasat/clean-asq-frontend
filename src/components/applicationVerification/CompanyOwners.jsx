@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Button from '../shared/small/Button';
 import TextField from '../shared/small/TextField';
 import { GoPlus } from 'react-icons/go';
-import RangeInput from './verification/RangeInput';
+// import RangeInput from './verification/RangeInput';
 import Modal from '../shared/Modal';
 import Star from '@/assets/svgs/UserApplicationForm/Star';
 
@@ -64,9 +64,7 @@ function CompanyOwners({ data, updateField, index }) {
           <div className="mt-3">
             <div className="flex flex-col gap-9">
               <p className="text-[14px] text-[#1A1A1A]">What is your ownership percentage?</p>
-              <div className="flex w-[70%] items-center justify-center">
-                <RangeInput />
-              </div>
+              <div className="">"RangeInput "</div>
             </div>
             <div className="mt-8">
               <TextField label={'Please provide your social security number'} />
