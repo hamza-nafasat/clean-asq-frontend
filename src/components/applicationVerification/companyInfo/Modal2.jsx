@@ -1,3 +1,4 @@
+import Button from '@/components/shared/small/Button';
 import TextField from '@/components/shared/small/TextField';
 import React, { useState } from 'react';
 
@@ -20,7 +21,7 @@ function Modal2({ modal1Handle }) {
     setShowInput1(e.target.id === 'Public');
   };
   return (
-    <div className="flex flex-col items-center justify-center">
+    <div className="m-2 flex flex-col items-center justify-center">
       <div className="flex flex-col items-center">
         <h1 className="text-primary text-4xl font-extrabold">LOGO</h1>
         <h2 className="text-xl font-medium">Confirm Your Information</h2>
@@ -59,6 +60,14 @@ function Modal2({ modal1Handle }) {
               </div>
             )}
           </div>
+        </div>
+        <div className="mt-6">
+          <TextField label={'SSN (Social Security Number)'} />
+          <h5>Enter your Social Security Number (XXX-XX-XXXX)</h5>
+        </div>
+        <div className="flex justify-end gap-4">
+          <Button label={'Back'} variant="secondary" />
+          <Button label={'Next'} />
         </div>
       </div>
     </div>

@@ -17,6 +17,7 @@
   --textPrimary: #1b1b1b;
   --textSecondary: #3b3b3b;
   --textLight: #636363;
+  --buttonSecondary: #a7a7a7;
 
   --aside-grad: linear-gradient(180deg, #039099 0%, rgba(197, 31, 255, 0.88) 111.68%);
   --radius: 0.625rem;
@@ -62,6 +63,7 @@
   --color-textPrimary: var(--textPrimary);
   --color-textSecondary: var(--textSecondary);
   --color-textLight: var(--textLight);
+  --color-buttonSecondary: var(--buttonSecondary);
 }
 body {
   padding: 0;
