@@ -124,7 +124,7 @@ function CompanyInformation({ data, updateField, index }) {
         <div className="flex w-full flex-col justify-start">
           <h1 className="text-lg font-medium">Legal Entity Type</h1>
           <div className="border-b-2 py-6">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 p-0">
               {options.map(({ id, label }) => (
                 <div key={id} className="flex items-center gap-2 p-2">
                   <input
