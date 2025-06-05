@@ -13,7 +13,7 @@ function UserApplicationForms() {
         {/* <UserApplicationFormAside /> */}
         <div className="w-full flex-1">
           <UserApplicationFormHeader />
-          <main className="scroll-0 mt-6 h-[calc(100vh-120px)] overflow-x-hidden overflow-y-scroll xl:h-[calc(100vh-120px)]">
+          <main className="scroll-0 mt-6 h-[calc(100vh-65px)] overflow-x-hidden overflow-y-scroll xl:h-[calc(100vh-65px)]">
             <Outlet />
           </main>
         </div>

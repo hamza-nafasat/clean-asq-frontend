@@ -35,7 +35,7 @@ const Modal = memo(
         <div className="scroll-0 max-h-[80%] w-[90%] max-w-md overflow-auto rounded-md bg-white p-6 shadow-lg">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-500" disabled={isLoading}>
+            <button onClick={onClose} className="cursor-pointer text-gray-400 hover:text-gray-500" disabled={isLoading}>
               <IoCloseSharp />
             </button>
           </div>
