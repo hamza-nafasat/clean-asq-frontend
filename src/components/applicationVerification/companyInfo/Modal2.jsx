@@ -67,7 +67,7 @@ function Modal2({ modal1Handle }) {
         </div>
         <div className="flex justify-end gap-4">
           <Button label={'Back'} variant="secondary" />
-          <Button label={'Next'} />
+          <Button label={'Next'} onClick={modal1Handle} />
         </div>
       </div>
     </div>
