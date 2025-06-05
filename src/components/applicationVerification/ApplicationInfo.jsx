@@ -4,7 +4,7 @@ import { PiPhoneCallLight } from 'react-icons/pi';
 
 function ApplicationInfo({ data, updateField, index }) {
   return (
-    <div className="mt-14 rounded-lg border p-6 shadow-md">
+    <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <h1 className="text-xl font-medium">Average Transaction</h1>
       <h5 className="text-textSecondary text-base">Provide average trancation</h5>
       <div className="flex flex-col gap-4">

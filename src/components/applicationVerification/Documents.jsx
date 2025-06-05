@@ -10,7 +10,7 @@ function Documents({ data, updateField, index }) {
     // Upload logic or further processing
   };
   return (
-    <div className="mt-14 w-full rounded-lg border p-6 shadow-md">
+    <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
       <h1 className="text-textSecondary text-base">Articles of Incorporation</h1>
       <div className="mt-6 w-full">
         <h5 className="text-textSecondary text-base">
