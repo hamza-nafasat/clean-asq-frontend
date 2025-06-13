@@ -17,6 +17,7 @@ import ApplicationVerification from './page/admin/userApplicationForms/Applicati
 import UserApplicationForms from './page/admin/userApplicationForms';
 import CompanyInformation from './page/admin/userApplicationForms/CompanyInforation/CompanyInformation';
 
+const Brandings =lazy(()=>import('./page/admin/dashboard/brandings/Brandings'))
 // Lazy components
 const Login = lazy(() => import('./page/auth/Login'));
 const Otp = lazy(() => import('./page/auth/Otp'));
@@ -67,6 +68,7 @@ function App() {
           <Route path="all-users" element={<AdminAllUsers />} />
           <Route path="admin-applications" element={<AdminApplications />} />
           <Route path="admin-applicants" element={<AdminApplicants />} />
+          <Route path="branding" element={<Brandings />} />
         </Route>
         <Route
           path="/user-application-forms/*"

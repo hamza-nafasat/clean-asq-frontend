@@ -14,6 +14,18 @@
 :root {
   --alex-brush-font: 'Alex Brush', cursive;
   --poppins: 'Poppins', sans-serif;
+
+  /* Branding Colors and Font */
+  --color-primary: #4F46E5;
+  --color-secondary: #2563EB;
+  --color-accent: #8B5CF6;
+  --color-text: #111827;
+  --color-link: #0000FF;
+  --color-background: #FFFFFF;
+  --color-frame: #E5E7EB;
+  --color-new-green: #15A090;
+  --font-primary: 'Inter';
+
   --light: #72ffe7;
   --secondary: #21ccb0;
   --primary: #066969;
@@ -72,7 +84,7 @@ body {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
-  font-family: var(--nunito-font) !important;
+  font-family: var(--font-primary), sans-serif !important;
   /* overflow-y: hidden; */
 }
 .user-dashboard::before {
@@ -370,3 +382,23 @@ body {
 .range-slider__thumb:hover {
   transform: scale(1.2);
 }
+
+/* Apply branding colors to relevant elements using CSS variables */
+.bg-teal-500 { background-color: var(--color-primary); }
+.hover\:bg-teal-600:hover { background-color: var(--color-primary); }
+.text-blue-500 { color: var(--color-link); }
+.bg-green-500 { background-color: var(--color-primary); }
+.hover\:bg-green-600:hover { background-color: var(--color-primary); }
+.bg-blue-500 { background-color: var(--color-primary); }
+.hover\:bg-blue-600:hover { background-color: var(--color-primary); }
+.text-gray-700 { color: var(--color-text); }
+.border-gray-300 { border-color: var(--color-frame); }
+.text-gray-500 { color: var(--color-text); }
+.text-gray-600 { color: var(--color-text); }
+.bg-gray-200 { background-color: var(--color-background); }
+.text-gray-800 { color: var(--color-text); }
+.hover\:bg-gray-300:hover { background-color: var(--color-frame); }
+.text-gray-700 { color: var(--color-text); }
+.bg-gray-300 { background-color: var(--color-background); }
+.bg-seagreen-500 { background-color: var(--color-new-green); }
+.hover\:bg-gray-400:hover { background-color: var(--color-frame); }
