@@ -2,33 +2,51 @@ import React from 'react';
 
 const Preview = ({ primaryColor, secondaryColor, accentColor, linkColor }) => {
   return (
-    <div className="mb-6 p-6 border rounded-lg shadow-sm">
-      <h2 className="text-xl font-semibold mb-4">Preview</h2>
-      <p className="text-gray-700 mb-4">
-        This is how your form will appear with the selected branding. <span className="underline" style={{ color: linkColor }}>Link will use the link color.</span>
-      </p>
-      <div className="flex space-x-4">
-        <button
-          className="px-6 py-3 rounded-md text-white font-semibold"
-          style={{ backgroundColor: primaryColor }}
-        >
-          Primary Button
-        </button>
-        <button
-          className="px-6 py-3 rounded-md text-white font-semibold"
-          style={{ backgroundColor: secondaryColor }}
-        >
-          Secondary Button
-        </button>
-        <button
-          className="px-6 py-3 rounded-md text-white font-semibold"
-          style={{ backgroundColor: accentColor }}
-        >
-          Accent Button
-        </button>
+    <div className="mt-6 rounded-[8px] border border-[#F0F0F0] p-3 shadow-sm md:p-6">
+      <h2 className="text-textPrimary text-[18px] font-medium">Preview</h2>
+      <div className="mt-5 rounded-md border p-3 md:p-6">
+        <p className="text-textPrimary mb-2 text-[22px] font-medium">Company Name</p>
+
+        <div className="">
+          <label className="mr-2 text-[14px] font-normal text-gray-500 uppercase">URL:</label>
+          <input
+            type="text"
+            value="https://company.apply-secure.com"
+            editable
+            className="rounded border border-[#A7A7A7] bg-white px-3 py-1 text-sm text-gray-700"
+          />
+        </div>
+
+        <p className="font-inter mt-6 text-[16px] font-normal text-gray-700">
+          This is how your form will appear with the selected branding.{' '}
+          <a href="#" className="underline" style={{ color: linkColor }}>
+            Link will use the link color.
+          </a>
+        </p>
+
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <button
+            className="rounded px-3 py-2 text-sm font-normal text-white md:px-5 md:py-4"
+            style={{ backgroundColor: primaryColor }}
+          >
+            Primary Button
+          </button>
+          <button
+            className="rounded px-3 py-2 text-sm font-normal text-white md:px-5 md:py-4"
+            style={{ backgroundColor: secondaryColor }}
+          >
+            Secondary Button
+          </button>
+          <button
+            className="rounded px-3 py-2 text-sm font-normal text-white md:px-5 md:py-4"
+            style={{ backgroundColor: accentColor }}
+          >
+            Accent Button
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
-export default Preview; 
+export default Preview;

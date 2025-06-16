@@ -15,24 +15,28 @@
   --alex-brush-font: 'Alex Brush', cursive;
   --poppins: 'Poppins', sans-serif;
 
-  /* Branding Colors and Font */
-  --color-primary: #4F46E5;
-  --color-secondary: #2563EB;
-  --color-accent: #8B5CF6;
-  --color-text: #111827;
-  --color-link: #0000FF;
-  --color-background: #FFFFFF;
-  --color-frame: #E5E7EB;
-  --color-new-green: #15A090;
-  --font-primary: 'Inter';
-
-  --light: #72ffe7;
-  --secondary: #21ccb0;
+  /* Default Application Colors */
   --primary: #066969;
+  --secondary: #21ccb0;
+  --accent: #72ffe7;
   --textPrimary: #1b1b1b;
   --textSecondary: #3b3b3b;
   --textLight: #636363;
   --buttonSecondary: #a7a7a7;
+  --linkColor: #1025e3;
+  --backgroundColor: #f9f9f9;
+  --frameColor: #db1313;
+
+  /* Branding Colors - These will override defaults when set */
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-text: var(--textPrimary);
+  --color-link: var(--linkColor);
+  --color-background: var(--backgroundColor);
+  --color-frame: var(--frameColor);
+  --color-new-green: #15a090;
+  --font-primary: 'Inter';
 
   --aside-grad: linear-gradient(180deg, #039099 0%, rgba(197, 31, 255, 0.88) 111.68%);
   --radius: 0.625rem;
@@ -48,7 +52,6 @@
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
@@ -383,22 +386,86 @@ body {
   transform: scale(1.2);
 }
 
-/* Apply branding colors to relevant elements using CSS variables */
-.bg-teal-500 { background-color: var(--color-primary); }
-.hover\:bg-teal-600:hover { background-color: var(--color-primary); }
-.text-blue-500 { color: var(--color-link); }
-.bg-green-500 { background-color: var(--color-primary); }
-.hover\:bg-green-600:hover { background-color: var(--color-primary); }
-.bg-blue-500 { background-color: var(--color-primary); }
-.hover\:bg-blue-600:hover { background-color: var(--color-primary); }
-.text-gray-700 { color: var(--color-text); }
-.border-gray-300 { border-color: var(--color-frame); }
-.text-gray-500 { color: var(--color-text); }
-.text-gray-600 { color: var(--color-text); }
-.bg-gray-200 { background-color: var(--color-background); }
-.text-gray-800 { color: var(--color-text); }
-.hover\:bg-gray-300:hover { background-color: var(--color-frame); }
-.text-gray-700 { color: var(--color-text); }
-.bg-gray-300 { background-color: var(--color-background); }
-.bg-seagreen-500 { background-color: var(--color-new-green); }
-.hover\:bg-gray-400:hover { background-color: var(--color-frame); }
+/* Utility classes with fallback to default colors */
+.bg-teal-500 {
+  background-color: var(--color-primary, var(--primary));
+}
+.hover\:bg-teal-600:hover {
+  background-color: var(--color-primary, var(--primary));
+}
+.text-blue-500 {
+  color: var(--color-link, var(--linkColor));
+}
+.bg-green-500 {
+  background-color: var(--color-primary, var(--primary));
+}
+.hover\:bg-green-600:hover {
+  background-color: var(--color-primary, var(--primary));
+}
+.bg-blue-500 {
+  background-color: var(--color-primary, var(--primary));
+}
+.hover\:bg-blue-600:hover {
+  background-color: var(--color-primary, var(--primary));
+}
+.text-gray-700 {
+  color: var(--color-text, var(--textPrimary));
+}
+.border-gray-300 {
+  border-color: var(--color-frame, var(--frameColor));
+}
+.text-gray-500 {
+  color: var(--color-text, var(--textPrimary));
+}
+.text-gray-600 {
+  color: var(--color-text, var(--textPrimary));
+}
+.bg-gray-200 {
+  background-color: var(--color-background, var(--backgroundColor));
+}
+.text-gray-800 {
+  color: var(--color-text, var(--textPrimary));
+}
+.hover\:bg-gray-300:hover {
+  background-color: var(--color-frame, var(--frameColor));
+}
+.text-gray-700 {
+  color: var(--color-text, var(--textPrimary));
+}
+.bg-gray-300 {
+  background-color: var(--color-background, var(--backgroundColor));
+}
+.bg-seagreen-500 {
+  background-color: var(--color-new-green);
+}
+.hover\:bg-gray-400:hover {
+  background-color: var(--color-frame, var(--frameColor));
+}
+
+/* Utility classes for accent and link colors */
+.bg-accent {
+  background-color: var(--accent);
+}
+.text-accent {
+  color: var(--accent);
+}
+.text-link {
+  color: var(--linkColor);
+}
+.hover\:text-link:hover {
+  color: var(--linkColor);
+}
+
+/* Add these new utility classes for background and frame colors */
+.bg-backgroundColor {
+  background-color: var(--backgroundColor);
+}
+.border-frameColor {
+  border-color: var(--frameColor);
+}
+.text-frameColor {
+  color: var(--frameColor);
+}
+.bg-frameColor {
+  background-color: var(--frameColor);
+}

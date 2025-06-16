@@ -7,7 +7,7 @@ import ArrowBackIcon from '../../../assets/svgs/ArrowBackIcon';
 import { FaUserCheck, FaWpforms } from 'react-icons/fa';
 import { FaUsersGear } from 'react-icons/fa6';
 import { AllRoles, AllUsers, Applicants, Applications } from '@/assets/svgs/icon';
-import { HiOutlineLightBulb } from "react-icons/hi";
+import { HiOutlineLightBulb } from 'react-icons/hi';
 
 const AdminAside = () => {
   const navigate = useNavigate();
@@ -39,7 +39,12 @@ const AdminAside = () => {
     {
       title: 'Brandings',
       link: '/branding',
-      icon: <HiOutlineLightBulb/>,
+      icon: <HiOutlineLightBulb />,
+    },
+    {
+      title: 'Brandingsddddd',
+      link: '/user-application-forms/application-verification',
+      icon: <HiOutlineLightBulb />,
     },
   ];
 

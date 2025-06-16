@@ -4,17 +4,27 @@ import ColorPalette from './ColorPalette';
 import BrandElementAssignment from './BrandElementAssignment';
 import Preview from './Preview';
 import { useBranding } from './BrandingContext';
+import TextField from '@/components/shared/small/TextField';
+import Button from '@/components/shared/small/Button';
 
 const GlobalBrandingPage = () => {
   const {
-    primaryColor, setPrimaryColor,
-    secondaryColor, setSecondaryColor,
-    accentColor, setAccentColor,
-    textColor, setTextColor,
-    linkColor, setLinkColor,
-    backgroundColor, setBackgroundColor,
-    frameColor, setFrameColor,
-    primaryFont, setPrimaryFont,
+    primaryColor,
+    setPrimaryColor,
+    secondaryColor,
+    setSecondaryColor,
+    accentColor,
+    setAccentColor,
+    textColor,
+    setTextColor,
+    linkColor,
+    setLinkColor,
+    backgroundColor,
+    setBackgroundColor,
+    frameColor,
+    setFrameColor,
+    primaryFont,
+    setPrimaryFont,
   } = useBranding();
 
   const handleApplyBranding = () => {
@@ -30,9 +40,9 @@ const GlobalBrandingPage = () => {
   };
 
   return (
-    <div className="border border-[#F0F0F0] rounded-[8px] bg-white px-6 mb-6 ">
-      <h1 className="text-2xl font-semibold text-gray-500 mt-12">Global Branding</h1>
-      <div className=" mt-12">
+    <div className="mb-6 rounded-[8px] border border-[#F0F0F0] bg-white px-3 md:px-6">
+      <h1 className="mt-12 text-lg font-semibold text-gray-500 md:text-2xl">Global Branding</h1>
+      <div className="mt-12">
         <BrandingSource />
         <ColorPalette />
         <BrandElementAssignment
@@ -53,6 +63,13 @@ const GlobalBrandingPage = () => {
           primaryFont={primaryFont}
           setPrimaryFont={setPrimaryFont}
         />
+        {/* <div>
+          <h1 className="bg-accent">main heading</h1>
+          <h1 className="bg-backgroundColor"> background colore</h1>
+
+          <input className="border-frameColor text-frameColor border" placeholder="hallo"></input>
+        </div> */}
+        <input type="color"></input>
         <Preview
           primaryColor={primaryColor}
           secondaryColor={secondaryColor}
@@ -60,23 +77,21 @@ const GlobalBrandingPage = () => {
           linkColor={linkColor}
         />
 
-        <div className="flex justify-end space-x-4 mt-6">
+        <div className="mt-6 mb-4 flex justify-between space-x-2 md:space-x-4">
           <button
-            className="px-6 py-3 rounded-md bg-gray-300 text-gray-700 hover:bg-gray-400"
+            className="rounded-md bg-teal-500 px-3 py-2 text-white hover:bg-gray-400 md:px-6 md:py-3"
             onClick={handleCancel}
           >
-            Cancel
+            skip
           </button>
-          <button
-            className="px-6 py-3 rounded-md bg-teal-500 text-white hover:bg-teal-600"
-            onClick={handleApplyBranding}
-          >
-            Apply Branding
-          </button>
+          <div className="flex gap-2 md:gap-6">
+            <Button variant="secondary" label={'Cancel'} onClick={handleCancel} />
+            <Button label={'Apply Branding'} onClick={handleApplyBranding} />
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default GlobalBrandingPage; 
+export default GlobalBrandingPage;

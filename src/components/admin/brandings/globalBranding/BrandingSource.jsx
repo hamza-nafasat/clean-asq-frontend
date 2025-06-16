@@ -1,13 +1,48 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { FiUpload } from 'react-icons/fi';
 import { HiOutlineSparkles } from 'react-icons/hi2';
 import { PiImageLight } from 'react-icons/pi';
 
 const BrandingSource = () => {
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handleUrlChange = e => {
+    setWebsiteUrl(e.target.value);
+  };
+
+  const handleExtract = () => {
+    if (!websiteUrl) {
+      alert('Please enter a valid website URL');
+      return;
+    }
+    // TODO: Add your extraction logic here
+    console.log('Extracting from URL:', websiteUrl);
+  };
+
+  const handleFileUpload = e => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check if file is an image
+      if (!file.type.startsWith('image/')) {
+        alert('Please upload an image file');
+        return;
+      }
+      setSelectedFile(file);
+      // TODO: Add your file processing logic here
+      console.log('File selected:', file.name);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
+  };
+
   return (
     <div className="mb-6">
       <div className="flex justify-between">
-        <p className="text-xl font-semibold text-gray-500">Choose Your Branding Source</p>
+        <p className="text-[14px] font-semibold text-gray-500 md:text-xl">Choose Your Branding Source</p>
         <div className="font-inter flex items-center gap-2 rounded-[4px] bg-[#F5F5F5] px-[10px] py-[6px] text-[14px] font-normal text-gray-500">
           <HiOutlineSparkles />
           AI Help
@@ -21,35 +56,45 @@ const BrandingSource = () => {
           <input
             type="url"
             id="website-url"
+            value={websiteUrl}
+            onChange={handleUrlChange}
             className="mt-2 block w-full rounded-[4px] border border-[#F6F8FF] bg-[#F6F8FF] px-4 py-2"
             placeholder="https://example.com"
           />
           {/* <p className="mt-2 text-sm text-gray-500">Enter a website URL, to extract its colors and logos for your branding.</p> */}
         </div>
-        <button className="rounded-md bg-green-500 px-4 py-2 text-white hover:bg-green-600">Extract</button>
+        <button onClick={handleExtract} className="rounded-md bg-green-500 px-4 py-2 text-white hover:bg-green-600">
+          Extract
+        </button>
       </div>
-      <div className="mt-3 mb-4 flex justify-between">
+      <div className="mt-3 mb-4 flex items-center justify-between gap-5">
         <p className="mt-2 text-sm text-gray-500">
           Enter a website URL, to extract its colors and logos for your branding.
         </p>
-        <button className="flex items-center space-x-2 rounded-[4px] border bg-white px-4 py-2 text-gray-700 hover:bg-gray-200">
-          <FiUpload />
-          <span>Upload</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="2"
-            stroke="currentColor"
-            className="h-4 w-4"
+        <div>
+          <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
+          <button
+            onClick={triggerFileInput}
+            className="flex items-center space-x-2 rounded-[4px] border bg-white px-2 py-2 text-gray-700 hover:bg-gray-200 md:px-4 md:py-2"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"></path>
-          </svg>
-        </button>{' '}
+            <FiUpload />
+            <span>{selectedFile ? selectedFile.name : 'Upload'}</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="currentColor"
+              className="h-4 w-4"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"></path>
+            </svg>
+          </button>
+        </div>
       </div>
       {/* Placeholder for Available Logos and Upload Logo */}
       <div className="mt-14 flex items-center justify-between space-x-2">
-        <div className="flex items-center gap-3 text-gray-600">
+        <div className="flex items-center gap-1.5 text-gray-600 md:gap-3">
           <svg width="22" height="17" viewBox="0 0 22 17" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
               fill-rule="evenodd"
@@ -60,7 +105,7 @@ const BrandingSource = () => {
           </svg>
           Available Logos
         </div>
-        <button className="flex items-center space-x-2 rounded-[4px] border bg-white px-4 py-2 text-gray-700 hover:bg-gray-200">
+        <button className="flex items-center space-x-1 rounded-[4px] border bg-white px-1.5 py-2 text-gray-700 hover:bg-gray-200 md:space-x-2 md:px-4 md:py-2">
           <FiUpload />
           <span>Upload Logo</span>
           <svg
