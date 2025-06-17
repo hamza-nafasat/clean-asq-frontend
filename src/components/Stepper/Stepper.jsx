@@ -84,10 +84,10 @@ const Stepper = ({
                 <div
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 ${
                     actualIndex < currentStep
-                      ? 'border-[#15A090] bg-[#15A090]'
+                      ? 'border-primary bg-primary'
                       : actualIndex === currentStep
-                        ? 'border-[#15A090]'
-                        : 'border-gray-300'
+                        ? 'border-primary'
+                        : '!border-gray-300'
                   }`}
                 >
                   {/* Circle content */}
@@ -103,7 +103,7 @@ const Stepper = ({
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   ) : actualIndex === currentStep ? (
-                    <div className="h-3 w-3 rounded-full bg-[#15A090]" />
+                    <div className="bg-primary h-3 w-3 rounded-full" />
                   ) : (
                     <div className="h-3 w-3 rounded-full bg-gray-300" />
                   )}
@@ -113,7 +113,7 @@ const Stepper = ({
                 {/* Add empty div for consistent spacing when label is hidden */}
                 <div className="fixed top-[166px]">
                   {actualIndex === currentStep && (
-                    <div className="mt-2 text-center text-xs font-medium whitespace-nowrap text-[#15A090]">{step}</div>
+                    <div className="text-primary mt-2 text-center text-xs font-medium whitespace-nowrap">{step}</div>
                   )}
                 </div>
                 {actualIndex !== currentStep && <div className="mt-2 h-[20px]" />}

@@ -18,7 +18,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
           <div className="flex flex-col justify-between gap-2 border-b border-[#E8E8E8] pb-3 sm:flex-row sm:gap-0">
             <div>
               <h2 className="text-textPrimary text-[22px] font-medium">Beneficial Owner Information</h2>
-              <p className="text-textSecondary">Provide information about the beneficial owner.</p>
+              <p className="text-textPrimary">Provide information about the beneficial owner.</p>
             </div>
             <div className="flex justify-end">
               <Button
@@ -31,7 +31,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
             </div>
           </div>
           <div className="mt-5 border-b border-[#E8E8E8] pb-3">
-            <p className="text-[14px] text-[#1A1A1A]">Do you own 25% or more of the company?</p>
+            <p className="text-textPrimary text-[14px]">Do you own 25% or more of the company?</p>
             <div className="mt-1.5 flex items-center gap-8">
               <div className="flex items-center gap-1">
                 <input
@@ -42,7 +42,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
                   type="radio"
                   name="beneficial"
                 />
-                <label className="text-[17px] font-medium" htmlFor="yes">
+                <label className="text-textPrimary text-[17px] font-medium" htmlFor="yes">
                   Yes
                 </label>
               </div>
@@ -55,7 +55,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
                   id="no"
                   name="beneficial"
                 />
-                <label className="text-[17px] font-medium" htmlFor="no">
+                <label className="text-textPrimary text-[17px] font-medium" htmlFor="no">
                   No
                 </label>
               </div>
@@ -64,7 +64,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
           {beneficialOwnership && (
             <div className="mt-3">
               <div className="flex flex-col gap-9">
-                <p className="text-[14px] text-[#1A1A1A]">What is your beneficialOwnership percentage?</p>
+                <p className="text-textPrimary text-[14px]">What is your beneficialOwnership percentage?</p>
                 <PercentageSlider />
               </div>
               <div className="mt-8">
@@ -73,7 +73,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
             </div>
           )}
           <div className="mt-5 border-b border-[#E8E8E8] pb-3">
-            <p className="text-[14px] text-[#1A1A1A]">Are there additional owners that own 25% or greater?</p>
+            <p className="text-textPrimary text-[14px]">Are there additional owners that own 25% or greater?</p>
             <div className="mt-1.5 flex items-center gap-8">
               <div className="flex items-center gap-1">
                 <input
@@ -84,7 +84,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
                   type="radio"
                   name="owners"
                 />
-                <label className="text-[17px] font-medium" htmlFor="owner-yes">
+                <label className="text-textPrimary text-[17px] font-medium" htmlFor="owner-yes">
                   Yes
                 </label>
               </div>
@@ -97,7 +97,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
                   id="owner-no"
                   name="owners"
                 />
-                <label className="text-[17px] font-medium" htmlFor="owner-no">
+                <label className="text-textPrimary text-[17px] font-medium" htmlFor="owner-no">
                   No
                 </label>
               </div>
@@ -138,7 +138,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
           <div className="flex flex-col justify-between gap-2 border-b border-[#E8E8E8] pb-3 sm:flex-row sm:gap-0">
             <div>
               <h2 className="text-textPrimary text-[22px] font-medium">Beneficial Owner Information</h2>
-              <p className="text-textSecondary">Provide information about the beneficial owner.</p>
+              <p className="text-textPrimary">Provide information about the beneficial owner.</p>
             </div>
             <div className="flex justify-end">
               <Button
@@ -151,7 +151,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
             </div>
           </div>
           <div className="mt-5 border-b border-[#E8E8E8] pb-3">
-            <p className="text-[14px] text-[#1A1A1A]">Do you own 25% or more of the company?</p>
+            <p className="text-textPrimary text-[14px]">Do you own 25% or more of the company?</p>
             <div className="mt-1.5 flex items-center gap-8">
               <div className="flex items-center gap-1">
                 <input
@@ -162,7 +162,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
                   type="radio"
                   name="owner"
                 />
-                <label className="text-[17px] font-medium" htmlFor="ownerYes">
+                <label className="text-textPrimary text-[17px] font-medium" htmlFor="ownerYes">
                   Yes
                 </label>
               </div>
@@ -175,7 +175,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
                   id="ownerNo"
                   name="owner"
                 />
-                <label className="text-[17px] font-medium" htmlFor="ownerNo">
+                <label className="text-textPrimary text-[17px] font-medium" htmlFor="ownerNo">
                   No
                 </label>
               </div>
@@ -184,7 +184,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
           {ownership && (
             <div className="mt-3">
               <div className="flex flex-col gap-9">
-                <p className="text-[14px] text-[#1A1A1A]">What is your beneficialOwnership percentage?</p>
+                <p className="text-textPrimary text-[14px]">What is your beneficialOwnership percentage?</p>
                 <div className="">
                   <PercentageSlider />
                 </div>
@@ -213,23 +213,23 @@ function OwnerInformation({ showInfo, setShowInfo }) {
           }}
           title="Confirmation"
         >
-          <p className="text-textSecondary">An email will be sent to following Co-Owners</p>
+          <p className="text-textPrimary">An email will be sent to following Co-Owners</p>
           <div className="mt-5 grid grid-cols-2 gap-5">
             <div>
               <h2 className="text-textPrimary font-medium">Co-Owner Name</h2>
-              <span className="text-textSecondary">John Doe</span>
+              <span className="text-textPrimary">John Doe</span>
             </div>
             <div>
               <h2 className="text-textPrimary font-medium">Email</h2>
-              <span className="text-textSecondary">xyz@mail.com</span>
+              <span className="text-textPrimary">xyz@mail.com</span>
             </div>
             <div>
               <h2 className="text-textPrimary font-medium">Co-Owner Name</h2>
-              <span className="text-textSecondary">John Doe</span>
+              <span className="text-textPrimary">John Doe</span>
             </div>
             <div>
               <h2 className="text-textPrimary font-medium">Email</h2>
-              <span className="text-textSecondary">xyz@mail.com</span>
+              <span className="text-textPrimary">xyz@mail.com</span>
             </div>
           </div>
         </Modal>

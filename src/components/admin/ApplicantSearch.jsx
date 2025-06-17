@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { Search } from 'lucide-react';
+import TextField from '../shared/small/TextField';
 
 // Define client types
 export const CLIENT_TYPES = {
@@ -55,12 +56,13 @@ const ApplicantSearch = ({ onSearch }) => {
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
           <Search className="h-5 w-5 text-gray-400" />
         </div>
-        <input
+
+        <TextField
+          leftIcon={<Search />}
           type="text"
           value={searchTerm}
           onChange={handleSearch}
           placeholder="Search by client type..."
-          className="focus:border-secondary focus:ring-secondary w-full rounded-md border border-gray-300 py-2 pr-4 pl-10 text-sm focus:ring-1 focus:outline-none"
         />
         {(searchTerm || selectedType) && (
           <button

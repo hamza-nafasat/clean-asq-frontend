@@ -1,11 +1,13 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import DataTable from 'react-data-table-component';
 import { MoreVertical, Eye } from 'lucide-react';
-import { tableStyles } from '@/data/data';
+import { getTableStyles } from '@/data/data';
 import Modal from '../shared/Modal';
 import ConfirmationModal from '../shared/ConfirmationModal';
 import Button from '../shared/small/Button';
 import { FaUserShield } from 'react-icons/fa';
+import { useBranding } from './brandings/globalBranding/BrandingContext';
+import TextField from '../shared/small/TextField';
 
 // Define role status
 const ROLE_STATUS = {
@@ -81,7 +83,8 @@ function AllUserRoles() {
   const [isLoading, setIsLoading] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const actionMenuRefs = useRef(new Map());
-
+  const { primaryColor, textColor, backgroundColor, secondaryColor, accentColor } = useBranding();
+  const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   useEffect(() => {
     const handleClickOutside = event => {
       const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
@@ -274,7 +277,7 @@ function AllUserRoles() {
               name={permission.id}
               checked={permissions[permission.id] || false}
               onChange={onChange}
-              className="text-primary focus:ring-primary h-4 w-4 rounded border-gray-300"
+              className="text-primary focus:ring-primary border-frameColor h-4 w-4 rounded"
               disabled={!onChange} // Disable if no onChange handler (view mode)
             />
             <label htmlFor={permission.id} className="text-sm text-gray-700">
@@ -295,13 +298,13 @@ function AllUserRoles() {
     if (type === 'select' && options) {
       return (
         <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium text-gray-700">{labelText}</label>
+          <label className="text-textPrimary mb-1 block text-sm font-medium">{labelText}</label>
           <select
             name={field}
             value={value}
             onChange={onChange}
-            className={`focus:border-primary focus:ring-primary/20 w-full rounded-md border px-4 py-2 text-sm shadow-sm transition focus:ring ${
-              error ? 'border-red-500' : 'border-gray-300'
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base${
+              error ? 'border-red-500' : 'border-frameColor'
             }`}
           >
             {options.map(option => (
@@ -317,17 +320,16 @@ function AllUserRoles() {
 
     return (
       <div className="mb-4">
-        <label className="mb-1 block text-sm font-medium text-gray-700">{labelText}</label>
-        <input
+        {/* <label className="text-textPrimary mb-1 block text-sm font-medium">{labelText}</label> */}
+        <TextField
+          label={labelText}
           name={field}
           type={type}
           value={value}
           onChange={onChange}
           placeholder={`Enter ${field}`}
-          className={`focus:border-primary focus:ring-primary/20 w-full rounded-md border border-gray-300 px-4 py-2 text-sm shadow-sm transition focus:ring ${
-            error ? 'border-red-500' : ''
-          }`}
         />
+
         {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
       </div>
     );
@@ -336,16 +338,16 @@ function AllUserRoles() {
   return (
     <div className="p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-[#323332]">Role Management</h2>
+        <h2 className="text-textPrimary text-xl font-semibold">Role Management</h2>
         <div>
           <Button icon={FaUserShield} label="Add Role" onClick={() => setIsModalOpen(true)} disabled={isLoading} />
         </div>
       </div>
 
       <DataTable
-        customStyles={tableStyles}
-        columns={columns}
         data={roles}
+        columns={columns}
+        customStyles={tableStyles}
         pagination
         highlightOnHover
         progressPending={isLoading}
@@ -415,27 +417,21 @@ function AllUserRoles() {
         <Modal title="View Role" onClose={() => setViewModalData(null)} hideSaveButton>
           <div className="mb-4">
             <label className="mb-1 block text-sm font-medium text-gray-700">Role Name</label>
-            <div className="rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm">
+            <div className="border-frameColor flex h-[45px] w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base">
               {viewModalData.roleName}
             </div>
           </div>
           <div className="mb-4">
             <label className="mb-1 block text-sm font-medium text-gray-700">Status</label>
-            <div className="rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm">
-              <span
-                className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                  viewModalData.status === ROLE_STATUS.ACTIVE
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}
-              >
+            <div className="border-frameColor flex h-[45px] w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base">
+              <span className={`text-textPrimary inline-flex rounded-full px-2 py-1 text-xs font-semibold`}>
                 {viewModalData.status === ROLE_STATUS.ACTIVE ? 'Active' : 'Inactive'}
               </span>
             </div>
           </div>
           <div className="mb-4">
             <label className="mb-1 block text-sm font-medium text-gray-700">Created Date</label>
-            <div className="rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm">
+            <div className="border-frameColor flex h-[45px] w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base">
               {viewModalData.createDate}
             </div>
           </div>

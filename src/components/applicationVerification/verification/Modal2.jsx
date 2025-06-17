@@ -11,7 +11,7 @@ function Modal2({ modal1Handle }) {
       </div>
       <div className="mt-6">
         <h1 className="text-textPrimary mt-2 text-xl font-medium">Business Email</h1>
-        <h1 className="text-textSecondary text-base">Please provide your work email address.</h1>
+        <h1 className="text-textPrimary text-base">Please provide your work email address.</h1>
       </div>
       <div className="flex w-full gap-4">
         <div className="flex w-full items-center">

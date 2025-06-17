@@ -7,7 +7,7 @@ import { MdOutlinePercent } from 'react-icons/md';
 function PlaceHolder({ data, updateField, index }) {
   const [tab, setTab] = useState('Type Signature');
   return (
-    <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
+    <div className="mt-14 flex h-full flex-col gap-4 overflow-auto rounded-lg border p-6 shadow-md">
       <TextField label={'SSN'} />
       <TextField label={'Addblk'} />
       <TextField label={'Ownership %'} rightIcon={<MdOutlinePercent />} />

@@ -8,11 +8,11 @@ function Modal1({ modal1Handle, openBusinessDescriptionHandel, openBusinessClass
     <div className="flex flex-col items-center justify-center">
       <div className="flex flex-col items-center">
         <h1 className="text-primary text-4xl font-extrabold">LOGO</h1>
-        <h2 className="text-xl font-medium">Confirm Your Information</h2>
-        <h5 className="text-textSecondary text-base">Please enter your company information</h5>
+        <h2 className="text-textPrimary text-xl font-medium">Confirm Your Information</h2>
+        <h5 className="text-textPrimary text-base">Please enter your company information</h5>
       </div>
       <div className="my-5 flex w-full flex-col items-start">
-        <h1 className="text-xl font-medium">Basic Information</h1>
+        <h1 className="text-textPrimary text-xl font-medium">Basic Information</h1>
         <div className="mt-6 flex w-full flex-col gap-4">
           <TextField label={'Website URL'} />
           <TextField label={'Legal Company Name'} />

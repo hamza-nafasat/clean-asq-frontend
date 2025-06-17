@@ -7,13 +7,13 @@ function Modal4({ modal1Handle }) {
     <div>
       <h1 className="text-primary text-4xl font-extrabold">LOGO</h1>
       <div>
-        <h3 className="text-xl font-medium">Confirm Your Information</h3>
-        <h3 className="text-textSecondary text-base">
+        <h3 className="text-textPrimary text-xl font-medium">Confirm Your Information</h3>
+        <h3 className="text-textPrimary text-base">
           Please review and correct your information if needed before proccing.
         </h3>
       </div>
       <div className="flex flex-col items-start justify-start">
-        <h3 className="text-lg font-medium">Personal Information</h3>
+        <h3 className="text-textPrimary text-lg font-medium">Personal Information</h3>
         <div className="w-full">
           <div className="grid grid-cols-12 gap-4">
             <div className="col-span-12 md:col-span-4">
@@ -31,7 +31,7 @@ function Modal4({ modal1Handle }) {
           <TextField label={'Email Address'} />
         </div>
         <div className="w-full">
-          <h3 className="text-lg font-medium">Current Address</h3>
+          <h3 className="text-textPrimary text-lg font-medium">Current Address</h3>
           <div className="w-full">
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-12 md:col-span-6">

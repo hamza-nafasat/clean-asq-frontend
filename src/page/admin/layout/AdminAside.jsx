@@ -42,7 +42,7 @@ const AdminAside = () => {
       icon: <HiOutlineLightBulb />,
     },
     {
-      title: 'Brandingsddddd',
+      title: '1st application',
       link: '/user-application-forms/application-verification',
       icon: <HiOutlineLightBulb />,
     },
@@ -56,7 +56,7 @@ const AdminAside = () => {
     >
       <div className="absolute top-[6%] right-[-11px] z-10 cursor-pointer" onClick={handleNavOpen}>
         <div className={`hidden transition-all duration-500 lg:block ${isNavOpen ? 'rotate-0' : 'rotate-180'}`}>
-          <ArrowBackIcon />
+          <ArrowBackIcon color="var(--primary)" />
         </div>
       </div>
 
@@ -88,7 +88,7 @@ const AdminAside = () => {
                 </div>
 
                 <p
-                  className={`navbar-title text-sm capitalize transition-opacity duration-500 md:text-base ${
+                  className={`navbar-title text-sm font-bold capitalize transition-opacity duration-500 md:text-base ${
                     isActive ? 'text-primary' : 'text-[#526581]'
                   } ${isNavOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}
                 >

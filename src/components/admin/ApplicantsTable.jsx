@@ -2,9 +2,11 @@ import React, { useCallback, useMemo, useRef, useEffect, useState } from 'react'
 import PropTypes from 'prop-types';
 import DataTable from 'react-data-table-component';
 import { MoreVertical } from 'lucide-react';
-import { tableStyles } from '@/data/data';
 import ApplicantSearch, { CLIENT_TYPES, CLIENT_LABELS } from './ApplicantSearch';
 import Modal from '../shared/Modal';
+import { useBranding } from './brandings/globalBranding/BrandingContext';
+import { getTableStyles } from '@/data/data';
+import TextField from '../shared/small/TextField';
 
 // Constants for applicant status
 export const APPLICANT_STATUS = {
@@ -36,7 +38,7 @@ const APPLICANT_TABLE_COLUMNS = [
     selector: row => row.clientType,
     sortable: true,
     cell: row => (
-      <span className="w-[130px] rounded-sm bg-gray-100 px-[10px] py-[3px] text-center text-xs font-bold text-gray-700 capitalize">
+      <span className="text-accent w-[130px] rounded-sm bg-gray-100 px-[10px] py-[3px] text-center text-xs font-bold capitalize">
         {CLIENT_LABELS[row.clientType] || row.clientType}
       </span>
     ),
@@ -70,7 +72,8 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
   const [editModalData, setEditModalData] = useState(null);
   const [formErrors, setFormErrors] = useState({});
   const actionMenuRefs = useRef(new Map());
-
+  const { primaryColor, textColor, backgroundColor, secondaryColor, accentColor } = useBranding();
+  const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   // Get unique clients for quick filters
   const uniqueClients = useMemo(() => {
     return [...new Set(applicants.map(applicant => applicant.clientType))];
@@ -145,7 +148,7 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
             name={field}
             value={value}
             onChange={onChange}
-            className={`focus:border-secondary focus:ring-secondary /20 w-full rounded-md border px-4 py-2 text-sm shadow-sm transition focus:ring ${
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
               error ? 'border-red-500' : 'border-gray-300'
             }`}
           >
@@ -163,16 +166,13 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
 
     return (
       <div className="mb-4">
-        <label className="mb-1 block text-sm font-medium text-gray-700">{labelText}</label>
-        <input
+        <TextField
+          label={labelText}
           name={field}
           type={type}
           value={value}
           onChange={onChange}
           placeholder={`Enter ${labelText}`}
-          className={`focus:border-secondary focus:ring-secondary /20 w-full rounded-md border px-4 py-2 text-sm shadow-sm transition focus:ring ${
-            error ? 'border-red-500' : 'border-gray-300'
-          }`}
         />
         {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
       </div>
@@ -254,21 +254,20 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
 
       <div className="mb-4 grid grid-cols-12 gap-4">
         <div className="col-span-12 md:col-span-4">
-          <label className="mb-1 block text-sm font-medium text-gray-700">Search by Name</label>
-          <input
+          <TextField
+            label={'Search by Name'}
             type="text"
             value={filters.name || ''}
             onChange={e => onFilterChange('name', e.target.value)}
             placeholder="Enter name to search..."
-            className="focus:border-secondary focus:ring-secondary w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-1 focus:outline-none"
           />
         </div>
         <div className="col-span-12 md:col-span-4">
-          <label className="mb-1 block text-sm font-medium text-gray-700">Status</label>
+          <label className="text-textPrimary text-sm lg:text-base">Status</label>
           <select
             value={filters.status}
             onChange={e => onFilterChange('status', e.target.value)}
-            className="focus:border-secondary focus:ring-secondary focus:outline-secondary w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="border-frameColor mt-2 h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
           >
             <option value="">All Statuses</option>
             {Object.values(APPLICANT_STATUS).map(status => (
@@ -279,19 +278,18 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
           </select>
         </div>
         <div className="col-span-12 md:col-span-4">
-          <label className="mb-1 block text-sm font-medium text-gray-700">Date Range</label>
           <div className="grid grid-cols-2 gap-2">
-            <input
+            <TextField
+              label={'Start Date '}
               type="date"
               value={filters.dateRange.start}
               onChange={e => onFilterChange('dateRange', { ...filters.dateRange, start: e.target.value })}
-              className="focus:border-secondary focus:ring-secondary focus:outline-secondary rounded-md border border-gray-300 px-3 py-2 text-sm"
             />
-            <input
+            <TextField
+              label={'End Date'}
               type="date"
-              value={filters.dateRange.end}
-              onChange={e => onFilterChange('dateRange', { ...filters.dateRange, end: e.target.value })}
-              className="focus:border-secondary focus:ring-secondary focus:outline-secondary rounded-md border border-gray-300 px-3 py-2 text-sm"
+              value={filters.dateRange.start}
+              onChange={e => onFilterChange('dateRange', { ...filters.dateRange, start: e.target.value })}
             />
           </div>
         </div>

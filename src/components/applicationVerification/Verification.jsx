@@ -56,10 +56,8 @@ function Verification() {
     <div className="mt-14 h-full overflow-auto text-center">
       {showInfo === false && (
         <div>
-          <h1 className="roboto-font text-textPrimary text-start text-2xl font-semibold">Verification</h1>
-          <p className="roboto-font text-textSecondary mt-10 text-[18px] font-semibold">
-            We need to Verify your identity
-          </p>
+          <h1 className="text-textPrimary text-start text-2xl font-semibold">Verification</h1>
+          <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your identity</p>
           <div className="mt-11 flex justify-center">
             <img src={verificationImg} alt="Verification Illustration" className="h-auto w-64" />
           </div>
@@ -76,19 +74,19 @@ function Verification() {
       {/* /// for next page */}
       {showInfo === true && (
         <div>
-          <h1 className="text-[24px] font-semibold text-[var(--dark-gray)]">1-Application Verification</h1>
+          <h1 className="text-textPrimary text-[24px] font-semibold">1-Application Verification</h1>
           <div className="mt-8">
             <h2 className="flex w-full justify-center gap-2 rounded-[4px] bg-[var(--primary)] py-3.5 text-center text-[20px] font-semibold text-white">
               <img src="/src/assets/images/Ð¨Ð°Ñ€_1.png" alt="" /> ID Verification Completed
             </h2>
           </div>
           <div className="mt-3 rounded-sm border border-[#F0F0F0] bg-white p-3">
-            <h2 className="text-[22px] font-medium text-[#1A1A1A]">Confirm Your Information</h2>
-            <p className="text-base text-[var(--light-gray)]">
+            <h2 className="text-textPrimary text-[22px] font-medium">Confirm Your Information</h2>
+            <p className="text-textPrimary text-base">
               Please review and correct your information if needed before proccing.
             </p>
             <div className="mt-4">
-              <h3 className="flex items-center gap-4 text-[18px] font-medium text-[#1A1A1A]">
+              <h3 className="text-textPrimary flex items-center gap-4 text-[18px] font-medium">
                 Personal Information{' '}
                 <span className="flex items-center gap-1 text-[#34C759]">
                   <MdVerifiedUser />
@@ -105,7 +103,7 @@ function Verification() {
               </div>
             </div>
             <div className="mt-5">
-              <h3 className="flex items-center gap-4 text-[18px] font-medium text-[#1A1A1A]">
+              <h3 className="text-textPrimary flex items-center gap-4 text-[18px] font-medium">
                 Current Address
                 <span className="flex items-center gap-1 text-[#34C759]">
                   <MdVerifiedUser />
@@ -122,22 +120,22 @@ function Verification() {
               </div>
             </div>
             <div className="mt-5">
-              <h2 className="text-[22px] font-medium text-[#1A1A1A]">Additional Information</h2>
-              <p className="text-base text-[var(--light-gray)]">
+              <h2 className="text-textPrimary text-[22px] font-medium">Additional Information</h2>
+              <p className="text-textPrimary text-base">
                 Please provide the following additional information to complete your profile.
               </p>
             </div>
             <div className="mt-5">
-              <h3 className="text-[18px] font-medium text-[#1A1A1A]">Personal Information</h3>
+              <h3 className="text-textPrimary text-[18px] font-medium">Personal Information</h3>
               <div className="mt-2">
                 <TextField label={'Job Title'} />
               </div>
             </div>
             <div className="mt-5 flex flex-col gap-3">
-              <p className="text-[14px] text-[#1A1A1A]">
+              <p className="text-textPrimary text-[14px]">
                 Your Signature<span className="text-[#CE2D2D]">*</span>
               </p>
-              <p className="text-[14px] text-[#1A1A1A]">
+              <p className="text-textPrimary text-[14px]">
                 By signing here you attest that you are authorized to bind the contractual agreement.
               </p>
               {/* <div className="grid grid-cols-1 items-center gap-6 sm:grid-cols-2">

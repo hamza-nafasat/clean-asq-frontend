@@ -24,30 +24,30 @@ function Modal2({ modal1Handle }) {
     <div className="m-2 flex flex-col items-center justify-center">
       <div className="flex flex-col items-center">
         <h1 className="text-primary text-4xl font-extrabold">LOGO</h1>
-        <h2 className="text-xl font-medium">Confirm Your Information</h2>
-        <h5 className="text-textSecondary text-base">Please enter your company information</h5>
+        <h2 className="text-textPrimary text-xl font-medium">Confirm Your Information</h2>
+        <h5 className="text-textPrimary text-base">Please enter your company information</h5>
       </div>
       <div className="flex w-full flex-col justify-start">
-        <h1 className="text-lg font-medium">Legal Entity Type</h1>
+        <h1 className="text-textPrimary text-lg font-medium">Legal Entity Type</h1>
         <div className="border-b-2 py-6">
           <div className="grid grid-cols-2 gap-4">
             {options.map(({ id, label }) => (
               <div key={id} className="flex items-center gap-2 p-2">
                 <input className="size-5" id={id} type="radio" name="rentReason1" onChange={handleRentReasonChange1} />
-                <label className="text-base" htmlFor={id}>
+                <label className="text-textPrimary text-base" htmlFor={id}>
                   {label}
                 </label>
               </div>
             ))}
           </div>
         </div>
-        <h1 className="text-lg font-medium">Company Ownership Type</h1>
+        <h1 className="text-textPrimary text-lg font-medium">Company Ownership Type</h1>
         <div className="border-b-2 py-6">
           <div className="grid grid-cols-3 gap-4">
             {ownerOptions.map(({ id, label }) => (
               <div key={id} className="flex items-center gap-2 p-2">
                 <input className="size-5" id={id} type="radio" name="rentReason1" onChange={handleRentReasonChange1} />
-                <label className="text-base" htmlFor={id}>
+                <label className="text-textPrimary text-base" htmlFor={id}>
                   {label}
                 </label>
               </div>
@@ -63,7 +63,7 @@ function Modal2({ modal1Handle }) {
         </div>
         <div className="mt-6">
           <TextField label={'SSN (Social Security Number)'} />
-          <h5>Enter your Social Security Number (XXX-XX-XXXX)</h5>
+          <h5 className="text-textPrimary">Enter your Social Security Number (XXX-XX-XXXX)</h5>
         </div>
         <div className="flex justify-end gap-4">
           <Button label={'Back'} variant="secondary" />

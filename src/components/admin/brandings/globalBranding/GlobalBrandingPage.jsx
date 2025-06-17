@@ -63,13 +63,7 @@ const GlobalBrandingPage = () => {
           fontFamily={fontFamily}
           setFontFamily={setFontFamily}
         />
-        {/* <div>
-          <h1 className="bg-accent">main heading</h1>
-          <h1 className="bg-backgroundColor"> background colore</h1>
 
-          <input className="border-frameColor text-frameColor border" placeholder="hallo"></input>
-        </div> */}
-        {/* <input type="color"></input> */}
         <Preview
           primaryColor={primaryColor}
           secondaryColor={secondaryColor}

@@ -7,11 +7,11 @@ function Modal3({ modal1Handle }) {
     <div className="m-2 flex flex-col items-center justify-center">
       <div className="flex flex-col items-center">
         <h1 className="text-primary text-4xl font-extrabold">LOGO</h1>
-        <h2 className="text-xl font-medium">Confirm Your Information</h2>
-        <h5 className="text-textSecondary text-base">Please enter your company information</h5>
+        <h2 className="text-textPrimary text-xl font-medium">Confirm Your Information</h2>
+        <h5 className="text-textPrimary text-base">Please enter your company information</h5>
       </div>
       <div className="flex w-full flex-col gap-4">
-        <h1 className="text-lg font-medium">Legal Entity Type</h1>
+        <h1 className="text-textPrimary text-lg font-medium">Legal Entity Type</h1>
         <TextField label={'Street Address'} />
         <TextField label={'Apt/Suite/Unit'} />
         <TextField label={'ZIP code'} />

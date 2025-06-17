@@ -1,11 +1,10 @@
-export const tableStyles = {
+export const getTableStyles = ({ primaryColor, textColor, secondaryColor, backgroundColor }) => ({
   headCells: {
     style: {
       fontSize: '14px',
       fontWeight: 700,
-      // color: '#7E7E7E',
-      color: '#171717',
-      // borderBottom: '1px solid #0245a5B2 !important',
+      color: textColor || '#171717',
+      backgroundColor: backgroundColor || 'transparent',
     },
   },
   rows: {
@@ -13,17 +12,36 @@ export const tableStyles = {
       background: 'transparent',
       padding: '10px 0',
       margin: '0',
-      borderBottomStyle: 'dashed !important',
+      borderBottom: '1px dashed #ccc',
     },
   },
   cells: {
     style: {
-      // color: '#0245a5',
-      color: '#7E7E7E',
+      color: textColor || '#7E7E7E',
       fontSize: '14px',
     },
   },
-};
+  pagination: {
+    style: {
+      color: textColor || '#171717',
+      backgroundColor: backgroundColor || 'transparent',
+    },
+    pageButtonsStyle: {
+      color: textColor || '#066969',
+      fill: `${textColor || '#066969'} !important`, // Force fill for SVG
+      '& svg': {
+        fill: `${textColor || '#066969'} !important`, // Target the arrow SVG specifically
+      },
+      '&:hover': {
+        backgroundColor: secondaryColor,
+      },
+      '&:disabled': {
+        color: '#ccc',
+        fill: '#ccc !important',
+      },
+    },
+  },
+});
 
 export const bankForms = [
   {
@@ -76,7 +94,7 @@ export const bankForms = [
     createdAt: '2024-05-20T14:30:00Z',
     totalApplicants: 17,
   },
- 
+
   {
     formType: 'Cheque Book Request ',
     fields: [

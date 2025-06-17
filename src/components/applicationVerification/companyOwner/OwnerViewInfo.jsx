@@ -6,7 +6,7 @@ function OwnerViewInfo() {
   return (
     <>
       <div>
-        <h3 className="flex items-center gap-4 font-medium text-[#1A1A1A] sm:text-[18px]">
+        <h3 className="text-textPrimary flex items-center gap-4 font-medium sm:text-[18px]">
           Beneficial Owner Information
           <span className="flex items-center gap-1 text-[#34C759]">
             <MdVerifiedUser />
@@ -21,7 +21,7 @@ function OwnerViewInfo() {
         </div>
       </div>
       <div className="mt-5">
-        <h3 className="flex items-center gap-4 font-medium text-[#1A1A1A] sm:text-[18px]">
+        <h3 className="text-textPrimary flex items-center gap-4 font-medium sm:text-[18px]">
           Other Owner Information
           <span className="flex items-center gap-1 text-[#34C759]">
             <MdVerifiedUser />
@@ -36,7 +36,7 @@ function OwnerViewInfo() {
         </div>
       </div>
       <div className="mt-5">
-        <h3 className="flex items-center gap-4 font-medium text-[#1A1A1A] sm:text-[18px]">
+        <h3 className="text-textPrimary flex items-center gap-4 font-medium sm:text-[18px]">
           Other Owner Information
           <span className="flex items-center gap-1 text-[#FF3B30]">
             <MdVerifiedUser />

@@ -51,12 +51,12 @@ const FileUploader = ({ label = '', accept = '.pdf,image/*', onFileSelect = () =
         onDragOver={handleDragOver}
         onClick={() => inputRef.current.click()}
       >
-        <PiFileArrowUpFill className="text-textLight text-8xl" />
-        <h4 className="text-textSecondary text-base font-medium">Click to upload or drag and drop a file</h4>
-        <h5 className="text-textLight">.pdf, .doc, .docx, .jpg, .png up to 10MB</h5>
+        <PiFileArrowUpFill className="text-textPrimary text-8xl" />
+        <h4 className="text-textPrimary text-base font-medium">Click to upload or drag and drop a file</h4>
+        <h5 className="text-textPrimary">.pdf, .doc, .docx, .jpg, .png up to 10MB</h5>
         <Button
           label={'Select file'}
-          className="!text-textSecondary !border-gray-300 !bg-white hover:!bg-gray-500"
+          className="!text-textPrimary !border-gray-300 !bg-white hover:!bg-gray-500"
           rightIcon={CgSoftwareUpload}
         />
         <input ref={inputRef} type="file" accept={accept} onChange={handleFileChange} className="hidden" />

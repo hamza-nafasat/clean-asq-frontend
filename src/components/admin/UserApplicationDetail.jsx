@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import TextField from '../shared/small/TextField';
 
 export default function UserApplicationDetail({ form, onClose }) {
   const [formData, setFormData] = useState({});
@@ -36,7 +37,7 @@ export default function UserApplicationDetail({ form, onClose }) {
             name={field}
             value={value}
             onChange={onChange}
-            className={`focus:border-primary focus:ring-primary/20 w-full rounded-md border px-4 py-2 text-sm shadow-sm transition focus:ring ${
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
               error ? 'border-red-500' : 'border-gray-300'
             }`}
           >
@@ -53,7 +54,7 @@ export default function UserApplicationDetail({ form, onClose }) {
 
     return (
       <div className="mb-4">
-        <label className="mb-1 block text-sm font-medium text-gray-700">{labelText}</label>
+        {/* <label className="mb-1 block text-sm font-medium text-gray-700">{labelText}</label>
         <input
           name={field}
           type={type}
@@ -63,6 +64,14 @@ export default function UserApplicationDetail({ form, onClose }) {
           className={`focus:border-primary focus:ring-primary/20 w-full rounded-md border border-gray-300 px-4 py-2 text-sm shadow-sm transition focus:ring ${
             error ? 'border-red-500' : ''
           }`}
+        /> */}
+        <TextField
+          label={'labelText'}
+          name={field}
+          type={type}
+          value={value || ''}
+          onChange={onChange}
+          placeholder={`Enter ${labelText.toLowerCase()}`}
         />
         {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
       </div>
@@ -116,6 +125,7 @@ export default function UserApplicationDetail({ form, onClose }) {
           >
             Cancel
           </button>
+
           <button
             type="submit"
             className="bg-secondary hover:bg-light rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm"

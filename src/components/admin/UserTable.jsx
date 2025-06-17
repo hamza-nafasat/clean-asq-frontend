@@ -1,29 +1,15 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import DataTable from 'react-data-table-component';
+import { INITIAL_USER_FORM, USER_STATUS, USER_TABLE_COLUMNS, USER_TYPES } from '@/constants/userConstants';
+import { validatePassword, validateUserForm } from '@/utils/userUtils';
 import { MoreVertical } from 'lucide-react';
-import { tableStyles } from '@/data/data';
-import Modal from '../shared/Modal';
-import ConfirmationModal from '../shared/ConfirmationModal';
-import Button from '../shared/small/Button';
-import { USER_TYPES, USER_STATUS, INITIAL_USER_FORM, USER_TABLE_COLUMNS } from '@/constants/userConstants';
-import { validateUserForm, validatePassword } from '@/utils/userUtils';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import DataTable from 'react-data-table-component';
 import { IoMdPersonAdd } from 'react-icons/io';
-import { FaUserShield } from 'react-icons/fa';
-
-// Define role access permissions
-const ROLE_PERMISSIONS = [
-  { id: 'create_user', label: 'Create User' },
-  { id: 'edit_user', label: 'Edit User' },
-  { id: 'delete_user', label: 'Delete User' },
-  { id: 'view_transactions', label: 'View Transactions' },
-  { id: 'approve_transactions', label: 'Approve Transactions' },
-  { id: 'manage_accounts', label: 'Manage Accounts' },
-  { id: 'view_reports', label: 'View Reports' },
-  { id: 'manage_roles', label: 'Manage Roles' },
-  { id: 'view_audit_logs', label: 'View Audit Logs' },
-  { id: 'manage_settings', label: 'Manage Settings' },
-];
+import ConfirmationModal from '../shared/ConfirmationModal';
+import Modal from '../shared/Modal';
+import Button from '../shared/small/Button';
+import { useBranding } from './brandings/globalBranding/BrandingContext';
+import { getTableStyles } from '@/data/data';
+import TextField from '../shared/small/TextField';
 
 const UserTable = () => {
   const [users, setUsers] = useState([
@@ -76,6 +62,9 @@ const UserTable = () => {
     permissions: {},
   });
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
+
+  const { primaryColor, textColor, backgroundColor, secondaryColor, accentColor } = useBranding();
+  const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
 
   useEffect(() => {
     const handleClickOutside = event => {
@@ -248,7 +237,7 @@ const UserTable = () => {
             name={field}
             value={value}
             onChange={onChange}
-            className={`focus:border-primary focus:ring-primary/20 w-full rounded-md border px-4 py-2 text-sm shadow-sm transition focus:ring ${
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
               error ? 'border-red-500' : 'border-gray-300'
             }`}
           >
@@ -282,16 +271,13 @@ const UserTable = () => {
 
     return (
       <div className="mb-4">
-        <label className="mb-1 block text-sm font-medium text-gray-700">{labelText}</label>
-        <input
+        <TextField
+          label={labelText}
           name={field}
           type={type}
           value={value}
           onChange={onChange}
           placeholder={`Enter ${labelText}`}
-          className={`focus:border-primary focus:ring-primary/20 w-full rounded-md border px-4 py-2 text-sm shadow-sm transition focus:ring ${
-            error ? 'border-red-500' : 'border-gray-300'
-          }`}
         />
         {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
       </div>

@@ -9,12 +9,12 @@ function Modal3({ modal1Handle }) {
         <img src={verify} alt="verify" className="h-[141px] w-[124px]" />
       </div>
       <div className="">
-        <h3 className="text-xl font-medium">Identity Verification</h3>
-        <h3 className="text-textSecondary text-base">We need to scan your ID to verify your identity.</h3>
+        <h3 className="text-textPrimary text-xl font-medium">Identity Verification</h3>
+        <h3 className="text-textPrimary text-base">We need to scan your ID to verify your identity.</h3>
       </div>
       <div className="w-full rounded-xl border bg-[#E0E0E0] p-4">
-        <h2 className="text-2xl font-medium">Verify with your mobile device</h2>
-        <h5 className="text-textSecondary mb-4">
+        <h2 className="text-textPrimary text-2xl font-medium">Verify with your mobile device</h2>
+        <h5 className="text-textPrimary mb-4">
           Please scan this QR code with your mobile phone to complete the verification process.
         </h5>
         <div className="m-4 flex justify-center">
@@ -24,7 +24,7 @@ function Modal3({ modal1Handle }) {
         </div>
         <div className="flex flex-col items-center gap-4">
           <Button label={'Already on a mobile device? Tap here'} className="rounded-full" />
-          <Button label={'Verification Underway'} className="!text-textPrimary rounded-full bg-white" />
+          <Button label={'Verification Underway'} className="!text-textPrimary rounded-full border-none bg-white" />
         </div>
       </div>
       <div className="mt-6">

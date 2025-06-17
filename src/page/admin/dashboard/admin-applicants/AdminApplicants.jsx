@@ -135,7 +135,7 @@ function AdminApplicants() {
   return (
     <div className="h-full bg-white p-4">
       <div className="mb-4">
-        <h2 className="mb-4 text-xl font-semibold text-[#323332]">Applicants</h2>
+        <h2 className="text-textPrimary mb-4 text-xl font-semibold">Applicants</h2>
 
         <ApplicantsTable
           applicants={applicants}
