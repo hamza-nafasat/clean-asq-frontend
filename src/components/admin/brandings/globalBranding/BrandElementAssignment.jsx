@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { HexColorPicker } from 'react-colorful';
+import FontPicker from './FontPicker';
 
 const ColorInput = ({ label, color, setColor }) => {
   const [showPicker, setShowPicker] = useState(false);
@@ -16,14 +17,14 @@ const ColorInput = ({ label, color, setColor }) => {
       <div className="flex items-center space-x-2">
         <input
           type="color"
-          className="size-14 cursor-pointer appearance-none border-none outline-none focus:border-none focus:ring-0 focus:outline-none"
+          className="size-14 cursor-pointer appearance-none rounded-lg border-none outline-none focus:ring-0"
           value={color}
           onChange={handleChange}
         />
         <div
           type="text"
           // id={label.toLowerCase().replace(/\s/g, '-') + '-color'}
-          className="flex h-12 w-28 items-center justify-center rounded-md border px-4 py-2 text-center text-sm shadow-sm"
+          className="flex h-12 w-28 items-center justify-center rounded-md border px-4 py-2 text-center text-sm shadow-sm "
           // {color}
           // onChange={handleChange}
         >
@@ -55,8 +56,10 @@ const BrandElementAssignment = ({
   setBackgroundColor,
   frameColor,
   setFrameColor,
-  primaryFont,
-  setPrimaryFont,
+  // primaryFont,
+  // setPrimaryFont,
+  fontFamily,
+  setFontFamily,
 }) => {
   return (
     <div className="mt-6">
@@ -79,17 +82,11 @@ const BrandElementAssignment = ({
 
         <div className="mt-3 flex items-center space-x-2">
           <span className="rounded bg-gray-100 px-4 py-3 text-lg font-semibold">Aa</span>
-          <input
-            type="text"
-            id="primary-font"
-            className="w-40 rounded-md border px-4 py-2 text-sm shadow-sm"
-            value={primaryFont}
-            onChange={e => setPrimaryFont(e.target.value)}
-          />
+          <FontPicker value={fontFamily.toLowerCase()} onChange={value => setFontFamily(value)} />
           <button
             type="button"
-            className="rounded-sm border px-4 py-2 text-sm text-gray-700 shadow-sm"
-            onClick={() => setPrimaryFont('Inter')}
+            className="rounded-sm border px-4 py-[13px] text-sm text-gray-700 shadow-sm"
+            onClick={() => setFontFamily('Inter')}
           >
             Reset
           </button>

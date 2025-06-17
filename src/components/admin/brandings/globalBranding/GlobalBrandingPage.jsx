@@ -23,8 +23,8 @@ const GlobalBrandingPage = () => {
     setBackgroundColor,
     frameColor,
     setFrameColor,
-    primaryFont,
-    setPrimaryFont,
+    fontFamily,
+    setFontFamily,
   } = useBranding();
 
   const handleApplyBranding = () => {
@@ -60,8 +60,8 @@ const GlobalBrandingPage = () => {
           setBackgroundColor={setBackgroundColor}
           frameColor={frameColor}
           setFrameColor={setFrameColor}
-          primaryFont={primaryFont}
-          setPrimaryFont={setPrimaryFont}
+          fontFamily={fontFamily}
+          setFontFamily={setFontFamily}
         />
         {/* <div>
           <h1 className="bg-accent">main heading</h1>
@@ -69,7 +69,7 @@ const GlobalBrandingPage = () => {
 
           <input className="border-frameColor text-frameColor border" placeholder="hallo"></input>
         </div> */}
-        <input type="color"></input>
+        {/* <input type="color"></input> */}
         <Preview
           primaryColor={primaryColor}
           secondaryColor={secondaryColor}

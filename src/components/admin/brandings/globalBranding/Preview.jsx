@@ -17,7 +17,7 @@ const Preview = ({ primaryColor, secondaryColor, accentColor, linkColor }) => {
           />
         </div>
 
-        <p className="font-inter mt-6 text-[16px] font-normal text-gray-700">
+        <p className=" mt-6 text-[16px] font-normal text-gray-700">
           This is how your form will appear with the selected branding.{' '}
           <a href="#" className="underline" style={{ color: linkColor }}>
             Link will use the link color.
