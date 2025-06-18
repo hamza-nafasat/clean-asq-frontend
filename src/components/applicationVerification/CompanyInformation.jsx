@@ -128,7 +128,7 @@ function CompanyInformation({ data, updateField, index }) {
               {options.map(({ id, label }) => (
                 <div key={id} className="flex items-center gap-2 p-2">
                   <input
-                    className="text-textPrimary size-5"
+                    className="text-textPrimary accent-primary size-5"
                     id={id}
                     type="radio"
                     name="rentReason1"
@@ -147,7 +147,7 @@ function CompanyInformation({ data, updateField, index }) {
               {ownerOptions.map(({ id, label }) => (
                 <div key={id} className="flex items-center gap-2 p-2">
                   <input
-                    className="size-5"
+                    className="accent-primary size-5"
                     id={id}
                     type="radio"
                     name="rentReason1"

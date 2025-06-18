@@ -2,6 +2,7 @@ import React from 'react';
 import AdminAside from '../layout/AdminAside';
 import AdminHeader from '../layout/AdminHeader';
 import { Outlet } from 'react-router-dom';
+import Footer from '../layout/Footer';
 
 function AdminDashboard() {
   return (
@@ -11,8 +12,11 @@ function AdminDashboard() {
           <AdminAside />
           <div className="mr-5 w-full flex-1">
             <AdminHeader />
-            <main className="scroll-0 mt-[14px] h-[calc(100vh-65px)] overflow-x-hidden overflow-y-scroll xl:h-[calc(100vh-65px)]">
-              <Outlet />
+            <main className="scroll-0 mt-[14px] h-[calc(100vh-65px)] overflow-x-hidden overflow-y-scroll xl:h-[calc(100vh-100px)]">
+              <div className="flex h-full flex-col justify-between overflow-auto">
+                <Outlet />
+                <Footer />
+              </div>
             </main>
           </div>
         </section>

@@ -122,7 +122,7 @@ const Stepper = ({
               {/* Connector Line to the right (only if not the last step in view) */}
               {!isLastDisplayedStep && (
                 <div
-                  className={`h-[2px] flex-auto ${actualIndex < currentStep ? 'bg-[#15A090]' : 'bg-gray-300'}`}
+                  className={`h-[2px] flex-auto ${actualIndex < currentStep ? 'bg-primary' : 'bg-gray-300'}`}
                   style={{ marginBottom: '28px' }} // Adjusted margin to align with circle center
                 />
               )}
@@ -130,7 +130,7 @@ const Stepper = ({
           );
         })}
       </div>
-      <div className="h-[calc(100vh-350px)]">{Children}</div>
+      <div className="h-[calc(100vh-420px)]">{Children}</div>
 
       {/* Navigation Buttons */}
       <div className="mt-8 flex justify-end gap-5">

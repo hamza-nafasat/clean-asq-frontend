@@ -1,11 +1,13 @@
 import React from 'react';
 
-const Preview = ({ primaryColor, secondaryColor, accentColor, linkColor }) => {
+const Preview = ({ primaryColor, companyName, secondaryColor, accentColor, linkColor }) => {
   return (
     <div className="mt-6 rounded-[8px] border border-[#F0F0F0] p-3 shadow-sm md:p-6">
       <h2 className="text-textPrimary text-[18px] font-medium">Preview</h2>
       <div className="mt-5 rounded-md border p-3 md:p-6">
-        <p className="text-textPrimary mb-2 text-[22px] font-medium">Company Name</p>
+        <p className="text-textPrimary mb-2 text-[22px] font-medium">
+          {companyName ? companyName.charAt(0).toUpperCase() + companyName.slice(1) : 'Company Name'}
+        </p>
 
         <div className="">
           <label className="mr-2 text-[14px] font-normal text-gray-500 uppercase">URL:</label>
@@ -17,7 +19,7 @@ const Preview = ({ primaryColor, secondaryColor, accentColor, linkColor }) => {
           />
         </div>
 
-        <p className=" mt-6 text-[16px] font-normal text-gray-700">
+        <p className="mt-6 text-[16px] font-normal text-gray-700">
           This is how your form will appear with the selected branding.{' '}
           <a href="#" className="underline" style={{ color: linkColor }}>
             Link will use the link color.

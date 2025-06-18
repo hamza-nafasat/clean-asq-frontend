@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import BrandingSource from './BrandingSource';
 import ColorPalette from './ColorPalette';
 import BrandElementAssignment from './BrandElementAssignment';
@@ -6,6 +6,9 @@ import Preview from './Preview';
 import { useBranding } from './BrandingContext';
 import TextField from '@/components/shared/small/TextField';
 import Button from '@/components/shared/small/Button';
+import Modal from '@/components/shared/small/Modal';
+import ApplyBranding from './ApplyBranding';
+import ConfirmationModal from '@/components/shared/ConfirmationModal';
 
 const GlobalBrandingPage = () => {
   const {
@@ -30,18 +33,38 @@ const GlobalBrandingPage = () => {
   const handleApplyBranding = () => {
     // In a real application, you might send this data to a backend or apply it globally
     console.log('Branding changes applied and saved to local storage.');
-    alert('Branding Applied!');
-  };
 
+    setApplyBranding(true);
+  };
+  const handleApplyBrandingClose = () => {
+    setApplyBranding(false);
+  };
   const handleCancel = () => {
     // In a real application, you might revert to previous state or clear form
     console.log('Branding changes cancelled.');
     alert('Branding Cancelled!');
   };
+  const [companyName, setCompanyName] = useState('');
+  const [applyBranding, setApplyBranding] = useState(false);
+  const companyNameHandle = e => {
+    setCompanyName(e.target.value);
+  };
 
   return (
     <div className="mb-6 rounded-[8px] border border-[#F0F0F0] bg-white px-3 md:px-6">
-      <h1 className="mt-12 text-lg font-semibold text-gray-500 md:text-2xl">Global Branding</h1>
+      {applyBranding && (
+        <ConfirmationModal
+          isOpen={!!applyBranding}
+          message={<ApplyBranding />}
+          confirmButtonText="Apply Branding"
+          confirmButtonClassName=" border-none hover:bg-red-600 text-white"
+          cancelButtonText="cancel"
+          onClose={handleApplyBrandingClose}
+          title={'Apply Branding'}
+        />
+      )}
+      <h1 className="mt-12 mb-6 text-lg font-semibold text-gray-500 md:text-2xl">Global Branding</h1>
+      <TextField label={'Company Name'} value={companyName} onChange={companyNameHandle} />
       <div className="mt-12">
         <BrandingSource />
         <ColorPalette />
@@ -65,6 +88,7 @@ const GlobalBrandingPage = () => {
         />
 
         <Preview
+          companyName={companyName}
           primaryColor={primaryColor}
           secondaryColor={secondaryColor}
           accentColor={accentColor}

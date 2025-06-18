@@ -33,7 +33,13 @@ function Modal2({ modal1Handle }) {
           <div className="grid grid-cols-2 gap-4">
             {options.map(({ id, label }) => (
               <div key={id} className="flex items-center gap-2 p-2">
-                <input className="size-5" id={id} type="radio" name="rentReason1" onChange={handleRentReasonChange1} />
+                <input
+                  className="accent-primary size-5"
+                  id={id}
+                  type="radio"
+                  name="rentReason1"
+                  onChange={handleRentReasonChange1}
+                />
                 <label className="text-textPrimary text-base" htmlFor={id}>
                   {label}
                 </label>
@@ -46,7 +52,13 @@ function Modal2({ modal1Handle }) {
           <div className="grid grid-cols-3 gap-4">
             {ownerOptions.map(({ id, label }) => (
               <div key={id} className="flex items-center gap-2 p-2">
-                <input className="size-5" id={id} type="radio" name="rentReason1" onChange={handleRentReasonChange1} />
+                <input
+                  className="accent-primary size-5"
+                  id={id}
+                  type="radio"
+                  name="rentReason1"
+                  onChange={handleRentReasonChange1}
+                />
                 <label className="text-textPrimary text-base" htmlFor={id}>
                   {label}
                 </label>

@@ -30,7 +30,7 @@ function AdminHeader() {
             ref={profileRef}
             className={`cursor-pointer transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`}
           >
-            <HiChevronDown size={20} color="#333" />
+            <HiChevronDown size={20} />
           </div>
 
           {/* Dropdown */}
@@ -56,12 +56,12 @@ const Profile = () => {
         to="/profile"
         className="flex items-center justify-between gap-4 rounded-t-md border-b bg-white px-2 py-2 hover:bg-[#b6feef]"
       >
-        <h6 className="text-[13px] font-medium">My Profile</h6>
-        <IoChevronForwardOutline fontSize={18} />
+        <h6 className="text-textPrimary text-xs font-medium">My Profile</h6>
+        <IoChevronForwardOutline fontSize={18} className="text-primary" />
       </Link>
       <div className="flex cursor-pointer items-center justify-between gap-4 rounded-b-md bg-white px-2 py-2 hover:bg-[#b6feef]">
-        <h6 className="text-[13px] font-medium">Logout</h6>
-        <IoLogOutOutline fontSize={18} />
+        <h6 className="text-textPrimary text-xs font-medium">Logout</h6>
+        <IoLogOutOutline fontSize={18} className="text-primary" />
       </div>
     </div>
   );

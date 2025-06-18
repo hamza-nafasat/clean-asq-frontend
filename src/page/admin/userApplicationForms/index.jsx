@@ -4,6 +4,7 @@ import AdminHeader from '../layout/AdminHeader';
 import { Outlet } from 'react-router-dom';
 import UserApplicationFormAside from './layout/UserApplicationFormAside';
 import UserApplicationFormHeader from './layout/UserApplicationFormHeader';
+import Footer from '../layout/Footer';
 
 function UserApplicationForms() {
   return (
@@ -14,7 +15,10 @@ function UserApplicationForms() {
         <div className="w-full flex-1">
           <UserApplicationFormHeader />
           <main className="scroll-0 mt-6 h-[calc(100vh-65px)] overflow-x-hidden overflow-y-scroll xl:h-[calc(100vh-65px)]">
-            <Outlet />
+            <div className="flex h-[calc(100vh-130px)] flex-col justify-between overflow-auto">
+              <Outlet />
+              <Footer />
+            </div>
           </main>
         </div>
         {/* </section> */}

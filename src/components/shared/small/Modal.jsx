@@ -16,7 +16,7 @@ const Modal = ({ title, onClose, children, width, headingIcon }) => {
         <div className="flex items-center justify-between">
           <span className="flex gap-1">
             {headingIcon && <span>{headingIcon}</span>}
-            <h2 className="text-base font-semibold text-[#111111] md:text-xl">{title}</h2>
+            <h2 className="text-textPrimary text-base font-semibold md:text-xl">{title}</h2>
           </span>
           <div className="bg-primary hover:bg-secondary cursor-pointer rounded-full p-2" onClick={onClose}>
             <RxCross2 color="#fff" />

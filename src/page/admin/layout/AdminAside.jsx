@@ -88,8 +88,8 @@ const AdminAside = () => {
                 </div>
 
                 <p
-                  className={`navbar-title text-sm font-bold capitalize transition-opacity duration-500 md:text-base ${
-                    isActive ? 'text-primary' : 'text-[#526581]'
+                  className={`navbar-title text-sm font-medium capitalize transition-opacity duration-500 md:text-base ${
+                    isActive ? 'text-primary !font-bold' : 'text-[#526581]'
                   } ${isNavOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}
                 >
                   {page.title}
