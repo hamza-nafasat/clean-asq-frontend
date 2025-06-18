@@ -1,11 +1,8 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 
-const ProtectedRoute = ({ user, role, children }) => {
-  if (!user?.isAuthenticated || user.role !== role) {
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
+const ProtectedRoute = ({ user, redirect = '/' }) => {
+  if (!user) return <Navigate to={redirect} replace />;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

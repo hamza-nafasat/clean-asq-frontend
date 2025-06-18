@@ -1,7 +1,11 @@
-import React, { useState, useRef } from 'react';
+import { useLogoutMutation } from '@/redux/apis/authApis';
+import { userNotExist } from '@/redux/slices/authSlice';
+import { useRef, useState } from 'react';
 import { HiChevronDown } from 'react-icons/hi';
 import { IoChevronForwardOutline, IoLogOutOutline } from 'react-icons/io5';
+import { useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom'; // or 'next/link' if using Next.js
+import { toast } from 'react-toastify';
 
 function AdminHeader() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -10,7 +14,6 @@ function AdminHeader() {
   const profileOpenHandler = () => {
     setIsProfileOpen(prev => !prev);
   };
-
   return (
     <div className="flex h-16 items-center justify-between bg-white p-2 shadow">
       <h1 className="text-2xl font-semibold text-gray-800">Welcome Wahid</h1>
@@ -46,10 +49,24 @@ function AdminHeader() {
     </div>
   );
 }
-
 export default AdminHeader;
 
 const Profile = () => {
+  const dispatch = useDispatch();
+  const [logout, { isLoading }] = useLogoutMutation();
+
+  const logoutHandler = async () => {
+    try {
+      const res = await logout().unwrap();
+      if (res.success) {
+        dispatch(userNotExist());
+        toast.success(res.message);
+      }
+    } catch (error) {
+      console.log('error while logging out', error);
+      toast.error(error?.data?.message || 'Error while logging out');
+    }
+  };
   return (
     <div className="w-full">
       <Link
@@ -60,8 +77,13 @@ const Profile = () => {
         <IoChevronForwardOutline fontSize={18} className="text-primary" />
       </Link>
       <div className="flex cursor-pointer items-center justify-between gap-4 rounded-b-md bg-white px-2 py-2 hover:bg-[#b6feef]">
-        <h6 className="text-textPrimary text-xs font-medium">Logout</h6>
-        <IoLogOutOutline fontSize={18} className="text-primary" />
+        <h6
+          className={`text-[13px] font-medium ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
+          onClick={logoutHandler}
+        >
+          Logout
+        </h6>
+        <IoLogOutOutline fontSize={18} />
       </div>
     </div>
   );
