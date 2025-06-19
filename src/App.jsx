@@ -1,14 +1,15 @@
 // App.js
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import 'react-toastify/dist/ReactToastify.css';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleRedirect from './components/RoleRedirect';
 import CustomLoading from './components/shared/small/CustomLoading';
 
+import { BrandingProvider } from './components/admin/brandings/globalBranding/BrandingContext';
 import AdminDashboard from './page/admin/dashboard';
 import AdminApplicants from './page/admin/dashboard/admin-applicants/AdminApplicants';
 import AdminApplications from './page/admin/dashboard/admin-applications/AdminApplications';
@@ -17,29 +18,11 @@ import AllRoles from './page/admin/dashboard/role/AllRoles';
 import UserApplicationForms from './page/admin/userApplicationForms';
 import ApplicationVerification from './page/admin/userApplicationForms/ApplicationVerification/ApplicationVerification';
 import CompanyInformation from './page/admin/userApplicationForms/CompanyInformation/CompanyInformation';
-import ClientMemberDashboard from './page/client-member/dashboard';
-import ClientMemberApplications from './page/client-member/dashboard/client-member-applications/ClientMemberApplications';
-import TeamMemberDashboard from './page/team-member/dashboard';
-import TeamMemberApplication from './page/team-member/dashboard/team-member-applications/TeamMemberApplication';
-
-import { userExist, userNotExist } from './redux/slices/authSlice';
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
-import { BrandingProvider } from './components/admin/brandings/globalBranding/BrandingContext';
-
-// Lazy components
+import { userExist, userNotExist } from './redux/slices/authSlice';
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const Login = lazy(() => import('./page/auth/Login'));
 const Otp = lazy(() => import('./page/auth/Otp'));
-const ApplicantsDashboard = lazy(() => import('./page/applicants/dashboard'));
-const ApplicantsApplications = lazy(
-  () => import('./page/applicants/dashboard/applicants-applications/ApplicantsApplications')
-);
-const ClientDashboard = lazy(() => import('./page/client/dashboard'));
-const ClientApplications = lazy(() => import('./page/client/dashboard/client-applications/ClientApplications'));
-const SuperBankDashboard = lazy(() => import('./page/superBank/dashboard'));
-const SuperBankApplications = lazy(
-  () => import('./page/superBank/dashboard/super-Bank-applications/SuperBankApplications')
-);
 
 function App() {
   const dispatch = useDispatch();
