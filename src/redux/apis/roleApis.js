@@ -65,5 +65,6 @@ export const {
   useGetSingleRoleMutation,
   useUpdateSingleRoleMutation,
   useDeleteSingleRoleMutation,
+  useGetAllPermissionsQuery,
 } = roleApis;
 export default roleApis;
