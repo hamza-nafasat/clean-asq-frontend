@@ -89,41 +89,11 @@ function App() {
                   <Route path="branding" element={<Brandings />} />
                 </Route>
 
-                {/* User Forms */}
+                {/*all User Forms or application layout  , with out sidebar */}
                 <Route path="/user-application-forms" element={<UserApplicationForms />}>
                   <Route index element={<Navigate to="application-verification" replace />} />
                   <Route path="application-verification" element={<ApplicationVerification />} />
                   <Route path="company-information" element={<CompanyInformation />} />
-                </Route>
-
-                {/* Applicants */}
-                <Route path="/applicants" element={<ApplicantsDashboard />}>
-                  <Route index element={<Navigate to="applicants-applications" replace />} />
-                  <Route path="applicants-applications" element={<ApplicantsApplications />} />
-                </Route>
-
-                {/* Clients */}
-                <Route path="/client" element={<ClientDashboard />}>
-                  <Route index element={<Navigate to="client-applications" replace />} />
-                  <Route path="client-applications" element={<ClientApplications />} />
-                </Route>
-
-                {/* Client Members */}
-                <Route path="/client_mbr" element={<ClientMemberDashboard />}>
-                  <Route index element={<Navigate to="client_mbr-applications" replace />} />
-                  <Route path="client_mbr-applications" element={<ClientMemberApplications />} />
-                </Route>
-
-                {/* Team Members */}
-                <Route path="/team-mbr" element={<TeamMemberDashboard />}>
-                  <Route index element={<Navigate to="team-mbr-applications" replace />} />
-                  <Route path="team-mbr-applications" element={<TeamMemberApplication />} />
-                </Route>
-
-                {/* Super Bank */}
-                <Route path="/super-bank" element={<SuperBankDashboard />}>
-                  <Route index element={<Navigate to="super-bank-applications" replace />} />
-                  <Route path="super-bank-applications" element={<SuperBankApplications />} />
                 </Route>
               </Route>
 

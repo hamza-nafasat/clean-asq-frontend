@@ -1,6 +1,14 @@
-import React from 'react';
+import { setCompanyName } from '@/redux/slices/brandingSlice';
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 
 const Preview = ({ primaryColor, companyName, secondaryColor, accentColor, linkColor }) => {
+  const formattedText = companyName.toLowerCase().replace(/\s+/g, '-');
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(setCompanyName(companyName));
+  }, [formattedText]);
   return (
     <div className="mt-6 rounded-[8px] border border-[#F0F0F0] p-3 shadow-sm md:p-6">
       <h2 className="text-textPrimary text-[18px] font-medium">Preview</h2>
@@ -13,7 +21,7 @@ const Preview = ({ primaryColor, companyName, secondaryColor, accentColor, linkC
           <label className="mr-2 text-[14px] font-normal text-gray-500 uppercase">URL:</label>
           <input
             type="text"
-            value="https://company.apply-secure.com"
+            value={`https://${formattedText || 'company'}.apply-secure.com`}
             editable
             className="rounded border border-[#A7A7A7] bg-white px-3 py-1 text-sm text-gray-700"
           />
