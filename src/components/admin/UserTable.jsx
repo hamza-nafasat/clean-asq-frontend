@@ -12,7 +12,7 @@ import { getTableStyles } from '@/data/data';
 import TextField from '../shared/small/TextField';
 
 const UserTable = () => {
-  const [users, setUsers] = useState([
+  const [users] = useState([
     {
       id: 1,
       name: 'Alice Johnson',
@@ -54,7 +54,7 @@ const UserTable = () => {
   const [actionMenu, setActionMenu] = useState(null);
   const [formData, setFormData] = useState(INITIAL_USER_FORM);
   const [formErrors, setFormErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const actionMenuRefs = useRef(new Map());
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [roleData, setRoleData] = useState({
@@ -68,20 +68,16 @@ const UserTable = () => {
 
   useEffect(() => {
     const handleClickOutside = event => {
-      // Check if click is outside all open menus
       const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
         ref => !ref.current?.contains(event.target)
       );
-
       if (clickedOutsideAllMenus) {
         setActionMenu(null);
       }
     };
-
     if (actionMenu !== null) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -93,7 +89,6 @@ const UserTable = () => {
       setFormData(prev => ({
         ...prev,
         [name]: type === 'checkbox' ? checked : value,
-        // Clear business name if type doesn't require it
         ...(name === 'type' && !['client', 'client-mbr', 'super-bank'].includes(value) ? { businessName: '' } : {}),
       }));
       if (formErrors[name]) {
@@ -103,124 +98,42 @@ const UserTable = () => {
     [formErrors]
   );
 
-  const handleAddUser = useCallback(async () => {
-    const errors = validateUserForm(formData);
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const date = new Date().toISOString().split('T')[0];
-      setUsers(prev => [
-        ...prev,
-        {
-          ...formData,
-          id: prev.length + 1,
-          createDate: date,
-          status: USER_STATUS.ACTIVE,
-          allowAdminAccess: formData.type === USER_TYPES.TEAM_MEMBER ? formData.allowAdminAccess : false,
-        },
-      ]);
-      setFormData(INITIAL_USER_FORM);
-      setIsModalOpen(false);
-      setFormErrors({});
-    } catch (error) {
-      console.error('Error adding user:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [formData]);
-
-  const handleEditUser = useCallback(async () => {
-    const errors = validateUserForm(editModalData);
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      setUsers(prev =>
-        prev.map(user =>
-          user.id === editModalData.id
-            ? {
-                ...editModalData,
-                allowAdminAccess:
-                  editModalData.type === USER_TYPES.TEAM_MEMBER ? editModalData.allowAdminAccess : false,
-              }
-            : user
-        )
-      );
-      setEditModalData(null);
-      setFormErrors({});
-    } catch (error) {
-      console.error('Error editing user:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [editModalData]);
-
-  const handleChangePassword = useCallback(async () => {
-    if (!passwordModalData?.password) {
-      setFormErrors({ password: ['Password is required'] });
-      return;
-    }
-
-    const passwordErrors = validatePassword(passwordModalData.password);
-    if (passwordErrors.length > 0) {
-      setFormErrors({ password: passwordErrors });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      setUsers(prev =>
-        prev.map(user => (user.id === passwordModalData.id ? { ...user, password: passwordModalData.password } : user))
-      );
-      setPasswordModalData(null);
-      setFormErrors({});
-    } catch (error) {
-      console.error('Error changing password:', error);
-      // Handle error appropriately
-    } finally {
-      setIsLoading(false);
-    }
-  }, [passwordModalData]);
-
-  const handleDeleteUser = useCallback(async () => {
-    if (!deleteConfirmation) return;
-
-    setIsLoading(true);
-    try {
-      setUsers(prev => prev.filter(user => user.id !== deleteConfirmation.id));
-      setActionMenu(null);
-      setDeleteConfirmation(null);
-    } catch (error) {
-      console.error('Error deleting user:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [deleteConfirmation]);
-
-  const handleRoleInputChange = useCallback(e => {
+  const handleEditInputChange = useCallback(e => {
     const { name, value, type, checked } = e.target;
-    if (type === 'checkbox') {
-      setRoleData(prev => ({
-        ...prev,
-        permissions: {
-          ...prev.permissions,
-          [name]: checked,
-        },
-      }));
-      console.log('Permission changed:', name, checked);
-    } else {
-      setRoleData(prev => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    setEditModalData(prev => {
+      if (!prev) return prev;
+      if (type === 'checkbox') {
+        return { ...prev, [name]: checked };
+      } else {
+        return { ...prev, [name]: value };
+      }
+    });
+  }, []);
+
+  const handlePasswordInputChange = useCallback(e => {
+    const { value } = e.target;
+    setPasswordModalData(prev => ({ ...prev, password: value }));
+  }, []);
+
+  const handleAddUser = useCallback(() => {
+    setIsModalOpen(false);
+    setFormData(INITIAL_USER_FORM);
+    setFormErrors({});
+  }, []);
+
+  const handleEditUser = useCallback(() => {
+    setEditModalData(null);
+    setFormErrors({});
+  }, []);
+
+  const handleChangePassword = useCallback(() => {
+    setPasswordModalData(null);
+    setFormErrors({});
+  }, []);
+
+  const handleDeleteUser = useCallback(() => {
+    setDeleteConfirmation(null);
+    setActionMenu(null);
   }, []);
 
   const renderFormField = useCallback((field, value, onChange, type = 'text', error = null, options = null) => {
@@ -301,7 +214,6 @@ const UserTable = () => {
       {
         name: 'Action',
         cell: row => {
-          // Get or create ref for this row
           if (!actionMenuRefs.current.has(row.id)) {
             actionMenuRefs.current.set(row.id, React.createRef());
           }
@@ -374,7 +286,6 @@ const UserTable = () => {
         noDataComponent="No users found"
       />
 
-      {/* Add User Modal */}
       {isModalOpen && (
         <Modal
           saveButtonText="Create User"
@@ -404,7 +315,6 @@ const UserTable = () => {
         </Modal>
       )}
 
-      {/* Edit Modal */}
       {editModalData && (
         <Modal
           saveButtonText="Edit"
@@ -416,17 +326,11 @@ const UserTable = () => {
           onSave={handleEditUser}
           isLoading={isLoading}
         >
-          {renderFormField(
-            'name',
-            editModalData.name,
-            e => setEditModalData(prev => ({ ...prev, name: e.target.value })),
-            'text',
-            formErrors.name
-          )}
+          {renderFormField('name', editModalData.name, handleEditInputChange, 'text', formErrors.name)}
           {renderFormField(
             'type',
             editModalData.type,
-            e => setEditModalData(prev => ({ ...prev, type: e.target.value })),
+            handleEditInputChange,
             'select',
             formErrors.type,
             userTypeOptions
@@ -435,40 +339,26 @@ const UserTable = () => {
             renderFormField(
               'businessName',
               editModalData.businessName,
-              e => setEditModalData(prev => ({ ...prev, businessName: e.target.value })),
+              handleEditInputChange,
               'text',
               formErrors.businessName
             )}
-          {renderFormField(
-            'email',
-            editModalData.email,
-            e => setEditModalData(prev => ({ ...prev, email: e.target.value })),
-            'email',
-            formErrors.email
-          )}
-          {renderFormField(
-            'status',
-            editModalData.status,
-            e => setEditModalData(prev => ({ ...prev, status: e.target.value })),
-            'select',
-            formErrors.status,
-            [
-              { value: USER_STATUS.ACTIVE, label: 'Active' },
-              { value: USER_STATUS.INACTIVE, label: 'Inactive' },
-            ]
-          )}
+          {renderFormField('email', editModalData.email, handleEditInputChange, 'email', formErrors.email)}
+          {renderFormField('status', editModalData.status, handleEditInputChange, 'select', formErrors.status, [
+            { value: USER_STATUS.ACTIVE, label: 'Active' },
+            { value: USER_STATUS.INACTIVE, label: 'Inactive' },
+          ])}
           {editModalData.type === USER_TYPES.TEAM_MEMBER &&
             renderFormField(
               'allowAdminAccess',
               editModalData.allowAdminAccess,
-              e => setEditModalData(prev => ({ ...prev, allowAdminAccess: e.target.checked })),
+              handleEditInputChange,
               'checkbox',
               formErrors.allowAdminAccess
             )}
         </Modal>
       )}
 
-      {/* Change Password Modal */}
       {passwordModalData && (
         <Modal
           title="Change Password"
@@ -482,14 +372,13 @@ const UserTable = () => {
           {renderFormField(
             'password',
             passwordModalData.password,
-            e => setPasswordModalData(prev => ({ ...prev, password: e.target.value })),
+            handlePasswordInputChange,
             'password',
             formErrors.password
           )}
         </Modal>
       )}
 
-      {/* Add Delete Confirmation Modal */}
       <ConfirmationModal
         isOpen={!!deleteConfirmation}
         onClose={() => setDeleteConfirmation(null)}

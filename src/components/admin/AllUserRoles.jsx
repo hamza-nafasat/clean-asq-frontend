@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import DataTable from 'react-data-table-component';
 import { MoreVertical, Eye } from 'lucide-react';
 import { getTableStyles } from '@/data/data';
@@ -36,7 +36,7 @@ const INITIAL_ROLE_FORM = {
 };
 
 function AllUserRoles() {
-  const [roles, setRoles] = useState([
+  const [roles] = useState([
     {
       id: 1,
       roleName: 'Admin',
@@ -80,31 +80,29 @@ function AllUserRoles() {
   const [viewModalData, setViewModalData] = useState(null);
   const [actionMenu, setActionMenu] = useState(null);
   const [formData, setFormData] = useState(INITIAL_ROLE_FORM);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const actionMenuRefs = useRef(new Map());
-  const { primaryColor, textColor, backgroundColor, secondaryColor, accentColor } = useBranding();
+  const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   useEffect(() => {
     const handleClickOutside = event => {
       const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
         ref => !ref.current?.contains(event.target)
       );
-
       if (clickedOutsideAllMenus) {
         setActionMenu(null);
       }
     };
-
     if (actionMenu !== null) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [actionMenu]);
 
+  // Only update local state for form fields, do not persist
   const handleInputChange = useCallback(e => {
     const { name, value, type, checked } = e.target;
     if (type === 'checkbox') {
@@ -123,65 +121,44 @@ function AllUserRoles() {
     }
   }, []);
 
-  const handleAddRole = useCallback(async () => {
-    if (!formData.roleName.trim()) {
-      alert('Role name is required');
-      return;
-    }
+  // For edit modal
+  const handleEditInputChange = useCallback(e => {
+    const { name, value, type, checked } = e.target;
+    setEditModalData(prev => {
+      if (!prev) return prev;
+      if (type === 'checkbox') {
+        return {
+          ...prev,
+          permissions: {
+            ...prev.permissions,
+            [name]: checked,
+          },
+        };
+      } else {
+        return {
+          ...prev,
+          [name]: value,
+        };
+      }
+    });
+  }, []);
 
-    setIsLoading(true);
-    try {
-      const date = new Date().toISOString().split('T')[0];
-      setRoles(prev => [
-        ...prev,
-        {
-          ...formData,
-          id: prev.length + 1,
-          createDate: date,
-        },
-      ]);
-      setFormData(INITIAL_ROLE_FORM);
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error('Error adding role:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [formData]);
+  // No-op for add, edit, delete
+  const handleAddRole = useCallback(async () => {
+    setIsModalOpen(false);
+    setFormData(INITIAL_ROLE_FORM);
+  }, []);
 
   const handleEditRole = useCallback(async () => {
-    if (!editModalData.roleName.trim()) {
-      alert('Role name is required');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      setRoles(prev => prev.map(role => (role.id === editModalData.id ? editModalData : role)));
-      setEditModalData(null);
-    } catch (error) {
-      console.error('Error editing role:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [editModalData]);
+    setEditModalData(null);
+  }, []);
 
   const handleDeleteRole = useCallback(async () => {
-    if (!deleteConfirmation) return;
+    setDeleteConfirmation(null);
+    setActionMenu(null);
+  }, []);
 
-    setIsLoading(true);
-    try {
-      setRoles(prev => prev.filter(role => role.id !== deleteConfirmation.id));
-      setActionMenu(null);
-      setDeleteConfirmation(null);
-    } catch (error) {
-      console.error('Error deleting role:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [deleteConfirmation]);
-
-  const columns = useMemo(
+  const columns = useCallback(
     () => [
       {
         name: 'Role Name',
@@ -346,7 +323,7 @@ function AllUserRoles() {
 
       <DataTable
         data={roles}
-        columns={columns}
+        columns={columns()}
         customStyles={tableStyles}
         pagination
         highlightOnHover
@@ -383,32 +360,12 @@ function AllUserRoles() {
           onSave={handleEditRole}
           isLoading={isLoading}
         >
-          {renderFormField(
-            'roleName',
-            editModalData.roleName,
-            e => setEditModalData(prev => ({ ...prev, roleName: e.target.value })),
-            'text'
-          )}
-          {renderFormField(
-            'status',
-            editModalData.status,
-            e => setEditModalData(prev => ({ ...prev, status: e.target.value })),
-            'select',
-            null,
-            [
-              { value: ROLE_STATUS.ACTIVE, label: 'Active' },
-              { value: ROLE_STATUS.INACTIVE, label: 'Inactive' },
-            ]
-          )}
-          {renderPermissionsGrid(editModalData.permissions, e =>
-            setEditModalData(prev => ({
-              ...prev,
-              permissions: {
-                ...prev.permissions,
-                [e.target.name]: e.target.checked,
-              },
-            }))
-          )}
+          {renderFormField('roleName', editModalData.roleName, handleEditInputChange, 'text')}
+          {renderFormField('status', editModalData.status, handleEditInputChange, 'select', null, [
+            { value: ROLE_STATUS.ACTIVE, label: 'Active' },
+            { value: ROLE_STATUS.INACTIVE, label: 'Inactive' },
+          ])}
+          {renderPermissionsGrid(editModalData.permissions, handleEditInputChange)}
         </Modal>
       )}
 
