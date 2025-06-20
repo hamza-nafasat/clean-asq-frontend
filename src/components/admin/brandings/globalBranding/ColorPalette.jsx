@@ -34,16 +34,39 @@ const ColorPalette = () => {
   };
 
   return (
-    <div className="mt-6">
+    <div className="mt-6 w-full">
       <div className="mb-4 flex items-center gap-1.5 text-[16px] font-medium text-gray-700 md:gap-3 md:text-xl">
         <IoColorPaletteOutline className="text-primary size-6" />
         Website / Image Color Palette
       </div>
-      <div className="flex flex-col items-center gap-4">
-        <div className="relative w-full max-w-md">
-          <TextField placeholder="Enter a Website URL or upload an image" />
+      <div className="flex w-full flex-col justify-between gap-4">
+        <div className="mt-6 grid grid-cols-2 gap-1 md:grid-cols-4 md:gap-8 xl:grid-cols-10 xl:gap-10">
+          {neutralColors.map((color, index) => (
+            <div
+              key={index}
+              className="flex w-full cursor-pointer flex-col items-center gap-2"
+              onClick={() => handleNeutralColorClick(color)}
+            >
+              {/* Color box */}
+              <div
+                className="h-24 w-full rounded-md border shadow-sm"
+                style={{ backgroundColor: color, borderColor: '#e0e0e0' }}
+              ></div>
+
+              {/* Color code below */}
+              <div
+                className="text-sm font-medium"
+                style={{
+                  color: parseInt(color.substring(1), 16) > 0xffffff / 2 ? '#000' : '#555',
+                }}
+              >
+                {color}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
+      <div className="border-primary my-6 border-t-2"></div>
 
       <div className="mt-6 flex items-center gap-1.5 text-lg font-normal text-gray-500 md:gap-3">
         <BiColor className="text-primary size-6" />
@@ -74,6 +97,7 @@ const ColorPalette = () => {
           </div>
         ))}
       </div>
+      <div className="border-primary my-6 border-t-2"></div>
 
       {/* Assign Brand Element section */}
       <div className="mt-12 flex items-center space-x-6">

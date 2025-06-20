@@ -1,5 +1,7 @@
 import Button from '@/components/shared/small/Button';
+import Checkbox from '@/components/shared/small/Checkbox';
 import React from 'react';
+// import Checkbox from '@/components/shared/Checkbox';
 
 function ApplyBranding() {
   return (
@@ -7,19 +9,13 @@ function ApplyBranding() {
       <div className="text-textPrimary text-base">Select where you want to apply this branding:</div>
       <div className="mt-2 flex flex-col gap-4">
         <div>
-          <label className="text-textPrimary flex items-center text-sm">
-            <input type="checkbox" className="text-textPrimary accent-primary mr-2" /> Remember me
-          </label>
+          <Checkbox label="Remember me" />
         </div>
         <div>
-          <label className="text-textPrimary flex items-center text-sm">
-            <input type="checkbox" className="text-textPrimary accent-primary mr-2" /> Remember me
-          </label>
+          <Checkbox label="Remember me" />
         </div>
         <div>
-          <label className="text-textPrimary flex items-center text-sm">
-            <input type="checkbox" className="text-textPrimary accent-primary mr-2" /> Remember me
-          </label>
+          <Checkbox label="Remember me" />
         </div>
       </div>
       <div className="mt-7">

@@ -86,6 +86,7 @@ const GlobalBrandingPage = () => {
           fontFamily={fontFamily}
           setFontFamily={setFontFamily}
         />
+        <div className="border-primary my-6 border-t-2"></div>
 
         <Preview
           companyName={companyName}

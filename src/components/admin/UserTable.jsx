@@ -9,6 +9,7 @@ import Button from '../shared/small/Button';
 import { useBranding } from './brandings/globalBranding/BrandingContext';
 import { getTableStyles } from '@/data/data';
 import TextField from '../shared/small/TextField';
+import Checkbox from '../shared/small/Checkbox';
 
 // user data for get and send
 // // fron to back
@@ -250,14 +251,7 @@ const UserTable = () => {
     if (type === 'checkbox') {
       return (
         <div className="mb-4 flex items-center space-x-2">
-          <input
-            type="checkbox"
-            name={field}
-            checked={value}
-            onChange={onChange}
-            className="text-primary focus:ring-primary h-4 w-4 rounded border-gray-300"
-          />
-          <label className="text-sm text-gray-700">{labelText}</label>
+          <Checkbox name={field} checked={value} onChange={onChange} label={labelText} />
           {error && <p className="ml-2 text-xs text-red-500">{error}</p>}
         </div>
       );

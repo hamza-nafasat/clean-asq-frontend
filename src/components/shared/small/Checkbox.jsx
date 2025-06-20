@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Checkbox = ({ id, name, label, checked = false, onChange, disabled = false, className = '' }) => {
+const Checkbox = ({ id, name, label, checked = false, onChange, disabled = false, className = '', ...rest }) => {
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
       <input
@@ -11,6 +11,7 @@ const Checkbox = ({ id, name, label, checked = false, onChange, disabled = false
         onChange={onChange}
         disabled={disabled}
         className="text-primary accent-primary focus:ring-primary border-frameColor h-4 w-4 rounded"
+        {...rest}
       />
       {label && (
         <label htmlFor={id} className="text-sm text-gray-700">
