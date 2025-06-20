@@ -1,5 +1,4 @@
 import { INITIAL_USER_FORM, USER_STATUS, USER_TABLE_COLUMNS, USER_TYPES } from '@/constants/userConstants';
-import { validatePassword, validateUserForm } from '@/utils/userUtils';
 import { MoreVertical } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DataTable from 'react-data-table-component';
@@ -11,6 +10,116 @@ import { useBranding } from './brandings/globalBranding/BrandingContext';
 import { getTableStyles } from '@/data/data';
 import TextField from '../shared/small/TextField';
 
+// user data for get and send
+// // fron to back
+//     {
+//       name: 'Aice Johnson',
+//       role: 'role id',
+//       businessName: 'dfdffd',
+//       email: 'alice@example.com',
+//       password: 'alicepass',
+//     },
+//     // back to front
+//     {
+//       _id: '32332',
+//       name: 'Alice Johnson',
+//       role: 'admin',
+//       businessName: 'dsdsds',
+//       email: 'alice@example.com',
+//       createAt: '2023-01-01',
+//       updatedAt: '2023-01-01',
+//     },
+
+export const userTypeOptions = [
+  {
+    _id: 'r1',
+    roleName: 'Admin',
+    status: 'ACTIVE',
+    permissions: [
+      {
+        _id: 'p1',
+        name: 'Manage Users',
+        createAt: '2024-01-01T10:00:00',
+        updatedAt: '2024-02-01T12:00:00',
+      },
+      {
+        _id: 'p2',
+        name: 'View Reports',
+        createAt: '2024-01-01T10:00:00',
+        updatedAt: '2024-02-01T12:00:00',
+      },
+    ],
+    createAt: '2024-01-01T10:00:00',
+    updatedAt: '2024-02-01T12:00:00',
+  },
+  {
+    _id: 'r2',
+    roleName: 'Owner',
+    status: 'ACTIVE',
+    permissions: [
+      {
+        _id: 'p3',
+        name: 'Manage Properties',
+        createAt: '2024-01-05T09:00:00',
+        updatedAt: '2024-02-01T14:00:00',
+      },
+    ],
+    createAt: '2024-01-05T09:00:00',
+    updatedAt: '2024-02-01T14:00:00',
+  },
+  {
+    _id: 'r3',
+    roleName: 'Tenant',
+    status: 'INACTIVE',
+    permissions: [
+      {
+        _id: 'p4',
+        name: 'View Rent Info',
+        createAt: '2024-01-10T11:00:00',
+        updatedAt: '2024-02-01T15:00:00',
+      },
+    ],
+    createAt: '2024-01-10T11:00:00',
+    updatedAt: '2024-02-01T15:00:00',
+  },
+  {
+    _id: 'r4',
+    roleName: 'Agent',
+    status: 'ACTIVE',
+    permissions: [
+      {
+        _id: 'p5',
+        name: 'List Properties',
+        createAt: '2024-01-15T13:00:00',
+        updatedAt: '2024-02-01T16:00:00',
+      },
+      {
+        _id: 'p6',
+        name: 'Contact Tenants',
+        createAt: '2024-01-15T13:00:00',
+        updatedAt: '2024-02-01T16:00:00',
+      },
+    ],
+    createAt: '2024-01-15T13:00:00',
+    updatedAt: '2024-02-01T16:00:00',
+  },
+  {
+    _id: 'r5',
+    roleName: 'Inspection',
+    status: 'ACTIVE',
+    permissions: [
+      {
+        _id: 'p7',
+        name: 'Inspect Properties',
+        createAt: '2024-01-20T08:30:00',
+        updatedAt: '2024-02-01T17:00:00',
+      },
+    ],
+    createAt: '2024-01-20T08:30:00',
+    updatedAt: '2024-02-01T17:00:00',
+  },
+];
+
 const UserTable = () => {
   const [users] = useState([
     {
@@ -21,30 +130,6 @@ const UserTable = () => {
       email: 'alice@example.com',
       password: 'alicepass',
       createDate: '2023-01-01',
-      status: USER_STATUS.ACTIVE,
-      allowAdminAccess: true,
-    },
-    {
-      id: 2,
-      name: 'Bob Smith',
-      type: USER_TYPES.TEAM_MEMBER,
-      businessName: '',
-      email: 'bob@example.com',
-      password: 'bobpass123',
-      createDate: '2023-01-05',
-      status: USER_STATUS.ACTIVE,
-      allowAdminAccess: false,
-    },
-    {
-      id: 3,
-      name: 'Acme Corp',
-      type: USER_TYPES.CLIENT,
-      businessName: 'Acme Corporation',
-      email: 'contact@acme.com',
-      password: 'acmepass123',
-      createDate: '2023-01-10',
-      status: USER_STATUS.ACTIVE,
-      allowAdminAccess: false,
     },
   ]);
 
@@ -56,15 +141,11 @@ const UserTable = () => {
   const [formErrors, setFormErrors] = useState({});
   const [isLoading] = useState(false);
   const actionMenuRefs = useRef(new Map());
-  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
-  const [roleData, setRoleData] = useState({
-    roleName: '',
-    permissions: {},
-  });
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
 
-  const { primaryColor, textColor, backgroundColor, secondaryColor, accentColor } = useBranding();
+  const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
+  console.log('all user ', formData);
 
   useEffect(() => {
     const handleClickOutside = event => {
@@ -197,14 +278,8 @@ const UserTable = () => {
     );
   }, []);
 
-  const userTypeOptions = useMemo(
-    () => [
-      { value: USER_TYPES.ADMIN, label: 'Admin' },
-      { value: USER_TYPES.TEAM_MEMBER, label: 'Team Member' },
-      { value: USER_TYPES.CLIENT, label: 'Client' },
-      { value: USER_TYPES.CLIENT_MEMBER, label: 'Client Member' },
-      { value: USER_TYPES.SUPER_BANK, label: 'Super Bank' },
-    ],
+  const userTypeDropdownOptions = useMemo(
+    () => userTypeOptions.map(option => ({ value: option._id, label: option.roleName })),
     []
   );
 
@@ -299,19 +374,18 @@ const UserTable = () => {
           isLoading={isLoading}
         >
           {renderFormField('name', formData.name, handleInputChange, 'text', formErrors.name)}
-          {renderFormField('type', formData.type, handleInputChange, 'select', formErrors.type, userTypeOptions)}
-          {['client', 'client-mbr', 'super-bank'].includes(formData.type) &&
+          {renderFormField(
+            'role',
+            formData.role,
+            handleInputChange,
+            'select',
+            formErrors.role,
+            userTypeDropdownOptions
+          )}
+          {['r2', 'r3', 'r4', 'r5'].includes(formData.role) &&
             renderFormField('businessName', formData.businessName, handleInputChange, 'text', formErrors.businessName)}
           {renderFormField('email', formData.email, handleInputChange, 'email', formErrors.email)}
           {renderFormField('password', formData.password, handleInputChange, 'password', formErrors.password)}
-          {formData.type === USER_TYPES.TEAM_MEMBER &&
-            renderFormField(
-              'allowAdminAccess',
-              formData.allowAdminAccess,
-              handleInputChange,
-              'checkbox',
-              formErrors.allowAdminAccess
-            )}
         </Modal>
       )}
 
@@ -328,14 +402,14 @@ const UserTable = () => {
         >
           {renderFormField('name', editModalData.name, handleEditInputChange, 'text', formErrors.name)}
           {renderFormField(
-            'type',
-            editModalData.type,
+            'role',
+            editModalData.role,
             handleEditInputChange,
             'select',
-            formErrors.type,
-            userTypeOptions
+            formErrors.role,
+            userTypeDropdownOptions
           )}
-          {['client', 'client-mbr', 'super-bank'].includes(editModalData.type) &&
+          {['r2', 'r3', 'r4', 'r5'].includes(editModalData.role) &&
             renderFormField(
               'businessName',
               editModalData.businessName,
@@ -348,14 +422,6 @@ const UserTable = () => {
             { value: USER_STATUS.ACTIVE, label: 'Active' },
             { value: USER_STATUS.INACTIVE, label: 'Inactive' },
           ])}
-          {editModalData.type === USER_TYPES.TEAM_MEMBER &&
-            renderFormField(
-              'allowAdminAccess',
-              editModalData.allowAdminAccess,
-              handleEditInputChange,
-              'checkbox',
-              formErrors.allowAdminAccess
-            )}
         </Modal>
       )}
 

@@ -8,6 +8,8 @@ import Button from '../shared/small/Button';
 import { FaUserShield } from 'react-icons/fa';
 import { useBranding } from './brandings/globalBranding/BrandingContext';
 import TextField from '../shared/small/TextField';
+import { useGetAllPermissionsQuery } from '@/redux/apis/roleApis';
+import Checkbox from '../shared/small/Checkbox';
 
 // Define role status
 const ROLE_STATUS = {
@@ -15,63 +17,37 @@ const ROLE_STATUS = {
   INACTIVE: 'inactive',
 };
 
-// Define role access permissions (same as in UserTable)
-const ROLE_PERMISSIONS = [
-  { id: 'create_user', label: 'Create User' },
-  { id: 'edit_user', label: 'Edit User' },
-  { id: 'delete_user', label: 'Delete User' },
-  { id: 'view_transactions', label: 'View Transactions' },
-  { id: 'approve_transactions', label: 'Approve Transactions' },
-  { id: 'manage_accounts', label: 'Manage Accounts' },
-  { id: 'view_reports', label: 'View Reports' },
-  { id: 'manage_roles', label: 'Manage Roles' },
-  { id: 'view_audit_logs', label: 'View Audit Logs' },
-  { id: 'manage_settings', label: 'Manage Settings' },
-];
-
 const INITIAL_ROLE_FORM = {
   roleName: '',
-  permissions: {},
+  permissions: [],
   status: ROLE_STATUS.ACTIVE,
 };
 
 function AllUserRoles() {
+  const { data: permissionsData } = useGetAllPermissionsQuery();
+  console.log('permissionsData', permissionsData);
+
   const [roles] = useState([
     {
-      id: 1,
+      _id: '3344343',
       roleName: 'Admin',
-      createDate: '2024-01-01',
       status: ROLE_STATUS.ACTIVE,
-      permissions: {
-        create_user: true,
-        edit_user: true,
-        delete_user: true,
-        view_transactions: true,
-        approve_transactions: true,
-        manage_accounts: true,
-        view_reports: true,
-        manage_roles: true,
-        view_audit_logs: true,
-        manage_settings: true,
-      },
-    },
-    {
-      id: 2,
-      roleName: 'Manager',
-      createDate: '2024-01-15',
-      status: ROLE_STATUS.ACTIVE,
-      permissions: {
-        create_user: true,
-        edit_user: true,
-        delete_user: false,
-        view_transactions: true,
-        approve_transactions: true,
-        manage_accounts: true,
-        view_reports: true,
-        manage_roles: false,
-        view_audit_logs: true,
-        manage_settings: false,
-      },
+      permissions: [
+        {
+          _id: '234567',
+          name: 'string',
+          createAt: '12-2-200T05:02:06',
+          updatedAt: '12-2-200T05:02:06',
+        },
+        {
+          _id: '23456',
+          name: 'string',
+          createAt: '12-2-200T05:02:06',
+          updatedAt: '12-2-200T05:02:06',
+        },
+      ],
+      createAt: '12-2-200T05:02:06',
+      updatedAt: '12-2-200T05:02:06',
     },
   ]);
 
@@ -101,18 +77,19 @@ function AllUserRoles() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [actionMenu]);
+  console.log('ytfrddfhygiyftuchb', formData);
 
   // Only update local state for form fields, do not persist
   const handleInputChange = useCallback(e => {
     const { name, value, type, checked } = e.target;
     if (type === 'checkbox') {
-      setFormData(prev => ({
-        ...prev,
-        permissions: {
-          ...prev.permissions,
-          [name]: checked,
-        },
-      }));
+      const permissionId = name;
+      setFormData(prev => {
+        const newPermissions = checked
+          ? [...prev.permissions, permissionId]
+          : prev.permissions.filter(id => id !== permissionId);
+        return { ...prev, permissions: newPermissions };
+      });
     } else {
       setFormData(prev => ({
         ...prev,
@@ -127,13 +104,11 @@ function AllUserRoles() {
     setEditModalData(prev => {
       if (!prev) return prev;
       if (type === 'checkbox') {
-        return {
-          ...prev,
-          permissions: {
-            ...prev.permissions,
-            [name]: checked,
-          },
-        };
+        const permissionId = name;
+        const newPermissions = checked
+          ? [...prev.permissions, permissionId]
+          : prev.permissions.filter(id => id !== permissionId);
+        return { ...prev, permissions: newPermissions };
       } else {
         return {
           ...prev,
@@ -217,7 +192,10 @@ function AllUserRoles() {
                   <button
                     className="block w-full px-4 py-2 text-left hover:bg-gray-100"
                     onClick={() => {
-                      setEditModalData({ ...row });
+                      setEditModalData({
+                        ...row,
+                        permissions: row.permissions.map(p => p._id),
+                      });
                       setActionMenu(null);
                     }}
                   >
@@ -246,22 +224,23 @@ function AllUserRoles() {
     <div className="mt-4">
       <h3 className="mb-2 text-sm font-medium text-gray-700">Access Permissions</h3>
       <div className="grid grid-cols-2 gap-2">
-        {ROLE_PERMISSIONS.map(permission => (
-          <div key={permission.id} className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id={permission.id}
-              name={permission.id}
-              checked={permissions[permission.id] || false}
+        {permissionsData?.data?.map(permission => {
+          const isViewMode = !onChange;
+          const isChecked = isViewMode
+            ? permissions.some(p => p._id === permission._id)
+            : permissions.includes(permission._id);
+          return (
+            <Checkbox
+              key={permission._id}
+              id={permission._id}
+              name={permission._id}
+              label={permission.name}
+              checked={isChecked}
               onChange={onChange}
-              className="text-primary focus:ring-primary border-frameColor h-4 w-4 rounded"
-              disabled={!onChange} // Disable if no onChange handler (view mode)
+              disabled={isViewMode}
             />
-            <label htmlFor={permission.id} className="text-sm text-gray-700">
-              {permission.label}
-            </label>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

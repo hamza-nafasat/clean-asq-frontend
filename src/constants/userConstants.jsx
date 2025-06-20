@@ -13,12 +13,10 @@ export const USER_STATUS = {
 
 export const INITIAL_USER_FORM = {
   name: '',
-  type: '',
+
   businessName: '',
   email: '',
   password: '',
-  status: USER_STATUS.ACTIVE,
-  allowAdminAccess: false,
 };
 
 export const USER_TABLE_COLUMNS = [
@@ -44,29 +42,29 @@ export const USER_TABLE_COLUMNS = [
     selector: row => row.email,
     sortable: true,
   },
-  {
-    name: 'Status',
-    cell: row => {
-      const status = row.status.toLowerCase();
-      return (
-        <div className="flex items-center gap-2">
-          <span
-            className={`${
-              status === 'active'
-                ? 'bg-[#34C7591A] text-[#34C759]'
-                : status === 'inactive'
-                  ? 'bg-[#FF3B301A] text-[#FF3B30]'
-                  : ''
-            } w-[85px] rounded-sm px-[10px] py-[3px] text-center font-bold capitalize`}
-          >
-            {row.status}
-          </span>
-        </div>
-      );
-    },
-    sortable: true,
-    format: row => row.status.charAt(0).toUpperCase() + row.status.slice(1),
-  },
+  // {
+  //   name: 'Status',
+  //   cell: row => {
+  //     const status = row.status.toLowerCase();
+  //     return (
+  //       <div className="flex items-center gap-2">
+  //         <span
+  //           className={`${
+  //             status === 'active'
+  //               ? 'bg-[#34C7591A] text-[#34C759]'
+  //               : status === 'inactive'
+  //                 ? 'bg-[#FF3B301A] text-[#FF3B30]'
+  //                 : ''
+  //           } w-[85px] rounded-sm px-[10px] py-[3px] text-center font-bold capitalize`}
+  //         >
+  //           {row.status}
+  //         </span>
+  //       </div>
+  //     );
+  //   },
+  //   sortable: true,
+  //   format: row => row.status.charAt(0).toUpperCase() + row.status.slice(1),
+  // },
   {
     name: 'Create Date',
     selector: row => row.createDate,

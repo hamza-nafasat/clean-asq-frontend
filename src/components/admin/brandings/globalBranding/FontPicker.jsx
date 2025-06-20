@@ -44,13 +44,6 @@ const FONT_OPTIONS = [
   { value: 'panchang', label: 'Panchang' },
   { value: 'melodrama', label: 'Melodrama' },
   { value: 'boska', label: 'Boska' },
-  { value: 'gambarino', label: 'Gambarino' },
-  { value: 'sentient', label: 'Sentient' },
-  { value: 'author', label: 'Author' },
-  { value: 'panchang', label: 'Panchang' },
-  { value: 'melodrama', label: 'Melodrama' },
-  { value: 'boska', label: 'Boska' },
-  { value: 'gambarino', label: 'Gambarino' },
 ];
 
 const FontPicker = ({ value, onChange }) => {

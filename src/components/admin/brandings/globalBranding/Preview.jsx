@@ -21,8 +21,8 @@ const Preview = ({ primaryColor, companyName, secondaryColor, accentColor, linkC
           <label className="mr-2 text-[14px] font-normal text-gray-500 uppercase">URL:</label>
           <input
             type="text"
+            readOnly
             value={`https://${formattedText || 'company'}.apply-secure.com`}
-            editable
             className="rounded border border-[#A7A7A7] bg-white px-3 py-1 text-sm text-gray-700"
           />
         </div>
