@@ -8,8 +8,15 @@ import Button from '../shared/small/Button';
 import { FaUserShield } from 'react-icons/fa';
 import { useBranding } from './brandings/globalBranding/BrandingContext';
 import TextField from '../shared/small/TextField';
-import { useGetAllPermissionsQuery } from '@/redux/apis/roleApis';
+import {
+  useCreateRoleMutation,
+  useDeleteSingleRoleMutation,
+  useGetAllPermissionsQuery,
+  useGetAllRolesQuery,
+  useUpdateSingleRoleMutation,
+} from '@/redux/apis/roleApis';
 import Checkbox from '../shared/small/Checkbox';
+import { toast } from 'react-toastify';
 
 // Define role status
 const ROLE_STATUS = {
@@ -25,32 +32,11 @@ const INITIAL_ROLE_FORM = {
 
 function AllUserRoles() {
   const { data: permissionsData } = useGetAllPermissionsQuery();
-  console.log('permissionsData', permissionsData);
+  const { data: roles } = useGetAllRolesQuery();
+  const [deleteRole] = useDeleteSingleRoleMutation();
+  const [editRole] = useUpdateSingleRoleMutation();
 
-  const [roles] = useState([
-    {
-      _id: '3344343',
-      roleName: 'Admin',
-      status: ROLE_STATUS.ACTIVE,
-      permissions: [
-        {
-          _id: '234567',
-          name: 'string',
-          createAt: '12-2-200T05:02:06',
-          updatedAt: '12-2-200T05:02:06',
-        },
-        {
-          _id: '23456',
-          name: 'string',
-          createAt: '12-2-200T05:02:06',
-          updatedAt: '12-2-200T05:02:06',
-        },
-      ],
-      createAt: '12-2-200T05:02:06',
-      updatedAt: '12-2-200T05:02:06',
-    },
-  ]);
-
+  const [createRole] = useCreateRoleMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editModalData, setEditModalData] = useState(null);
   const [viewModalData, setViewModalData] = useState(null);
@@ -58,26 +44,11 @@ function AllUserRoles() {
   const [formData, setFormData] = useState(INITIAL_ROLE_FORM);
   const [isLoading] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
+  const [rowForDelete, setRowForDelete] = useState(null);
+  const [rowForEdit, setRowForEdit] = useState(null);
   const actionMenuRefs = useRef(new Map());
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
-  useEffect(() => {
-    const handleClickOutside = event => {
-      const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
-        ref => !ref.current?.contains(event.target)
-      );
-      if (clickedOutsideAllMenus) {
-        setActionMenu(null);
-      }
-    };
-    if (actionMenu !== null) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [actionMenu]);
-  console.log('ytfrddfhygiyftuchb', formData);
 
   // Only update local state for form fields, do not persist
   const handleInputChange = useCallback(e => {
@@ -119,106 +90,147 @@ function AllUserRoles() {
   }, []);
 
   // No-op for add, edit, delete
-  const handleAddRole = useCallback(async () => {
-    setIsModalOpen(false);
-    setFormData(INITIAL_ROLE_FORM);
-  }, []);
+  const handleAddRole = async () => {
+    try {
+      const res = await createRole({ name: formData.roleName, permissions: formData.permissions }).unwrap();
+      if (res?.success) {
+        toast.success(res.message);
+        setFormData(INITIAL_ROLE_FORM);
+        setIsModalOpen(false);
+      }
+    } catch (error) {
+      console.error('Error creating role:', error);
+      toast.error(error?.data?.message || 'Failed to create role');
+    }
+  };
 
-  const handleEditRole = useCallback(async () => {
-    setEditModalData(null);
-  }, []);
+  const handleEditRole = async () => {
+    try {
+      const res = await editRole({
+        _id: rowForEdit?._id,
+        name: editModalData.roleName,
+        permissions: editModalData.permissions,
+      }).unwrap();
+      if (res?.success) {
+        toast.success(res.message);
+        setEditModalData(null);
+        setRowForEdit(null);
+      } else {
+        toast.error(res?.message || 'Failed to update role');
+      }
+    } catch (error) {
+      console.error('Error updating role:', error);
+      toast.error(error?.data?.message || 'Failed to update role');
+    }
+  };
 
-  const handleDeleteRole = useCallback(async () => {
-    setDeleteConfirmation(null);
-    setActionMenu(null);
-  }, []);
+  const handleDeleteRole = async () => {
+    try {
+      console.log('Deleting role with ID:', rowForDelete);
+      const res = await deleteRole({ _id: rowForDelete }).unwrap();
+      if (res?.success) {
+        toast.success(res.message);
+        setDeleteConfirmation(null);
+        setActionMenu(null);
+        setRowForDelete(null);
+      }
+    } catch (error) {
+      console.error('Error deleting role:', error);
+      toast.error(error?.data?.message || 'Failed to delete role');
+    }
+  };
 
-  const columns = useCallback(
-    () => [
-      {
-        name: 'Role Name',
-        selector: row => row.roleName,
-        sortable: true,
+  const columns = () => [
+    {
+      name: 'Role Name',
+      selector: row => row.name,
+      sortable: true,
+    },
+
+    {
+      name: '_id',
+      selector: row => row._id,
+      sortable: true,
+    },
+
+    {
+      name: 'Created At',
+      selector: row => row.createdAt?.split('T')?.[0],
+      sortable: true,
+    },
+    {
+      name: 'Action',
+      cell: row => {
+        if (!actionMenuRefs.current.has(row._id)) {
+          actionMenuRefs.current.set(row._id, React.createRef());
+        }
+        const rowRef = actionMenuRefs.current.get(row._id);
+
+        return (
+          <div className="relative" ref={rowRef}>
+            <button
+              onClick={() => setActionMenu(row._id)}
+              className="rounded p-1 hover:bg-gray-100"
+              aria-label="Actions"
+            >
+              <MoreVertical size={18} />
+            </button>
+            {actionMenu === row._id && (
+              <div className="fixed z-10 mt-2 w-40 rounded border bg-white shadow-lg">
+                <button
+                  className="flex w-full items-center px-4 py-2 text-left hover:bg-gray-100"
+                  onClick={() => {
+                    setViewModalData(row);
+                    setActionMenu(null);
+                  }}
+                >
+                  <Eye size={16} className="mr-2" />
+                  View
+                </button>
+                <button
+                  className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                  onClick={() => {
+                    setRowForEdit(row);
+                    setEditModalData({ ...row, roleName: row.name });
+                    setActionMenu(null);
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
+                  onClick={() => {
+                    setDeleteConfirmation(row);
+                    setActionMenu(null);
+                    setRowForDelete(row?._id);
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
+        );
       },
+    },
+  ];
 
-      {
-        name: 'Created Date',
-        selector: row => row.createDate,
-        sortable: true,
-      },
-      {
-        name: 'Status',
-        selector: row => row.status,
-        sortable: true,
-        cell: row => (
-          <span
-            className={`${
-              row.status === ROLE_STATUS.ACTIVE ? 'bg-[#34C7591A] text-[#34C759]' : 'bg-[#FF3B301A] text-[#FF3B30]'
-            } w-[85px] rounded-sm px-[10px] py-[3px] text-center font-bold capitalize`}
-          >
-            {row.status === ROLE_STATUS.ACTIVE ? 'Active' : 'Inactive'}
-          </span>
-        ),
-      },
-      {
-        name: 'Action',
-        cell: row => {
-          if (!actionMenuRefs.current.has(row.id)) {
-            actionMenuRefs.current.set(row.id, React.createRef());
-          }
-          const rowRef = actionMenuRefs.current.get(row.id);
-
-          return (
-            <div className="relative" ref={rowRef}>
-              <button
-                onClick={() => setActionMenu(row.id)}
-                className="rounded p-1 hover:bg-gray-100"
-                aria-label="Actions"
-              >
-                <MoreVertical size={18} />
-              </button>
-              {actionMenu === row.id && (
-                <div className="fixed z-10 mt-2 w-40 rounded border bg-white shadow-lg">
-                  <button
-                    className="flex w-full items-center px-4 py-2 text-left hover:bg-gray-100"
-                    onClick={() => {
-                      setViewModalData(row);
-                      setActionMenu(null);
-                    }}
-                  >
-                    <Eye size={16} className="mr-2" />
-                    View
-                  </button>
-                  <button
-                    className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-                    onClick={() => {
-                      setEditModalData({
-                        ...row,
-                        permissions: row.permissions.map(p => p._id),
-                      });
-                      setActionMenu(null);
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
-                    onClick={() => {
-                      setDeleteConfirmation(row);
-                      setActionMenu(null);
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-            </div>
-          );
-        },
-      },
-    ],
-    [actionMenu, handleDeleteRole]
-  );
+  useEffect(() => {
+    const handleClickOutside = event => {
+      const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
+        ref => !ref.current?.contains(event.target)
+      );
+      if (clickedOutsideAllMenus) {
+        setActionMenu(null);
+      }
+    };
+    if (actionMenu !== null) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [actionMenu]);
 
   const renderPermissionsGrid = (permissions, onChange) => (
     <div className="mt-4">
@@ -301,7 +313,7 @@ function AllUserRoles() {
       </div>
 
       <DataTable
-        data={roles}
+        data={roles?.data || []}
         columns={columns()}
         customStyles={tableStyles}
         pagination
@@ -347,7 +359,6 @@ function AllUserRoles() {
           {renderPermissionsGrid(editModalData.permissions, handleEditInputChange)}
         </Modal>
       )}
-
       {/* View Role Modal */}
       {viewModalData && (
         <Modal title="View Role" onClose={() => setViewModalData(null)} hideSaveButton>
@@ -381,7 +392,7 @@ function AllUserRoles() {
         onClose={() => setDeleteConfirmation(null)}
         onConfirm={handleDeleteRole}
         title="Delete Role"
-        message={`Are you sure you want to delete the role "${deleteConfirmation?.roleName}"? This action cannot be undone.`}
+        message={`Are you sure you want to delete the role "${deleteConfirmation?.name}"? This action cannot be undone.`}
         isLoading={isLoading}
         confirmButtonText="Delete Role"
         confirmButtonClassName="bg-red-500 border-none hover:bg-red-600 text-white"

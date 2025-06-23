@@ -3,11 +3,12 @@ import { userNotExist } from '@/redux/slices/authSlice';
 import { useRef, useState } from 'react';
 import { HiChevronDown } from 'react-icons/hi';
 import { IoChevronForwardOutline, IoLogOutOutline } from 'react-icons/io5';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom'; // or 'next/link' if using Next.js
 import { toast } from 'react-toastify';
 
 function AdminHeader() {
+  const { user } = useSelector(state => state.auth);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef(null);
 
@@ -16,7 +17,9 @@ function AdminHeader() {
   };
   return (
     <div className="flex h-16 items-center justify-between bg-white p-2 shadow">
-      <h1 className="text-2xl font-semibold text-gray-800">Welcome Wahid</h1>
+      <h1 className="text-2xl font-semibold text-gray-800">
+        Welcome {user?.firstName} {user?.lastName}
+      </h1>
       <div className="flex items-center gap-4 rounded-bl-[20px] bg-white px-6 py-2">
         <div className="relative flex items-center gap-2">
           <img
@@ -25,8 +28,10 @@ function AdminHeader() {
             className="h-9 w-9 rounded-full border border-gray-700 object-cover"
           />
           <div>
-            <h6 className="text-sm font-semibold text-gray-800">Wahid</h6>
-            <p className="text-xs text-gray-600">Example@gamail.com</p>
+            <h6 className="text-sm font-semibold text-gray-800">
+              {user?.firstName} {user?.lastName}
+            </h6>
+            <p className="text-xs text-gray-600">{user?.email}</p>
           </div>
           <div
             onClick={profileOpenHandler}
@@ -76,13 +81,11 @@ const Profile = () => {
         <h6 className="text-textPrimary text-xs font-medium">My Profile</h6>
         <IoChevronForwardOutline fontSize={18} className="text-primary" />
       </Link>
-      <div className="flex cursor-pointer items-center justify-between gap-4 rounded-b-md bg-white px-2 py-2 hover:bg-[#b6feef]">
-        <h6
-          className={`text-[13px] font-medium ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
-          onClick={logoutHandler}
-        >
-          Logout
-        </h6>
+      <div
+        onClick={logoutHandler}
+        className={`flex cursor-pointer items-center justify-between gap-4 rounded-b-md bg-white px-2 py-2 hover:bg-[#b6feef] ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
+      >
+        <h6 className={`text-[13px] font-medium`}>Logout</h6>
         <IoLogOutOutline fontSize={18} />
       </div>
     </div>

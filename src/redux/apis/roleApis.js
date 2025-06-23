@@ -5,6 +5,7 @@ const roleApis = createApi({
   reducerPath: 'roleApi',
   baseQuery: fetchBaseQuery({ baseUrl: `${getEnv('SERVER_URL')}/api/role`, credentials: 'include' }),
 
+  tagTypes: ['Role', 'Permission'],
   endpoints: builder => ({
     // create new role
     // ---------------
@@ -14,6 +15,7 @@ const roleApis = createApi({
         method: 'POST',
         body: data,
       }),
+      invalidatesTags: ['Role'],
     }),
     // get get all users
     // --------------
@@ -22,32 +24,37 @@ const roleApis = createApi({
         url: '/all',
         method: 'GET',
       }),
+      providesTags: ['Role'],
     }),
 
     // get single role
     // ---------------
     getSingleRole: builder.mutation({
       query: data => ({
-        url: `single/:${data?._id}`,
+        url: `single/${data?._id}`,
         method: 'GET',
       }),
+      invalidatesTags: ['Role'],
     }),
 
     // update single role
     // ---------------
     updateSingleRole: builder.mutation({
       query: data => ({
-        url: `single/:${data?._id}`,
+        url: `single/${data?._id}`,
         method: 'PUT',
+        body: data,
       }),
+      invalidatesTags: ['Role'],
     }),
     // DELETE single role
     // ---------------
     deleteSingleRole: builder.mutation({
       query: data => ({
-        url: `single/:${data?._id}`,
+        url: `single/${data?._id}`,
         method: 'Delete',
       }),
+      invalidatesTags: ['Role'],
     }),
     // get all permissions
     // ------------------
@@ -56,6 +63,7 @@ const roleApis = createApi({
         url: '/permissions',
         method: 'GET',
       }),
+      providesTags: ['Permission'],
     }),
   }),
 });

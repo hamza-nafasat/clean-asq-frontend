@@ -1,4 +1,11 @@
-import { INITIAL_USER_FORM, USER_STATUS, USER_TABLE_COLUMNS, USER_TYPES } from '@/constants/userConstants';
+import { INITIAL_USER_FORM, USER_STATUS } from '@/constants/userConstants';
+import { getTableStyles } from '@/data/data';
+import {
+  useCreateUserMutation,
+  useDeleteSingleUserMutation,
+  useGetAllUsersQuery,
+  useUpdateSingleUserMutation,
+} from '@/redux/apis/userApis';
 import { MoreVertical } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DataTable from 'react-data-table-component';
@@ -6,133 +13,18 @@ import { IoMdPersonAdd } from 'react-icons/io';
 import ConfirmationModal from '../shared/ConfirmationModal';
 import Modal from '../shared/Modal';
 import Button from '../shared/small/Button';
-import { useBranding } from './brandings/globalBranding/BrandingContext';
-import { getTableStyles } from '@/data/data';
-import TextField from '../shared/small/TextField';
 import Checkbox from '../shared/small/Checkbox';
-
-// user data for get and send
-// // fron to back
-//     {
-//       name: 'Aice Johnson',
-//       role: 'role id',
-//       businessName: 'dfdffd',
-//       email: 'alice@example.com',
-//       password: 'alicepass',
-//     },
-//     // back to front
-//     {
-//       _id: '32332',
-//       name: 'Alice Johnson',
-//       role: 'admin',
-//       businessName: 'dsdsds',
-//       email: 'alice@example.com',
-//       createAt: '2023-01-01',
-//       updatedAt: '2023-01-01',
-//     },
-
-export const userTypeOptions = [
-  {
-    _id: 'r1',
-    roleName: 'Admin',
-    status: 'ACTIVE',
-    permissions: [
-      {
-        _id: 'p1',
-        name: 'Manage Users',
-        createAt: '2024-01-01T10:00:00',
-        updatedAt: '2024-02-01T12:00:00',
-      },
-      {
-        _id: 'p2',
-        name: 'View Reports',
-        createAt: '2024-01-01T10:00:00',
-        updatedAt: '2024-02-01T12:00:00',
-      },
-    ],
-    createAt: '2024-01-01T10:00:00',
-    updatedAt: '2024-02-01T12:00:00',
-  },
-  {
-    _id: 'r2',
-    roleName: 'Owner',
-    status: 'ACTIVE',
-    permissions: [
-      {
-        _id: 'p3',
-        name: 'Manage Properties',
-        createAt: '2024-01-05T09:00:00',
-        updatedAt: '2024-02-01T14:00:00',
-      },
-    ],
-    createAt: '2024-01-05T09:00:00',
-    updatedAt: '2024-02-01T14:00:00',
-  },
-  {
-    _id: 'r3',
-    roleName: 'Tenant',
-    status: 'INACTIVE',
-    permissions: [
-      {
-        _id: 'p4',
-        name: 'View Rent Info',
-        createAt: '2024-01-10T11:00:00',
-        updatedAt: '2024-02-01T15:00:00',
-      },
-    ],
-    createAt: '2024-01-10T11:00:00',
-    updatedAt: '2024-02-01T15:00:00',
-  },
-  {
-    _id: 'r4',
-    roleName: 'Agent',
-    status: 'ACTIVE',
-    permissions: [
-      {
-        _id: 'p5',
-        name: 'List Properties',
-        createAt: '2024-01-15T13:00:00',
-        updatedAt: '2024-02-01T16:00:00',
-      },
-      {
-        _id: 'p6',
-        name: 'Contact Tenants',
-        createAt: '2024-01-15T13:00:00',
-        updatedAt: '2024-02-01T16:00:00',
-      },
-    ],
-    createAt: '2024-01-15T13:00:00',
-    updatedAt: '2024-02-01T16:00:00',
-  },
-  {
-    _id: 'r5',
-    roleName: 'Inspection',
-    status: 'ACTIVE',
-    permissions: [
-      {
-        _id: 'p7',
-        name: 'Inspect Properties',
-        createAt: '2024-01-20T08:30:00',
-        updatedAt: '2024-02-01T17:00:00',
-      },
-    ],
-    createAt: '2024-01-20T08:30:00',
-    updatedAt: '2024-02-01T17:00:00',
-  },
-];
+import TextField from '../shared/small/TextField';
+import { useBranding } from './brandings/globalBranding/BrandingContext';
+import { useGetAllRolesQuery } from '@/redux/apis/roleApis';
+import { toast } from 'react-toastify';
 
 const UserTable = () => {
-  const [users] = useState([
-    {
-      id: 1,
-      name: 'Alice Johnson',
-      type: USER_TYPES.ADMIN,
-      businessName: '',
-      email: 'alice@example.com',
-      password: 'alicepass',
-      createDate: '2023-01-01',
-    },
-  ]);
+  const { data: users } = useGetAllUsersQuery();
+  const { data: userTypeOptions } = useGetAllRolesQuery();
+  const [createUser] = useCreateUserMutation();
+  const [deleteUser] = useDeleteSingleUserMutation();
+  const [updateUser] = useUpdateSingleUserMutation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editModalData, setEditModalData] = useState(null);
@@ -143,27 +35,10 @@ const UserTable = () => {
   const [isLoading] = useState(false);
   const actionMenuRefs = useRef(new Map());
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
+  const [userIdForDelete, setUserIdForDelete] = useState(null);
 
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
-  console.log('all user ', formData);
-
-  useEffect(() => {
-    const handleClickOutside = event => {
-      const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
-        ref => !ref.current?.contains(event.target)
-      );
-      if (clickedOutsideAllMenus) {
-        setActionMenu(null);
-      }
-    };
-    if (actionMenu !== null) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [actionMenu]);
 
   const handleInputChange = useCallback(
     e => {
@@ -197,26 +72,55 @@ const UserTable = () => {
     setPasswordModalData(prev => ({ ...prev, password: value }));
   }, []);
 
-  const handleAddUser = useCallback(() => {
-    setIsModalOpen(false);
-    setFormData(INITIAL_USER_FORM);
-    setFormErrors({});
-  }, []);
+  const handleAddUser = async () => {
+    try {
+      const res = await createUser(formData).unwrap();
+      if (res.success) {
+        toast.success(res.message);
+        setIsModalOpen(false);
+        setFormData(INITIAL_USER_FORM);
+        setFormErrors({});
+      }
+    } catch (error) {
+      console.error('Error creating user:', error);
+      toast.error(error?.data?.message || 'Failed to create user');
+    }
+  };
 
-  const handleEditUser = useCallback(() => {
-    setEditModalData(null);
-    setFormErrors({});
-  }, []);
+  const handleEditUser = async () => {
+    try {
+      const res = await updateUser(editModalData).unwrap();
+      if (res.success) {
+        toast.success(res.message);
+        setEditModalData(null);
+        setFormErrors({});
+        setActionMenu(null);
+        setIsModalOpen(false);
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error(error?.data?.message || 'Failed to update user');
+    }
+  };
 
-  const handleChangePassword = useCallback(() => {
+  const handleChangePassword = async () => {
     setPasswordModalData(null);
     setFormErrors({});
-  }, []);
+  };
 
-  const handleDeleteUser = useCallback(() => {
-    setDeleteConfirmation(null);
-    setActionMenu(null);
-  }, []);
+  const handleDeleteUser = async () => {
+    try {
+      const res = await deleteUser({ _id: userIdForDelete }).unwrap();
+      if (res.success) {
+        toast.success(res?.message);
+        setDeleteConfirmation(null);
+        setActionMenu(null);
+      }
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error(error?.data?.message || 'Failed to change password');
+    }
+  };
 
   const renderFormField = useCallback((field, value, onChange, type = 'text', error = null, options = null) => {
     const labelText = field
@@ -273,36 +177,57 @@ const UserTable = () => {
   }, []);
 
   const userTypeDropdownOptions = useMemo(
-    () => userTypeOptions.map(option => ({ value: option._id, label: option.roleName })),
-    []
+    () => userTypeOptions?.data?.map(option => ({ value: option?._id, label: option?.name })),
+    [userTypeOptions?.data]
   );
 
   const columns = useMemo(
     () => [
-      ...USER_TABLE_COLUMNS,
+      {
+        name: 'Name',
+        selector: row => row?.firstName + ' ' + row?.lastName,
+        sortable: true,
+      },
+
+      {
+        name: 'Email',
+        selector: row => row?.email,
+        sortable: true,
+      },
+      {
+        name: 'Role',
+        selector: row => row?.role?.name,
+        sortable: true,
+      },
+
+      {
+        name: 'Create Date',
+        selector: row => row?.createdAt?.split('T')[0],
+        sortable: true,
+      },
       {
         name: 'Action',
         cell: row => {
-          if (!actionMenuRefs.current.has(row.id)) {
-            actionMenuRefs.current.set(row.id, React.createRef());
+          if (!actionMenuRefs.current.has(row?._id)) {
+            actionMenuRefs.current.set(row?._id, React.createRef());
           }
-          const rowRef = actionMenuRefs.current.get(row.id);
+          const rowRef = actionMenuRefs.current.get(row?._id);
 
           return (
             <div className="relative" ref={rowRef}>
               <button
-                onClick={() => setActionMenu(row.id)}
+                onClick={() => setActionMenu(row?._id)}
                 className="rounded p-1 hover:bg-gray-100"
                 aria-label="Actions"
               >
                 <MoreVertical size={18} />
               </button>
-              {actionMenu === row.id && (
+              {actionMenu === row?._id && (
                 <div className="fixed z-10 mt-2 w-40 rounded border bg-white shadow-lg">
                   <button
                     className="block w-full px-4 py-2 text-left hover:bg-gray-100"
                     onClick={() => {
-                      setEditModalData({ ...row });
+                      setEditModalData({ ...row, role: row?.role?._id });
                       setActionMenu(null);
                     }}
                   >
@@ -311,7 +236,7 @@ const UserTable = () => {
                   <button
                     className="block w-full px-4 py-2 text-left hover:bg-gray-100"
                     onClick={() => {
-                      setPasswordModalData({ id: row.id, password: '' });
+                      setPasswordModalData({ id: row?._id, password: '' });
                       setActionMenu(null);
                     }}
                   >
@@ -322,6 +247,7 @@ const UserTable = () => {
                     onClick={() => {
                       setDeleteConfirmation(row);
                       setActionMenu(null);
+                      setUserIdForDelete(row?._id);
                     }}
                   >
                     Delete
@@ -333,8 +259,25 @@ const UserTable = () => {
         },
       },
     ],
-    [actionMenu, handleDeleteUser]
+    [actionMenu]
   );
+
+  useEffect(() => {
+    const handleClickOutside = event => {
+      const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
+        ref => !ref.current?.contains(event.target)
+      );
+      if (clickedOutsideAllMenus) {
+        setActionMenu(null);
+      }
+    };
+    if (actionMenu !== null) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [actionMenu]);
 
   return (
     <div className="p-4">
@@ -348,7 +291,7 @@ const UserTable = () => {
       <DataTable
         customStyles={tableStyles}
         columns={columns}
-        data={users}
+        data={users?.data || []}
         pagination
         highlightOnHover
         progressPending={isLoading}
@@ -367,7 +310,8 @@ const UserTable = () => {
           onSave={handleAddUser}
           isLoading={isLoading}
         >
-          {renderFormField('name', formData.name, handleInputChange, 'text', formErrors.name)}
+          {renderFormField('firstName', formData.firstName, handleInputChange, 'text', formErrors.firstName)}
+          {renderFormField('lastName', formData.lastName, handleInputChange, 'text', formErrors.lastName)}
           {renderFormField(
             'role',
             formData.role,
@@ -394,7 +338,8 @@ const UserTable = () => {
           onSave={handleEditUser}
           isLoading={isLoading}
         >
-          {renderFormField('name', editModalData.name, handleEditInputChange, 'text', formErrors.name)}
+          {renderFormField('firstName', editModalData.firstName, handleEditInputChange, 'text', formErrors.firstName)}
+          {renderFormField('lastName', editModalData.lastName, handleEditInputChange, 'text', formErrors.lastName)}
           {renderFormField(
             'role',
             editModalData.role,
@@ -412,10 +357,6 @@ const UserTable = () => {
               formErrors.businessName
             )}
           {renderFormField('email', editModalData.email, handleEditInputChange, 'email', formErrors.email)}
-          {renderFormField('status', editModalData.status, handleEditInputChange, 'select', formErrors.status, [
-            { value: USER_STATUS.ACTIVE, label: 'Active' },
-            { value: USER_STATUS.INACTIVE, label: 'Inactive' },
-          ])}
         </Modal>
       )}
 

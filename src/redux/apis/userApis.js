@@ -4,7 +4,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 const userApis = createApi({
   reducerPath: 'userApi',
   baseQuery: fetchBaseQuery({ baseUrl: `${getEnv('SERVER_URL')}/api/user`, credentials: 'include' }),
-
+  tagTypes: ['User'],
   endpoints: builder => ({
     // create new user
     // ---------------
@@ -14,6 +14,7 @@ const userApis = createApi({
         method: 'POST',
         body: data,
       }),
+      invalidatesTags: ['User'],
     }),
     // get get all users
     // --------------
@@ -22,32 +23,37 @@ const userApis = createApi({
         url: '/all',
         method: 'GET',
       }),
+      providesTags: ['User'],
     }),
 
     // get single user
     // ---------------
     getSingleUser: builder.mutation({
       query: data => ({
-        url: `single/:${data?._id}`,
+        url: `single/${data?._id}`,
         method: 'GET',
       }),
+      invalidatesTags: ['User'],
     }),
 
     // update single user
     // ---------------
     updateSingleUser: builder.mutation({
       query: data => ({
-        url: `single/:${data?._id}`,
+        url: `single/${data?._id}`,
         method: 'PUT',
+        body: data,
       }),
+      invalidatesTags: ['User'],
     }),
     // DELETE single user
     // ---------------
     deleteSingleUser: builder.mutation({
       query: data => ({
-        url: `single/:${data?._id}`,
+        url: `single/${data?._id}`,
         method: 'Delete',
       }),
+      invalidatesTags: ['User'],
     }),
   }),
 });
