@@ -1,14 +1,11 @@
-// App.js
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleRedirect from './components/RoleRedirect';
 import CustomLoading from './components/shared/small/CustomLoading';
-
 import { BrandingProvider } from './components/admin/brandings/globalBranding/BrandingContext';
 import AdminDashboard from './page/admin/dashboard';
 import AdminApplicants from './page/admin/dashboard/admin-applicants/AdminApplicants';
@@ -20,10 +17,10 @@ import ApplicationVerification from './page/admin/userApplicationForms/Applicati
 import CompanyInformation from './page/admin/userApplicationForms/CompanyInformation/CompanyInformation';
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
+
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const Login = lazy(() => import('./page/auth/Login'));
 const Otp = lazy(() => import('./page/auth/Otp'));
-
 function App() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
