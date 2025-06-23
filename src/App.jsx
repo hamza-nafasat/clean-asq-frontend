@@ -48,11 +48,11 @@ function App() {
               {/* root redirects */}
               <Route
                 path="/"
-                element={user ? <Navigate to="/all-roles" replace /> : <Navigate to="/login" replace />}
+                element={user ? <Navigate to="/all-users" replace /> : <Navigate to="/login" replace />}
               />
 
               {/* Public routes */}
-              <Route element={<ProtectedRoute user={!user} redirect="/all-roles" />}>
+              <Route element={<ProtectedRoute user={!user} redirect="/all-users" />}>
                 <Route path="/login" element={<Login />} />
                 <Route path="/otp" element={<Otp />} />
               </Route>
