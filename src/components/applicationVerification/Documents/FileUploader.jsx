@@ -1,18 +1,20 @@
 import React, { useState, useRef } from 'react';
 import { PiFileArrowUpFill } from 'react-icons/pi';
-// import Button from '../shared/small/Button';
 import { CgSoftwareUpload } from 'react-icons/cg';
 import Button from '@/components/shared/small/Button';
-const FileUploader = ({ label = '', accept = '.pdf,image/*', onFileSelect = () => {} }) => {
+
+const FileUploader = ({ label = '', accept = '.pdf,image/*,.csv', onFileSelect = () => {} }) => {
   const [fileName, setFileName] = useState('');
   const [previewUrl, setPreviewUrl] = useState(null);
   const inputRef = useRef(null);
 
+  const isCSV = file => file.name.toLowerCase().endsWith('.csv');
+
   const handleFile = file => {
     const fileType = file.type;
 
-    if (!fileType.includes('image') && !fileType.includes('pdf')) {
-      alert('Only PDF or image files are allowed.');
+    if (!fileType.includes('image') && !fileType.includes('pdf') && !isCSV(file)) {
+      alert('Only PDF, image, or CSV files are allowed.');
       return;
     }
 
@@ -24,7 +26,7 @@ const FileUploader = ({ label = '', accept = '.pdf,image/*', onFileSelect = () =
       reader.onloadend = () => setPreviewUrl(reader.result);
       reader.readAsDataURL(file);
     } else {
-      setPreviewUrl(null); // No preview for PDF
+      setPreviewUrl(null); // No preview for PDF or CSV
     }
   };
 
@@ -53,7 +55,7 @@ const FileUploader = ({ label = '', accept = '.pdf,image/*', onFileSelect = () =
       >
         <PiFileArrowUpFill className="text-textPrimary text-8xl" />
         <h4 className="text-textPrimary text-base font-medium">Click to upload or drag and drop a file</h4>
-        <h5 className="text-textPrimary">.pdf, .doc, .docx, .jpg, .png up to 10MB</h5>
+        <h5 className="text-textPrimary">.pdf, .doc, .docx, .jpg, .png, .csv up to 10MB</h5>
         <Button
           label={'Select file'}
           className="!text-textPrimary !border-gray-300 !bg-white hover:!bg-gray-500"

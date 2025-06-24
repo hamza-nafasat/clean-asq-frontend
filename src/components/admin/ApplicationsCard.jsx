@@ -6,6 +6,8 @@ import UserApplicationDetail from './UserApplicationDetail';
 import Button from '../shared/small/Button';
 import TextField from '../shared/small/TextField';
 import { FaCheck } from 'react-icons/fa6';
+import Modal from '../shared/small/Modal';
+import FileUploader from '../applicationVerification/Documents/FileUploader';
 
 const statusOptions = ['All', 'Active', 'Draft', 'Inactive'];
 
@@ -47,10 +49,25 @@ export default function ApplicationsCard() {
   if (selectedForm) {
     return <UserApplicationDetail form={selectedForm} onClose={handleCloseDetail} />;
   }
-
+  const [creteFormModal, setCreateFormModal] = useState(false);
+  const openFormModalHandle = () => {
+    setCreateFormModal(true);
+  };
+  const closeFormModalHandle = () => {
+    setCreateFormModal(false);
+  };
   return (
     <div className="rounded-md bg-white p-5 shadow">
       {/* Header Section */}
+      {creteFormModal && (
+        <Modal onClose={closeFormModalHandle} title="">
+          <FileUploader
+            label="Upload Image / PDF / CSV"
+            accept=".pdf,image/*,.csv"
+            onFileSelect={file => console.log('Selected file:', file)}
+          />
+        </Modal>
+      )}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-textPrimary text-[22px] font-medium">Financial Services Application Platform</h1>
@@ -60,7 +77,7 @@ export default function ApplicationsCard() {
         </div>
         <div className="flex gap-6">
           <Button label={'Help'} variant="secondary" />
-          <Button label={'Create Form'} />
+          <Button label={'Create Form'} onClick={openFormModalHandle} />
         </div>
       </div>
 
