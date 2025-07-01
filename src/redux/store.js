@@ -4,6 +4,7 @@ import authSlice from './slices/authSlice';
 import brandingSlice from './slices/brandingSlice';
 import userApis from './apis/userApis';
 import roleApis from './apis/roleApis';
+import formApis from './apis/formApis';
 
 const store = configureStore({
   reducer: {
@@ -16,12 +17,14 @@ const store = configureStore({
     [authApis.reducerPath]: authApis.reducer,
     [userApis.reducerPath]: userApis.reducer,
     [roleApis.reducerPath]: roleApis.reducer,
+    [formApis.reducerPath]: formApis.reducer,
   },
   middleware: getDefaultMiddleware => {
     return getDefaultMiddleware({ serializableCheck: false })
       .concat(authApis.middleware)
       .concat(userApis.middleware)
-      .concat(roleApis.middleware);
+      .concat(roleApis.middleware)
+      .concat(formApis.middleware);
   },
 });
 

@@ -19,8 +19,10 @@ import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
+const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
 const Login = lazy(() => import('./page/auth/Login'));
 const Otp = lazy(() => import('./page/auth/Otp'));
+
 function App() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
@@ -67,6 +69,7 @@ function App() {
                   <Route path="admin-applications" element={<AdminApplications />} />
                   <Route path="admin-applicants" element={<AdminApplicants />} />
                   <Route path="branding" element={<Brandings />} />
+                  <Route path="branding/create" element={<CreateBranding />} />
                 </Route>
 
                 {/*all User Forms or application layout  , with out sidebar */}

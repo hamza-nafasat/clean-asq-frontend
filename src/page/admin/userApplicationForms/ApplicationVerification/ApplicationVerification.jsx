@@ -21,7 +21,7 @@ const steps = [
   'Placeholders',
 ];
 
-export default function ApplicationVerification() {
+export default function ApplicationVerification({ form }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState([
     { idType: '', idNumber: '' }, // Verification
