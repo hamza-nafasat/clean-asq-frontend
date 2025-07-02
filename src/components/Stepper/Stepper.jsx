@@ -1,14 +1,7 @@
 import React, { useState, useEffect, Children } from 'react';
 import Button from '../shared/small/Button';
 
-const Stepper = ({
-  steps,
-  currentStep,
-  onStepChange,
-  onComplete,
-  visibleSteps = 5, // Number of steps to show at once on mobile
-  Children,
-}) => {
+const Stepper = ({ steps, currentStep, onStepChange, onComplete, visibleSteps = 5, Children }) => {
   const [visibleStepRange, setVisibleStepRange] = useState({ start: 0, end: visibleSteps });
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const totalSteps = steps.length;
@@ -29,21 +22,12 @@ const Stepper = ({
       // Show all steps on screens 1440px and above
       setVisibleStepRange({ start: 0, end: totalSteps });
     } else {
-      // Calculate visible steps based on screen width
-      const stepsPerScreen = Math.max(3, Math.floor(windowWidth / 200)); // At least 3 steps, or more based on screen width
-
-      // Ensure current step is always visible and reasonably centered
+      const stepsPerScreen = Math.max(3, Math.floor(windowWidth / 200));
       let start = Math.max(0, currentStep - Math.floor(stepsPerScreen / 2));
       let end = Math.min(totalSteps, start + stepsPerScreen);
-
       // Adjust start/end if near boundaries
-      if (end === totalSteps) {
-        start = Math.max(0, end - stepsPerScreen);
-      }
-      if (start === 0) {
-        end = Math.min(totalSteps, start + stepsPerScreen);
-      }
-
+      if (end === totalSteps) start = Math.max(0, end - stepsPerScreen);
+      if (start === 0) end = Math.min(totalSteps, start + stepsPerScreen);
       setVisibleStepRange({ start, end });
     }
   }, [currentStep, totalSteps, windowWidth]);
@@ -53,27 +37,21 @@ const Stepper = ({
       onStepChange(currentStep - 1);
     }
   };
-
   const handleNext = () => {
     if (currentStep < totalSteps - 1) {
       onStepChange(currentStep + 1);
     }
   };
-
   const handleSubmit = () => {
     onComplete();
   };
-
   const displayedSteps = steps.slice(visibleStepRange.start, visibleStepRange.end);
-
   return (
-    <div className="w-full">
-      {/* Stepper Container */}
+    <div className="w-full p-4">
       <div className="mb-8 flex items-center justify-between overflow-x-auto">
         {displayedSteps.map((step, index) => {
           const actualIndex = visibleStepRange.start + index;
           const isLastDisplayedStep = index === displayedSteps.length - 1;
-
           return (
             <React.Fragment key={actualIndex}>
               {/* Step Circle and Label */}

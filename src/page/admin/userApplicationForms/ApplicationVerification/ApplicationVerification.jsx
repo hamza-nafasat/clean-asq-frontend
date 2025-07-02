@@ -1,14 +1,13 @@
-import React, { useState, useMemo } from 'react';
-import verificationImg from '../../../../assets/images/verificationImg.png';
-import Stepper from '../../../../components/Stepper/Stepper';
-import CompanyInformation from '@/components/applicationVerification/CompanyInformation';
-import Verification from '@/components/applicationVerification/Verification';
-import CompanyOwners from '@/components/applicationVerification/CompanyOwners';
-import BankInfo from '@/components/applicationVerification/BankInfo';
-import ProcessingInfo from '@/components/applicationVerification/ProcessingInfo';
 import ApplicationInfo from '@/components/applicationVerification/ApplicationInfo';
-import PlaceHolder from '@/components/applicationVerification/PlaceHolder';
+import BankInfo from '@/components/applicationVerification/BankInfo';
+import CompanyInformation from '@/components/applicationVerification/CompanyInformation';
+import CompanyOwners from '@/components/applicationVerification/CompanyOwners';
 import Documents from '@/components/applicationVerification/Documents';
+import PlaceHolder from '@/components/applicationVerification/PlaceHolder';
+import ProcessingInfo from '@/components/applicationVerification/ProcessingInfo';
+import Verification from '@/components/applicationVerification/Verification';
+import { useMemo, useState } from 'react';
+import Stepper from '../../../../components/Stepper/Stepper';
 
 const steps = [
   'Verification',
@@ -42,12 +41,7 @@ export default function ApplicationVerification({ form }) {
     });
   };
 
-  const handleStepChange = step => {
-    setCurrentStep(step);
-  };
-
   const handleComplete = () => {
-    // Handle form submission
     console.log('Form submitted:', formData);
   };
 
@@ -71,7 +65,7 @@ export default function ApplicationVerification({ form }) {
       <Stepper
         steps={steps}
         currentStep={currentStep}
-        onStepChange={handleStepChange}
+        onStepChange={step => setCurrentStep(step)}
         onComplete={handleComplete}
         visibleSteps={5}
         Children={stepComponents[currentStep]}

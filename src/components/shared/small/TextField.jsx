@@ -1,5 +1,3 @@
-/* eslint-disable react/prop-types */
-
 const TextField = ({ cn, label, type = 'text', shadow = false, leftIcon, cnLeft, rightIcon, cnRight, ...rest }) => {
   return (
     <div className="flex w-full flex-col items-start">
@@ -22,14 +20,3 @@ const TextField = ({ cn, label, type = 'text', shadow = false, leftIcon, cnLeft,
 };
 
 export default TextField;
-
-/// for example
-{
-  /* <div className="">
-  <TextField label="Search" leftIcon={<FiSearch />} placeholder="Search here..." />
-
-  <div className="mt-4">
-    <TextField label="Password" type="password" rightIcon={<FiEye />} placeholder="Enter password" />
-  </div>
-</div>; */
-}

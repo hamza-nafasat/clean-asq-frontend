@@ -9,8 +9,8 @@ import Modal from '../shared/small/Modal';
 import FileUploader from '../applicationVerification/Documents/FileUploader';
 import { useCreateFormMutation, useGetMyAllFormsQuery } from '@/redux/apis/formApis';
 import { toast } from 'react-toastify';
-import ApplicationVerification from '@/page/admin/userApplicationForms/ApplicationVerification/ApplicationVerification';
 import { MoreVertical } from 'lucide-react';
+import ApplicationForm from '@/page/admin/userApplicationForms/ApplicationVerification/ApplicationForm';
 
 export default function ApplicationsCard() {
   const rowRef = useRef(null);
@@ -54,7 +54,12 @@ export default function ApplicationsCard() {
     };
   }, [rowRef]);
 
-  if (selectedForm) return <ApplicationVerification form={selectedForm} onClose={() => setSelectedForm(null)} />;
+  if (selectedForm)
+    return (
+      <div className="flex items-center justify-center p-4">
+        <ApplicationForm form={selectedForm} onClose={() => setSelectedForm(null)} />
+      </div>
+    );
   return (
     <div className="rounded-md bg-white p-5 shadow">
       {/* Header Section */}
