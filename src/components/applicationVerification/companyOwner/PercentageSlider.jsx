@@ -1,10 +1,7 @@
-import React, { useState } from 'react';
 import RangeSlider from 'react-range-slider-input';
 import 'react-range-slider-input/dist/style.css';
 
-const PercentageSlider = () => {
-  const [percentage, setPercentage] = useState(100);
-
+const PercentageSlider = ({ percentage, handleAddOwnerPercentage }) => {
   return (
     <div className="rounded-xl bg-white p-6 shadow">
       <div className="flex items-center justify-center gap-2">
@@ -16,7 +13,7 @@ const PercentageSlider = () => {
         min={0}
         max={100}
         defaultValue={[0, percentage]} // Left thumb is fixed at 0
-        onInput={([_, value]) => setPercentage(value)} // Only track right thumb
+        onInput={([_, value]) => handleAddOwnerPercentage(value)} // Only track right thumb
         thumbsDisabled={[true, false]} // Left disabled, right enabled
         rangeSlideDisabled={true} // Prevent range dragging
         className="mt-4 bg-red-500"

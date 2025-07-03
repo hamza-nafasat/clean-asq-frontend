@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Children } from 'react';
 import Button from '../shared/small/Button';
 
-const Stepper = ({ steps, currentStep, onStepChange, onComplete, visibleSteps = 5, Children }) => {
+const Stepper = ({ steps, currentStep, visibleSteps = 5, Children }) => {
   const [visibleStepRange, setVisibleStepRange] = useState({ start: 0, end: visibleSteps });
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const totalSteps = steps.length;
@@ -32,19 +32,6 @@ const Stepper = ({ steps, currentStep, onStepChange, onComplete, visibleSteps = 
     }
   }, [currentStep, totalSteps, windowWidth]);
 
-  const handlePrevious = () => {
-    if (currentStep > 0) {
-      onStepChange(currentStep - 1);
-    }
-  };
-  const handleNext = () => {
-    if (currentStep < totalSteps - 1) {
-      onStepChange(currentStep + 1);
-    }
-  };
-  const handleSubmit = () => {
-    onComplete();
-  };
   const displayedSteps = steps.slice(visibleStepRange.start, visibleStepRange.end);
   return (
     <div className="w-full p-4">
@@ -111,14 +98,6 @@ const Stepper = ({ steps, currentStep, onStepChange, onComplete, visibleSteps = 
       <div className="h-[calc(100vh-420px)]">{Children}</div>
 
       {/* Navigation Buttons */}
-      <div className="mt-8 flex justify-end gap-5">
-        {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
-        {currentStep < totalSteps - 1 ? (
-          <Button label={'Next'} onClick={handleNext} />
-        ) : (
-          <Button label={'Submit'} onClick={handleSubmit} />
-        )}
-      </div>
     </div>
   );
 };

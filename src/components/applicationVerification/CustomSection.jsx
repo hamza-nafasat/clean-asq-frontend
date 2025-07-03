@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import TextField from '../shared/small/TextField';
-import { FiEye } from 'react-icons/fi';
+import Button from '../shared/small/Button';
 
-function CustomSection({ fields, name }) {
+function CustomSection({ fields, name, currentStep, totalSteps, handleNext, handlePrevious, handleSubmit }) {
   const [form, setForm] = useState({});
 
   useEffect(() => {
@@ -27,6 +27,17 @@ function CustomSection({ fields, name }) {
             type={field?.type}
           />
         ))}
+      </div>
+      {/* next Previous buttons  */}
+      <div className="flex justify-end gap-4 p-4">
+        <div className="mt-8 flex justify-end gap-5">
+          {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
+          {currentStep < totalSteps - 1 ? (
+            <Button label={'Next'} onClick={() => handleNext({ data: form, name })} />
+          ) : (
+            <Button label={'Submit'} onClick={handleSubmit} />
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import TextField from '../shared/small/TextField';
 import Button from '../shared/small/Button';
 import Modal from '../shared/small/Modal';
@@ -21,11 +21,10 @@ const ownerOptions = [
   { label: 'Public', id: 'Public' },
 ];
 
-function CompanyInformation() {
+function CompanyInformation({ name, handleNext, handlePrevious, currentStep, totalSteps, handleSubmit }) {
   const [activeModal, setActiveModal] = useState(null);
   const [businessDescription, setBusinessDescription] = useState(false);
   const [businessClassification, setBusinessClassification] = useState(false);
-  const [showInput1, setShowInput1] = useState(false);
   const [form, setForm] = useState({
     websiteUrl: '',
     legalCompanyName: '',
@@ -43,7 +42,7 @@ function CompanyInformation() {
     companyPhone: '',
     unit: '',
   });
-
+  console.log('form ', form);
   const renderModal = () => {
     switch (activeModal) {
       case 1:
@@ -84,7 +83,7 @@ function CompanyInformation() {
   return (
     <div className="mt-14 h-full overflow-auto">
       <div className="rounded-lg border border-gray-300 p-6">
-        <h2 className="text-textPrimary text-xl font-medium">Confirm Your Information</h2>
+        <h2 className="text-textPrimary text-xl font-medium">{name}</h2>
         <h5 className="text-textPrimary text-base">Please enter your company information</h5>
         <h5 className="text-textPrimary mt-3">Company Website (recommended) or Complete Legal Company Name</h5>
         <div className="flex items-center justify-center gap-4">
@@ -102,9 +101,21 @@ function CompanyInformation() {
         <div className="my-5 flex w-full flex-col items-start">
           <h1 className="text-xl font-medium">Basic Information</h1>
           <div className="mt-6 flex w-full flex-col gap-4">
-            <TextField label={'Website URL'} />
-            <TextField label={'Legal Company Name'} />
-            <TextField label={'DBA Name'} />
+            <TextField
+              label={'Website URL'}
+              value={form.websiteUrl}
+              onChange={e => setForm({ ...form, websiteUrl: e.target.value })}
+            />
+            <TextField
+              label={'Legal Company Name'}
+              value={form.legalCompanyName}
+              onChange={e => setForm({ ...form, legalCompanyName: e.target.value })}
+            />
+            <TextField
+              label={'DBA Name'}
+              value={form.dbaName}
+              onChange={e => setForm({ ...form, dbaName: e.target.value })}
+            />
           </div>
           <div className="w-full">
             <div className="w-full">
@@ -118,7 +129,11 @@ function CompanyInformation() {
                   className="!border-none !bg-[#F5F5F5] !text-[#1A1A1A] hover:!bg-gray-500"
                 />
               </div>
-              <TextField label={'Business Description'} />
+              <TextField
+                label={'Business Description'}
+                value={form.businessDescription}
+                onChange={e => setForm({ ...form, businessDescription: e.target.value })}
+              />
             </div>
           </div>
           <div className="w-full">
@@ -133,7 +148,11 @@ function CompanyInformation() {
                   className="!border-none !bg-[#F5F5F5] !text-[#1A1A1A] hover:!bg-gray-500"
                 />
               </div>
-              <TextField label={'Business Classification'} />
+              <TextField
+                label={'Business Classification'}
+                value={form.businessClassification}
+                onChange={e => setForm({ ...form, businessClassification: e.target.value })}
+              />
             </div>
           </div>
         </div>
@@ -146,6 +165,7 @@ function CompanyInformation() {
                   <input
                     className="text-textPrimary accent-primary size-5"
                     id={id}
+                    value={form.legalEntityType}
                     onClick={() => setForm({ ...form, legalEntityType: id })}
                     type="radio"
                     name="rentReason1"
@@ -165,44 +185,58 @@ function CompanyInformation() {
                   <input
                     className="accent-primary size-5"
                     id={id}
-                    onChange={() => setForm({ ...form, ownershipType: id })}
+                    value={form.ownerShipType}
+                    onClick={() => setForm({ ...form, ownershipType: id })}
                     type="radio"
-                    name="rentReason1"
+                    name="rentReason2"
                   />
                   <label className="text-textPrimary text-base" htmlFor={id}>
                     {label}
                   </label>
                 </div>
               ))}
-              {showInput1 && (
-                <div>
-                  <div className="mt-1">
-                    <TextField type="text" placeholder="AAPL (NASDAQ)" />
-                  </div>
-                </div>
-              )}
             </div>
           </div>
           <div className="mt-6">
-            <TextField label={'SSN (Social Security Number)'} />
+            <TextField
+              label={'SSN (Social Security Number)'}
+              value={form.ssn}
+              onChange={e => setForm({ ...form, ssn: e.target.value })}
+            />
             <h5 className="text-textPrimary">Enter your Social Security Number (XXX-XX-XXXX)</h5>
           </div>
-          {/* <div className="flex justify-end gap-4">
-            <Button label={'Back'} variant="secondary" />
-            <Button label={'Next'} onClick={modal1Handle} />
-          </div> */}
         </div>
         <div className="flex w-full flex-col gap-4">
           <h1 className="text-textPrimary text-lg font-medium">Legal Entity Type</h1>
-          <TextField label={'Street Address'} />
-          <TextField label={'Apt/Suite/Unit'} />
-          <TextField label={'ZIP code'} />
-          <TextField label={'Country'} />
+          <TextField
+            label={'Street Address'}
+            value={form.streetAddress}
+            onChange={e => setForm({ ...form, streetAddress: e.target.value })}
+          />
+          <TextField
+            label={'Apt/Suite/Unit'}
+            value={form.unit}
+            onChange={e => setForm({ ...form, unit: e.target.value })}
+          />
+          <TextField
+            label={'ZIP code'}
+            value={form.zipCode}
+            onChange={e => setForm({ ...form, zipCode: e.target.value })}
+          />
+          <TextField
+            label={'Country'}
+            value={form.country}
+            onChange={e => setForm({ ...form, country: e.target.value })}
+          />
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <TextField label={'City'} />
-            <TextField label={'State'} />
+            <TextField label={'City'} value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} />
+            <TextField label={'State'} value={form.state} onChange={e => setForm({ ...form, state: e.target.value })} />
           </div>
-          <TextField label={'Company Phone'} />
+          <TextField
+            label={'Company Phone'}
+            value={form.companyPhone}
+            onChange={e => setForm({ ...form, companyPhone: e.target.value })}
+          />
         </div>
       </div>
       {activeModal && (
@@ -240,6 +274,17 @@ function CompanyInformation() {
           />
         </Modal>
       )}
+      {/* next Previous buttons  */}
+      <div className="flex justify-end gap-4 p-4">
+        <div className="mt-8 flex justify-end gap-5">
+          {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
+          {currentStep < totalSteps - 1 ? (
+            <Button label={'Next'} onClick={() => handleNext({ data: form, name })} />
+          ) : (
+            <Button label={'Submit'} onClick={handleSubmit} />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

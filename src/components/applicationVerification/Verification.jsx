@@ -11,7 +11,7 @@ import Modal5 from './verification/Modal5';
 import { MdVerifiedUser } from 'react-icons/md';
 import TextField from '../shared/small/TextField';
 
-function Verification() {
+function Verification({ name, handleNext, handlePrevious, currentStep, totalSteps, handleSubmit }) {
   const [activeModal, setActiveModal] = useState(null);
   const [showInfo, setShowInfo] = useState(false);
 
@@ -56,7 +56,7 @@ function Verification() {
     <div className="mt-14 h-full overflow-auto text-center">
       {showInfo === false && (
         <div>
-          <h1 className="text-textPrimary text-start text-2xl font-semibold">Verification</h1>
+          <h1 className="text-textPrimary text-start text-2xl font-semibold">{name}</h1>
           <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your identity</p>
           <div className="mt-11 flex justify-center">
             <img src={verificationImg} alt="Verification Illustration" className="h-auto w-64" />
@@ -83,7 +83,7 @@ function Verification() {
           <div className="mt-3 rounded-sm border border-[#F0F0F0] bg-white p-3">
             <h2 className="text-textPrimary text-[22px] font-medium">Confirm Your Information</h2>
             <p className="text-textPrimary text-base">
-              Please review and correct your information if needed before proccing.
+              Please review and correct your information if needed before processing.
             </p>
             <div className="mt-4">
               <h3 className="text-textPrimary flex items-center gap-4 text-[18px] font-medium">
@@ -138,24 +138,22 @@ function Verification() {
               <p className="text-textPrimary text-[14px]">
                 By signing here you attest that you are authorized to bind the contractual agreement.
               </p>
-              {/* <div className="grid grid-cols-1 items-center gap-6 sm:grid-cols-2">
-              {['Draw Signature', 'Type Signature'].map((item, i) => (
-                <Button
-                  key={i}
-                  label={item}
-                  className={`${tab === item ? '' : '!border-transparent !bg-[#F6F6F6] !text-[var(--textLight)] hover:!bg-gray-200'}`}
-                  onClick={() => setTab(item)}
-                />
-              ))}
-            </div>
-            {tab === 'Draw Signature' && <div>Draw</div>}
-            {tab === 'Type Signature' && <div>Type</div>} */}
             </div>
           </div>
         </div>
       )}
-
       {activeModal && <Modal onClose={closeModal}>{renderModal()}</Modal>}
+
+      <div className="flex justify-end gap-4 p-4">
+        <div className="mt-8 flex justify-end gap-5">
+          {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
+          {currentStep < totalSteps - 1 ? (
+            <Button label={'Next'} onClick={handleNext} />
+          ) : (
+            <Button label={'Submit'} onClick={handleSubmit} />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

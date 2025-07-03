@@ -6,11 +6,23 @@ import React, { useState } from 'react';
 import { GoPlus } from 'react-icons/go';
 import PercentageSlider from '../companyOwner/PercentageSlider';
 
-function OwnerInformation({ showInfo, setShowInfo }) {
+function OwnerInformation({ form, setForm, setShowInfo }) {
   const [addOwner, setAddOwner] = useState(false);
-  const [beneficialOwnership, setBeneficialOwnership] = useState(false);
   const [ownership, setOwnership] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleAddOwnerPercentage = percentage => {
+    setForm({
+      ...form,
+      yourPercentage: percentage,
+    });
+  };
+  const handleOtherOwnerPercentage = percentage => {
+    setForm({
+      ...form,
+      otherOwnerPercentage: percentage,
+    });
+  };
   return (
     <>
       <div className="h-full overflow-auto pb-3">
@@ -37,7 +49,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
                 <input
                   id="yes"
                   onChange={() => {
-                    setBeneficialOwnership(true);
+                    setForm({ ...form, mainOwnerOwn25OrMore: 'yes' });
                   }}
                   type="radio"
                   name="beneficial"
@@ -49,7 +61,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
               <div className="flex items-center gap-1">
                 <input
                   onChange={() => {
-                    setBeneficialOwnership(false);
+                    setForm({ ...form, mainOwnerOwn25OrMore: 'no' });
                   }}
                   type="radio"
                   id="no"
@@ -61,14 +73,21 @@ function OwnerInformation({ showInfo, setShowInfo }) {
               </div>
             </div>
           </div>
-          {beneficialOwnership && (
+          {form.mainOwnerOwn25OrMore === 'yes' && (
             <div className="mt-3">
               <div className="flex flex-col gap-9">
                 <p className="text-textPrimary text-[14px]">What is your beneficialOwnership percentage?</p>
-                <PercentageSlider />
+                <PercentageSlider
+                  percentage={form.yourPercentage}
+                  handleAddOwnerPercentage={handleAddOwnerPercentage}
+                />
               </div>
               <div className="mt-8">
-                <TextField label={'Please provide your social security number'} />
+                <TextField
+                  label={'Please provide your social security number'}
+                  value={form.yourSsn}
+                  onChange={e => setForm({ ...form, yourSsn: e.target.value })}
+                />
               </div>
             </div>
           )}
@@ -79,6 +98,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
                 <input
                   id="owner-yes"
                   onChange={() => {
+                    setForm({ ...form, otherOwnersOwn25OrMore: 'yes' });
                     setAddOwner(true);
                   }}
                   type="radio"
@@ -91,7 +111,7 @@ function OwnerInformation({ showInfo, setShowInfo }) {
               <div className="flex items-center gap-1">
                 <input
                   onChange={() => {
-                    setAddOwner(false);
+                    setForm({ ...form, otherOwnersOwn25OrMore: 'no' });
                   }}
                   type="radio"
                   id="owner-no"
@@ -186,11 +206,18 @@ function OwnerInformation({ showInfo, setShowInfo }) {
               <div className="flex flex-col gap-9">
                 <p className="text-textPrimary text-[14px]">What is your beneficialOwnership percentage?</p>
                 <div className="">
-                  <PercentageSlider />
+                  <PercentageSlider
+                    percentage={form.otherOwnerPercentage}
+                    handleAddOwnerPercentage={handleOtherOwnerPercentage}
+                  />
                 </div>
               </div>
               <div className="mt-8">
-                <TextField label={'Please provide your social security number'} />
+                <TextField
+                  label={'Please provide your social security number'}
+                  value={form.otherSsn}
+                  onChange={e => setForm({ ...form, otherSsn: e.target.value })}
+                />
               </div>
             </div>
           )}
