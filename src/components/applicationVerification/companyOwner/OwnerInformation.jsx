@@ -2,14 +2,12 @@ import Star from '@/assets/svgs/UserApplicationForm/Star';
 import Modal from '@/components/shared/Modal';
 import Button from '@/components/shared/small/Button';
 import TextField from '@/components/shared/small/TextField';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { GoPlus } from 'react-icons/go';
 import PercentageSlider from '../companyOwner/PercentageSlider';
 
-function OwnerInformation({ form, setForm, setShowInfo }) {
+function OwnerInformation({ form, setForm }) {
   const [addOwner, setAddOwner] = useState(false);
-  const [ownership, setOwnership] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleAddOwnerPercentage = percentage => {
     setForm({
@@ -17,10 +15,23 @@ function OwnerInformation({ form, setForm, setShowInfo }) {
       yourPercentage: percentage,
     });
   };
-  const handleOtherOwnerPercentage = percentage => {
+
+  const handleChangeOnOtherOwnersData = (e, index) => {
+    const newOtherOwners = [...form.otherOwnersData];
+    newOtherOwners[index][e.target.name] = e.target.value;
     setForm({
       ...form,
-      otherOwnerPercentage: percentage,
+      otherOwnersData: newOtherOwners,
+    });
+    console.log('form', form);
+  };
+
+  const handleRemoveOtherOwnersData = index => {
+    const newOtherOwners = [...form.otherOwnersData];
+    newOtherOwners.splice(index, 1);
+    setForm({
+      ...form,
+      otherOwnersData: newOtherOwners,
     });
   };
   return (
@@ -29,6 +40,18 @@ function OwnerInformation({ form, setForm, setShowInfo }) {
         <div className="rounded-[8px] border border-[#F0F0F0] p-4">
           <div className="flex flex-col justify-between gap-2 border-b border-[#E8E8E8] pb-3 sm:flex-row sm:gap-0">
             <div>
+              <div className="mt-3 grid gap-6 sm:grid-cols-2 md:grid-cols-4">
+                <TextField
+                  label={'Name (Me)'}
+                  value={form.mainOwnerName}
+                  onChange={e => setForm({ ...form, mainOwnerName: e.target.value })}
+                />
+                <TextField
+                  label={'Email Address'}
+                  value={form.mainOwnerEmail}
+                  onChange={e => setForm({ ...form, mainOwnerEmail: e.target.value })}
+                />
+              </div>
               <h2 className="text-textPrimary text-[22px] font-medium">Beneficial Owner Information</h2>
               <p className="text-textPrimary">Provide information about the beneficial owner.</p>
             </div>
@@ -100,6 +123,7 @@ function OwnerInformation({ form, setForm, setShowInfo }) {
                   onChange={() => {
                     setForm({ ...form, otherOwnersOwn25OrMore: 'yes' });
                     setAddOwner(true);
+                    setForm({ ...form, otherOwnersData: [{ name: '', email: '', ssn: '', percentage: '' }] });
                   }}
                   type="radio"
                   name="owners"
@@ -112,6 +136,8 @@ function OwnerInformation({ form, setForm, setShowInfo }) {
                 <input
                   onChange={() => {
                     setForm({ ...form, otherOwnersOwn25OrMore: 'no' });
+                    setAddOwner(false);
+                    setForm({ ...form, otherOwnersData: [] });
                   }}
                   type="radio"
                   id="owner-no"
@@ -125,24 +151,51 @@ function OwnerInformation({ form, setForm, setShowInfo }) {
           </div>
           {addOwner && (
             <div className="flex flex-col gap-3">
-              <div className="mt-3 flex flex-col items-center justify-between gap-4 md:flex-row">
-                <div className="grid w-full gap-6 sm:grid-cols-2">
-                  <TextField label={'Owner Name'} />
-                  <TextField label={'Email Address'} />
+              {form?.otherOwnersData?.map(({ name, email, ssn, percentage }, index) => (
+                <div key={index} className="mt-3 flex flex-col items-center justify-between gap-4 md:flex-row">
+                  <div className="grid w-full gap-6 sm:grid-cols-2">
+                    <TextField
+                      label={'Owner Name'}
+                      name={'name'}
+                      value={name}
+                      onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                    />
+                    <TextField
+                      name={'email'}
+                      label={'Email Address'}
+                      value={email}
+                      onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                    />
+                    <TextField
+                      name={'ssn'}
+                      label={'Social Security Number'}
+                      value={ssn}
+                      onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                    />
+                    <TextField
+                      name={'percentage'}
+                      label={'Ownership Percentage?'}
+                      value={percentage}
+                      onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                    />
+                  </div>
+                  <div className="top-3 flex w-full justify-end md:relative">
+                    <Button
+                      onClick={() => handleRemoveOtherOwnersData(index)}
+                      className={'!py-2.5'}
+                      variant="secondary"
+                      label={'Remove'}
+                    />
+                  </div>
                 </div>
-                <div className="top-3 flex w-full justify-end md:relative">
-                  <Button
-                    onClick={() => setAddOwner(false)}
-                    className={'!py-2.5'}
-                    variant="secondary"
-                    label={'Remove'}
-                  />
-                </div>
-              </div>
+              ))}
               <div className="flex justify-end">
                 <Button
                   onClick={() => {
-                    setIsModalOpen(true);
+                    setForm({
+                      ...form,
+                      otherOwnersData: [...form.otherOwnersData, { name: '', email: '', ssn: '', percentage: '' }],
+                    });
                   }}
                   icon={GoPlus}
                   className={
@@ -154,85 +207,9 @@ function OwnerInformation({ form, setForm, setShowInfo }) {
             </div>
           )}
         </div>
-        <div className="mt-5 rounded-[8px] border border-[#F0F0F0] p-4">
-          <div className="flex flex-col justify-between gap-2 border-b border-[#E8E8E8] pb-3 sm:flex-row sm:gap-0">
-            <div>
-              <h2 className="text-textPrimary text-[22px] font-medium">Beneficial Owner Information</h2>
-              <p className="text-textPrimary">Provide information about the beneficial owner.</p>
-            </div>
-            <div className="flex justify-end">
-              <Button
-                icon={Star}
-                className={
-                  '!text-textPrimary !h-fit !rounded-[4px] !border-none !bg-[#F5F5F5] !shadow-md hover:!bg-gray-300'
-                }
-                label={'AI Help'}
-              />
-            </div>
-          </div>
-          <div className="mt-5 border-b border-[#E8E8E8] pb-3">
-            <p className="text-textPrimary text-[14px]">Do you own 25% or more of the company?</p>
-            <div className="mt-1.5 flex items-center gap-8">
-              <div className="flex items-center gap-1">
-                <input
-                  id="ownerYes"
-                  onChange={() => {
-                    setOwnership(true);
-                  }}
-                  type="radio"
-                  name="owner"
-                />
-                <label className="text-textPrimary text-[17px] font-medium" htmlFor="ownerYes">
-                  Yes
-                </label>
-              </div>
-              <div className="flex items-center gap-1">
-                <input
-                  onChange={() => {
-                    setOwnership(false);
-                  }}
-                  type="radio"
-                  id="ownerNo"
-                  name="owner"
-                />
-                <label className="text-textPrimary text-[17px] font-medium" htmlFor="ownerNo">
-                  No
-                </label>
-              </div>
-            </div>
-          </div>
-          {ownership && (
-            <div className="mt-3">
-              <div className="flex flex-col gap-9">
-                <p className="text-textPrimary text-[14px]">What is your beneficialOwnership percentage?</p>
-                <div className="">
-                  <PercentageSlider
-                    percentage={form.otherOwnerPercentage}
-                    handleAddOwnerPercentage={handleOtherOwnerPercentage}
-                  />
-                </div>
-              </div>
-              <div className="mt-8">
-                <TextField
-                  label={'Please provide your social security number'}
-                  value={form.otherSsn}
-                  onChange={e => setForm({ ...form, otherSsn: e.target.value })}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="mt-5 flex justify-end">
-          <Button
-            onClick={() => {
-              setShowInfo(true);
-            }}
-            label={'Submit'}
-          />
-        </div>
       </div>
 
-      {isModalOpen && (
+      {/* {isModalOpen && (
         <Modal
           saveButtonText={'Yes, Proceed'}
           onClose={() => {
@@ -260,7 +237,7 @@ function OwnerInformation({ form, setForm, setShowInfo }) {
             </div>
           </div>
         </Modal>
-      )}
+      )} */}
     </>
   );
 }

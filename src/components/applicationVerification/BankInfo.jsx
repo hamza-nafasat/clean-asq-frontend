@@ -3,7 +3,7 @@ import TextField from '../shared/small/TextField';
 import { FiEye } from 'react-icons/fi';
 import Button from '../shared/small/Button';
 
-function BankInfo({ name, handleNext, handlePrevious, currentStep, totalSteps, handleSubmit }) {
+function BankInfo({ name, handleNext, handlePrevious, currentStep, totalSteps, handleSubmit, formLoading }) {
   const [form, setForm] = useState({
     bankName: '',
     accountHolderName: '',
@@ -45,7 +45,12 @@ function BankInfo({ name, handleNext, handlePrevious, currentStep, totalSteps, h
           {currentStep < totalSteps - 1 ? (
             <Button label={'Next'} onClick={() => handleNext({ data: form, name })} />
           ) : (
-            <Button label={'Submit'} onClick={handleSubmit} />
+            <Button
+              disabled={formLoading}
+              className={`${formLoading && 'pinter-events-none cursor-not-allowed opacity-50'}`}
+              label={'Submit'}
+              onClick={() => handleSubmit({ data: form, name })}
+            />
           )}
         </div>
       </div>

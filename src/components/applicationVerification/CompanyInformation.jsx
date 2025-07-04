@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import TextField from '../shared/small/TextField';
 import Button from '../shared/small/Button';
 import Modal from '../shared/small/Modal';
@@ -21,7 +21,16 @@ const ownerOptions = [
   { label: 'Public', id: 'Public' },
 ];
 
-function CompanyInformation({ name, handleNext, handlePrevious, currentStep, totalSteps, handleSubmit }) {
+function CompanyInformation({
+  name,
+  handleNext,
+  handlePrevious,
+  currentStep,
+  totalSteps,
+  handleSubmit,
+  reduxData,
+  formLoading,
+}) {
   const [activeModal, setActiveModal] = useState(null);
   const [businessDescription, setBusinessDescription] = useState(false);
   const [businessClassification, setBusinessClassification] = useState(false);
@@ -32,7 +41,7 @@ function CompanyInformation({ name, handleNext, handlePrevious, currentStep, tot
     businessDescription: '',
     businessClassification: '',
     legalEntityType: '',
-    ownerShipType: '',
+    ownershipType: '',
     ssn: '',
     streetAddress: '',
     city: '',
@@ -79,6 +88,30 @@ function CompanyInformation({ name, handleNext, handlePrevious, currentStep, tot
         return null;
     }
   };
+
+  useEffect(() => {
+    if (reduxData) {
+      console.log('reduxData ', reduxData);
+      const obj = {
+        websiteUrl: reduxData?.websiteUrl ?? '',
+        legalCompanyName: reduxData?.legalCompanyName ?? '',
+        dbaName: reduxData?.dbaName ?? '',
+        businessDescription: reduxData?.businessDescription ?? '',
+        businessClassification: reduxData?.businessClassification ?? '',
+        legalEntityType: reduxData?.legalEntityType ?? '',
+        ownershipType: reduxData?.ownershipType ?? '',
+        ssn: reduxData?.ssn ?? '',
+        streetAddress: reduxData?.streetAddress ?? '',
+        city: reduxData?.city ?? '',
+        state: reduxData?.state ?? '',
+        zipCode: reduxData?.zipCode ?? '',
+        country: reduxData?.country ?? '',
+        companyPhone: reduxData?.companyPhone ?? '',
+        unit: reduxData?.unit ?? '',
+      };
+      setForm(obj);
+    }
+  }, [reduxData]);
 
   return (
     <div className="mt-14 h-full overflow-auto">
@@ -164,13 +197,13 @@ function CompanyInformation({ name, handleNext, handlePrevious, currentStep, tot
                 <div key={id} className="flex items-center gap-2 p-2">
                   <input
                     className="text-textPrimary accent-primary size-5"
-                    id={id}
+                    id={form.legalEntityType}
                     value={form.legalEntityType}
                     onClick={() => setForm({ ...form, legalEntityType: id })}
                     type="radio"
                     name="rentReason1"
                   />
-                  <label className="text-textPrimary text-base" htmlFor={id}>
+                  <label className="text-textPrimary text-base" htmlFor={form.legalEntityType}>
                     {label}
                   </label>
                 </div>
@@ -185,7 +218,7 @@ function CompanyInformation({ name, handleNext, handlePrevious, currentStep, tot
                   <input
                     className="accent-primary size-5"
                     id={id}
-                    value={form.ownerShipType}
+                    value={form.ownershipType}
                     onClick={() => setForm({ ...form, ownershipType: id })}
                     type="radio"
                     name="rentReason2"
@@ -281,7 +314,12 @@ function CompanyInformation({ name, handleNext, handlePrevious, currentStep, tot
           {currentStep < totalSteps - 1 ? (
             <Button label={'Next'} onClick={() => handleNext({ data: form, name })} />
           ) : (
-            <Button label={'Submit'} onClick={handleSubmit} />
+            <Button
+              disabled={formLoading}
+              className={`${formLoading && 'pinter-events-none cursor-not-allowed opacity-50'}`}
+              label={'Submit'}
+              onClick={() => handleSubmit({ data: form, name })}
+            />
           )}
         </div>
       </div>

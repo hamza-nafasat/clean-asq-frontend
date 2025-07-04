@@ -2,7 +2,16 @@ import React, { useEffect, useState } from 'react';
 import TextField from '../shared/small/TextField';
 import Button from '../shared/small/Button';
 
-function CustomSection({ fields, name, currentStep, totalSteps, handleNext, handlePrevious, handleSubmit }) {
+function CustomSection({
+  fields,
+  name,
+  currentStep,
+  totalSteps,
+  handleNext,
+  handlePrevious,
+  handleSubmit,
+  formLoading,
+}) {
   const [form, setForm] = useState({});
 
   useEffect(() => {
@@ -35,7 +44,12 @@ function CustomSection({ fields, name, currentStep, totalSteps, handleNext, hand
           {currentStep < totalSteps - 1 ? (
             <Button label={'Next'} onClick={() => handleNext({ data: form, name })} />
           ) : (
-            <Button label={'Submit'} onClick={handleSubmit} />
+            <Button
+              disabled={formLoading}
+              className={`${formLoading && 'pinter-events-none cursor-not-allowed opacity-50'}`}
+              label={'Submit'}
+              onClick={() => handleSubmit({ data: form, name })}
+            />
           )}
         </div>
       </div>

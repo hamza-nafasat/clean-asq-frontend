@@ -3,15 +3,15 @@ import OwnerInformation from './companyOwner/OwnerInformation';
 import OwnerViewInfo from './companyOwner/OwnerViewInfo';
 import Button from '../shared/small/Button';
 
-function CompanyOwners({ name, handleNext, handlePrevious, currentStep, totalSteps, handleSubmit }) {
+function CompanyOwners({ name, handleNext, handlePrevious, currentStep, totalSteps, handleSubmit, formLoading }) {
   const [showInfo, setShowInfo] = useState(false);
   const [form, setForm] = useState({
-    mainOwnerOwn25OrMore: '',
-    yourPercentage: 100,
+    mainOwnerName: '',
+    mainOwnerEmail: '',
+    yourPercentage: 25,
     yourSsn: '',
     otherOwnersOwn25OrMore: '',
-    otherOwnerPercentage: 100,
-    otherOwnerSsn: '',
+    otherOwnersData: [],
   });
 
   return (
@@ -30,7 +30,12 @@ function CompanyOwners({ name, handleNext, handlePrevious, currentStep, totalSte
           {currentStep < totalSteps - 1 ? (
             <Button label={'Next'} onClick={() => handleNext({ data: form, name })} />
           ) : (
-            <Button label={'Submit'} onClick={handleSubmit} />
+            <Button
+              disabled={formLoading}
+              className={`${formLoading && 'pinter-events-none cursor-not-allowed opacity-50'}`}
+              label={'Submit'}
+              onClick={() => handleSubmit({ data: form, name })}
+            />
           )}
         </div>
       </div>

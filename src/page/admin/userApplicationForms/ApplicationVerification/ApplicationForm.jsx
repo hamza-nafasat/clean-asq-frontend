@@ -9,28 +9,35 @@ import { useCallback, useEffect, useState } from 'react';
 import Stepper from '../../../../components/Stepper/Stepper';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateFormState } from '@/redux/slices/formSlice';
+import { useSubmitFormArticleFileMutation, useSubmitFormMutation } from '@/redux/apis/formApis';
+import { toast } from 'react-toastify';
+import { unwrapResult } from '@reduxjs/toolkit';
 
 export default function ApplicationForm({ form }) {
   const dispatch = useDispatch();
-  const { formData } = useSelector(state => state?.form);
+  const { formData, fileData } = useSelector(state => state?.form);
   const [currentStep, setCurrentStep] = useState(0);
   const [sectionNames, setSectionNames] = useState([]);
   const [stepsComps, setStepsComps] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formSubmit] = useSubmitFormMutation();
+  const [submitArticle] = useSubmitFormArticleFileMutation();
 
   const handleComplete = () => {
     console.log('Form submitted:');
   };
-  console.warn('redux form state', formData);
 
   const handlePrevious = useCallback(() => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
   }, [currentStep]);
+
   const handleNext = useCallback(
-    ({ data, name }) => {
+    async ({ data, name }) => {
       if (data && name) {
-        dispatch(updateFormState({ data, name }));
+        const action = await dispatch(updateFormState({ data, name }));
+        unwrapResult(action);
       }
       if (currentStep < form?.sections?.length - 1) {
         setCurrentStep(currentStep + 1);
@@ -38,13 +45,36 @@ export default function ApplicationForm({ form }) {
     },
     [currentStep, dispatch, form?.sections?.length]
   );
-  const handleSubmit = () => {};
+
+  const handleSubmit = useCallback(
+    async ({ data, name }) => {
+      try {
+        setIsLoading(true);
+        const res = await formSubmit({ formId: form?._id, formData: { ...formData, [name]: data } }).unwrap();
+        if (res.success) {
+          const formDataStructure = new FormData();
+          formDataStructure.append('submissionId', res?.data?._id);
+          formDataStructure.append('file', fileData?.file);
+          formDataStructure.append('name', fileData?.name);
+          const resp = await submitArticle(formDataStructure).unwrap();
+          if (resp.success) toast.success(res.message);
+        }
+      } catch (error) {
+        console.log('error submitting form', error);
+        toast.error(error?.data?.message || 'Error while submitting form');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [fileData?.file, fileData?.name, form?._id, formData, formSubmit, submitArticle]
+  );
 
   useEffect(() => {
     if (form?.sections && form?.sections?.length > 0) {
       const data = [];
       const stepNames = [];
       form?.sections?.forEach(step => {
+        const sectionDataFromRedux = formData?.[step?.name];
         if (step.title === 'id_verification_blk') {
           data.push(
             <Verification
@@ -54,72 +84,84 @@ export default function ApplicationForm({ form }) {
               handleSubmit={handleSubmit}
               currentStep={currentStep}
               totalSteps={form?.sections?.length}
+              formLoading={isLoading}
             />
           );
           stepNames.push(step.name);
         } else if (step.title === 'company_information_blk') {
           data.push(
             <CompanyInformation
+              reduxData={sectionDataFromRedux}
               handleNext={handleNext}
               handlePrevious={handlePrevious}
               name={step.name}
               handleSubmit={handleSubmit}
               currentStep={currentStep}
               totalSteps={form?.sections?.length}
+              formLoading={isLoading}
             />
           );
           stepNames.push(step.name);
         } else if (step.title === 'beneficial_blk') {
           data.push(
             <CompanyOwners
+              reduxData={sectionDataFromRedux}
               handleNext={handleNext}
               handlePrevious={handlePrevious}
               name={step.name}
               handleSubmit={handleSubmit}
               currentStep={currentStep}
               totalSteps={form?.sections?.length}
+              formLoading={isLoading}
             />
           );
           stepNames.push(step.name);
         } else if (step.title === 'bank_account_info_blk') {
           data.push(
             <BankInfo
+              reduxData={sectionDataFromRedux}
               handleNext={handleNext}
               handlePrevious={handlePrevious}
               name={step.name}
               handleSubmit={handleSubmit}
               currentStep={currentStep}
               totalSteps={form?.sections?.length}
+              formLoading={isLoading}
             />
           );
           stepNames.push(step.name);
         } else if (step.title === 'avg_transactions_blk') {
           data.push(
             <ProcessingInfo
+              reduxData={sectionDataFromRedux}
               handleNext={handleNext}
               handlePrevious={handlePrevious}
               name={step.name}
               handleSubmit={handleSubmit}
               currentStep={currentStep}
               totalSteps={form?.sections?.length}
+              formLoading={isLoading}
             />
           );
           stepNames.push(step.name);
         } else if (step.title === 'incorporation_article_blk') {
           data.push(
             <Documents
+              reduxData={sectionDataFromRedux}
               handleNext={handleNext}
               handlePrevious={handlePrevious}
               name={step.name}
               handleSubmit={handleSubmit}
               currentStep={currentStep}
               totalSteps={form?.sections?.length}
+              formLoading={isLoading}
             />
           );
           stepNames.push(step.name);
         } else if (step.title == 'custom_section') {
           data.push(
             <CustomSection
+              reduxData={sectionDataFromRedux}
               fields={step.fields}
               name={step.name}
               handleNext={handleNext}
@@ -127,6 +169,7 @@ export default function ApplicationForm({ form }) {
               handleSubmit={handleSubmit}
               currentStep={currentStep}
               totalSteps={form?.sections?.length}
+              formLoading={isLoading}
             />
           );
           stepNames.push(step.name);
@@ -136,7 +179,7 @@ export default function ApplicationForm({ form }) {
       setStepsComps(data);
       setSectionNames(stepNames);
     }
-  }, [currentStep, form?.sections, handleNext, handlePrevious]);
+  }, [currentStep, form?.sections, formData, formData.sections, handleNext, handlePrevious, handleSubmit, isLoading]);
   return (
     <div className="overflow-none h-full w-full rounded-[10px] bg-white px-6 py-6">
       <Stepper

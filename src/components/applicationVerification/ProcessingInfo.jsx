@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import TextField from '../shared/small/TextField';
 import Button from '../shared/small/Button';
 
-function ProcessingInfo({ name, handleNext, handlePrevious, currentStep, totalSteps, handleSubmit }) {
+function ProcessingInfo({ name, handleNext, handlePrevious, currentStep, totalSteps, handleSubmit, formLoading }) {
   const [form, setForm] = useState({
     monthlyAmount: '',
     processingValue: '',
@@ -36,7 +36,12 @@ function ProcessingInfo({ name, handleNext, handlePrevious, currentStep, totalSt
           {currentStep < totalSteps - 1 ? (
             <Button label={'Next'} onClick={() => handleNext({ data: form, name })} />
           ) : (
-            <Button label={'Submit'} onClick={handleSubmit} />
+            <Button
+              disabled={formLoading}
+              className={`${formLoading && 'pinter-events-none cursor-not-allowed opacity-50'}`}
+              label={'Submit'}
+              onClick={() => handleSubmit({ data: form, name })}
+            />
           )}
         </div>
       </div>

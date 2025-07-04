@@ -46,8 +46,35 @@ const formApis = createApi({
       }),
       invalidatesTags: ['Form'],
     }),
+
+    // SUBMIT form
+    // ---------------
+    submitForm: builder.mutation({
+      query: data => ({
+        url: '/submit',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Form'],
+    }),
+    // SUBMIT-ARTICLE
+    // ---------------
+    submitFormArticleFile: builder.mutation({
+      query: data => ({
+        url: '/submit-article',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Form'],
+    }),
   }),
 });
-export const { useCreateFormMutation, useGetMyAllFormsQuery, useGetSingleFormMutation, useDeleteSingleFormMutation } =
-  formApis;
+export const {
+  useCreateFormMutation,
+  useGetMyAllFormsQuery,
+  useGetSingleFormMutation,
+  useDeleteSingleFormMutation,
+  useSubmitFormMutation,
+  useSubmitFormArticleFileMutation,
+} = formApis;
 export default formApis;
