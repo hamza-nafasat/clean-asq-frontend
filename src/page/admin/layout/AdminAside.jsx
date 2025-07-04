@@ -37,7 +37,7 @@ const AdminAside = () => {
       icon: <Applicants />,
     },
     {
-      title: 'Brandings',
+      title: 'Branding',
       link: '/branding',
       icon: <HiOutlineLightBulb />,
     },
