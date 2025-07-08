@@ -8,6 +8,7 @@ import Modal3 from './companyInfo/Modal3';
 import Modal4 from './companyInfo/Modal4';
 import Modal5 from './companyInfo/Modal5';
 import { Ai } from '@/assets/svgs/icon';
+import Modal6 from './companyInfo/Modal6';
 
 const options = [
   { label: 'Limited Liability Company (LLC)', id: 'llc' },
@@ -34,6 +35,8 @@ function CompanyInformation({
   const [activeModal, setActiveModal] = useState(null);
   const [businessDescription, setBusinessDescription] = useState(false);
   const [businessClassification, setBusinessClassification] = useState(false);
+  const [customizeModal, setCustomizeModal] = useState(false);
+
   const [form, setForm] = useState({
     websiteUrl: '',
     legalCompanyName: '',
@@ -115,6 +118,16 @@ function CompanyInformation({
 
   return (
     <div className="mt-14 h-full overflow-auto">
+      <div className="mb-10 flex items-center justify-between">
+        <p className="text-textPrimary text-2xl font-semibold">2-Company Information</p>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            setCustomizeModal(true);
+          }}
+          label={'Customize'}
+        />
+      </div>
       <div className="rounded-lg border border-gray-300 p-6">
         <h2 className="text-textPrimary text-xl font-medium">{name}</h2>
         <h5 className="text-textPrimary text-base">Please enter your company information</h5>
@@ -323,6 +336,15 @@ function CompanyInformation({
           )}
         </div>
       </div>
+      {customizeModal && (
+        <Modal
+          onClose={() => {
+            setCustomizeModal(false);
+          }}
+        >
+          <Modal6 />
+        </Modal>
+      )}
     </div>
   );
 }
