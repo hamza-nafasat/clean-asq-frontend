@@ -6,6 +6,7 @@ import userApis from './apis/userApis';
 import roleApis from './apis/roleApis';
 import formApis from './apis/formApis';
 import formSlice from './slices/formSlice';
+import idMissionApis from './apis/idMissionApis';
 
 const store = configureStore({
   reducer: {
@@ -20,13 +21,15 @@ const store = configureStore({
     [userApis.reducerPath]: userApis.reducer,
     [roleApis.reducerPath]: roleApis.reducer,
     [formApis.reducerPath]: formApis.reducer,
+    [idMissionApis.reducerPath]: idMissionApis.reducer,
   },
   middleware: getDefaultMiddleware => {
     return getDefaultMiddleware({ serializableCheck: false })
       .concat(authApis.middleware)
       .concat(userApis.middleware)
       .concat(roleApis.middleware)
-      .concat(formApis.middleware);
+      .concat(formApis.middleware)
+      .concat(idMissionApis.middleware);
   },
 });
 

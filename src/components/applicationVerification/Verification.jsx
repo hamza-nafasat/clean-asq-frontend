@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import verificationImg from '../../assets/images/verificationImg.png';
 import Modal from '../shared/small/Modal';
 import Button from '../shared/small/Button';
@@ -10,48 +10,73 @@ import Modal4 from './verification/Modal4';
 import Modal5 from './verification/Modal5';
 import { MdVerifiedUser } from 'react-icons/md';
 import TextField from '../shared/small/TextField';
+import { IdValidation } from 'idmission-web-sdk';
+import { useGetIdMissionSessionMutation } from '@/redux/apis/idMissionApis';
 
 function Verification({ name, handleNext, handlePrevious, currentStep, totalSteps, handleSubmit }) {
   const [activeModal, setActiveModal] = useState(null);
+  const [validatedData, setValidatedData] = useState(null);
+  const [getIdMissionSession] = useGetIdMissionSessionMutation();
+  const [running, setRunning] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
 
-  const openModal = modalNumber => {
-    setActiveModal(modalNumber);
-  };
+  const getSessionId = useCallback(async () => {
+    try {
+      const res = await getIdMissionSession().unwrap();
+      console.log('session id is ', res);
+      if (res.success) return res.session.id;
+    } catch (error) {
+      console.log('Error fetching session ID:', error);
+    }
+  }, [getIdMissionSession]);
 
-  const closeModal = () => {
-    setActiveModal(null);
-  };
-  const closeModal1 = () => {
-    console.log('new');
-    setShowInfo(true);
-    console.log('new1');
-    setActiveModal(null);
-    console.log('new2');
-  };
-  console.log('showInfo', showInfo);
-
-  const nextModal = () => {
-    setActiveModal(prev => prev + 1);
-  };
+  const handleApproved = useCallback(submissionResponse => {
+    setValidatedData({
+      name: submissionResponse?.responseCustomerData?.extractedPersonalData?.name,
+      dob: submissionResponse?.responseCustomerData?.extractedPersonalData?.dob,
+      gender: submissionResponse?.responseCustomerData?.extractedPersonalData?.gender,
+      idType: submissionResponse?.responseCustomerData?.extractedIdData?.idType,
+      idCountry: submissionResponse?.responseCustomerData?.extractedIdData?.idCountry,
+      idIssuedCountry: submissionResponse?.responseCustomerData?.extractedIdData?.idIssueCountry,
+      ageOver18: submissionResponse?.responseCustomerData?.extractedIdData?.ageOver18,
+      idIssueDate: submissionResponse?.responseCustomerData?.extractedIdData?.idIssueDate,
+      idExpirationDate: submissionResponse?.responseCustomerData?.extractedIdData?.idExpirationDate,
+      idNumber: submissionResponse?.responseCustomerData?.extractedIdData?.idNumber,
+      negativeDBMatchFound: submissionResponse?.responseCustomerData?.extractedIdData?.negativeDBMatchFound,
+      uniqueRequestId: submissionResponse?.responseCustomerData?.resultData?.uniqueRequestId,
+      verificationResult: submissionResponse?.resultData?.verificationResult,
+      verificationResultId: submissionResponse?.resultData?.verificationResultId,
+      traceId: submissionResponse?.status?.traceId,
+      requestId: submissionResponse?.status?.requestId,
+      ipAddress: submissionResponse?.status?.ipAddress,
+      statusMessage: submissionResponse?.status?.statusMessage,
+    });
+  }, []);
 
   const renderModal = () => {
     switch (activeModal) {
       case 1:
-        return <Modal1 modal1Handle={nextModal} />;
+        return <Modal1 modal1Handle={() => setActiveModal(prev => prev + 1)} />;
       case 2:
-        return <Modal2 modal1Handle={nextModal} />;
+        return <Modal2 modal1Handle={() => setActiveModal(prev => prev + 1)} />;
       case 3:
-        return <Modal3 modal1Handle={nextModal} />;
+        return <Modal3 modal1Handle={() => setActiveModal(prev => prev + 1)} />;
       case 4:
-        return <Modal4 modal1Handle={nextModal} />;
+        return <Modal4 modal1Handle={() => setActiveModal(prev => prev + 1)} />;
       case 5:
-        return <Modal5 modal1Handle={closeModal1} />;
+        return (
+          <Modal5
+            modal1Handle={() => {
+              setShowInfo(true);
+              setActiveModal(null);
+            }}
+          />
+        );
       default:
         return null;
     }
   };
-
+  console.log('idmission validated data is ', validatedData);
   return (
     <div className="mt-14 h-full overflow-auto text-center">
       {showInfo === false && (
@@ -63,12 +88,30 @@ function Verification({ name, handleNext, handlePrevious, currentStep, totalStep
           </div>
           <div className="mt-8">
             <Button
-              onClick={() => openModal(1)}
+              onClick={() => setRunning(true)}
               label={'Verify ID'}
               cnRight={'text-white'}
               rightIcon={PiUserFocusFill}
             />
           </div>
+          {running && (
+            <IdValidation
+              sessionId={getSessionId}
+              onApproved={handleApproved}
+              onDenied={() => {
+                alert('Validation denied, please try again.');
+                setRunning(false);
+              }}
+              onError={err => {
+                console.error('SDK error:', err);
+                alert('An error occurred during verification.');
+                setRunning(false);
+              }}
+              onComplete={() => {
+                setRunning(false);
+              }}
+            />
+          )}
         </div>
       )}
       {/* /// for next page */}
@@ -142,7 +185,15 @@ function Verification({ name, handleNext, handlePrevious, currentStep, totalStep
           </div>
         </div>
       )}
-      {activeModal && <Modal onClose={closeModal}>{renderModal()}</Modal>}
+      {activeModal && (
+        <Modal
+          onClose={() => {
+            setActiveModal(null);
+          }}
+        >
+          {renderModal()}
+        </Modal>
+      )}
 
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">

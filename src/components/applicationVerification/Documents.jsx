@@ -1,7 +1,7 @@
 import FileUploader from './Documents/FileUploader';
 import Button from '../shared/small/Button';
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { updateFileData } from '@/redux/slices/formSlice';
 
