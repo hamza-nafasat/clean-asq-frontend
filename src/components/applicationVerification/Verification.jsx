@@ -43,7 +43,7 @@ function Verification({ name, handleNext, handlePrevious, currentStep, totalStep
       idExpirationDate: submissionResponse?.responseCustomerData?.extractedIdData?.idExpirationDate,
       idNumber: submissionResponse?.responseCustomerData?.extractedIdData?.idNumber,
       negativeDBMatchFound: submissionResponse?.responseCustomerData?.extractedIdData?.negativeDBMatchFound,
-      uniqueRequestId: submissionResponse?.responseCustomerData?.resultData?.uniqueRequestId,
+      uniqueRequestId: submissionResponse?.resultData?.uniqueRequestId,
       verificationResult: submissionResponse?.resultData?.verificationResult,
       verificationResultId: submissionResponse?.resultData?.verificationResultId,
       traceId: submissionResponse?.status?.traceId,
