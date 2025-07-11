@@ -95,6 +95,7 @@ export default function ApplicationForm({ form }) {
               handleNext={handleNext}
               handlePrevious={handlePrevious}
               name={step.name}
+              fields={step.fields}
               handleSubmit={handleSubmit}
               currentStep={currentStep}
               totalSteps={form?.sections?.length}
@@ -109,6 +110,7 @@ export default function ApplicationForm({ form }) {
               handleNext={handleNext}
               handlePrevious={handlePrevious}
               name={step.name}
+              fields={step.fields}
               handleSubmit={handleSubmit}
               currentStep={currentStep}
               totalSteps={form?.sections?.length}
@@ -123,6 +125,7 @@ export default function ApplicationForm({ form }) {
               handleNext={handleNext}
               handlePrevious={handlePrevious}
               name={step.name}
+              fields={step.fields}
               handleSubmit={handleSubmit}
               currentStep={currentStep}
               totalSteps={form?.sections?.length}
@@ -137,6 +140,7 @@ export default function ApplicationForm({ form }) {
               handleNext={handleNext}
               handlePrevious={handlePrevious}
               name={step.name}
+              fields={step.fields}
               handleSubmit={handleSubmit}
               currentStep={currentStep}
               totalSteps={form?.sections?.length}
@@ -151,6 +155,7 @@ export default function ApplicationForm({ form }) {
               handleNext={handleNext}
               handlePrevious={handlePrevious}
               name={step.name}
+              fields={step.fields}
               handleSubmit={handleSubmit}
               currentStep={currentStep}
               totalSteps={form?.sections?.length}
