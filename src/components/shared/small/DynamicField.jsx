@@ -1,6 +1,6 @@
 import React from 'react';
 
-const DynamicField = ({ cn, field, className = '', form, setForm, ...rest }) => {
+const DynamicField = ({ cn, field, className = '', form, placeholder, setForm, ...rest }) => {
   const { type, label, id, options, name } = field;
   if (type == 'radio') {
     return (
@@ -13,9 +13,12 @@ const DynamicField = ({ cn, field, className = '', form, setForm, ...rest }) => 
                 <input
                   name={name}
                   type={type}
+                  id={option.value}
+                  value={option.value}
+                  checked={form[name] === option.value}
                   className="text-textPrimary accent-primary size-5"
                   {...rest}
-                  onClick={() => setForm({ ...form, [name]: option.value })}
+                  onChange={() => setForm({ ...form, [name]: option.value })}
                 />
                 <label className="text-textPrimary text-base">{option?.label}</label>
               </div>
@@ -41,6 +44,25 @@ const DynamicField = ({ cn, field, className = '', form, setForm, ...rest }) => 
       </div>
     );
   }
+  if (type == 'range') {
+    return (
+      <>
+        <div className="flex w-full flex-col items-start">
+          {label && <label className="text-textPrimary text-sm lg:text-base">{label}</label>}
+          <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
+            <input
+              type="range"
+              minValue={0}
+              maxValue={100}
+              className={`${cn} border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
+              defaultValue={25}
+              {...rest}
+            />
+          </div>
+        </div>
+      </>
+    );
+  }
   return (
     <>
       <div className="flex w-full flex-col items-start">
@@ -48,6 +70,7 @@ const DynamicField = ({ cn, field, className = '', form, setForm, ...rest }) => 
         <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
           <input
             {...rest}
+            placeholder={placeholder}
             type={type}
             className={`${cn} border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
           />

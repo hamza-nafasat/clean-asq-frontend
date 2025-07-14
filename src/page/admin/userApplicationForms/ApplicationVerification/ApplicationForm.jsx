@@ -151,7 +151,7 @@ export default function ApplicationForm({ form }) {
         } else if (step.title === 'incorporation_article_blk') {
           data.push(
             <Documents
-              reduxData={sectionDataFromRedux}
+              reduxData={fileData}
               handleNext={handleNext}
               handlePrevious={handlePrevious}
               name={step.name}
@@ -184,7 +184,17 @@ export default function ApplicationForm({ form }) {
       setStepsComps(data);
       setSectionNames(stepNames);
     }
-  }, [currentStep, form?.sections, formData, formData.sections, handleNext, handlePrevious, handleSubmit, isLoading]);
+  }, [
+    currentStep,
+    fileData,
+    form?.sections,
+    formData,
+    formData.sections,
+    handleNext,
+    handlePrevious,
+    handleSubmit,
+    isLoading,
+  ]);
   return (
     <div className="overflow-none h-full w-full rounded-[10px] bg-white px-6 py-6">
       <Stepper

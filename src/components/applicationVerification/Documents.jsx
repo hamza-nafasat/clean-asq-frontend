@@ -1,39 +1,68 @@
 import FileUploader from './Documents/FileUploader';
 import Button from '../shared/small/Button';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { updateFileData } from '@/redux/slices/formSlice';
 
-function Documents({ name, currentStep, totalSteps, handleNext, handlePrevious, handleSubmit, formLoading }) {
+function Documents({
+  name,
+  currentStep,
+  totalSteps,
+  handleNext,
+  handlePrevious,
+  handleSubmit,
+  formLoading,
+  fields,
+  reduxData,
+}) {
   const dispatch = useDispatch();
+  const [fileFieldName, setFileFieldName] = useState('');
+  const [form, setForm] = useState({});
 
-  const [file, setFile] = useState(null);
   const handleFileSelect = file => {
-    console.log('Selected file:', file);
-    setFile(file);
+    if (!file) return toast.error('Please select a file');
+    setForm(prev => ({ ...prev, [fileFieldName]: file }));
   };
   const updateFileDataHandler = () => {
-    if (!file) return toast.error('Please select a file');
-    dispatch(updateFileData({ name, file }));
-    handleNext({ data: { file }, name });
+    if (!form?.[fileFieldName]) return toast.error('Please select a file');
+    dispatch(updateFileData({ name, file: form[fileFieldName] }));
+    handleNext({ data: { [fileFieldName]: form[fileFieldName] }, name });
   };
   const submitFileDataHandler = () => {
-    if (!file) return toast.error('Please select a file');
-    dispatch(updateFileData({ name, file }));
-    handleSubmit({ data: { file }, name });
+    if (!form?.[fileFieldName]) return toast.error('Please select a file');
+    dispatch(updateFileData({ name, file: form[fileFieldName] }));
+    handleSubmit({ data: { [fileFieldName]: form[fileFieldName] }, name });
   };
+
+  useEffect(() => {
+    if (fields && fields.length > 0) {
+      const initialForm = {};
+      fields.forEach(field => {
+        if (field.type === 'file') {
+          setFileFieldName(field.name);
+          initialForm[field.name] = reduxData.file ? reduxData.file || '' : '';
+        }
+      });
+      setForm(initialForm);
+    }
+  }, [fields, name, reduxData]);
+
+  console.log('Documents form data:', form);
+
   return (
     <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
       <h1 className="text-textPrimary text-base">{name}</h1>
       <div className="mt-6 w-full">
-        <h5 className="text-textPrimary text-base">
-          Please upload a copy of your articles of incorporation (PDF or image file)
-        </h5>
-
-        <div className="w-full p-6">
-          <FileUploader onFileSelect={handleFileSelect} />
-        </div>
+        {fields?.map((field, i) => {
+          if (field.type === 'file') {
+            return (
+              <div className="w-full p-6" key={i}>
+                <FileUploader label={field?.label} file={form[fileFieldName]} onFileSelect={handleFileSelect} />
+              </div>
+            );
+          }
+        })}
       </div>
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">

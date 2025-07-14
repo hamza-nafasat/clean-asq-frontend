@@ -8,6 +8,7 @@ import Modal3 from './companyInfo/Modal3';
 import Modal4 from './companyInfo/Modal4';
 import Modal5 from './companyInfo/Modal5';
 import Modal6 from './companyInfo/Modal6';
+import { toast } from 'react-toastify';
 
 function CompanyInformation({
   name,
@@ -25,7 +26,9 @@ function CompanyInformation({
   const [businessClassification, setBusinessClassification] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
   const [form, setForm] = useState({});
+
   console.log('company info', form);
+
   const renderModal = () => {
     switch (activeModal) {
       case 1:
@@ -71,29 +74,30 @@ function CompanyInformation({
       });
       setForm(initialForm);
     }
-  }, [fields, reduxData]);
+  }, [fields, name, reduxData]);
+
+  const nextHandler = ({ data, name }) => {
+    const isValid = Object.values(data).every(value => value.trim() !== '');
+    if (!isValid) return toast.error('Please fill all fields before proceeding next.');
+    handleNext({ data: form, name });
+  };
 
   return (
     <div className="mt-14 h-full overflow-auto">
       <div className="mb-10 flex items-center justify-between">
         <p className="text-textPrimary text-2xl font-semibold">{name}</p>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            setCustomizeModal(true);
-          }}
-          label={'Customize'}
-        />
+        <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
       </div>
 
       {fields?.length > 0 &&
         fields.map((field, index) => (
-          <div key={index}>
+          <div key={index} className="mt-4">
             <DynamicField
               field={field}
               value={form[field.name] || ''}
               onChange={e => setForm({ ...form, [field.name]: e.target.value })}
               setForm={setForm}
+              placeholder={field.placeholder}
               form={form}
             />
           </div>
@@ -115,7 +119,7 @@ function CompanyInformation({
         <div className="mt-8 flex justify-end gap-5">
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
-            <Button label={'Next'} onClick={() => handleNext({ data: form, name })} />
+            <Button label={'Next'} onClick={() => nextHandler({ data: form, name })} />
           ) : (
             <Button
               disabled={formLoading}

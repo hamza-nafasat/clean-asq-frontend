@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import TextField from '../shared/small/TextField';
 import Button from '../shared/small/Button';
+import DynamicField from '../shared/small/DynamicField';
 
 function CustomSection({
   fields,
@@ -28,13 +29,16 @@ function CustomSection({
       <h1 className="text-textPrimary text-xl font-medium">{name}</h1>
       <div className="mt-6 flex flex-col gap-4">
         {fields?.map((field, index) => (
-          <TextField
-            key={index}
-            label={field?.label}
-            value={form[field?.label]}
-            onChange={e => setForm({ ...form, [field?.label]: e.target.value })}
-            type={field?.type}
-          />
+          <div key={index} className="mt-4">
+            <DynamicField
+              field={field}
+              value={form[field.name] || ''}
+              onChange={e => setForm({ ...form, [field.name]: e.target.value })}
+              setForm={setForm}
+              placeholder={field.placeholder}
+              form={form}
+            />
+          </div>
         ))}
       </div>
       {/* next Previous buttons  */}
