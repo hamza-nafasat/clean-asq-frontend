@@ -2,7 +2,7 @@ import React from 'react';
 
 const Checkbox = ({ id, name, label, checked = false, onChange, disabled = false, className = '', ...rest }) => {
   return (
-    <div className={`flex items-center space-x-2 ${className}`}>
+    <div className={`mt-5 flex w-full items-center space-x-2 ${className}`}>
       <input
         type="checkbox"
         id={id}

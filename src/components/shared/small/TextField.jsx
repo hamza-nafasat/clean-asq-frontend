@@ -1,4 +1,4 @@
-const TextField = ({ cn, label, type = 'text', shadow = false, leftIcon, cnLeft, rightIcon, cnRight, ...rest }) => {
+const TextField = ({ cn, label, type = 'text', leftIcon, cnLeft, rightIcon, cnRight, ...rest }) => {
   return (
     <div className="flex w-full flex-col items-start">
       {label && <label className="text-textPrimary text-sm lg:text-base">{label}</label>}

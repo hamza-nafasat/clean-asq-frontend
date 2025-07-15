@@ -132,7 +132,7 @@ function CompanyInformation({
       </div>
       {customizeModal && (
         <Modal onClose={() => setCustomizeModal(false)}>
-          <Modal6 />
+          <Modal6 fields={fields} />
         </Modal>
       )}
     </div>
