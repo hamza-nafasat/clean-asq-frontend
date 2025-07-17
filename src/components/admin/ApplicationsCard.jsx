@@ -1,16 +1,14 @@
+import ApplicationForm from '@/page/admin/userApplicationForms/ApplicationVerification/ApplicationForm';
+import { useCreateFormMutation, useGetMyAllFormsQuery } from '@/redux/apis/formApis';
+import { MoreVertical } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { CiSearch } from 'react-icons/ci';
-import { GoChevronDown } from 'react-icons/go';
-import UserApplicationDetail from './UserApplicationDetail';
-import Button from '../shared/small/Button';
-import TextField from '../shared/small/TextField';
 import { FaCheck } from 'react-icons/fa6';
-import Modal from '../shared/small/Modal';
-import FileUploader from '../applicationVerification/Documents/FileUploader';
-import { useCreateFormMutation, useGetMyAllFormsQuery } from '@/redux/apis/formApis';
 import { toast } from 'react-toastify';
-import { MoreVertical } from 'lucide-react';
-import ApplicationForm from '@/page/admin/userApplicationForms/ApplicationVerification/ApplicationForm';
+import FileUploader from '../applicationVerification/Documents/FileUploader';
+import Button from '../shared/small/Button';
+import Modal from '../shared/small/Modal';
+import TextField from '../shared/small/TextField';
 
 export default function ApplicationsCard() {
   const rowRef = useRef(null);
@@ -24,7 +22,7 @@ export default function ApplicationsCard() {
   const [creteFormModal, setCreateFormModal] = useState(false);
   const [file, setFile] = useState(null);
   const [createForm, { isLoading }] = useCreateFormMutation();
-  const { data: forms } = useGetMyAllFormsQuery();
+  const { data: forms, isLoading: formsLoading, refetch: refetchForms } = useGetMyAllFormsQuery();
 
   const createFormWithCsvHandler = async () => {
     console.log('file', file);
@@ -43,6 +41,15 @@ export default function ApplicationsCard() {
   };
 
   useEffect(() => {
+    if (selectedForm && forms?.data) {
+      const updatedForm = forms.data.find(f => f._id === selectedForm._id);
+      if (updatedForm) {
+        setSelectedForm(updatedForm);
+      }
+    }
+  }, [forms, selectedForm]);
+
+  useEffect(() => {
     const handleClickOutside = event => {
       if (rowRef.current && !rowRef.current.contains(event.target)) {
         setActionMenu(null);
@@ -54,10 +61,16 @@ export default function ApplicationsCard() {
     };
   }, [rowRef]);
 
-  if (selectedForm)
+  if (selectedForm?._id)
     return (
       <div className="flex items-center justify-center p-4">
-        <ApplicationForm form={selectedForm} onClose={() => setSelectedForm(null)} />
+        <ApplicationForm
+          formId={selectedForm?._id}
+          selectedForm={selectedForm}
+          formLoading={formsLoading}
+          formRefetch={refetchForms}
+          onClose={() => setSelectedForm(null)}
+        />
       </div>
     );
   return (

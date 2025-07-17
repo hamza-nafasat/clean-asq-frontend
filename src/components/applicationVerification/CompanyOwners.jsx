@@ -6,6 +6,114 @@ import Button from '../shared/small/Button';
 import DynamicField from '../shared/small/DynamicField';
 import { toast } from 'react-toastify';
 
+const applicantIsMainOwner = [
+  {
+    label: 'Name (main owner)',
+    type: 'text',
+    name: 'main_owner_name',
+    required: true,
+    placeholder: 'e.g. John Doe',
+    aiHelp: false,
+  },
+  {
+    label: 'Email Address (main owner)',
+    type: 'email',
+    name: 'main_owner_email',
+    required: true,
+    placeholder: 'e.g. 8aQ0A@example.com',
+    aiHelp: false,
+  },
+  {
+    label: 'SSN (main owner)',
+    type: 'text',
+    name: 'main_owner_ssn',
+    required: true,
+    placeholder: 'e.g. 123-45-6789',
+    aiHelp: false,
+  },
+  {
+    label: 'Ownership Percentage (main owner)?',
+    type: 'range',
+    name: 'main owner_percentage_value',
+    min: 0,
+    max: 100,
+    defaultValue: 25,
+    required: false,
+    aiHelp: false,
+  },
+];
+const applicantIsNotMainOwner = [
+  {
+    label: 'Name (your)',
+    type: 'text',
+    name: 'main_owner_name',
+    required: true,
+    placeholder: 'e.g. John Doe',
+    aiHelp: false,
+  },
+  {
+    label: 'Email Address (your)',
+    type: 'email',
+    name: 'main_owner_email',
+    required: true,
+    placeholder: 'e.g. 8aQ0A@example.com',
+    aiHelp: false,
+  },
+  {
+    label: 'SSN (your)',
+    type: 'text',
+    name: 'main_owner_ssn',
+    required: true,
+    placeholder: 'e.g. 123-45-6789',
+    aiHelp: false,
+  },
+  {
+    label: 'Ownership Percentage (your)?',
+    type: 'range',
+    name: 'main owner_percentage_value',
+    min: 0,
+    max: 100,
+    defaultValue: 25,
+    required: false,
+    aiHelp: false,
+  },
+
+  {
+    label: 'Name (main owner)',
+    type: 'text',
+    name: 'main_owner_name',
+    required: true,
+    placeholder: 'e.g. John Doe',
+    aiHelp: false,
+  },
+  {
+    label: 'Email Address (main owner)',
+    type: 'email',
+    name: 'main_owner_email',
+    required: true,
+    placeholder: 'e.g. 8aQ0A@example.com',
+    aiHelp: false,
+  },
+  {
+    label: 'SSN (main owner)',
+    type: 'text',
+    name: 'main_owner_ssn',
+    required: true,
+    placeholder: 'e.g. 123-45-6789',
+    aiHelp: false,
+  },
+  {
+    label: 'Ownership Percentage (main owner)?',
+    type: 'range',
+    name: 'main owner_percentage_value',
+    min: 0,
+    max: 100,
+    defaultValue: 25,
+    required: false,
+    aiHelp: false,
+  },
+];
+
 function CompanyOwners({
   name,
   handleNext,
@@ -18,7 +126,25 @@ function CompanyOwners({
   reduxData,
 }) {
   const [otherOwnersStateName, setOtherOwnersStateName] = useState('');
+  const [formFields, setFormFields] = useState([]);
   const [form, setForm] = useState({});
+  useEffect(() => {
+    if (form?.['applicant_is_main_owner'] === 'no') {
+      const newFields = [
+        fields[0], // first item
+        ...applicantIsNotMainOwner, // insert at index 1
+        ...fields.slice(1), // rest of the fields
+      ];
+      setFormFields(newFields);
+    } else if (form?.['applicant_is_main_owner'] === 'yes') {
+      const newFields = [
+        fields[0], // first item
+        ...applicantIsMainOwner, // insert at index 1
+        ...fields.slice(1), // rest of the fields
+      ];
+      setFormFields(newFields);
+    }
+  }, [fields, form]);
 
   console.log('company owners', form);
 
@@ -70,7 +196,11 @@ function CompanyOwners({
       setForm(initialForm);
     }
   }, [fields, name, reduxData]);
-
+  useEffect(() => {
+    if (fields && fields.length > 0) {
+      setFormFields([...fields]);
+    }
+  }, [fields]);
   return (
     <div className="h-full overflow-auto">
       <h3 className="text-textPrimary text-[24px] font-semibold">{name}</h3>
@@ -91,7 +221,7 @@ function CompanyOwners({
               </div>
             </div>
 
-            {fields?.map((field, i) => {
+            {formFields?.map((field, i) => {
               if (field.name === 'main_owner_own_25_percent_or_more' || field.type === 'block') return null;
               return (
                 <div key={i} className="mt-5">
@@ -106,7 +236,6 @@ function CompanyOwners({
                 </div>
               );
             })}
-
             {form?.additional_owners_own_25_percent_or_more == 'yes' ? (
               <div className="flex flex-col gap-3">
                 {form?.[otherOwnersStateName]?.map(({ name, email, ssn, percentage }, index) => (

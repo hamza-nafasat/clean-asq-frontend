@@ -5,7 +5,7 @@ const formApis = createApi({
   reducerPath: 'formApi',
   baseQuery: fetchBaseQuery({ baseUrl: `${getEnv('SERVER_URL')}/api/form`, credentials: 'include' }),
 
-  tagTypes: ['Form', 'Permission'],
+  tagTypes: ['Form'],
   endpoints: builder => ({
     // create new form
     // ---------------
@@ -15,7 +15,7 @@ const formApis = createApi({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['Form'],
+      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
     }),
     // get my all users
     // --------------
@@ -24,7 +24,7 @@ const formApis = createApi({
         url: '/my',
         method: 'GET',
       }),
-      providesTags: ['Form'],
+      providesTags: [{ type: 'Form', id: 'LIST' }],
     }),
 
     // get single form
@@ -34,7 +34,14 @@ const formApis = createApi({
         url: `single/${data?._id}`,
         method: 'GET',
       }),
-      invalidatesTags: ['Form'],
+      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+    }),
+    getSingleFormQuery: builder.query({
+      query: data => ({
+        url: `single/${data?._id}`,
+        method: 'GET',
+      }),
+      providesTags: [{ type: 'Form', id: 'LIST' }],
     }),
 
     // DELETE single form
@@ -44,7 +51,7 @@ const formApis = createApi({
         url: `single/${data?._id}`,
         method: 'Delete',
       }),
-      invalidatesTags: ['Form'],
+      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
     }),
 
     // SUBMIT form
@@ -55,7 +62,7 @@ const formApis = createApi({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['Form'],
+      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
     }),
     // SUBMIT-ARTICLE
     // ---------------
@@ -65,7 +72,16 @@ const formApis = createApi({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['Form'],
+    }),
+    // update form fields delete and create api
+    // ---------------
+    updateDeleteCreateFormFields: builder.mutation({
+      query: data => ({
+        url: '/update-delete-create-fields',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
     }),
   }),
 });
@@ -73,8 +89,10 @@ export const {
   useCreateFormMutation,
   useGetMyAllFormsQuery,
   useGetSingleFormMutation,
+  useGetSingleFormQueryQuery,
   useDeleteSingleFormMutation,
   useSubmitFormMutation,
   useSubmitFormArticleFileMutation,
+  useUpdateDeleteCreateFormFieldsMutation,
 } = formApis;
 export default formApis;

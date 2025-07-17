@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import Button from '../shared/small/Button';
 import DynamicField from '../shared/small/DynamicField';
 import Modal from '../shared/small/Modal';
@@ -8,9 +9,10 @@ import Modal3 from './companyInfo/Modal3';
 import Modal4 from './companyInfo/Modal4';
 import Modal5 from './companyInfo/Modal5';
 import Modal6 from './companyInfo/Modal6';
-import { toast } from 'react-toastify';
 
 function CompanyInformation({
+  formRefetch,
+  _id,
   name,
   handleNext,
   handlePrevious,
@@ -132,7 +134,7 @@ function CompanyInformation({
       </div>
       {customizeModal && (
         <Modal onClose={() => setCustomizeModal(false)}>
-          <Modal6 fields={fields} />
+          <Modal6 sectionId={_id} fields={fields} formRefetch={formRefetch} onClose={() => setCustomizeModal(false)} />
         </Modal>
       )}
     </div>

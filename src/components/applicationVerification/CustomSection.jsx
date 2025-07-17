@@ -1,18 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import TextField from '../shared/small/TextField';
+import { useEffect, useState } from 'react';
 import Button from '../shared/small/Button';
 import DynamicField from '../shared/small/DynamicField';
 
-function CustomSection({
-  fields,
-  name,
-  currentStep,
-  totalSteps,
-  handleNext,
-  handlePrevious,
-  handleSubmit,
-  formLoading,
-}) {
+function CustomSection({ fields, name, currentStep, totalSteps, handleNext, handlePrevious, handleSubmit, isLoading }) {
   const [form, setForm] = useState({});
 
   useEffect(() => {
@@ -49,8 +39,8 @@ function CustomSection({
             <Button label={'Next'} onClick={() => handleNext({ data: form, name })} />
           ) : (
             <Button
-              disabled={formLoading}
-              className={`${formLoading && 'pinter-events-none cursor-not-allowed opacity-50'}`}
+              disabled={isLoading}
+              className={`${isLoading && 'pinter-events-none cursor-not-allowed opacity-50'}`}
               label={'Submit'}
               onClick={() => handleSubmit({ data: form, name })}
             />
