@@ -5,6 +5,8 @@ import { GoPlus } from 'react-icons/go';
 import Button from '../shared/small/Button';
 import DynamicField from '../shared/small/DynamicField';
 import { toast } from 'react-toastify';
+import Modal from '../shared/small/Modal';
+import Modal6 from './companyInfo/Modal6';
 
 const applicantIsMainOwner = [
   {
@@ -115,6 +117,8 @@ const applicantIsNotMainOwner = [
 ];
 
 function CompanyOwners({
+  _id,
+  formRefetch,
   name,
   handleNext,
   handlePrevious,
@@ -126,6 +130,7 @@ function CompanyOwners({
   reduxData,
 }) {
   const [otherOwnersStateName, setOtherOwnersStateName] = useState('');
+  const [customizeModal, setCustomizeModal] = useState(false);
   const [formFields, setFormFields] = useState([]);
   const [form, setForm] = useState({});
   useEffect(() => {
@@ -203,7 +208,10 @@ function CompanyOwners({
   }, [fields]);
   return (
     <div className="h-full overflow-auto">
-      <h3 className="text-textPrimary text-[24px] font-semibold">{name}</h3>
+      <div className="mb-10 flex items-center justify-between">
+        <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
+        <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+      </div>
       <div className="mt-5">
         <div className="h-full overflow-auto pb-3">
           <div className="rounded-[8px] border border-[#F0F0F0] p-4">
@@ -308,6 +316,12 @@ function CompanyOwners({
           )}
         </div>
       </div>
+
+      {customizeModal && (
+        <Modal onClose={() => setCustomizeModal(false)}>
+          <Modal6 sectionId={_id} fields={fields} formRefetch={formRefetch} onClose={() => setCustomizeModal(false)} />
+        </Modal>
+      )}
     </div>
   );
 }

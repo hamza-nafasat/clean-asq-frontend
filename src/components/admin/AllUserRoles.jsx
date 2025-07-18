@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import DataTable from 'react-data-table-component';
-import { MoreVertical, Eye } from 'lucide-react';
+import { MoreVertical, Eye, Pencil, Trash } from 'lucide-react';
 import { getTableStyles } from '@/data/data';
 import Modal from '../shared/Modal';
 import ConfirmationModal from '../shared/ConfirmationModal';
@@ -17,6 +17,7 @@ import {
 } from '@/redux/apis/roleApis';
 import Checkbox from '../shared/small/Checkbox';
 import { toast } from 'react-toastify';
+import { ThreeDotEditViewDelete } from '../shared/ThreeDotViewEditDelete';
 
 // Define role status
 const ROLE_STATUS = {
@@ -49,6 +50,36 @@ function AllUserRoles() {
   const actionMenuRefs = useRef(new Map());
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
+
+  const ButtonsForThreeDot = [
+    {
+      name: 'view',
+      icon: <Eye size={16} className="mr-2" />,
+      onClick: row => {
+        console.log('row', row);
+        setViewModalData(row);
+        setActionMenu(null);
+      },
+    },
+    {
+      name: 'edit',
+      icon: <Pencil size={16} className="mr-2" />,
+      onClick: row => {
+        setRowForEdit(row?._id);
+        setEditModalData({ ...row, roleName: row.name });
+        setActionMenu(null);
+      },
+    },
+    {
+      name: 'delete',
+      icon: <Trash size={16} className="mr-2" />,
+      onClick: row => {
+        setDeleteConfirmation(row);
+        setActionMenu(null);
+        setRowForDelete(row?._id);
+      },
+    },
+  ];
 
   // Only update local state for form fields, do not persist
   const handleInputChange = useCallback(e => {
@@ -169,46 +200,13 @@ function AllUserRoles() {
         return (
           <div className="relative" ref={rowRef}>
             <button
-              onClick={() => setActionMenu(row._id)}
+              onClick={() => setActionMenu(prevActionMenu => (prevActionMenu === row._id ? null : row._id))}
               className="rounded p-1 hover:bg-gray-100"
               aria-label="Actions"
             >
               <MoreVertical size={18} />
             </button>
-            {actionMenu === row._id && (
-              <div className="fixed z-10 mt-2 w-40 rounded border bg-white shadow-lg">
-                <button
-                  className="flex w-full items-center px-4 py-2 text-left hover:bg-gray-100"
-                  onClick={() => {
-                    setViewModalData(row);
-                    setActionMenu(null);
-                  }}
-                >
-                  <Eye size={16} className="mr-2" />
-                  View
-                </button>
-                <button
-                  className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-                  onClick={() => {
-                    setRowForEdit(row);
-                    setEditModalData({ ...row, roleName: row.name });
-                    setActionMenu(null);
-                  }}
-                >
-                  Edit
-                </button>
-                <button
-                  className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
-                  onClick={() => {
-                    setDeleteConfirmation(row);
-                    setActionMenu(null);
-                    setRowForDelete(row?._id);
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-            )}
+            {actionMenu === row._id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
           </div>
         );
       },
@@ -365,7 +363,7 @@ function AllUserRoles() {
           <div className="mb-4">
             <label className="mb-1 block text-sm font-medium text-gray-700">Role Name</label>
             <div className="border-frameColor flex h-[45px] w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base">
-              {viewModalData.roleName}
+              {viewModalData.name}
             </div>
           </div>
           <div className="mb-4">
@@ -379,10 +377,10 @@ function AllUserRoles() {
           <div className="mb-4">
             <label className="mb-1 block text-sm font-medium text-gray-700">Created Date</label>
             <div className="border-frameColor flex h-[45px] w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base">
-              {viewModalData.createDate}
+              {viewModalData?.createdAt?.split('T')?.[0]}
             </div>
           </div>
-          {renderPermissionsGrid(viewModalData.permissions)}
+          {renderPermissionsGrid(viewModalData?.permissions)}
         </Modal>
       )}
 

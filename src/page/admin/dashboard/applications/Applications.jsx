@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import ApplicantsTable, { APPLICANT_STATUS } from '@/components/admin/ApplicantsTable';
+import ApplicantsTable from '@/components/admin/ApplicantsTable';
 import { CLIENT_TYPES } from '@/components/admin/ApplicantSearch';
 import Modal from '@/components/shared/Modal';
+import { APPLICANT_STATUS } from '@/data/constants';
 // import Modal from '@/components/admin/shared/Modal';
 
 // Initial mock data
@@ -98,7 +99,7 @@ const INITIAL_APPLICANTS = [
   },
 ];
 
-function AdminApplicants() {
+function Applications() {
   const [applicants, setApplicants] = useState(INITIAL_APPLICANTS);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
@@ -190,6 +191,6 @@ function AdminApplicants() {
   );
 }
 
-export default AdminApplicants;
+export default Applications;
 
 // - List of applicants, include filters (date range, filter by client, status), Table fields (Name, Application, Email, Date Created, Status, Action (view, delete)).

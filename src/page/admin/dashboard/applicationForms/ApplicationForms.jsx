@@ -1,7 +1,7 @@
 import ApplicationsCard from '@/components/admin/ApplicationsCard';
 import React from 'react';
 
-function AdminApplications() {
+function ApplicationForms() {
   return (
     <div>
       <ApplicationsCard />
@@ -9,4 +9,4 @@ function AdminApplications() {
   );
 }
 
-export default AdminApplications;
+export default ApplicationForms;

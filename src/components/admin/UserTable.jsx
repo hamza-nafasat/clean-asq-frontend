@@ -1,23 +1,24 @@
-import { INITIAL_USER_FORM, USER_STATUS } from '@/constants/userConstants';
+import { INITIAL_USER_FORM } from '@/constants/userConstants';
 import { getTableStyles } from '@/data/data';
+import { useGetAllRolesQuery } from '@/redux/apis/roleApis';
 import {
   useCreateUserMutation,
   useDeleteSingleUserMutation,
   useGetAllUsersQuery,
   useUpdateSingleUserMutation,
 } from '@/redux/apis/userApis';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, Pencil, Trash } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DataTable from 'react-data-table-component';
 import { IoMdPersonAdd } from 'react-icons/io';
+import { toast } from 'react-toastify';
 import ConfirmationModal from '../shared/ConfirmationModal';
 import Modal from '../shared/Modal';
 import Button from '../shared/small/Button';
 import Checkbox from '../shared/small/Checkbox';
 import TextField from '../shared/small/TextField';
+import { ThreeDotEditViewDelete } from '../shared/ThreeDotViewEditDelete';
 import { useBranding } from './brandings/globalBranding/BrandingContext';
-import { useGetAllRolesQuery } from '@/redux/apis/roleApis';
-import { toast } from 'react-toastify';
 
 const UserTable = () => {
   const { data: users } = useGetAllUsersQuery();
@@ -181,6 +182,39 @@ const UserTable = () => {
     [userTypeOptions?.data]
   );
 
+  const ButtonsForThreeDot = useMemo(
+    () => [
+      {
+        name: 'Change Password',
+        icon: <Lock size={16} className="mr-2" />,
+        onClick: row => {
+          setEditModalData({ ...row, role: row?.role?._id });
+          setActionMenu(null);
+        },
+      },
+      {
+        name: 'Edit',
+        icon: <Pencil size={16} className="mr-2" />,
+        onClick: row => {
+          setPasswordModalData({ id: row?._id, password: '' });
+          setActionMenu(null);
+        },
+      },
+      {
+        name: 'Delete',
+        icon: <Trash size={16} className="mr-2" />,
+        onClick: row => {
+          () => {
+            setDeleteConfirmation(row);
+            setActionMenu(null);
+            setUserIdForDelete(row?._id);
+          };
+        },
+      },
+    ],
+    []
+  );
+
   const columns = useMemo(
     () => [
       {
@@ -212,54 +246,22 @@ const UserTable = () => {
             actionMenuRefs.current.set(row?._id, React.createRef());
           }
           const rowRef = actionMenuRefs.current.get(row?._id);
-
           return (
             <div className="relative" ref={rowRef}>
               <button
-                onClick={() => setActionMenu(row?._id)}
+                onClick={() => setActionMenu(prevActionMenu => (prevActionMenu === row._id ? null : row._id))}
                 className="rounded p-1 hover:bg-gray-100"
                 aria-label="Actions"
               >
                 <MoreVertical size={18} />
               </button>
-              {actionMenu === row?._id && (
-                <div className="fixed z-10 mt-2 w-40 rounded border bg-white shadow-lg">
-                  <button
-                    className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-                    onClick={() => {
-                      setEditModalData({ ...row, role: row?.role?._id });
-                      setActionMenu(null);
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-                    onClick={() => {
-                      setPasswordModalData({ id: row?._id, password: '' });
-                      setActionMenu(null);
-                    }}
-                  >
-                    Change Password
-                  </button>
-                  <button
-                    className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
-                    onClick={() => {
-                      setDeleteConfirmation(row);
-                      setActionMenu(null);
-                      setUserIdForDelete(row?._id);
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
+              {actionMenu === row._id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
             </div>
           );
         },
       },
     ],
-    [actionMenu]
+    [ButtonsForThreeDot, actionMenu]
   );
 
   useEffect(() => {

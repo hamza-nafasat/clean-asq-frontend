@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
-import { PiUsersThreeBold } from 'react-icons/pi';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import logo from '../../../assets/images/logo.png';
 import ArrowBackIcon from '../../../assets/svgs/ArrowBackIcon';
-// import { PiUsersThreeBold } from 'react-icons/pi';
-import { FaUserCheck, FaWpforms } from 'react-icons/fa';
-import { FaUsersGear } from 'react-icons/fa6';
 import { AllRoles, AllUsers, Applicants, Applications } from '@/assets/svgs/icon';
 import { HiOutlineLightBulb } from 'react-icons/hi';
 
 const AdminAside = () => {
-  const navigate = useNavigate();
   const [isNavOpen, setIsNavOpen] = useState(true);
   const location = useLocation();
 
@@ -27,13 +22,13 @@ const AdminAside = () => {
       icon: <AllUsers />,
     },
     {
-      title: 'Applications',
-      link: '/admin-applications',
+      title: 'Application forms',
+      link: '/application-forms',
       icon: <Applications />,
     },
     {
-      title: 'Applicants',
-      link: '/admin-applicants',
+      title: 'Applications',
+      link: '/applications',
       icon: <Applicants />,
     },
     {
@@ -62,11 +57,13 @@ const AdminAside = () => {
 
       <div className="py-4">
         <div className="mb-5 flex w-full items-center justify-center gap-1 xl:mb-12">
-          <img
-            src={logo}
-            alt="logo"
-            className={`block h-[31px] ${isNavOpen ? 'h-[50px] w-[160px]' : 'h-[31px] w-[31px]'} object-cover`}
-          />
+          <Link to="/application-forms">
+            <img
+              src={logo}
+              alt="logo"
+              className={`block h-[31px] ${isNavOpen ? 'h-[50px] w-[160px]' : 'h-[31px] w-[31px]'} object-cover`}
+            />
+          </Link>
         </div>
 
         <div className={`flex flex-col justify-center gap-2 ${isNavOpen ? 'items-start' : 'items-center'}`}>

@@ -8,8 +8,8 @@ import RoleRedirect from './components/RoleRedirect';
 import CustomLoading from './components/shared/small/CustomLoading';
 import { BrandingProvider } from './components/admin/brandings/globalBranding/BrandingContext';
 import AdminDashboard from './page/admin/dashboard';
-import AdminApplicants from './page/admin/dashboard/admin-applicants/AdminApplicants';
-import AdminApplications from './page/admin/dashboard/admin-applications/AdminApplications';
+import Applications from './page/admin/dashboard/applications/Applications';
+import ApplicationForms from './page/admin/dashboard/applicationForms/ApplicationForms';
 import AdminAllUsers from './page/admin/dashboard/admin-dashboard/AdminAllUsers';
 import AllRoles from './page/admin/dashboard/role/AllRoles';
 import UserApplicationForms from './page/admin/userApplicationForms';
@@ -66,8 +66,8 @@ function App() {
                   <Route index element={<Navigate to="all-roles" replace />} />
                   <Route path="all-roles" element={<AllRoles />} />
                   <Route path="all-users" element={<AdminAllUsers />} />
-                  <Route path="admin-applications" element={<AdminApplications />} />
-                  <Route path="admin-applicants" element={<AdminApplicants />} />
+                  <Route path="application-forms" element={<ApplicationForms />} />
+                  <Route path="applications" element={<Applications />} />
                   <Route path="branding" element={<Brandings />} />
                   <Route path="branding/create" element={<CreateBranding />} />
                 </Route>

@@ -1,7 +1,8 @@
 import { useBranding } from '@/components/admin/brandings/globalBranding/BrandingContext';
+import { ThreeDotEditViewDelete } from '@/components/shared/ThreeDotViewEditDelete';
 import { Button } from '@/components/ui/button';
 import { getTableStyles } from '@/data/data';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, Pencil, Trash } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import DataTable from 'react-data-table-component';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +14,19 @@ const Brandings = () => {
   const [actionMenu, setActionMenu] = useState(null);
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
+
+  const ButtonsForThreeDot = [
+    {
+      name: 'edit',
+      icon: <Pencil size={16} className="mr-2" />,
+      onClick: () => {},
+    },
+    {
+      name: 'delete',
+      icon: <Trash size={16} className="mr-2" />,
+      onClick: () => {},
+    },
+  ];
 
   const columns = () => [
     {
@@ -45,18 +59,13 @@ const Brandings = () => {
         return (
           <div className="relative" ref={rowRef}>
             <button
-              onClick={() => setActionMenu(row._id)}
+              onClick={() => setActionMenu(prevActionMenu => (prevActionMenu === row._id ? null : row._id))}
               className="cursor-pointer rounded p-1 hover:bg-gray-100"
               aria-label="Actions"
             >
               <MoreVertical size={18} />
             </button>
-            {actionMenu === row._id && (
-              <div className="fixed z-10 mt-2 w-40 rounded border bg-white shadow-lg">
-                <button className="block w-full px-4 py-2 text-left hover:bg-gray-100">Edit</button>
-                <button className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100">Delete</button>
-              </div>
-            )}
+            {actionMenu === row._id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
           </div>
         );
       },

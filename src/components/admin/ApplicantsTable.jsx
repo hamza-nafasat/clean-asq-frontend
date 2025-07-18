@@ -1,21 +1,14 @@
-import React, { useCallback, useMemo, useRef, useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
-import DataTable from 'react-data-table-component';
-import { MoreVertical } from 'lucide-react';
-import ApplicantSearch, { CLIENT_TYPES, CLIENT_LABELS } from './ApplicantSearch';
-import Modal from '../shared/Modal';
-import { useBranding } from './brandings/globalBranding/BrandingContext';
+import { APPLICANT_STATUS } from '@/data/constants';
 import { getTableStyles } from '@/data/data';
+import { Eye, MoreVertical, Pencil, Trash } from 'lucide-react';
+import PropTypes from 'prop-types';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import DataTable from 'react-data-table-component';
+import Modal from '../shared/Modal';
 import TextField from '../shared/small/TextField';
-
-// Constants for applicant status
-export const APPLICANT_STATUS = {
-  PENDING: 'pending',
-  REVIEWING: 'reviewing',
-  APPROVED: 'approved',
-  REJECTED: 'rejected',
-};
-
+import { ThreeDotEditViewDelete } from '../shared/ThreeDotViewEditDelete';
+import ApplicantSearch, { CLIENT_LABELS, CLIENT_TYPES } from './ApplicantSearch';
+import { useBranding } from './brandings/globalBranding/BrandingContext';
 // Table columns configuration
 const APPLICANT_TABLE_COLUMNS = [
   {
@@ -72,7 +65,7 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
   const [editModalData, setEditModalData] = useState(null);
   const [formErrors, setFormErrors] = useState({});
   const actionMenuRefs = useRef(new Map());
-  const { primaryColor, textColor, backgroundColor, secondaryColor, accentColor } = useBranding();
+  const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   // Get unique clients for quick filters
   const uniqueClients = useMemo(() => {
@@ -192,6 +185,35 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
     });
   }, [applicants, filters, searchTerm]);
 
+  const ButtonsForThreeDot = useMemo(
+    () => [
+      {
+        name: 'View',
+        icon: <Eye size={16} className="mr-2" />,
+        onClick: row => {
+          onView(row.id);
+          setActionMenu(null);
+        },
+      },
+      {
+        name: 'Edit',
+        icon: <Pencil size={16} className="mr-2" />,
+        onClick: row => {
+          setEditModalData({ ...row });
+          setActionMenu(null);
+        },
+      },
+      {
+        name: 'Delete',
+        icon: <Trash size={16} className="mr-2" />,
+        onClick: row => {
+          handleDeleteApplicant(row?.id);
+        },
+      },
+    ],
+    [handleDeleteApplicant, onView]
+  );
+
   const columns = useMemo(
     () => [
       ...APPLICANT_TABLE_COLUMNS,
@@ -206,46 +228,19 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
           return (
             <div className="relative" ref={rowRef}>
               <button
-                onClick={() => setActionMenu(row.id)}
+                onClick={() => setActionMenu(prevActionMenu => (prevActionMenu === row.id ? null : row.id))}
                 className="rounded p-1 hover:bg-gray-100"
                 aria-label="Actions"
               >
                 <MoreVertical size={18} />
               </button>
-              {actionMenu === row.id && (
-                <div className="fixed z-10 mt-2 w-40 rounded border bg-white shadow-lg">
-                  <button
-                    className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-                    onClick={() => {
-                      onView(row.id);
-                      setActionMenu(null);
-                    }}
-                  >
-                    View
-                  </button>
-                  <button
-                    className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-                    onClick={() => {
-                      setEditModalData({ ...row });
-                      setActionMenu(null);
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
-                    onClick={() => handleDeleteApplicant(row.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
+              {actionMenu === row.id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
             </div>
           );
         },
       },
     ],
-    [actionMenu, handleDeleteApplicant, onView]
+    [ButtonsForThreeDot, actionMenu]
   );
 
   return (
