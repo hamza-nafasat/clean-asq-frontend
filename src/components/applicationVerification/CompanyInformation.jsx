@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
 import Button from '../shared/small/Button';
-import DynamicField from '../shared/small/DynamicField';
+import {
+  SelectInputType,
+  CheckboxInputType,
+  RangeInputType,
+  OtherInputType,
+  RadioInputType,
+  MultiCheckboxInputType,
+} from '../shared/small/DynamicField';
 import Modal from '../shared/small/Modal';
 import Modal1 from './companyInfo/Modal1';
 import Modal2 from './companyInfo/Modal2';
@@ -9,6 +15,8 @@ import Modal3 from './companyInfo/Modal3';
 import Modal4 from './companyInfo/Modal4';
 import Modal5 from './companyInfo/Modal5';
 import Modal6 from './companyInfo/Modal6';
+import { FIELD_TYPES } from '@/data/constants';
+import { toast } from 'react-toastify';
 
 function CompanyInformation({
   formRefetch,
@@ -79,7 +87,11 @@ function CompanyInformation({
   }, [fields, name, reduxData]);
 
   const nextHandler = ({ data, name }) => {
-    const isValid = Object.values(data).every(value => value.trim() !== '');
+    const isValid = Object.values(data).every(value => {
+      if (typeof value === 'string') return value.trim() !== '';
+      if (Array.isArray(value)) return value.every(item => Object.values(item).every(val => val.trim() !== ''));
+      return true;
+    });
     if (!isValid) return toast.error('Please fill all fields before proceeding next.');
     handleNext({ data: form, name });
   };
@@ -92,18 +104,60 @@ function CompanyInformation({
       </div>
 
       {fields?.length > 0 &&
-        fields.map((field, index) => (
-          <div key={index} className="mt-4">
-            <DynamicField
-              field={field}
-              value={form[field.name] || ''}
-              onChange={e => setForm({ ...form, [field.name]: e.target.value })}
-              setForm={setForm}
-              placeholder={field.placeholder}
-              form={form}
-            />
-          </div>
-        ))}
+        fields.map((field, index) => {
+          if (field.type === FIELD_TYPES.SELECT) {
+            return (
+              <div key={index} className="mt-4">
+                <SelectInputType field={field} form={form} setForm={setForm} className={''} />
+              </div>
+            );
+          }
+          if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
+            return (
+              <div key={index} className="mt-4">
+                <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={''} />
+              </div>
+            );
+          }
+          if (field.type === FIELD_TYPES.RADIO) {
+            return (
+              <div key={index} className="mt-4">
+                <RadioInputType field={field} form={form} setForm={setForm} className={''} />
+              </div>
+            );
+          }
+          if (field.type === FIELD_TYPES.RANGE) {
+            return (
+              <div key={index} className="mt-4">
+                <RangeInputType field={field} form={form} setForm={setForm} className={''} />
+              </div>
+            );
+          }
+          if (field.type === FIELD_TYPES.CHECKBOX) {
+            return (
+              <div key={index} className="mt-4">
+                <CheckboxInputType
+                  field={field}
+                  placeholder={field.placeholder}
+                  form={form}
+                  setForm={setForm}
+                  className={''}
+                />
+              </div>
+            );
+          }
+          return (
+            <div key={index} className="mt-4">
+              <OtherInputType
+                field={field}
+                placeholder={field.placeholder}
+                form={form}
+                setForm={setForm}
+                className={''}
+              />
+            </div>
+          );
+        })}
 
       {activeModal && <Modal onClose={() => setActiveModal(null)}>{renderModal()}</Modal>}
       {businessDescription && (

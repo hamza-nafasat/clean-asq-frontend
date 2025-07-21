@@ -83,6 +83,15 @@ const formApis = createApi({
       }),
       invalidatesTags: [{ type: 'Form', id: 'LIST' }],
     }),
+    // formate display text
+    // ---------------
+    formateTextInMarkDown: builder.mutation({
+      query: data => ({
+        url: '/formate-display-text',
+        method: 'POST',
+        body: data,
+      }),
+    }),
   }),
 });
 export const {
@@ -94,5 +103,6 @@ export const {
   useSubmitFormMutation,
   useSubmitFormArticleFileMutation,
   useUpdateDeleteCreateFormFieldsMutation,
+  useFormateTextInMarkDownMutation,
 } = formApis;
 export default formApis;
