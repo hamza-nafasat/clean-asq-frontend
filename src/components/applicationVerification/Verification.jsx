@@ -12,21 +12,32 @@ import { MdVerifiedUser } from 'react-icons/md';
 import TextField from '../shared/small/TextField';
 import { IdValidation } from 'idmission-web-sdk';
 import { useGetIdMissionSessionMutation } from '@/redux/apis/idMissionApis';
+import QRCode from 'react-qr-code';
 
 function Verification({ name, handleNext, handlePrevious, currentStep, totalSteps, handleSubmit }) {
+  const [isLoading, setIsLoading] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
   const [validatedData, setValidatedData] = useState(null);
   const [getIdMissionSession] = useGetIdMissionSessionMutation();
   const [running, setRunning] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
   const [showInfo, setShowInfo] = useState(false);
+  const [qrUrl, setQrUrl] = useState('');
 
   const getSessionId = useCallback(async () => {
     try {
+      setIsLoading(true);
       const res = await getIdMissionSession().unwrap();
       console.log('session id is ', res);
-      if (res.success) return res.session.id;
+      if (res.success) {
+        const id = res.session.id;
+        setSessionId(id);
+        setQrUrl(`https://identity.idmission.com/identity/m/verification/verification?sessionId=${id}`);
+      }
     } catch (error) {
       console.log('Error fetching session ID:', error);
+    } finally {
+      setIsLoading(false);
     }
   }, [getIdMissionSession]);
 
@@ -86,9 +97,30 @@ function Verification({ name, handleNext, handlePrevious, currentStep, totalStep
           <div className="mt-11 flex justify-center">
             <img src={verificationImg} alt="Verification Illustration" className="h-auto w-64" />
           </div>
+
+          {qrUrl && (
+            <div className="mt-4 flex w-full flex-col items-center gap-4">
+              <QRCode
+                size={150}
+                style={{ height: 'auto', maxWidth: '150', width: '100%' }}
+                viewBox={`0 0 150 150`}
+                value={qrUrl}
+              />
+              <Button
+                className="max-w-[400px]"
+                label={'Open here'}
+                onClick={() => {
+                  setRunning(true);
+                  setQrUrl('');
+                }}
+              />
+            </div>
+          )}
+
           <div className="mt-8">
             <Button
-              onClick={() => setRunning(true)}
+              onClick={getSessionId}
+              disabled={isLoading}
               label={'Verify ID'}
               cnRight={'text-white'}
               rightIcon={PiUserFocusFill}
@@ -96,7 +128,9 @@ function Verification({ name, handleNext, handlePrevious, currentStep, totalStep
           </div>
           {running && (
             <IdValidation
-              sessionId={getSessionId}
+              sessionId={sessionId}
+              // allowSinglePageIdCapture={true}
+              // allowIdCardBackToFrontCapture={true}
               onApproved={handleApproved}
               onDenied={() => {
                 alert('Validation denied, please try again.');

@@ -367,6 +367,8 @@ import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
 import { Rewind, TrashIcon } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { toast } from 'react-toastify';
+import { FIELD_TYPES } from '@/data/constants';
+import DOMPurify from 'dompurify';
 
 const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index }) => {
   const field = fieldsData[index] || {};
@@ -448,7 +450,8 @@ const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index }) => {
         instructions: formattingInstructionForAi,
       }).unwrap();
       if (res.success) {
-        setFieldsData(prev => prev.map((item, idx) => (idx !== index ? item : { ...item, ai_formatting: res.data })));
+        let html = DOMPurify.sanitize(res.data);
+        setFieldsData(prev => prev.map((item, idx) => (idx !== index ? item : { ...item, ai_formatting: html })));
       }
     } catch (err) {
       console.error(err);
@@ -456,11 +459,17 @@ const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index }) => {
     }
   }, [formattingInstructionForAi, field.displayText, formateTextInMarkDown, index, setFieldsData]);
 
-  const simpleFieldType = ['text', 'number', 'email', 'password', 'textarea'].includes(field.type);
-  const radioFieldType = field.type === 'radio';
-  const selectFieldType = field.type === 'select';
-  const rangeFieldType = field.type === 'range';
-  const multiCheckbox = field.type === 'multi-checkbox';
+  const simpleFieldType = [
+    FIELD_TYPES.TEXT,
+    FIELD_TYPES.NUMBER,
+    FIELD_TYPES.EMAIL,
+    FIELD_TYPES.PASSWORD,
+    FIELD_TYPES.TEXTAREA,
+  ].includes(field.type);
+  const radioFieldType = field.type === FIELD_TYPES.RADIO;
+  const selectFieldType = field.type === FIELD_TYPES.SELECT;
+  const rangeFieldType = field.type === FIELD_TYPES.RANGE;
+  const multiCheckbox = field.type === FIELD_TYPES.MULTI_CHECKBOX;
 
   return (
     <div className="flex flex-col gap-4 p-2 pb-2">
@@ -483,16 +492,15 @@ const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index }) => {
                 className="w-full p-2 outline-none"
               >
                 {[
-                  'text',
-                  'number',
-                  'email',
-                  'password',
-                  'radio',
-                  'checkbox',
-                  'textarea',
-                  'range',
-                  'select',
-                  'multi-checkbox',
+                  FIELD_TYPES.TEXT,
+                  FIELD_TYPES.NUMBER,
+                  FIELD_TYPES.EMAIL,
+                  FIELD_TYPES.PASSWORD,
+                  FIELD_TYPES.TEXTAREA,
+                  FIELD_TYPES.RADIO,
+                  FIELD_TYPES.SELECT,
+                  FIELD_TYPES.RANGE,
+                  FIELD_TYPES.MULTI_CHECKBOX,
                 ].map(typeOpt => (
                   <option key={typeOpt} value={typeOpt}>
                     {typeOpt.charAt(0).toUpperCase() + typeOpt.slice(1)}
@@ -546,7 +554,7 @@ const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index }) => {
           />
         </div>
         {/* AI prompt & response */}
-        {field.aiHelp && (
+        {field?.aiHelp && (
           <div className="flex w-full flex-col items-center gap-2">
             <div className="flex w-full items-center gap-2">
               <TextField label="Ai Prompt" value={field.aiPrompt} name="aiPrompt" onChange={updateFieldDataField} />
@@ -554,7 +562,7 @@ const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index }) => {
                 Generate
               </Button>
             </div>
-            {field.aiResponse && (
+            {field?.aiResponse && (
               <div className="w-full flex-col py-4">
                 <h6 className="text-textPrimary py-2 text-xl font-semibold">Ai Response</h6>
                 <Markdown
@@ -633,23 +641,28 @@ const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index }) => {
               </Button>
             </div>
             {field.ai_formatting && (
-              <Markdown
-                components={{
-                  h1: props => <h1 className="mb-6 text-2xl font-medium" {...props} />,
-                  h2: props => <h2 className="mb-6 text-xl font-medium" {...props} />,
-                  h3: props => <h3 className="mb-6 text-lg font-medium" {...props} />,
-                  h4: props => <h4 className="mb-6 text-base font-medium" {...props} />,
-                  p: props => <p className="mb-6 leading-relaxed" {...props} />,
-                  ul: props => <ul className="mb-6 list-inside list-disc" {...props} />,
-                  ol: props => <ol className="mb-6 list-inside list-decimal" {...props} />,
-                  li: props => <li className="mb-1" {...props} />,
-                  strong: props => <strong className="font-semibold" {...props} />,
-                  code: props => <code className="rounded bg-gray-100 px-1 py-0.5" {...props} />,
-                  blockquote: props => <blockquote className="my-2 border-l-4 pl-4 italic" {...props} />,
-                }}
-              >
-                {field.ai_formatting}
-              </Markdown>
+              // <Markdown
+              //   components={{
+              //     h1: props => <h1 className="mb-6 text-2xl font-medium" {...props} />,
+              //     h2: props => <h2 className="mb-6 text-xl font-medium" {...props} />,
+              //     h3: props => <h3 className="mb-6 text-lg font-medium" {...props} />,
+              //     h4: props => <h4 className="mb-6 text-base font-medium" {...props} />,
+              //     p: props => <p className="mb-6 leading-relaxed" {...props} />,
+              //     ul: props => <ul className="mb-6 list-inside list-disc" {...props} />,
+              //     ol: props => <ol className="mb-6 list-inside list-decimal" {...props} />,
+              //     li: props => <li className="mb-1" {...props} />,
+              //     strong: props => <strong className="font-semibold" {...props} />,
+              //     code: props => <code className="rounded bg-gray-100 px-1 py-0.5" {...props} />,
+              //     blockquote: props => <blockquote className="my-2 border-l-4 pl-4 italic" {...props} />,
+              //   }}
+              // >
+              //   {field.ai_formatting}
+              // </Markdown>
+
+              <div
+                className="h-full bg-amber-100 p-4"
+                dangerouslySetInnerHTML={{ __html: field?.ai_formatting ?? '' }}
+              />
             )}
           </div>
         )}

@@ -7,10 +7,13 @@ export const APPLICANT_STATUS = {
 
 export const FIELD_TYPES = {
   TEXT: 'text',
+  EMAIL: 'email',
   NUMBER: 'number',
-  CHECKBOX: 'checkbox',
+  PASSWORD: 'password',
+  TEXTAREA: 'textarea',
+  RANGE: 'range',
   RADIO: 'radio',
   SELECT: 'select',
-  EMAIL: 'email',
+  CHECKBOX: 'checkbox',
   MULTI_CHECKBOX: 'multi-checkbox',
 };
