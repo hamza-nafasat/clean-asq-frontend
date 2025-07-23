@@ -1,22 +1,18 @@
+import { FIELD_TYPES } from '@/data/constants';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import Button from '../shared/small/Button';
 import {
-  SelectInputType,
   CheckboxInputType,
-  RangeInputType,
+  MultiCheckboxInputType,
   OtherInputType,
   RadioInputType,
-  MultiCheckboxInputType,
+  RangeInputType,
+  SelectInputType,
 } from '../shared/small/DynamicField';
 import Modal from '../shared/small/Modal';
-import Modal1 from './companyInfo/Modal1';
-import Modal2 from './companyInfo/Modal2';
-import Modal3 from './companyInfo/Modal3';
-import Modal4 from './companyInfo/Modal4';
-import Modal5 from './companyInfo/Modal5';
-import Modal6 from './companyInfo/Modal6';
-import { FIELD_TYPES } from '@/data/constants';
-import { toast } from 'react-toastify';
+import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
+import { useMemo } from 'react';
 
 function CompanyInformation({
   formRefetch,
@@ -31,49 +27,22 @@ function CompanyInformation({
   formLoading,
   fields,
 }) {
-  const [activeModal, setActiveModal] = useState(null);
-  const [businessDescription, setBusinessDescription] = useState(false);
-  const [businessClassification, setBusinessClassification] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
+  const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [form, setForm] = useState({});
+  const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
 
   console.log('company info', form);
+  console.log('isAllRequiredFieldsFilled', isAllRequiredFieldsFilled);
 
-  const renderModal = () => {
-    switch (activeModal) {
-      case 1:
-        return (
-          <Modal1
-            modal1Handle={() => {
-              setActiveModal(prev => prev + 1);
-            }}
-            openBusinessDescriptionHandel={() => {
-              setBusinessDescription(true);
-            }}
-            openBusinessClassificationHandel={() => {
-              setBusinessClassification(true);
-            }}
-          />
-        );
-      case 2:
-        return (
-          <Modal2
-            modal1Handle={() => {
-              setActiveModal(prev => prev + 1);
-            }}
-          />
-        );
-      case 3:
-        return (
-          <Modal3
-            modal1Handle={() => {
-              setActiveModal(null);
-            }}
-          />
-        );
-      default:
-        return null;
-    }
+  const nextHandler = ({ data, name }) => {
+    const isValid = Object.values(data).every(value => {
+      if (typeof value === 'string') return value.trim() !== '';
+      if (Array.isArray(value)) return value.every(item => Object.values(item).every(val => val.trim() !== ''));
+      return true;
+    });
+    if (!isValid) return toast.error('Please fill all fields before proceeding next.');
+    handleNext({ data: form, name });
   };
 
   useEffect(() => {
@@ -86,15 +55,26 @@ function CompanyInformation({
     }
   }, [fields, name, reduxData]);
 
-  const nextHandler = ({ data, name }) => {
-    const isValid = Object.values(data).every(value => {
-      if (typeof value === 'string') return value.trim() !== '';
-      if (Array.isArray(value)) return value.every(item => Object.values(item).every(val => val.trim() !== ''));
+  // checking is all required fields are filled or not
+  // ---------------------------------------------------
+  useEffect(() => {
+    const allFilled = requiredNames.every(name => {
+      const val = form[name];
+      if (val == null) return false;
+      if (typeof val === 'string') return val.trim() !== '';
+      if (Array.isArray(val))
+        return (
+          val.length > 0 &&
+          val.every(item =>
+            typeof item === 'object'
+              ? Object.values(item).every(v => v?.toString().trim() !== '')
+              : item?.toString().trim() !== ''
+          )
+        );
       return true;
     });
-    if (!isValid) return toast.error('Please fill all fields before proceeding next.');
-    handleNext({ data: form, name });
-  };
+    setIsAllRequiredFieldsFilled(allFilled);
+  }, [form, requiredNames]);
 
   return (
     <div className="mt-14 h-full overflow-auto">
@@ -159,23 +139,17 @@ function CompanyInformation({
           );
         })}
 
-      {activeModal && <Modal onClose={() => setActiveModal(null)}>{renderModal()}</Modal>}
-      {businessDescription && (
-        <Modal onClose={() => setBusinessDescription(false)}>
-          <Modal4 closeBusinessDescriptionHandel={() => setBusinessDescription(false)} />
-        </Modal>
-      )}
-      {businessClassification && (
-        <Modal onClose={() => setBusinessClassification(false)}>
-          <Modal5 closeBusinessClassificationHandel={() => setBusinessClassification(false)} />
-        </Modal>
-      )}
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
-            <Button label={'Next'} onClick={() => nextHandler({ data: form, name })} />
+            <Button
+              className={`${!isAllRequiredFieldsFilled && 'pointer-events-none cursor-not-allowed opacity-50'}`}
+              disabled={!isAllRequiredFieldsFilled}
+              label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
+              onClick={() => nextHandler({ data: form, name })}
+            />
           ) : (
             <Button
               disabled={formLoading}
@@ -188,7 +162,12 @@ function CompanyInformation({
       </div>
       {customizeModal && (
         <Modal onClose={() => setCustomizeModal(false)}>
-          <Modal6 sectionId={_id} fields={fields} formRefetch={formRefetch} onClose={() => setCustomizeModal(false)} />
+          <CustomizationFieldsModal
+            sectionId={_id}
+            fields={fields}
+            formRefetch={formRefetch}
+            onClose={() => setCustomizeModal(false)}
+          />
         </Modal>
       )}
     </div>

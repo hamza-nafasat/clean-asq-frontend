@@ -4,7 +4,7 @@ import { useUpdateDeleteCreateFormFieldsMutation } from '@/redux/apis/formApis';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
-function Modal6({ onClose, fields, sectionId, formRefetch }) {
+function CustomizationFieldsModal({ onClose, fields, blocks, sectionId, formRefetch }) {
   const [fieldsData, setFieldsData] = useState([]);
   const [customizeForm, { isLoading }] = useUpdateDeleteCreateFormFieldsMutation();
 
@@ -38,6 +38,28 @@ function Modal6({ onClose, fields, sectionId, formRefetch }) {
             <MakeFieldDataCustom field={field} fieldsData={fieldsData} setFieldsData={setFieldsData} index={index} />
           </div>
         ))}
+      {/* {blocks?.length > 0 && (
+        <div className="my-6 bg-gray-300 p-4">
+          {blocks?.map((block, i) => {
+            return (
+              <div key={i}>
+                <p className="text-textPrimary text-center text-2xl font-medium">{block?.name}</p>
+                <p className="text-center text-base font-normal">{block?.description}</p>
+                {block?.fields?.map((field, index) => (
+                  <div key={index} className="mt-6 flex flex-col gap-4">
+                    <MakeFieldDataCustom
+                      field={field}
+                      fieldsData={fieldsData}
+                      setFieldsData={setFieldsData}
+                      index={index}
+                    />
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )} */}
       <div className="mt-6 flex w-full justify-between gap-2">
         <Button className="bg-primary w-[45%] cursor-pointer text-white" onClick={addNewFieldHandler}>
           Add New Field
@@ -54,4 +76,4 @@ function Modal6({ onClose, fields, sectionId, formRefetch }) {
   );
 }
 
-export default Modal6;
+export default CustomizationFieldsModal;

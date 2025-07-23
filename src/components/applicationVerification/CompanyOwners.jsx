@@ -1,123 +1,20 @@
 import Star from '@/assets/svgs/UserApplicationForm/Star';
 import TextField from '@/components/shared/small/TextField';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { GoPlus } from 'react-icons/go';
 import Button from '../shared/small/Button';
-import DynamicField from '../shared/small/DynamicField';
+import {
+  CheckboxInputType,
+  MultiCheckboxInputType,
+  OtherInputType,
+  RadioInputType,
+  RangeInputType,
+  SelectInputType,
+} from '../shared/small/DynamicField';
 import { toast } from 'react-toastify';
 import Modal from '../shared/small/Modal';
-import Modal6 from './companyInfo/Modal6';
-
-const applicantIsMainOwner = [
-  {
-    label: 'Name (main owner)',
-    type: 'text',
-    name: 'main_owner_name',
-    required: true,
-    placeholder: 'e.g. John Doe',
-    aiHelp: false,
-  },
-  {
-    label: 'Email Address (main owner)',
-    type: 'email',
-    name: 'main_owner_email',
-    required: true,
-    placeholder: 'e.g. 8aQ0A@example.com',
-    aiHelp: false,
-  },
-  {
-    label: 'SSN (main owner)',
-    type: 'text',
-    name: 'main_owner_ssn',
-    required: true,
-    placeholder: 'e.g. 123-45-6789',
-    aiHelp: false,
-  },
-  {
-    label: 'Ownership Percentage (main owner)?',
-    type: 'range',
-    name: 'main owner_percentage_value',
-    minLength: 0,
-    maxLength: 100,
-    value: 0,
-    defaultValue: 0,
-    required: false,
-    aiHelp: false,
-  },
-];
-const applicantIsNotMainOwner = [
-  {
-    label: 'Name (your)',
-    type: 'text',
-    name: 'main_owner_name',
-    required: true,
-    placeholder: 'e.g. John Doe',
-    aiHelp: false,
-  },
-  {
-    label: 'Email Address (your)',
-    type: 'email',
-    name: 'main_owner_email',
-    required: true,
-    placeholder: 'e.g. 8aQ0A@example.com',
-    aiHelp: false,
-  },
-  {
-    label: 'SSN (your)',
-    type: 'text',
-    name: 'main_owner_ssn',
-    required: true,
-    placeholder: 'e.g. 123-45-6789',
-    aiHelp: false,
-  },
-  {
-    label: 'Ownership Percentage (your)?',
-    type: 'range',
-    name: 'main owner_percentage_value',
-    minLength: 0,
-    maxLength: 100,
-    value: 0,
-    defaultValue: 0,
-    required: false,
-    aiHelp: false,
-  },
-
-  {
-    label: 'Name (main owner)',
-    type: 'text',
-    name: 'main_owner_name',
-    required: true,
-    placeholder: 'e.g. John Doe',
-    aiHelp: false,
-  },
-  {
-    label: 'Email Address (main owner)',
-    type: 'email',
-    name: 'main_owner_email',
-    required: true,
-    placeholder: 'e.g. 8aQ0A@example.com',
-    aiHelp: false,
-  },
-  {
-    label: 'SSN (main owner)',
-    type: 'text',
-    name: 'main_owner_ssn',
-    required: true,
-    placeholder: 'e.g. 123-45-6789',
-    aiHelp: false,
-  },
-  {
-    label: 'Ownership Percentage (main owner)?',
-    type: 'range',
-    name: 'main owner_percentage_value',
-    minLength: 0,
-    maxLength: 100,
-    value: 0,
-    defaultValue: 0,
-    required: false,
-    aiHelp: false,
-  },
-];
+import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
+import { FIELD_TYPES } from '@/data/constants';
 
 function CompanyOwners({
   _id,
@@ -129,30 +26,18 @@ function CompanyOwners({
   totalSteps,
   handleSubmit,
   formLoading,
-  fields,
   reduxData,
+  fields,
+  blocks,
 }) {
+  const [fieldForCustomization, setFieldForCustomization] = useState({});
   const [otherOwnersStateName, setOtherOwnersStateName] = useState('');
   const [customizeModal, setCustomizeModal] = useState(false);
   const [formFields, setFormFields] = useState([]);
   const [form, setForm] = useState({});
-  useEffect(() => {
-    if (form?.['applicant_is_main_owner'] === 'no') {
-      const newFields = [
-        fields[0], // first item
-        ...applicantIsNotMainOwner, // insert at index 1
-        ...fields.slice(1), // rest of the fields
-      ];
-      setFormFields(newFields);
-    } else if (form?.['applicant_is_main_owner'] === 'yes') {
-      const newFields = [
-        fields[0], // first item
-        ...applicantIsMainOwner, // insert at index 1
-        ...fields.slice(1), // rest of the fields
-      ];
-      setFormFields(newFields);
-    }
-  }, [fields, form]);
+  const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
+
+  const requiredNames = useMemo(() => formFields.filter(f => f.required).map(f => f.name), [formFields]);
 
   console.log('company owners', form);
 
@@ -190,25 +75,82 @@ function CompanyOwners({
   };
 
   useEffect(() => {
-    if (fields && fields.length > 0) {
-      const initialForm = {};
-      fields.forEach(field => {
-        if (field.type === 'block' && field.name === 'additional_owner') {
-          setOtherOwnersStateName(field.name);
-          const initialState = { name: '', email: '', ssn: '', percentage: '' };
-          initialForm[field.name] = reduxData ? reduxData[field.name] || [initialState] : [initialState];
-        } else {
-          initialForm[field.name] = reduxData ? reduxData[field.name] || '' : '';
-        }
-      });
-      setForm(initialForm);
+    const isApplicantOwner = 'applicant_is_main_owner';
+    const isApplicantNotOwner = 'applicant_is_not_main_owner';
+    if (form?.[isApplicantOwner] === 'yes') {
+      const blockFields = blocks.find(block => block?.name === isApplicantOwner)?.fields ?? [];
+      const newFields = [fields[0], ...blockFields, ...fields.slice(1)];
+      setFormFields(newFields);
+    } else if (form?.[isApplicantOwner] === 'no') {
+      const blockFields = blocks.find(block => block?.name === isApplicantNotOwner)?.fields ?? [];
+      const newFields = [fields[0], ...blockFields, ...fields.slice(1)];
+      setFormFields(newFields);
     }
-  }, [fields, name, reduxData]);
+  }, [blocks, fields, form]);
+
+  // making form states according changing fields
+  // --------------------------------------------
+
+  useEffect(() => {
+    if (!formFields?.length) return;
+    // 1) Build the “canonical” shape for this form
+    const initialForm = {};
+    formFields.forEach(field => {
+      if (field.type === 'block' && field.name === 'additional_owner') {
+        setOtherOwnersStateName(field.name);
+        const initialState = { name: '', email: '', ssn: '', percentage: '' };
+        initialForm[field.name] = reduxData?.[field.name] ?? [initialState];
+      } else {
+        initialForm[field.name] = reduxData?.[field.name] ?? '';
+      }
+    });
+    // 2) Figure out what to add…
+    const toAdd = Object.fromEntries(Object.entries(initialForm).filter(([key]) => !(key in form)));
+    // 3) …and what to remove
+    const toRemoveKeys = Object.keys(form).filter(key => !(key in initialForm));
+    // 4) If there’s nothing to do, bail out
+    if (Object.keys(toAdd).length === 0 && toRemoveKeys.length === 0) return;
+    // 5) Apply both additions and deletions in one go
+    setForm(prev => {
+      // Start with everything that *should* stay
+      const cleaned = Object.fromEntries(Object.entries(prev).filter(([key]) => !toRemoveKeys.includes(key)));
+      // Then merge in any brand-new keys
+      return { ...cleaned, ...toAdd };
+    });
+  }, [form, formFields, reduxData]);
+
+  // create fields for this section and also for customization
+  // ---------------------------------------------------------
   useEffect(() => {
     if (fields && fields.length > 0) {
       setFormFields([...fields]);
+      const allPossibleFieldsOfThisSection = [...fields];
+      blocks.forEach(block => {
+        allPossibleFieldsOfThisSection.push(...block.fields);
+      });
+      setFieldForCustomization(allPossibleFieldsOfThisSection);
     }
-  }, [fields]);
+  }, [blocks, fields]);
+
+  useEffect(() => {
+    const allFilled = requiredNames.every(name => {
+      const val = form[name];
+      if (val == null) return false;
+      if (typeof val === 'string') return val.trim() !== '';
+      if (Array.isArray(val))
+        return (
+          val.length > 0 &&
+          val.every(item =>
+            typeof item === 'object'
+              ? Object.values(item).every(v => v?.toString().trim() !== '')
+              : item?.toString().trim() !== ''
+          )
+        );
+      return true;
+    });
+    setIsAllRequiredFieldsFilled(allFilled);
+  }, [form, requiredNames]);
+
   return (
     <div className="h-full overflow-auto">
       <div className="mb-10 flex items-center justify-between">
@@ -232,17 +174,57 @@ function CompanyOwners({
               </div>
             </div>
 
-            {formFields?.map((field, i) => {
+            {formFields?.map((field, index) => {
               if (field.name === 'main_owner_own_25_percent_or_more' || field.type === 'block') return null;
+              if (field.type === FIELD_TYPES.SELECT) {
+                return (
+                  <div key={index} className="mt-4">
+                    <SelectInputType field={field} form={form} setForm={setForm} className={''} />
+                  </div>
+                );
+              }
+              if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
+                return (
+                  <div key={index} className="mt-4">
+                    <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={''} />
+                  </div>
+                );
+              }
+              if (field.type === FIELD_TYPES.RADIO) {
+                return (
+                  <div key={index} className="mt-4">
+                    <RadioInputType field={field} form={form} setForm={setForm} className={''} />
+                  </div>
+                );
+              }
+              if (field.type === FIELD_TYPES.RANGE) {
+                return (
+                  <div key={index} className="mt-4">
+                    <RangeInputType field={field} form={form} setForm={setForm} className={''} />
+                  </div>
+                );
+              }
+              if (field.type === FIELD_TYPES.CHECKBOX) {
+                return (
+                  <div key={index} className="mt-4">
+                    <CheckboxInputType
+                      field={field}
+                      placeholder={field.placeholder}
+                      form={form}
+                      setForm={setForm}
+                      className={''}
+                    />
+                  </div>
+                );
+              }
               return (
-                <div key={i} className="mt-5">
-                  <DynamicField
+                <div key={index} className="mt-4">
+                  <OtherInputType
                     field={field}
-                    value={form[field.name] || ''}
                     placeholder={field.placeholder}
-                    onChange={e => setForm(prev => ({ ...prev, [field.name]: e.target.value }))}
-                    setForm={setForm}
                     form={form}
+                    setForm={setForm}
+                    className={''}
                   />
                 </div>
               );
@@ -308,7 +290,12 @@ function CompanyOwners({
         <div className="mt-8 flex justify-end gap-5">
           {currentStep > 0 && <Button variant="secondary" label="Previous" onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
-            <Button label="Next" onClick={() => nextHandler({ data: form, name })} />
+            <Button
+              onClick={() => nextHandler({ data: form, name })}
+              className={`${!isAllRequiredFieldsFilled && 'pointer-events-none cursor-not-allowed opacity-50'}`}
+              disabled={!isAllRequiredFieldsFilled}
+              label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
+            />
           ) : (
             <Button
               disabled={formLoading}
@@ -322,7 +309,13 @@ function CompanyOwners({
 
       {customizeModal && (
         <Modal onClose={() => setCustomizeModal(false)}>
-          <Modal6 sectionId={_id} fields={fields} formRefetch={formRefetch} onClose={() => setCustomizeModal(false)} />
+          <CustomizationFieldsModal
+            sectionId={_id}
+            fields={fieldForCustomization}
+            blocks={blocks}
+            formRefetch={formRefetch}
+            onClose={() => setCustomizeModal(false)}
+          />
         </Modal>
       )}
     </div>

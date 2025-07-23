@@ -295,8 +295,9 @@ const RangeInputType = ({ field, className, form, setForm }) => {
   const { label, name, required, minValue = 0, maxValue = 100 } = field;
 
   const onRangeChange = e => {
-    if (e.target.value > maxValue || e.target.value < minValue) return;
-    setForm({ ...form, [name]: e.target.value });
+    const targetVAlue = String(e.target.value);
+    if (targetVAlue > maxValue || targetVAlue < minValue) return;
+    setForm({ ...form, [name]: targetVAlue });
   };
   return (
     <div className={`flex w-full flex-col items-start ${className}`}>
@@ -306,9 +307,9 @@ const RangeInputType = ({ field, className, form, setForm }) => {
         </h4>
       )}
       <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
-        <div className="mb-2 w-full text-center text-sm font-semibold text-gray-700">{form[name] ?? 0}</div>
+        <div className="mb-2 w-full text-center text-sm font-semibold text-gray-700">{Number(form[name]) || 0}</div>
         <input
-          value={form[name] ?? 0}
+          value={Number(form[name]) || 0}
           type="range"
           className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
           defaultValue={0}
@@ -316,7 +317,7 @@ const RangeInputType = ({ field, className, form, setForm }) => {
         />
         <input
           type="number"
-          value={form[name] ?? 0}
+          value={Number(form[name]) || 0}
           className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
           onChange={onRangeChange}
         />

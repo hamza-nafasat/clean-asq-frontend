@@ -473,7 +473,7 @@ const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index }) => {
 
   return (
     <div className="flex flex-col gap-4 p-2 pb-2">
-      <h2 className="text-Primary text-xl font-semibold">{String(field.name).toUpperCase()}</h2>
+      <h2 className="text-Primary text-lg font-semibold">{String(field.label).toUpperCase()}</h2>
       <div className="flex flex-col gap-3">
         {/* Label & Name */}
         <div className="flex items-center justify-between gap-2">

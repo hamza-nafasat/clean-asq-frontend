@@ -88,7 +88,8 @@ export default function ApplicationForm({ selectedForm }) {
         const commonProps = {
           _id: step._id,
           name: step.name,
-          fields: step.fields,
+          fields: step?.fields ?? [],
+          blocks: step?.blocks ?? [],
           reduxData: sectionDataFromRedux,
           currentStep,
           totalSteps: form?.data?.sections?.length,
