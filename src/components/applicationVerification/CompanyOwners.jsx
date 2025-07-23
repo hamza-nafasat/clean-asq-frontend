@@ -311,7 +311,7 @@ function CompanyOwners({
         <Modal onClose={() => setCustomizeModal(false)}>
           <CustomizationFieldsModal
             sectionId={_id}
-            fields={fieldForCustomization}
+            fields={fields}
             blocks={blocks}
             formRefetch={formRefetch}
             onClose={() => setCustomizeModal(false)}
