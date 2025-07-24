@@ -1,7 +1,16 @@
-import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
+import { useEffect, useMemo, useState } from 'react';
 import Button from '../shared/small/Button';
-import DynamicField from '../shared/small/DynamicField';
+import {
+  CheckboxInputType,
+  MultiCheckboxInputType,
+  OtherInputType,
+  RadioInputType,
+  RangeInputType,
+  SelectInputType,
+} from '../shared/small/DynamicField';
+import { FIELD_TYPES } from '@/data/constants';
+import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
+import Modal from '../shared/small/Modal';
 
 function BankInfo({
   name,
@@ -13,9 +22,18 @@ function BankInfo({
   formLoading,
   fields,
   reduxData,
+  formRefetch,
+  _id,
 }) {
   const [form, setForm] = useState({});
+  const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
+  const [customizeModal, setCustomizeModal] = useState(false);
+  const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
   console.log('bank information', form);
+
+  const nextHandler = ({ data, name }) => {
+    handleNext({ data, name });
+  };
 
   useEffect(() => {
     if (fields && fields.length > 0) {
@@ -26,16 +44,35 @@ function BankInfo({
       setForm(initialForm);
     }
   }, [fields, name, reduxData]);
-  const nextHandler = ({ data, name }) => {
-    let isValid = Object.values(data).every(value => value.trim() !== '');
-    if (!isValid) return toast.error('Please fill all the fields');
-    handleNext({ data, name });
-  };
+
+  useEffect(() => {
+    const allFilled = requiredNames.every(name => {
+      const val = form[name];
+      if (val == null) return false;
+      if (typeof val === 'string') return val.trim() !== '';
+      if (Array.isArray(val))
+        return (
+          val.length > 0 &&
+          val.every(item =>
+            typeof item === 'object'
+              ? Object.values(item).every(v => v?.toString().trim() !== '')
+              : item?.toString().trim() !== ''
+          )
+        );
+      if (typeof val === 'object') return Object.values(val).every(v => v?.toString().trim() !== '');
+
+      return true;
+    });
+    setIsAllRequiredFieldsFilled(allFilled);
+  }, [form, requiredNames]);
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
-      <h1 className="text-textPrimary text-xl font-medium">{name}</h1>
+      <div className="mb-10 flex items-center justify-between">
+        <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
+        <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+      </div>
       <h5 className="text-textPrimary text-base">Provide Account information.</h5>
-      {fields?.map((field, i) => (
+      {/* {fields?.map((field, i) => (
         <div key={i} className="mt-5">
           <DynamicField
             key={i}
@@ -47,13 +84,73 @@ function BankInfo({
             form={form}
           />
         </div>
-      ))}
+      ))} */}
+      {fields?.length > 0 &&
+        fields.map((field, index) => {
+          if (field.type === FIELD_TYPES.SELECT) {
+            return (
+              <div key={index} className="mt-4">
+                <SelectInputType field={field} form={form} setForm={setForm} className={''} />
+              </div>
+            );
+          }
+          if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
+            return (
+              <div key={index} className="mt-4">
+                <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={''} />
+              </div>
+            );
+          }
+          if (field.type === FIELD_TYPES.RADIO) {
+            return (
+              <div key={index} className="mt-4">
+                <RadioInputType field={field} form={form} setForm={setForm} className={''} />
+              </div>
+            );
+          }
+          if (field.type === FIELD_TYPES.RANGE) {
+            return (
+              <div key={index} className="mt-4">
+                <RangeInputType field={field} form={form} setForm={setForm} className={''} />
+              </div>
+            );
+          }
+          if (field.type === FIELD_TYPES.CHECKBOX) {
+            return (
+              <div key={index} className="mt-4">
+                <CheckboxInputType
+                  field={field}
+                  placeholder={field.placeholder}
+                  form={form}
+                  setForm={setForm}
+                  className={''}
+                />
+              </div>
+            );
+          }
+          return (
+            <div key={index} className="mt-4">
+              <OtherInputType
+                field={field}
+                placeholder={field.placeholder}
+                form={form}
+                setForm={setForm}
+                className={''}
+              />
+            </div>
+          );
+        })}
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
-            <Button label={'Next'} onClick={() => nextHandler({ data: form, name })} />
+            <Button
+              onClick={() => nextHandler({ data: form, name })}
+              className={`${!isAllRequiredFieldsFilled && 'pointer-events-none cursor-not-allowed opacity-50'}`}
+              disabled={!isAllRequiredFieldsFilled}
+              label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
+            />
           ) : (
             <Button
               disabled={formLoading}
@@ -64,6 +161,16 @@ function BankInfo({
           )}
         </div>
       </div>
+      {customizeModal && (
+        <Modal onClose={() => setCustomizeModal(false)}>
+          <CustomizationFieldsModal
+            sectionId={_id}
+            fields={fields}
+            formRefetch={formRefetch}
+            onClose={() => setCustomizeModal(false)}
+          />
+        </Modal>
+      )}
     </div>
   );
 }

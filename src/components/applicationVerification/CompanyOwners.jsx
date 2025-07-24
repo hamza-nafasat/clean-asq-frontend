@@ -11,10 +11,10 @@ import {
   RangeInputType,
   SelectInputType,
 } from '../shared/small/DynamicField';
-import { toast } from 'react-toastify';
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 import { FIELD_TYPES } from '@/data/constants';
+import CustomizationOwnerFieldsModal from './companyInfo/CustomizationOwnerFieldsModal';
 
 function CompanyOwners({
   _id,
@@ -30,7 +30,6 @@ function CompanyOwners({
   fields,
   blocks,
 }) {
-  const [fieldForCustomization, setFieldForCustomization] = useState({});
   const [otherOwnersStateName, setOtherOwnersStateName] = useState('');
   const [customizeModal, setCustomizeModal] = useState(false);
   const [formFields, setFormFields] = useState([]);
@@ -61,17 +60,6 @@ function CompanyOwners({
       ...prev,
       [otherOwnersStateName]: [...(prev[otherOwnersStateName] || []), { name: '', email: '', ssn: '', percentage: '' }],
     }));
-  };
-
-  const nextHandler = ({ data, name }) => {
-    let isValid = Object.values(data).every(value => {
-      if (typeof value === 'string') return value.trim() !== '';
-      if (Array.isArray(value)) return value.every(item => Object.values(item).every(val => val.trim() !== ''));
-    });
-    if (isValid)
-      isValid = data?.[otherOwnersStateName]?.every(owner => Object.values(owner).every(value => value.trim() !== ''));
-    if (!isValid) return toast.error('Please fill all the fields');
-    handleNext({ data, name });
   };
 
   useEffect(() => {
@@ -124,13 +112,8 @@ function CompanyOwners({
   useEffect(() => {
     if (fields && fields.length > 0) {
       setFormFields([...fields]);
-      const allPossibleFieldsOfThisSection = [...fields];
-      blocks.forEach(block => {
-        allPossibleFieldsOfThisSection.push(...block.fields);
-      });
-      setFieldForCustomization(allPossibleFieldsOfThisSection);
     }
-  }, [blocks, fields]);
+  }, [fields]);
 
   useEffect(() => {
     const allFilled = requiredNames.every(name => {
@@ -146,6 +129,8 @@ function CompanyOwners({
               : item?.toString().trim() !== ''
           )
         );
+      if (typeof val === 'object') return Object.values(val).every(v => v?.toString().trim() !== '');
+
       return true;
     });
     setIsAllRequiredFieldsFilled(allFilled);
@@ -291,7 +276,7 @@ function CompanyOwners({
           {currentStep > 0 && <Button variant="secondary" label="Previous" onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
             <Button
-              onClick={() => nextHandler({ data: form, name })}
+              onClick={() => handleNext({ data: form, name })}
               className={`${!isAllRequiredFieldsFilled && 'pointer-events-none cursor-not-allowed opacity-50'}`}
               disabled={!isAllRequiredFieldsFilled}
               label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
@@ -309,7 +294,7 @@ function CompanyOwners({
 
       {customizeModal && (
         <Modal onClose={() => setCustomizeModal(false)}>
-          <CustomizationFieldsModal
+          <CustomizationOwnerFieldsModal
             sectionId={_id}
             fields={fields}
             blocks={blocks}

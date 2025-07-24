@@ -1,6 +1,5 @@
 import { FIELD_TYPES } from '@/data/constants';
 import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
 import Button from '../shared/small/Button';
 import {
   CheckboxInputType,
@@ -36,12 +35,6 @@ function CompanyInformation({
   console.log('isAllRequiredFieldsFilled', isAllRequiredFieldsFilled);
 
   const nextHandler = ({ data, name }) => {
-    const isValid = Object.values(data).every(value => {
-      if (typeof value === 'string') return value.trim() !== '';
-      if (Array.isArray(value)) return value.every(item => Object.values(item).every(val => val.trim() !== ''));
-      return true;
-    });
-    if (!isValid) return toast.error('Please fill all fields before proceeding next.');
     handleNext({ data: form, name });
   };
 
