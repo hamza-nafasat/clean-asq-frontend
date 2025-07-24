@@ -34,10 +34,6 @@ function CompanyInformation({
   console.log('company info', form);
   console.log('isAllRequiredFieldsFilled', isAllRequiredFieldsFilled);
 
-  const nextHandler = ({ data, name }) => {
-    handleNext({ data: form, name });
-  };
-
   useEffect(() => {
     if (fields && fields.length > 0) {
       const initialForm = {};
@@ -141,7 +137,7 @@ function CompanyInformation({
               className={`${!isAllRequiredFieldsFilled && 'pointer-events-none cursor-not-allowed opacity-50'}`}
               disabled={!isAllRequiredFieldsFilled}
               label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
-              onClick={() => nextHandler({ data: form, name })}
+              onClick={() => handleNext({ data: form, name })}
             />
           ) : (
             <Button

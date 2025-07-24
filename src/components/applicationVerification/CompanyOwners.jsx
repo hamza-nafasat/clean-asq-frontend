@@ -12,7 +12,6 @@ import {
   SelectInputType,
 } from '../shared/small/DynamicField';
 import Modal from '../shared/small/Modal';
-import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 import { FIELD_TYPES } from '@/data/constants';
 import CustomizationOwnerFieldsModal from './companyInfo/CustomizationOwnerFieldsModal';
 
@@ -296,7 +295,7 @@ function CompanyOwners({
         <Modal onClose={() => setCustomizeModal(false)}>
           <CustomizationOwnerFieldsModal
             sectionId={_id}
-            fields={fields}
+            fields={fields?.filter(f => f.type !== 'block')}
             blocks={blocks}
             formRefetch={formRefetch}
             onClose={() => setCustomizeModal(false)}
