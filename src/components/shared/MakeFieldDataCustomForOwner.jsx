@@ -16,24 +16,24 @@ const MakeFieldDataCustomForOwner = ({ fieldsData, setFieldsData, index }) => {
   const [formattingInstructionForAi, setFormattingInstructionForAi] = useState('');
   const [formateTextInMarkDown, { isLoading }] = useFormateTextInMarkDownMutation();
 
-  const addNewOption = useCallback(() => {
-    setFieldsData(prev =>
-      prev.map((item, idx) =>
-        idx !== index ? item : { ...item, options: [...(item.options || []), { label: '', value: '' }] }
-      )
-    );
-  }, [setFieldsData, index]);
+  // const addNewOption = useCallback(() => {
+  //   setFieldsData(prev =>
+  //     prev.map((item, idx) =>
+  //       idx !== index ? item : { ...item, options: [...(item.options || []), { label: '', value: '' }] }
+  //     )
+  //   );
+  // }, [setFieldsData, index]);
 
-  const removeOption = useCallback(
-    optionIdx => {
-      setFieldsData(prev =>
-        prev.map((item, idx) =>
-          idx !== index ? item : { ...item, options: item.options.filter((_, i) => i !== optionIdx) }
-        )
-      );
-    },
-    [setFieldsData, index]
-  );
+  // const removeOption = useCallback(
+  //   optionIdx => {
+  //     setFieldsData(prev =>
+  //       prev.map((item, idx) =>
+  //         idx !== index ? item : { ...item, options: item.options.filter((_, i) => i !== optionIdx) }
+  //       )
+  //     );
+  //   },
+  //   [setFieldsData, index]
+  // );
 
   const updateFieldDataField = useCallback(
     (e, isCheckbox) => {
@@ -232,18 +232,18 @@ const MakeFieldDataCustomForOwner = ({ fieldsData, setFieldsData, index }) => {
                   label={`Option ${i + 1} Value`}
                   value={opt.value}
                   name="value"
-                  onChange={e => updateFieldDataFieldForOptions(e, i)}
+                  // onChange={e => updateFieldDataFieldForOptions(e, i)}
                 />
-                <Button onClick={() => removeOption(i)} className="mt-8 bg-red-500 hover:bg-red-700">
+                {/* <Button onClick={() => removeOption(i)} className="mt-8 bg-red-500 hover:bg-red-700">
                   <TrashIcon className="h-5 w-5 text-white" />
-                </Button>
+                </Button> */}
               </div>
             ))}
-            <div className="flex justify-end">
+            {/* <div className="flex justify-end">
               <Button onClick={addNewOption} className="mt-4">
                 Add Option
               </Button>
-            </div>
+            </div> */}
           </div>
         )}
         {/* Display text & AI formatting */}

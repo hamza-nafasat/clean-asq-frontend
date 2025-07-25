@@ -34,7 +34,7 @@ function CustomSection({
     const formFields = {};
     if (fields?.length) {
       fields?.forEach(field => {
-        formFields[field?.label] = '';
+        formFields[field?.name] = '';
       });
       setForm(formFields);
     }
