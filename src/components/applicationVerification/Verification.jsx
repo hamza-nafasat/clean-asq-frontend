@@ -1,28 +1,26 @@
-import React, { useCallback, useState } from 'react';
-import verificationImg from '../../assets/images/verificationImg.png';
-import Modal from '../shared/small/Modal';
-import Button from '../shared/small/Button';
+import { useGetIdMissionSessionMutation } from '@/redux/apis/idMissionApis';
+import { useCallback, useState } from 'react';
+import { MdVerifiedUser } from 'react-icons/md';
 import { PiUserFocusFill } from 'react-icons/pi';
+import QRCode from 'react-qr-code';
+import verificationImg from '../../assets/images/verificationImg.png';
+import Button from '../shared/small/Button';
+import Modal from '../shared/small/Modal';
+import TextField from '../shared/small/TextField';
 import Modal1 from './verification/Modal1';
 import Modal2 from './verification/Modal2';
 import Modal3 from './verification/Modal3';
 import Modal4 from './verification/Modal4';
 import Modal5 from './verification/Modal5';
-import { MdVerifiedUser } from 'react-icons/md';
-import TextField from '../shared/small/TextField';
-import { IdValidation } from 'idmission-web-sdk';
-import { useGetIdMissionSessionMutation } from '@/redux/apis/idMissionApis';
-import QRCode from 'react-qr-code';
 
 function Verification({ name, handleNext, handlePrevious, currentStep, totalSteps, handleSubmit }) {
   const [isLoading, setIsLoading] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
-  const [validatedData, setValidatedData] = useState(null);
+  // const [validatedData, setValidatedData] = useState(null);
   const [getIdMissionSession] = useGetIdMissionSessionMutation();
-  const [running, setRunning] = useState(false);
-  const [sessionId, setSessionId] = useState(null);
+  const [webLink, setWebLink] = useState(null);
   const [showInfo, setShowInfo] = useState(false);
-  const [qrUrl, setQrUrl] = useState('');
+  const [qrCode, setQrCode] = useState('');
 
   const getSessionId = useCallback(async () => {
     try {
@@ -30,9 +28,8 @@ function Verification({ name, handleNext, handlePrevious, currentStep, totalStep
       const res = await getIdMissionSession().unwrap();
       console.log('session id is ', res);
       if (res.success) {
-        const id = res.session.id;
-        setSessionId(id);
-        setQrUrl(`https://identity.idmission.com/identity/m/verification/verification?sessionId=${id}`);
+        setQrCode(res.data?.customerData?.qrCode);
+        setWebLink(res.data?.customerData?.kycUrl);
       }
     } catch (error) {
       console.log('Error fetching session ID:', error);
@@ -40,29 +37,6 @@ function Verification({ name, handleNext, handlePrevious, currentStep, totalStep
       setIsLoading(false);
     }
   }, [getIdMissionSession]);
-
-  const handleApproved = useCallback(submissionResponse => {
-    setValidatedData({
-      name: submissionResponse?.responseCustomerData?.extractedPersonalData?.name,
-      dob: submissionResponse?.responseCustomerData?.extractedPersonalData?.dob,
-      gender: submissionResponse?.responseCustomerData?.extractedPersonalData?.gender,
-      idType: submissionResponse?.responseCustomerData?.extractedIdData?.idType,
-      idCountry: submissionResponse?.responseCustomerData?.extractedIdData?.idCountry,
-      idIssuedCountry: submissionResponse?.responseCustomerData?.extractedIdData?.idIssueCountry,
-      ageOver18: submissionResponse?.responseCustomerData?.extractedIdData?.ageOver18,
-      idIssueDate: submissionResponse?.responseCustomerData?.extractedIdData?.idIssueDate,
-      idExpirationDate: submissionResponse?.responseCustomerData?.extractedIdData?.idExpirationDate,
-      idNumber: submissionResponse?.responseCustomerData?.extractedIdData?.idNumber,
-      negativeDBMatchFound: submissionResponse?.responseCustomerData?.extractedIdData?.negativeDBMatchFound,
-      uniqueRequestId: submissionResponse?.resultData?.uniqueRequestId,
-      verificationResult: submissionResponse?.resultData?.verificationResult,
-      verificationResultId: submissionResponse?.resultData?.verificationResultId,
-      traceId: submissionResponse?.status?.traceId,
-      requestId: submissionResponse?.status?.requestId,
-      ipAddress: submissionResponse?.status?.ipAddress,
-      statusMessage: submissionResponse?.status?.statusMessage,
-    });
-  }, []);
 
   const renderModal = () => {
     switch (activeModal) {
@@ -87,7 +61,7 @@ function Verification({ name, handleNext, handlePrevious, currentStep, totalStep
         return null;
     }
   };
-  console.log('idmission validated data is ', validatedData);
+  // console.log('idmission validated data is ', validatedData);
   return (
     <div className="mt-14 h-full overflow-auto text-center">
       {showInfo === false && (
@@ -98,25 +72,26 @@ function Verification({ name, handleNext, handlePrevious, currentStep, totalStep
             <img src={verificationImg} alt="Verification Illustration" className="h-auto w-64" />
           </div>
 
-          {qrUrl && (
+          {qrCode && (
             <div className="mt-4 flex w-full flex-col items-center gap-4">
-              <QRCode
-                size={150}
-                style={{ height: 'auto', maxWidth: '150', width: '100%' }}
-                viewBox={`0 0 150 150`}
-                value={qrUrl}
-              />
+              <img className="h-[230px] w-[230px]" src={`data:image/jpeg;base64,${qrCode}`} alt="qr code " />
+            </div>
+          )}
+
+          {webLink && (
+            <div className="mt-4 flex w-full flex-col items-center gap-4">
               <Button
                 className="max-w-[400px]"
-                label={'Open here'}
+                label={'Open LInk in New Tab'}
                 onClick={() => {
-                  setRunning(true);
-                  setQrUrl('');
+                  window.open(webLink, '_blank');
                 }}
+                rightIcon={MdVerifiedUser}
               />
             </div>
           )}
 
+          {/* {!qrCode && !webLink && ( */}
           <div className="mt-8">
             <Button
               onClick={getSessionId}
@@ -126,26 +101,7 @@ function Verification({ name, handleNext, handlePrevious, currentStep, totalStep
               rightIcon={PiUserFocusFill}
             />
           </div>
-          {running && (
-            <IdValidation
-              sessionId={sessionId}
-              // allowSinglePageIdCapture={true}
-              // allowIdCardBackToFrontCapture={true}
-              onApproved={handleApproved}
-              onDenied={() => {
-                alert('Validation denied, please try again.');
-                setRunning(false);
-              }}
-              onError={err => {
-                console.error('SDK error:', err);
-                alert('An error occurred during verification.');
-                setRunning(false);
-              }}
-              onComplete={() => {
-                setRunning(false);
-              }}
-            />
-          )}
+          {/* )} */}
         </div>
       )}
       {/* /// for next page */}
