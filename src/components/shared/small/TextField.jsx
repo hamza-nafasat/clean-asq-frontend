@@ -1,6 +1,6 @@
-const TextField = ({ cn, label, type = 'text', leftIcon, cnLeft, rightIcon, cnRight, ...rest }) => {
+const TextField = ({ cn, label, type = 'text', leftIcon, cnLeft, rightIcon, cnRight, className, ...rest }) => {
   return (
-    <div className="flex w-full flex-col items-start">
+    <div className={`flex w-full flex-col items-start ${className}`}>
       {label && <label className="text-textPrimary text-sm lg:text-base">{label}</label>}
       <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
         {leftIcon && (

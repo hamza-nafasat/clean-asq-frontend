@@ -15,7 +15,25 @@ const idMissionApis = createApi({
         method: 'GET',
       }),
     }),
+    // send otp
+    // --------------
+    sendOtp: builder.mutation({
+      query: data => ({
+        url: '/send-otp',
+        method: 'POST',
+        body: data,
+      }),
+    }),
+    // verify email
+    // --------------
+    verifyEmail: builder.mutation({
+      query: data => ({
+        url: '/verify-email',
+        method: 'POST',
+        body: data,
+      }),
+    }),
   }),
 });
-export const { useGetIdMissionSessionMutation } = idMissionApis;
+export const { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } = idMissionApis;
 export default idMissionApis;

@@ -4,7 +4,7 @@ import CompanyOwners from '@/components/applicationVerification/CompanyOwners';
 import CustomSection from '@/components/applicationVerification/CustomSection';
 import Documents from '@/components/applicationVerification/Documents';
 import ProcessingInfo from '@/components/applicationVerification/ProcessingInfo';
-import Verification from '@/components/applicationVerification/Verification';
+
 import { useCallback, useEffect, useState } from 'react';
 import Stepper from '../../../../components/Stepper/Stepper';
 import { useDispatch, useSelector } from 'react-redux';
@@ -32,11 +32,7 @@ export default function ApplicationForm({ selectedForm }) {
     isLoading: formLoading,
     refetch: formRefetch,
   } = useGetSingleFormQueryQuery({ _id: selectedForm._id });
-
-  const handleComplete = () => {
-    console.log('Form submitted:');
-  };
-
+  const handleComplete = () => console.log('Form submitted:');
   const handlePrevious = useCallback(() => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
@@ -97,12 +93,9 @@ export default function ApplicationForm({ selectedForm }) {
           handlePrevious,
           handleSubmit,
           formLoading,
-          formRefetch, // Pass refetch function to components
+          formRefetch,
         };
-        if (step.title === 'id_verification_blk') {
-          data.push(<Verification {...commonProps} />);
-          stepNames.push(step.name);
-        } else if (step.title === 'company_information_blk') {
+        if (step.title === 'company_information_blk') {
           data.push(<CompanyInformation {...commonProps} />);
           stepNames.push(step.name);
         } else if (step.title === 'beneficial_blk') {
@@ -121,6 +114,10 @@ export default function ApplicationForm({ selectedForm }) {
           data.push(<CustomSection {...commonProps} isLoading={isLoading} />);
           stepNames.push(step.name);
         }
+        // else if (step.title === 'id_verification_blk') {
+        //   data.push(<Verification {...commonProps} />);
+        //   stepNames.push(step.name);
+        // }
       });
       console.log('steps', data);
       setStepsComps(data);

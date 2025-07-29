@@ -17,6 +17,7 @@ import ApplicationVerification from './page/admin/userApplicationForms/Applicati
 import CompanyInformation from './page/admin/userApplicationForms/CompanyInformation/CompanyInformation';
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
+import Verification from './components/applicationVerification/Verification';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -75,7 +76,7 @@ function App() {
                 {/*all User Forms or application layout  , with out sidebar */}
                 <Route path="/user-application-forms" element={<UserApplicationForms />}>
                   <Route index element={<Navigate to="application-verification" replace />} />
-                  <Route path="application-verification" element={<ApplicationVerification />} />
+                  <Route path="application-verification" element={<Verification />} />
                   <Route path="company-information" element={<CompanyInformation />} />
                 </Route>
               </Route>
