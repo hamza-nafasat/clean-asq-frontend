@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { HiChevronDown } from 'react-icons/hi';
 import { IoChevronForwardOutline, IoLogOutOutline } from 'react-icons/io5';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom'; // or 'next/link' if using Next.js
+import { Link, useNavigate } from 'react-router-dom'; // or 'next/link' if using Next.js
 import { toast } from 'react-toastify';
 
 function AdminHeader() {
@@ -57,6 +57,7 @@ function AdminHeader() {
 export default AdminHeader;
 
 const Profile = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const [logout, { isLoading }] = useLogoutMutation();
 
@@ -64,8 +65,9 @@ const Profile = () => {
     try {
       const res = await logout().unwrap();
       if (res.success) {
-        dispatch(userNotExist());
+        await dispatch(userNotExist());
         toast.success(res.message);
+        return navigate('/login');
       }
     } catch (error) {
       console.log('error while logging out', error);

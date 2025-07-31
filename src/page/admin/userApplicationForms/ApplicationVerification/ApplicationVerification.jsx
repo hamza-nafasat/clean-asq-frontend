@@ -5,12 +5,10 @@ import CompanyOwners from '@/components/applicationVerification/CompanyOwners';
 import Documents from '@/components/applicationVerification/Documents';
 import PlaceHolder from '@/components/applicationVerification/PlaceHolder';
 import ProcessingInfo from '@/components/applicationVerification/ProcessingInfo';
-import Verification from '@/components/applicationVerification/Verification';
 import { useMemo, useState } from 'react';
 import Stepper from '../../../../components/Stepper/Stepper';
 
 const steps = [
-  'Verification',
   'Company Information',
   'Company Owners',
   'Bank Account Information',
@@ -47,7 +45,6 @@ export default function ApplicationVerification({ form }) {
 
   const stepComponents = useMemo(
     () => [
-      <Verification key="verification" data={formData[0]} updateField={updateField} index={0} />,
       <CompanyInformation key="company-info" data={formData[1]} updateField={updateField} index={1} />,
       <CompanyOwners key="company-owners" data={formData[2]} updateField={updateField} index={2} />,
       <BankInfo key="bank-account" data={formData[3]} updateField={updateField} index={3} />,

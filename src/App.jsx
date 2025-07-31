@@ -3,21 +3,22 @@ import { useDispatch, useSelector } from 'react-redux';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import ProtectedRoute from './components/ProtectedRoute';
-import RoleRedirect from './components/RoleRedirect';
-import CustomLoading from './components/shared/small/CustomLoading';
 import { BrandingProvider } from './components/admin/brandings/globalBranding/BrandingContext';
+import Verification from './components/applicationVerification/Verification';
+import ProtectedRoute from './components/ProtectedRoute';
+import CustomLoading from './components/shared/small/CustomLoading';
+import { socket } from './main';
 import AdminDashboard from './page/admin/dashboard';
-import Applications from './page/admin/dashboard/applications/Applications';
-import ApplicationForms from './page/admin/dashboard/applicationForms/ApplicationForms';
 import AdminAllUsers from './page/admin/dashboard/admin-dashboard/AdminAllUsers';
+import ApplicationForms from './page/admin/dashboard/applicationForms/ApplicationForms';
+import Applications from './page/admin/dashboard/applications/Applications';
 import AllRoles from './page/admin/dashboard/role/AllRoles';
 import UserApplicationForms from './page/admin/userApplicationForms';
-import ApplicationVerification from './page/admin/userApplicationForms/ApplicationVerification/ApplicationVerification';
+import ApplicationForm from './page/admin/userApplicationForms/ApplicationVerification/ApplicationForm';
+import SingleApplication from './page/admin/userApplicationForms/ApplicationVerification/SingleApplication';
 import CompanyInformation from './page/admin/userApplicationForms/CompanyInformation/CompanyInformation';
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
-import Verification from './components/applicationVerification/Verification';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -31,6 +32,18 @@ function App() {
   const { user } = useSelector(state => state.auth);
 
   useEffect(() => {
+    const userId = user?._id;
+    if (!userId) return;
+    const register = () => {
+      socket.emit('register_user', userId);
+      console.log(`📌 User registered: ${userId} -> ${socket.id}`);
+    };
+    if (socket.connected) register();
+    else socket.on('connect', register);
+    return () => socket.off('connect', register);
+  }, [user?._id]);
+
+  useEffect(() => {
     getUserProfile()
       .then(res => {
         if (res?.data?.success) dispatch(userExist(res.data.data));
@@ -40,6 +53,13 @@ function App() {
       .finally(() => setLoading(false));
   }, [getUserProfile, dispatch]);
 
+  // debugging for socket
+  // useEffect(() => {
+  //   socket.onAny((event, ...args) => {
+  //     console.log(`⚡ Socket event: ${event}`, args);
+  //   });
+  //   return () => socket.offAny();
+  // }, []);
   return (
     <BrowserRouter>
       <BrandingProvider>
@@ -68,6 +88,8 @@ function App() {
                   <Route path="all-roles" element={<AllRoles />} />
                   <Route path="all-users" element={<AdminAllUsers />} />
                   <Route path="application-forms" element={<ApplicationForms />} />
+                  <Route path="application-form/:formId" element={<SingleApplication />} />
+                  <Route path="singleForm/stepper/:formId" element={<ApplicationForm />} />
                   <Route path="applications" element={<Applications />} />
                   <Route path="branding" element={<Brandings />} />
                   <Route path="branding/create" element={<CreateBranding />} />
@@ -76,13 +98,12 @@ function App() {
                 {/*all User Forms or application layout  , with out sidebar */}
                 <Route path="/user-application-forms" element={<UserApplicationForms />}>
                   <Route index element={<Navigate to="application-verification" replace />} />
-                  <Route path="application-verification" element={<Verification />} />
                   <Route path="company-information" element={<CompanyInformation />} />
                 </Route>
               </Route>
 
               {/* Fallback */}
-              <Route path="*" element={<RoleRedirect user={user} />} />
+              {/* <Route path="*" element={<RoleRedirect user={user} />} /> */}
             </Routes>
           </Suspense>
         )}

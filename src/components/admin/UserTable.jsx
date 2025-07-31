@@ -1,4 +1,4 @@
-import { INITIAL_USER_FORM } from '@/constants/userConstants';
+import { INITIAL_USER_FORM } from '@/constants/constants';
 import { getTableStyles } from '@/data/data';
 import { useGetAllRolesQuery } from '@/redux/apis/roleApis';
 import {

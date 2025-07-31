@@ -1,16 +1,21 @@
+import { useNavigate, useParams } from 'react-router-dom';
 import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
 import { updateEmailVerified } from '@/redux/slices/formSlice';
 import { useCallback, useEffect, useState } from 'react';
 import { MdVerifiedUser } from 'react-icons/md';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import Button from '../shared/small/Button';
-import TextField from '../shared/small/TextField';
+import TextField from '@/components/shared/small/TextField';
+import Button from '@/components/shared/small/Button';
+import CustomLoading from '@/components/shared/small/CustomLoading';
 import { socket } from '@/main';
-import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
 import { userExist, userNotExist } from '@/redux/slices/authSlice';
+import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
 
-function Verification() {
+export default function SingleApplication() {
+  const navigate = useNavigate();
+  const params = useParams();
+  const formId = params.formId;
   const dispatch = useDispatch();
   const { emailVerified } = useSelector(state => state.form);
   const [webLink, setWebLink] = useState(null);
@@ -18,13 +23,35 @@ function Verification() {
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [getQrAndWebLinkLoading, setGetQrAndWebLinkLoading] = useState(false);
 
+  const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const [getIdMissionSession] = useGetIdMissionSessionMutation();
   const [sendOtp, { isLoading: otpLoading }] = useSendOtpMutation();
-  const [getUserProfile, { refetch }] = useGetMyProfileFirstTimeMutation();
   const [verifyEmail, { isLoading: emailLoading }] = useVerifyEmailMutation();
 
-  const getSessionId = async () => {
+  useEffect(() => {
+    // Setup listener ONCE when component mounts
+    socket.on('idMission_processing_started', data => {
+      console.log('you start id mission verification', data);
+    });
+    socket.on('idMission_verified', data => {
+      console.log('You are verified successfully', data);
+      return navigate(`/singleForm/stepper/${formId}`);
+    });
+    socket.on('idMission_failed', data => {
+      console.log('you start id mission failed', data);
+    });
+
+    // Cleanup listener when component unmounts
+    return () => {
+      socket.off('idMission_processing_started');
+      socket.off('idMission_verified');
+      socket.off('idMission_failed');
+    };
+  }, [formId, navigate]);
+
+  const getQrAndWebLink = useCallback(async () => {
     try {
       const res = await getIdMissionSession().unwrap();
       console.log('session id is ', res);
@@ -35,9 +62,9 @@ function Verification() {
     } catch (error) {
       console.log('Error fetching session ID:', error);
     }
-  };
+  }, [getIdMissionSession]);
 
-  const sentOtpForEmail = async () => {
+  const sentOtpForEmail = useCallback(async () => {
     try {
       if (!email) return toast.error('Please enter your email');
       const res = await sendOtp({ email }).unwrap();
@@ -49,32 +76,39 @@ function Verification() {
       console.log('Error sending OTP:', error);
       toast.error(error?.data?.message || 'Failed to send OTP');
     }
-  };
+  }, [email, sendOtp]);
 
-  const verifyWithOtp = async () => {
+  const verifyWithOtp = useCallback(async () => {
     try {
       if (!email || !otp) return toast.error('Please enter your email and otp');
       const res = await verifyEmail({ email, otp }).unwrap();
       if (res.success) {
-        await getSessionId();
-        await refetch();
+        // await getQrAndWebLink();
         await dispatch(updateEmailVerified(true));
+        await getUserProfile()
+          .then(res => {
+            if (res?.data?.success) dispatch(userExist(res.data.data));
+            else dispatch(userNotExist());
+          })
+          .catch(() => dispatch(userNotExist()));
         toast.success(res.message);
       }
     } catch (error) {
       console.log('Error sending OTP:', error);
       toast.error(error?.data?.message || 'Failed to send OTP');
     }
-  };
+  }, [dispatch, email, getUserProfile, otp, verifyEmail]);
+
+  const getQrLinkOnEmailVerified = useCallback(() => {
+    if (!qrCode && !webLink && emailVerified) {
+      setGetQrAndWebLinkLoading(true);
+      getQrAndWebLink().finally(() => setGetQrAndWebLinkLoading(false));
+    }
+  }, [emailVerified, getQrAndWebLink, qrCode, webLink]);
 
   useEffect(() => {
-    getUserProfile()
-      .then(res => {
-        if (res?.data?.success) dispatch(userExist(res.data.data));
-        else dispatch(userNotExist());
-      })
-      .catch(() => dispatch(userNotExist()));
-  }, [getUserProfile, dispatch]);
+    getQrLinkOnEmailVerified();
+  }, [getQrLinkOnEmailVerified]);
 
   return (
     <div className="mt-14 h-full overflow-auto text-center">
@@ -115,6 +149,8 @@ function Verification() {
             </div>
           )}
         </div>
+      ) : getQrAndWebLinkLoading ? (
+        <CustomLoading />
       ) : (
         <div className="flex flex-col items-center gap-3">
           <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
@@ -136,33 +172,15 @@ function Verification() {
               </div>
             </>
           )}
-
-          {/* {!qrCode && !webLink && ( */}
-          {/* <div className="mt-8">
+          {/* <div className="flex w-full items-center justify-end">
             <Button
-              onClick={getSessionId}
-              disabled={isLoading}
-              label={'Verify ID'}
-              cnRight={'text-white'}
-              rightIcon={PiUserFocusFill}
+              onClick={() => navigate(`/singleForm/stepper/${formId}`)}
+              className="!text-base"
+              label={'Continue Application'}
             />
           </div> */}
-          {/* )} */}
         </div>
       )}
-
-      {/* <div className="flex justify-end gap-4 p-4">
-        <div className="mt-8 flex justify-end gap-5">
-          {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
-          {currentStep < totalSteps - 1 ? (
-            <Button label={'Next'} onClick={handleNext} />
-          ) : (
-            <Button label={'Submit'} onClick={handleSubmit} />
-          )}
-        </div>
-      </div> */}
     </div>
   );
 }
-
-export default Verification;

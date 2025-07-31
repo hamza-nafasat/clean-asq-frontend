@@ -9,11 +9,12 @@ import FileUploader from '../applicationVerification/Documents/FileUploader';
 import Button from '../shared/small/Button';
 import Modal from '../shared/small/Modal';
 import TextField from '../shared/small/TextField';
+import { useNavigate } from 'react-router-dom';
 
 export default function ApplicationsCard() {
+  const navigate = useNavigate();
   const rowRef = useRef(null);
   const [actionMenu, setActionMenu] = useState(null);
-  const [selectedForm, setSelectedForm] = useState(null);
   const [clientQuery, setClientQuery] = useState('');
   const [nameQuery, setNameQuery] = useState('');
   const [dateFrom, setDateFrom] = useState('');
@@ -22,7 +23,7 @@ export default function ApplicationsCard() {
   const [creteFormModal, setCreateFormModal] = useState(false);
   const [file, setFile] = useState(null);
   const [createForm, { isLoading }] = useCreateFormMutation();
-  const { data: forms, isLoading: formsLoading, refetch: refetchForms } = useGetMyAllFormsQuery();
+  const { data: forms } = useGetMyAllFormsQuery();
 
   const createFormWithCsvHandler = async () => {
     console.log('file', file);
@@ -39,16 +40,6 @@ export default function ApplicationsCard() {
       setCreateFormModal(false);
     }
   };
-
-  useEffect(() => {
-    if (selectedForm && forms?.data) {
-      const updatedForm = forms.data.find(f => f._id === selectedForm._id);
-      if (updatedForm) {
-        setSelectedForm(updatedForm);
-      }
-    }
-  }, [forms, selectedForm]);
-
   useEffect(() => {
     const handleClickOutside = event => {
       if (rowRef.current && !rowRef.current.contains(event.target)) {
@@ -61,18 +52,6 @@ export default function ApplicationsCard() {
     };
   }, [rowRef]);
 
-  if (selectedForm?._id)
-    return (
-      <div className="flex items-center justify-center p-4">
-        <ApplicationForm
-          formId={selectedForm?._id}
-          selectedForm={selectedForm}
-          formLoading={formsLoading}
-          formRefetch={refetchForms}
-          onClose={() => setSelectedForm(null)}
-        />
-      </div>
-    );
   return (
     <div className="rounded-md bg-white p-5 shadow">
       {/* Header Section */}
@@ -221,7 +200,7 @@ export default function ApplicationsCard() {
               </span>
             </div>
             <div className="mt-3 flex w-full flex-col items-center justify-between gap-3 md:mt-6 md:flex-row md:gap-4">
-              <Button label={'Start Application'} onClick={() => setSelectedForm(form)} />
+              <Button label={'View Application'} onClick={() => navigate(`/application-form/${form?._id}`)} />
             </div>
           </div>
         ))}

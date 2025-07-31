@@ -1,4 +1,4 @@
-import { PASSWORD_REQUIREMENTS, USER_TYPES } from '../constants/userConstants';
+import { PASSWORD_REQUIREMENTS, USER_TYPES } from '../constants/constants';
 
 export const validatePassword = password => {
   const errors = [];

@@ -6,11 +6,6 @@ export const USER_TYPES = {
   SUPER_BANK: 'super-bank',
 };
 
-export const USER_STATUS = {
-  ACTIVE: 'active',
-  INACTIVE: 'inactive',
-};
-
 export const INITIAL_USER_FORM = {
   firstName: '',
   lastName: '',

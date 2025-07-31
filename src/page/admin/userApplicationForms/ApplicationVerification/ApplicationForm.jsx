@@ -17,8 +17,11 @@ import {
 import { toast } from 'react-toastify';
 import { unwrapResult } from '@reduxjs/toolkit';
 import CustomLoading from '@/components/shared/small/CustomLoading';
+import { useParams } from 'react-router-dom';
 
-export default function ApplicationForm({ selectedForm }) {
+export default function ApplicationForm() {
+  const params = useParams();
+  const formId = params.formId;
   const dispatch = useDispatch();
   const { formData, fileData } = useSelector(state => state?.form);
   const [currentStep, setCurrentStep] = useState(0);
@@ -27,11 +30,7 @@ export default function ApplicationForm({ selectedForm }) {
   const [isLoading, setIsLoading] = useState(false);
   const [formSubmit] = useSubmitFormMutation();
   const [submitArticle] = useSubmitFormArticleFileMutation();
-  const {
-    data: form,
-    isLoading: formLoading,
-    refetch: formRefetch,
-  } = useGetSingleFormQueryQuery({ _id: selectedForm._id });
+  const { data: form, isLoading: formLoading, refetch: formRefetch } = useGetSingleFormQueryQuery({ _id: formId });
   const handleComplete = () => console.log('Form submitted:');
   const handlePrevious = useCallback(() => {
     if (currentStep > 0) {

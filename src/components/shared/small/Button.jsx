@@ -40,7 +40,7 @@ const Button = ({
   rightIcon: RightIcon,
   cnLeft,
   cnRight,
-  variant = 'primary', // 'primary' or 'secondary'
+  variant = 'primary',
   ...props
 }) => {
   const baseClasses =
