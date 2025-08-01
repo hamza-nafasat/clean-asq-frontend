@@ -10,7 +10,7 @@ import Button from '@/components/shared/small/Button';
 import CustomLoading from '@/components/shared/small/CustomLoading';
 import { socket } from '@/main';
 import { userExist, userNotExist } from '@/redux/slices/authSlice';
-import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
+import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from '@/redux/apis/authApis';
 import { LoadingWithTimer } from '@/components/shared/small/LoadingWithTimer';
 import { Autocomplete } from '@react-google-maps/api';
 import { unwrapResult } from '@reduxjs/toolkit';
@@ -20,6 +20,7 @@ export default function SingleApplication() {
   const params = useParams();
   const formId = params.formId;
   const dispatch = useDispatch();
+  const { user } = useSelector(state => state.auth);
   const { emailVerified } = useSelector(state => state.form);
   const [webLink, setWebLink] = useState(null);
   const [qrCode, setQrCode] = useState('');
@@ -36,9 +37,10 @@ export default function SingleApplication() {
   const [sendOtp, { isLoading: otpLoading }] = useSendOtpMutation();
   const [verifyEmail, { isLoading: emailLoading }] = useVerifyEmailMutation();
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
+  const [updateMyProfile] = useUpdateMyProfileMutation();
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
-    name: 'sdfsd',
-    idNumber: 'sdfsdf',
+    name: '',
+    idNumber: '',
     address: '',
     phoneNumber: '',
     companyTitle: '',
@@ -49,7 +51,7 @@ export default function SingleApplication() {
     country: '',
   });
 
-  console.log('idMissionVerifiedData', idMissionVerifiedData);
+  // console.log('idMissionVerifiedData', idMissionVerifiedData);
 
   const onLoad = useCallback(autoC => {
     autoC.setFields(['address_components', 'formatted_address', 'geometry', 'place_id']);
@@ -181,7 +183,15 @@ export default function SingleApplication() {
       console.log('you start id mission verification', data);
       setIsIdMissionProcessing(true);
     });
-    socket.on('idMission_verified', data => {
+    socket.on('idMission_verified', async data => {
+      if (user._id && data?.Form_Data?.FullName) {
+        const res = await updateMyProfile({
+          _id: user._id,
+          firstName: data?.Form_Data?.FullName?.split(' ')[0],
+          lastName: data?.Form_Data?.FullName?.split(' ')[1],
+        }).unwrap();
+        if (!res.success) return toast.error(res.message);
+      }
       const raw = data?.Form_Data?.Issue_Date;
       let isoDate = '';
       if (raw) {
@@ -212,7 +222,7 @@ export default function SingleApplication() {
       socket.off('idMission_verified');
       socket.off('idMission_failed');
     };
-  }, [formId, navigate]);
+  }, [formId, navigate, updateMyProfile, user._id]);
 
   useEffect(() => {
     const allFilled = Object.keys(idMissionVerifiedData).every(name => {
