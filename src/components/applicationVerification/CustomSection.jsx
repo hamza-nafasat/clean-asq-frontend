@@ -127,7 +127,7 @@ function CustomSection({
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
-          {currentStep < totalSteps - 1 ? (
+          {currentStep < totalSteps - 2 ? (
             <Button label={'Next'} onClick={() => handleNext({ data: form, name })} />
           ) : (
             <Button

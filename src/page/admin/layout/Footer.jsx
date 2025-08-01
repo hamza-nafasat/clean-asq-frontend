@@ -3,7 +3,6 @@ import { useSelector } from 'react-redux';
 
 function Footer() {
   const companyName = useSelector(state => state.branding.companyName);
-  console.log('companyName', companyName);
   return (
     <div className="flex h-16 items-center justify-between border-t-2 bg-white px-20 py-4 shadow">
       <div className="text-textPrimary">
