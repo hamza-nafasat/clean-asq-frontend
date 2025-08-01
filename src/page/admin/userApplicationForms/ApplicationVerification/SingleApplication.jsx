@@ -191,6 +191,13 @@ export default function SingleApplication() {
           lastName: data?.Form_Data?.FullName?.split(' ')[1],
         }).unwrap();
         if (!res.success) return toast.error(res.message);
+        else {
+          await getUserProfile()
+            .then(res => {
+              if (res?.data?.success) dispatch(userExist(res.data.data));
+            })
+            .catch(() => dispatch(userNotExist()));
+        }
       }
       const raw = data?.Form_Data?.Issue_Date;
       let isoDate = '';
@@ -222,7 +229,7 @@ export default function SingleApplication() {
       socket.off('idMission_verified');
       socket.off('idMission_failed');
     };
-  }, [formId, navigate, updateMyProfile, user._id]);
+  }, [dispatch, formId, getUserProfile, navigate, updateMyProfile, user._id]);
 
   useEffect(() => {
     const allFilled = Object.keys(idMissionVerifiedData).every(name => {
