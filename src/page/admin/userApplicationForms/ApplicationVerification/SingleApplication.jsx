@@ -1,19 +1,19 @@
-import { useNavigate, useParams } from 'react-router-dom';
-import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
-import { updateEmailVerified, updateFormState } from '@/redux/slices/formSlice';
-import { useCallback, useEffect, useState } from 'react';
-import { MdOutlineVerifiedUser, MdVerifiedUser } from 'react-icons/md';
-import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
-import TextField from '@/components/shared/small/TextField';
 import Button from '@/components/shared/small/Button';
 import CustomLoading from '@/components/shared/small/CustomLoading';
-import { socket } from '@/main';
-import { userExist, userNotExist } from '@/redux/slices/authSlice';
-import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from '@/redux/apis/authApis';
 import { LoadingWithTimer } from '@/components/shared/small/LoadingWithTimer';
+import TextField from '@/components/shared/small/TextField';
+import { socket } from '@/main';
+import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from '@/redux/apis/authApis';
+import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
+import { userExist, userNotExist } from '@/redux/slices/authSlice';
+import { updateEmailVerified, updateFormState } from '@/redux/slices/formSlice';
 import { Autocomplete } from '@react-google-maps/api';
 import { unwrapResult } from '@reduxjs/toolkit';
+import { useCallback, useEffect, useState } from 'react';
+import { MdVerifiedUser } from 'react-icons/md';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 export default function SingleApplication() {
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ export default function SingleApplication() {
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
     name: '',
     idNumber: '',
-    address: '',
+    streetAddress: '',
     phoneNumber: '',
     companyTitle: '',
     issueDate: '',
@@ -60,28 +60,28 @@ export default function SingleApplication() {
 
   const onPlaceChanged = () => {
     const place = autocomplete.getPlace();
-    fillBasicComponents(place.address_components || [], place.formatted_address);
+    console.log('place', place);
+    fillBasicComponents(place.address_components || []);
     if (!place.address_components.some(c => c.types.includes('postal_code'))) {
       const { lat, lng } = place.geometry.location;
       reverseGeocode(lat(), lng());
     }
   };
-  function fillBasicComponents(components, formatted_address) {
+  const fillBasicComponents = components => {
     const getComp = type => {
       const c = components.find(c => c.types.includes(type));
       return c ? c.long_name : '';
     };
     setIdMissionVerifiedData(prev => ({
       ...prev,
-      address: formatted_address || '',
+      streetAddress: getComp('sublocality'),
       city: getComp('locality'),
       state: getComp('administrative_area_level_1'),
       country: getComp('country'),
       zipCode: getComp('postal_code'), // may be empty
     }));
-  }
-
-  function reverseGeocode(lat, lng) {
+  };
+  const reverseGeocode = (lat, lng) => {
     const geocoder = new window.google.maps.Geocoder();
     geocoder.geocode({ location: { lat, lng } }, (results, status) => {
       if (status !== 'OK' || !results || !results.length) {
@@ -97,7 +97,7 @@ export default function SingleApplication() {
         }));
       }
     });
-  }
+  };
 
   const submitIdMissionData = useCallback(
     async e => {
@@ -164,10 +164,12 @@ export default function SingleApplication() {
     }
   }, [emailVerified, getQrAndWebLink, qrCode, webLink]);
 
+  // get qr and session id
   useEffect(() => {
     getQrLinkOnEmailVerified();
   }, [getQrLinkOnEmailVerified]);
 
+  // get user when he logged in
   useEffect(() => {
     getUserProfile()
       .then(res => {
@@ -177,6 +179,7 @@ export default function SingleApplication() {
       .catch(() => dispatch(userNotExist()));
   }, [getUserProfile, dispatch]);
 
+  // check and get socket events
   useEffect(() => {
     // Setup listener ONCE when component mounts
     socket.on('idMission_processing_started', data => {
@@ -184,9 +187,9 @@ export default function SingleApplication() {
       setIsIdMissionProcessing(true);
     });
     socket.on('idMission_verified', async data => {
-      if (user._id && data?.Form_Data?.FullName) {
+      if (user?._id && data?.Form_Data?.FullName) {
         const res = await updateMyProfile({
-          _id: user._id,
+          _id: user?._id,
           firstName: data?.Form_Data?.FullName?.split(' ')[0],
           lastName: data?.Form_Data?.FullName?.split(' ')[1],
         }).unwrap();
@@ -211,16 +214,23 @@ export default function SingleApplication() {
       setIdMissionVerifiedData({
         name: data?.Form_Data?.FullName || '',
         idNumber: data?.Form_Data?.ID_Number || '',
-        address: data?.Form_Data?.Address || '',
+        streetAddress: data?.Form_Data?.Address || '',
         phoneNumber: data?.Form_Data?.PhoneNumber || '',
         issueDate: isoDate || '',
         companyTitle: '',
       });
       setIdMissionVerified(true);
-      // return navigate(`/singleForm/stepper/${formId}`);
     });
-    socket.on('idMission_failed', data => {
+    socket.on('idMission_failed', async data => {
       console.log('you start id mission failed', data);
+      const action = await dispatch(
+        updateFormState({
+          data: { idMissionVerification: 'failed', verificationStatus: data?.Form_Status || 'rejected' },
+          name: 'IdMission',
+        })
+      );
+      unwrapResult(action);
+      return navigate(`/singleForm/stepper/${formId}`);
     });
 
     // Cleanup listener when component unmounts
@@ -229,8 +239,9 @@ export default function SingleApplication() {
       socket.off('idMission_verified');
       socket.off('idMission_failed');
     };
-  }, [dispatch, formId, getUserProfile, navigate, updateMyProfile, user._id]);
+  }, [dispatch, formId, getUserProfile, navigate, updateMyProfile, user?._id]);
 
+  // check validations
   useEffect(() => {
     const allFilled = Object.keys(idMissionVerifiedData).every(name => {
       const val = idMissionVerifiedData[name];
@@ -251,6 +262,16 @@ export default function SingleApplication() {
     });
     setIsAllRequiredFieldsFilled(allFilled);
   }, [idMissionVerifiedData]);
+
+  // add a keydown event listener to the document
+  useEffect(() => {
+    const handleEnter = e => {
+      if (e.key === 'Enter' && !otp && !otpLoading) sentOtpForEmail();
+      if (e.key === 'Enter' && otp && !otpLoading) verifyWithOtp();
+    };
+    window.addEventListener('keydown', handleEnter);
+    return () => window.removeEventListener('keydown', handleEnter);
+  }, [otp, otpLoading, sentOtpForEmail, verifyWithOtp]);
 
   return isIdMissionProcessing ? (
     <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
@@ -317,13 +338,6 @@ export default function SingleApplication() {
                 </div>
               </>
             )}
-            {/* <div className="flex w-full items-center justify-end">
-            <Button
-              onClick={() => navigate(`/singleForm/stepper/${formId}`)}
-              className="!text-base"
-              label={'Continue Application'}
-            />
-          </div> */}
           </div>
         )
       ) : (
@@ -334,27 +348,27 @@ export default function SingleApplication() {
               onChange={() => {}}
               required
               value={idMissionVerifiedData?.name}
-              label="Name"
+              label="Name:*"
               className={'max-w-[500px]!'}
             />
             <TextField
               required
               onChange={() => {}}
               value={idMissionVerifiedData?.idNumber}
-              label="Id Number"
+              label="Id Number:*"
               className={'max-w-[500px]!'}
             />
             <TextField
               value={idMissionVerifiedData?.phoneNumber}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, phoneNumber: e.target.value })}
-              label="Phone Number"
+              label="Phone Number:*"
               required
               className={'max-w-[500px]!'}
             />
             <TextField
               value={idMissionVerifiedData?.companyTitle}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, companyTitle: e.target.value })}
-              label="Company Title"
+              label="Company Title:*"
               required
               className={'max-w-[500px]!'}
             />
@@ -362,7 +376,7 @@ export default function SingleApplication() {
               type="date"
               value={idMissionVerifiedData?.issueDate}
               onChange={() => {}}
-              label="Issue Date"
+              label="Issue Date:*"
               required
               className={'max-w-[500px]!'}
             />
@@ -375,19 +389,27 @@ export default function SingleApplication() {
               <TextField
                 type="text"
                 required
-                value={idMissionVerifiedData?.address}
-                onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, address: e.target.value })}
-                label="Address"
+                value={idMissionVerifiedData?.streetAddress}
+                onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, streetAddress: e.target.value })}
+                label="Street Address:*"
                 className={'max-w-[500px]!'}
               />
             </Autocomplete>
+
+            {/* <PlaceAutocompleteElement
+              onLoad={onLoad}
+              onPlaceChanged={onPlaceChanged}
+              options={{
+                fields: ['address_components', 'formatted_address', 'geometry', 'place_id'],
+              }}
+            /> */}
 
             <TextField
               type="text"
               required
               value={idMissionVerifiedData?.city}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, city: e.target.value })}
-              label="City"
+              label="City:*"
               className={'max-w-[500px]!'}
             />
 
@@ -396,7 +418,7 @@ export default function SingleApplication() {
               required
               value={idMissionVerifiedData?.country}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, country: e.target.value })}
-              label="Country"
+              label="Country:*"
               className={'max-w-[500px]!'}
             />
 
@@ -405,7 +427,7 @@ export default function SingleApplication() {
               required
               value={idMissionVerifiedData?.zipCode}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, zipCode: e.target.value })}
-              label="Zip Code"
+              label="Zip Code:*"
               className={'max-w-[500px]!'}
             />
 
@@ -414,7 +436,7 @@ export default function SingleApplication() {
               required
               value={idMissionVerifiedData?.state}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, state: e.target.value })}
-              label="State"
+              label="State:*"
               className={'max-w-[500px]!'}
             />
           </form>

@@ -74,13 +74,17 @@ function App() {
                 element={user ? <Navigate to="/all-users" replace /> : <Navigate to="/login" replace />}
               />
 
-              {/* Public routes */}
+              {/* public routes */}
+              <Route path="/" element={<AdminDashboard />}>
+                <Route path="application-form/:formId" element={<SingleApplication />} />
+              </Route>
+              {/* non authentic routes */}
               <Route element={<ProtectedRoute user={!user} redirect="/all-users" />}>
                 <Route path="/login" element={<Login />} />
                 <Route path="/otp" element={<Otp />} />
               </Route>
 
-              {/* Private routes */}
+              {/* authentic routes */}
               <Route element={<ProtectedRoute user={user} redirect="/login" />}>
                 {/* Admin */}
                 <Route path="/" element={<AdminDashboard />}>
@@ -88,7 +92,6 @@ function App() {
                   <Route path="all-roles" element={<AllRoles />} />
                   <Route path="all-users" element={<AdminAllUsers />} />
                   <Route path="application-forms" element={<ApplicationForms />} />
-                  <Route path="application-form/:formId" element={<SingleApplication />} />
                   <Route path="singleForm/stepper/:formId" element={<ApplicationForm />} />
                   <Route path="applications" element={<Applications />} />
                   <Route path="branding" element={<Brandings />} />
