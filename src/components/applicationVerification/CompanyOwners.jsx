@@ -28,6 +28,7 @@ function CompanyOwners({
   reduxData,
   fields,
   blocks,
+  title,
 }) {
   const [otherOwnersStateName, setOtherOwnersStateName] = useState('');
   const [customizeModal, setCustomizeModal] = useState(false);
@@ -275,7 +276,7 @@ function CompanyOwners({
           {currentStep > 0 && <Button variant="secondary" label="Previous" onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
             <Button
-              onClick={() => handleNext({ data: form, name })}
+              onClick={() => handleNext({ data: form, name: title })}
               className={`${!isAllRequiredFieldsFilled && 'pointer-events-none cursor-not-allowed opacity-50'}`}
               disabled={!isAllRequiredFieldsFilled}
               label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
@@ -285,7 +286,7 @@ function CompanyOwners({
               disabled={formLoading}
               className={formLoading ? 'pointer-events-none cursor-not-allowed opacity-50' : ''}
               label="Submit"
-              onClick={() => handleSubmit({ data: form, name })}
+              onClick={() => handleSubmit({ data: form, name: title })}
             />
           )}
         </div>

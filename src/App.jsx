@@ -19,6 +19,7 @@ import SingleApplication from './page/admin/userApplicationForms/ApplicationVeri
 import CompanyInformation from './page/admin/userApplicationForms/CompanyInformation/CompanyInformation';
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
+import AdditionalOwnersForm from './page/admin/userApplicationForms/ApplicationVerification/AdditionalOwnersForm';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -77,6 +78,7 @@ function App() {
               {/* public routes */}
               <Route path="/" element={<AdminDashboard />}>
                 <Route path="application-form/:formId" element={<SingleApplication />} />
+                <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
               </Route>
               {/* non authentic routes */}
               <Route element={<ProtectedRoute user={!user} redirect="/all-users" />}>

@@ -25,6 +25,7 @@ function CompanyInformation({
   reduxData,
   formLoading,
   fields,
+  title,
 }) {
   const [customizeModal, setCustomizeModal] = useState(false);
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
@@ -137,14 +138,14 @@ function CompanyInformation({
               className={`${!isAllRequiredFieldsFilled && 'pointer-events-none cursor-not-allowed opacity-50'}`}
               disabled={!isAllRequiredFieldsFilled}
               label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
-              onClick={() => handleNext({ data: form, name })}
+              onClick={() => handleNext({ data: form, name: title })}
             />
           ) : (
             <Button
               disabled={formLoading}
               className={`${formLoading && 'pinter-events-none cursor-not-allowed opacity-50'}`}
               label={'Submit'}
-              onClick={() => handleSubmit({ data: form, name })}
+              onClick={() => handleSubmit({ data: form, name: title })}
             />
           )}
         </div>

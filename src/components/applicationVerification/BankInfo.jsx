@@ -24,6 +24,7 @@ function BankInfo({
   reduxData,
   formRefetch,
   _id,
+  title,
 }) {
   const [form, setForm] = useState({});
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
@@ -146,7 +147,7 @@ function BankInfo({
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
             <Button
-              onClick={() => nextHandler({ data: form, name })}
+              onClick={() => nextHandler({ data: form, name: title })}
               className={`${!isAllRequiredFieldsFilled && 'pointer-events-none cursor-not-allowed opacity-50'}`}
               disabled={!isAllRequiredFieldsFilled}
               label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
@@ -156,7 +157,7 @@ function BankInfo({
               disabled={formLoading}
               className={`${formLoading && 'pinter-events-none cursor-not-allowed opacity-50'}`}
               label={'Submit'}
-              onClick={() => handleSubmit({ data: form, name })}
+              onClick={() => handleSubmit({ data: form, name: title })}
             />
           )}
         </div>

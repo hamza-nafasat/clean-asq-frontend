@@ -24,6 +24,7 @@ function ProcessingInfo({
   reduxData,
   formRefetch,
   _id,
+  title,
 }) {
   const [form, setForm] = useState({});
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
@@ -136,14 +137,14 @@ function ProcessingInfo({
               className={`${!isAllRequiredFieldsFilled && 'pointer-events-none cursor-not-allowed opacity-50'}`}
               disabled={!isAllRequiredFieldsFilled}
               label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
-              onClick={() => nextHandler({ data: form, name })}
+              onClick={() => nextHandler({ data: form, name: title })}
             />
           ) : (
             <Button
               disabled={formLoading}
               className={`${formLoading && 'pinter-events-none cursor-not-allowed opacity-50'}`}
               label={'Submit'}
-              onClick={() => handleSubmit({ data: form, name })}
+              onClick={() => handleSubmit({ data: form, name: title })}
             />
           )}
         </div>

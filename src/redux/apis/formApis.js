@@ -1,5 +1,6 @@
 import getEnv from '@/lib/env';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { BsEmojiNeutral } from 'react-icons/bs';
 
 const formApis = createApi({
   reducerPath: 'formApi',
@@ -92,6 +93,23 @@ const formApis = createApi({
         body: data,
       }),
     }),
+    // get beneficial owners
+    // ---------------
+    getBeneficialOwnersData: builder.query({
+      query: ({ email, submitId, userId }) => ({
+        url: `/beneficial-owners?email=${email}&submitId=${submitId}&userId=${userId}`,
+        method: 'GET',
+      }),
+    }),
+    // update beneficial owners
+    // ---------------
+    updateBeneficialOwners: builder.mutation({
+      query: ({ submitId, userId, form }) => ({
+        url: `/beneficial-owners?submitId=${submitId}&userId=${userId}`,
+        method: 'PUT',
+        body: form,
+      }),
+    }),
   }),
 });
 export const {
@@ -104,5 +122,7 @@ export const {
   useSubmitFormArticleFileMutation,
   useUpdateDeleteCreateFormFieldsMutation,
   useFormateTextInMarkDownMutation,
+  useGetBeneficialOwnersDataQuery,
+  useUpdateBeneficialOwnersMutation,
 } = formApis;
 export default formApis;

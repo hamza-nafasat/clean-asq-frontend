@@ -15,6 +15,7 @@ function Documents({
   formLoading,
   fields,
   reduxData,
+  title,
 }) {
   const dispatch = useDispatch();
   const [fileFieldName, setFileFieldName] = useState('');
@@ -27,12 +28,12 @@ function Documents({
   const updateFileDataHandler = () => {
     if (!form?.[fileFieldName]) return toast.error('Please select a file');
     dispatch(updateFileData({ name, file: form[fileFieldName] }));
-    handleNext({ data: { [fileFieldName]: form[fileFieldName] }, name });
+    handleNext({ data: { [fileFieldName]: form[fileFieldName] }, name: title });
   };
   const submitFileDataHandler = () => {
     if (!form?.[fileFieldName]) return toast.error('Please select a file');
     dispatch(updateFileData({ name, file: form[fileFieldName] }));
-    handleSubmit({ data: { [fileFieldName]: form[fileFieldName] }, name });
+    handleSubmit({ data: { [fileFieldName]: form[fileFieldName] }, name: title });
   };
 
   useEffect(() => {

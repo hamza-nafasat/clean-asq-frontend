@@ -79,10 +79,11 @@ export default function ApplicationForm() {
       const data = [];
       const stepNames = [];
       form?.data?.sections?.forEach(step => {
-        const sectionDataFromRedux = formData?.[step?.name];
+        const sectionDataFromRedux = formData?.[step?.title];
         const commonProps = {
           _id: step._id,
           name: step.name,
+          title: step.title,
           fields: step?.fields ?? [],
           blocks: step?.blocks ?? [],
           reduxData: sectionDataFromRedux,
