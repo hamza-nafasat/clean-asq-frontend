@@ -1,7 +1,7 @@
 import Star from '@/assets/svgs/UserApplicationForm/Star';
 import TextField from '@/components/shared/small/TextField';
 import { useEffect, useMemo, useState } from 'react';
-import { GoPlus } from 'react-icons/go';
+import { GoEye, GoPlus } from 'react-icons/go';
 import Button from '../shared/small/Button';
 import {
   CheckboxInputType,
@@ -38,7 +38,9 @@ function CompanyOwners({
 
   const requiredNames = useMemo(() => formFields.filter(f => f.required).map(f => f.name), [formFields]);
 
-  console.log('company owners', form);
+  console.log('form field', formFields);
+
+  // console.log('company owners', form);
 
   const handleChangeOnOtherOwnersData = (e, index) => {
     const updatedOwners = [...(form[otherOwnersStateName] || [])];
@@ -62,22 +64,103 @@ function CompanyOwners({
     }));
   };
 
-  useEffect(() => {
-    const isApplicantOwner = 'applicant_is_main_owner';
-    const isApplicantNotOwner = 'applicant_is_not_main_owner';
-    if (form?.[isApplicantOwner] === 'yes') {
-      const blockFields = blocks.find(block => block?.name === isApplicantOwner)?.fields ?? [];
-      const newFields = [fields[0], ...blockFields, ...fields.slice(1)];
-      setFormFields(newFields);
-    } else if (form?.[isApplicantOwner] === 'no') {
-      const blockFields = blocks.find(block => block?.name === isApplicantNotOwner)?.fields ?? [];
-      const newFields = [fields[0], ...blockFields, ...fields.slice(1)];
-      setFormFields(newFields);
-    }
-  }, [blocks, fields, form]);
+  // useEffect(() => {
+  //   const isApplicantOwner = 'applicant_is_primary_operator_or_owner_with_more_then_25percentage';
+  //   // const isApplicantNotOwner = 'applicant_is_not_main_owner';
+  //   if (form?.[isApplicantOwner] === 'yes') {
+  //     const blockFields = blocks.find(block => block?.name === isApplicantOwner)?.fields ?? [];
+  //     const newFields = [fields[0], ...blockFields, ...fields.slice(1)];
+  //     setFormFields(newFields);
+  //   } else if (form?.[isApplicantOwner] === 'no') {
+  //     // const blockFields = blocks.find(block => block?.name === isApplicantNotOwner)?.fields ?? [];
+  //     const newFields = [fields[0], ...fields.slice(1)];
+  //     setFormFields(newFields);
+  //   }
+  // }, [blocks, fields, form]);
 
   // making form states according changing fields
   // --------------------------------------------
+
+  useEffect(() => {
+    const isApplicantOwner = 'applicant_is_primary_operator_or_owner_with_more_then_25percentage';
+
+    let baseFields;
+    if (form?.[isApplicantOwner] === 'yes') {
+      const blockFields = blocks.find(block => block?.name === isApplicantOwner)?.fields ?? [];
+      baseFields = [fields[0], ...blockFields, ...fields.slice(1)];
+    } else if (form?.[isApplicantOwner] === 'no') {
+      baseFields = [fields[0], ...fields.slice(1)];
+    } else {
+      baseFields = [...fields];
+    }
+
+    const percentage = Number(form?.applicant_percentage);
+    const isApplicantPrimaryOperator = form?.applicant_is_also_primary_operator;
+    console.log('isApplicantPrimaryOperator', isApplicantPrimaryOperator);
+    const hasOperatorField = baseFields.some(f => f.name === 'applicant_is_owner_and_operator');
+
+    if (percentage >= 25 && percentage !== 0 && !hasOperatorField) {
+      baseFields = baseFields.filter(f => f.name !== 'applicant_job_title');
+      const newField = {
+        label: 'Are you also a primary operator',
+        name: 'applicant_is_also_primary_operator',
+        required: true,
+        aiHelp: false,
+        type: 'radio',
+        options: [
+          { label: 'Yes', value: 'yes' },
+          { label: 'No', value: 'no' },
+        ],
+      };
+      baseFields.splice(baseFields?.length - 2, 0, newField);
+    }
+
+    if (percentage < 25) {
+      baseFields = baseFields.filter(f => f.name !== 'applicant_is_also_primary_operator');
+      const newField = {
+        label: 'What is your job title in the company?',
+        name: 'applicant_job_title',
+        required: true,
+        aiHelp: false,
+        type: 'radio',
+        options: [
+          { label: 'CEO', value: 'ceo' },
+          { label: 'President', value: 'president' },
+        ],
+      };
+      baseFields.splice(baseFields?.length - 2, 0, newField);
+    }
+
+    // if applicant is not primary operator then change the label
+    if (isApplicantPrimaryOperator === 'yes' || isApplicantPrimaryOperator === 'no') {
+      const label =
+        isApplicantPrimaryOperator === 'yes'
+          ? 'Are there any additional primary operators and/or owners (25% or more)?:'
+          : 'Are there any primary operators and/or owners (25% or more)? We need at least one primary operator.';
+
+      // Find the last radio field
+      const lastRadioFieldIndex = [...baseFields]
+        .map((f, i) => ({ ...f, _index: i }))
+        .reverse()
+        .find(f => f.type === 'radio')?._index;
+
+      if (typeof lastRadioFieldIndex === 'number') {
+        const updatedField = {
+          ...baseFields[lastRadioFieldIndex],
+          label,
+        };
+
+        // Replace the field with updated label
+        baseFields = [
+          ...baseFields.slice(0, lastRadioFieldIndex),
+          updatedField,
+          ...baseFields.slice(lastRadioFieldIndex + 1),
+        ];
+      }
+    }
+
+    setFormFields(baseFields);
+  }, [blocks, fields, form]);
 
   useEffect(() => {
     if (!formFields?.length) return;
@@ -86,7 +169,7 @@ function CompanyOwners({
     formFields.forEach(field => {
       if (field.type === 'block' && field.name === 'additional_owner') {
         setOtherOwnersStateName(field.name);
-        const initialState = { name: '', email: '', ssn: '', percentage: '' };
+        const initialState = { name: '', email: '', phone: '', role: '', ssn: '', percentage: '' };
         initialForm[field.name] = reduxData?.[field.name] ?? [initialState];
       } else {
         initialForm[field.name] = reduxData?.[field.name] ?? '';
@@ -159,39 +242,39 @@ function CompanyOwners({
               </div>
             </div>
 
-            {formFields?.map((field, index) => {
+            {formFields?.map(field => {
               if (field.name === 'main_owner_own_25_percent_or_more' || field.type === 'block') return null;
               if (field.type === FIELD_TYPES.SELECT) {
                 return (
-                  <div key={index} className="mt-4">
+                  <div key={field?.name} className="mt-4">
                     <SelectInputType field={field} form={form} setForm={setForm} className={''} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
                 return (
-                  <div key={index} className="mt-4">
+                  <div key={field?.name} className="mt-4">
                     <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={''} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.RADIO) {
                 return (
-                  <div key={index} className="mt-4">
+                  <div key={field?.name} className="mt-4">
                     <RadioInputType field={field} form={form} setForm={setForm} className={''} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.RANGE) {
                 return (
-                  <div key={index} className="mt-4">
+                  <div key={field?.name} className="mt-4">
                     <RangeInputType field={field} form={form} setForm={setForm} className={''} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.CHECKBOX) {
                 return (
-                  <div key={index} className="mt-4">
+                  <div key={field?.name} className="mt-4">
                     <CheckboxInputType
                       field={field}
                       placeholder={field.placeholder}
@@ -203,7 +286,7 @@ function CompanyOwners({
                 );
               }
               return (
-                <div key={index} className="mt-4">
+                <div key={field?.name} className="mt-4">
                   <OtherInputType
                     field={field}
                     placeholder={field.placeholder}
@@ -216,7 +299,7 @@ function CompanyOwners({
             })}
             {form?.additional_owners_own_25_percent_or_more == 'yes' ? (
               <div className="flex flex-col gap-3">
-                {form?.[otherOwnersStateName]?.map(({ name, email, ssn, percentage }, index) => (
+                {form?.[otherOwnersStateName]?.map(({ name, email, ssn, role, phone, percentage }, index) => (
                   <div
                     key={index}
                     className="mt-3 flex min-w-full flex-col items-center justify-between gap-4 md:flex-row"
@@ -235,9 +318,22 @@ function CompanyOwners({
                         onChange={e => handleChangeOnOtherOwnersData(e, index)}
                       />
                       <TextField
+                        name="text"
+                        label="Role"
+                        value={role}
+                        onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                      />
+                      <TextField
+                        name="text"
+                        label="Phone Number"
+                        value={phone}
+                        onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                      />
+                      <TextField
                         name="ssn"
                         label="Social Security Number"
                         value={ssn}
+                        isMasked={true}
                         onChange={e => handleChangeOnOtherOwnersData(e, index)}
                       />
                       <TextField

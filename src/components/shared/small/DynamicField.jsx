@@ -1,4 +1,9 @@
-import React from 'react';
+import Ai from '@/assets/svgs/Ai';
+import { Eye, EyeClosed, EyeClosedIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { BsFillEyeSlashFill } from 'react-icons/bs';
+import { IoEyeOffSharp } from 'react-icons/io5';
+import { RxEyeClosed, RxEyeOpen } from 'react-icons/rx';
 
 const DynamicField = ({ cn, field, className = '', form, placeholder, value, setForm, ...rest }) => {
   const { type, label, id, options, name, required } = field;
@@ -21,7 +26,7 @@ const DynamicField = ({ cn, field, className = '', form, placeholder, value, set
   if (type == 'radio') {
     return (
       <>
-        <h4 className="text-textPrimary text-base font-medium text-nowrap lg:text-lg">
+        <h4 className="text-textPrimary text-base font-medium lg:text-lg">
           {label}:{required ? '*' : ''}
         </h4>
         <div className="border-b-2 py-6">
@@ -50,7 +55,7 @@ const DynamicField = ({ cn, field, className = '', form, placeholder, value, set
     return (
       <div className={`flex items-center space-x-8 ${className}`}>
         {label && (
-          <h4 className="text-textPrimary text-base font-medium text-nowrap lg:text-lg">
+          <h4 className="text-textPrimary text-base font-medium lg:text-lg">
             {label}:{required ? '*' : ''}
           </h4>
         )}
@@ -70,7 +75,7 @@ const DynamicField = ({ cn, field, className = '', form, placeholder, value, set
       <>
         <div className="flex w-full flex-col items-start">
           {label && (
-            <h4 className="text-textPrimary text-base font-medium text-nowrap lg:text-lg">
+            <h4 className="text-textPrimary text-base font-medium lg:text-lg">
               {label}:{required ? '*' : ''}
             </h4>
           )}
@@ -97,7 +102,7 @@ const DynamicField = ({ cn, field, className = '', form, placeholder, value, set
   if (type == 'multi-checkbox') {
     return (
       <div className={`flex w-full justify-between gap-8 ${className}`}>
-        <h4 className="text-textPrimary text-base font-medium text-nowrap lg:text-lg">
+        <h4 className="text-textPrimary text-base font-medium lg:text-lg">
           {label}:{required ? '*' : ''}
         </h4>
         <div className="flex w-full items-center gap-8">
@@ -126,7 +131,7 @@ const DynamicField = ({ cn, field, className = '', form, placeholder, value, set
       <>
         <div className="flex w-full flex-col items-start">
           {label && (
-            <h4 className="text-textPrimary text-base font-medium text-nowrap lg:text-lg">
+            <h4 className="text-textPrimary text-base font-medium lg:text-lg">
               {label}:{required ? '*' : ''}
             </h4>
           )}
@@ -151,7 +156,7 @@ const DynamicField = ({ cn, field, className = '', form, placeholder, value, set
     <>
       <div className="flex w-full flex-col items-start">
         {label && (
-          <h4 className="text-textPrimary text-base font-medium text-nowrap lg:text-lg">
+          <h4 className="text-textPrimary text-base font-medium lg:text-lg">
             {label}:{required ? '*' : ''}
           </h4>
         )}
@@ -179,7 +184,7 @@ const SelectInputType = ({ field, className, form, setForm }) => {
     <>
       <div className={`flex w-full flex-col items-start ${className}`}>
         {label && (
-          <h4 className="text-textPrimary text-base font-medium text-nowrap lg:text-lg">
+          <h4 className="text-textPrimary text-base font-medium lg:text-lg">
             {label}:{required ? '*' : ''}
           </h4>
         )}
@@ -212,7 +217,7 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
   };
   return (
     <div className={`flex w-full justify-between gap-8 ${className}`}>
-      <h4 className="text-textPrimary text-base font-medium text-nowrap lg:text-lg">
+      <h4 className="text-textPrimary text-base font-medium lg:text-lg">
         {label}:{required ? '*' : ''}
       </h4>
       <div className="flex w-full items-center gap-8">
@@ -242,7 +247,7 @@ const RadioInputType = ({ field, className, form, setForm }) => {
   const radioHandler = option => setForm({ ...form, [name]: option.value });
   return (
     <div className={`flex w-full flex-col items-start ${className}`}>
-      <h4 className="text-textPrimary text-base font-medium text-nowrap lg:text-lg">
+      <h4 className="text-textPrimary text-base font-medium lg:text-lg">
         {label}:{required ? '*' : ''}
       </h4>
       <div className="border-b-2 py-6">
@@ -275,7 +280,7 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
   return (
     <div className={`flex items-center space-x-8 ${className}`}>
       {label && (
-        <h4 className="text-textPrimary text-base font-medium text-nowrap lg:text-lg">
+        <h4 className="text-textPrimary text-base font-medium lg:text-lg">
           {label}:{required ? '*' : ''}
         </h4>
       )}
@@ -302,7 +307,7 @@ const RangeInputType = ({ field, className, form, setForm }) => {
   return (
     <div className={`flex w-full flex-col items-start ${className}`}>
       {label && (
-        <h4 className="text-textPrimary text-base font-medium text-nowrap lg:text-lg">
+        <h4 className="text-textPrimary text-base font-medium lg:text-lg">
           {label}:{required ? '*' : ''}
         </h4>
       )}
@@ -327,12 +332,13 @@ const RangeInputType = ({ field, className, form, setForm }) => {
 };
 
 const OtherInputType = ({ field, className, form, setForm }) => {
-  const { type, label, name, required, placeholder } = field;
+  const { type, label, name, required, placeholder, isMasked } = field;
+  const [showMasked, setShowMasked] = useState(isMasked ? true : false);
   return (
     <>
       <div className="flex w-full flex-col items-start">
         {label && (
-          <h4 className="text-textPrimary text-base font-medium text-nowrap lg:text-lg">
+          <h4 className="text-textPrimary text-base font-medium lg:text-lg">
             {label}:{required ? '*' : ''}
           </h4>
         )}
@@ -340,10 +346,18 @@ const OtherInputType = ({ field, className, form, setForm }) => {
           <input
             onChange={e => setForm(prev => ({ ...prev, [name]: e.target.value }))}
             placeholder={placeholder}
-            type={type}
+            type={showMasked ? 'password' : type}
             value={form[name]}
             className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
           />
+          {isMasked && (
+            <span
+              onClick={() => setShowMasked(!showMasked)}
+              className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-sm text-gray-600"
+            >
+              {!showMasked ? <RxEyeOpen className="h-5 w-5" /> : <IoEyeOffSharp className="h-5 w-5" />}
+            </span>
+          )}
         </div>
       </div>
     </>
