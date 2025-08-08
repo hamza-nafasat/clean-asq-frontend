@@ -218,7 +218,7 @@ function CompanyOwners({
     let isOperatorExist = false;
     if (form?.applicant_is_also_primary_operator === 'yes') {
       isOperatorExist = true;
-    } else if (!form?.applicant_is_also_primary_operator) {
+    } else if (!form?.applicant_is_also_primary_operator|| form?.applicant_is_also_primary_operator === 'no') {
       // Check additional_owner for at least one non-empty object
       isOperatorExist =
         Array.isArray(form?.additional_owner) &&
