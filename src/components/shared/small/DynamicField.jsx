@@ -1,9 +1,6 @@
-import Ai from '@/assets/svgs/Ai';
-import { Eye, EyeClosed, EyeClosedIcon } from 'lucide-react';
-import React, { useState } from 'react';
-import { BsFillEyeSlashFill } from 'react-icons/bs';
+import { useState } from 'react';
 import { IoEyeOffSharp } from 'react-icons/io5';
-import { RxEyeClosed, RxEyeOpen } from 'react-icons/rx';
+import { RxEyeOpen } from 'react-icons/rx';
 
 const DynamicField = ({ cn, field, className = '', form, placeholder, value, setForm, ...rest }) => {
   const { type, label, id, options, name, required } = field;
@@ -242,7 +239,7 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
   );
 };
 
-const RadioInputType = ({ field, className, form, setForm }) => {
+const RadioInputType = ({ field, className, form, setForm, onChange }) => {
   const { label, options, name, required } = field;
   const radioHandler = option => setForm({ ...form, [name]: option.value });
   return (
@@ -251,7 +248,7 @@ const RadioInputType = ({ field, className, form, setForm }) => {
         {label}:{required ? '*' : ''}
       </h4>
       <div className="border-b-2 py-6">
-        <div className="grid grid-cols-2 gap-4 p-0">
+        <div className="grid grid-cols-3 gap-4 p-0">
           {options?.map((option, index) => (
             <div key={index} className="flex items-center gap-2 p-2">
               <input
@@ -262,7 +259,7 @@ const RadioInputType = ({ field, className, form, setForm }) => {
                 checked={form[name] === option.value}
                 className="text-textPrimary accent-primary size-5"
                 required={required}
-                onChange={() => radioHandler(option)}
+                onChange={onChange ? onChange : () => radioHandler(option)}
               />
               <label className="text-textPrimary text-base">{option?.label}</label>
             </div>
@@ -364,4 +361,4 @@ const OtherInputType = ({ field, className, form, setForm }) => {
   );
 };
 
-export { SelectInputType, CheckboxInputType, RangeInputType, OtherInputType, RadioInputType, MultiCheckboxInputType };
+export { CheckboxInputType, MultiCheckboxInputType, OtherInputType, RadioInputType, RangeInputType, SelectInputType };

@@ -1,7 +1,8 @@
 import Star from '@/assets/svgs/UserApplicationForm/Star';
 import TextField from '@/components/shared/small/TextField';
+import { FIELD_TYPES } from '@/data/constants';
 import { useEffect, useMemo, useState } from 'react';
-import { GoEye, GoPlus } from 'react-icons/go';
+import { GoPlus } from 'react-icons/go';
 import Button from '../shared/small/Button';
 import {
   CheckboxInputType,
@@ -12,7 +13,6 @@ import {
   SelectInputType,
 } from '../shared/small/DynamicField';
 import Modal from '../shared/small/Modal';
-import { FIELD_TYPES } from '@/data/constants';
 import CustomizationOwnerFieldsModal from './companyInfo/CustomizationOwnerFieldsModal';
 
 function CompanyOwners({
@@ -35,10 +35,9 @@ function CompanyOwners({
   const [formFields, setFormFields] = useState([]);
   const [form, setForm] = useState({});
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
+  const [submitButtonText, setSubmitButtonText] = useState('Some Required Fields are Missing');
 
   const requiredNames = useMemo(() => formFields.filter(f => f.required).map(f => f.name), [formFields]);
-
-  console.log('form field', formFields);
 
   // console.log('company owners', form);
 
@@ -64,23 +63,6 @@ function CompanyOwners({
     }));
   };
 
-  // useEffect(() => {
-  //   const isApplicantOwner = 'applicant_is_primary_operator_or_owner_with_more_then_25percentage';
-  //   // const isApplicantNotOwner = 'applicant_is_not_main_owner';
-  //   if (form?.[isApplicantOwner] === 'yes') {
-  //     const blockFields = blocks.find(block => block?.name === isApplicantOwner)?.fields ?? [];
-  //     const newFields = [fields[0], ...blockFields, ...fields.slice(1)];
-  //     setFormFields(newFields);
-  //   } else if (form?.[isApplicantOwner] === 'no') {
-  //     // const blockFields = blocks.find(block => block?.name === isApplicantNotOwner)?.fields ?? [];
-  //     const newFields = [fields[0], ...fields.slice(1)];
-  //     setFormFields(newFields);
-  //   }
-  // }, [blocks, fields, form]);
-
-  // making form states according changing fields
-  // --------------------------------------------
-
   useEffect(() => {
     const isApplicantOwner = 'applicant_is_primary_operator_or_owner_with_more_then_25percentage';
 
@@ -99,6 +81,7 @@ function CompanyOwners({
     console.log('isApplicantPrimaryOperator', isApplicantPrimaryOperator);
     const hasOperatorField = baseFields.some(f => f.name === 'applicant_is_owner_and_operator');
 
+    // if value is les than 25 then add job title
     if (percentage >= 25 && percentage !== 0 && !hasOperatorField) {
       baseFields = baseFields.filter(f => f.name !== 'applicant_job_title');
       const newField = {
@@ -115,41 +98,41 @@ function CompanyOwners({
       baseFields.splice(baseFields?.length - 2, 0, newField);
     }
 
+    // if value is les than 25 then add applicant is also primary operator
     if (percentage < 25) {
       baseFields = baseFields.filter(f => f.name !== 'applicant_is_also_primary_operator');
-      const newField = {
-        label: 'What is your job title in the company?',
-        name: 'applicant_job_title',
-        required: true,
-        aiHelp: false,
-        type: 'radio',
-        options: [
-          { label: 'CEO', value: 'ceo' },
-          { label: 'President', value: 'president' },
-        ],
-      };
-      baseFields.splice(baseFields?.length - 2, 0, newField);
     }
 
     // if applicant is not primary operator then change the label
     if (isApplicantPrimaryOperator === 'yes' || isApplicantPrimaryOperator === 'no') {
+      // add new field or remove according to primary operator
+      if (isApplicantPrimaryOperator == 'yes') {
+        const newField = {
+          label: 'What is your job title in the company?',
+          name: 'applicant_job_title',
+          required: true,
+          aiHelp: false,
+          type: 'text',
+        };
+        baseFields.splice(baseFields?.length - 2, 0, newField);
+      } else {
+        baseFields = baseFields.filter(f => f.name !== 'applicant_job_title');
+      }
+      // change label of next field according to primary operator
       const label =
         isApplicantPrimaryOperator === 'yes'
           ? 'Are there any additional primary operators and/or owners (25% or more)?:'
           : 'Are there any primary operators and/or owners (25% or more)? We need at least one primary operator.';
-
       // Find the last radio field
       const lastRadioFieldIndex = [...baseFields]
         .map((f, i) => ({ ...f, _index: i }))
         .reverse()
         .find(f => f.type === 'radio')?._index;
-
       if (typeof lastRadioFieldIndex === 'number') {
         const updatedField = {
           ...baseFields[lastRadioFieldIndex],
           label,
         };
-
         // Replace the field with updated label
         baseFields = [
           ...baseFields.slice(0, lastRadioFieldIndex),
@@ -158,10 +141,11 @@ function CompanyOwners({
         ];
       }
     }
-
     setFormFields(baseFields);
   }, [blocks, fields, form]);
 
+  // making form states according changing fields
+  // --------------------------------------------
   useEffect(() => {
     if (!formFields?.length) return;
     // 1) Build the “canonical” shape for this form
@@ -169,7 +153,17 @@ function CompanyOwners({
     formFields.forEach(field => {
       if (field.type === 'block' && field.name === 'additional_owner') {
         setOtherOwnersStateName(field.name);
-        const initialState = { name: '', email: '', phone: '', role: '', ssn: '', percentage: '' };
+        const initialState = {
+          name: '',
+          email: '',
+          role: '',
+          job_title: '',
+          have_detail: '',
+          phone: '',
+          ssn: '',
+          address: '',
+          percentage: '',
+        };
         initialForm[field.name] = reduxData?.[field.name] ?? [initialState];
       } else {
         initialForm[field.name] = reduxData?.[field.name] ?? '';
@@ -198,25 +192,43 @@ function CompanyOwners({
     }
   }, [fields]);
 
+  // check if all required fields are filled
+  // --------------------------------------
   useEffect(() => {
+    // Check if all required fields are filled
     const allFilled = requiredNames.every(name => {
       const val = form[name];
       if (val == null) return false;
       if (typeof val === 'string') return val.trim() !== '';
-      if (Array.isArray(val))
+      if (Array.isArray(val)) {
         return (
           val.length > 0 &&
           val.every(item =>
             typeof item === 'object'
-              ? Object.values(item).every(v => v?.toString().trim() !== '')
+              ? Object.values(item).some(v => v?.toString().trim() !== '')
               : item?.toString().trim() !== ''
           )
         );
-      if (typeof val === 'object') return Object.values(val).every(v => v?.toString().trim() !== '');
-
+      }
+      if (typeof val === 'object') return Object.values(val).some(v => v?.toString().trim() !== '');
       return true;
     });
-    setIsAllRequiredFieldsFilled(allFilled);
+
+    // Logic for primary operator
+    let isOperatorExist = false;
+    if (form?.applicant_is_also_primary_operator === 'yes') {
+      isOperatorExist = true;
+    } else if (!form?.applicant_is_also_primary_operator) {
+      // Check additional_owner for at least one non-empty object
+      isOperatorExist =
+        Array.isArray(form?.additional_owner) &&
+        form.additional_owner.some(item => Object.values(item).some(v => v?.toString().trim() !== ''));
+    }
+    if (!isOperatorExist) setSubmitButtonText('At least one primary operator required');
+    if (!allFilled) setSubmitButtonText('Some Required Fields are Missing');
+    const isAllChecksTrue = allFilled && isOperatorExist;
+    setIsAllRequiredFieldsFilled(isAllChecksTrue);
+    // console.log('isOperatorExist:', isOperatorExist, 'allFilled:', allFilled, 'Final Check:', isAllChecksTrue);
   }, [form, requiredNames]);
 
   return (
@@ -299,60 +311,117 @@ function CompanyOwners({
             })}
             {form?.additional_owners_own_25_percent_or_more == 'yes' ? (
               <div className="flex flex-col gap-3">
-                {form?.[otherOwnersStateName]?.map(({ name, email, ssn, role, phone, percentage }, index) => (
-                  <div
-                    key={index}
-                    className="mt-3 flex min-w-full flex-col items-center justify-between gap-4 md:flex-row"
-                  >
-                    <div className="wrap flex w-full min-w-[400px] gap-3">
-                      <TextField
-                        label="Owner Name"
-                        name="name"
-                        value={name}
-                        onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                      />
-                      <TextField
-                        name="email"
-                        label="Email Address"
-                        value={email}
-                        onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                      />
-                      <TextField
-                        name="text"
-                        label="Role"
-                        value={role}
-                        onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                      />
-                      <TextField
-                        name="text"
-                        label="Phone Number"
-                        value={phone}
-                        onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                      />
-                      <TextField
-                        name="ssn"
-                        label="Social Security Number"
-                        value={ssn}
-                        isMasked={true}
-                        onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                      />
-                      <TextField
-                        name="percentage"
-                        label="Ownership Percentage?"
-                        value={percentage}
-                        onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                      />
-                    </div>
-                    <div className="top-3 flex justify-end md:relative">
-                      <Button
-                        onClick={() => handleRemoveOtherOwnersData(index)}
-                        className="!py-2.5"
-                        variant="secondary"
-                        label="Remove"
-                      />
-                    </div>
-                  </div>
-                ))}
+                {form?.[otherOwnersStateName]?.map(
+                  ({ name, email, ssn, role, job_title, have_detail, address, phone, percentage }, index) => {
+                    return (
+                      <div
+                        key={index}
+                        className="mt-3 flex min-w-full flex-col items-center justify-between gap-4 border-2 border-[#066969] p-4 md:flex-row"
+                      >
+                        <div className="wrap flex w-full min-w-[400px] flex-col gap-3">
+                          <div className="flex w-full gap-4">
+                            <TextField
+                              label="Owner Name"
+                              name="name"
+                              value={name}
+                              onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                            />
+                            <TextField
+                              name="email"
+                              label="Email Address"
+                              value={email}
+                              onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                            />
+                          </div>
+                          <div className="flex w-full gap-4">
+                            <RadioInputType
+                              field={{
+                                label: 'Role',
+                                name: 'role',
+                                options: [
+                                  { label: 'Primary Operator', value: 'primary_operator' },
+                                  { label: 'Beneficial Owner', value: 'beneficial_owner' },
+                                  { label: 'both', value: 'both' },
+                                ],
+                                required: true,
+                              }}
+                              form={{ role }}
+                              onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                            />
+                            <RadioInputType
+                              field={{
+                                label: 'Do you have full information for this person?',
+                                name: 'have_detail',
+                                options: [
+                                  { label: 'NO', value: 'no' },
+                                  { label: 'Yes', value: 'yes' },
+                                ],
+                                required: true,
+                              }}
+                              form={{ have_detail }}
+                              onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                            />
+                          </div>
+
+                          {(role === 'primary_operator' || role === 'both') && (
+                            <div className="flex w-full gap-4">
+                              <TextField
+                                name="job_title"
+                                label="Job Title"
+                                value={job_title}
+                                onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                              />
+                            </div>
+                          )}
+
+                          {have_detail == 'yes' && (
+                            <div className="flex w-full flex-col gap-4">
+                              <div className="flex">
+                                <TextField
+                                  name="phone"
+                                  label="Phone Number"
+                                  value={phone}
+                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                                  className={'w-full max-w-[500px]'}
+                                />
+                                <TextField
+                                  name="ssn"
+                                  label="Social Security Number"
+                                  value={ssn}
+                                  isMasked={true}
+                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                                  className={'w-full max-w-[500px]'}
+                                />
+                              </div>
+                              <div className="flex">
+                                <TextField
+                                  name="address"
+                                  label="Address?"
+                                  value={address}
+                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                                  className={'w-full max-w-[500px]'}
+                                />
+                                <TextField
+                                  name="percentage"
+                                  label="Ownership Percentage?"
+                                  value={percentage}
+                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                                  className={'w-full max-w-[500px]'}
+                                />
+                              </div>
+                            </div>
+                          )}
+                          <Button
+                            onClick={() => handleRemoveOtherOwnersData(index)}
+                            className="!py-2.5"
+                            variant="secondary"
+                            label="Remove"
+                          />
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
                 <div className="flex w-full justify-end">
                   <Button
                     onClick={handleAddOwner}
@@ -367,7 +436,7 @@ function CompanyOwners({
         </div>
       </div>
 
-      <div className="flex justify-end gap-4 p-4">
+      <form className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
           {currentStep > 0 && <Button variant="secondary" label="Previous" onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
@@ -375,7 +444,7 @@ function CompanyOwners({
               onClick={() => handleNext({ data: form, name: title })}
               className={`${!isAllRequiredFieldsFilled && 'pointer-events-none cursor-not-allowed opacity-50'}`}
               disabled={!isAllRequiredFieldsFilled}
-              label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
+              label={isAllRequiredFieldsFilled ? 'Next' : submitButtonText}
             />
           ) : (
             <Button
@@ -386,7 +455,7 @@ function CompanyOwners({
             />
           )}
         </div>
-      </div>
+      </form>
 
       {customizeModal && (
         <Modal onClose={() => setCustomizeModal(false)}>
