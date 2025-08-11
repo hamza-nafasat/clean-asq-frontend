@@ -5,7 +5,7 @@ import TextField from '@/components/shared/small/TextField';
 import { BiColor } from 'react-icons/bi';
 import { IoColorPaletteOutline } from 'react-icons/io5';
 
-const ColorPalette = () => {
+const ColorPalette = ({ colorPalette }) => {
   const {
     setPrimaryColor,
     setSecondaryColor,
@@ -41,7 +41,7 @@ const ColorPalette = () => {
       </div>
       <div className="flex w-full flex-col justify-between gap-4">
         <div className="mt-6 grid grid-cols-2 gap-1 md:grid-cols-4 md:gap-8 xl:grid-cols-10 xl:gap-10">
-          {neutralColors.map((color, index) => (
+          {colorPalette?.map((color, index) => (
             <div
               key={index}
               className="flex w-full cursor-pointer flex-col items-center gap-2"

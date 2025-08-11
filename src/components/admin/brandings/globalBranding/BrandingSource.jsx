@@ -10,11 +10,9 @@ import { IoColorPaletteOutline } from 'react-icons/io5';
 import { BsGlobe2 } from 'react-icons/bs';
 import { FiX } from 'react-icons/fi';
 
-const BrandingSource = () => {
-  const [websiteUrl, setWebsiteUrl] = useState('');
+const BrandingSource = ({ websiteUrl, setWebsiteUrl, logos, setLogos, extractBranding }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [websiteImage, setWebsiteImage] = useState(null); // For website image preview
-  const [logos, setLogos] = useState([]); // For multiple logos
   const [showPasteMenu, setShowPasteMenu] = useState(false);
   const [pasteTarget, setPasteTarget] = useState(null); // 'logo' or 'websiteImage'
   const [selectedLogoIndex, setSelectedLogoIndex] = useState(null);
@@ -51,15 +49,6 @@ const BrandingSource = () => {
 
   const handleUrlChange = e => {
     setWebsiteUrl(e.target.value);
-  };
-
-  const handleExtract = () => {
-    if (!websiteUrl) {
-      alert('Please enter a valid website URL');
-      return;
-    }
-    // TODO: Add your extraction logic here
-    console.log('Extracting from URL:', websiteUrl);
   };
 
   const handleFileUpload = e => {
@@ -129,7 +118,7 @@ const BrandingSource = () => {
           />
           {/* <p className="mt-2 text-sm text-gray-500">Enter a website URL, to extract its colors and logos for your branding.</p> */}
         </div>
-        <Button onClick={handleExtract} label={'Extract'} icon={IoColorPaletteOutline} />
+        <Button onClick={extractBranding} label={'Extract'} icon={IoColorPaletteOutline} />
       </div>
       <div className="mt-3 mb-4 flex items-center justify-between gap-5">
         <p className="mt-2 text-sm text-gray-500">
@@ -206,8 +195,8 @@ const BrandingSource = () => {
           />
           {/* logo section here is all logo logos are multipal and select able mean logs is select able  */}
           <div className="flex w-full flex-wrap items-center gap-2 overflow-auto p-2">
-            {logos.length > 0 ? (
-              logos.map((logo, idx) => (
+            {logos?.length > 0 ? (
+              logos?.map((logo, idx) => (
                 <div
                   key={idx}
                   onClick={() => handleLogoSelect(idx)}
@@ -226,7 +215,7 @@ const BrandingSource = () => {
                   </button>
                   <div className="flex h-[100px] w-[80%] cursor-pointer flex-col items-center justify-center">
                     <img
-                      src={logo}
+                      src={logo?.url}
                       alt={`Logo ${idx + 1}`}
                       className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain`}
                       onClick={() => handleLogoSelect(idx)}

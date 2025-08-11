@@ -1,7 +1,9 @@
 import { useBranding } from '@/components/admin/brandings/globalBranding/BrandingContext';
+import CustomLoading from '@/components/shared/small/CustomLoading';
 import { ThreeDotEditViewDelete } from '@/components/shared/ThreeDotViewEditDelete';
 import { Button } from '@/components/ui/button';
 import { getTableStyles } from '@/data/data';
+import { useGetAllBrandingsQuery } from '@/redux/apis/brandingApis';
 import { MoreVertical, Pencil, Trash } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import DataTable from 'react-data-table-component';
@@ -14,6 +16,8 @@ const Brandings = () => {
   const [actionMenu, setActionMenu] = useState(null);
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
+
+  const { data: brandings = [], isLoading: isBrandingsLoading } = useGetAllBrandingsQuery();
 
   const ButtonsForThreeDot = [
     {
@@ -31,41 +35,41 @@ const Brandings = () => {
   const columns = () => [
     {
       name: 'Name',
-      selector: row => 'First Branding',
+      selector: row => row?.name,
       sortable: true,
     },
     {
       name: 'Url',
-      selector: row => 'https://firstbranding.com',
+      selector: row => row?.url || 'N/A',
       sortable: true,
     },
     {
       name: 'logo',
-      selector: row => 'default',
+      selector: row => row?.logo || 'N/A',
       sortable: true,
     },
     {
       name: 'Font family',
-      selector: row => 'Inter',
+      selector: row => row?.fontFamily || 'N/A',
       sortable: true,
     },
     {
       name: 'Action',
       cell: row => {
-        if (!actionMenuRefs.current.has(row._id)) {
-          actionMenuRefs.current.set(row._id, React.createRef());
+        if (!actionMenuRefs.current.has(row?._id)) {
+          actionMenuRefs.current.set(row?._id, React.createRef());
         }
-        const rowRef = actionMenuRefs.current.get(row._id);
+        const rowRef = actionMenuRefs.current.get(row?._id);
         return (
           <div className="relative" ref={rowRef}>
             <button
-              onClick={() => setActionMenu(prevActionMenu => (prevActionMenu === row._id ? null : row._id))}
+              onClick={() => setActionMenu(prevActionMenu => (prevActionMenu === row?._id ? null : row?._id))}
               className="cursor-pointer rounded p-1 hover:bg-gray-100"
               aria-label="Actions"
             >
               <MoreVertical size={18} />
             </button>
-            {actionMenu === row._id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
+            {actionMenu === row?._id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
           </div>
         );
       },
@@ -85,7 +89,9 @@ const Brandings = () => {
     };
   }, [actionMenu]);
 
-  return (
+  return isBrandingsLoading ? (
+    <CustomLoading />
+  ) : (
     <div>
       <div className="flex justify-end">
         <Button className={'cursor-pointer'} onClick={() => navigate('/branding/create')}>
@@ -93,7 +99,7 @@ const Brandings = () => {
         </Button>
       </div>
       <DataTable
-        data={[{ _id: 1 }]}
+        data={brandings?.data || []}
         columns={columns()}
         customStyles={tableStyles}
         pagination

@@ -68,7 +68,7 @@ export const BrandingProvider = ({ children }) => {
     document.documentElement.style.setProperty('--backgroundColor', backgroundColor);
     document.documentElement.style.setProperty('--color-frame', frameColor);
     document.documentElement.style.setProperty('--frameColor', frameColor);
-    
+
     // Apply font family globally using CSS variables
     document.documentElement.style.setProperty('--font-primary', `var(--font-${fontFamily.toLowerCase()})`);
   }, [primaryColor, secondaryColor, accentColor, textColor, linkColor, backgroundColor, frameColor, fontFamily]);

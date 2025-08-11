@@ -9,26 +9,25 @@ import Button from '@/components/shared/small/Button';
 import Modal from '@/components/shared/small/Modal';
 import ApplyBranding from './ApplyBranding';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
+import { toast } from 'react-toastify';
+import { useFetchBrandingMutation } from '@/redux/apis/brandingApis';
 
 const GlobalBrandingPage = () => {
-  const {
-    primaryColor,
-    setPrimaryColor,
-    secondaryColor,
-    setSecondaryColor,
-    accentColor,
-    setAccentColor,
-    textColor,
-    setTextColor,
-    linkColor,
-    setLinkColor,
-    backgroundColor,
-    setBackgroundColor,
-    frameColor,
-    setFrameColor,
-    fontFamily,
-    setFontFamily,
-  } = useBranding();
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [primaryColor, setPrimaryColor] = useState('');
+  const [secondaryColor, setSecondaryColor] = useState('');
+  const [accentColor, setAccentColor] = useState('');
+  const [textColor, setTextColor] = useState('');
+  const [linkColor, setLinkColor] = useState('');
+  const [backgroundColor, setBackgroundColor] = useState('');
+  const [frameColor, setFrameColor] = useState('');
+  const [fontFamily, setFontFamily] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [applyBranding, setApplyBranding] = useState(false);
+  const [logos, setLogos] = useState([]);
+  const [colorPalette, setColorPalette] = useState([]);
+
+  const [fetchBranding] = useFetchBrandingMutation();
 
   const handleApplyBranding = () => {
     // In a real application, you might send this data to a backend or apply it globally
@@ -44,10 +43,35 @@ const GlobalBrandingPage = () => {
     console.log('Branding changes cancelled.');
     alert('Branding Cancelled!');
   };
-  const [companyName, setCompanyName] = useState('');
-  const [applyBranding, setApplyBranding] = useState(false);
   const companyNameHandle = e => {
     setCompanyName(e.target.value);
+  };
+
+  const extractBranding = async () => {
+    if (!websiteUrl) toast.error('Please enter a valid website URL');
+    try {
+      const res = await fetchBranding({ url: websiteUrl }).unwrap();
+
+      if (res.success) {
+        const data = res.data;
+        setCompanyName(data?.name || '');
+        setFontFamily(data?.fontFamily || '');
+        setLogos(data?.logos || []);
+        setPrimaryColor(data?.colors?.primary);
+        setSecondaryColor(data?.colors?.secondary);
+        setAccentColor(data?.colors?.accent);
+        setTextColor(data?.colors?.text);
+        setLinkColor(data?.colors?.link);
+        setBackgroundColor(data?.colors?.background);
+        setFrameColor(data?.colors?.frame);
+        if (Array.isArray(data?.color_palette?.fromLogo) && Array.isArray(data?.color_palette?.fromSite)) {
+          setColorPalette([...data.color_palette.fromLogo, ...data.color_palette.fromSite]);
+        }
+      }
+    } catch (error) {
+      console.error('Error extracting branding:', error);
+      toast.error('Failed to extract branding. Please try again.');
+    }
   };
 
   return (
@@ -66,8 +90,14 @@ const GlobalBrandingPage = () => {
       <h1 className="mt-12 mb-6 text-lg font-semibold text-gray-500 md:text-2xl">Global Branding</h1>
       <TextField label={'Company Name'} value={companyName} onChange={companyNameHandle} />
       <div className="mt-12">
-        <BrandingSource />
-        <ColorPalette />
+        <BrandingSource
+          websiteUrl={websiteUrl}
+          setWebsiteUrl={setWebsiteUrl}
+          logos={logos}
+          setLogos={setLogos}
+          extractBranding={extractBranding}
+        />
+        <ColorPalette colorPalette={colorPalette} />
         <BrandElementAssignment
           primaryColor={primaryColor}
           setPrimaryColor={setPrimaryColor}
