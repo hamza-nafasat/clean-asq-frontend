@@ -42,6 +42,7 @@ const Brandings = () => {
     setBackgroundColor,
     setFrameColor,
     setFontFamily,
+    setLogo,
   } = useBranding();
 
   useEffect(() => {
@@ -56,6 +57,7 @@ const Brandings = () => {
         setBackgroundColor(firstFormBranding.colors.background);
         setFrameColor(firstFormBranding.colors.frame);
         setFontFamily(firstFormBranding.fontFamily);
+        setLogo(firstFormBranding?.logos?.[0]?.url);
       }
     }
   }, [
@@ -65,6 +67,7 @@ const Brandings = () => {
     setFontFamily,
     setFrameColor,
     setLinkColor,
+    setLogo,
     setPrimaryColor,
     setSecondaryColor,
     setTextColor,
