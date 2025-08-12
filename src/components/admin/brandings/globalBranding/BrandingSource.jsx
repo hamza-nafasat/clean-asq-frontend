@@ -1,20 +1,17 @@
 import Button from '@/components/shared/small/Button';
 import TextField from '@/components/shared/small/TextField';
-import React, { useState, useRef, useEffect } from 'react';
-import { FiUpload } from 'react-icons/fi';
-import { HiOutlineSparkles } from 'react-icons/hi2';
-import { PiImageLight } from 'react-icons/pi';
-import { GrImage } from 'react-icons/gr';
-import { LuUpload } from 'react-icons/lu';
-import { IoColorPaletteOutline } from 'react-icons/io5';
+import { useEffect, useRef, useState } from 'react';
 import { BsGlobe2 } from 'react-icons/bs';
-import { FiX } from 'react-icons/fi';
+import { FiUpload, FiX } from 'react-icons/fi';
+import { GrImage } from 'react-icons/gr';
+import { HiOutlineSparkles } from 'react-icons/hi2';
+import { IoColorPaletteOutline } from 'react-icons/io5';
 
-const BrandingSource = ({ websiteUrl, setWebsiteUrl, logos, setLogos, extractBranding }) => {
+const BrandingSource = ({ websiteUrl, setWebsiteUrl, logos, setLogos, extractBranding, isFetchLoading }) => {
   const [selectedFile, setSelectedFile] = useState(null);
-  const [websiteImage, setWebsiteImage] = useState(null); // For website image preview
+  const [websiteImage, setWebsiteImage] = useState(null);
   const [showPasteMenu, setShowPasteMenu] = useState(false);
-  const [pasteTarget, setPasteTarget] = useState(null); // 'logo' or 'websiteImage'
+  const [pasteTarget, setPasteTarget] = useState(null);
   const [selectedLogoIndex, setSelectedLogoIndex] = useState(null);
   const fileInputRef = useRef(null);
   const pasteMenuRef = useRef(null);
@@ -45,7 +42,7 @@ const BrandingSource = ({ websiteUrl, setWebsiteUrl, logos, setLogos, extractBra
     return () => {
       window.removeEventListener('paste', handlePaste);
     };
-  }, [pasteTarget]);
+  }, [pasteTarget, setLogos]);
 
   const handleUrlChange = e => {
     setWebsiteUrl(e.target.value);
@@ -118,7 +115,13 @@ const BrandingSource = ({ websiteUrl, setWebsiteUrl, logos, setLogos, extractBra
           />
           {/* <p className="mt-2 text-sm text-gray-500">Enter a website URL, to extract its colors and logos for your branding.</p> */}
         </div>
-        <Button onClick={extractBranding} label={'Extract'} icon={IoColorPaletteOutline} />
+        <Button
+          disabled={isFetchLoading}
+          className={`${isFetchLoading && 'cursor-not-allowed opacity-50'}`}
+          onClick={extractBranding}
+          label={'Extract'}
+          icon={IoColorPaletteOutline}
+        />
       </div>
       <div className="mt-3 mb-4 flex items-center justify-between gap-5">
         <p className="mt-2 text-sm text-gray-500">
@@ -159,7 +162,7 @@ const BrandingSource = ({ websiteUrl, setWebsiteUrl, logos, setLogos, extractBra
           </div>
           <div className="text-textPrimary">Website / Image Preview</div>
         </div>
-        {/* websit image section */}
+        {/* website image section */}
         <div
           className={`mt-4 flex ${websiteImage ? 'h-[300px]' : ''} w-full items-center justify-center rounded-md border p-4`}
         >
@@ -196,34 +199,37 @@ const BrandingSource = ({ websiteUrl, setWebsiteUrl, logos, setLogos, extractBra
           {/* logo section here is all logo logos are multipal and select able mean logs is select able  */}
           <div className="flex w-full flex-wrap items-center gap-2 overflow-auto p-2">
             {logos?.length > 0 ? (
-              logos?.map((logo, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => handleLogoSelect(idx)}
-                  className={`relative flex h-[130px] w-[200px] cursor-pointer items-center justify-center gap-2 rounded-md border${selectedLogoIndex === idx ? 'ring-primary ring-2' : ''}`}
-                >
-                  {/* Close icon */}
-                  <button
-                    type="button"
-                    className="bg-primary hover:bg-secondary absolute -top-2 -right-2 z-10 rounded-full p-1 text-gray-500 hover:text-red-500"
-                    onClick={e => {
-                      e.stopPropagation();
-                      handleRemoveLogo(idx);
-                    }}
+              logos?.map((logo, idx) => {
+                console.log('Logo URL:', logo?.url);
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => handleLogoSelect(idx)}
+                    className={`relative flex h-[130px] w-[200px] cursor-pointer items-center justify-center gap-2 rounded-md border ${selectedLogoIndex === idx ? 'ring-primary ring-2' : ''}`}
                   >
-                    <FiX size={18} />
-                  </button>
-                  <div className="flex h-[100px] w-[80%] cursor-pointer flex-col items-center justify-center">
-                    <img
-                      src={logo?.url}
-                      alt={`Logo ${idx + 1}`}
-                      className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain`}
-                      onClick={() => handleLogoSelect(idx)}
-                    />
-                    <div>logo</div>
+                    {/* Close icon */}
+                    <button
+                      type="button"
+                      className="bg-primary hover:bg-secondary absolute -top-2 -right-2 z-10 rounded-full p-1 text-gray-500 hover:text-red-500"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleRemoveLogo(idx);
+                      }}
+                    >
+                      <FiX size={18} />
+                    </button>
+                    <div className="flex h-[100px] w-[80%] cursor-pointer flex-col items-center justify-center">
+                      <img
+                        src={typeof logo === 'string' ? logo : logo?.url}
+                        alt={`Logo ${idx + 1}`}
+                        className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain`}
+                        // onClick={() => handleLogoSelect(idx)}
+                      />
+                      <div>logo</div>
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <span className="text-gray-400">No logos uploaded or pasted.</span>
             )}

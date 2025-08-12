@@ -39,6 +39,17 @@ export const BrandingProvider = ({ children }) => {
     }
   }, []);
 
+  const updateBranding = branding => {
+    setPrimaryColor(branding.colors?.primary || DEFAULT_COLORS.primaryColor);
+    setSecondaryColor(branding.colors?.secondary || DEFAULT_COLORS.secondaryColor);
+    setAccentColor(branding.colors?.accent || DEFAULT_COLORS.accentColor);
+    setTextColor(branding.colors?.text || DEFAULT_COLORS.textColor);
+    setLinkColor(branding.colors?.link || DEFAULT_COLORS.linkColor);
+    setBackgroundColor(branding.colors?.background || DEFAULT_COLORS.backgroundColor);
+    setFrameColor(branding.colors?.frame || DEFAULT_COLORS.frameColor);
+    setFontFamily(branding.fontFamily || DEFAULT_COLORS.fontFamily);
+  };
+
   // Save branding to localStorage whenever it changes
   useEffect(() => {
     const brandingData = {
@@ -90,6 +101,7 @@ export const BrandingProvider = ({ children }) => {
     setFrameColor,
     fontFamily,
     setFontFamily,
+    updateBranding,
   };
 
   return <BrandingContext.Provider value={value}>{children}</BrandingContext.Provider>;

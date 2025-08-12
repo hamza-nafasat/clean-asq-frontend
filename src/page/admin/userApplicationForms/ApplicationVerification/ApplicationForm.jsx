@@ -5,19 +5,19 @@ import CustomSection from '@/components/applicationVerification/CustomSection';
 import Documents from '@/components/applicationVerification/Documents';
 import ProcessingInfo from '@/components/applicationVerification/ProcessingInfo';
 
-import { useCallback, useEffect, useState } from 'react';
-import Stepper from '../../../../components/Stepper/Stepper';
-import { useDispatch, useSelector } from 'react-redux';
-import { updateFormState } from '@/redux/slices/formSlice';
+import CustomLoading from '@/components/shared/small/CustomLoading';
 import {
   useGetSingleFormQueryQuery,
   useSubmitFormArticleFileMutation,
   useSubmitFormMutation,
 } from '@/redux/apis/formApis';
-import { toast } from 'react-toastify';
+import { updateFormState } from '@/redux/slices/formSlice';
 import { unwrapResult } from '@reduxjs/toolkit';
-import CustomLoading from '@/components/shared/small/CustomLoading';
+import { useCallback, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import Stepper from '../../../../components/Stepper/Stepper';
 
 export default function ApplicationForm() {
   const params = useParams();

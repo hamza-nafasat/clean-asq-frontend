@@ -98,6 +98,7 @@ function App() {
                   <Route path="applications" element={<Applications />} />
                   <Route path="branding" element={<Brandings />} />
                   <Route path="branding/create" element={<CreateBranding />} />
+                  <Route path="branding/single/:brandingId" element={<CreateBranding />} />
                 </Route>
 
                 {/*all User Forms or application layout  , with out sidebar */}

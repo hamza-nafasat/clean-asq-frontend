@@ -1,36 +1,128 @@
+import ApplyBranding from '@/components/admin/brandings/globalBranding/ApplyBranding';
 import { useBranding } from '@/components/admin/brandings/globalBranding/BrandingContext';
+import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import CustomLoading from '@/components/shared/small/CustomLoading';
 import { ThreeDotEditViewDelete } from '@/components/shared/ThreeDotViewEditDelete';
 import { Button } from '@/components/ui/button';
 import { getTableStyles } from '@/data/data';
-import { useGetAllBrandingsQuery } from '@/redux/apis/brandingApis';
+import {
+  useAddBrandingInFormMutation,
+  useDeleteSingleBrandingMutation,
+  useGetAllBrandingsQuery,
+} from '@/redux/apis/brandingApis';
+import { useGetMyAllFormsQuery } from '@/redux/apis/formApis';
 import { MoreVertical, Pencil, Trash } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import DataTable from 'react-data-table-component';
+import { FaExchangeAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const Brandings = () => {
   const navigate = useNavigate();
   const actionMenuRefs = useRef(new Map());
   const [isLoading] = useState(false);
+  const [applyModal, setApplyModal] = useState(false);
   const [actionMenu, setActionMenu] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
+  const [selectedBranding, setSelectedBranding] = useState(null);
 
-  const { data: brandings = [], isLoading: isBrandingsLoading } = useGetAllBrandingsQuery();
+  const { data: brandings = [], isLoading: isBrandingsLoading, refetch } = useGetAllBrandingsQuery();
+  const [deleteBranding, { isLoading: isDeleting }] = useDeleteSingleBrandingMutation();
+  const [addFromBranding] = useAddBrandingInFormMutation();
+  const { data: forms, refetch: refetchForms } = useGetMyAllFormsQuery();
+  const {
+    setPrimaryColor,
+    setSecondaryColor,
+    setAccentColor,
+    setTextColor,
+    setLinkColor,
+    setBackgroundColor,
+    setFrameColor,
+    setFontFamily,
+  } = useBranding();
+
+  useEffect(() => {
+    if (forms?.data?.length) {
+      const firstFormBranding = forms?.data?.[0]?.branding;
+      if (firstFormBranding?.colors) {
+        setPrimaryColor(firstFormBranding.colors.primary);
+        setSecondaryColor(firstFormBranding.colors.secondary);
+        setAccentColor(firstFormBranding.colors.accent);
+        setTextColor(firstFormBranding.colors.text);
+        setLinkColor(firstFormBranding.colors.link);
+        setBackgroundColor(firstFormBranding.colors.background);
+        setFrameColor(firstFormBranding.colors.frame);
+        setFontFamily(firstFormBranding.fontFamily);
+      }
+    }
+  }, [
+    forms,
+    setAccentColor,
+    setBackgroundColor,
+    setFontFamily,
+    setFrameColor,
+    setLinkColor,
+    setPrimaryColor,
+    setSecondaryColor,
+    setTextColor,
+  ]);
 
   const ButtonsForThreeDot = [
     {
       name: 'edit',
       icon: <Pencil size={16} className="mr-2" />,
-      onClick: () => {},
+      onClick: row => {
+        navigate(`/branding/single/${row?._id}`);
+        setActionMenu(null);
+      },
     },
     {
       name: 'delete',
       icon: <Trash size={16} className="mr-2" />,
-      onClick: () => {},
+      disabled: isDeleting,
+      onClick: async row => {
+        try {
+          if (!row?._id) toast.error('Branding ID is missing');
+          const res = await deleteBranding(row?._id).unwrap();
+          if (res.success) {
+            await refetch();
+            toast.success(row?.message || 'Branding deleted successfully');
+          }
+        } catch (error) {
+          toast.error(error?.data?.message || 'Failed to delete branding');
+        } finally {
+          setActionMenu(null);
+        }
+      },
+    },
+    {
+      name: 'apply',
+      icon: <FaExchangeAlt size={16} className="mr-2" />,
+      onClick: row => {
+        setApplyModal(true);
+        setSelectedBranding(row?._id);
+        setActionMenu(null);
+      },
     },
   ];
+
+  const onConfirmApply = async () => {
+    try {
+      if (!selectedBranding || !selectedId) toast.error('Branding ID is missing');
+      const res = await addFromBranding({ brandingId: selectedBranding, formId: selectedId }).unwrap();
+      if (res.success) {
+        await refetchForms();
+        toast.success(res?.message || 'Branding applied successfully');
+      }
+    } catch (error) {
+      toast.error(error?.data?.message || 'Failed to apply branding');
+    } finally {
+      setApplyModal(false);
+    }
+  };
 
   const columns = () => [
     {
@@ -44,8 +136,8 @@ const Brandings = () => {
       sortable: true,
     },
     {
-      name: 'logo',
-      selector: row => row?.logo || 'N/A',
+      name: 'logos',
+      selector: row => row?.logos?.length || 0,
       sortable: true,
     },
     {
@@ -93,6 +185,18 @@ const Brandings = () => {
     <CustomLoading />
   ) : (
     <div>
+      {applyModal && (
+        <ConfirmationModal
+          isOpen={!!applyModal}
+          message={<ApplyBranding setSelectedId={setSelectedId} selectedId={selectedId} onConfirm={onConfirmApply} />}
+          confirmButtonText="Apply Branding"
+          confirmButtonClassName=" border-none hover:bg-red-600 text-white"
+          cancelButtonText="cancel"
+          onConfirm={onConfirmApply}
+          onClose={() => setApplyModal(false)}
+          title={'Apply Branding'}
+        />
+      )}
       <div className="flex justify-end">
         <Button className={'cursor-pointer'} onClick={() => navigate('/branding/create')}>
           Create Branding

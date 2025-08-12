@@ -3,16 +3,23 @@ import BrandingSource from './BrandingSource';
 import ColorPalette from './ColorPalette';
 import BrandElementAssignment from './BrandElementAssignment';
 import Preview from './Preview';
-import { useBranding } from './BrandingContext';
 import TextField from '@/components/shared/small/TextField';
 import Button from '@/components/shared/small/Button';
 import Modal from '@/components/shared/small/Modal';
 import ApplyBranding from './ApplyBranding';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import { toast } from 'react-toastify';
-import { useFetchBrandingMutation } from '@/redux/apis/brandingApis';
+import {
+  useCreateBrandingMutation,
+  useFetchBrandingMutation,
+  useGetSingleBrandingQuery,
+  useUpdateSingleBrandingMutation,
+} from '@/redux/apis/brandingApis';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const GlobalBrandingPage = () => {
+const GlobalBrandingPage = ({ brandingId }) => {
+  const navigate = useNavigate();
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [primaryColor, setPrimaryColor] = useState('');
   const [secondaryColor, setSecondaryColor] = useState('');
@@ -23,23 +30,15 @@ const GlobalBrandingPage = () => {
   const [frameColor, setFrameColor] = useState('');
   const [fontFamily, setFontFamily] = useState('');
   const [companyName, setCompanyName] = useState('');
-  const [applyBranding, setApplyBranding] = useState(false);
   const [logos, setLogos] = useState([]);
   const [colorPalette, setColorPalette] = useState([]);
 
-  const [fetchBranding] = useFetchBrandingMutation();
+  const [fetchBranding, { isLoading: isFetchLoading }] = useFetchBrandingMutation();
+  const [createBranding, { isLoading }] = useCreateBrandingMutation();
+  const [updateBranding, { isLoading: isUpdateLoading }] = useUpdateSingleBrandingMutation();
+  const { data: singleBrandingData } = useGetSingleBrandingQuery(brandingId);
 
-  const handleApplyBranding = () => {
-    // In a real application, you might send this data to a backend or apply it globally
-    console.log('Branding changes applied and saved to local storage.');
-
-    setApplyBranding(true);
-  };
-  const handleApplyBrandingClose = () => {
-    setApplyBranding(false);
-  };
   const handleCancel = () => {
-    // In a real application, you might revert to previous state or clear form
     console.log('Branding changes cancelled.');
     alert('Branding Cancelled!');
   };
@@ -74,19 +73,127 @@ const GlobalBrandingPage = () => {
     }
   };
 
+  const createBrandingHandler = async () => {
+    if (
+      !companyName ||
+      !websiteUrl ||
+      !fontFamily ||
+      !colorPalette?.length ||
+      !logos?.length ||
+      !primaryColor ||
+      !secondaryColor ||
+      !accentColor ||
+      !textColor ||
+      !linkColor ||
+      !backgroundColor ||
+      !frameColor
+    ) {
+      return toast.error('Please fill all fields before creating branding');
+    }
+    const colors = {
+      primary: primaryColor,
+      secondary: secondaryColor,
+      accent: accentColor,
+      link: linkColor,
+      text: textColor,
+      background: backgroundColor,
+      frame: frameColor,
+    };
+    const brandingData = {
+      name: companyName,
+      url: websiteUrl,
+      logos,
+      colorPalette,
+      colors,
+      fontFamily,
+    };
+
+    try {
+      const res = await createBranding(brandingData).unwrap();
+      if (res?.success) {
+        toast.success(res?.message || 'Branding created successfully!');
+      } else {
+        toast.error('Failed to create branding. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating branding:', error);
+      toast.error('Failed to create branding. Please try again.');
+    }
+  };
+
+  const updateBrandingHandler = async brandingId => {
+    if (
+      !brandingId ||
+      !companyName ||
+      !websiteUrl ||
+      !fontFamily ||
+      !colorPalette?.length ||
+      !logos?.length ||
+      !primaryColor ||
+      !secondaryColor ||
+      !accentColor ||
+      !textColor ||
+      !linkColor ||
+      !backgroundColor ||
+      !frameColor
+    ) {
+      return toast.error('Please fill all fields before creating branding');
+    }
+    const colors = {
+      primary: primaryColor,
+      secondary: secondaryColor,
+      accent: accentColor,
+      link: linkColor,
+      text: textColor,
+      background: backgroundColor,
+      frame: frameColor,
+    };
+    const brandingData = {
+      name: companyName,
+      url: websiteUrl,
+      logos,
+      colorPalette,
+      colors,
+      fontFamily,
+    };
+
+    try {
+      const res = await updateBranding({ brandingId, data: brandingData }).unwrap();
+      if (res?.success) {
+        toast.success(res?.message || 'Branding created successfully!');
+      } else {
+        toast.error('Failed to create branding. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating branding:', error);
+      toast.error('Failed to create branding. Please try again.');
+    } finally {
+      navigate('/branding');
+    }
+  };
+
+  useEffect(() => {
+    if (brandingId) {
+      if (singleBrandingData) {
+        const singleBranding = singleBrandingData?.data;
+        setCompanyName(singleBranding.name);
+        setWebsiteUrl(singleBranding.url);
+        setLogos(singleBranding.logos || []);
+        setColorPalette(singleBranding.colorPalette || []);
+        setPrimaryColor(singleBranding.colors.primary);
+        setSecondaryColor(singleBranding.colors.secondary);
+        setAccentColor(singleBranding.colors.accent);
+        setTextColor(singleBranding.colors.text);
+        setLinkColor(singleBranding.colors.link);
+        setBackgroundColor(singleBranding.colors.background);
+        setFrameColor(singleBranding.colors.frame);
+        setFontFamily(singleBranding.fontFamily);
+      }
+    }
+  }, [brandingId, singleBrandingData]);
+
   return (
     <div className="mb-6 rounded-[8px] border border-[#F0F0F0] bg-white px-3 md:px-6">
-      {applyBranding && (
-        <ConfirmationModal
-          isOpen={!!applyBranding}
-          message={<ApplyBranding />}
-          confirmButtonText="Apply Branding"
-          confirmButtonClassName=" border-none hover:bg-red-600 text-white"
-          cancelButtonText="cancel"
-          onClose={handleApplyBrandingClose}
-          title={'Apply Branding'}
-        />
-      )}
       <h1 className="mt-12 mb-6 text-lg font-semibold text-gray-500 md:text-2xl">Global Branding</h1>
       <TextField label={'Company Name'} value={companyName} onChange={companyNameHandle} />
       <div className="mt-12">
@@ -95,6 +202,7 @@ const GlobalBrandingPage = () => {
           setWebsiteUrl={setWebsiteUrl}
           logos={logos}
           setLogos={setLogos}
+          isFetchLoading={isFetchLoading}
           extractBranding={extractBranding}
         />
         <ColorPalette colorPalette={colorPalette} />
@@ -135,7 +243,12 @@ const GlobalBrandingPage = () => {
           </button>
           <div className="flex gap-2 md:gap-6">
             <Button variant="secondary" label={'Cancel'} onClick={handleCancel} />
-            <Button label={'Apply Branding'} onClick={handleApplyBranding} />
+            <Button
+              disabled={isLoading || isUpdateLoading}
+              className={`${isLoading || isUpdateLoading ? 'cursor-not-allowed opacity-50' : ''}`}
+              label={brandingId ? 'Update Branding' : 'Create Branding'}
+              onClick={brandingId ? () => updateBrandingHandler(brandingId) : () => createBrandingHandler()}
+            />
           </div>
         </div>
       </div>
