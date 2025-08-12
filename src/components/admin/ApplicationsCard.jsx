@@ -10,6 +10,7 @@ import Button from '../shared/small/Button';
 import Modal from '../shared/small/Modal';
 import TextField from '../shared/small/TextField';
 import { useNavigate } from 'react-router-dom';
+import { useBranding } from './brandings/globalBranding/BrandingContext';
 
 export default function ApplicationsCard() {
   const navigate = useNavigate();
@@ -24,6 +25,16 @@ export default function ApplicationsCard() {
   const [file, setFile] = useState(null);
   const [createForm, { isLoading }] = useCreateFormMutation();
   const { data: forms } = useGetMyAllFormsQuery();
+  const {
+    setPrimaryColor,
+    setSecondaryColor,
+    setAccentColor,
+    setTextColor,
+    setLinkColor,
+    setBackgroundColor,
+    setFrameColor,
+    setFontFamily,
+  } = useBranding();
 
   const createFormWithCsvHandler = async () => {
     console.log('file', file);
@@ -40,6 +51,32 @@ export default function ApplicationsCard() {
       setCreateFormModal(false);
     }
   };
+
+  useEffect(() => {
+    if (forms?.data?.length) {
+      const firstFormBranding = forms?.data?.[0]?.branding;
+      if (firstFormBranding?.colors) {
+        setPrimaryColor(firstFormBranding.colors.primary);
+        setSecondaryColor(firstFormBranding.colors.secondary);
+        setAccentColor(firstFormBranding.colors.accent);
+        setTextColor(firstFormBranding.colors.text);
+        setLinkColor(firstFormBranding.colors.link);
+        setBackgroundColor(firstFormBranding.colors.background);
+        setFrameColor(firstFormBranding.colors.frame);
+        setFontFamily(firstFormBranding.fontFamily);
+      }
+    }
+  }, [
+    forms,
+    setAccentColor,
+    setBackgroundColor,
+    setFontFamily,
+    setFrameColor,
+    setLinkColor,
+    setPrimaryColor,
+    setSecondaryColor,
+    setTextColor,
+  ]);
   useEffect(() => {
     const handleClickOutside = event => {
       if (rowRef.current && !rowRef.current.contains(event.target)) {

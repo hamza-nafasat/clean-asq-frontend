@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import logo from '../../../assets/images/logo.png';
 import ArrowBackIcon from '../../../assets/svgs/ArrowBackIcon';
 import { AllRoles, AllUsers, Applicants, Applications } from '@/assets/svgs/icon';
 import { HiOutlineLightBulb } from 'react-icons/hi';
+import { useBranding } from '@/components/admin/brandings/globalBranding/BrandingContext';
+import logoApply from '../../../assets/images/logo.png';
 
 const AdminAside = () => {
   const [isNavOpen, setIsNavOpen] = useState(true);
   const location = useLocation();
+  const { logo } = useBranding();
 
   const handleNavOpen = () => setIsNavOpen(!isNavOpen);
   const pages = [
@@ -59,7 +61,7 @@ const AdminAside = () => {
         <div className="mb-5 flex w-full items-center justify-center gap-1 xl:mb-12">
           <Link to="/application-forms">
             <img
-              src={logo}
+              src={logo || logoApply}
               alt="logo"
               className={`block h-[31px] ${isNavOpen ? 'h-[50px] w-[160px]' : 'h-[31px] w-[31px]'} object-cover`}
             />

@@ -16,6 +16,7 @@ const DEFAULT_COLORS = {
 
 export const BrandingProvider = ({ children }) => {
   const [primaryColor, setPrimaryColor] = useState(DEFAULT_COLORS.primaryColor);
+  const [logo, setLogo] = useState(''); // Default logo path
   const [secondaryColor, setSecondaryColor] = useState(DEFAULT_COLORS.secondaryColor);
   const [accentColor, setAccentColor] = useState(DEFAULT_COLORS.accentColor);
   const [textColor, setTextColor] = useState(DEFAULT_COLORS.textColor);
@@ -68,12 +69,14 @@ export const BrandingProvider = ({ children }) => {
     document.documentElement.style.setProperty('--backgroundColor', backgroundColor);
     document.documentElement.style.setProperty('--color-frame', frameColor);
     document.documentElement.style.setProperty('--frameColor', frameColor);
-    
+
     // Apply font family globally using CSS variables
     document.documentElement.style.setProperty('--font-primary', `var(--font-${fontFamily.toLowerCase()})`);
   }, [primaryColor, secondaryColor, accentColor, textColor, linkColor, backgroundColor, frameColor, fontFamily]);
 
   const value = {
+    logo,
+    setLogo,
     primaryColor,
     setPrimaryColor,
     secondaryColor,
