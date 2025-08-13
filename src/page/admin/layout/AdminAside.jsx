@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import ArrowBackIcon from '../../../assets/svgs/ArrowBackIcon';
 import { AllRoles, AllUsers, Applicants, Applications } from '@/assets/svgs/icon';
 import { HiOutlineLightBulb } from 'react-icons/hi';
-import { useBranding } from '@/components/admin/brandings/globalBranding/BrandingContext';
+import { useBranding } from '@/hooks/BrandingContext';
 import logoApply from '../../../assets/images/logo.png';
 
 const AdminAside = () => {

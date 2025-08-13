@@ -10,11 +10,16 @@ import Button from '../shared/small/Button';
 import Modal from '../shared/small/Modal';
 import TextField from '../shared/small/TextField';
 import { useNavigate } from 'react-router-dom';
-import { useBranding } from './brandings/globalBranding/BrandingContext';
+import ApplyBranding from './brandings/globalBranding/ApplyBranding';
+import ConfirmationModal from '../shared/ConfirmationModal';
+import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
+import { useBranding } from '@/hooks/BrandingContext';
+import { useAddBrandingInFormMutation, useGetAllBrandingsQuery } from '@/redux/apis/brandingApis';
 
 export default function ApplicationsCard() {
   const navigate = useNavigate();
-  const rowRef = useRef(null);
+  const menuRef = useRef(null);
+  const buttonRef = useRef(null);
   const [actionMenu, setActionMenu] = useState(null);
   const [clientQuery, setClientQuery] = useState('');
   const [nameQuery, setNameQuery] = useState('');
@@ -24,17 +29,15 @@ export default function ApplicationsCard() {
   const [creteFormModal, setCreateFormModal] = useState(false);
   const [file, setFile] = useState(null);
   const [createForm, { isLoading }] = useCreateFormMutation();
-  const { data: forms } = useGetMyAllFormsQuery();
-  const {
-    setPrimaryColor,
-    setSecondaryColor,
-    setAccentColor,
-    setTextColor,
-    setLinkColor,
-    setBackgroundColor,
-    setFrameColor,
-    setFontFamily,
-  } = useBranding();
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const [selectedBranding, setSelectedBranding] = useState(null);
+  const [onHome, setOnHome] = useState(false);
+  const { data: forms, refetch } = useGetMyAllFormsQuery();
+
+  const { data: brandings } = useGetAllBrandingsQuery();
+
+  const [addFromBranding] = useAddBrandingInFormMutation();
 
   const createFormWithCsvHandler = async () => {
     console.log('file', file);
@@ -52,45 +55,66 @@ export default function ApplicationsCard() {
     }
   };
 
-  useEffect(() => {
-    if (forms?.data?.length) {
-      const firstFormBranding = forms?.data?.[0]?.branding;
-      if (firstFormBranding?.colors) {
-        setPrimaryColor(firstFormBranding.colors.primary);
-        setSecondaryColor(firstFormBranding.colors.secondary);
-        setAccentColor(firstFormBranding.colors.accent);
-        setTextColor(firstFormBranding.colors.text);
-        setLinkColor(firstFormBranding.colors.link);
-        setBackgroundColor(firstFormBranding.colors.background);
-        setFrameColor(firstFormBranding.colors.frame);
-        setFontFamily(firstFormBranding.fontFamily);
+  const onConfirmApply = async () => {
+    if (!selectedBranding) toast.error('Branding ID is missing');
+    if (!selectedId && !onHome) toast.error('Form ID is required if onHome is not provided');
+    try {
+      const res = await addFromBranding({
+        brandingId: selectedBranding,
+        formId: selectedId,
+        onHome: onHome ? 'yes' : 'no',
+      }).unwrap();
+      console.log('res', res);
+      if (res?.success) {
+        await refetch();
+        toast?.success(res?.message || 'Branding applied successfully');
       }
+    } catch (error) {
+      console.error('Error applying branding:', error);
+      toast.error(error?.data?.message || 'Failed to apply branding');
+    } finally {
+      setOpenModal(false);
+      setSelectedId(null);
+      setSelectedBranding(null);
+      setOnHome(false);
+      setActionMenu(null);
     }
-  }, [
-    forms,
-    setAccentColor,
-    setBackgroundColor,
-    setFontFamily,
-    setFrameColor,
-    setLinkColor,
-    setPrimaryColor,
-    setSecondaryColor,
-    setTextColor,
-  ]);
+  };
+
   useEffect(() => {
     const handleClickOutside = event => {
-      if (rowRef.current && !rowRef.current.contains(event.target)) {
+      if (buttonRef.current && !buttonRef.current.contains(event.target)) {
         setActionMenu(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [rowRef]);
-
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   return (
     <div className="rounded-md bg-white p-5 shadow">
+      {/* modal for set branding  */}
+
+      {openModal && (
+        <ConfirmationModal
+          isOpen={!!openModal}
+          message={
+            <ApplyBranding
+              brandings={brandings?.data}
+              setSelectedId={setSelectedBranding}
+              selectedId={selectedBranding}
+              setOnHome={setOnHome}
+              onHome={onHome}
+            />
+          }
+          confirmButtonText="Apply Branding"
+          confirmButtonClassName=" border-none hover:bg-red-600 text-white"
+          cancelButtonText="cancel"
+          onConfirm={onConfirmApply}
+          onClose={() => setOpenModal(false)}
+          title={'Apply Branding'}
+        />
+      )}
+
       {/* Header Section */}
       {creteFormModal && (
         <Modal onClose={() => setCreateFormModal(false)} title="">
@@ -172,75 +196,106 @@ export default function ApplicationsCard() {
 
       {/* Cards */}
       <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {forms?.data?.map((form, index) => (
-          <div
-            key={index}
-            className="relative flex min-w-0 flex-col rounded-[8px] border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
-          >
-            <div className="flex items-center justify-end">
-              <div ref={rowRef}>
-                <button
-                  onClick={() => setActionMenu('open')}
-                  className="cursor-pointer rounded p-1 hover:bg-gray-100"
-                  aria-label="Actions"
-                >
-                  <MoreVertical size={18} />
-                </button>
-                {actionMenu === 'open' && (
-                  <div className="fixed z-10 mt-2 w-40 rounded border bg-white shadow-lg">
-                    <button className="block w-full px-4 py-2 text-left hover:bg-gray-100">Set Branding</button>
-                    <button className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100">
-                      Delete Form
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Menu icon */}
-            <div className="absolute top-3 right-3 cursor-pointer sm:top-4 sm:right-4">{/* <CiMenuKebab /> */}</div>
-            <div className="flex items-start gap-2 md:gap-4">
-              {/* <CardIcon /> */}
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="text-base leading-tight font-bold break-words text-gray-700 sm:text-lg md:text-2xl">
-                    {form?.name}
-                  </h2>
-                  <span
-                    className={`rounded-[8px] px-4 py-2 text-xs font-semibold md:text-sm ${form?.status === 'Active' ? 'bg-green-100 text-green-700' : form?.status === 'Draft' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-600'}`}
+        {forms?.data?.map((form, index) => {
+          const colors = form?.branding?.colors;
+          return (
+            <div
+              key={index}
+              className="relative flex min-w-0 flex-col rounded-[8px] border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
+            >
+              <div className="flex items-center justify-end">
+                <div ref={menuRef} className="relative">
+                  <button
+                    onClick={() => setActionMenu(form?._id)}
+                    className="cursor-pointer rounded p-1 hover:bg-gray-100"
+                    aria-label="Actions"
                   >
-                    {form?.status}
-                  </span>
+                    <MoreVertical size={18} />
+                  </button>
+
+                  {actionMenu === form?._id && (
+                    <div className="absolute right-0 mt-2 w-40 rounded border bg-white shadow-lg">
+                      <button
+                        ref={buttonRef}
+                        className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                        onClick={() => {
+                          setSelectedId(form?._id);
+                          setOpenModal(true);
+                        }}
+                      >
+                        Set Branding
+                      </button>
+                      <button className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100">
+                        Delete Form
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div className="mt-1 truncate text-xs text-gray-500 sm:text-sm">Created from CSV import</div>
+              </div>
+
+              {/* Menu icon */}
+              <div className="absolute top-3 right-3 cursor-pointer sm:top-4 sm:right-4">{/* <CiMenuKebab /> */}</div>
+              <div className="flex items-start gap-2 md:gap-4">
+                {/* <CardIcon /> */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <h2 className="text-base leading-tight font-bold break-words text-gray-700 sm:text-lg md:text-2xl">
+                      {form?.name}
+                    </h2>
+                    <span
+                      className={`rounded-[8px] px-4 py-2 text-xs font-semibold md:text-sm ${form?.status === 'Active' ? 'bg-green-100 text-green-700' : form?.status === 'Draft' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-600'}`}
+                    >
+                      {form?.status}
+                    </span>
+                  </div>
+                  <div className="mt-1 truncate text-xs text-gray-500 sm:text-sm">Created from CSV import</div>
+                </div>
+              </div>
+              <div className="mt-3 space-y-1 text-sm text-gray-700 md:mt-3 md:text-base">
+                <div className="flex items-center gap-1 md:gap-2">
+                  <FaCheck className="text-primary" />
+                  <span>{form?.sections?.length} form sections</span>
+                </div>
+                <div className="flex items-center gap-1 md:gap-2">
+                  <FaCheck className="text-primary" />
+                  <span>AI-assisted completion available</span>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
+                <span className="text-gray-500">Applicants: {form?.sections?.length}</span>
+                <span className="text-gray-500">
+                  Created:{' '}
+                  {new Date(form?.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </span>
+              </div>
+              <div className="mt-3 flex w-full flex-col items-center justify-between gap-3 md:mt-6 md:flex-row md:gap-4">
+                <Button
+                  label="View Application"
+                  onClick={() => navigate(`/application-form/${form?._id}`)}
+                  style={{
+                    backgroundColor: colors?.primary,
+                    borderColor: colors?.primary,
+                    color: 'white',
+                  }}
+                  onMouseEnter={e => {
+                    e.target.style.backgroundColor = colors?.secondary;
+                    e.target.style.borderColor = colors?.secondary;
+                    e.target.style.color = colors?.text;
+                  }}
+                  onMouseLeave={e => {
+                    e.target.style.backgroundColor = colors?.primary;
+                    e.target.style.borderColor = colors?.primary;
+                    e.target.style.color = 'white';
+                  }}
+                />
               </div>
             </div>
-            <div className="mt-3 space-y-1 text-sm text-gray-700 md:mt-3 md:text-base">
-              <div className="flex items-center gap-1 md:gap-2">
-                <FaCheck className="text-primary" />
-                <span>{form?.sections?.length} form sections</span>
-              </div>
-              <div className="flex items-center gap-1 md:gap-2">
-                <FaCheck className="text-primary" />
-                <span>AI-assisted completion available</span>
-              </div>
-            </div>
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
-              <span className="text-gray-500">Applicants: {form?.sections?.length}</span>
-              <span className="text-gray-500">
-                Created:{' '}
-                {new Date(form?.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </span>
-            </div>
-            <div className="mt-3 flex w-full flex-col items-center justify-between gap-3 md:mt-6 md:flex-row md:gap-4">
-              <Button label={'View Application'} onClick={() => navigate(`/application-form/${form?._id}`)} />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

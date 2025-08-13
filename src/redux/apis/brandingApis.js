@@ -63,10 +63,10 @@ const brandingApis = createApi({
     // add branding in form
     // -------------------
     addBrandingInForm: builder.mutation({
-      query: ({ brandingId, formId }) => ({
+      query: ({ brandingId, formId, onHome }) => ({
         url: '/apply/branding',
         method: 'PUT',
-        body: { brandingId, formId },
+        body: { brandingId, formId, onHome },
       }),
       invalidatesTags: ['Brandings'],
     }),

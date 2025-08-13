@@ -1,16 +1,16 @@
 import ApplyBranding from '@/components/admin/brandings/globalBranding/ApplyBranding';
-import { useBranding } from '@/components/admin/brandings/globalBranding/BrandingContext';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import CustomLoading from '@/components/shared/small/CustomLoading';
 import { ThreeDotEditViewDelete } from '@/components/shared/ThreeDotViewEditDelete';
 import { Button } from '@/components/ui/button';
 import { getTableStyles } from '@/data/data';
+import { useBranding } from '@/hooks/BrandingContext';
+import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
 import {
   useAddBrandingInFormMutation,
   useDeleteSingleBrandingMutation,
   useGetAllBrandingsQuery,
 } from '@/redux/apis/brandingApis';
-import { useGetMyAllFormsQuery } from '@/redux/apis/formApis';
 import { MoreVertical, Pencil, Trash } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import DataTable from 'react-data-table-component';
@@ -26,13 +26,14 @@ const Brandings = () => {
   const [actionMenu, setActionMenu] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
+  const [onHome, setOnHome] = React.useState(false);
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   const [selectedBranding, setSelectedBranding] = useState(null);
 
   const { data: brandings = [], isLoading: isBrandingsLoading, refetch } = useGetAllBrandingsQuery();
   const [deleteBranding, { isLoading: isDeleting }] = useDeleteSingleBrandingMutation();
   const [addFromBranding] = useAddBrandingInFormMutation();
-  const { data: forms, refetch: refetchForms } = useGetMyAllFormsQuery();
+  const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const {
     setPrimaryColor,
     setSecondaryColor,
@@ -44,34 +45,6 @@ const Brandings = () => {
     setFontFamily,
     setLogo,
   } = useBranding();
-
-  useEffect(() => {
-    if (forms?.data?.length) {
-      const firstFormBranding = forms?.data?.[0]?.branding;
-      if (firstFormBranding?.colors) {
-        setPrimaryColor(firstFormBranding.colors.primary);
-        setSecondaryColor(firstFormBranding.colors.secondary);
-        setAccentColor(firstFormBranding.colors.accent);
-        setTextColor(firstFormBranding.colors.text);
-        setLinkColor(firstFormBranding.colors.link);
-        setBackgroundColor(firstFormBranding.colors.background);
-        setFrameColor(firstFormBranding.colors.frame);
-        setFontFamily(firstFormBranding.fontFamily);
-        setLogo(firstFormBranding?.logos?.[0]?.url);
-      }
-    }
-  }, [
-    forms,
-    setAccentColor,
-    setBackgroundColor,
-    setFontFamily,
-    setFrameColor,
-    setLinkColor,
-    setLogo,
-    setPrimaryColor,
-    setSecondaryColor,
-    setTextColor,
-  ]);
 
   const ButtonsForThreeDot = [
     {
@@ -113,17 +86,43 @@ const Brandings = () => {
   ];
 
   const onConfirmApply = async () => {
+    if (!selectedBranding) toast.error('Branding ID is missing');
+    if (!selectedId && !onHome) toast.error('Form ID is required if onHome is not provided');
     try {
-      if (!selectedBranding || !selectedId) toast.error('Branding ID is missing');
-      const res = await addFromBranding({ brandingId: selectedBranding, formId: selectedId }).unwrap();
-      if (res.success) {
-        await refetchForms();
-        toast.success(res?.message || 'Branding applied successfully');
+      const res = await addFromBranding({
+        brandingId: selectedBranding,
+        formId: selectedId,
+        onHome: onHome ? 'yes' : 'no',
+      }).unwrap();
+      console.log('res', res);
+      if (res?.success) {
+        if (onHome) {
+          const res = await getUserProfile().unwrap();
+
+          if (res?.data?.branding?.colors) {
+            const userBranding = res?.data?.branding;
+            if (userBranding?.colors) {
+              setPrimaryColor(userBranding.colors.primary);
+              setSecondaryColor(userBranding.colors.secondary);
+              setAccentColor(userBranding.colors.accent);
+              setTextColor(userBranding.colors.text);
+              setLinkColor(userBranding.colors.link);
+              setBackgroundColor(userBranding.colors.background);
+              setFrameColor(userBranding.colors.frame);
+              setFontFamily(userBranding.fontFamily);
+              setLogo(userBranding?.logos?.[0]?.url);
+            }
+          }
+        }
+        toast?.success(res?.message || 'Branding applied successfully');
       }
     } catch (error) {
+      console.error('Error applying branding:', error);
       toast.error(error?.data?.message || 'Failed to apply branding');
     } finally {
       setApplyModal(false);
+      setSelectedId(null);
+      setOnHome(false);
     }
   };
 
@@ -191,7 +190,15 @@ const Brandings = () => {
       {applyModal && (
         <ConfirmationModal
           isOpen={!!applyModal}
-          message={<ApplyBranding setSelectedId={setSelectedId} selectedId={selectedId} onConfirm={onConfirmApply} />}
+          message={
+            <ApplyBranding
+              setSelectedId={setSelectedId}
+              selectedId={selectedId}
+              onConfirm={onConfirmApply}
+              setOnHome={setOnHome}
+              onHome={onHome}
+            />
+          }
           confirmButtonText="Apply Branding"
           confirmButtonClassName=" border-none hover:bg-red-600 text-white"
           cancelButtonText="cancel"

@@ -1,9 +1,11 @@
+import { useBranding } from '@/hooks/BrandingContext';
 import Button from '@/components/shared/small/Button';
 import CustomLoading from '@/components/shared/small/CustomLoading';
 import { LoadingWithTimer } from '@/components/shared/small/LoadingWithTimer';
 import TextField from '@/components/shared/small/TextField';
 import { socket } from '@/main';
 import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from '@/redux/apis/authApis';
+import { useGetSingleFormQueryQuery } from '@/redux/apis/formApis';
 import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
 import { userExist, userNotExist } from '@/redux/slices/authSlice';
 import { updateEmailVerified, updateFormState } from '@/redux/slices/formSlice';
@@ -38,6 +40,8 @@ export default function SingleApplication() {
   const [verifyEmail, { isLoading: emailLoading }] = useVerifyEmailMutation();
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [updateMyProfile] = useUpdateMyProfileMutation();
+  const { data: form } = useGetSingleFormQueryQuery({ _id: formId });
+  ``;
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
     name: '',
     idNumber: '',
@@ -272,6 +276,75 @@ export default function SingleApplication() {
     window.addEventListener('keydown', handleEnter);
     return () => window.removeEventListener('keydown', handleEnter);
   }, [otp, otpLoading, sentOtpForEmail, verifyWithOtp]);
+
+  const {
+    setPrimaryColor,
+    setSecondaryColor,
+    setAccentColor,
+    setTextColor,
+    setLinkColor,
+    setBackgroundColor,
+    setFrameColor,
+    setFontFamily,
+  } = useBranding();
+
+  const DEFAULT_COLORS = {
+    primaryColor: '#066969',
+    secondaryColor: '#21ccb0',
+    accentColor: '#72ffe7',
+    textColor: '#1b1b1b',
+    linkColor: '#1025e3',
+    backgroundColor: '#f9f9f9',
+    frameColor: '#db1313',
+    fontFamily: 'Inter',
+  };
+
+  useEffect(() => {
+    console.log('form?.data?.branding', form?.data?.branding);
+    if (form?.data?.branding?.colors) {
+      const firstFormBranding = form?.data?.branding;
+      if (firstFormBranding?.colors) {
+        setPrimaryColor(firstFormBranding.colors.primary);
+        setSecondaryColor(firstFormBranding.colors.secondary);
+        setAccentColor(firstFormBranding.colors.accent);
+        setTextColor(firstFormBranding.colors.text);
+        setLinkColor(firstFormBranding.colors.link);
+        setBackgroundColor(firstFormBranding.colors.background);
+        setFrameColor(firstFormBranding.colors.frame);
+        setFontFamily(firstFormBranding.fontFamily);
+        // setLogo(firstFormBranding?.logos?.[0]?.url);
+      }
+    }
+
+    return () => {
+      setPrimaryColor(DEFAULT_COLORS.primaryColor);
+      setSecondaryColor(DEFAULT_COLORS.secondaryColor);
+      setAccentColor(DEFAULT_COLORS.accentColor);
+      setTextColor(DEFAULT_COLORS.textColor);
+      setLinkColor(DEFAULT_COLORS.linkColor);
+      setBackgroundColor(DEFAULT_COLORS.backgroundColor);
+      setFrameColor(DEFAULT_COLORS.frameColor);
+      setFontFamily(DEFAULT_COLORS.fontFamily);
+    };
+  }, [
+    DEFAULT_COLORS.accentColor,
+    DEFAULT_COLORS.backgroundColor,
+    DEFAULT_COLORS.fontFamily,
+    DEFAULT_COLORS.frameColor,
+    DEFAULT_COLORS.linkColor,
+    DEFAULT_COLORS.primaryColor,
+    DEFAULT_COLORS.secondaryColor,
+    DEFAULT_COLORS.textColor,
+    form?.data?.branding,
+    setAccentColor,
+    setBackgroundColor,
+    setFontFamily,
+    setFrameColor,
+    setLinkColor,
+    setPrimaryColor,
+    setSecondaryColor,
+    setTextColor,
+  ]);
 
   return isIdMissionProcessing ? (
     <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />

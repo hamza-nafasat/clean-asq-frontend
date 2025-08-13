@@ -4,18 +4,8 @@ import { useGetMyAllFormsQuery } from '@/redux/apis/formApis';
 import React from 'react';
 // import Checkbox from '@/components/shared/Checkbox';
 
-function ApplyBranding({ selectedId, setSelectedId }) {
-  const [onForm, setOnForm] = React.useState(false);
-  const [onHome, setOnHome] = React.useState(false);
-  const [onBoth, setOnBoth] = React.useState(false);
-
+function ApplyBranding({ selectedId, setSelectedId, onHome, setOnHome, brandings }) {
   const { data } = useGetMyAllFormsQuery();
-
-  const selectAllHandler = () => {
-    setOnForm(true);
-    setOnHome(true);
-    setOnBoth(true);
-  };
 
   return (
     <div>
@@ -30,29 +20,26 @@ function ApplyBranding({ selectedId, setSelectedId }) {
             onChange={e => setSelectedId(e.target.value)}
           >
             <option value="">{'Choose an option'}</option>
-            {data?.data?.map((option, index) => (
-              <option key={index} value={option?._id}>
-                {option?.name}
-              </option>
-            ))}
+            {Array.isArray(brandings)
+              ? brandings?.map((option, index) => (
+                  <option key={index} value={option?._id}>
+                    {option?.name?.length > 35 ? `${option?.name?.slice(0, 35)}...` : option?.name}
+                  </option>
+                ))
+              : Array.isArray(data?.data)
+                ? data?.data?.map((option, index) => (
+                    <option key={index} value={option?._id}>
+                      {option?.name}
+                    </option>
+                  ))
+                : null}
           </select>
         </div>
-        <div>
-          <Checkbox label="On Form" onChange={e => setOnForm(e.target.checked)} value={onForm} checked={onForm} />
-        </div>
-        <div>
-          <Checkbox label="on Home" onChange={e => setOnHome(e.target.checked)} value={onHome} checked={onHome} />
-        </div>
-        <div>
-          <Checkbox label="On Both" onChange={e => setOnBoth(e.target.checked)} value={onBoth} checked={onBoth} />
-        </div>
-      </div>
-      <div className="mt-7">
-        <Button
-          label={'select All'}
-          onClick={selectAllHandler}
-          className="!text-textPrimary !border-secondary !bg-white"
-        />
+        {!brandings && (
+          <div>
+            <Checkbox label="on Home" onChange={e => setOnHome(e.target.checked)} value={onHome} checked={onHome} />
+          </div>
+        )}
       </div>
     </div>
   );

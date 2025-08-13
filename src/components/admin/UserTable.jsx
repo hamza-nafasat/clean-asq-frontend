@@ -18,7 +18,7 @@ import Button from '../shared/small/Button';
 import Checkbox from '../shared/small/Checkbox';
 import TextField from '../shared/small/TextField';
 import { ThreeDotEditViewDelete } from '../shared/ThreeDotViewEditDelete';
-import { useBranding } from './brandings/globalBranding/BrandingContext';
+import { useBranding } from '../../hooks/BrandingContext';
 
 const UserTable = () => {
   const { data: users } = useGetAllUsersQuery();

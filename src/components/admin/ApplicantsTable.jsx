@@ -8,7 +8,7 @@ import Modal from '../shared/Modal';
 import TextField from '../shared/small/TextField';
 import { ThreeDotEditViewDelete } from '../shared/ThreeDotViewEditDelete';
 import ApplicantSearch, { CLIENT_LABELS, CLIENT_TYPES } from './ApplicantSearch';
-import { useBranding } from './brandings/globalBranding/BrandingContext';
+import { useBranding } from '../../hooks/BrandingContext';
 // Table columns configuration
 const APPLICANT_TABLE_COLUMNS = [
   {
