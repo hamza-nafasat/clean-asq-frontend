@@ -6,7 +6,7 @@ import Modal from '../shared/Modal';
 import ConfirmationModal from '../shared/ConfirmationModal';
 import Button from '../shared/small/Button';
 import { FaUserShield } from 'react-icons/fa';
-import { useBranding } from './brandings/globalBranding/BrandingContext';
+import { useBranding } from '../../hooks/BrandingContext';
 import TextField from '../shared/small/TextField';
 import {
   useCreateRoleMutation,

@@ -7,6 +7,8 @@ import store from './redux/store';
 import getEnv from './lib/env';
 import './index.css';
 import { io } from 'socket.io-client';
+import { BrandingProvider } from './hooks/BrandingContext';
+import { BrowserRouter } from 'react-router-dom';
 
 export const socket = io(getEnv('SERVER_URL'), { withCredentials: true });
 
@@ -20,9 +22,13 @@ if (!container._reactRoot) {
   root.render(
     <StrictMode>
       <LoadScript googleMapsApiKey={'AIzaSyCjIrS-bOHBzGviCsSHDZZUf9F9oonZGnU'} libraries={['places']}>
-        <Provider store={store}>
-          <App />
-        </Provider>
+        <BrandingProvider>
+          <Provider store={store}>
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </Provider>
+        </BrandingProvider>
       </LoadScript>
     </StrictMode>
   );

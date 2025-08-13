@@ -1,5 +1,5 @@
 import React from 'react';
-import { useBranding } from './BrandingContext';
+import { useBranding } from '../../../../hooks/BrandingContext';
 import { HiOutlineSparkles } from 'react-icons/hi';
 import TextField from '@/components/shared/small/TextField';
 import { BiColor } from 'react-icons/bi';

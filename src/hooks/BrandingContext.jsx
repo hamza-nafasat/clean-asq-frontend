@@ -4,19 +4,19 @@ const BrandingContext = createContext();
 
 // Default application colors
 const DEFAULT_COLORS = {
-  primaryColor: '#066969', // --primary
-  secondaryColor: '#21ccb0', // --secondary
-  accentColor: '#72ffe7', // --accent
-  textColor: '#1b1b1b', // --textPrimary
-  linkColor: '#1025e3', // --linkColor
-  backgroundColor: '#f9f9f9', // --backgroundColor
-  frameColor: '#db1313', // --frameColor
-  fontFamily: 'Inter', // Default font
+  primaryColor: '#066969',
+  secondaryColor: '#21ccb0',
+  accentColor: '#72ffe7',
+  textColor: '#1b1b1b',
+  linkColor: '#1025e3',
+  backgroundColor: '#f9f9f9',
+  frameColor: '#db1313',
+  fontFamily: 'Inter',
 };
 
 export const BrandingProvider = ({ children }) => {
   const [primaryColor, setPrimaryColor] = useState(DEFAULT_COLORS.primaryColor);
-  const [logo, setLogo] = useState(''); // Default logo path
+  const [logo, setLogo] = useState('');
   const [secondaryColor, setSecondaryColor] = useState(DEFAULT_COLORS.secondaryColor);
   const [accentColor, setAccentColor] = useState(DEFAULT_COLORS.accentColor);
   const [textColor, setTextColor] = useState(DEFAULT_COLORS.textColor);

@@ -3,8 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { BrandingProvider } from './components/admin/brandings/globalBranding/BrandingContext';
-import Verification from './components/applicationVerification/Verification';
+import { BrandingProvider, useBranding } from './hooks/BrandingContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import CustomLoading from './components/shared/small/CustomLoading';
 import { socket } from './main';
@@ -14,12 +13,12 @@ import ApplicationForms from './page/admin/dashboard/applicationForms/Applicatio
 import Applications from './page/admin/dashboard/applications/Applications';
 import AllRoles from './page/admin/dashboard/role/AllRoles';
 import UserApplicationForms from './page/admin/userApplicationForms';
+import AdditionalOwnersForm from './page/admin/userApplicationForms/ApplicationVerification/AdditionalOwnersForm';
 import ApplicationForm from './page/admin/userApplicationForms/ApplicationVerification/ApplicationForm';
 import SingleApplication from './page/admin/userApplicationForms/ApplicationVerification/SingleApplication';
 import CompanyInformation from './page/admin/userApplicationForms/CompanyInformation/CompanyInformation';
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
-import AdditionalOwnersForm from './page/admin/userApplicationForms/ApplicationVerification/AdditionalOwnersForm';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -31,6 +30,18 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const { user } = useSelector(state => state.auth);
+
+  const {
+    setPrimaryColor,
+    setSecondaryColor,
+    setAccentColor,
+    setTextColor,
+    setLinkColor,
+    setBackgroundColor,
+    setFrameColor,
+    setFontFamily,
+    setLogo,
+  } = useBranding();
 
   useEffect(() => {
     const userId = user?._id;
@@ -47,75 +58,92 @@ function App() {
   useEffect(() => {
     getUserProfile()
       .then(res => {
-        if (res?.data?.success) dispatch(userExist(res.data.data));
-        else dispatch(userNotExist());
+        if (res?.data?.success) {
+          dispatch(userExist(res.data.data));
+          console.log(res?.data?.data?.branding);
+
+          if (res?.data?.data?.branding?.colors) {
+            const userBranding = res?.data?.data?.branding;
+            if (userBranding?.colors) {
+              setPrimaryColor(userBranding.colors.primary);
+              setSecondaryColor(userBranding.colors.secondary);
+              setAccentColor(userBranding.colors.accent);
+              setTextColor(userBranding.colors.text);
+              setLinkColor(userBranding.colors.link);
+              setBackgroundColor(userBranding.colors.background);
+              setFrameColor(userBranding.colors.frame);
+              setFontFamily(userBranding.fontFamily);
+              setLogo(userBranding?.logos?.[0]?.url);
+            }
+          }
+        } else dispatch(userNotExist());
       })
       .catch(() => dispatch(userNotExist()))
       .finally(() => setLoading(false));
-  }, [getUserProfile, dispatch]);
+  }, [
+    getUserProfile,
+    dispatch,
+    setPrimaryColor,
+    setSecondaryColor,
+    setAccentColor,
+    setTextColor,
+    setLinkColor,
+    setBackgroundColor,
+    setFrameColor,
+    setFontFamily,
+    setLogo,
+  ]);
 
-  // debugging for socket
-  // useEffect(() => {
-  //   socket.onAny((event, ...args) => {
-  //     console.log(`⚡ Socket event: ${event}`, args);
-  //   });
-  //   return () => socket.offAny();
-  // }, []);
   return (
-    <BrowserRouter>
-      <BrandingProvider>
-        {loading ? (
-          <CustomLoading />
-        ) : (
-          <Suspense fallback={<CustomLoading />}>
-            <Routes>
-              {/* root redirects */}
-              <Route
-                path="/"
-                element={user ? <Navigate to="/all-users" replace /> : <Navigate to="/login" replace />}
-              />
+    <>
+      {loading ? (
+        <CustomLoading />
+      ) : (
+        <Suspense fallback={<CustomLoading />}>
+          <Routes>
+            {/* root redirects */}
+            <Route path="/" element={user ? <Navigate to="/all-users" replace /> : <Navigate to="/login" replace />} />
 
-              {/* public routes */}
+            {/* public routes */}
+            <Route path="/" element={<AdminDashboard />}>
+              <Route path="application-form/:formId" element={<SingleApplication />} />
+              <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
+            </Route>
+            {/* non authentic routes */}
+            <Route element={<ProtectedRoute user={!user} redirect="/all-users" />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/otp" element={<Otp />} />
+            </Route>
+
+            {/* authentic routes */}
+            <Route element={<ProtectedRoute user={user} redirect="/login" />}>
+              {/* Admin */}
               <Route path="/" element={<AdminDashboard />}>
-                <Route path="application-form/:formId" element={<SingleApplication />} />
-                <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
-              </Route>
-              {/* non authentic routes */}
-              <Route element={<ProtectedRoute user={!user} redirect="/all-users" />}>
-                <Route path="/login" element={<Login />} />
-                <Route path="/otp" element={<Otp />} />
-              </Route>
-
-              {/* authentic routes */}
-              <Route element={<ProtectedRoute user={user} redirect="/login" />}>
-                {/* Admin */}
-                <Route path="/" element={<AdminDashboard />}>
-                  <Route index element={<Navigate to="all-roles" replace />} />
-                  <Route path="all-roles" element={<AllRoles />} />
-                  <Route path="all-users" element={<AdminAllUsers />} />
-                  <Route path="application-forms" element={<ApplicationForms />} />
-                  <Route path="singleForm/stepper/:formId" element={<ApplicationForm />} />
-                  <Route path="applications" element={<Applications />} />
-                  <Route path="branding" element={<Brandings />} />
-                  <Route path="branding/create" element={<CreateBranding />} />
-                  <Route path="branding/single/:brandingId" element={<CreateBranding />} />
-                </Route>
-
-                {/*all User Forms or application layout  , with out sidebar */}
-                <Route path="/user-application-forms" element={<UserApplicationForms />}>
-                  <Route index element={<Navigate to="application-verification" replace />} />
-                  <Route path="company-information" element={<CompanyInformation />} />
-                </Route>
+                <Route index element={<Navigate to="all-roles" replace />} />
+                <Route path="all-roles" element={<AllRoles />} />
+                <Route path="all-users" element={<AdminAllUsers />} />
+                <Route path="application-forms" element={<ApplicationForms />} />
+                <Route path="singleForm/stepper/:formId" element={<ApplicationForm />} />
+                <Route path="applications" element={<Applications />} />
+                <Route path="branding" element={<Brandings />} />
+                <Route path="branding/create" element={<CreateBranding />} />
+                <Route path="branding/single/:brandingId" element={<CreateBranding />} />
               </Route>
 
-              {/* Fallback */}
-              {/* <Route path="*" element={<RoleRedirect user={user} />} /> */}
-            </Routes>
-          </Suspense>
-        )}
-      </BrandingProvider>
+              {/*all User Forms or application layout  , with out sidebar */}
+              <Route path="/user-application-forms" element={<UserApplicationForms />}>
+                <Route index element={<Navigate to="application-verification" replace />} />
+                <Route path="company-information" element={<CompanyInformation />} />
+              </Route>
+            </Route>
+
+            {/* Fallback */}
+            {/* <Route path="*" element={<RoleRedirect user={user} />} /> */}
+          </Routes>
+        </Suspense>
+      )}
       <ToastContainer autoClose={3000} />
-    </BrowserRouter>
+    </>
   );
 }
 
