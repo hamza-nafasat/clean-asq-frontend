@@ -4,18 +4,8 @@ import { useGetMyAllFormsQuery } from '@/redux/apis/formApis';
 import React from 'react';
 // import Checkbox from '@/components/shared/Checkbox';
 
-function ApplyBranding({ selectedId, setSelectedId }) {
-  const [onForm, setOnForm] = React.useState(false);
-  const [onHome, setOnHome] = React.useState(false);
-  const [onBoth, setOnBoth] = React.useState(false);
-
+function ApplyBranding({ selectedId, setSelectedId, onHome, setOnHome }) {
   const { data } = useGetMyAllFormsQuery();
-
-  const selectAllHandler = () => {
-    setOnForm(true);
-    setOnHome(true);
-    setOnBoth(true);
-  };
 
   return (
     <div>
@@ -38,21 +28,8 @@ function ApplyBranding({ selectedId, setSelectedId }) {
           </select>
         </div>
         <div>
-          <Checkbox label="On Form" onChange={e => setOnForm(e.target.checked)} value={onForm} checked={onForm} />
-        </div>
-        <div>
           <Checkbox label="on Home" onChange={e => setOnHome(e.target.checked)} value={onHome} checked={onHome} />
         </div>
-        <div>
-          <Checkbox label="On Both" onChange={e => setOnBoth(e.target.checked)} value={onBoth} checked={onBoth} />
-        </div>
-      </div>
-      <div className="mt-7">
-        <Button
-          label={'select All'}
-          onClick={selectAllHandler}
-          className="!text-textPrimary !border-secondary !bg-white"
-        />
       </div>
     </div>
   );

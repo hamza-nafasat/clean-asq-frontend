@@ -26,6 +26,7 @@ const Brandings = () => {
   const [actionMenu, setActionMenu] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
+  const [onHome, setOnHome] = React.useState(false);
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   const [selectedBranding, setSelectedBranding] = useState(null);
 
@@ -112,10 +113,15 @@ const Brandings = () => {
     },
   ];
 
-  const onConfirmApply = async () => {
+  const onConfirmApply = async onHome => {
+    if (!selectedBranding) toast.error('Branding ID is missing');
+    if (!selectedId && !onHome == 'yes') toast.error('Form ID is required if onHome is not provided');
     try {
-      if (!selectedBranding || !selectedId) toast.error('Branding ID is missing');
-      const res = await addFromBranding({ brandingId: selectedBranding, formId: selectedId }).unwrap();
+      const res = await addFromBranding({
+        brandingId: selectedBranding,
+        formId: selectedId,
+        onHome: onHome ? 'yes' : 'no',
+      }).unwrap();
       if (res.success) {
         await refetchForms();
         toast.success(res?.message || 'Branding applied successfully');
@@ -191,7 +197,15 @@ const Brandings = () => {
       {applyModal && (
         <ConfirmationModal
           isOpen={!!applyModal}
-          message={<ApplyBranding setSelectedId={setSelectedId} selectedId={selectedId} onConfirm={onConfirmApply} />}
+          message={
+            <ApplyBranding
+              setSelectedId={setSelectedId}
+              selectedId={selectedId}
+              onConfirm={onConfirmApply}
+              setOnHome={setOnHome}
+              onHome={onHome}
+            />
+          }
           confirmButtonText="Apply Branding"
           confirmButtonClassName=" border-none hover:bg-red-600 text-white"
           cancelButtonText="cancel"
