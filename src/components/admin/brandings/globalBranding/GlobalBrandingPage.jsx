@@ -69,7 +69,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       }
     } catch (error) {
       console.error('Error extracting branding:', error);
-      toast.error('Failed to extract branding. Please try again.');
+      toast.error(error?.data?.message || 'Failed to extract branding. Please try again.');
     }
   };
 
