@@ -43,6 +43,11 @@ const AdminAside = () => {
       link: '/user-application-forms/application-verification',
       icon: <HiOutlineLightBulb />,
     },
+    {
+      title: 'Strategies',
+      link: '/strategies',
+      icon: <HiOutlineLightBulb />,
+    },
   ];
 
   return (
