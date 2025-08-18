@@ -1,6 +1,8 @@
 import DropdownCheckbox from '@/components/shared/DropdownCheckbox';
 import TextField from '@/components/shared/small/TextField';
+import { useCreateSearchStrategyMutation, useUpdateSearchStrategyMutation } from '@/redux/apis/formApis';
 import { useState } from 'react';
+import { toast } from 'react-toastify';
 
 // ✅ Dynamic form field renderer
 const renderFormField = (field, value, onChange, type = 'text', options = null, error = null) => {
@@ -73,28 +75,75 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
   );
 };
 
-const AddStrategies = ({ onSave, companyOptions, extractAsOptions }) => {
+const AddStrategies = ({ selectedRow, companyOptions, extractAsOptions, setEditModalData, setIsModalOpen }) => {
+  const [createSearchStrategy] = useCreateSearchStrategyMutation();
+  const [updateSearchStrategy] = useUpdateSearchStrategyMutation();
   const [form, setForm] = useState({
-    searchObjectKey: '',
-    companyIdentification: [],
-    extractAs: '',
-    searchTerms: '',
-    extractionPrompt: '',
-    active: true,
+    searchObjectKey: selectedRow?.searchObjectKey || '',
+    companyIdentification: selectedRow?.companyIdentification || [],
+    extractAs: selectedRow?.extractAs || '',
+    searchTerms: selectedRow?.searchTerms || '',
+    extractionPrompt: selectedRow?.extractionPrompt || '',
+    active: selectedRow?.isActive || false,
   });
+
+  console.log('form', form);
 
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    onSave(form);
+    try {
+      const { active, companyIdentification, extractAs, extractionPrompt, searchObjectKey, searchTerms } = form;
+      console.log('searchObjectKey', searchObjectKey);
+      if (!searchObjectKey || !searchTerms || !extractionPrompt || !extractAs || !companyIdentification.length) {
+        return toast.error('Please fill all required fields');
+      }
+      if (!selectedRow?._id) {
+        const res = await createSearchStrategy({
+          data: {
+            searchObjectKey,
+            searchTerms,
+            extractionPrompt,
+            extractAs,
+            companyIdentification,
+            active,
+          },
+        }).unwrap();
+        if (res?.success) {
+          toast.success('Search strategy created successfully');
+        }
+      } else {
+        const res = await updateSearchStrategy({
+          SearchStrategyId: selectedRow?._id,
+          data: {
+            searchObjectKey,
+            searchTerms,
+            extractionPrompt,
+            extractAs,
+            companyIdentification,
+            active,
+            _id: selectedRow?._id,
+          },
+        }).unwrap();
+        if (res?.success) {
+          toast.success('Search strategy updated successfully');
+        }
+      }
+    } catch (error) {
+      console.error('Error creating search strategy:', error);
+      toast.error(error?.data?.message || 'Failed to create search strategy');
+    } finally {
+      if (selectedRow?._id) setEditModalData(null);
+      else setIsModalOpen(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {renderFormField('searchObjectKey', form.searchObjectKey, handleChange)}
+      {renderFormField('searchObjectKey', form?.searchObjectKey, handleChange)}
       {renderFormField(
         'companyIdentification',
         form.companyIdentification,

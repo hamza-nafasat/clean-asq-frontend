@@ -6,7 +6,7 @@ const formApis = createApi({
   reducerPath: 'formApi',
   baseQuery: fetchBaseQuery({ baseUrl: `${getEnv('SERVER_URL')}/api/form`, credentials: 'include' }),
 
-  tagTypes: ['Form'],
+  tagTypes: ['Form', 'Strategy'],
   endpoints: builder => ({
     // create new form
     // ---------------
@@ -110,6 +110,49 @@ const formApis = createApi({
         body: form,
       }),
     }),
+
+    //===========================
+    // Search Strategy APIs
+    //===========================
+
+    // create search strategy
+    // ---------------
+    createSearchStrategy: builder.mutation({
+      query: ({ data }) => ({
+        url: '/search-strategy/create',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
+    }),
+    // get all search strategies
+    // ---------------
+    getAllSearchStrategies: builder.query({
+      query: () => ({
+        url: '/search-strategy/all',
+        method: 'GET',
+      }),
+      providesTags: [{ type: 'Strategy', id: 'LIST' }],
+    }),
+    // update search strategy
+    // ---------------
+    updateSearchStrategy: builder.mutation({
+      query: ({ SearchStrategyId, data }) => ({
+        url: `/search-strategy/single/${SearchStrategyId}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
+    }),
+    // delete search strategy
+    // ---------------
+    deleteSearchStrategy: builder.mutation({
+      query: ({ SearchStrategyId }) => ({
+        url: `/search-strategy/single/${SearchStrategyId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
+    }),
   }),
 });
 export const {
@@ -124,5 +167,9 @@ export const {
   useFormateTextInMarkDownMutation,
   useGetBeneficialOwnersDataQuery,
   useUpdateBeneficialOwnersMutation,
+  useCreateSearchStrategyMutation,
+  useGetAllSearchStrategiesQuery,
+  useUpdateSearchStrategyMutation,
+  useDeleteSearchStrategyMutation,
 } = formApis;
 export default formApis;
