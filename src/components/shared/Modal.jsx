@@ -15,6 +15,7 @@ const Modal = memo(
     saveButtonClassName = '',
     cancelButtonClassName = '!bg-gray-500 !border-gray-500 hover:!bg-gray-400 hover:!border-gray-400',
     cancelButtonText = 'Cancel',
+    hideCancelButton=false,
     hideSaveButton = false,
   }) => {
     const handleBackdropClick = useCallback(
@@ -43,7 +44,9 @@ const Modal = memo(
           <div className="mb-6">{children}</div>
 
           <div className="flex justify-end gap-2">
-            <Button label={cancelButtonText} onClick={onClose} className={cancelButtonClassName} disabled={isLoading} />
+            {!hideCancelButton&&(
+              <Button label={cancelButtonText} onClick={onClose} className={cancelButtonClassName} disabled={isLoading} />
+            )}
             {!hideSaveButton && (
               <Button
                 label={isLoading ? 'Loading...' : saveButtonText}

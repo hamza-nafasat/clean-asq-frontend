@@ -146,7 +146,7 @@ function AllFormsStrategies() {
 
       {/* Add Modal */}
       {isModalOpen && (
-        <Modal title="Add Strategy" onClose={() => setIsModalOpen(false)}>
+        <Modal hideSaveButton={false} hideCancelButton={false} title="Add Strategy" onClose={() => setIsModalOpen(false)}>
           <AddStrategies
             setIsModalOpen={setIsModalOpen}
             setEditModalData={setEditModalData}
