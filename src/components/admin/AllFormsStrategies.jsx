@@ -146,7 +146,7 @@ function AllFormsStrategies() {
 
       {/* Add Modal */}
       {isModalOpen && (
-        <Modal hideSaveButton={false} hideCancelButton={false} title="Add Strategy" onClose={() => setIsModalOpen(false)}>
+        <Modal hideSaveButton={true} hideCancelButton={true} title="Add Strategy" onClose={() => setIsModalOpen(false)}>
           <AddStrategies
             setIsModalOpen={setIsModalOpen}
             setEditModalData={setEditModalData}
@@ -170,7 +170,13 @@ function AllFormsStrategies() {
 
       {/* Edit Modal */}
       {editModalData && (
-        <Modal title="Edit Strategy" saveButtonText="Save" onClose={() => setEditModalData(null)}>
+        <Modal
+          hideSaveButton={true}
+          hideCancelButton={true}
+          title="Edit Strategy"
+          saveButtonText="Save"
+          onClose={() => setEditModalData(null)}
+        >
           <AddStrategies
             setIsModalOpen={setIsModalOpen}
             setEditModalData={setEditModalData}
