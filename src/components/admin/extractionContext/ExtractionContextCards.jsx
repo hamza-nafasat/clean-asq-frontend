@@ -1,15 +1,26 @@
-import React, { useEffect, useRef } from 'react';
+import Button from '@/components/shared/small/Button';
+import React, { useEffect, useRef, useState } from 'react';
 import { FiEdit } from 'react-icons/fi';
 
-function ExtractionContextCards({ title, section, subtitle, prompt }) {
+function ExtractionContextCards({
+  title,
+  section,
+  label,
+  id,
+  subtitle,
+  prompt,
+  handler,
+  setPrompts,
+  isPreview = false,
+}) {
   const textareaRef = useRef(null);
+  const [isEdit, setIsEdit] = useState(false);
 
-  // Auto-resize textarea on mount + whenever prompt changes
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = 'auto'; // reset
-      textarea.style.height = `${textarea.scrollHeight}px`; // set to content
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
     }
   }, [prompt]);
 
@@ -32,9 +43,32 @@ function ExtractionContextCards({ title, section, subtitle, prompt }) {
         </div>
 
         {/* Edit Icon */}
-        <button type="button" className="hover:bg-backgroundColor rounded-lg p-2 transition-colors">
-          <FiEdit className="text-textPrimary cursor-pointer text-lg" />
-        </button>
+        {!isPreview &&
+          (!isEdit ? (
+            <button
+              onClick={() => setIsEdit(true)}
+              type="button"
+              className="hover:bg-backgroundColor rounded-lg p-2 transition-colors"
+            >
+              <FiEdit className="text-textPrimary cursor-pointer text-lg" />
+            </button>
+          ) : (
+            <div className="flex gap-4">
+              <Button
+                label="Update"
+                onClick={() => handler(label, prompt, id, setIsEdit)}
+                type="button"
+                className="hover:bg-backgroundColor rounded-lg p-2 transition-colors"
+              />
+
+              <Button
+                onClick={() => setIsEdit(false)}
+                type="button"
+                label={'Cancel'}
+                className="hover:bg-backgroundColor rounded-lg p-2 transition-colors"
+              />
+            </div>
+          ))}
       </div>
 
       {/* Textarea */}
@@ -43,7 +77,8 @@ function ExtractionContextCards({ title, section, subtitle, prompt }) {
           ref={textareaRef}
           className="text-textPrimary border-frameColor max-h-56 min-h-[2rem] w-full resize-none overflow-y-auto rounded-lg border bg-transparent p-2 placeholder-gray-400 outline-none"
           defaultValue={prompt}
-          readOnly
+          readOnly={!isEdit || !label}
+          onChange={label ? e => setPrompts({ ...prompt, [label]: e.target.value }) : null}
         />
       </div>
     </div>

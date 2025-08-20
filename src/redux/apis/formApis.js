@@ -6,7 +6,7 @@ const formApis = createApi({
   reducerPath: 'formApi',
   baseQuery: fetchBaseQuery({ baseUrl: `${getEnv('SERVER_URL')}/api/form`, credentials: 'include' }),
 
-  tagTypes: ['Form', 'Strategy'],
+  tagTypes: ['Form', 'Strategy', 'prompts'],
   endpoints: builder => ({
     // create new form
     // ---------------
@@ -153,6 +153,35 @@ const formApis = createApi({
       }),
       invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
     }),
+    // create prompt
+    // ---------------
+    createPrompt: builder.mutation({
+      query: ({ data }) => ({
+        url: '/create-prompt',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: [{ type: 'Prompt', id: 'LIST' }],
+    }),
+    // update prompt
+    // ---------------
+    updatePrompt: builder.mutation({
+      query: data => ({
+        url: `/prompt/single/update`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: [{ type: 'Prompt', id: 'LIST' }],
+    }),
+    // get all prompts
+    // ---------------
+    getAllPrompts: builder.query({
+      query: () => ({
+        url: '/get-my-prompts',
+        method: 'GET',
+      }),
+      providesTags: [{ type: 'Prompt', id: 'LIST' }],
+    }),
   }),
 });
 export const {
@@ -171,5 +200,8 @@ export const {
   useGetAllSearchStrategiesQuery,
   useUpdateSearchStrategyMutation,
   useDeleteSearchStrategyMutation,
+  useCreatePromptMutation,
+  useUpdatePromptMutation,
+  useGetAllPromptsQuery,
 } = formApis;
 export default formApis;
