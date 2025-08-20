@@ -48,6 +48,11 @@ const AdminAside = () => {
       link: '/strategies',
       icon: <HiOutlineLightBulb />,
     },
+    {
+      title: 'Extraction Context',
+      link: '/extraction-context',
+      icon: <HiOutlineLightBulb />,
+    },
   ];
 
   return (

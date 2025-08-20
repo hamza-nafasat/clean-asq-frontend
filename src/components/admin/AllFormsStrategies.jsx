@@ -9,6 +9,7 @@ import ConfirmationModal from '../shared/ConfirmationModal';
 import Modal from '../shared/Modal';
 import { ThreeDotEditViewDelete } from '../shared/ThreeDotViewEditDelete';
 import AddStrategies from './startegies/AddStrategies';
+import Button from '../shared/small/Button';
 
 function AllFormsStrategies() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -116,7 +117,7 @@ function AllFormsStrategies() {
               className="rounded p-1 hover:bg-gray-100"
               aria-label="Actions"
             >
-              <MoreVertical size={18} />
+              <MoreVertical className="cursor-pointer" size={18} />
             </button>
             {actionMenu === row._id && <ThreeDotEditViewDelete buttons={buttons} row={row} />}
           </div>
@@ -126,11 +127,12 @@ function AllFormsStrategies() {
   ];
 
   return (
-    <>
-      <div className="mb-4">
-        <button onClick={() => setIsModalOpen(true)} className="rounded bg-blue-500 px-4 py-2 text-white">
+    <div>
+      <div className="mb-4 flex w-full justify-end">
+        {/* <button onClick={() => setIsModalOpen(true)} className="rounded bg-blue-500 px-4 py-2 text-white">
           Add New
-        </button>
+        </button> */}
+        <Button onClick={() => setIsModalOpen(true)} label={'Add new'} />
       </div>
 
       <DataTable
@@ -200,7 +202,7 @@ function AllFormsStrategies() {
         confirmButtonText="Delete"
         confirmButtonClassName="bg-red-500 text-white"
       />
-    </>
+    </div>
   );
 }
 

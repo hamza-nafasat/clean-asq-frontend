@@ -20,6 +20,7 @@ import CompanyInformation from './page/admin/userApplicationForms/CompanyInforma
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
 import FormStrategies from './page/admin/dashboard/formStrategies/FormStrategies';
+import ExtractionContext from './page/admin/dashboard/extractionContext/ExtractionContext';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -130,6 +131,7 @@ function App() {
                 <Route path="branding/create" element={<CreateBranding />} />
                 <Route path="branding/single/:brandingId" element={<CreateBranding />} />
                 <Route path="strategies" element={<FormStrategies />} />
+                <Route path="extraction-context" element={<ExtractionContext />} />
               </Route>
 
               {/*all User Forms or application layout  , with out sidebar */}
