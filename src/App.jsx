@@ -21,6 +21,8 @@ import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
 import FormStrategies from './page/admin/dashboard/formStrategies/FormStrategies';
 import ExtractionContext from './page/admin/dashboard/extractionContext/ExtractionContext';
+import Varification from './page/admin/dashboard/varification/Varification';
+import Verification from './page/admin/dashboard/varification/Varification';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -132,6 +134,7 @@ function App() {
                 <Route path="branding/single/:brandingId" element={<CreateBranding />} />
                 <Route path="strategies" element={<FormStrategies />} />
                 <Route path="extraction-context" element={<ExtractionContext />} />
+                <Route path="verification" element={<Verification />} />
               </Route>
 
               {/*all User Forms or application layout  , with out sidebar */}

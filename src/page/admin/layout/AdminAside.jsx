@@ -53,6 +53,11 @@ const AdminAside = () => {
       link: '/extraction-context',
       icon: <HiOutlineLightBulb />,
     },
+    {
+      title: 'Verification',
+      link: '/verification',
+      icon: <HiOutlineLightBulb />,
+    },
   ];
 
   return (
