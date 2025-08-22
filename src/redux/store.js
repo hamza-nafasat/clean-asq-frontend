@@ -8,6 +8,7 @@ import formApis from './apis/formApis';
 import formSlice from './slices/formSlice';
 import idMissionApis from './apis/idMissionApis';
 import brandingApis from './apis/brandingApis';
+import companySlice from './slices/companySlice';
 
 const store = configureStore({
   reducer: {
@@ -17,6 +18,7 @@ const store = configureStore({
     // [roleSlice.name]: roleSlice.reducer,
     [brandingSlice.name]: brandingSlice.reducer,
     [formSlice.name]: formSlice.reducer,
+    [companySlice.name]: companySlice.reducer,
     // apis
     [authApis.reducerPath]: authApis.reducer,
     [userApis.reducerPath]: userApis.reducer,

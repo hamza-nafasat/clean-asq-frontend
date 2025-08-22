@@ -127,7 +127,7 @@ function App() {
                 <Route path="all-roles" element={<AllRoles />} />
                 <Route path="all-users" element={<AdminAllUsers />} />
                 <Route path="application-forms" element={<ApplicationForms />} />
-                <Route path="singleForm/stepper/:formId" element={<ApplicationForm />} />
+                <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
                 <Route path="applications" element={<Applications />} />
                 <Route path="branding" element={<Brandings />} />
                 <Route path="branding/create" element={<CreateBranding />} />

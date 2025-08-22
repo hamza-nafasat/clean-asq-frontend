@@ -157,8 +157,9 @@ function AllFormsStrategies() {
               { label: 'None', value: 'none' },
             ]}
             extractAsOptions={[
-              { label: 'Simple TExt', value: 'simple_text' },
-              { label: 'JSON', value: 'json' },
+              { label: 'Simple Text', value: 'simple_text' },
+              { label: 'Phone', value: 'phone' },
+              { label: 'Address', value: 'address' },
               { label: 'Text', value: 'text' },
               { label: 'Number', value: 'number' },
               { label: 'Date', value: 'date' },
@@ -187,8 +188,9 @@ function AllFormsStrategies() {
               { label: 'Website Url', value: 'website_url' },
             ]}
             extractAsOptions={[
-              { label: 'Simple TExt', value: 'simple_text' },
-              { label: 'JSON', value: 'json' },
+              { label: 'Simple Text', value: 'simple_text' },
+              { label: 'Phone', value: 'phone' },
+              { label: 'Address', value: 'address' },
               { label: 'Text', value: 'text' },
               { label: 'Number', value: 'number' },
               { label: 'Date', value: 'date' },

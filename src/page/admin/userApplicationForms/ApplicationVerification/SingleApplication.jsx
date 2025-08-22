@@ -108,7 +108,7 @@ export default function SingleApplication() {
       e.preventDefault();
       const action = await dispatch(updateFormState({ data: idMissionVerifiedData, name: 'IdMission' }));
       unwrapResult(action);
-      navigate(`/singleForm/stepper/${formId}`);
+      navigate(`/singleform/stepper/${formId}`);
     },
     [dispatch, formId, idMissionVerifiedData, navigate]
   );
@@ -234,7 +234,7 @@ export default function SingleApplication() {
         })
       );
       unwrapResult(action);
-      return navigate(`/singleForm/stepper/${formId}`);
+      return navigate(`/singleform/stepper/${formId}`);
     });
 
     // Cleanup listener when component unmounts
@@ -468,14 +468,6 @@ export default function SingleApplication() {
                 className={'max-w-[500px]!'}
               />
             </Autocomplete>
-
-            {/* <PlaceAutocompleteElement
-              onLoad={onLoad}
-              onPlaceChanged={onPlaceChanged}
-              options={{
-                fields: ['address_components', 'formatted_address', 'geometry', 'place_id'],
-              }}
-            /> */}
 
             <TextField
               type="text"

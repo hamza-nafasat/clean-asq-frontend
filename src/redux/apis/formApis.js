@@ -182,6 +182,25 @@ const formApis = createApi({
       }),
       providesTags: [{ type: 'Prompt', id: 'LIST' }],
     }),
+
+    //================================
+    // company verification and lookup
+    //================================
+
+    companyVerification: builder.mutation({
+      query: data => ({
+        url: '/verify-company',
+        method: 'POST',
+        body: data,
+      }),
+    }),
+    companyLookup: builder.mutation({
+      query: data => ({
+        url: '/lookup-company',
+        method: 'POST',
+        body: data,
+      }),
+    }),
   }),
 });
 export const {
@@ -203,5 +222,7 @@ export const {
   useCreatePromptMutation,
   useUpdatePromptMutation,
   useGetAllPromptsQuery,
+  useCompanyVerificationMutation,
+  useCompanyLookupMutation,
 } = formApis;
 export default formApis;
