@@ -10,6 +10,7 @@ import { getVerificationTableStyles } from '@/data/data';
 import { toast } from 'react-toastify';
 import { useCompanyLookupMutation, useCompanyVerificationMutation } from '@/redux/apis/formApis';
 import CustomLoading from '@/components/shared/small/CustomLoading';
+import { useNavigate } from 'react-router-dom';
 
 const columns = [
   { name: 'Field', selector: row => row.name, sortable: true },
@@ -17,7 +18,8 @@ const columns = [
   { name: 'Source', selector: row => row.source },
 ];
 
-function CompanyVerification() {
+function CompanyVerification({ formId }) {
+  const navigate = useNavigate();
   const [totalSearchStreatgies, setTotalSearchStreatgies] = useState(0);
   const [successfullyVerifiedStreatgies, setSuccessfullyVerifiedStreatgies] = useState(0);
   const [lookupDataForTable, setLookupDataForTable] = useState([]);
@@ -65,6 +67,10 @@ function CompanyVerification() {
       console.log('Error verifying company:', error);
       toast.error(error?.data?.message || 'Failed to verify company');
     }
+  };
+
+  const handleNext = () => {
+    navigate(`/singleform/stepper/${formId}`);
   };
 
   return (
@@ -125,7 +131,7 @@ function CompanyVerification() {
         </div>
       </div>
       {(verifyCompanyLoading || lookupCompanyLoading) && <CustomLoading />}
-      {lookupDataForTable?.length && !(verifyCompanyLoading || lookupCompanyLoading) > 0 && (
+      {lookupDataForTable?.length && !(verifyCompanyLoading || lookupCompanyLoading) ? (
         <div className="border-frameColor bg-backgroundColor w-full space-y-4 rounded-md border p-4">
           <div className="flex items-center gap-3">
             <div>
@@ -165,7 +171,9 @@ function CompanyVerification() {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
+
+      <Button onClick={handleNext} label={'Next to Stepper'} />
     </div>
   );
 }

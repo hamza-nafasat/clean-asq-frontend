@@ -108,7 +108,7 @@ export default function SingleApplication() {
       e.preventDefault();
       const action = await dispatch(updateFormState({ data: idMissionVerifiedData, name: 'IdMission' }));
       unwrapResult(action);
-      navigate(`/singleform/stepper/${formId}`);
+      navigate(`/verification?formId=${formId}`);
     },
     [dispatch, formId, idMissionVerifiedData, navigate]
   );

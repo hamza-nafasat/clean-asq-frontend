@@ -38,11 +38,11 @@ const AdminAside = () => {
       link: '/branding',
       icon: <HiOutlineLightBulb />,
     },
-    {
-      title: '1st application',
-      link: '/user-application-forms/application-verification',
-      icon: <HiOutlineLightBulb />,
-    },
+    // {
+    //   title: '1st application',
+    //   link: '/user-application-forms/application-verification',
+    //   icon: <HiOutlineLightBulb />,
+    // },
     {
       title: 'Strategies',
       link: '/strategies',
