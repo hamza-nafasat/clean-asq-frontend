@@ -24,6 +24,7 @@ const TextField = ({
         )}
         <input
           {...rest}
+          autoComplete="off"
           type={showMasked ? 'password' : type}
           className={`${cn} border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''}`}
         />

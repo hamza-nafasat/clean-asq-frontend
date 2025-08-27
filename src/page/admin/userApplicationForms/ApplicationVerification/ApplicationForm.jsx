@@ -24,6 +24,7 @@ export default function ApplicationForm() {
   const formId = params.formId;
   const dispatch = useDispatch();
   const { formData, fileData } = useSelector(state => state?.form);
+
   const [currentStep, setCurrentStep] = useState(0);
   const [sectionNames, setSectionNames] = useState([]);
   const [stepsComps, setStepsComps] = useState([]);
@@ -32,6 +33,7 @@ export default function ApplicationForm() {
   const [submitArticle] = useSubmitFormArticleFileMutation();
   const { data: form, isLoading: formLoading, refetch: formRefetch } = useGetSingleFormQueryQuery({ _id: formId });
   const handleComplete = () => console.log('Form submitted:');
+
   const handlePrevious = useCallback(() => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);

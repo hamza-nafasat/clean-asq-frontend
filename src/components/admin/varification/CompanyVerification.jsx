@@ -13,20 +13,11 @@ import CustomLoading from '@/components/shared/small/CustomLoading';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { addLookupData } from '@/redux/slices/companySlice';
+import { updateFormState } from '@/redux/slices/formSlice';
 
 const columns = [
-  {
-    name: 'Field',
-    selector: row => row.name,
-    sortable: true,
-    width: '150px', // fixed width
-  },
+  { name: 'Field', selector: row => row.name, sortable: true, width: '150px' },
   { name: 'Result', grow: 2, wrap: true, selector: row => row.result },
-  {
-    name: 'Source',
-    selector: row => row.source,
-    width: '150px',
-  },
 ];
 
 function CompanyVerification({ formId }) {
@@ -79,6 +70,7 @@ function CompanyVerification({ formId }) {
   const handleNext = () => {
     console.log(lookupDataForTable);
     dispatch(addLookupData(lookupDataForTable));
+    dispatch(updateFormState({ data: lookupDataForTable, name: 'company_lookup_data' }));
     navigate(`/singleform/stepper/${formId}`);
   };
 

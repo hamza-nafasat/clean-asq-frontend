@@ -12,6 +12,7 @@ import {
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 
 function CompanyInformation({
   formRefetch,
@@ -27,9 +28,11 @@ function CompanyInformation({
   fields,
   title,
 }) {
+  const { lookupData } = useSelector(state => state?.company);
   const [customizeModal, setCustomizeModal] = useState(false);
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [form, setForm] = useState({});
+
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
 
   console.log('company info', form);
@@ -39,11 +42,16 @@ function CompanyInformation({
     if (fields && fields.length > 0) {
       const initialForm = {};
       fields.forEach(field => {
-        initialForm[field.name] = reduxData ? reduxData[field.name] || '' : '';
+        const fieldValueFromLookupData = lookupData?.find(item => item.name === field.name)?.result;
+        initialForm[field.name] = reduxData
+          ? reduxData[field.name]
+          : fieldValueFromLookupData
+            ? fieldValueFromLookupData
+            : '';
       });
       setForm(initialForm);
     }
-  }, [fields, name, reduxData]);
+  }, [fields, lookupData, name, reduxData]);
 
   // checking is all required fields are filled or not
   // ---------------------------------------------------

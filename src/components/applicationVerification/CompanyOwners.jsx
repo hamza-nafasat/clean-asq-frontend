@@ -14,6 +14,7 @@ import {
 } from '../shared/small/DynamicField';
 import Modal from '../shared/small/Modal';
 import CustomizationOwnerFieldsModal from './companyInfo/CustomizationOwnerFieldsModal';
+import { useSelector } from 'react-redux';
 
 function CompanyOwners({
   _id,
@@ -30,6 +31,9 @@ function CompanyOwners({
   blocks,
   title,
 }) {
+  const { lookupData } = useSelector(state => state?.company);
+  const [ownersFromLookup, setOwnersFromLookup] = useState([]);
+  const [filteredOwners, setFilteredOwners] = useState([]);
   const [otherOwnersStateName, setOtherOwnersStateName] = useState('');
   const [customizeModal, setCustomizeModal] = useState(false);
   const [formFields, setFormFields] = useState([]);
@@ -39,15 +43,27 @@ function CompanyOwners({
 
   const requiredNames = useMemo(() => formFields.filter(f => f.required).map(f => f.name), [formFields]);
 
+  // console.log('company owners', lookupData);
+  console.log('company owners', ownersFromLookup);
+  console.log('filtered owners', filteredOwners);
+
   // console.log('company owners', form);
 
-  const handleChangeOnOtherOwnersData = (e, index) => {
+  const handleChangeOnOtherOwnersData = (e, index, isFilter = false) => {
+    if (e.target.name == 'name') {
+      if (e.target.value) {
+        setFilteredOwners(ownersFromLookup.filter(owner => owner.toLowerCase().includes(e.target.value.toLowerCase())));
+      } else {
+        setFilteredOwners([]);
+      }
+    }
     const updatedOwners = [...(form[otherOwnersStateName] || [])];
     updatedOwners[index] = {
       ...updatedOwners[index],
       [e.target.name]: e.target.value,
     };
     setForm(prev => ({ ...prev, [otherOwnersStateName]: updatedOwners }));
+    if (isFilter) setFilteredOwners([]);
   };
 
   const handleRemoveOtherOwnersData = index => {
@@ -144,6 +160,16 @@ function CompanyOwners({
     setFormFields(baseFields);
   }, [blocks, fields, form]);
 
+  // add owners for suggestions
+  useEffect(() => {
+    const founders = Array.isArray(lookupData) && lookupData?.filter(item => item?.name == 'founders');
+    if (founders?.length) {
+      setOwnersFromLookup(founders[0]?.result);
+    } else {
+      setOwnersFromLookup([]);
+    }
+  }, [lookupData]);
+
   // making form states according changing fields
   // --------------------------------------------
   useEffect(() => {
@@ -218,7 +244,7 @@ function CompanyOwners({
     let isOperatorExist = false;
     if (form?.applicant_is_also_primary_operator === 'yes') {
       isOperatorExist = true;
-    } else if (!form?.applicant_is_also_primary_operator|| form?.applicant_is_also_primary_operator === 'no') {
+    } else if (!form?.applicant_is_also_primary_operator || form?.applicant_is_also_primary_operator === 'no') {
       // Check additional_owner for at least one non-empty object
       isOperatorExist =
         Array.isArray(form?.additional_owner) &&
@@ -319,13 +345,32 @@ function CompanyOwners({
                         className="mt-3 flex min-w-full flex-col items-center justify-between gap-4 border-2 border-[#066969] p-4 md:flex-row"
                       >
                         <div className="wrap flex w-full min-w-[400px] flex-col gap-3">
-                          <div className="flex w-full gap-4">
+                          <div className="relative flex w-full gap-4">
                             <TextField
                               label="Owner Name"
                               name="name"
                               value={name}
                               onChange={e => handleChangeOnOtherOwnersData(e, index)}
                             />
+                            {filteredOwners?.length > 0 && (
+                              <ul className="absolute top-20 mt-1 w-full max-w-[400px] rounded border bg-white shadow">
+                                {filteredOwners.map(name => (
+                                  <li
+                                    key={index}
+                                    onClick={() =>
+                                      handleChangeOnOtherOwnersData(
+                                        { target: { name: 'name', value: name } },
+                                        index,
+                                        true
+                                      )
+                                    }
+                                    className="cursor-pointer px-2 py-1 hover:bg-gray-200"
+                                  >
+                                    {name}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
                             <TextField
                               name="email"
                               label="Email Address"
