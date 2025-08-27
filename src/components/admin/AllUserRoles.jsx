@@ -46,7 +46,6 @@ function AllUserRoles() {
   const [isLoading] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const [rowForDelete, setRowForDelete] = useState(null);
-  const [rowForEdit, setRowForEdit] = useState(null);
   const actionMenuRefs = useRef(new Map());
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
@@ -65,7 +64,6 @@ function AllUserRoles() {
       name: 'edit',
       icon: <Pencil size={16} className="mr-2" />,
       onClick: row => {
-        setRowForEdit(row?._id);
         setEditModalData({ ...row, roleName: row.name });
         setActionMenu(null);
       },
@@ -120,6 +118,22 @@ function AllUserRoles() {
     });
   }, []);
 
+  // For edit modal
+  const handleEditInputChangeForPermissions = useCallback((e, value) => {
+    const { name, checked } = e.target;
+    setEditModalData(prev => {
+      let permissions = prev?.permissions || [];
+      if (checked) {
+        if (!permissions.some(p => p._id === name)) {
+          permissions = [...permissions, value];
+        }
+      } else {
+        permissions = permissions.filter(p => p._id !== name);
+      }
+      return { ...prev, permissions };
+    });
+  }, []);
+
   // No-op for add, edit, delete
   const handleAddRole = async () => {
     try {
@@ -138,14 +152,13 @@ function AllUserRoles() {
   const handleEditRole = async () => {
     try {
       const res = await editRole({
-        _id: rowForEdit?._id,
+        _id: editModalData?._id,
         name: editModalData.roleName,
-        permissions: editModalData.permissions,
+        permissions: editModalData.permissions?.map(permission => permission?._id),
       }).unwrap();
       if (res?.success) {
         toast.success(res.message);
         setEditModalData(null);
-        setRowForEdit(null);
       } else {
         toast.error(res?.message || 'Failed to update role');
       }
@@ -230,30 +243,34 @@ function AllUserRoles() {
     };
   }, [actionMenu]);
 
-  const renderPermissionsGrid = (permissions, onChange) => (
-    <div className="mt-4">
-      <h3 className="mb-2 text-sm font-medium text-gray-700">Access Permissions</h3>
-      <div className="grid grid-cols-2 gap-2">
-        {permissionsData?.data?.map(permission => {
-          const isViewMode = !onChange;
-          const isChecked = isViewMode
-            ? permissions.some(p => p._id === permission._id)
-            : permissions.includes(permission._id);
-          return (
-            <Checkbox
-              key={permission._id}
-              id={permission._id}
-              name={permission._id}
-              label={permission.name}
-              checked={isChecked}
-              onChange={onChange}
-              disabled={isViewMode}
-            />
-          );
-        })}
+  const renderPermissionsGrid = (permissions, onChange) => {
+    console.log('permissions', permissions);
+    return (
+      <div className="mt-4">
+        <h3 className="mb-2 text-sm font-medium text-gray-700">Access Permissions</h3>
+        <div className="grid grid-cols-2 gap-2">
+          {permissionsData?.data?.map(permission => {
+            const isViewMode = !onChange;
+            const isChecked = isViewMode
+              ? permissions.some(p => p._id === permission._id)
+              : permissions.some(p => p._id === permission._id);
+            return (
+              <Checkbox
+                key={permission._id}
+                id={permission._id}
+                value={permission}
+                name={permission._id}
+                label={permission.name}
+                checked={isChecked}
+                onChange={isViewMode ? null : e => onChange(e, permission)}
+                disabled={isViewMode}
+              />
+            );
+          })}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderFormField = useCallback((field, value, onChange, type = 'text', error = null, options = null) => {
     const labelText = field
@@ -354,7 +371,7 @@ function AllUserRoles() {
             { value: ROLE_STATUS.ACTIVE, label: 'Active' },
             { value: ROLE_STATUS.INACTIVE, label: 'Inactive' },
           ])}
-          {renderPermissionsGrid(editModalData.permissions, handleEditInputChange)}
+          {renderPermissionsGrid(editModalData.permissions, handleEditInputChangeForPermissions)}
         </Modal>
       )}
       {/* View Role Modal */}

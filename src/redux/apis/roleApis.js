@@ -40,10 +40,10 @@ const roleApis = createApi({
     // update single role
     // ---------------
     updateSingleRole: builder.mutation({
-      query: data => ({
-        url: `single/${data?._id}`,
+      query: ({ _id, name, permissions }) => ({
+        url: `single/${_id}`,
         method: 'PUT',
-        body: data,
+        body: { name, permissions },
       }),
       invalidatesTags: ['Role'],
     }),

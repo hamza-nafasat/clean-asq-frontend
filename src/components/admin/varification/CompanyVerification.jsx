@@ -44,14 +44,14 @@ function CompanyVerification({ formId }) {
         // if (lookupCompanyRes?.lookupStatus === 'verified') {
         const lookupDataObj = lookupCompanyRes?.data?.lookupData;
         const totalStrEntries = Object.entries(lookupDataObj);
-        const totalStr = totalStrEntries.filter(([key, _]) => key.includes('source'));
-        const verifiedStr = totalStrEntries.filter(([key, _]) => !key.includes('source'));
+        const totalStr = totalStrEntries.filter(([key]) => key.includes('source'));
+        const verifiedStr = totalStrEntries.filter(([key]) => !key.includes('source'));
 
         setTotalSearchStreatgies(totalStr?.length);
         // setAllSearchStreatgies(verifiedStr);
         setSuccessfullyVerifiedStreatgies(verifiedStr?.length);
         let totalLookupData = totalStr?.map(([key, value]) => {
-          let nameObj = verifiedStr?.find(([k, v]) => key?.includes(k));
+          let nameObj = verifiedStr?.find(([k]) => key?.includes(k));
           if (value == 'Not found') return {};
           return {
             source: String(value).split(',')[0],
