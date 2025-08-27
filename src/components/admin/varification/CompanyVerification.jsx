@@ -11,23 +11,32 @@ import { toast } from 'react-toastify';
 import { useCompanyLookupMutation, useCompanyVerificationMutation } from '@/redux/apis/formApis';
 import CustomLoading from '@/components/shared/small/CustomLoading';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { addLookupData } from '@/redux/slices/companySlice';
 
 const columns = [
-  { name: 'Field', selector: row => row.name, sortable: true },
-  { name: 'Result', selector: row => row.result },
-  { name: 'Source', selector: row => row.source },
+  {
+    name: 'Field',
+    selector: row => row.name,
+    sortable: true,
+    width: '150px', // fixed width
+  },
+  { name: 'Result', grow: 2, wrap: true, selector: row => row.result },
+  {
+    name: 'Source',
+    selector: row => row.source,
+    width: '150px',
+  },
 ];
 
 function CompanyVerification({ formId }) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [totalSearchStreatgies, setTotalSearchStreatgies] = useState(0);
   const [successfullyVerifiedStreatgies, setSuccessfullyVerifiedStreatgies] = useState(0);
   const [lookupDataForTable, setLookupDataForTable] = useState([]);
   const [form, setForm] = useState({ name: '', url: '' });
-  const [apisRes, setApisRes] = useState({
-    companyLookup: {},
-    companyVerify: {},
-  });
+  const [apisRes, setApisRes] = useState({ companyLookup: {}, companyVerify: {} });
   const [verifyCompany, { isLoading: verifyCompanyLoading }] = useCompanyVerificationMutation();
   const [lookupCompany, { isLoading: lookupCompanyLoading }] = useCompanyLookupMutation();
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
@@ -41,14 +50,12 @@ function CompanyVerification({ formId }) {
       const [companyVerifyRes, lookupCompanyRes] = await Promise.all([companyVerifyPromise, lookupCompanyPromise]);
       if (companyVerifyRes?.success && lookupCompanyRes?.success) {
         setApisRes({ companyLookup: lookupCompanyRes?.data, companyVerify: companyVerifyRes?.data });
-        // if (lookupCompanyRes?.lookupStatus === 'verified') {
         const lookupDataObj = lookupCompanyRes?.data?.lookupData;
         const totalStrEntries = Object.entries(lookupDataObj);
         const totalStr = totalStrEntries.filter(([key]) => key.includes('source'));
         const verifiedStr = totalStrEntries.filter(([key]) => !key.includes('source'));
 
         setTotalSearchStreatgies(totalStr?.length);
-        // setAllSearchStreatgies(verifiedStr);
         setSuccessfullyVerifiedStreatgies(verifiedStr?.length);
         let totalLookupData = totalStr?.map(([key, value]) => {
           let nameObj = verifiedStr?.find(([k]) => key?.includes(k));
@@ -70,6 +77,8 @@ function CompanyVerification({ formId }) {
   };
 
   const handleNext = () => {
+    console.log(lookupDataForTable);
+    dispatch(addLookupData(lookupDataForTable));
     navigate(`/singleform/stepper/${formId}`);
   };
 
@@ -102,19 +111,17 @@ function CompanyVerification({ formId }) {
               verifyCompanyLoading || lookupCompanyLoading ? () => {} : e => setForm({ ...form, url: e.target.value })
             }
           />
-          {apisRes?.companyVerify?.confidenceScore &&
-            apisRes?.companyVerify?.verificationStatus &&
-            apisRes?.companyVerify?.originalCompanyName && (
-              <div className="flex w-44 items-center gap-2 rounded-2xl border p-2 py-1">
-                <div>
-                  <GoCheckCircle className="font-medium text-blue-400" />
-                </div>
-                <div className="text-textPrimary text-xs">
-                  {apisRes?.companyVerify?.originalCompanyName} {apisRes?.companyVerify?.verificationStatus} (
-                  {apisRes?.companyVerify?.confidenceScore}%)
-                </div>
+          {apisRes?.companyVerify?.confidenceScore && apisRes?.companyVerify?.verificationStatus && (
+            <div className="flex w-44 items-center gap-2 rounded-2xl border p-2 py-1">
+              <div>
+                <GoCheckCircle className="font-medium text-blue-400" />
               </div>
-            )}
+              <div className="text-textPrimary text-xs">
+                {apisRes?.companyVerify?.originalCompanyName || form?.name} {apisRes?.companyVerify?.verificationStatus}{' '}
+                ({apisRes?.companyVerify?.confidenceScore}%)
+              </div>
+            </div>
+          )}
 
           <div className="mb-4 flex items-center space-x-2 px-2">
             <input type="checkbox" />
@@ -156,24 +163,12 @@ function CompanyVerification({ formId }) {
               customStyles={tableStyles}
             />
           </div>
-          <div className="border"></div>
-          <div className="flex items-center justify-between">
-            <div className="text-textPrimary flex items-center gap-3">
-              <div>
-                <GoDatabase />
-              </div>
-              <div className="text-xs">Complete traceability: 2 search strategies attempted with full results</div>
-            </div>
-            <div>
-              <div>
-                <Button label={'Start Over'} />
-              </div>
-            </div>
-          </div>
         </div>
       ) : null}
 
-      <Button onClick={handleNext} label={'Next to Stepper'} />
+      {apisRes?.companyVerify?.verificationStatus === 'verified' && formId && (
+        <Button onClick={handleNext} label={'Next to Stepper'} />
+      )}
     </div>
   );
 }

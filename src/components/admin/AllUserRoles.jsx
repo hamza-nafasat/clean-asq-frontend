@@ -55,7 +55,6 @@ function AllUserRoles() {
       name: 'view',
       icon: <Eye size={16} className="mr-2" />,
       onClick: row => {
-        console.log('row', row);
         setViewModalData(row);
         setActionMenu(null);
       },
@@ -170,7 +169,6 @@ function AllUserRoles() {
 
   const handleDeleteRole = async () => {
     try {
-      console.log('Deleting role with ID:', rowForDelete);
       const res = await deleteRole({ _id: rowForDelete }).unwrap();
       if (res?.success) {
         toast.success(res.message);
@@ -244,7 +242,6 @@ function AllUserRoles() {
   }, [actionMenu]);
 
   const renderPermissionsGrid = (permissions, onChange) => {
-    console.log('permissions', permissions);
     return (
       <div className="mt-4">
         <h3 className="mb-2 text-sm font-medium text-gray-700">Access Permissions</h3>
