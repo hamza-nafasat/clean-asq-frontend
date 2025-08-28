@@ -13,6 +13,8 @@ import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { useFindNaicAndMccMutation } from '@/redux/apis/formApis';
+import { toast } from 'react-toastify';
 
 function CompanyInformation({
   formRefetch,
@@ -32,11 +34,29 @@ function CompanyInformation({
   const [customizeModal, setCustomizeModal] = useState(false);
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [form, setForm] = useState({});
+  const [naicsToMccDetails, setNaicsToMccDetails] = useState({ NAICS: '', MCC: '' });
+  const [showNaicsToMccDetails, setShowNaicsToMccDetails] = useState(true);
+  const [naicsApiData, setNaicsApiData] = useState({ bestMatch: {}, otherMatches: [] });
+  const [findNaicsToMccDetails, { isLoading }] = useFindNaicAndMccMutation();
 
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
 
-  console.log('company info', form);
-  console.log('isAllRequiredFieldsFilled', isAllRequiredFieldsFilled);
+  const findNaicsHandler = async () => {
+    const description = form?.['companydescription'];
+    if (!description) return toast.error('Please enter a description first');
+    try {
+      const res = await findNaicsToMccDetails({ description }).unwrap();
+      if (res.success) {
+        setNaicsApiData(res?.data);
+        setShowNaicsToMccDetails(true);
+      }
+    } catch (error) {
+      console.log('Error sending OTP:', error);
+      toast.error(error?.data?.message || 'Failed to send OTP');
+    }
+  };
+  // console.log('company info', form);
+  // console.log('isAllRequiredFieldsFilled', isAllRequiredFieldsFilled);
 
   useEffect(() => {
     if (fields && fields.length > 0) {
@@ -71,8 +91,10 @@ function CompanyInformation({
         );
       return true;
     });
-    setIsAllRequiredFieldsFilled(allFilled);
-  }, [form, requiredNames]);
+    const isNaicsFilled = naicsToMccDetails.NAICS;
+    const isAllRequiredFieldsFilled = allFilled && isNaicsFilled;
+    setIsAllRequiredFieldsFilled(isAllRequiredFieldsFilled);
+  }, [form, naicsToMccDetails?.NAICS, requiredNames]);
 
   return (
     <div className="mt-14 h-full overflow-auto">
@@ -80,7 +102,36 @@ function CompanyInformation({
         <p className="text-textPrimary text-2xl font-semibold">{name}</p>
         <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
       </div>
-
+      {/* NAICS to MCC SECTION  */}
+      {naicsApiData?.bestMatch?.naics && showNaicsToMccDetails && (
+        <Modal isOpen={showNaicsToMccDetails} onClose={() => setShowNaicsToMccDetails(false)}>
+          <NAICSModal
+            naicsApiData={naicsApiData}
+            setNaicsApiData={setNaicsApiData}
+            naicsToMccDetails={naicsToMccDetails}
+            setNaicsToMccDetails={setNaicsToMccDetails}
+            setShowNaicsToMccDetails={setShowNaicsToMccDetails}
+          />
+        </Modal>
+      )}
+      <div className="flex w-full flex-col items-start">
+        <h4 className="text-textPrimary text-base font-medium lg:text-lg">NAICS Code and Description</h4>
+        <div className={`'mt-2' flex w-full gap-4`}>
+          <input
+            placeholder={'NAICS Code and Description'}
+            type={'text'}
+            value={naicsToMccDetails.NAICS}
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
+            onChange={e => setNaicsToMccDetails({ ...naicsToMccDetails, NAICS: e.target.value })}
+          />
+          <Button
+            label="Find NAICS"
+            className={`text-nowrap ${isLoading && 'pointer-events-none opacity-30'}`}
+            disabled={isLoading}
+            onClick={findNaicsHandler}
+          />
+        </div>
+      </div>
       {fields?.length > 0 &&
         fields.map((field, index) => {
           if (field.type === FIELD_TYPES.SELECT) {
@@ -136,7 +187,6 @@ function CompanyInformation({
             </div>
           );
         })}
-
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
@@ -146,14 +196,14 @@ function CompanyInformation({
               className={`${!isAllRequiredFieldsFilled && 'pointer-events-none cursor-not-allowed opacity-50'}`}
               disabled={!isAllRequiredFieldsFilled}
               label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
-              onClick={() => handleNext({ data: form, name: title })}
+              onClick={() => handleNext({ data: { ...form, naics: naicsToMccDetails }, name: title })}
             />
           ) : (
             <Button
               disabled={formLoading}
               className={`${formLoading && 'pinter-events-none cursor-not-allowed opacity-50'}`}
               label={'Submit'}
-              onClick={() => handleSubmit({ data: form, name: title })}
+              onClick={() => handleSubmit({ data: { ...form, naics: naicsToMccDetails }, name: title })}
             />
           )}
         </div>
@@ -173,3 +223,60 @@ function CompanyInformation({
 }
 
 export default CompanyInformation;
+
+const NAICSModal = ({ naicsApiData, setNaicsApiData, setNaicsToMccDetails, setShowNaicsToMccDetails }) => {
+  const handlerOnClickOnOtherMatches = i => {
+    const bestMatch = { ...naicsApiData?.bestMatch };
+    const clickedMatch = { ...naicsApiData?.otherMatches[i] };
+    const remainingOtherMatches = naicsApiData?.otherMatches.filter((match, index) => index !== i);
+    bestMatch.naics = clickedMatch.naics;
+    bestMatch.naicsDescription = clickedMatch.naicsDescription;
+    bestMatch.mcc = clickedMatch.mcc;
+    bestMatch.mccDescription = clickedMatch.mccDescription;
+    remainingOtherMatches.push(naicsApiData?.bestMatch);
+    setNaicsApiData({ otherMatches: remainingOtherMatches, bestMatch });
+  };
+  const saveHandler = bestMatch => {
+    if (!bestMatch?.naics) return toast.error('Please select a best match');
+    setNaicsToMccDetails({
+      NAICS: `${bestMatch?.naics}, ${bestMatch?.naicsDescription}`,
+      MCC: `${bestMatch?.mcc || ''}, ${bestMatch?.mccDescription || ''}`,
+    });
+    setShowNaicsToMccDetails(true);
+  };
+  return (
+    <div className="flex w-full flex-col items-start gap-4">
+      <section className="flex w-full flex-col">
+        <h4 className="text-textPrimary text-base font-medium lg:text-lg">Best Match</h4>
+        <div className={`'mt-2' flex w-full gap-4`}>
+          <input
+            placeholder={'NAICS Code and Description'}
+            type={'text'}
+            readOnly
+            value={`${naicsApiData?.bestMatch?.naics ? naicsApiData?.bestMatch?.naics + ' ,' : ''} ${naicsApiData?.bestMatch?.naicsDescription || ''}`}
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
+          />
+        </div>
+      </section>
+      <section className="flex w-full flex-col">
+        <h4 className="text-textPrimary text-base font-medium lg:text-lg">Other Possible Matches</h4>
+        <div className={`'mt-2' flex w-full gap-4`}>
+          {naicsApiData?.otherMatches?.map((match, i) => (
+            <button className="cursor-pointer" key={i} onClick={() => handlerOnClickOnOtherMatches(i)}>
+              <input
+                placeholder={'NAICS Code and Description'}
+                type={'text'}
+                readOnly
+                value={`${match?.naics}, ${match?.naicsDescription}`}
+                className={`border-frameColor h-[45px] w-full cursor-pointer! rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
+              />
+            </button>
+          ))}
+        </div>
+      </section>
+      <div className="flex w-full items-center justify-end">
+        <Button label="Save Best Match" onClick={() => saveHandler(naicsApiData?.bestMatch)} />
+      </div>
+    </div>
+  );
+};

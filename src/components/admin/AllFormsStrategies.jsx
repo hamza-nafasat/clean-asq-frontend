@@ -1,6 +1,10 @@
 import { getTableStyles } from '@/data/data';
 import { useBranding } from '@/hooks/BrandingContext';
-import { useDeleteSearchStrategyMutation, useGetAllSearchStrategiesQuery } from '@/redux/apis/formApis';
+import {
+  useCreateSearchStrategyDefaultMutation,
+  useDeleteSearchStrategyMutation,
+  useGetAllSearchStrategiesQuery,
+} from '@/redux/apis/formApis';
 import { MoreVertical, Pencil, Trash } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import DataTable from 'react-data-table-component';
@@ -22,6 +26,8 @@ function AllFormsStrategies() {
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
 
   const { data } = useGetAllSearchStrategiesQuery();
+  const [createDefaultStrategies, { isLoading: isLoadingCreateDefaultStrategies }] =
+    useCreateSearchStrategyDefaultMutation();
   const [deleteSearchStrategy] = useDeleteSearchStrategyMutation();
 
   const handleDelete = async () => {
@@ -36,6 +42,15 @@ function AllFormsStrategies() {
       toast.error(error?.data?.message || 'Failed to delete user');
     } finally {
       setDeleteConfirmation(null);
+    }
+  };
+  const handleCreateDefaultStrategies = async () => {
+    try {
+      const res = await createDefaultStrategies().unwrap();
+      if (res.success) toast.success(res.message);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error(error?.data?.message || 'Failed to delete user');
     }
   };
 
@@ -128,11 +143,13 @@ function AllFormsStrategies() {
 
   return (
     <div>
-      <div className="mb-4 flex w-full justify-end">
-        {/* <button onClick={() => setIsModalOpen(true)} className="rounded bg-blue-500 px-4 py-2 text-white">
-          Add New
-        </button> */}
+      <div className="mb-4 flex w-full justify-end gap-3">
         <Button onClick={() => setIsModalOpen(true)} label={'Add new'} />
+        <Button
+          onClick={handleCreateDefaultStrategies}
+          disabled={isLoadingCreateDefaultStrategies}
+          label={'Create Default'}
+        />
       </div>
 
       <DataTable

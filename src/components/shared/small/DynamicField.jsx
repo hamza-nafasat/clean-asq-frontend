@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { IoEyeOffSharp } from 'react-icons/io5';
 import { RxEyeOpen } from 'react-icons/rx';
+import Button from './Button';
 
 const DynamicField = ({ cn, field, className = '', form, placeholder, value, setForm, ...rest }) => {
   const { type, label, id, options, name, required } = field;
@@ -329,33 +330,56 @@ const RangeInputType = ({ field, className, form, setForm }) => {
 };
 
 const OtherInputType = ({ field, className, form, setForm }) => {
-  const { type, label, name, required, placeholder, isMasked } = field;
+  const {
+    type,
+    label,
+    name,
+    required,
+    placeholder,
+    isMasked,
+    aiHelp,
+    aiPrompt,
+    aiResponse,
+    isDisplayText,
+    ai_formatting,
+  } = field;
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
   return (
     <>
-      <div className="flex w-full flex-col items-start">
-        {label && (
-          <h4 className="text-textPrimary text-base font-medium lg:text-lg">
-            {label}:{required ? '*' : ''}
-          </h4>
-        )}
-        <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
-          <input
-            onChange={e => setForm(prev => ({ ...prev, [name]: e.target.value }))}
-            placeholder={placeholder}
-            type={showMasked ? 'password' : type}
-            value={form[name]}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
-          />
-          {isMasked && (
-            <span
-              onClick={() => setShowMasked(!showMasked)}
-              className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-sm text-gray-600"
-            >
-              {!showMasked ? <RxEyeOpen className="h-5 w-5" /> : <IoEyeOffSharp className="h-5 w-5" />}
-            </span>
+      <div className="flex w-full flex-col items-start gap-4">
+        <article className="flex w-full flex-col items-start gap-2">
+          {label && (
+            <h4 className="text-textPrimary text-base font-medium lg:text-lg">
+              {label}:{required ? '*' : ''}
+            </h4>
           )}
-        </div>
+          {ai_formatting && isDisplayText && (
+            <div className="flex h-full w-full flex-col gap-4 bg-amber-100 p-4">
+              <h3 className="text-textPrimary text-lg font-semibold lg:text-lg">Instruction</h3>
+              <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
+            </div>
+          )}
+          <section className="flex w-full gap-2">
+            <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
+              <input
+                onChange={e => setForm(prev => ({ ...prev, [name]: e.target.value }))}
+                placeholder={placeholder}
+                type={showMasked ? 'password' : type}
+                value={form[name]}
+                className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
+              />
+              {isMasked && (
+                <span
+                  onClick={() => setShowMasked(!showMasked)}
+                  className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-sm text-gray-600"
+                >
+                  {!showMasked ? <RxEyeOpen className="h-5 w-5" /> : <IoEyeOffSharp className="h-5 w-5" />}
+                </span>
+              )}
+            </div>
+            {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={aiPrompt} />}
+          </section>
+        </article>
       </div>
     </>
   );

@@ -125,6 +125,16 @@ const formApis = createApi({
       }),
       invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
     }),
+    // create search strategy default
+    // ---------------
+    createSearchStrategyDefault: builder.mutation({
+      query: () => ({
+        url: '/search-strategy/create-default',
+        method: 'POST',
+        body: {},
+      }),
+      invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
+    }),
     // get all search strategies
     // ---------------
     getAllSearchStrategies: builder.query({
@@ -201,6 +211,13 @@ const formApis = createApi({
         body: data,
       }),
     }),
+    findNaicAndMcc: builder.mutation({
+      query: data => ({
+        url: '/find-naics-to-mcc',
+        method: 'POST',
+        body: data,
+      }),
+    }),
   }),
 });
 export const {
@@ -216,6 +233,7 @@ export const {
   useGetBeneficialOwnersDataQuery,
   useUpdateBeneficialOwnersMutation,
   useCreateSearchStrategyMutation,
+  useCreateSearchStrategyDefaultMutation,
   useGetAllSearchStrategiesQuery,
   useUpdateSearchStrategyMutation,
   useDeleteSearchStrategyMutation,
@@ -224,5 +242,6 @@ export const {
   useGetAllPromptsQuery,
   useCompanyVerificationMutation,
   useCompanyLookupMutation,
+  useFindNaicAndMccMutation,
 } = formApis;
 export default formApis;
