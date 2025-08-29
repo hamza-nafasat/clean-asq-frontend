@@ -5,6 +5,8 @@ import { AllRoles, AllUsers, Applicants, Applications } from '@/assets/svgs/icon
 import { HiOutlineLightBulb } from 'react-icons/hi';
 import { useBranding } from '@/hooks/BrandingContext';
 import logoApply from '../../../assets/images/logo.png';
+import { MdOutlineBrandingWatermark } from 'react-icons/md';
+import { BrushIcon, CheckCircle, Layers2 } from 'lucide-react';
 
 const AdminAside = () => {
   const [isNavOpen, setIsNavOpen] = useState(true);
@@ -36,7 +38,7 @@ const AdminAside = () => {
     {
       title: 'Branding',
       link: '/branding',
-      icon: <HiOutlineLightBulb />,
+      icon: <BrushIcon />,
     },
     // {
     //   title: '1st application',
@@ -51,19 +53,19 @@ const AdminAside = () => {
     {
       title: 'Extraction Context',
       link: '/extraction-context',
-      icon: <HiOutlineLightBulb />,
+      icon: <Layers2 />,
     },
     {
       title: 'Verification',
       link: '/verification',
-      icon: <HiOutlineLightBulb />,
+      icon: <CheckCircle />,
     },
   ];
 
   return (
     <div
       className={`relative flex h-full flex-col justify-between rounded-t-md bg-white p-4 transition-all duration-500 ${
-        isNavOpen ? 'w-[200px]' : 'w-[65px]'
+        isNavOpen ? 'w-[250px]' : 'w-[65px]'
       }`}
     >
       <div className="absolute top-[6%] right-[-11px] z-10 cursor-pointer" onClick={handleNavOpen}>
