@@ -5,11 +5,11 @@ export const ThreeDotEditViewDelete = ({ row, buttons }) => {
         <button
           key={index}
           className={`flex w-full cursor-pointer items-center px-4 py-2 text-sm hover:bg-gray-100 ${button?.disabled ? 'cursor-not-allowed opacity-50' : ''}`}
-          onClick={() => button.onClick(row)}
+          onClick={() => button?.onClick(row)}
           disabled={button?.disabled || false}
         >
-          {button.icon}
-          {button.name}
+          {button?.icon}
+          {button?.name}
         </button>
       ))}
     </div>

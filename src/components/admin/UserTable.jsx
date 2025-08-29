@@ -7,7 +7,7 @@ import {
   useGetAllUsersQuery,
   useUpdateSingleUserMutation,
 } from '@/redux/apis/userApis';
-import { MoreVertical, Pencil, Trash } from 'lucide-react';
+import { Lock, MoreVertical, Pencil, Trash } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DataTable from 'react-data-table-component';
 import { IoMdPersonAdd } from 'react-icons/io';
@@ -188,7 +188,7 @@ const UserTable = () => {
         name: 'Change Password',
         icon: <Lock size={16} className="mr-2" />,
         onClick: row => {
-          setEditModalData({ ...row, role: row?.role?._id });
+          setPasswordModalData({ id: row?._id, password: '' });
           setActionMenu(null);
         },
       },
@@ -196,7 +196,7 @@ const UserTable = () => {
         name: 'Edit',
         icon: <Pencil size={16} className="mr-2" />,
         onClick: row => {
-          setPasswordModalData({ id: row?._id, password: '' });
+          setEditModalData({ ...row, role: row?.role?._id });
           setActionMenu(null);
         },
       },
@@ -204,11 +204,9 @@ const UserTable = () => {
         name: 'Delete',
         icon: <Trash size={16} className="mr-2" />,
         onClick: row => {
-          () => {
-            setDeleteConfirmation(row);
-            setActionMenu(null);
-            setUserIdForDelete(row?._id);
-          };
+          setDeleteConfirmation(row);
+          setActionMenu(null);
+          setUserIdForDelete(row?._id);
         },
       },
     ],
@@ -249,13 +247,13 @@ const UserTable = () => {
           return (
             <div className="relative" ref={rowRef}>
               <button
-                onClick={() => setActionMenu(prevActionMenu => (prevActionMenu === row._id ? null : row._id))}
+                onClick={() => setActionMenu(prevActionMenu => (prevActionMenu === row?._id ? null : row?._id))}
                 className="rounded p-1 hover:bg-gray-100"
                 aria-label="Actions"
               >
                 <MoreVertical size={18} />
               </button>
-              {actionMenu === row._id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
+              {actionMenu === row?._id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
             </div>
           );
         },
@@ -383,7 +381,7 @@ const UserTable = () => {
       )}
 
       <ConfirmationModal
-        isOpen={!!deleteConfirmation}
+        isOpen={deleteConfirmation}
         onClose={() => setDeleteConfirmation(null)}
         onConfirm={handleDeleteUser}
         title="Delete User"
