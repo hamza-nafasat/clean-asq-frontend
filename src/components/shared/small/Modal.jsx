@@ -1,6 +1,5 @@
 import { RxCross2 } from 'react-icons/rx';
 
-// eslint-disable-next-line react/prop-types
 const Modal = ({ title, onClose, children, width, headingIcon }) => {
   return (
     <div

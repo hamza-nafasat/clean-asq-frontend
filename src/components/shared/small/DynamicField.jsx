@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { IoEyeOffSharp } from 'react-icons/io5';
 import { RxEyeOpen } from 'react-icons/rx';
 import Button from './Button';
+import Modal from './Modal';
+import { toast } from 'react-toastify';
+import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
+import DOMPurify from 'dompurify';
 
 const DynamicField = ({ cn, field, className = '', form, placeholder, value, setForm, ...rest }) => {
   const { type, label, id, options, name, required } = field;
@@ -176,36 +180,53 @@ const DynamicField = ({ cn, field, className = '', form, placeholder, value, set
 export default DynamicField;
 
 const SelectInputType = ({ field, className, form, setForm }) => {
-  const { label, options, name, required, placeholder } = field;
+  const { label, options, name, required, placeholder, aiHelp, aiPrompt, aiResponse, isDisplayText, ai_formatting } =
+    field;
+  const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const selectHandler = e => setForm({ ...form, [name]: e.target.value });
   return (
     <>
       <div className={`flex w-full flex-col items-start ${className}`}>
+        {openAiHelpModal && (
+          <Modal onClose={() => setOpenAiHelpModal(false)}>
+            <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
+          </Modal>
+        )}
         {label && (
           <h4 className="text-textPrimary text-base font-medium lg:text-lg">
             {label}:{required ? '*' : ''}
           </h4>
         )}
-        <select
-          name={name}
-          required={required}
-          className="border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
-          onChange={selectHandler}
-        >
-          <option value="">{placeholder ?? 'Choose an option'}</option>
-          {options?.map((option, index) => (
-            <option key={index} value={option?.value}>
-              {option?.label}
-            </option>
-          ))}
-        </select>
+        {ai_formatting && isDisplayText && (
+          <div className="flex h-full w-full flex-col gap-4 bg-amber-100 p-4">
+            <h3 className="text-textPrimary text-lg font-semibold lg:text-lg">Instruction</h3>
+            <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
+          </div>
+        )}
+        <div className="flex gap-2">
+          <select
+            name={name}
+            required={required}
+            className="border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
+            onChange={selectHandler}
+          >
+            <option value="">{placeholder ?? 'Choose an option'}</option>
+            {options?.map((option, index) => (
+              <option key={index} value={option?.value}>
+                {option?.label}
+              </option>
+            ))}
+          </select>
+          {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
+        </div>
       </div>
     </>
   );
 };
 
 const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
-  const { label, options, name, required } = field;
+  const { label, options, name, required, aiHelp, aiPrompt, aiResponse, isDisplayText, ai_formatting } = field;
+  const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const multiCheckBoxHandler = e => {
     if (form[name]?.includes(e.target.value)) {
       setForm({ ...form, [name]: form[name].filter(item => item !== e.target.value) });
@@ -215,9 +236,20 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
   };
   return (
     <div className={`flex w-full justify-between gap-8 ${className}`}>
+      {openAiHelpModal && (
+        <Modal onClose={() => setOpenAiHelpModal(false)}>
+          <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
+        </Modal>
+      )}
       <h4 className="text-textPrimary text-base font-medium lg:text-lg">
         {label}:{required ? '*' : ''}
       </h4>
+      {ai_formatting && isDisplayText && (
+        <div className="flex h-full w-full flex-col gap-4 bg-amber-100 p-4">
+          <h3 className="text-textPrimary text-lg font-semibold lg:text-lg">Instruction</h3>
+          <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
+        </div>
+      )}
       <div className="flex w-full items-center gap-8">
         {options?.map((option, index) => (
           <div key={index} className="flex items-center justify-center gap-2">
@@ -235,19 +267,32 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
             />
           </div>
         ))}
+        {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
       </div>
     </div>
   );
 };
 
 const RadioInputType = ({ field, className, form, setForm, onChange }) => {
-  const { label, options, name, required } = field;
+  const { label, options, name, required, aiHelp, aiPrompt, aiResponse, isDisplayText, ai_formatting } = field;
+  const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const radioHandler = option => setForm({ ...form, [name]: option.value });
   return (
     <div className={`flex w-full flex-col items-start ${className}`}>
+      {openAiHelpModal && (
+        <Modal onClose={() => setOpenAiHelpModal(false)}>
+          <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
+        </Modal>
+      )}
       <h4 className="text-textPrimary text-base font-medium lg:text-lg">
         {label}:{required ? '*' : ''}
       </h4>
+      {ai_formatting && isDisplayText && (
+        <div className="flex h-full w-full flex-col gap-4 bg-amber-100 p-4">
+          <h3 className="text-textPrimary text-lg font-semibold lg:text-lg">Instruction</h3>
+          <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
+        </div>
+      )}
       <div className="border-b-2 py-6">
         <div className="grid grid-cols-3 gap-4 p-0">
           {options?.map((option, index) => (
@@ -265,6 +310,7 @@ const RadioInputType = ({ field, className, form, setForm, onChange }) => {
               <label className="text-textPrimary text-base">{option?.label}</label>
             </div>
           ))}
+          {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
         </div>
       </div>
     </div>
@@ -272,15 +318,27 @@ const RadioInputType = ({ field, className, form, setForm, onChange }) => {
 };
 
 const CheckboxInputType = ({ field, className, form, setForm }) => {
-  const { label, name, required } = field;
+  const { label, name, required, aiHelp, aiPrompt, aiResponse, isDisplayText, ai_formatting } = field;
+  const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
 
   const singleCheckBoxHandler = e => setForm({ ...form, [name]: e.target.checked });
   return (
     <div className={`flex items-center space-x-8 ${className}`}>
+      {openAiHelpModal && (
+        <Modal onClose={() => setOpenAiHelpModal(false)}>
+          <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
+        </Modal>
+      )}
       {label && (
         <h4 className="text-textPrimary text-base font-medium lg:text-lg">
           {label}:{required ? '*' : ''}
         </h4>
+      )}
+      {ai_formatting && isDisplayText && (
+        <div className="flex h-full w-full flex-col gap-4 bg-amber-100 p-4">
+          <h3 className="text-textPrimary text-lg font-semibold lg:text-lg">Instruction</h3>
+          <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
+        </div>
       )}
       <input
         type={'checkbox'}
@@ -290,12 +348,25 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
         className="text-primary accent-primary focus:ring-primary border-frameColor h-4 w-4 rounded"
         onChange={singleCheckBoxHandler}
       />
+      {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
     </div>
   );
 };
 
 const RangeInputType = ({ field, className, form, setForm }) => {
-  const { label, name, required, minValue = 0, maxValue = 100 } = field;
+  const {
+    label,
+    name,
+    required,
+    minValue = 0,
+    maxValue = 100,
+    aiHelp,
+    aiPrompt,
+    aiResponse,
+    isDisplayText,
+    ai_formatting,
+  } = field;
+  const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
 
   const onRangeChange = e => {
     const targetVAlue = String(e.target.value);
@@ -304,10 +375,21 @@ const RangeInputType = ({ field, className, form, setForm }) => {
   };
   return (
     <div className={`flex w-full flex-col items-start ${className}`}>
+      {openAiHelpModal && (
+        <Modal onClose={() => setOpenAiHelpModal(false)}>
+          <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
+        </Modal>
+      )}
       {label && (
         <h4 className="text-textPrimary text-base font-medium lg:text-lg">
           {label}:{required ? '*' : ''}
         </h4>
+      )}
+      {ai_formatting && isDisplayText && (
+        <div className="flex h-full w-full flex-col gap-4 bg-amber-100 p-4">
+          <h3 className="text-textPrimary text-lg font-semibold lg:text-lg">Instruction</h3>
+          <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
+        </div>
       )}
       <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
         <div className="mb-2 w-full text-center text-sm font-semibold text-gray-700">{Number(form[name]) || 0}</div>
@@ -318,12 +400,15 @@ const RangeInputType = ({ field, className, form, setForm }) => {
           defaultValue={0}
           onChange={onRangeChange}
         />
-        <input
-          type="number"
-          value={Number(form[name]) || 0}
-          className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
-          onChange={onRangeChange}
-        />
+        <div className="flex w-full gap-2">
+          <input
+            type="number"
+            value={Number(form[name]) || 0}
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
+            onChange={onRangeChange}
+          />
+          {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
+        </div>
       </div>
     </div>
   );
@@ -344,8 +429,14 @@ const OtherInputType = ({ field, className, form, setForm }) => {
     ai_formatting,
   } = field;
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
+  const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   return (
     <>
+      {openAiHelpModal && (
+        <Modal onClose={() => setOpenAiHelpModal(false)}>
+          <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
+        </Modal>
+      )}
       <div className="flex w-full flex-col items-start gap-4">
         <article className="flex w-full flex-col items-start gap-2">
           {label && (
@@ -377,11 +468,54 @@ const OtherInputType = ({ field, className, form, setForm }) => {
                 </span>
               )}
             </div>
-            {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={aiPrompt} />}
+            {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
           </section>
         </article>
       </div>
     </>
+  );
+};
+
+const AiHelpModal = ({ aiPrompt, aiResponse }) => {
+  const [updateAiPrompt, setUpdateAiPrompt] = useState(aiPrompt || '');
+  const [updatedAiResponse, setUpdatedAiResponse] = useState(aiResponse || '');
+  const [formateTextInMarkDown, { isLoading }] = useFormateTextInMarkDownMutation();
+
+  const getResponseFromAi = async () => {
+    if (!updateAiPrompt) return toast.error('Please enter a prompt');
+
+    try {
+      const res = await formateTextInMarkDown({
+        text: aiPrompt,
+      }).unwrap();
+      if (res.success) {
+        let html = DOMPurify.sanitize(res.data);
+        setUpdatedAiResponse(html);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.data?.message || 'Failed to format text');
+    }
+  };
+
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <h2 className="text-textPrimary text-lg font-semibold">AI Prompt</h2>
+        <input
+          placeholder={'Enter Ai Prompt'}
+          type={'text'}
+          value={updateAiPrompt}
+          onChange={e => setUpdateAiPrompt(e.target.value)}
+          className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
+        />
+        <Button label="Get Response" className="text-nowrap" onClick={getResponseFromAi} loading={isLoading} />
+      </div>
+      <div className="flex flex-col gap-2 bg-amber-100 p-4">
+        <h2 className="text-textPrimary text-lg font-semibold">AI Response</h2>
+        <div className="" dangerouslySetInnerHTML={{ __html: updatedAiResponse ?? '' }} />
+      </div>
+    </div>
   );
 };
 
