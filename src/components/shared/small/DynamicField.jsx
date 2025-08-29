@@ -176,7 +176,6 @@ const DynamicField = ({ cn, field, className = '', form, placeholder, value, set
     </>
   );
 };
-
 export default DynamicField;
 
 const SelectInputType = ({ field, className, form, setForm }) => {
