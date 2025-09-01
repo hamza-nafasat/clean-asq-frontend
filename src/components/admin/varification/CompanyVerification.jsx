@@ -37,7 +37,7 @@ function CompanyVerification({ formId }) {
     if (!form?.name || !form?.url) return toast.error('Please fill all fields');
     try {
       const companyVerifyPromise = verifyCompany({ name: form?.name, url: form?.url }).unwrap();
-      const lookupCompanyPromise = lookupCompany({ name: form?.name, url: form?.url }).unwrap();
+      const lookupCompanyPromise = lookupCompany({ name: form?.name, url: form?.url, formId }).unwrap();
       const [companyVerifyRes, lookupCompanyRes] = await Promise.all([companyVerifyPromise, lookupCompanyPromise]);
       if (companyVerifyRes?.success && lookupCompanyRes?.success) {
         setApisRes({ companyLookup: lookupCompanyRes?.data, companyVerify: companyVerifyRes?.data });
