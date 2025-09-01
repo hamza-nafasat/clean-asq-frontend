@@ -1,7 +1,9 @@
 import DropdownCheckbox from '@/components/shared/DropdownCheckbox';
 import Button from '@/components/shared/small/Button';
 import TextField from '@/components/shared/small/TextField';
+import { useUpdateFormStrategyMutation } from '@/redux/apis/formApis';
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 const renderFormField = (field, value, onChange, type = 'text', options = null, error = null) => {
   const labelText = field
@@ -73,46 +75,16 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
   );
 };
 
-// function EditStrategies({ setIsModalOpen, selectedRow, setEditModalData, forms = [], formKeys = [] }) {
-//   const [form, setForm] = useState({
-//     name: '',
-//     form: '',
-//     formKey: '',
-//   });
+function EditStrategies({ selectedRow, setEditModalData, forms = [], formKeys = [] }) {
+  const [form, setForm] = useState({ name: '', form: '', searchStrategies: [] });
+  const [updateFormStrategy, { isLoading }] = useUpdateFormStrategyMutation();
 
-//   const handleChange = (field, value) => {
-//     setForm(prev => ({ ...prev, [field]: value }));
-//   };
-//   const handleSubmit = async e => {
-//     e.preventDefault(); // prevent page refresh
-//     console.log('Form values:', form);
-//   };
-//   return (
-//     <form onSubmit={handleSubmit} className="space-y-4">
-//       {renderFormField('name', form.name, handleChange, 'text')}
-//       {renderFormField('form', form.form, handleChange, 'select', forms)}
-//       {renderFormField('strategies Key', form.formKey, handleChange, 'multi-select', formKeys)}
-//       <div className="flex w-full justify-end">
-//         <Button type="submit" label={'Save'} />
-//       </div>
-//     </form>
-//   );
-// }
-function EditStrategies({ setIsModalOpen, selectedRow, setEditModalData, forms = [], formKeys = [] }) {
-  const [form, setForm] = useState({
-    name: '',
-    form: '',
-    formKey: [],
-  });
-  console.log('selectedRow', selectedRow);
-
-  // ✅ Load values into form when editing
   useEffect(() => {
     if (selectedRow) {
       setForm({
         name: selectedRow.name || '',
-        form: selectedRow.form || '',
-        formKey: selectedRow.strategiesKey || [], // must match your DB field
+        form: selectedRow.form?._id || '',
+        searchStrategies: selectedRow?.searchStrategies?.map(s => s?._id) || [],
       });
     }
   }, [selectedRow]);
@@ -123,20 +95,32 @@ function EditStrategies({ setIsModalOpen, selectedRow, setEditModalData, forms =
 
   const handleSubmit = async e => {
     e.preventDefault();
-    console.log('Updated form:', form);
+    try {
+      const res = await updateFormStrategy({ FormStrategyId: selectedRow._id, data: form }).unwrap();
+      if (res?.success) {
+        toast.success(res.message);
+        setEditModalData(false);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.data?.message || 'Failed to update form strategy');
+    }
 
     // pass updated data back to parent
-    setEditModalData(form);
-    setIsModalOpen(false);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {renderFormField('name', form.name, handleChange, 'text')}
       {renderFormField('form', form.form, handleChange, 'select', forms)}
-      {renderFormField('Strategie-Key', form.formKey, handleChange, 'multi-select', formKeys)}
+      {renderFormField('searchStrategies', form.searchStrategies, handleChange, 'multi-select', formKeys)}
       <div className="flex w-full justify-end">
-        <Button type="submit" label="Save" />
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className={isLoading ? 'cursor-not-allowed opacity-50' : ''}
+          label="Save"
+        />
       </div>
     </form>
   );

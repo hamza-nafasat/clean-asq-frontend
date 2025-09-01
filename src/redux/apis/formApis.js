@@ -6,7 +6,7 @@ const formApis = createApi({
   reducerPath: 'formApi',
   baseQuery: fetchBaseQuery({ baseUrl: `${getEnv('SERVER_URL')}/api/form`, credentials: 'include' }),
 
-  tagTypes: ['Form', 'Strategy', 'prompts'],
+  tagTypes: ['Form', 'Strategy', 'prompts', 'FormStrategy'],
   endpoints: builder => ({
     // create new form
     // ---------------
@@ -192,6 +192,48 @@ const formApis = createApi({
       }),
       providesTags: [{ type: 'Prompt', id: 'LIST' }],
     }),
+    //================================
+    // form strategies apis
+    //================================
+
+    // create form strategy
+    // ---------------
+    createFormStrategy: builder.mutation({
+      query: data => ({
+        url: '/form-strategy/create',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
+    }),
+    // get all form strategies
+    // ---------------
+    getAllFormStrategies: builder.query({
+      query: () => ({
+        url: '/form-strategy/all',
+        method: 'GET',
+      }),
+      providesTags: [{ type: 'Strategy', id: 'LIST' }],
+    }),
+    // update form strategy
+    // ---------------
+    updateFormStrategy: builder.mutation({
+      query: ({ FormStrategyId, data }) => ({
+        url: `/form-strategy/single/${FormStrategyId}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
+    }),
+    // delete form strategy
+    // ---------------
+    deleteFormStrategy: builder.mutation({
+      query: ({ FormStrategyId }) => ({
+        url: `/form-strategy/single/${FormStrategyId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
+    }),
 
     //================================
     // company verification and lookup
@@ -237,6 +279,10 @@ export const {
   useGetAllSearchStrategiesQuery,
   useUpdateSearchStrategyMutation,
   useDeleteSearchStrategyMutation,
+  useCreateFormStrategyMutation,
+  useGetAllFormStrategiesQuery,
+  useUpdateFormStrategyMutation,
+  useDeleteFormStrategyMutation,
   useCreatePromptMutation,
   useUpdatePromptMutation,
   useGetAllPromptsQuery,

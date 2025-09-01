@@ -1,7 +1,9 @@
 import DropdownCheckbox from '@/components/shared/DropdownCheckbox';
 import Button from '@/components/shared/small/Button';
 import TextField from '@/components/shared/small/TextField';
+import { useCreateFormStrategyMutation } from '@/redux/apis/formApis';
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 const renderFormField = (field, value, onChange, type = 'text', options = null, error = null) => {
   const labelText = field
     .split(/(?=[A-Z])/) // split camelCase into words
@@ -74,28 +76,40 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
   );
 };
 
-function AddStrategies({ setIsModalOpen, selectedRow, setEditModalData, forms = [], formKeys = [] }) {
-  const [form, setForm] = useState({
-    name: '',
-    form: '',
-    formKey: '',
-  });
+function AddStrategies({ setIsModalOpen, forms = [], formKeys = [] }) {
+  const [form, setForm] = useState({ name: '', form: '', searchStrategies: [] });
+  const [createFormStrategy, { isLoading }] = useCreateFormStrategyMutation();
 
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
   };
   const handleSubmit = async e => {
-    e.preventDefault(); // prevent page refresh
-    console.log('Form values:', form);
+    e.preventDefault();
+    if (!form.name || !form.form || !form.searchStrategies.length) return toast.error('Please fill all the fields');
+    try {
+      const res = await createFormStrategy(form).unwrap();
+      if (res.success) {
+        toast.success(res.message);
+        setIsModalOpen(false);
+        setForm({ name: '', form: '', searchStrategies: [] });
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.data?.message || 'Failed to create form strategy');
+    }
   };
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {renderFormField('name', form.name, handleChange, 'text')}
       {renderFormField('form', form.form, handleChange, 'select', forms)}
-      {/* {renderFormField('strategies Key', form.formKey, handleChange, 'select', formKeys)} */}
-      {renderFormField('strategies Key', form.formKey, handleChange, 'multi-select', formKeys)}
+      {renderFormField('searchStrategies', form.searchStrategies, handleChange, 'multi-select', formKeys)}
       <div className="flex w-full justify-end">
-        <Button type="submit" label={'Save'} />
+        <Button
+          type="submit"
+          label={'Save'}
+          disabled={isLoading}
+          className={isLoading ? 'cursor-not-allowed opacity-50' : ''}
+        />
       </div>
     </form>
   );
