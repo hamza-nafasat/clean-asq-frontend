@@ -46,8 +46,8 @@ const AdminAside = () => {
     //   icon: <HiOutlineLightBulb />,
     // },
     {
-      title: 'Strategies',
-      link: '/strategies',
+      title: 'Strategies Key',
+      link: '/strategies-key',
       icon: <HiOutlineLightBulb />,
     },
     {
@@ -58,6 +58,11 @@ const AdminAside = () => {
     {
       title: 'Verification',
       link: '/verification',
+      icon: <CheckCircle />,
+    },
+    {
+      title: 'Strategies',
+      link: '/strategies',
       icon: <CheckCircle />,
     },
   ];

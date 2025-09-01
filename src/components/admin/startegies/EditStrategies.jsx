@@ -1,7 +1,8 @@
 import DropdownCheckbox from '@/components/shared/DropdownCheckbox';
 import Button from '@/components/shared/small/Button';
 import TextField from '@/components/shared/small/TextField';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+
 const renderFormField = (field, value, onChange, type = 'text', options = null, error = null) => {
   const labelText = field
     .split(/(?=[A-Z])/) // split camelCase into words
@@ -42,8 +43,6 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
   }
 
   if (type === 'multi-select' && options) {
-    console.log('options', options);
-
     return (
       <div className="mb-4">
         <label className="mb-1 block text-sm font-medium">{labelText}</label>
@@ -74,31 +73,73 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
   );
 };
 
-function AddStrategies({ setIsModalOpen, selectedRow, setEditModalData, forms = [], formKeys = [] }) {
+// function EditStrategies({ setIsModalOpen, selectedRow, setEditModalData, forms = [], formKeys = [] }) {
+//   const [form, setForm] = useState({
+//     name: '',
+//     form: '',
+//     formKey: '',
+//   });
+
+//   const handleChange = (field, value) => {
+//     setForm(prev => ({ ...prev, [field]: value }));
+//   };
+//   const handleSubmit = async e => {
+//     e.preventDefault(); // prevent page refresh
+//     console.log('Form values:', form);
+//   };
+//   return (
+//     <form onSubmit={handleSubmit} className="space-y-4">
+//       {renderFormField('name', form.name, handleChange, 'text')}
+//       {renderFormField('form', form.form, handleChange, 'select', forms)}
+//       {renderFormField('strategies Key', form.formKey, handleChange, 'multi-select', formKeys)}
+//       <div className="flex w-full justify-end">
+//         <Button type="submit" label={'Save'} />
+//       </div>
+//     </form>
+//   );
+// }
+function EditStrategies({ setIsModalOpen, selectedRow, setEditModalData, forms = [], formKeys = [] }) {
   const [form, setForm] = useState({
     name: '',
     form: '',
-    formKey: '',
+    formKey: [],
   });
+  console.log('selectedRow', selectedRow);
+
+  // ✅ Load values into form when editing
+  useEffect(() => {
+    if (selectedRow) {
+      setForm({
+        name: selectedRow.name || '',
+        form: selectedRow.form || '',
+        formKey: selectedRow.strategiesKey || [], // must match your DB field
+      });
+    }
+  }, [selectedRow]);
 
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
   };
+
   const handleSubmit = async e => {
-    e.preventDefault(); // prevent page refresh
-    console.log('Form values:', form);
+    e.preventDefault();
+    console.log('Updated form:', form);
+
+    // pass updated data back to parent
+    setEditModalData(form);
+    setIsModalOpen(false);
   };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {renderFormField('name', form.name, handleChange, 'text')}
       {renderFormField('form', form.form, handleChange, 'select', forms)}
-      {/* {renderFormField('strategies Key', form.formKey, handleChange, 'select', formKeys)} */}
-      {renderFormField('strategies Key', form.formKey, handleChange, 'multi-select', formKeys)}
+      {renderFormField('Strategie-Key', form.formKey, handleChange, 'multi-select', formKeys)}
       <div className="flex w-full justify-end">
-        <Button type="submit" label={'Save'} />
+        <Button type="submit" label="Save" />
       </div>
     </form>
   );
 }
 
-export default AddStrategies;
+export default EditStrategies;

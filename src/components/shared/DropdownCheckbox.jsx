@@ -16,7 +16,9 @@ const DropdownCheckbox = memo(
     selected = [],
   }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [selectedValues, setSelectedValues] = useState(selected);
+    const [selectedValues, setSelectedValues] = useState(
+      Array.isArray(selected) ? selected : selected ? [selected] : []
+    );
     const [customValue, setCustomValue] = useState('');
     const [showCustomInput, setShowCustomInput] = useState(false);
     const dropdownRef = useRef(null);
@@ -35,7 +37,7 @@ const DropdownCheckbox = memo(
             .replace(/\s+/g, '_')
             .replace(/[^a-z0-9_]/g, '')
         )
-        .filter(Boolean);
+        .filter(Boolean); // remove empty
 
     const toggleValue = useCallback(
       option => {
@@ -52,7 +54,6 @@ const DropdownCheckbox = memo(
 
         // Case: Others option
         if (option.value === 'others') {
-          // If "None" was previously selected, remove it
           setSelectedValues(prev => prev.filter(v => v !== 'none'));
 
           if (!showCustomInput) {
@@ -61,7 +62,7 @@ const DropdownCheckbox = memo(
           } else {
             const customValues = normalizeAndSplitValues(customValue);
             setSelectedValues(prev => {
-              const updated = prev.filter(v => !customValues.includes(v));
+              const updated = prev.filter(v => !customValues.includes(v)).filter(Boolean);
               onSelect?.(updated);
               return updated;
             });
@@ -77,9 +78,9 @@ const DropdownCheckbox = memo(
           if (prev.includes(option.value)) {
             updated = prev.filter(v => v !== option.value);
           } else {
-            // remove "none" if user selects something else
             updated = [...prev.filter(v => v !== 'none'), option.value];
           }
+          updated = updated.filter(Boolean); // remove empty
           onSelect?.(updated);
           return updated;
         });
@@ -95,7 +96,7 @@ const DropdownCheckbox = memo(
 
         setSelectedValues(prev => {
           const filtered = prev.filter(v => !normalizeAndSplitValues(customValue).includes(v));
-          const updated = [...filtered, ...customValues];
+          const updated = [...filtered, ...customValues].filter(Boolean);
           onSelect?.(updated);
           return updated;
         });
@@ -113,7 +114,6 @@ const DropdownCheckbox = memo(
       if (!readOnly) setIsOpen(open => !open);
     }, [readOnly]);
 
-    // ⬇️ Fix: check both dropdownRef and portalRef
     const handleClickOutside = useCallback(e => {
       if (
         dropdownRef.current &&
@@ -137,14 +137,24 @@ const DropdownCheckbox = memo(
         document.removeEventListener('keydown', handleKeyDown);
       };
     }, [handleClickOutside, handleKeyDown]);
+
+    // Normalize incoming selected prop
     useEffect(() => {
-      setSelectedValues(selected);
+      if (Array.isArray(selected)) {
+        setSelectedValues(selected.filter(Boolean));
+      } else if (typeof selected === 'string') {
+        setSelectedValues([selected].filter(Boolean));
+      } else {
+        setSelectedValues([]);
+      }
     }, [selected]);
+
     const displayText = selectedValues.length
       ? options
           .filter(opt => selectedValues.includes(opt.value))
           .map(opt => opt.label ?? opt.option)
           .concat(selectedValues.filter(v => !options.some(opt => opt.value === v)))
+          .filter(Boolean)
           .join(', ')
       : defaultText;
 
@@ -152,8 +162,7 @@ const DropdownCheckbox = memo(
       shadow && 'shadow-input',
       readOnly ? 'cursor-not-allowed' : 'border-[#E0E0E9]',
       mainClassName,
-      // 'flex py-1 w-full items-center justify-between rounded-xl border border-[#66666659] px-1 text-sm text-[#383838E5] lg:text-base',
-      `flex items-center justify-between border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base `,
+      `flex items-center justify-between border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`,
     ]
       .filter(Boolean)
       .join(' ');
