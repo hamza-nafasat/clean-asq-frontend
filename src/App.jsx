@@ -66,7 +66,6 @@ function App() {
         if (res?.data?.success) {
           dispatch(userExist(res.data.data));
           console.log(res?.data?.data?.branding);
-
           if (res?.data?.data?.branding?.colors) {
             const userBranding = res?.data?.data?.branding;
             if (userBranding?.colors) {

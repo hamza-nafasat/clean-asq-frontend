@@ -108,7 +108,7 @@ export default function SingleApplication() {
       e.preventDefault();
       const action = await dispatch(updateFormState({ data: idMissionVerifiedData, name: 'IdMission' }));
       unwrapResult(action);
-      navigate(`/verification?formId=${formId}`);
+      navigate(`/singleform/stepper/${formId}`);
     },
     [dispatch, formId, idMissionVerifiedData, navigate]
   );
@@ -154,12 +154,13 @@ export default function SingleApplication() {
           })
           .catch(() => dispatch(userNotExist()));
         toast.success(res.message);
+        return navigate('/verification?formId=' + formId);
       }
     } catch (error) {
       console.log('Error sending OTP:', error);
       toast.error(error?.data?.message || 'Failed to send OTP');
     }
-  }, [dispatch, email, getUserProfile, otp, verifyEmail]);
+  }, [dispatch, email, formId, getUserProfile, navigate, otp, verifyEmail]);
 
   const getQrLinkOnEmailVerified = useCallback(() => {
     if (!qrCode && !webLink && emailVerified) {
@@ -405,6 +406,7 @@ export default function SingleApplication() {
                     label={'Open LInk in New Tab'}
                     onClick={() => {
                       window.open(webLink, '_blank');
+                      // navigate(`/singleform/stepper/${formId}`);
                     }}
                     rightIcon={MdVerifiedUser}
                   />

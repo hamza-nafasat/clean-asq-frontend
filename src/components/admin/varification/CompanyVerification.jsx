@@ -23,6 +23,7 @@ const columns = [
 function CompanyVerification({ formId }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
   const [totalSearchStreatgies, setTotalSearchStreatgies] = useState(0);
   const [successfullyVerifiedStreatgies, setSuccessfullyVerifiedStreatgies] = useState(0);
   const [lookupDataForTable, setLookupDataForTable] = useState([]);
@@ -32,6 +33,63 @@ function CompanyVerification({ formId }) {
   const [lookupCompany, { isLoading: lookupCompanyLoading }] = useCompanyLookupMutation();
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getVerificationTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
+
+  const handleSubmit = async () => {
+    if (!form?.name || !form?.url) return toast.error('Please fill all fields');
+    try {
+      setLoading(true);
+      const companyVerifyPromise = verifyCompany({ name: form?.name, url: form?.url }).unwrap();
+      const companyVerifyRes = await companyVerifyPromise;
+      if (companyVerifyRes?.success) {
+        setApisRes({ companyVerify: companyVerifyRes?.data });
+        setApisRes(prev => ({ ...prev, companyVerify: companyVerifyRes?.data }));
+        toast.success('Company verified successfully');
+        setLoading(false);
+        companyLookup();
+      }
+    } catch (error) {
+      console.log('Error verifying company:', error);
+      toast.error(error?.data?.message || 'Failed to verify company');
+    } finally {
+      setLoading(false);
+      navigate(`/application-form/${formId}`);
+    }
+  };
+
+  const companyLookup = async () => {
+    if (!form?.name || !form?.url) return toast.error('Please fill all fields');
+    try {
+      const lookupCompanyPromise = lookupCompany({ name: form?.name, url: form?.url, formId }).unwrap();
+      const lookupCompanyRes = await lookupCompanyPromise;
+      if (lookupCompanyRes?.success) {
+        setApisRes(prev => ({ ...prev, companyLookup: lookupCompanyRes?.data }));
+        const lookupDataObj = lookupCompanyRes?.data?.lookupData;
+        const totalStrEntries = Object.entries(lookupDataObj);
+        const totalStr = totalStrEntries.filter(([key]) => key.includes('source'));
+        const verifiedStr = totalStrEntries.filter(([key]) => !key.includes('source'));
+
+        setTotalSearchStreatgies(totalStr?.length);
+        setSuccessfullyVerifiedStreatgies(verifiedStr?.length);
+        let totalLookupData = totalStr?.map(([key, value]) => {
+          let nameObj = verifiedStr?.find(([k]) => key?.includes(k));
+          if (value == 'Not found') return {};
+          return {
+            source: String(value).split(',')[0],
+            name: nameObj?.[0],
+            result: nameObj?.[1],
+          };
+        });
+        totalLookupData = totalLookupData.filter(item => item.name !== undefined);
+        setLookupDataForTable(totalLookupData);
+        dispatch(addLookupData(totalLookupData));
+        dispatch(updateFormState({ data: totalLookupData, name: 'company_lookup_data' }));
+        toast.success('Company Lookup successfully');
+      }
+    } catch (error) {
+      console.log('Error lookup company:', error);
+      toast.error(error?.data?.message || 'Failed to lookup company');
+    }
+  };
 
   const verifyCompanyAndLookup = async () => {
     if (!form?.name || !form?.url) return toast.error('Please fill all fields');
@@ -59,6 +117,8 @@ function CompanyVerification({ formId }) {
         });
         totalLookupData = totalLookupData.filter(item => item.name !== undefined);
         setLookupDataForTable(totalLookupData);
+        dispatch(addLookupData(totalLookupData));
+        dispatch(updateFormState({ data: totalLookupData, name: 'company_lookup_data' }));
         toast.success('Company verified successfully');
       }
     } catch (error) {
@@ -122,9 +182,9 @@ function CompanyVerification({ formId }) {
           <div className="flex items-center justify-end">
             <Button
               label="Verify Company"
-              onClick={verifyCompanyAndLookup}
-              disabled={verifyCompanyLoading || lookupCompanyLoading}
-              className={` ${(verifyCompanyLoading || lookupCompanyLoading) && 'cursor-not-allowed opacity-20'}`}
+              onClick={handleSubmit}
+              disabled={loading}
+              className={` ${loading && 'pointer-events-auto cursor-not-allowed opacity-20'}`}
             />
           </div>
         </div>

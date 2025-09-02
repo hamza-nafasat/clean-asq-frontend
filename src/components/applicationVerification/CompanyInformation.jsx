@@ -39,6 +39,8 @@ function CompanyInformation({
   const [naicsApiData, setNaicsApiData] = useState({ bestMatch: {}, otherMatches: [] });
   const [findNaicsToMccDetails, { isLoading }] = useFindNaicAndMccMutation();
 
+  console.log('lookup data', lookupData);
+
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
 
   const findNaicsHandler = async () => {
