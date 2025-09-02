@@ -405,8 +405,8 @@ export default function SingleApplication() {
                     className="max-w-[400px]"
                     label={'Open LInk in New Tab'}
                     onClick={() => {
-                      window.open(webLink, '_blank');
-                      // navigate(`/singleform/stepper/${formId}`);
+                      // window.open(webLink, '_blank');
+                      navigate(`/singleform/stepper/${formId}`);
                     }}
                     rightIcon={MdVerifiedUser}
                   />
