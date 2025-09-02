@@ -91,42 +91,6 @@ function CompanyVerification({ formId }) {
     }
   };
 
-  const verifyCompanyAndLookup = async () => {
-    if (!form?.name || !form?.url) return toast.error('Please fill all fields');
-    try {
-      const companyVerifyPromise = verifyCompany({ name: form?.name, url: form?.url }).unwrap();
-      const lookupCompanyPromise = lookupCompany({ name: form?.name, url: form?.url, formId }).unwrap();
-      const [companyVerifyRes, lookupCompanyRes] = await Promise.all([companyVerifyPromise, lookupCompanyPromise]);
-      if (companyVerifyRes?.success && lookupCompanyRes?.success) {
-        setApisRes({ companyLookup: lookupCompanyRes?.data, companyVerify: companyVerifyRes?.data });
-        const lookupDataObj = lookupCompanyRes?.data?.lookupData;
-        const totalStrEntries = Object.entries(lookupDataObj);
-        const totalStr = totalStrEntries.filter(([key]) => key.includes('source'));
-        const verifiedStr = totalStrEntries.filter(([key]) => !key.includes('source'));
-
-        setTotalSearchStreatgies(totalStr?.length);
-        setSuccessfullyVerifiedStreatgies(verifiedStr?.length);
-        let totalLookupData = totalStr?.map(([key, value]) => {
-          let nameObj = verifiedStr?.find(([k]) => key?.includes(k));
-          if (value == 'Not found') return {};
-          return {
-            source: String(value).split(',')[0],
-            name: nameObj?.[0],
-            result: nameObj?.[1],
-          };
-        });
-        totalLookupData = totalLookupData.filter(item => item.name !== undefined);
-        setLookupDataForTable(totalLookupData);
-        dispatch(addLookupData(totalLookupData));
-        dispatch(updateFormState({ data: totalLookupData, name: 'company_lookup_data' }));
-        toast.success('Company verified successfully');
-      }
-    } catch (error) {
-      console.log('Error verifying company:', error);
-      toast.error(error?.data?.message || 'Failed to verify company');
-    }
-  };
-
   const handleNext = () => {
     console.log(lookupDataForTable);
     dispatch(addLookupData(lookupDataForTable));
@@ -226,3 +190,39 @@ function CompanyVerification({ formId }) {
 }
 
 export default CompanyVerification;
+
+// const verifyCompanyAndLookup = async () => {
+//   if (!form?.name || !form?.url) return toast.error('Please fill all fields');
+//   try {
+//     const companyVerifyPromise = verifyCompany({ name: form?.name, url: form?.url }).unwrap();
+//     const lookupCompanyPromise = lookupCompany({ name: form?.name, url: form?.url, formId }).unwrap();
+//     const [companyVerifyRes, lookupCompanyRes] = await Promise.all([companyVerifyPromise, lookupCompanyPromise]);
+//     if (companyVerifyRes?.success && lookupCompanyRes?.success) {
+//       setApisRes({ companyLookup: lookupCompanyRes?.data, companyVerify: companyVerifyRes?.data });
+//       const lookupDataObj = lookupCompanyRes?.data?.lookupData;
+//       const totalStrEntries = Object.entries(lookupDataObj);
+//       const totalStr = totalStrEntries.filter(([key]) => key.includes('source'));
+//       const verifiedStr = totalStrEntries.filter(([key]) => !key.includes('source'));
+
+//       setTotalSearchStreatgies(totalStr?.length);
+//       setSuccessfullyVerifiedStreatgies(verifiedStr?.length);
+//       let totalLookupData = totalStr?.map(([key, value]) => {
+//         let nameObj = verifiedStr?.find(([k]) => key?.includes(k));
+//         if (value == 'Not found') return {};
+//         return {
+//           source: String(value).split(',')[0],
+//           name: nameObj?.[0],
+//           result: nameObj?.[1],
+//         };
+//       });
+//       totalLookupData = totalLookupData.filter(item => item.name !== undefined);
+//       setLookupDataForTable(totalLookupData);
+//       dispatch(addLookupData(totalLookupData));
+//       dispatch(updateFormState({ data: totalLookupData, name: 'company_lookup_data' }));
+//       toast.success('Company verified successfully');
+//     }
+//   } catch (error) {
+//     console.log('Error verifying company:', error);
+//     toast.error(error?.data?.message || 'Failed to verify company');
+//   }
+// };
