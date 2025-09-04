@@ -25,16 +25,14 @@ function ProcessingInfo({
   formRefetch,
   _id,
   title,
+  saveInProgress,
 }) {
   const [form, setForm] = useState({});
+  const [loadingNext, setLoadingNext] = useState(false);
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
   console.log('bank information', form);
-
-  const nextHandler = ({ data, name }) => {
-    handleNext({ data, name });
-  };
 
   useEffect(() => {
     if (fields && fields.length > 0) {
@@ -70,7 +68,10 @@ function ProcessingInfo({
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
-        <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+        <div className="flex gap-2">
+          <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
+          <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+        </div>
       </div>
       <h5 className="text-textPrimary text-base">Provide average transactions</h5>
       {fields?.map((field, index) => {
@@ -134,17 +135,17 @@ function ProcessingInfo({
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
             <Button
-              className={`${!isAllRequiredFieldsFilled && 'pointer-events-none cursor-not-allowed opacity-50'}`}
-              disabled={!isAllRequiredFieldsFilled}
-              label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
-              onClick={() => nextHandler({ data: form, name: title })}
+              className={`${(!isAllRequiredFieldsFilled || loadingNext) && 'pointer-events-none cursor-not-allowed opacity-20'}`}
+              disabled={!isAllRequiredFieldsFilled || loadingNext}
+              label={isAllRequiredFieldsFilled || loadingNext ? 'Next' : 'Some Required Fields are Missing'}
+              onClick={() => handleNext({ data: form, name: title, setLoadingNext })}
             />
           ) : (
             <Button
-              disabled={formLoading}
-              className={`${formLoading && 'pinter-events-none cursor-not-allowed opacity-50'}`}
+              disabled={formLoading || loadingNext}
+              className={`${formLoading || loadingNext ? 'pinter-events-none cursor-not-allowed opacity-20' : ''}`}
               label={'Submit'}
-              onClick={() => handleSubmit({ data: form, name: title })}
+              onClick={() => handleSubmit({ data: form, name: title, setLoadingNext })}
             />
           )}
         </div>

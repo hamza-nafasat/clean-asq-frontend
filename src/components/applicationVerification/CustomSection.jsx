@@ -20,13 +20,14 @@ function CustomSection({
   handleNext,
   handlePrevious,
   handleSubmit,
-  isLoading,
   formRefetch,
   _id,
   title,
+  saveInProgress,
 }) {
   const [form, setForm] = useState({});
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
+  const [loadingNext, setLoadingNext] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
   console.log('bank information', form);
@@ -65,7 +66,10 @@ function CustomSection({
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
-        <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+        <div className="flex gap-2">
+          <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
+          <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+        </div>
       </div>
       <div className="mt-6 flex flex-col gap-4">
         {fields?.map((field, index) => {
@@ -129,13 +133,17 @@ function CustomSection({
         <div className="mt-8 flex justify-end gap-5">
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
           {currentStep < totalSteps - 2 ? (
-            <Button label={'Next'} onClick={() => handleNext({ data: form, name: title })} />
+            <Button
+              disabled={loadingNext}
+              label={'Next'}
+              onClick={() => handleNext({ data: form, name: title, setLoadingNext })}
+            />
           ) : (
             <Button
-              disabled={isLoading || !isAllRequiredFieldsFilled}
-              className={`${isLoading || (!isAllRequiredFieldsFilled && 'pinter-events-none cursor-not-allowed opacity-50')}`}
+              disabled={!isAllRequiredFieldsFilled || loadingNext}
+              className={`${!isAllRequiredFieldsFilled || loadingNext ? 'pointer-events-none cursor-not-allowed opacity-20' : 'opacity-100'}`}
               label={!isAllRequiredFieldsFilled ? 'Some required fields are missing' : 'Submit'}
-              onClick={() => handleSubmit({ data: form, name: title })}
+              onClick={() => handleSubmit({ data: form, name: title, setLoadingNext })}
             />
           )}
         </div>

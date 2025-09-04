@@ -16,9 +16,11 @@ function Documents({
   fields,
   reduxData,
   title,
+  // saveInProgress,
 }) {
   const dispatch = useDispatch();
   const [fileFieldName, setFileFieldName] = useState('');
+  const [loadingNext, setLoadingNext] = useState(false);
   const [form, setForm] = useState({});
 
   const handleFileSelect = file => {
@@ -28,12 +30,12 @@ function Documents({
   const updateFileDataHandler = () => {
     if (!form?.[fileFieldName]) return toast.error('Please select a file');
     dispatch(updateFileData({ name, file: form[fileFieldName] }));
-    handleNext({ data: { [fileFieldName]: form[fileFieldName] }, name: title });
+    handleNext({ data: { [fileFieldName]: form[fileFieldName] }, name: title, setLoadingNext });
   };
   const submitFileDataHandler = () => {
     if (!form?.[fileFieldName]) return toast.error('Please select a file');
     dispatch(updateFileData({ name, file: form[fileFieldName] }));
-    handleSubmit({ data: { [fileFieldName]: form[fileFieldName] }, name: title });
+    handleSubmit({ data: { [fileFieldName]: form[fileFieldName] }, name: title, setLoadingNext });
   };
 
   useEffect(() => {
@@ -54,6 +56,9 @@ function Documents({
   return (
     <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
       <h1 className="text-textPrimary text-base">{name}</h1>
+      {/* <div className="flex gap-2">
+        <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
+      </div> */}
       <div className="mt-6 w-full">
         {fields?.map((field, i) => {
           if (field.type === 'file') {
@@ -70,11 +75,16 @@ function Documents({
         <div className="mt-8 flex justify-end gap-5">
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
-            <Button label={'Next'} onClick={updateFileDataHandler} />
+            <Button
+              disabled={loadingNext}
+              className={`${loadingNext && 'pinter-events-none cursor-not-allowed opacity-20'}`}
+              label={'Next'}
+              onClick={updateFileDataHandler}
+            />
           ) : (
             <Button
-              disabled={formLoading}
-              className={`${formLoading && 'pinter-events-none cursor-not-allowed opacity-50'}`}
+              disabled={formLoading || loadingNext}
+              className={`${(formLoading || loadingNext) && 'pinter-events-none cursor-not-allowed opacity-20'}`}
               label={'Submit'}
               onClick={submitFileDataHandler}
             />

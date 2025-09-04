@@ -29,12 +29,17 @@ function CompanyInformation({
   formLoading,
   fields,
   title,
+  saveInProgress,
 }) {
   const { lookupData } = useSelector(state => state?.company);
   const [customizeModal, setCustomizeModal] = useState(false);
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [form, setForm] = useState({});
-  const [naicsToMccDetails, setNaicsToMccDetails] = useState({ NAICS: '', MCC: '' });
+  const [loadingNext, setLoadingNext] = useState(false);
+  const [naicsToMccDetails, setNaicsToMccDetails] = useState({
+    NAICS: reduxData?.naics?.NAICS || '',
+    MCC: reduxData?.naics?.MCC || '',
+  });
   const [showNaicsToMccDetails, setShowNaicsToMccDetails] = useState(true);
   const [naicsApiData, setNaicsApiData] = useState({ bestMatch: {}, otherMatches: [] });
   const [findNaicsToMccDetails, { isLoading }] = useFindNaicAndMccMutation();
@@ -57,8 +62,6 @@ function CompanyInformation({
       toast.error(error?.data?.message || 'Failed to send OTP');
     }
   };
-  // console.log('company info', form);
-  // console.log('isAllRequiredFieldsFilled', isAllRequiredFieldsFilled);
 
   useEffect(() => {
     if (fields && fields.length > 0) {
@@ -102,7 +105,13 @@ function CompanyInformation({
     <div className="mt-14 h-full overflow-auto">
       <div className="mb-10 flex items-center justify-between">
         <p className="text-textPrimary text-2xl font-semibold">{name}</p>
-        <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+        <div className="flex gap-2">
+          <Button
+            onClick={() => saveInProgress({ data: { ...form, naics: naicsToMccDetails }, name: title })}
+            label={'Save in Draft'}
+          />
+          <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+        </div>
       </div>
       {/* NAICS to MCC SECTION  */}
       {naicsApiData?.bestMatch?.naics && showNaicsToMccDetails && (
@@ -195,17 +204,17 @@ function CompanyInformation({
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
             <Button
-              className={`${!isAllRequiredFieldsFilled && 'pointer-events-none cursor-not-allowed opacity-50'}`}
-              disabled={!isAllRequiredFieldsFilled}
+              className={`${(!isAllRequiredFieldsFilled || loadingNext) && 'pointer-events-none cursor-not-allowed opacity-50'}`}
+              disabled={!isAllRequiredFieldsFilled || loadingNext}
               label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
-              onClick={() => handleNext({ data: { ...form, naics: naicsToMccDetails }, name: title })}
+              onClick={() => handleNext({ data: { ...form, naics: naicsToMccDetails }, name: title, setLoadingNext })}
             />
           ) : (
             <Button
-              disabled={formLoading}
-              className={`${formLoading && 'pinter-events-none cursor-not-allowed opacity-50'}`}
+              disabled={formLoading || loadingNext}
+              className={`${(formLoading || loadingNext) && 'pinter-events-none cursor-not-allowed opacity-50'}`}
               label={'Submit'}
-              onClick={() => handleSubmit({ data: { ...form, naics: naicsToMccDetails }, name: title })}
+              onClick={() => handleSubmit({ data: { ...form, naics: naicsToMccDetails }, name: title, setLoadingNext })}
             />
           )}
         </div>

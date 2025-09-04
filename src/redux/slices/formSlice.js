@@ -15,9 +15,12 @@ const formSlice = createSlice({
     updateEmailVerified: (state, action) => {
       state.emailVerified = action.payload;
     },
+    addSavedFormData: (state, action) => {
+      state.formData = action.payload;
+    },
   },
 });
 
-export const { updateFormState, updateFileData, updateEmailVerified } = formSlice.actions;
+export const { updateFormState, updateFileData, updateEmailVerified, addSavedFormData } = formSlice.actions;
 
 export default formSlice;

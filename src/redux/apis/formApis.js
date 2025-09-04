@@ -74,6 +74,25 @@ const formApis = createApi({
         body: data,
       }),
     }),
+    // save form in draft
+    // ---------------
+    saveFormInDraft: builder.mutation({
+      query: data => ({
+        url: '/save-in-draft',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+    }),
+
+    // get saved form
+    // ---------------
+    getSavedForm: builder.mutation({
+      query: ({ formId }) => ({
+        url: `/get-saved/${formId}`,
+        method: 'GET',
+      }),
+    }),
     // update form fields delete and create api
     // ---------------
     updateDeleteCreateFormFields: builder.mutation({
@@ -270,6 +289,8 @@ export const {
   useDeleteSingleFormMutation,
   useSubmitFormMutation,
   useSubmitFormArticleFileMutation,
+  useSaveFormInDraftMutation,
+  useGetSavedFormMutation,
   useUpdateDeleteCreateFormFieldsMutation,
   useFormateTextInMarkDownMutation,
   useGetBeneficialOwnersDataQuery,

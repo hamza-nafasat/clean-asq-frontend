@@ -30,10 +30,12 @@ function CompanyOwners({
   fields,
   blocks,
   title,
+  saveInProgress,
 }) {
   const { lookupData } = useSelector(state => state?.company);
   const [ownersFromLookup, setOwnersFromLookup] = useState([]);
   const [filteredOwners, setFilteredOwners] = useState([]);
+  const [loadingNext, setLoadingNext] = useState(false);
   const [otherOwnersStateName, setOtherOwnersStateName] = useState('');
   const [customizeModal, setCustomizeModal] = useState(false);
   const [formFields, setFormFields] = useState([]);
@@ -261,7 +263,10 @@ function CompanyOwners({
     <div className="h-full overflow-auto">
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
-        <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+        <div className="flex gap-2">
+          <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
+          <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+        </div>
       </div>
       <div className="mt-5">
         <div className="h-full overflow-auto pb-3">
@@ -486,17 +491,17 @@ function CompanyOwners({
           {currentStep > 0 && <Button variant="secondary" label="Previous" onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
             <Button
-              onClick={() => handleNext({ data: form, name: title })}
-              className={`${!isAllRequiredFieldsFilled && 'pointer-events-none cursor-not-allowed opacity-50'}`}
+              onClick={() => handleNext({ data: form, name: title, setLoadingNext })}
+              className={`${(!isAllRequiredFieldsFilled || loadingNext) && 'pointer-events-none cursor-not-allowed opacity-50'}`}
               disabled={!isAllRequiredFieldsFilled}
               label={isAllRequiredFieldsFilled ? 'Next' : submitButtonText}
             />
           ) : (
             <Button
-              disabled={formLoading}
-              className={formLoading ? 'pointer-events-none cursor-not-allowed opacity-50' : ''}
+              disabled={formLoading || loadingNext}
+              className={formLoading || loadingNext ? 'pointer-events-none cursor-not-allowed opacity-50' : ''}
               label="Submit"
-              onClick={() => handleSubmit({ data: form, name: title })}
+              onClick={() => handleSubmit({ data: form, name: title, setLoadingNext })}
             />
           )}
         </div>

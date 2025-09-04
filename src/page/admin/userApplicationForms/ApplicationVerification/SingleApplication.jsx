@@ -1,11 +1,11 @@
-import { useBranding } from '@/hooks/BrandingContext';
 import Button from '@/components/shared/small/Button';
 import CustomLoading from '@/components/shared/small/CustomLoading';
 import { LoadingWithTimer } from '@/components/shared/small/LoadingWithTimer';
 import TextField from '@/components/shared/small/TextField';
+import { useBranding } from '@/hooks/BrandingContext';
 import { socket } from '@/main';
 import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from '@/redux/apis/authApis';
-import { useGetSingleFormQueryQuery } from '@/redux/apis/formApis';
+import { useGetSavedFormMutation, useGetSingleFormQueryQuery } from '@/redux/apis/formApis';
 import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
 import { userExist, userNotExist } from '@/redux/slices/authSlice';
 import { updateEmailVerified, updateFormState } from '@/redux/slices/formSlice';
@@ -41,6 +41,7 @@ export default function SingleApplication() {
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [updateMyProfile] = useUpdateMyProfileMutation();
   const { data: form } = useGetSingleFormQueryQuery({ _id: formId });
+  const [getSavedFormData] = useGetSavedFormMutation();
   ``;
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
     name: '',
@@ -103,6 +104,21 @@ export default function SingleApplication() {
     });
   };
 
+  const redirectAccordingSavedData = useCallback(
+    async formId => {
+      try {
+        const res = await getSavedFormData({ formId: formId }).unwrap();
+        if (res.success && res?.data && res?.data?.savedData?.company_lookup_data) {
+          navigate(`/singleform/stepper/${formId}`);
+        } else {
+          navigate(`/verification?formId=${formId}`);
+        }
+      } catch (error) {
+        navigate(`/verification?formId=${formId}`);
+      }
+    },
+    [getSavedFormData, navigate]
+  );
   const submitIdMissionData = useCallback(
     async e => {
       e.preventDefault();
@@ -154,13 +170,13 @@ export default function SingleApplication() {
           })
           .catch(() => dispatch(userNotExist()));
         toast.success(res.message);
-        return navigate('/verification?formId=' + formId);
+        await redirectAccordingSavedData(formId);
       }
     } catch (error) {
       console.log('Error sending OTP:', error);
       toast.error(error?.data?.message || 'Failed to send OTP');
     }
-  }, [dispatch, email, formId, getUserProfile, navigate, otp, verifyEmail]);
+  }, [dispatch, email, formId, getUserProfile, otp, redirectAccordingSavedData, verifyEmail]);
 
   const getQrLinkOnEmailVerified = useCallback(() => {
     if (!qrCode && !webLink && emailVerified) {
@@ -235,7 +251,6 @@ export default function SingleApplication() {
         })
       );
       unwrapResult(action);
-      return navigate(`/singleform/stepper/${formId}`);
     });
 
     // Cleanup listener when component unmounts
@@ -244,7 +259,7 @@ export default function SingleApplication() {
       socket.off('idMission_verified');
       socket.off('idMission_failed');
     };
-  }, [dispatch, formId, getUserProfile, navigate, updateMyProfile, user?._id]);
+  }, [dispatch, formId, getUserProfile, updateMyProfile, user?._id]);
 
   // check validations
   useEffect(() => {
@@ -404,9 +419,10 @@ export default function SingleApplication() {
                   <Button
                     className="max-w-[400px]"
                     label={'Open LInk in New Tab'}
-                    onClick={() => {
+                    onClick={async () => {
                       // window.open(webLink, '_blank');
                       navigate(`/singleform/stepper/${formId}`);
+                      // await redirectAccordingSavedData(formId);
                     }}
                     rightIcon={MdVerifiedUser}
                   />

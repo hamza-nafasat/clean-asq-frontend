@@ -85,7 +85,7 @@ const AdminAside = () => {
             <img
               src={logo || logoApply}
               alt="logo"
-              className={`block h-[31px] ${isNavOpen ? 'h-[50px] w-[160px]' : 'h-[31px] w-[31px]'} object-cover`}
+              className={`block h-[31px] ${isNavOpen ? 'h-[50px] w-[160px]' : 'h-[31px] w-[31px]'} object-contain`}
             />
           </Link>
         </div>
