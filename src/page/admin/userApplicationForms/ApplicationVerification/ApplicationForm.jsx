@@ -87,7 +87,6 @@ export default function ApplicationForm() {
     async ({ data, name }) => {
       try {
         const formDataInRedux = { ...formData, [name]: data };
-        console.log('save in progress', formDataInRedux);
         const res = await saveFormInDraft({ formId: form?.data?._id, formData: formDataInRedux }).unwrap();
         if (res.success) toast.success(res.message);
       } catch (error) {
@@ -152,7 +151,7 @@ export default function ApplicationForm() {
           stepNames.push(step.name);
         }
       });
-      console.log('steps', data);
+      // console.log('steps', data);
       setStepsComps(data);
       setSectionNames(stepNames);
     }

@@ -1,6 +1,6 @@
 import Button from '@/components/shared/small/Button';
 import TextField from '@/components/shared/small/TextField';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { IoShieldOutline } from 'react-icons/io5';
 import { GoCheckCircle } from 'react-icons/go';
 import { GoDatabase } from 'react-icons/go';
@@ -8,10 +8,14 @@ import DataTable from 'react-data-table-component';
 import { useBranding } from '@/hooks/BrandingContext';
 import { getVerificationTableStyles } from '@/data/data';
 import { toast } from 'react-toastify';
-import { useCompanyLookupMutation, useCompanyVerificationMutation } from '@/redux/apis/formApis';
+import {
+  useCompanyLookupMutation,
+  useCompanyVerificationMutation,
+  useSaveFormInDraftMutation,
+} from '@/redux/apis/formApis';
 import CustomLoading from '@/components/shared/small/CustomLoading';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { addLookupData } from '@/redux/slices/companySlice';
 import { updateFormState } from '@/redux/slices/formSlice';
 
@@ -33,6 +37,8 @@ function CompanyVerification({ formId }) {
   const [lookupCompany, { isLoading: lookupCompanyLoading }] = useCompanyLookupMutation();
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getVerificationTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
+  const { formData } = useSelector(state => state?.form);
+  const [saveFormInDraft] = useSaveFormInDraftMutation();
 
   const handleSubmit = async () => {
     if (!form?.name || !form?.url) return toast.error('Please fill all fields');
@@ -55,6 +61,23 @@ function CompanyVerification({ formId }) {
       navigate(`/application-form/${formId}`);
     }
   };
+
+  const saveInProgress = useCallback(
+    async ({ data, name }) => {
+      try {
+        const formDataInRedux = { ...formData, [name]: data };
+        // console.log('save in progress', formDataInRedux);
+        const res = await saveFormInDraft({ formId: formId, formData: formDataInRedux }).unwrap();
+        if (res.success) {
+          console.log('form saved in draft successfully');
+        }
+      } catch (error) {
+        console.log('error while saving form in draft', error);
+        toast.error(error?.data?.message || 'Error while saving form in draft');
+      }
+    },
+    [formData, formId, saveFormInDraft]
+  );
 
   const companyLookup = async () => {
     if (!form?.name || !form?.url) return toast.error('Please fill all fields');
@@ -83,6 +106,7 @@ function CompanyVerification({ formId }) {
         setLookupDataForTable(totalLookupData);
         dispatch(addLookupData(totalLookupData));
         dispatch(updateFormState({ data: totalLookupData, name: 'company_lookup_data' }));
+        await saveInProgress({ data: totalLookupData, name: 'company_lookup_data' });
         toast.success('Company Lookup successfully');
       }
     } catch (error) {
@@ -92,7 +116,7 @@ function CompanyVerification({ formId }) {
   };
 
   const handleNext = () => {
-    console.log(lookupDataForTable);
+    // console.log(lookupDataForTable);
     dispatch(addLookupData(lookupDataForTable));
     dispatch(updateFormState({ data: lookupDataForTable, name: 'company_lookup_data' }));
     navigate(`/singleform/stepper/${formId}`);
@@ -190,39 +214,3 @@ function CompanyVerification({ formId }) {
 }
 
 export default CompanyVerification;
-
-// const verifyCompanyAndLookup = async () => {
-//   if (!form?.name || !form?.url) return toast.error('Please fill all fields');
-//   try {
-//     const companyVerifyPromise = verifyCompany({ name: form?.name, url: form?.url }).unwrap();
-//     const lookupCompanyPromise = lookupCompany({ name: form?.name, url: form?.url, formId }).unwrap();
-//     const [companyVerifyRes, lookupCompanyRes] = await Promise.all([companyVerifyPromise, lookupCompanyPromise]);
-//     if (companyVerifyRes?.success && lookupCompanyRes?.success) {
-//       setApisRes({ companyLookup: lookupCompanyRes?.data, companyVerify: companyVerifyRes?.data });
-//       const lookupDataObj = lookupCompanyRes?.data?.lookupData;
-//       const totalStrEntries = Object.entries(lookupDataObj);
-//       const totalStr = totalStrEntries.filter(([key]) => key.includes('source'));
-//       const verifiedStr = totalStrEntries.filter(([key]) => !key.includes('source'));
-
-//       setTotalSearchStreatgies(totalStr?.length);
-//       setSuccessfullyVerifiedStreatgies(verifiedStr?.length);
-//       let totalLookupData = totalStr?.map(([key, value]) => {
-//         let nameObj = verifiedStr?.find(([k]) => key?.includes(k));
-//         if (value == 'Not found') return {};
-//         return {
-//           source: String(value).split(',')[0],
-//           name: nameObj?.[0],
-//           result: nameObj?.[1],
-//         };
-//       });
-//       totalLookupData = totalLookupData.filter(item => item.name !== undefined);
-//       setLookupDataForTable(totalLookupData);
-//       dispatch(addLookupData(totalLookupData));
-//       dispatch(updateFormState({ data: totalLookupData, name: 'company_lookup_data' }));
-//       toast.success('Company verified successfully');
-//     }
-//   } catch (error) {
-//     console.log('Error verifying company:', error);
-//     toast.error(error?.data?.message || 'Failed to verify company');
-//   }
-// };

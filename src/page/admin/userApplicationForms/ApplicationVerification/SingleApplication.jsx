@@ -5,10 +5,10 @@ import TextField from '@/components/shared/small/TextField';
 import { useBranding } from '@/hooks/BrandingContext';
 import { socket } from '@/main';
 import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from '@/redux/apis/authApis';
-import { useGetSavedFormMutation, useGetSingleFormQueryQuery } from '@/redux/apis/formApis';
+import { useGetSavedFormMutation, useGetSingleFormQueryQuery, useSaveFormInDraftMutation } from '@/redux/apis/formApis';
 import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
 import { userExist, userNotExist } from '@/redux/slices/authSlice';
-import { updateEmailVerified, updateFormState } from '@/redux/slices/formSlice';
+import { addSavedFormData, updateEmailVerified, updateFormState } from '@/redux/slices/formSlice';
 import { Autocomplete } from '@react-google-maps/api';
 import { unwrapResult } from '@reduxjs/toolkit';
 import { useCallback, useEffect, useState } from 'react';
@@ -33,16 +33,18 @@ export default function SingleApplication() {
   const [getQrAndWebLinkLoading, setGetQrAndWebLinkLoading] = useState(false);
   const [isIdMissionProcessing, setIsIdMissionProcessing] = useState(false);
   const [idMissionVerified, setIdMissionVerified] = useState(false);
+  const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
 
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const [getIdMissionSession] = useGetIdMissionSessionMutation();
   const [sendOtp, { isLoading: otpLoading }] = useSendOtpMutation();
   const [verifyEmail, { isLoading: emailLoading }] = useVerifyEmailMutation();
-  const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [updateMyProfile] = useUpdateMyProfileMutation();
   const { data: form } = useGetSingleFormQueryQuery({ _id: formId });
   const [getSavedFormData] = useGetSavedFormMutation();
-  ``;
+  const { formData } = useSelector(state => state?.form);
+  const [saveFormInDraft] = useSaveFormInDraftMutation();
+
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
     name: '',
     idNumber: '',
@@ -63,9 +65,24 @@ export default function SingleApplication() {
     setAutocomplete(autoC);
   }, []);
 
+  const saveInProgress = useCallback(
+    async ({ data, name }) => {
+      try {
+        const formDataInRedux = { ...formData, [name]: data };
+        // console.log('save in progress', formDataInRedux);
+        const res = await saveFormInDraft({ formId: form?.data?._id, formData: formDataInRedux }).unwrap();
+        if (res.success) toast.success(res.message);
+      } catch (error) {
+        console.log('error while saving form in draft', error);
+        toast.error(error?.data?.message || 'Error while saving form in draft');
+      }
+    },
+    [form?.data?._id, formData, saveFormInDraft]
+  );
+
   const onPlaceChanged = () => {
     const place = autocomplete.getPlace();
-    console.log('place', place);
+    // console.log('place', place);
     fillBasicComponents(place.address_components || []);
     if (!place.address_components.some(c => c.types.includes('postal_code'))) {
       const { lat, lng } = place.geometry.location;
@@ -104,35 +121,24 @@ export default function SingleApplication() {
     });
   };
 
-  const redirectAccordingSavedData = useCallback(
-    async formId => {
-      try {
-        const res = await getSavedFormData({ formId: formId }).unwrap();
-        if (res.success && res?.data && res?.data?.savedData?.company_lookup_data) {
-          navigate(`/singleform/stepper/${formId}`);
-        } else {
-          navigate(`/verification?formId=${formId}`);
-        }
-      } catch (error) {
-        navigate(`/verification?formId=${formId}`);
-      }
-    },
-    [getSavedFormData, navigate]
-  );
+  // navigate(`/singleform/stepper/${formId}`);
+  // navigate(`/verification?formId=${formId}`);
+
   const submitIdMissionData = useCallback(
     async e => {
       e.preventDefault();
-      const action = await dispatch(updateFormState({ data: idMissionVerifiedData, name: 'IdMission' }));
+      const action = await dispatch(updateFormState({ data: idMissionVerifiedData, name: 'idMission' }));
       unwrapResult(action);
+      await saveInProgress({ data: idMissionVerifiedData, name: 'idMission' });
       navigate(`/singleform/stepper/${formId}`);
     },
-    [dispatch, formId, idMissionVerifiedData, navigate]
+    [dispatch, formId, idMissionVerifiedData, navigate, saveInProgress]
   );
 
   const getQrAndWebLink = useCallback(async () => {
     try {
       const res = await getIdMissionSession().unwrap();
-      console.log('session id is ', res);
+      // console.log('session id is ', res);
       if (res.success) {
         setQrCode(res.data?.customerData?.qrCode);
         setWebLink(res.data?.customerData?.kycUrl);
@@ -161,7 +167,6 @@ export default function SingleApplication() {
       if (!email || !otp) return toast.error('Please enter your email and otp');
       const res = await verifyEmail({ email, otp }).unwrap();
       if (res.success) {
-        // await getQrAndWebLink();
         await dispatch(updateEmailVerified(true));
         await getUserProfile()
           .then(res => {
@@ -170,20 +175,26 @@ export default function SingleApplication() {
           })
           .catch(() => dispatch(userNotExist()));
         toast.success(res.message);
-        await redirectAccordingSavedData(formId);
+        // check if company verification already exist then dont navigate to company verification
+        if (formData && !formData?.company_lookup_data) {
+          navigate(`/verification?formId=${formId}`);
+        }
       }
     } catch (error) {
       console.log('Error sending OTP:', error);
       toast.error(error?.data?.message || 'Failed to send OTP');
     }
-  }, [dispatch, email, formId, getUserProfile, otp, redirectAccordingSavedData, verifyEmail]);
+  }, [dispatch, email, formId, getUserProfile, navigate, otp, formData, verifyEmail]);
 
   const getQrLinkOnEmailVerified = useCallback(() => {
     if (!qrCode && !webLink && emailVerified) {
+      if (formData && formData?.idMission) {
+        return navigate(`/singleform/stepper/${formId}`);
+      }
       setGetQrAndWebLinkLoading(true);
       getQrAndWebLink().finally(() => setGetQrAndWebLinkLoading(false));
     }
-  }, [emailVerified, getQrAndWebLink, qrCode, webLink]);
+  }, [emailVerified, formData, formId, getQrAndWebLink, navigate, qrCode, webLink]);
 
   // get qr and session id
   useEffect(() => {
@@ -230,7 +241,7 @@ export default function SingleApplication() {
         isoDate = `${y}-${m}-${d}`;
       }
 
-      console.log('You are verified successfully', data);
+      // console.log('You are verified successfully', data);
       setIsIdMissionProcessing(false);
       setIdMissionVerifiedData({
         name: data?.Form_Data?.FullName || '',
@@ -243,11 +254,11 @@ export default function SingleApplication() {
       setIdMissionVerified(true);
     });
     socket.on('idMission_failed', async data => {
-      console.log('you start id mission failed', data);
+      // console.log('you start id mission failed', data);
       const action = await dispatch(
         updateFormState({
           data: { idMissionVerification: 'failed', verificationStatus: data?.Form_Status || 'rejected' },
-          name: 'IdMission',
+          name: 'idMission',
         })
       );
       unwrapResult(action);
@@ -293,6 +304,14 @@ export default function SingleApplication() {
     return () => window.removeEventListener('keydown', handleEnter);
   }, [otp, otpLoading, sentOtpForEmail, verifyWithOtp]);
 
+  // use effect for getting data from draft and save in redux
+  useEffect(() => {
+    getSavedFormData({ formId: form?.data?._id }).then(res => {
+      const data = res?.data?.data?.savedData;
+      if (data) dispatch(addSavedFormData(data));
+    });
+  }, [dispatch, form, getSavedFormData]);
+
   const {
     setPrimaryColor,
     setSecondaryColor,
@@ -316,7 +335,7 @@ export default function SingleApplication() {
   };
 
   useEffect(() => {
-    console.log('form?.data?.branding', form?.data?.branding);
+    // console.log('form?.data?.branding', form?.data?.branding);
     if (form?.data?.branding?.colors) {
       const firstFormBranding = form?.data?.branding;
       if (firstFormBranding?.colors) {
@@ -420,9 +439,8 @@ export default function SingleApplication() {
                     className="max-w-[400px]"
                     label={'Open LInk in New Tab'}
                     onClick={async () => {
-                      // window.open(webLink, '_blank');
-                      navigate(`/singleform/stepper/${formId}`);
-                      // await redirectAccordingSavedData(formId);
+                      window.open(webLink, '_blank');
+                      // navigate(`/singleform/stepper/${formId}`);
                     }}
                     rightIcon={MdVerifiedUser}
                   />
