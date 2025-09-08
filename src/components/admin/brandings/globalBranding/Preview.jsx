@@ -2,7 +2,7 @@ import { setCompanyName } from '@/redux/slices/brandingSlice';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
-const Preview = ({ primaryColor, companyName, secondaryColor, accentColor, linkColor }) => {
+const Preview = ({ primaryColor, companyName, selectedLogo, secondaryColor, accentColor, linkColor }) => {
   const formattedText = companyName.toLowerCase().replace(/\s+/g, '-');
   const dispatch = useDispatch();
 
@@ -16,16 +16,21 @@ const Preview = ({ primaryColor, companyName, secondaryColor, accentColor, linkC
         <p className="text-textPrimary mb-2 text-[22px] font-medium">
           {companyName ? companyName.charAt(0).toUpperCase() + companyName.slice(1) : 'Company Name'}
         </p>
-
-        <div className="">
-          <label className="mr-2 text-[14px] font-normal text-gray-500 uppercase">URL:</label>
-          <input
-            type="text"
-            readOnly
-            value={`https://${formattedText || 'company'}.apply-secure.com`}
-            className="rounded border border-[#A7A7A7] bg-white px-3 py-1 text-sm text-gray-700"
+        <div className="flex h-[100px] w-[80%] cursor-pointer items-center justify-center">
+          <img
+            src={typeof logo === 'string' ? logo : selectedLogo}
+            alt="logo"
+            className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain`}
+            // onClick={() => handleLogoSelect(idx)}
           />
         </div>
+        <input
+          type="text"
+          readOnly
+          value={`https://${formattedText || 'company'}.apply-secure.com`}
+          style={{ width: `${`https://${formattedText || 'company'}.apply-secure.com`.length}ch` }}
+          className="rounded border border-[#A7A7A7] bg-white px-3 py-1 text-sm text-gray-700"
+        />
 
         <p className="mt-6 text-[16px] font-normal text-gray-700">
           This is how your form will appear with the selected branding.{' '}

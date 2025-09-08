@@ -133,7 +133,7 @@ function App() {
                 <Route path="branding/create" element={<CreateBranding />} />
                 <Route path="branding/single/:brandingId" element={<CreateBranding />} />
                 <Route path="strategies-key" element={<FormStrategies />} />
-                <Route path="extraction-context" element={<ExtractionContext />} />
+                {/* <Route path="extraction-context" element={<ExtractionContext />} /> */}
                 <Route path="verification" element={<Verification />} />
                 <Route path="strategies" element={<Strategies />} />
               </Route>

@@ -7,7 +7,16 @@ import { GrImage } from 'react-icons/gr';
 import { HiOutlineSparkles } from 'react-icons/hi2';
 import { IoColorPaletteOutline } from 'react-icons/io5';
 
-const BrandingSource = ({ websiteUrl, setWebsiteUrl, logos, setLogos, extractBranding, isFetchLoading }) => {
+const BrandingSource = ({
+  websiteUrl,
+  setWebsiteUrl,
+  logos,
+  selectedLogo,
+  setSelectedLogo,
+  setLogos,
+  extractBranding,
+  isFetchLoading,
+}) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [websiteImage, setWebsiteImage] = useState(null);
   const [showPasteMenu, setShowPasteMenu] = useState(false);
@@ -16,6 +25,7 @@ const BrandingSource = ({ websiteUrl, setWebsiteUrl, logos, setLogos, extractBra
   const fileInputRef = useRef(null);
   const pasteMenuRef = useRef(null);
   const logoFileInputRef = useRef(null);
+  console.log('selectedLogoIndex', selectedLogoIndex);
 
   useEffect(() => {
     const handlePaste = e => {
@@ -78,8 +88,10 @@ const BrandingSource = ({ websiteUrl, setWebsiteUrl, logos, setLogos, extractBra
     }, 100);
   };
 
-  const handleLogoSelect = idx => {
+  const handleLogoSelect = (idx, logo) => {
     setSelectedLogoIndex(idx);
+    setSelectedLogo(logo);
+    console.log('logo', logo);
   };
 
   const handleLogoFileUpload = e => {
@@ -204,7 +216,7 @@ const BrandingSource = ({ websiteUrl, setWebsiteUrl, logos, setLogos, extractBra
                 return (
                   <div
                     key={idx}
-                    onClick={() => handleLogoSelect(idx)}
+                    onClick={() => handleLogoSelect(idx, logo?.url)}
                     className={`relative flex h-[130px] w-[200px] cursor-pointer items-center justify-center gap-2 rounded-md border ${selectedLogoIndex === idx ? 'ring-primary ring-2' : ''}`}
                   >
                     {/* Close icon */}

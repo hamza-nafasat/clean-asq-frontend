@@ -12,16 +12,17 @@ const AdminAside = () => {
   const [isNavOpen, setIsNavOpen] = useState(true);
   const location = useLocation();
   const { logo } = useBranding();
+  // console.log('logo', logo);
 
   const handleNavOpen = () => setIsNavOpen(!isNavOpen);
   const pages = [
     {
-      title: 'All Role',
+      title: 'Role Management',
       link: '/all-roles',
       icon: <AllRoles />,
     },
     {
-      title: 'All Users',
+      title: 'User Management',
       link: '/all-users',
       icon: <AllUsers />,
     },
@@ -36,7 +37,7 @@ const AdminAside = () => {
       icon: <Applicants />,
     },
     {
-      title: 'Branding',
+      title: 'Branding Management',
       link: '/branding',
       icon: <BrushIcon />,
     },
@@ -46,15 +47,15 @@ const AdminAside = () => {
     //   icon: <HiOutlineLightBulb />,
     // },
     {
-      title: 'Strategies Key',
+      title: 'Lookup management',
       link: '/strategies-key',
       icon: <HiOutlineLightBulb />,
     },
-    {
-      title: 'Extraction Context',
-      link: '/extraction-context',
-      icon: <Layers2 />,
-    },
+    // {
+    //   title: 'Extraction Context',
+    //   link: '/extraction-context',
+    //   icon: <Layers2 />,
+    // },
     {
       title: 'Verification',
       link: '/verification',

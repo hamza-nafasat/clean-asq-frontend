@@ -167,13 +167,13 @@ export default function ApplicationsCard() {
             rightIcon={
               <div>
                 <Button
-                  className={`!border-none ${searchMode === 'client' ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-600'}`}
+                  className={`!border-none ${searchMode === 'client' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'}`}
                   onClick={() => setSearchMode('client')}
                   label={'BY CLIENT#'}
                 />
 
                 <Button
-                  className={`!border-none ${searchMode === 'name' ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-600'}`}
+                  className={`!border-none ${searchMode === 'name' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'}`}
                   onClick={() => setSearchMode('name')}
                   label={'BY NAME#'}
                 />
@@ -198,6 +198,8 @@ export default function ApplicationsCard() {
       <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {forms?.data?.map((form, index) => {
           const colors = form?.branding?.colors;
+          console.log('colors', colors);
+
           return (
             <div
               key={index}
@@ -274,22 +276,23 @@ export default function ApplicationsCard() {
               </div>
               <div className="mt-3 flex w-full flex-col items-center justify-between gap-3 md:mt-6 md:flex-row md:gap-4">
                 <Button
-                  label="View Application"
+                  label="Start Application"
                   onClick={() => navigate(`/application-form/${form?._id}`)}
                   style={{
                     backgroundColor: colors?.primary,
                     borderColor: colors?.primary,
                     color: 'white',
+                    transition: 'all 0.3s ease',
                   }}
                   onMouseEnter={e => {
-                    e.target.style.backgroundColor = colors?.secondary;
-                    e.target.style.borderColor = colors?.secondary;
-                    e.target.style.color = colors?.text;
+                    e.currentTarget.style.backgroundColor = colors?.secondary;
+                    e.currentTarget.style.borderColor = colors?.secondary;
+                    e.currentTarget.style.color = colors?.text;
                   }}
                   onMouseLeave={e => {
-                    e.target.style.backgroundColor = colors?.primary;
-                    e.target.style.borderColor = colors?.primary;
-                    e.target.style.color = 'white';
+                    e.currentTarget.style.backgroundColor = colors?.primary;
+                    e.currentTarget.style.borderColor = colors?.primary;
+                    e.currentTarget.style.color = 'white';
                   }}
                 />
               </div>

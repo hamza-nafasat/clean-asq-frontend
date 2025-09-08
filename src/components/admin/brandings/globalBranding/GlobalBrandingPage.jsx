@@ -32,6 +32,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [companyName, setCompanyName] = useState('');
   const [logos, setLogos] = useState([]);
   const [colorPalette, setColorPalette] = useState([]);
+  const [selectedLogo, setSelectedLogo] = useState();
 
   const [fetchBranding, { isLoading: isFetchLoading }] = useFetchBrandingMutation();
   const [createBranding, { isLoading }] = useCreateBrandingMutation();
@@ -191,6 +192,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       }
     }
   }, [brandingId, singleBrandingData]);
+  console.log('selectedLogo', selectedLogo);
 
   return (
     <div className="mb-6 rounded-[8px] border border-[#F0F0F0] bg-white px-3 md:px-6">
@@ -204,6 +206,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
           setLogos={setLogos}
           isFetchLoading={isFetchLoading}
           extractBranding={extractBranding}
+          setSelectedLogo={setSelectedLogo}
+          selectedLogo={selectedLogo}
         />
         <ColorPalette colorPalette={colorPalette} />
         <BrandElementAssignment
@@ -232,6 +236,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
           secondaryColor={secondaryColor}
           accentColor={accentColor}
           linkColor={linkColor}
+          selectedLogo={selectedLogo}
         />
 
         <div className="mt-6 mb-4 flex justify-between space-x-2 md:space-x-4">
