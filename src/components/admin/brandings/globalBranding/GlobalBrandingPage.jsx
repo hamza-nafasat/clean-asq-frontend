@@ -183,15 +183,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
     try {
       const res = await updateBranding({ brandingId, data: formData }).unwrap();
       if (res?.success) {
-        // Update the logo in the sidebar
-        if (selectedLogo) {
-          setLogo(selectedLogo);
-        } else if (logos?.length > 0) {
-          const firstLogo = typeof logos[0] === 'string' ? logos[0] : logos[0]?.url;
-          if (firstLogo) {
-            setLogo(firstLogo);
-          }
-        }
         toast.success(res?.message || 'Branding updated successfully!');
       } else {
         toast.error('Failed to update branding. Please try again.');
@@ -200,7 +191,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       console.error('Error updating branding:', error);
       toast.error('Failed to update branding. Please try again.');
     } finally {
-      // navigate('/branding');
+      navigate('/branding');
       // console.log('Branding updated successfully!', logos);
     }
   };

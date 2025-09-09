@@ -38,12 +38,7 @@ const Login = () => {
       {/* Right Side */}
       <div className="flex w-full max-w-md flex-col justify-center rounded-xl bg-white p-10 shadow-2xl md:w-1/2">
         <h2 className="mb-2 text-2xl font-bold">Sign in to your account</h2>
-        <p className="text-md mb-6 font-semibold">
-          Or{' '}
-          <a href="#" className="text-secondary hover:underline">
-            create a new account
-          </a>
-        </p>
+
         <form className="space-y-6" action="#" method="POST">
           <div>
             <TextField type="email" label={'Email address'} value={email} onChange={e => setEmail(e.target.value)} />
@@ -56,14 +51,7 @@ const Login = () => {
               onChange={e => setPassword(e.target.value)}
             />
           </div>
-          <div className="flex items-center justify-between">
-            <label className="flex items-center text-sm font-semibold text-gray-500">
-              <input type="checkbox" className="mr-2" /> Remember me
-            </label>
-            <a href="#" className="text-secondary text-sm font-semibold hover:underline">
-              Forgot password?
-            </a>
-          </div>
+
           <Button
             disabled={isLoading}
             onClick={loginHandler}
@@ -71,13 +59,6 @@ const Login = () => {
             className="hover:!bg-secondary text-secondary !border-secondary w-full !rounded-[20px] !border bg-blue-600 hover:!text-white"
           />
         </form>
-
-        <p className="mt-6 text-center text-sm font-semibold text-gray-600">
-          Don't have an account yet?{' '}
-          <a href="#" className="text-secondary font-semibold hover:underline">
-            Sign up
-          </a>
-        </p>
       </div>
     </div>
   );
