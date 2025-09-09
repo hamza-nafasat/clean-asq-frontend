@@ -17,6 +17,7 @@ const BrandingSource = ({
   extractBranding,
   isFetchLoading,
   defaultSelectedLogo = null, // Add this prop for the current branding logo
+  handleExtraLogoUpload,
 }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [websiteImage, setWebsiteImage] = useState(null);
@@ -132,8 +133,18 @@ const BrandingSource = ({
 
   const handleLogoFileUpload = e => {
     const files = Array.from(e.target.files);
-    const newLogos = files.filter(file => file.type.startsWith('image/')).map(file => URL.createObjectURL(file));
-    setLogos(prev => [...prev, ...newLogos]);
+    const newLogos = files
+      .filter(file => file.type.startsWith('image/'))
+      .map(file => ({
+        file,
+        preview: URL.createObjectURL(file),
+      }));
+
+    setLogos(prev => [...prev, { url: newLogos[0].preview, type: 'img', preview: true }]);
+
+    if (newLogos.length > 0) {
+      handleExtraLogoUpload(newLogos[0].file);
+    }
   };
 
   const handleRemoveLogo = idx => {
