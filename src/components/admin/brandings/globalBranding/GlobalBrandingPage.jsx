@@ -17,6 +17,7 @@ import {
 } from '@/redux/apis/brandingApis';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useBranding } from '@/hooks/BrandingContext';
 
 const GlobalBrandingPage = ({ brandingId }) => {
   const navigate = useNavigate();
@@ -105,6 +106,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       name: companyName,
       url: websiteUrl,
       logos,
+      selectedLogo,
       colorPalette,
       colors,
       fontFamily,
@@ -122,6 +124,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       toast.error('Failed to create branding. Please try again.');
     }
   };
+
+  const { setLogo } = useBranding();
 
   const updateBrandingHandler = async brandingId => {
     if (
@@ -154,6 +158,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       name: companyName,
       url: websiteUrl,
       logos,
+      selectedLogo,
       colorPalette,
       colors,
       fontFamily,
@@ -162,34 +167,55 @@ const GlobalBrandingPage = ({ brandingId }) => {
     try {
       const res = await updateBranding({ brandingId, data: brandingData }).unwrap();
       if (res?.success) {
-        toast.success(res?.message || 'Branding created successfully!');
+        // Update the logo in the sidebar
+        if (selectedLogo) {
+          setLogo(selectedLogo);
+        } else if (logos?.length > 0) {
+          const firstLogo = typeof logos[0] === 'string' ? logos[0] : logos[0]?.url;
+          if (firstLogo) {
+            setLogo(firstLogo);
+          }
+        }
+        
+        toast.success(res?.message || 'Branding updated successfully!');
       } else {
-        toast.error('Failed to create branding. Please try again.');
+        toast.error('Failed to update branding. Please try again.');
       }
     } catch (error) {
-      console.error('Error creating branding:', error);
-      toast.error('Failed to create branding. Please try again.');
+      console.error('Error updating branding:', error);
+      toast.error('Failed to update branding. Please try again.');
     } finally {
       navigate('/branding');
     }
   };
 
   useEffect(() => {
-    if (brandingId) {
-      if (singleBrandingData) {
-        const singleBranding = singleBrandingData?.data;
-        setCompanyName(singleBranding.name);
-        setWebsiteUrl(singleBranding.url);
-        setLogos(singleBranding.logos || []);
-        setColorPalette(singleBranding.colorPalette || []);
-        setPrimaryColor(singleBranding.colors.primary);
-        setSecondaryColor(singleBranding.colors.secondary);
-        setAccentColor(singleBranding.colors.accent);
-        setTextColor(singleBranding.colors.text);
-        setLinkColor(singleBranding.colors.link);
-        setBackgroundColor(singleBranding.colors.background);
-        setFrameColor(singleBranding.colors.frame);
-        setFontFamily(singleBranding.fontFamily);
+    if (brandingId && singleBrandingData) {
+      const singleBranding = singleBrandingData?.data;
+      setCompanyName(singleBranding.name);
+      setWebsiteUrl(singleBranding.url);
+      setLogos(singleBranding.logos || []);
+      setColorPalette(singleBranding.colorPalette || []);
+      setPrimaryColor(singleBranding.colors.primary);
+      setSecondaryColor(singleBranding.colors.secondary);
+      setAccentColor(singleBranding.colors.accent);
+      setTextColor(singleBranding.colors.text);
+      setLinkColor(singleBranding.colors.link);
+      setBackgroundColor(singleBranding.colors.background);
+      setFrameColor(singleBranding.colors.frame);
+      setFontFamily(singleBranding.fontFamily);
+      
+      // Set the selected logo from the API response if available
+      if (singleBranding.selectedLogo) {
+        setSelectedLogo(singleBranding.selectedLogo);
+      } else if (singleBranding.logos?.length > 0) {
+        // Default to the first logo if no logo is selected
+        const firstLogo = typeof singleBranding.logos[0] === 'string' 
+          ? singleBranding.logos[0] 
+          : singleBranding.logos[0]?.url;
+        if (firstLogo) {
+          setSelectedLogo(firstLogo);
+        }
       }
     }
   }, [brandingId, singleBrandingData]);
@@ -209,6 +235,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
           extractBranding={extractBranding}
           setSelectedLogo={setSelectedLogo}
           selectedLogo={selectedLogo}
+          defaultSelectedLogo={brandingId ? selectedLogo : null}
         />
         <ColorPalette colorPalette={colorPalette} />
         <BrandElementAssignment

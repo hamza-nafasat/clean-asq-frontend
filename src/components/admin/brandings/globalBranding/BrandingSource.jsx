@@ -16,12 +16,52 @@ const BrandingSource = ({
   setLogos,
   extractBranding,
   isFetchLoading,
+  defaultSelectedLogo = null, // Add this prop for the current branding logo
 }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [websiteImage, setWebsiteImage] = useState(null);
   const [showPasteMenu, setShowPasteMenu] = useState(false);
   const [pasteTarget, setPasteTarget] = useState(null);
   const [selectedLogoIndex, setSelectedLogoIndex] = useState(null);
+
+  // Update selected logo index when selectedLogo or logos change
+  useEffect(() => {
+    if (selectedLogo && logos?.length > 0) {
+      const index = logos.findIndex(logo => 
+        (typeof logo === 'string' ? logo : logo?.url) === selectedLogo
+      );
+      if (index !== -1) {
+        setSelectedLogoIndex(index);
+      } else if (logos.length > 0) {
+        // If selectedLogo doesn't match any logo, select the first one
+        const firstLogo = typeof logos[0] === 'string' ? logos[0] : logos[0]?.url;
+        if (firstLogo) {
+          setSelectedLogoIndex(0);
+          setSelectedLogo(firstLogo);
+        }
+      }
+    } else if (logos?.length > 0 && selectedLogoIndex === null) {
+      // If no logo is selected, select the first one
+      const firstLogo = typeof logos[0] === 'string' ? logos[0] : logos[0]?.url;
+      if (firstLogo) {
+        setSelectedLogoIndex(0);
+        setSelectedLogo(firstLogo);
+      }
+    }
+  }, [logos, selectedLogo, selectedLogoIndex, setSelectedLogo]);
+
+  // Handle initial load with default selected logo
+  useEffect(() => {
+    if (defaultSelectedLogo && logos?.length > 0 && !selectedLogo) {
+      const index = logos.findIndex(logo => 
+        (typeof logo === 'string' ? logo : logo?.url) === defaultSelectedLogo
+      );
+      if (index !== -1) {
+        setSelectedLogoIndex(index);
+        setSelectedLogo(defaultSelectedLogo);
+      }
+    }
+  }, [defaultSelectedLogo, logos, selectedLogo]);
   const fileInputRef = useRef(null);
   const pasteMenuRef = useRef(null);
   const logoFileInputRef = useRef(null);
@@ -217,8 +257,13 @@ const BrandingSource = ({
                   <div
                     key={idx}
                     onClick={() => handleLogoSelect(idx, logo?.url)}
-                    className={`relative flex h-[130px] w-[200px] cursor-pointer items-center justify-center gap-2 rounded-md border ${selectedLogoIndex === idx ? 'ring-primary ring-2' : ''}`}
+                    className={`relative flex h-[130px] w-[200px] cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-md border-2 transition-all duration-200 ${selectedLogoIndex === idx ? 'ring-opacity-50 border-green-500 ring-2 ring-green-500' : 'border-gray-200 hover:border-gray-300'}`}
                   >
+                    {selectedLogoIndex === idx && (
+                      <div className="absolute top-0 left-0 rounded-bl-md px-2 py-1 text-xs font-medium text-green-500">
+                        Selected
+                      </div>
+                    )}
                     {/* Close icon */}
                     <button
                       type="button"
