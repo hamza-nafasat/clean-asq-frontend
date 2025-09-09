@@ -42,6 +42,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const handleCancel = () => {
     console.log('Branding changes cancelled.');
     alert('Branding Cancelled!');
+    navigate('/branding');
   };
   const companyNameHandle = e => {
     setCompanyName(e.target.value);
