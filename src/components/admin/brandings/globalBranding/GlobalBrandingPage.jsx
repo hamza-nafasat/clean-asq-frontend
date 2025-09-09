@@ -34,8 +34,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [logos, setLogos] = useState([]);
   const [colorPalette, setColorPalette] = useState([]);
   const [selectedLogo, setSelectedLogo] = useState();
-
   const [extraLogos, setExtraLogos] = useState([]);
+
+  const { setLogo } = useBranding();
 
   const [fetchBranding, { isLoading: isFetchLoading }] = useFetchBrandingMutation();
   const [createBranding, { isLoading }] = useCreateBrandingMutation();
@@ -120,10 +121,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append('colorPalette', JSON.stringify(colorPalette));
     formData.append('colors', JSON.stringify(colors));
     formData.append('logos', JSON.stringify(finalLogos));
-    formData.append('files', extraLogos);
-    // extraLogos.forEach((file, index) => {
-    //   formData.append(`files`, file);
-    // });
+    extraLogos.forEach(file => {
+      formData.append(`files`, file);
+    });
     console.log(extraLogos);
     try {
       const res = await createBranding(formData).unwrap();
@@ -137,8 +137,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
       toast.error('Failed to create branding. Please try again.');
     }
   };
-
-  const { setLogo } = useBranding();
 
   const updateBrandingHandler = async brandingId => {
     if (
@@ -178,7 +176,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append('colorPalette', JSON.stringify(colorPalette));
     formData.append('colors', JSON.stringify(colors));
     formData.append('logos', JSON.stringify(finalLogos));
-    formData.append('files', extraLogos);
+    extraLogos.forEach(file => {
+      formData.append(`files`, file);
+    });
 
     try {
       const res = await updateBranding({ brandingId, data: formData }).unwrap();

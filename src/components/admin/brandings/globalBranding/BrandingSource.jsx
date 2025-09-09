@@ -58,7 +58,7 @@ const BrandingSource = ({
         setSelectedLogo(defaultSelectedLogo);
       }
     }
-  }, [defaultSelectedLogo, logos, selectedLogo]);
+  }, [defaultSelectedLogo, logos, selectedLogo, setSelectedLogo]);
   const fileInputRef = useRef(null);
   const pasteMenuRef = useRef(null);
   const logoFileInputRef = useRef(null);
@@ -140,10 +140,10 @@ const BrandingSource = ({
         preview: URL.createObjectURL(file),
       }));
 
-    setLogos(prev => [...prev, { url: newLogos[0].preview, type: 'img', preview: true }]);
+    setLogos(prev => [...prev, { url: newLogos[0]?.preview, type: 'img', preview: true }]);
 
     if (newLogos.length > 0) {
-      handleExtraLogoUpload(newLogos[0].file);
+      handleExtraLogoUpload(newLogos[0]?.file);
     }
   };
 
