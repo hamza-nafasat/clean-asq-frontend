@@ -128,11 +128,11 @@ const BrandingSource = ({
           {/* <p className="mt-2 text-sm text-gray-500">Enter a website URL, to extract its colors and logos for your branding.</p> */}
         </div>
         <Button
-          disabled={isFetchLoading}
-          className={`${isFetchLoading && 'cursor-not-allowed opacity-50'}`}
           onClick={extractBranding}
           label={'Extract'}
           icon={IoColorPaletteOutline}
+          loading={isFetchLoading}
+          disabled={isFetchLoading}
         />
       </div>
       <div className="mt-3 mb-4 flex items-center justify-between gap-5">
