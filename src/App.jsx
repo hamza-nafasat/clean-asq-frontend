@@ -77,7 +77,7 @@ function App() {
               setBackgroundColor(userBranding.colors.background);
               setFrameColor(userBranding.colors.frame);
               setFontFamily(userBranding.fontFamily);
-              setLogo(userBranding?.logos?.[0]?.url);
+              setLogo(userBranding?.selectedLogo);
             }
           }
         } else dispatch(userNotExist());

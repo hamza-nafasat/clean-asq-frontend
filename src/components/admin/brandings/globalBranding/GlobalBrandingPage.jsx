@@ -18,8 +18,12 @@ import {
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBranding } from '@/hooks/BrandingContext';
+import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
+import { userExist, userNotExist } from '@/redux/slices/authSlice';
+import { useDispatch } from 'react-redux';
 
 const GlobalBrandingPage = ({ brandingId }) => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [primaryColor, setPrimaryColor] = useState('');
@@ -36,8 +40,19 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [selectedLogo, setSelectedLogo] = useState();
   const [extraLogos, setExtraLogos] = useState([]);
 
-  const { setLogo } = useBranding();
+  const {
+    setPrimaryColor: setGlobalPrimaryColor,
+    setSecondaryColor: setGlobalSecondaryColor,
+    setAccentColor: setGlobalAccentColor,
+    setTextColor: setGlobalTextColor,
+    setLinkColor: setGlobalLinkColor,
+    setBackgroundColor: setGlobalBackgroundColor,
+    setFrameColor: setGlobalFrameColor,
+    setFontFamily: setGlobalFontFamily,
+    setLogo: setGlobalLogo,
+  } = useBranding();
 
+  const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const [fetchBranding, { isLoading: isFetchLoading }] = useFetchBrandingMutation();
   const [createBranding, { isLoading }] = useCreateBrandingMutation();
   const [updateBranding, { isLoading: isUpdateLoading }] = useUpdateSingleBrandingMutation();
@@ -183,6 +198,23 @@ const GlobalBrandingPage = ({ brandingId }) => {
     try {
       const res = await updateBranding({ brandingId, data: formData }).unwrap();
       if (res?.success) {
+        const res = await getUserProfile().unwrap();
+
+        if (res?.data?.branding?.colors) {
+          const userBranding = res?.data?.branding;
+          if (userBranding?.colors) {
+            setGlobalPrimaryColor(userBranding.colors.primary);
+            setGlobalSecondaryColor(userBranding.colors.secondary);
+            setGlobalAccentColor(userBranding.colors.accent);
+            setGlobalTextColor(userBranding.colors.text);
+            setGlobalLinkColor(userBranding.colors.link);
+            setGlobalBackgroundColor(userBranding.colors.background);
+            setGlobalFrameColor(userBranding.colors.frame);
+            setGlobalFontFamily(userBranding.fontFamily);
+            setGlobalLogo(userBranding?.selectedLogo);
+          }
+        }
+
         toast.success(res?.message || 'Branding updated successfully!');
       } else {
         toast.error('Failed to update branding. Please try again.');
