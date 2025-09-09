@@ -38,7 +38,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [fetchBranding, { isLoading: isFetchLoading }] = useFetchBrandingMutation();
   const [createBranding, { isLoading }] = useCreateBrandingMutation();
   const [updateBranding, { isLoading: isUpdateLoading }] = useUpdateSingleBrandingMutation();
-  const { data: singleBrandingData } = useGetSingleBrandingQuery(brandingId);
+  const { data: singleBrandingData } = useGetSingleBrandingQuery(brandingId || '');
 
   const handleCancel = () => {
     console.log('Branding changes cancelled.');
@@ -102,44 +102,15 @@ const GlobalBrandingPage = ({ brandingId }) => {
       background: backgroundColor,
       frame: frameColor,
     };
-    const brandingData = {
-      name: companyName,
-      url: websiteUrl,
-      logos,
-      selectedLogo,
-      colorPalette,
-      colors,
-      fontFamily,
-    };
 
     const formData = new FormData();
     formData.append('name', companyName);
     formData.append('url', websiteUrl);
     formData.append('fontFamily', fontFamily);
     formData.append('selectedLogo', selectedLogo);
-
-    formData.append(
-      'colors',
-      JSON.stringify({
-        primary: primaryColor,
-        secondary: secondaryColor,
-        accent: accentColor,
-        link: linkColor,
-        text: textColor,
-        background: backgroundColor,
-        frame: frameColor,
-      })
-    );
-
     formData.append('colorPalette', JSON.stringify(colorPalette));
-
-    logos.forEach((logo, idx) => {
-      if (logo instanceof File) {
-        formData.append('logos', logo);
-      } else {
-        formData.append('logos', typeof logo === 'string' ? logo : logo.url);
-      }
-    });
+    formData.append('colors', JSON.stringify(colors));
+    formData.append('logos', JSON.stringify(logos));
 
     try {
       const res = await createBranding(formData).unwrap();
@@ -183,44 +154,15 @@ const GlobalBrandingPage = ({ brandingId }) => {
       background: backgroundColor,
       frame: frameColor,
     };
-    const brandingData = {
-      name: companyName,
-      url: websiteUrl,
-      logos,
-      selectedLogo,
-      colorPalette,
-      colors,
-      fontFamily,
-    };
 
     const formData = new FormData();
     formData.append('name', companyName);
     formData.append('url', websiteUrl);
     formData.append('fontFamily', fontFamily);
     formData.append('selectedLogo', selectedLogo);
-
-    formData.append(
-      'colors',
-      JSON.stringify({
-        primary: primaryColor,
-        secondary: secondaryColor,
-        accent: accentColor,
-        link: linkColor,
-        text: textColor,
-        background: backgroundColor,
-        frame: frameColor,
-      })
-    );
-
     formData.append('colorPalette', JSON.stringify(colorPalette));
-
-    logos.forEach((logo, idx) => {
-      if (logo instanceof File) {
-        formData.append('logos', logo);
-      } else {
-        formData.append('logos', typeof logo === 'string' ? logo : logo.url);
-      }
-    });
+    formData.append('colors', JSON.stringify(colors));
+    formData.append('logos', JSON.stringify(logos));
 
     try {
       const res = await updateBranding({ brandingId, data: formData }).unwrap();
@@ -234,7 +176,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
             setLogo(firstLogo);
           }
         }
-
         toast.success(res?.message || 'Branding updated successfully!');
       } else {
         toast.error('Failed to update branding. Please try again.');
