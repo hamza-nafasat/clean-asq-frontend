@@ -110,10 +110,10 @@ const BrandingSource = ({
     <div className="mb-6">
       <div className="flex justify-between">
         <p className="text-base font-semibold text-gray-500 md:text-xl">Choose Your Branding Source</p>
-        <div className="flex items-center gap-2 rounded-[4px] bg-[#F5F5F5] px-[10px] py-[6px] text-base font-normal text-gray-500">
+        {/* <div className="flex items-center gap-2 rounded-[4px] bg-[#F5F5F5] px-[10px] py-[6px] text-base font-normal text-gray-500">
           <HiOutlineSparkles />
           AI Help
-        </div>
+        </div> */}
       </div>
       <div className="mt-6 flex items-end space-x-4">
         <div className="flex-grow">

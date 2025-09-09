@@ -105,9 +105,9 @@ const ColorPalette = ({ colorPalette }) => {
           <BiColor className="text-primary size-6" />
           Assign Brand Element
         </div>
-        <button className="flex items-center gap-2 rounded-sm bg-[#F5F5F5] px-3 py-2 text-gray-700">
+        {/* <button className="flex items-center gap-2 rounded-sm bg-[#F5F5F5] px-3 py-2 text-gray-700">
           <HiOutlineSparkles /> AI Help
-        </button>
+        </button> */}
       </div>
     </div>
   );
