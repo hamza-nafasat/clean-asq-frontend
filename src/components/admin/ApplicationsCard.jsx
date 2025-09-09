@@ -159,13 +159,13 @@ export default function ApplicationsCard() {
           <TextField
             label={'Advance search'}
             type="text"
-            className="border-none bg-white px-2 py-2 text-sm outline-none"
+            className="border-none bg-white px-2 text-sm outline-none"
             placeholder={searchMode === 'client' ? 'Search From' : 'Search Name'}
             value={searchMode === 'client' ? clientQuery : nameQuery}
             onChange={e => (searchMode === 'client' ? setClientQuery(e.target.value) : setNameQuery(e.target.value))}
             leftIcon={<CiSearch />}
             rightIcon={
-              <div>
+              <div className="flex gap-x-2">
                 <Button
                   className={`!border-none ${searchMode === 'client' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'}`}
                   onClick={() => setSearchMode('client')}
@@ -279,20 +279,16 @@ export default function ApplicationsCard() {
                   label="Start Application"
                   onClick={() => navigate(`/application-form/${form?._id}`)}
                   style={{
-                    backgroundColor: colors?.primary,
-                    borderColor: colors?.primary,
-                    color: 'white',
+                    backgroundColor: colors?.secondary,
+                    borderColor: colors?.secondary,
+                    color: colors?.text,
                     transition: 'all 0.3s ease',
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.backgroundColor = colors?.secondary;
-                    e.currentTarget.style.borderColor = colors?.secondary;
-                    e.currentTarget.style.color = colors?.text;
+                    e.currentTarget.style.opacity = '0.6';
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.backgroundColor = colors?.primary;
-                    e.currentTarget.style.borderColor = colors?.primary;
-                    e.currentTarget.style.color = 'white';
+                    e.currentTarget.style.opacity = '1';
                   }}
                 />
               </div>

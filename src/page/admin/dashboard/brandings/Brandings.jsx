@@ -208,7 +208,7 @@ const Brandings = () => {
         />
       )}
       <div className="flex justify-end">
-        <Button className={'cursor-pointer'} onClick={() => navigate('/branding/create')}>
+        <Button className={'mb-4 cursor-pointer'} onClick={() => navigate('/branding/create')}>
           Create Branding
         </Button>
       </div>
