@@ -27,9 +27,7 @@ const BrandingSource = ({
   // Update selected logo index when selectedLogo or logos change
   useEffect(() => {
     if (selectedLogo && logos?.length > 0) {
-      const index = logos.findIndex(logo => 
-        (typeof logo === 'string' ? logo : logo?.url) === selectedLogo
-      );
+      const index = logos.findIndex(logo => (typeof logo === 'string' ? logo : logo?.url) === selectedLogo);
       if (index !== -1) {
         setSelectedLogoIndex(index);
       } else if (logos.length > 0) {
@@ -53,9 +51,7 @@ const BrandingSource = ({
   // Handle initial load with default selected logo
   useEffect(() => {
     if (defaultSelectedLogo && logos?.length > 0 && !selectedLogo) {
-      const index = logos.findIndex(logo => 
-        (typeof logo === 'string' ? logo : logo?.url) === defaultSelectedLogo
-      );
+      const index = logos.findIndex(logo => (typeof logo === 'string' ? logo : logo?.url) === defaultSelectedLogo);
       if (index !== -1) {
         setSelectedLogoIndex(index);
         setSelectedLogo(defaultSelectedLogo);
@@ -280,6 +276,7 @@ const BrandingSource = ({
                         src={typeof logo === 'string' ? logo : logo?.url}
                         alt={`Logo ${idx + 1}`}
                         className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain`}
+                        referrerPolicy="no-referrer"
                         // onClick={() => handleLogoSelect(idx)}
                       />
                       <div>logo</div>
