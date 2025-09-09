@@ -3,7 +3,17 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 const brandingApis = createApi({
   reducerPath: 'brandingApi',
-  baseQuery: fetchBaseQuery({ baseUrl: `${getEnv('SERVER_URL')}/api/branding`, credentials: 'include' }),
+  baseQuery: fetchBaseQuery({
+    baseUrl: `${getEnv('SERVER_URL')}/api/branding`,
+    credentials: 'include',
+    prepareHeaders: (headers, { getState, endpoint, type, forced }) => {
+      // Do NOT force Content-Type if body is FormData
+      if (!headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/json');
+      }
+      return headers;
+    },
+  }),
   tagTypes: ['Brandings'],
 
   endpoints: builder => ({

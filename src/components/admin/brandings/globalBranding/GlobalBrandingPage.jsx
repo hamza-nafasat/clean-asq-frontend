@@ -112,8 +112,37 @@ const GlobalBrandingPage = ({ brandingId }) => {
       fontFamily,
     };
 
+    const formData = new FormData();
+    formData.append('name', companyName);
+    formData.append('url', websiteUrl);
+    formData.append('fontFamily', fontFamily);
+    formData.append('selectedLogo', selectedLogo);
+
+    formData.append(
+      'colors',
+      JSON.stringify({
+        primary: primaryColor,
+        secondary: secondaryColor,
+        accent: accentColor,
+        link: linkColor,
+        text: textColor,
+        background: backgroundColor,
+        frame: frameColor,
+      })
+    );
+
+    formData.append('colorPalette', JSON.stringify(colorPalette));
+
+    logos.forEach((logo, idx) => {
+      if (logo instanceof File) {
+        formData.append('logos', logo);
+      } else {
+        formData.append('logos', typeof logo === 'string' ? logo : logo.url);
+      }
+    });
+
     try {
-      const res = await createBranding(brandingData).unwrap();
+      const res = await createBranding(formData).unwrap();
       if (res?.success) {
         toast.success(res?.message || 'Branding created successfully!');
       } else {
@@ -164,8 +193,37 @@ const GlobalBrandingPage = ({ brandingId }) => {
       fontFamily,
     };
 
+    const formData = new FormData();
+    formData.append('name', companyName);
+    formData.append('url', websiteUrl);
+    formData.append('fontFamily', fontFamily);
+    formData.append('selectedLogo', selectedLogo);
+
+    formData.append(
+      'colors',
+      JSON.stringify({
+        primary: primaryColor,
+        secondary: secondaryColor,
+        accent: accentColor,
+        link: linkColor,
+        text: textColor,
+        background: backgroundColor,
+        frame: frameColor,
+      })
+    );
+
+    formData.append('colorPalette', JSON.stringify(colorPalette));
+
+    logos.forEach((logo, idx) => {
+      if (logo instanceof File) {
+        formData.append('logos', logo);
+      } else {
+        formData.append('logos', typeof logo === 'string' ? logo : logo.url);
+      }
+    });
+
     try {
-      const res = await updateBranding({ brandingId, data: brandingData }).unwrap();
+      const res = await updateBranding({ brandingId, data: formData }).unwrap();
       if (res?.success) {
         // Update the logo in the sidebar
         if (selectedLogo) {
@@ -176,7 +234,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
             setLogo(firstLogo);
           }
         }
-        
+
         toast.success(res?.message || 'Branding updated successfully!');
       } else {
         toast.error('Failed to update branding. Please try again.');
@@ -204,15 +262,14 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setBackgroundColor(singleBranding.colors.background);
       setFrameColor(singleBranding.colors.frame);
       setFontFamily(singleBranding.fontFamily);
-      
+
       // Set the selected logo from the API response if available
       if (singleBranding.selectedLogo) {
         setSelectedLogo(singleBranding.selectedLogo);
       } else if (singleBranding.logos?.length > 0) {
         // Default to the first logo if no logo is selected
-        const firstLogo = typeof singleBranding.logos[0] === 'string' 
-          ? singleBranding.logos[0] 
-          : singleBranding.logos[0]?.url;
+        const firstLogo =
+          typeof singleBranding.logos[0] === 'string' ? singleBranding.logos[0] : singleBranding.logos[0]?.url;
         if (firstLogo) {
           setSelectedLogo(firstLogo);
         }
