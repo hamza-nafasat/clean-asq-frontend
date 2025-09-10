@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ArrowBackIcon from '../../../assets/svgs/ArrowBackIcon';
 import { AllRoles, AllUsers, Applicants, Applications } from '@/assets/svgs/icon';
@@ -7,12 +7,23 @@ import { useBranding } from '@/hooks/BrandingContext';
 import logoApply from '../../../assets/images/logo.png';
 import { MdOutlineBrandingWatermark } from 'react-icons/md';
 import { BrushIcon, CheckCircle, Layers2 } from 'lucide-react';
+import { detectLogo } from '@/utils/detectLogo';
 
 const AdminAside = () => {
   const [isNavOpen, setIsNavOpen] = useState(true);
   const location = useLocation();
   const { logo } = useBranding();
+  const [isLight, setIsLight] = useState(false);
+
   // console.log('logo', logo);
+  useEffect(() => {
+    if (logo) {
+      detectLogo(logo).then(res => {
+        console.log('res', res);
+        setIsLight(res);
+      });
+    }
+  }, [logo]);
 
   const handleNavOpen = () => setIsNavOpen(!isNavOpen);
   const pages = [
@@ -86,7 +97,7 @@ const AdminAside = () => {
             <img
               src={logo || logoApply}
               alt="logo"
-              className={`block h-[31px] ${isNavOpen ? 'h-[50px] w-[160px]' : 'h-[31px] w-[31px]'} object-contain`}
+              className={`block h-[31px] ${isNavOpen ? 'h-[50px] w-[160px]' : 'h-[31px] w-[31px]'} object-contain ${isLight ? 'brightness-200 invert' : ''}`}
               referrerPolicy="no-referrer"
             />
           </Link>
