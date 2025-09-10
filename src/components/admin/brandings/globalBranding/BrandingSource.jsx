@@ -1,5 +1,6 @@
 import Button from '@/components/shared/small/Button';
 import TextField from '@/components/shared/small/TextField';
+import { detectLogo } from '@/utils/detectLogo';
 import { useEffect, useRef, useState } from 'react';
 import { BsGlobe2 } from 'react-icons/bs';
 import { FiUpload, FiX } from 'react-icons/fi';
@@ -131,7 +132,7 @@ const BrandingSource = ({
     console.log('logo', logo);
   };
 
-  const handleLogoFileUpload = e => {
+  const handleLogoFileUpload = async e => {
     const files = Array.from(e.target.files);
     const newLogos = files
       .filter(file => file.type.startsWith('image/'))
@@ -140,7 +141,9 @@ const BrandingSource = ({
         preview: URL.createObjectURL(file),
       }));
 
-    setLogos(prev => [...prev, { url: newLogos[0]?.preview, type: 'img', preview: true }]);
+    const detect = await detectLogo(newLogos[0]?.preview);
+
+    setLogos(prev => [...prev, { url: newLogos[0]?.preview, type: 'img', preview: true, invert: detect }]);
 
     if (newLogos.length > 0) {
       handleExtraLogoUpload(newLogos[0]?.file);
@@ -286,7 +289,7 @@ const BrandingSource = ({
                       <img
                         src={typeof logo === 'string' ? logo : logo?.url}
                         alt={`Logo ${idx + 1}`}
-                        className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain`}
+                        className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain ${logo?.invert ? 'brightness-200 invert' : ''}`}
                         referrerPolicy="no-referrer"
                         // onClick={() => handleLogoSelect(idx)}
                       />

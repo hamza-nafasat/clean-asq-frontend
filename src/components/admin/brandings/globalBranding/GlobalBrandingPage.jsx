@@ -19,7 +19,6 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBranding } from '@/hooks/BrandingContext';
 import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
-import { userExist, userNotExist } from '@/redux/slices/authSlice';
 import { useDispatch } from 'react-redux';
 
 const GlobalBrandingPage = ({ brandingId }) => {
