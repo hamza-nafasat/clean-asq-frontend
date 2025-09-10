@@ -13,7 +13,7 @@ import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { useFindNaicAndMccMutation } from '@/redux/apis/formApis';
+import { useFindNaicAndMccMutation, useGetAllSearchStrategiesQuery } from '@/redux/apis/formApis';
 import { toast } from 'react-toastify';
 
 function CompanyInformation({
@@ -43,8 +43,16 @@ function CompanyInformation({
   const [showNaicsToMccDetails, setShowNaicsToMccDetails] = useState(true);
   const [naicsApiData, setNaicsApiData] = useState({ bestMatch: {}, otherMatches: [] });
   const [findNaicsToMccDetails, { isLoading }] = useFindNaicAndMccMutation();
+  const [strategyKeys, setStrategyKeys] = useState([]);
+  const { data: strategyKeysData } = useGetAllSearchStrategiesQuery();
 
-  console.log('lookup data', lookupData);
+  useEffect(() => {
+    if (strategyKeysData?.data) {
+      setStrategyKeys(strategyKeysData?.data?.map(item => item?.searchObjectKey));
+    }
+  }, [strategyKeysData]);
+
+  // console.log('lookup data', lookupData);
 
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
 
@@ -222,6 +230,7 @@ function CompanyInformation({
       {customizeModal && (
         <Modal onClose={() => setCustomizeModal(false)}>
           <CustomizationFieldsModal
+            suggestions={strategyKeys}
             sectionId={_id}
             fields={fields}
             formRefetch={formRefetch}

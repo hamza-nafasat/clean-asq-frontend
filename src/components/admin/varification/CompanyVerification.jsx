@@ -1,23 +1,22 @@
 import Button from '@/components/shared/small/Button';
+import CustomLoading from '@/components/shared/small/CustomLoading';
 import TextField from '@/components/shared/small/TextField';
-import React, { useCallback, useState } from 'react';
-import { IoShieldOutline } from 'react-icons/io5';
-import { GoCheckCircle } from 'react-icons/go';
-import { GoDatabase } from 'react-icons/go';
-import DataTable from 'react-data-table-component';
-import { useBranding } from '@/hooks/BrandingContext';
 import { getVerificationTableStyles } from '@/data/data';
-import { toast } from 'react-toastify';
+import { useBranding } from '@/hooks/BrandingContext';
 import {
   useCompanyLookupMutation,
   useCompanyVerificationMutation,
   useSaveFormInDraftMutation,
 } from '@/redux/apis/formApis';
-import CustomLoading from '@/components/shared/small/CustomLoading';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import { addLookupData } from '@/redux/slices/companySlice';
 import { updateFormState } from '@/redux/slices/formSlice';
+import { useCallback, useState } from 'react';
+import DataTable from 'react-data-table-component';
+import { GoCheckCircle } from 'react-icons/go';
+import { IoShieldOutline } from 'react-icons/io5';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const columns = [
   { name: 'Field', selector: row => row.name, sortable: true, width: '150px' },

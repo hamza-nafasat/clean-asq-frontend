@@ -19,6 +19,7 @@ const BrandingSource = ({
   isFetchLoading,
   defaultSelectedLogo = null, // Add this prop for the current branding logo
   handleExtraLogoUpload,
+  extractColorsFromLogosHandler,
 }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [websiteImage, setWebsiteImage] = useState(null);
@@ -243,11 +244,18 @@ const BrandingSource = ({
             <GrImage className="text-primary size-5" />
             Available Logos
           </div>
-          <Button
-            label={'Upload Logo'}
-            icon={FiUpload}
-            onClick={() => logoFileInputRef.current && logoFileInputRef.current.click()}
-          />
+          <div className="flex items-center gap-2">
+            <Button
+              label={'Extract New Colors'}
+              icon={IoColorPaletteOutline}
+              onClick={() => extractColorsFromLogosHandler()}
+            />
+            <Button
+              label={'Upload Logo'}
+              icon={FiUpload}
+              onClick={() => logoFileInputRef.current && logoFileInputRef.current.click()}
+            />
+          </div>
         </div>
         <div className="mt-8 w-full items-center justify-center overflow-auto">
           <input
@@ -262,7 +270,6 @@ const BrandingSource = ({
           <div className="flex w-full flex-wrap items-center gap-2 overflow-auto p-2">
             {logos?.length > 0 ? (
               logos?.map((logo, idx) => {
-                console.log('Logo URL:', logo?.url);
                 return (
                   <div
                     key={idx}

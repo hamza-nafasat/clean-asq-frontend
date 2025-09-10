@@ -1,28 +1,24 @@
-import React, { useState } from 'react';
-import BrandingSource from './BrandingSource';
-import ColorPalette from './ColorPalette';
-import BrandElementAssignment from './BrandElementAssignment';
-import Preview from './Preview';
-import TextField from '@/components/shared/small/TextField';
 import Button from '@/components/shared/small/Button';
-import Modal from '@/components/shared/small/Modal';
-import ApplyBranding from './ApplyBranding';
-import ConfirmationModal from '@/components/shared/ConfirmationModal';
-import { toast } from 'react-toastify';
+import TextField from '@/components/shared/small/TextField';
+import { useBranding } from '@/hooks/BrandingContext';
+import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
 import {
   useCreateBrandingMutation,
+  useExtractColorsFromLogosMutation,
   useFetchBrandingMutation,
   useGetSingleBrandingQuery,
   useUpdateSingleBrandingMutation,
 } from '@/redux/apis/brandingApis';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useBranding } from '@/hooks/BrandingContext';
-import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
-import { useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
+import BrandElementAssignment from './BrandElementAssignment';
+import BrandingSource from './BrandingSource';
+import ColorPalette from './ColorPalette';
+import Preview from './Preview';
+import { Rewind } from 'lucide-react';
 
 const GlobalBrandingPage = ({ brandingId }) => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [primaryColor, setPrimaryColor] = useState('');
@@ -51,6 +47,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
     setLogo: setGlobalLogo,
   } = useBranding();
 
+  const [extractColorsFromLogos] = useExtractColorsFromLogosMutation();
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const [fetchBranding, { isLoading: isFetchLoading }] = useFetchBrandingMutation();
   const [createBranding, { isLoading }] = useCreateBrandingMutation();
@@ -227,6 +224,29 @@ const GlobalBrandingPage = ({ brandingId }) => {
     }
   };
 
+  const extractColorsFromLogosHandler = async () => {
+    if (!extraLogos || extraLogos.length < 1) {
+      toast.error('Please upload at least one new logo');
+      return;
+    }
+    try {
+      const formData = new FormData();
+      extraLogos.forEach(file => {
+        formData.append('files', file);
+      });
+      const res = await extractColorsFromLogos(formData).unwrap();
+      if (res?.success && res?.data) {
+        toast.success(res.message);
+        const mergedColors = [...colorPalette, ...res.data];
+        const uniqueColors = [...new Set(mergedColors)];
+        console.log('uniqueColors', uniqueColors);
+        setColorPalette(uniqueColors);
+      }
+    } catch (error) {
+      console.log('error while extracting colors from logo', error);
+    }
+  };
+
   useEffect(() => {
     if (brandingId && singleBrandingData) {
       const singleBranding = singleBrandingData?.data;
@@ -274,6 +294,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
           selectedLogo={selectedLogo}
           defaultSelectedLogo={brandingId ? selectedLogo : null}
           handleExtraLogoUpload={handleExtraLogoUpload}
+          extractColorsFromLogosHandler={extractColorsFromLogosHandler}
         />
         <ColorPalette colorPalette={colorPalette} />
         <BrandElementAssignment

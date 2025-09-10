@@ -12,9 +12,30 @@ const TextField = ({
   cnRight,
   isMasked = false,
   className,
+  suggestions,
   ...rest
 }) => {
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const inputVal = (rest?.value || '').toLowerCase();
+
+  const filteredSuggestions = Array.isArray(suggestions)
+    ? suggestions
+        .filter(s => {
+          if (inputVal === '*') return true;
+          return s.toLowerCase().includes(inputVal);
+        })
+        .sort((a, b) => {
+          if (inputVal === '*') return a.localeCompare(b);
+          const aStarts = a.toLowerCase().startsWith(inputVal);
+          const bStarts = b.toLowerCase().startsWith(inputVal);
+          if (aStarts && !bStarts) return -1;
+          if (!aStarts && bStarts) return 1;
+          return a.localeCompare(b);
+        })
+    : [];
+
   return (
     <div className={`flex w-full flex-col items-start ${className}`}>
       {label && <label className="text-textPrimary text-sm lg:text-base">{label}</label>}
@@ -26,8 +47,32 @@ const TextField = ({
           {...rest}
           autoComplete="off"
           type={showMasked ? 'password' : type}
-          className={`${cn} border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''}`}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+          className={`${cn} border-frameColor relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''}`}
         />
+
+        {showSuggestions && filteredSuggestions.length > 0 && rest?.value?.length > 0 && (
+          <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-2xl border border-gray-200 bg-white shadow-lg">
+            <ul className="flex h-full flex-col divide-y divide-gray-100">
+              {filteredSuggestions?.map((suggestion, index) => (
+                <li
+                  key={index}
+                  className="h-full cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-black"
+                  onClick={() => {
+                    if (rest?.onChange) {
+                      rest.onChange({ target: { name: rest?.name, value: suggestion } });
+                      setShowSuggestions(false);
+                    }
+                  }}
+                >
+                  {suggestion}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {rightIcon && (
           <span className={`absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 ${cnRight}`}>{rightIcon}</span>
         )}

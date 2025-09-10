@@ -4,7 +4,7 @@ import { useUpdateDeleteCreateFormFieldsMutation } from '@/redux/apis/formApis';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
-function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch }) {
+function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, suggestions }) {
   const [fieldsData, setFieldsData] = useState([]);
   const [customizeForm, { isLoading }] = useUpdateDeleteCreateFormFieldsMutation();
 
@@ -36,7 +36,13 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch }) {
       {fieldsData?.length > 0 &&
         fieldsData?.map((field, index) => (
           <div key={index} className="mt-6 flex flex-col gap-4">
-            <MakeFieldDataCustom field={field} fieldsData={fieldsData} setFieldsData={setFieldsData} index={index} />
+            <MakeFieldDataCustom
+              field={field}
+              fieldsData={fieldsData}
+              setFieldsData={setFieldsData}
+              index={index}
+              suggestions={suggestions}
+            />
           </div>
         ))}
       <div className="mt-6 flex w-full justify-between gap-2">

@@ -10,7 +10,7 @@ import { TrashIcon } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { toast } from 'react-toastify';
 
-const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index }) => {
+const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index, suggestions }) => {
   const field = fieldsData[index] || {};
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [formattingInstructionForAi, setFormattingInstructionForAi] = useState('');
@@ -138,7 +138,13 @@ const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index }) => {
         {/* Label & Name */}
         <div className="flex items-center justify-between gap-2">
           <TextField label="Change label" value={field.label} name="label" onChange={updateFieldDataField} />
-          <TextField label="Change Field Name" value={field.name} name="name" onChange={updateFieldDataField} />
+          <TextField
+            label="Change Field Name"
+            value={field.name}
+            name="name"
+            suggestions={suggestions}
+            onChange={updateFieldDataField}
+          />
         </div>
         {/* Field Type & Placeholder */}
         <div className="flex items-center justify-between gap-2">

@@ -73,6 +73,16 @@ const brandingApis = createApi({
       }),
       invalidatesTags: ['Brandings'],
     }),
+
+    // extract colors from logos
+    // -------------------------
+    extractColorsFromLogos: builder.mutation({
+      query: formData => ({
+        url: '/extract-colors-from-logo',
+        method: 'POST',
+        body: formData,
+      }),
+    }),
   }),
 });
 
@@ -84,5 +94,6 @@ export const {
   useDeleteSingleBrandingMutation,
   useGetAllBrandingsQuery,
   useAddBrandingInFormMutation,
+  useExtractColorsFromLogosMutation,
 } = brandingApis;
 export default brandingApis;
