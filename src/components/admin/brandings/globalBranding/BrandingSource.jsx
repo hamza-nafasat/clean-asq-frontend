@@ -289,7 +289,7 @@ const BrandingSource = ({
                       <img
                         src={typeof logo === 'string' ? logo : logo?.url}
                         alt={`Logo ${idx + 1}`}
-                        className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain ${logo?.invert ? 'brightness-200 invert' : ''}`}
+                        className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain ${logo?.invert ? 'rounded-sm bg-gray-700' : ''}`}
                         referrerPolicy="no-referrer"
                         // onClick={() => handleLogoSelect(idx)}
                       />

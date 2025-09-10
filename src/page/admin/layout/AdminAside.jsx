@@ -92,12 +92,12 @@ const AdminAside = () => {
       </div>
 
       <div className="py-4">
-        <div className="mb-5 flex w-full items-center justify-center gap-1 xl:mb-12">
+        <div className={`mb-5 flex w-full items-center justify-center gap-1 xl:mb-12`}>
           <Link to="/application-forms">
             <img
               src={logo || logoApply}
               alt="logo"
-              className={`block h-[31px] ${isNavOpen ? 'h-[50px] w-[160px]' : 'h-[31px] w-[31px]'} object-contain ${isLight ? 'brightness-200 invert' : ''}`}
+              className={`block h-[31px] w-full ${isNavOpen ? 'h-[50px] max-w-[160px]' : 'h-[31px] max-w-[31px]'} object-contain ${isLight ? 'rounded-sm bg-gray-700' : ''}`}
               referrerPolicy="no-referrer"
             />
           </Link>

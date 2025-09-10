@@ -1,14 +1,22 @@
 import { setCompanyName } from '@/redux/slices/brandingSlice';
+import { detectLogo } from '@/utils/detectLogo';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 const Preview = ({ primaryColor, companyName, selectedLogo, secondaryColor, accentColor, linkColor }) => {
   const formattedText = companyName.toLowerCase().replace(/\s+/g, '-');
   const dispatch = useDispatch();
+  const [isLight, setIsLight] = useState(false);
 
   useEffect(() => {
     dispatch(setCompanyName(companyName));
-  }, [formattedText]);
+    if (selectedLogo) {
+      detectLogo(selectedLogo).then(res => {
+        console.log('res', res);
+        setIsLight(res);
+      });
+    }
+  }, [companyName, dispatch, formattedText, selectedLogo]);
   return (
     <div className="mt-6 rounded-[8px] border border-[#F0F0F0] p-3 shadow-sm md:p-6">
       <h2 className="text-textPrimary text-[18px] font-medium">Preview</h2>
@@ -18,9 +26,9 @@ const Preview = ({ primaryColor, companyName, selectedLogo, secondaryColor, acce
         </p>
         <div className="flex h-[100px] w-[80%] cursor-pointer items-center justify-center">
           <img
-            src={typeof logo === 'string' ? logo : selectedLogo}
+            src={typeof selectedLogo === 'string' ? selectedLogo : selectedLogo}
             alt="logo"
-            className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain`}
+            className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain ${isLight ? 'rounded-sm bg-gray-700' : ''}`}
             // onClick={() => handleLogoSelect(idx)}
           />
         </div>
