@@ -16,11 +16,12 @@ import { addSavedFormData, updateFormState } from '@/redux/slices/formSlice';
 import { unwrapResult } from '@reduxjs/toolkit';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Stepper from '../../../../components/Stepper/Stepper';
 
 export default function ApplicationForm() {
+  const navigate = useNavigate();
   const params = useParams();
   const formId = params.formId;
   const dispatch = useDispatch();
@@ -72,7 +73,10 @@ export default function ApplicationForm() {
           formDataStructure.append('file', fileData?.file);
           formDataStructure.append('name', fileData?.name);
           const resp = await submitArticle(formDataStructure).unwrap();
-          if (resp.success) toast.success(res.message);
+          if (resp.success) {
+            toast.success(res.message);
+            navigate('/submited-successfully/' + form?.data?._id);
+          }
         }
       } catch (error) {
         console.log('error submitting form', error);
@@ -81,7 +85,7 @@ export default function ApplicationForm() {
         setLoadingNext(false);
       }
     },
-    [fileData?.file, fileData?.name, form?.data?._id, formData, formSubmit, submitArticle]
+    [fileData?.file, fileData?.name, form?.data?._id, formData, formSubmit, navigate, submitArticle]
   );
   const saveInProgress = useCallback(
     async ({ data, name }) => {

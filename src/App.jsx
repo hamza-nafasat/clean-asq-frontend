@@ -1,17 +1,21 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { BrandingProvider, useBranding } from './hooks/BrandingContext';
+import { SubmissionSuccessPage } from './components/LoadingWithTimerAfterSubmission';
 import ProtectedRoute from './components/ProtectedRoute';
 import CustomLoading from './components/shared/small/CustomLoading';
+import { useBranding } from './hooks/BrandingContext';
 import { socket } from './main';
 import AdminDashboard from './page/admin/dashboard';
 import AdminAllUsers from './page/admin/dashboard/admin-dashboard/AdminAllUsers';
 import ApplicationForms from './page/admin/dashboard/applicationForms/ApplicationForms';
 import Applications from './page/admin/dashboard/applications/Applications';
+import FormStrategies from './page/admin/dashboard/formStrategies/FormStrategies';
 import AllRoles from './page/admin/dashboard/role/AllRoles';
+import Strategies from './page/admin/dashboard/strategies/Strategies';
+import Verification from './page/admin/dashboard/varification/Varification';
 import UserApplicationForms from './page/admin/userApplicationForms';
 import AdditionalOwnersForm from './page/admin/userApplicationForms/ApplicationVerification/AdditionalOwnersForm';
 import ApplicationForm from './page/admin/userApplicationForms/ApplicationVerification/ApplicationForm';
@@ -19,11 +23,6 @@ import SingleApplication from './page/admin/userApplicationForms/ApplicationVeri
 import CompanyInformation from './page/admin/userApplicationForms/CompanyInformation/CompanyInformation';
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
-import FormStrategies from './page/admin/dashboard/formStrategies/FormStrategies';
-import ExtractionContext from './page/admin/dashboard/extractionContext/ExtractionContext';
-import Varification from './page/admin/dashboard/varification/Varification';
-import Verification from './page/admin/dashboard/varification/Varification';
-import Strategies from './page/admin/dashboard/strategies/Strategies';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -112,6 +111,7 @@ function App() {
             <Route path="/" element={<AdminDashboard />}>
               <Route path="application-form/:formId" element={<SingleApplication />} />
               <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
+              <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
             </Route>
             {/* non authentic routes */}
             <Route element={<ProtectedRoute user={!user} redirect="/all-users" />}>
