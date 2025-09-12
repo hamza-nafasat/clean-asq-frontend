@@ -1,28 +1,22 @@
-import { toast } from 'react-toastify';
-import { useCompanyLookupMutation, useCompanyVerificationMutation } from '@/redux/apis/formApis';
+import Button from '@/components/shared/small/Button';
 import CustomLoading from '@/components/shared/small/CustomLoading';
-import { useNavigate } from 'react-router-dom';
+import TextField from '@/components/shared/small/TextField';
 import { getVerificationTableStyles } from '@/data/data';
 import { useBranding } from '@/hooks/BrandingContext';
+import { useCompanyLookupMutation, useCompanyVerificationMutation } from '@/redux/apis/formApis';
 import { useState } from 'react';
-import { IoShieldOutline } from 'react-icons/io5';
-import TextField from '@/components/shared/small/TextField';
-import { GoCheckCircle, GoCrossReference, GoDatabase } from 'react-icons/go';
-import Button from '@/components/shared/small/Button';
 import DataTable from 'react-data-table-component';
-import { CrosshairIcon, CrossIcon } from 'lucide-react';
-import { BiCross } from 'react-icons/bi';
+import { GoCheckCircle, GoDatabase } from 'react-icons/go';
+import { IoShieldOutline } from 'react-icons/io5';
+import { toast } from 'react-toastify';
 
 const columns = [
   { name: 'Field', selector: row => row.name, sortable: true },
   { name: 'Result', selector: row => row.result },
   { name: 'Source', selector: row => row.source },
-
-  // name: form?.name, url: form?.url, formId
 ];
 
 function CompanyVerificationTest({ formId }) {
-  const navigate = useNavigate();
   const [totalSearchStreatgies, setTotalSearchStreatgies] = useState(0);
   const [successfullyVerifiedStreatgies, setSuccessfullyVerifiedStreatgies] = useState(0);
   const [lookupDataForTable, setLookupDataForTable] = useState([]);
@@ -39,9 +33,13 @@ function CompanyVerificationTest({ formId }) {
   const verifyCompanyAndLookup = async () => {
     if (!form?.name || !form?.url) return toast.error('Please fill all fields');
     try {
-      const companyVerifyPromise = verifyCompany({ name: form?.name, url: form?.url, formId }).unwrap();
-      const lookupCompanyPromise = lookupCompany({ name: form?.name, url: form?.url, formId }).unwrap();
-      const [companyVerifyRes, lookupCompanyRes] = await Promise.all([companyVerifyPromise, lookupCompanyPromise]);
+      const companyVerifyRes = await verifyCompany({ name: form?.name, url: form?.url, formId }).unwrap();
+
+      console.log('companyVerifyRes', companyVerifyRes);
+      if (companyVerifyRes?.success && companyVerifyRes?.data?.verificationStatus === 'unverified') {
+        return toast.error(companyVerifyRes?.data?.error || 'Company verification failed, please try again');
+      }
+      const lookupCompanyRes = await lookupCompany({ name: form?.name, url: form?.url, formId }).unwrap();
       if (companyVerifyRes?.success && lookupCompanyRes?.success) {
         setApisRes({ companyLookup: lookupCompanyRes?.data, companyVerify: companyVerifyRes?.data });
         // if (lookupCompanyRes?.lookupStatus === 'verified') {
@@ -70,10 +68,6 @@ function CompanyVerificationTest({ formId }) {
       console.log('Error verifying company:', error);
       toast.error(error?.data?.message || 'Failed to verify company');
     }
-  };
-
-  const handleNext = () => {
-    navigate(`/singleform/stepper/${formId}`);
   };
 
   return (
@@ -175,8 +169,6 @@ function CompanyVerificationTest({ formId }) {
           </div>
         </div>
       ) : null}
-
-      <Button onClick={handleNext} label={'Next to Stepper'} />
     </div>
   );
 }
