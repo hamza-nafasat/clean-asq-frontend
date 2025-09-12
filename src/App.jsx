@@ -23,6 +23,7 @@ import SingleApplication from './page/admin/userApplicationForms/ApplicationVeri
 import CompanyInformation from './page/admin/userApplicationForms/CompanyInformation/CompanyInformation';
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
+import VerificationTest from './page/admin/dashboard/varification/VerficationTest';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -135,6 +136,7 @@ function App() {
                 <Route path="strategies-key" element={<FormStrategies />} />
                 {/* <Route path="extraction-context" element={<ExtractionContext />} /> */}
                 <Route path="verification" element={<Verification />} />
+                <Route path="verification-test" element={<VerificationTest />} />
                 <Route path="strategies" element={<Strategies />} />
               </Route>
 

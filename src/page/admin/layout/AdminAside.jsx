@@ -8,6 +8,7 @@ import logoApply from '../../../assets/images/logo.png';
 import { MdOutlineBrandingWatermark } from 'react-icons/md';
 import { BrushIcon, CheckCircle, Layers2 } from 'lucide-react';
 import { detectLogo } from '@/utils/detectLogo';
+import { PiStrategyBold } from 'react-icons/pi';
 
 const AdminAside = () => {
   const [isNavOpen, setIsNavOpen] = useState(true);
@@ -69,13 +70,13 @@ const AdminAside = () => {
     // },
     {
       title: 'Verification',
-      link: '/verification',
+      link: '/verification-test',
       icon: <CheckCircle />,
     },
     {
       title: 'Strategies',
       link: '/strategies',
-      icon: <CheckCircle />,
+      icon: <PiStrategyBold />,
     },
   ];
 

@@ -1,98 +1,57 @@
-import Button from '@/components/shared/small/Button';
+import { toast } from 'react-toastify';
+import { useCompanyLookupMutation, useCompanyVerificationMutation } from '@/redux/apis/formApis';
 import CustomLoading from '@/components/shared/small/CustomLoading';
-import TextField from '@/components/shared/small/TextField';
+import { useNavigate } from 'react-router-dom';
 import { getVerificationTableStyles } from '@/data/data';
 import { useBranding } from '@/hooks/BrandingContext';
-import {
-  useCompanyLookupMutation,
-  useCompanyVerificationMutation,
-  useSaveFormInDraftMutation,
-} from '@/redux/apis/formApis';
-import { addLookupData } from '@/redux/slices/companySlice';
-import { updateFormState } from '@/redux/slices/formSlice';
-import { useCallback, useState } from 'react';
-import DataTable from 'react-data-table-component';
-import { GoCheckCircle } from 'react-icons/go';
+import { useState } from 'react';
 import { IoShieldOutline } from 'react-icons/io5';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import TextField from '@/components/shared/small/TextField';
+import { GoCheckCircle, GoCrossReference, GoDatabase } from 'react-icons/go';
+import Button from '@/components/shared/small/Button';
+import DataTable from 'react-data-table-component';
+import { CrosshairIcon, CrossIcon } from 'lucide-react';
+import { BiCross } from 'react-icons/bi';
 
 const columns = [
-  { name: 'Field', selector: row => row.name, sortable: true, width: '150px' },
-  { name: 'Result', grow: 2, wrap: true, selector: row => row.result },
+  { name: 'Field', selector: row => row.name, sortable: true },
+  { name: 'Result', selector: row => row.result },
+  { name: 'Source', selector: row => row.source },
+
+  // name: form?.name, url: form?.url, formId
 ];
 
-function CompanyVerification({ formId }) {
+function CompanyVerificationTest({ formId }) {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const [loading, setLoading] = useState(false);
   const [totalSearchStreatgies, setTotalSearchStreatgies] = useState(0);
   const [successfullyVerifiedStreatgies, setSuccessfullyVerifiedStreatgies] = useState(0);
   const [lookupDataForTable, setLookupDataForTable] = useState([]);
   const [form, setForm] = useState({ name: '', url: '' });
-  const [apisRes, setApisRes] = useState({ companyLookup: {}, companyVerify: {} });
+  const [apisRes, setApisRes] = useState({
+    companyLookup: {},
+    companyVerify: {},
+  });
   const [verifyCompany, { isLoading: verifyCompanyLoading }] = useCompanyVerificationMutation();
   const [lookupCompany, { isLoading: lookupCompanyLoading }] = useCompanyLookupMutation();
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getVerificationTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
-  const { formData } = useSelector(state => state?.form);
-  const [saveFormInDraft] = useSaveFormInDraftMutation();
 
-  const handleSubmit = async () => {
+  const verifyCompanyAndLookup = async () => {
     if (!form?.name || !form?.url) return toast.error('Please fill all fields');
     try {
-      setLoading(true);
       const companyVerifyPromise = verifyCompany({ name: form?.name, url: form?.url, formId }).unwrap();
-      const companyVerifyRes = await companyVerifyPromise;
-      if (companyVerifyRes?.success && companyVerifyRes?.data?.verificationStatus !== 'unverified') {
-        setApisRes({ companyVerify: companyVerifyRes?.data });
-        setApisRes(prev => ({ ...prev, companyVerify: companyVerifyRes?.data }));
-        toast.success('Company verified successfully');
-        setLoading(false);
-        companyLookup();
-        navigate(`/application-form/${formId}`);
-      } else {
-        toast.error('Company verification failed, please try again');
-      }
-    } catch (error) {
-      console.log('Error verifying company:', error);
-      toast.error(error?.data?.message || 'Failed to verify company');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveInProgress = useCallback(
-    async ({ data, name }) => {
-      try {
-        const formDataInRedux = { ...formData, [name]: data };
-        // console.log('save in progress', formDataInRedux);
-        const res = await saveFormInDraft({ formId: formId, formData: formDataInRedux }).unwrap();
-        if (res.success) {
-          console.log('form saved in draft successfully');
-        }
-      } catch (error) {
-        console.log('error while saving form in draft', error);
-        toast.error(error?.data?.message || 'Error while saving form in draft');
-      }
-    },
-    [formData, formId, saveFormInDraft]
-  );
-
-  const companyLookup = async () => {
-    if (!form?.name || !form?.url) return toast.error('Please fill all fields');
-    try {
       const lookupCompanyPromise = lookupCompany({ name: form?.name, url: form?.url, formId }).unwrap();
-      const lookupCompanyRes = await lookupCompanyPromise;
-      if (lookupCompanyRes?.success) {
-        setApisRes(prev => ({ ...prev, companyLookup: lookupCompanyRes?.data }));
+      const [companyVerifyRes, lookupCompanyRes] = await Promise.all([companyVerifyPromise, lookupCompanyPromise]);
+      if (companyVerifyRes?.success && lookupCompanyRes?.success) {
+        setApisRes({ companyLookup: lookupCompanyRes?.data, companyVerify: companyVerifyRes?.data });
+        // if (lookupCompanyRes?.lookupStatus === 'verified') {
         const lookupDataObj = lookupCompanyRes?.data?.lookupData;
         const totalStrEntries = Object.entries(lookupDataObj);
         const totalStr = totalStrEntries.filter(([key]) => key.includes('source'));
         const verifiedStr = totalStrEntries.filter(([key]) => !key.includes('source'));
 
         setTotalSearchStreatgies(totalStr?.length);
+        // setAllSearchStreatgies(verifiedStr);
         setSuccessfullyVerifiedStreatgies(verifiedStr?.length);
         let totalLookupData = totalStr?.map(([key, value]) => {
           let nameObj = verifiedStr?.find(([k]) => key?.includes(k));
@@ -105,23 +64,17 @@ function CompanyVerification({ formId }) {
         });
         totalLookupData = totalLookupData.filter(item => item.name !== undefined);
         setLookupDataForTable(totalLookupData);
-        dispatch(addLookupData(totalLookupData));
-        dispatch(updateFormState({ data: totalLookupData, name: 'company_lookup_data' }));
-        await saveInProgress({ data: totalLookupData, name: 'company_lookup_data' });
-        toast.success('Company Lookup successfully');
+        toast.success('Company verified successfully');
       }
     } catch (error) {
-      console.log('Error lookup company:', error);
-      toast.error(error?.data?.message || 'Failed to lookup company');
+      console.log('Error verifying company:', error);
+      toast.error(error?.data?.message || 'Failed to verify company');
     }
   };
 
-  // const handleNext = () => {
-  //   // console.log(lookupDataForTable);
-  //   dispatch(addLookupData(lookupDataForTable));
-  //   dispatch(updateFormState({ data: lookupDataForTable, name: 'company_lookup_data' }));
-  //   navigate(`/singleform/stepper/${formId}`);
-  // };
+  const handleNext = () => {
+    navigate(`/singleform/stepper/${formId}`);
+  };
 
   return (
     <div className="flex flex-col space-y-8">
@@ -152,17 +105,19 @@ function CompanyVerification({ formId }) {
               verifyCompanyLoading || lookupCompanyLoading ? () => {} : e => setForm({ ...form, url: e.target.value })
             }
           />
-          {apisRes?.companyVerify?.confidenceScore && apisRes?.companyVerify?.verificationStatus && (
+          {apisRes?.companyVerify?.confidenceScore &&
+          apisRes?.companyVerify?.verificationStatus &&
+          apisRes?.companyVerify?.originalCompanyName ? (
             <div className="flex w-44 items-center gap-2 rounded-2xl border p-2 py-1">
               <div>
                 <GoCheckCircle className="font-medium text-blue-400" />
               </div>
               <div className="text-textPrimary text-xs">
-                {apisRes?.companyVerify?.originalCompanyName || form?.name} {apisRes?.companyVerify?.verificationStatus}{' '}
-                ({apisRes?.companyVerify?.confidenceScore}%)
+                {apisRes?.companyVerify?.originalCompanyName} {apisRes?.companyVerify?.verificationStatus} (
+                {apisRes?.companyVerify?.confidenceScore}%)
               </div>
             </div>
-          )}
+          ) : null}
 
           <div className="mb-4 flex items-center space-x-2 px-2">
             <input type="checkbox" />
@@ -171,9 +126,9 @@ function CompanyVerification({ formId }) {
           <div className="flex items-center justify-end">
             <Button
               label="Verify Company"
-              onClick={handleSubmit}
-              disabled={loading}
-              className={` ${loading && 'pointer-events-auto cursor-not-allowed opacity-20'}`}
+              onClick={verifyCompanyAndLookup}
+              disabled={verifyCompanyLoading || lookupCompanyLoading}
+              className={` ${(verifyCompanyLoading || lookupCompanyLoading) && 'cursor-not-allowed opacity-20'}`}
             />
           </div>
         </div>
@@ -204,14 +159,26 @@ function CompanyVerification({ formId }) {
               customStyles={tableStyles}
             />
           </div>
+          <div className="border"></div>
+          <div className="flex items-center justify-between">
+            <div className="text-textPrimary flex items-center gap-3">
+              <div>
+                <GoDatabase />
+              </div>
+              <div className="text-xs">Complete traceability: 2 search strategies attempted with full results</div>
+            </div>
+            <div>
+              <div>
+                <Button label={'Start Over'} />
+              </div>
+            </div>
+          </div>
         </div>
       ) : null}
 
-      {/* {apisRes?.companyVerify?.verificationStatus === 'verified' && formId && (
-        <Button onClick={handleNext} label={'Next to Stepper'} />
-      )} */}
+      <Button onClick={handleNext} label={'Next to Stepper'} />
     </div>
   );
 }
 
-export default CompanyVerification;
+export default CompanyVerificationTest;
