@@ -121,36 +121,7 @@ function CompanyInformation({
           <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
         </div>
       </div>
-      {/* NAICS to MCC SECTION  */}
-      {naicsApiData?.bestMatch?.naics && showNaicsToMccDetails && (
-        <Modal isOpen={showNaicsToMccDetails} onClose={() => setShowNaicsToMccDetails(false)}>
-          <NAICSModal
-            naicsApiData={naicsApiData}
-            setNaicsApiData={setNaicsApiData}
-            naicsToMccDetails={naicsToMccDetails}
-            setNaicsToMccDetails={setNaicsToMccDetails}
-            setShowNaicsToMccDetails={setShowNaicsToMccDetails}
-          />
-        </Modal>
-      )}
-      <div className="flex w-full flex-col items-start">
-        <h4 className="text-textPrimary text-base font-medium lg:text-lg">NAICS Code and Description</h4>
-        <div className={`'mt-2' flex w-full gap-4`}>
-          <input
-            placeholder={'NAICS Code and Description'}
-            type={'text'}
-            value={naicsToMccDetails.NAICS}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
-            onChange={e => setNaicsToMccDetails({ ...naicsToMccDetails, NAICS: e.target.value })}
-          />
-          <Button
-            label="Find NAICS"
-            className={`text-nowrap ${isLoading && 'pointer-events-none opacity-30'}`}
-            disabled={isLoading}
-            onClick={findNaicsHandler}
-          />
-        </div>
-      </div>
+
       {fields?.length > 0 &&
         fields.map((field, index) => {
           if (field.type === FIELD_TYPES.SELECT) {
@@ -206,6 +177,37 @@ function CompanyInformation({
             </div>
           );
         })}
+
+      {/* NAICS to MCC SECTION  */}
+      {naicsApiData?.bestMatch?.naics && showNaicsToMccDetails && (
+        <Modal isOpen={showNaicsToMccDetails} onClose={() => setShowNaicsToMccDetails(false)}>
+          <NAICSModal
+            naicsApiData={naicsApiData}
+            setNaicsApiData={setNaicsApiData}
+            naicsToMccDetails={naicsToMccDetails}
+            setNaicsToMccDetails={setNaicsToMccDetails}
+            setShowNaicsToMccDetails={setShowNaicsToMccDetails}
+          />
+        </Modal>
+      )}
+      <div className="mt-6 flex w-full flex-col items-start">
+        <h4 className="text-textPrimary text-base font-medium lg:text-lg">NAICS Code and Description</h4>
+        <div className={`'mt-2' flex w-full gap-4`}>
+          <input
+            placeholder={'NAICS Code and Description'}
+            type={'text'}
+            value={naicsToMccDetails.NAICS}
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
+            onChange={e => setNaicsToMccDetails({ ...naicsToMccDetails, NAICS: e.target.value })}
+          />
+          <Button
+            label="Find NAICS"
+            className={`text-nowrap ${isLoading && 'pointer-events-none opacity-30'}`}
+            disabled={isLoading}
+            onClick={findNaicsHandler}
+          />
+        </div>
+      </div>
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">

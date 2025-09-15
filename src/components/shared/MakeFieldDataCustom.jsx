@@ -280,7 +280,7 @@ const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index, suggestions }) 
             />
             <div className="flex justify-end">
               <Button onClick={formateTextWithAi} disabled={isLoading} className="mt-8">
-                Formate Text
+                Format Text
               </Button>
             </div>
             {field.ai_formatting && (

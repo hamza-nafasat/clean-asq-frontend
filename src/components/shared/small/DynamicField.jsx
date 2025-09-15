@@ -197,8 +197,7 @@ const SelectInputType = ({ field, className, form, setForm }) => {
           </h4>
         )}
         {ai_formatting && isDisplayText && (
-          <div className="flex h-full w-full flex-col gap-4 bg-amber-100 p-4">
-            <h3 className="text-textPrimary text-lg font-semibold lg:text-lg">Instruction</h3>
+          <div className="flex h-full w-full flex-col gap-4">
             <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
           </div>
         )}
@@ -244,8 +243,7 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
         {label}:{required ? '*' : ''}
       </h4>
       {ai_formatting && isDisplayText && (
-        <div className="flex h-full w-full flex-col gap-4 bg-amber-100 p-4">
-          <h3 className="text-textPrimary text-lg font-semibold lg:text-lg">Instruction</h3>
+        <div className="gap-4p-4 flex h-full w-full flex-col">
           <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
         </div>
       )}
@@ -287,8 +285,7 @@ const RadioInputType = ({ field, className, form, setForm, onChange }) => {
         {label}:{required ? '*' : ''}
       </h4>
       {ai_formatting && isDisplayText && (
-        <div className="flex h-full w-full flex-col gap-4 bg-amber-100 p-4">
-          <h3 className="text-textPrimary text-lg font-semibold lg:text-lg">Instruction</h3>
+        <div className="flex h-full w-full flex-col gap-4 p-4">
           <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
         </div>
       )}
@@ -328,14 +325,9 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
           <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
         </Modal>
       )}
-      {label && (
-        <h4 className="text-textPrimary text-base font-medium lg:text-lg">
-          {label}:{required ? '*' : ''}
-        </h4>
-      )}
+
       {ai_formatting && isDisplayText && (
-        <div className="flex h-full w-full flex-col gap-4 bg-amber-100 p-4">
-          <h3 className="text-textPrimary text-lg font-semibold lg:text-lg">Instruction</h3>
+        <div className="flex h-full w-full flex-col gap-4 p-4">
           <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
         </div>
       )}
@@ -347,6 +339,12 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
         className="text-primary accent-primary focus:ring-primary border-frameColor h-4 w-4 rounded"
         onChange={singleCheckBoxHandler}
       />
+      {label && (
+        <h4 className="text-textPrimary text-base font-medium lg:text-lg">
+          :{required ? '*' : ''}
+          {label}
+        </h4>
+      )}
       {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
     </div>
   );
@@ -385,8 +383,7 @@ const RangeInputType = ({ field, className, form, setForm }) => {
         </h4>
       )}
       {ai_formatting && isDisplayText && (
-        <div className="flex h-full w-full flex-col gap-4 bg-amber-100 p-4">
-          <h3 className="text-textPrimary text-lg font-semibold lg:text-lg">Instruction</h3>
+        <div className="flex h-full w-full flex-col gap-4 p-4">
           <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
         </div>
       )}
@@ -444,8 +441,7 @@ const OtherInputType = ({ field, className, form, setForm }) => {
             </h4>
           )}
           {ai_formatting && isDisplayText && (
-            <div className="flex h-full w-full flex-col gap-4 bg-amber-100 p-4">
-              <h3 className="text-textPrimary text-lg font-semibold lg:text-lg">Instruction</h3>
+            <div className="gap-4p-4 flex h-full w-full flex-col">
               <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
             </div>
           )}
