@@ -319,32 +319,34 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
 
   const singleCheckBoxHandler = e => setForm({ ...form, [name]: e.target.checked });
   return (
-    <div className={`flex items-center space-x-8 ${className}`}>
+    <div className={`flex flex-col items-start ${className}`}>
       {openAiHelpModal && (
         <Modal onClose={() => setOpenAiHelpModal(false)}>
           <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
         </Modal>
       )}
-
       {ai_formatting && isDisplayText && (
         <div className="flex h-full w-full flex-col gap-4 p-4">
           <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
         </div>
       )}
-      <input
-        type={'checkbox'}
-        name={name}
-        required={required}
-        value={form[name]}
-        className="text-primary accent-primary focus:ring-primary border-frameColor h-4 w-4 rounded"
-        onChange={singleCheckBoxHandler}
-      />
-      {label && (
-        <h4 className="text-textPrimary text-base font-medium lg:text-lg">
-          :{required ? '*' : ''}
-          {label}
-        </h4>
-      )}
+      <div className="flex items-center gap-4 p-4">
+        <input
+          type={'checkbox'}
+          name={name}
+          required={required}
+          value={form[name]}
+          className="text-primary accent-primary focus:ring-primary border-frameColor h-4 w-4 rounded"
+          onChange={singleCheckBoxHandler}
+        />
+        {label && (
+          <h4 className="text-textPrimary text-base font-medium lg:text-lg">
+            :{required ? '*' : ''}
+            {label}
+          </h4>
+        )}
+      </div>
+
       {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
     </div>
   );
@@ -435,11 +437,6 @@ const OtherInputType = ({ field, className, form, setForm }) => {
       )}
       <div className="flex w-full flex-col items-start gap-4">
         <article className="flex w-full flex-col items-start gap-2">
-          {label && (
-            <h4 className="text-textPrimary text-base font-medium lg:text-lg">
-              {label}:{required ? '*' : ''}
-            </h4>
-          )}
           {ai_formatting && isDisplayText && (
             <div className="gap-4p-4 flex h-full w-full flex-col">
               <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
@@ -447,6 +444,11 @@ const OtherInputType = ({ field, className, form, setForm }) => {
           )}
           <section className="flex w-full gap-2">
             <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
+              {label && (
+                <h4 className="text-textPrimary text-base font-medium lg:text-lg">
+                  {label}:{required ? '*' : ''}
+                </h4>
+              )}
               <input
                 onChange={e => setForm(prev => ({ ...prev, [name]: e.target.value }))}
                 placeholder={placeholder}
@@ -472,8 +474,8 @@ const OtherInputType = ({ field, className, form, setForm }) => {
 };
 
 const AiHelpModal = ({ aiPrompt, aiResponse }) => {
-  const [updateAiPrompt, setUpdateAiPrompt] = useState(aiPrompt || '');
-  const [updatedAiResponse, setUpdatedAiResponse] = useState(aiResponse || '');
+  const [updateAiPrompt, setUpdateAiPrompt] = useState('');
+  const [updatedAiResponse, setUpdatedAiResponse] = useState('');
   const [formateTextInMarkDown, { isLoading }] = useFormateTextInMarkDownMutation();
 
   const getResponseFromAi = async () => {
@@ -481,7 +483,9 @@ const AiHelpModal = ({ aiPrompt, aiResponse }) => {
 
     try {
       const res = await formateTextInMarkDown({
-        text: aiPrompt,
+        text:
+          'you are an expert ai tell the accurate answer of this question is html format the prompt is ' +
+          updateAiPrompt,
       }).unwrap();
       if (res.success) {
         let html = DOMPurify.sanitize(res.data);
@@ -496,7 +500,9 @@ const AiHelpModal = ({ aiPrompt, aiResponse }) => {
   return (
     <div className="flex w-full flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <h2 className="text-textPrimary text-lg font-semibold">AI Prompt</h2>
+        <div className="flex flex-col gap-2 p-4">
+          <div className="" dangerouslySetInnerHTML={{ __html: aiResponse ?? '' }} />
+        </div>
         <input
           placeholder={'Enter Ai Prompt'}
           type={'text'}
@@ -506,10 +512,11 @@ const AiHelpModal = ({ aiPrompt, aiResponse }) => {
         />
         <Button label="Get Response" className="text-nowrap" onClick={getResponseFromAi} loading={isLoading} />
       </div>
-      <div className="flex flex-col gap-2 bg-amber-100 p-4">
-        <h2 className="text-textPrimary text-lg font-semibold">AI Response</h2>
-        <div className="" dangerouslySetInnerHTML={{ __html: updatedAiResponse ?? '' }} />
-      </div>
+      {updatedAiResponse && (
+        <div className="flex flex-col gap-2 bg-amber-100 p-4">
+          <div className="" dangerouslySetInnerHTML={{ __html: updatedAiResponse ?? '' }} />
+        </div>
+      )}
     </div>
   );
 };

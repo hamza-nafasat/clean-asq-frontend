@@ -73,7 +73,7 @@ function BankInfo({
           <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
         </div>
       </div>
-      <h5 className="text-textPrimary text-base">Provide Account information.</h5>
+      {/* <h5 className="text-textPrimary text-base">Provide Account information.</h5> */}
       {/* {fields?.map((field, i) => (
         <div key={i} className="mt-5">
           <DynamicField

@@ -191,6 +191,10 @@ function CompanyOwners({
           ssn: '',
           address: '',
           percentage: '',
+          date_of_birth: '',
+          driver_license_issuer: '',
+          driver_license_issuer_state: '',
+          driver_licence_number: '',
         };
         initialForm[field.name] = reduxData?.[field.name] ?? [initialState];
       } else {
@@ -343,7 +347,23 @@ function CompanyOwners({
             {form?.additional_owners_own_25_percent_or_more == 'yes' ? (
               <div className="flex flex-col gap-3">
                 {form?.[otherOwnersStateName]?.map(
-                  ({ name, email, ssn, role, job_title, have_detail, address, phone, percentage }, index) => {
+                  (
+                    {
+                      name,
+                      email,
+                      ssn,
+                      role,
+                      job_title,
+                      have_detail,
+                      address,
+                      phone,
+                      percentage,
+                      date_of_birth,
+                      driver_license_issuer_state,
+                      driver_licence_number,
+                    },
+                    index
+                  ) => {
                     return (
                       <div
                         key={index}
@@ -352,7 +372,7 @@ function CompanyOwners({
                         <div className="wrap flex w-full min-w-[400px] flex-col gap-3">
                           <div className="relative flex w-full gap-4">
                             <TextField
-                              label="Owner Name"
+                              label="Owner or primary operator name"
                               name="name"
                               value={name}
                               onChange={e => handleChangeOnOtherOwnersData(e, index)}
@@ -426,13 +446,13 @@ function CompanyOwners({
 
                           {have_detail == 'yes' && (
                             <div className="flex w-full flex-col gap-4">
-                              <div className="flex">
+                              <div className="flex flex-wrap gap-4">
                                 <TextField
                                   name="phone"
                                   label="Phone Number"
                                   value={phone}
                                   onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'w-full max-w-[500px]'}
+                                  className={'max-w-[30%] min-w-[400px]'}
                                 />
                                 <TextField
                                   name="ssn"
@@ -440,23 +460,43 @@ function CompanyOwners({
                                   value={ssn}
                                   isMasked={true}
                                   onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'w-full max-w-[500px]'}
+                                  className={'max-w-[30%] min-w-[400px]'}
                                 />
-                              </div>
-                              <div className="flex">
                                 <TextField
                                   name="address"
-                                  label="Address?"
+                                  label="Address"
                                   value={address}
                                   onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'w-full max-w-[500px]'}
+                                  className={'max-w-[30%] min-w-[400px]'}
                                 />
                                 <TextField
                                   name="percentage"
-                                  label="Ownership Percentage?"
+                                  label="Ownership Percentage"
                                   value={percentage}
                                   onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'w-full max-w-[500px]'}
+                                  className={'max-w-[30%] min-w-[400px]'}
+                                />
+                                <TextField
+                                  name="date_of_birth"
+                                  label="Date of Birth"
+                                  value={date_of_birth}
+                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                                  className={'max-w-[30%] min-w-[400px]'}
+                                />
+
+                                <TextField
+                                  name="driver_license_issuer_state"
+                                  label="driver’s license issuer (state)"
+                                  value={driver_license_issuer_state}
+                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                                  className={'max-w-[30%] min-w-[400px]'}
+                                />
+                                <TextField
+                                  name="driver_licence_number"
+                                  label="Driver’s License Number"
+                                  value={driver_licence_number}
+                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                                  className={'max-w-[30%] min-w-[400px]'}
                                 />
                               </div>
                             </div>

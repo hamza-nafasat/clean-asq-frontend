@@ -31,6 +31,7 @@ function CompanyInformation({
   title,
   saveInProgress,
 }) {
+  const { user } = useSelector(state => state.auth);
   const { lookupData } = useSelector(state => state?.company);
   const [customizeModal, setCustomizeModal] = useState(false);
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
@@ -118,7 +119,9 @@ function CompanyInformation({
             onClick={() => saveInProgress({ data: { ...form, naics: naicsToMccDetails }, name: title })}
             label={'Save in Draft'}
           />
-          <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+          {user?._id && user.role !== 'guest' && (
+            <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+          )}
         </div>
       </div>
 
