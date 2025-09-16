@@ -39,6 +39,13 @@ function ProcessingInfo({
       const initialForm = {};
       fields.forEach(field => {
         initialForm[field.name] = reduxData ? reduxData[field.name] || '' : '';
+        if (field?.conditional_fields?.length > 0) {
+          field?.conditional_fields?.forEach(cf => {
+            const fieldName = `${field.name}/${cf?.name}`;
+            console.log('fieldname is ', fieldName);
+            initialForm[fieldName] = reduxData ? reduxData[fieldName] || '' : '';
+          });
+        }
       });
       setForm(initialForm);
     }
@@ -73,7 +80,7 @@ function ProcessingInfo({
           <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
         </div>
       </div>
-      <h5 className="text-textPrimary text-base">Provide average transactions</h5>
+      {/* <h5 className="text-textPrimary text-base">Provide average transactions</h5> */}
       {fields?.map((field, index) => {
         if (field.name === 'main_owner_own_25_percent_or_more' || field.type === 'block') return null;
         if (field.type === FIELD_TYPES.SELECT) {

@@ -6,6 +6,7 @@ import Modal from './Modal';
 import { toast } from 'react-toastify';
 import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
 import DOMPurify from 'dompurify';
+import TextField from './TextField';
 
 const DynamicField = ({ cn, field, className = '', form, placeholder, value, setForm, ...rest }) => {
   const { type, label, id, options, name, required } = field;
@@ -314,40 +315,64 @@ const RadioInputType = ({ field, className, form, setForm, onChange }) => {
 };
 
 const CheckboxInputType = ({ field, className, form, setForm }) => {
-  const { label, name, required, aiHelp, aiPrompt, aiResponse, isDisplayText, ai_formatting } = field;
+  const { label, name, required, aiHelp, aiPrompt, aiResponse, isDisplayText, ai_formatting, conditional_fields } =
+    field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
 
   const singleCheckBoxHandler = e => setForm({ ...form, [name]: e.target.checked });
   return (
-    <div className={`flex flex-col items-start ${className}`}>
-      {openAiHelpModal && (
-        <Modal onClose={() => setOpenAiHelpModal(false)}>
-          <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
-        </Modal>
-      )}
-      {ai_formatting && isDisplayText && (
-        <div className="flex h-full w-full flex-col gap-4 p-4">
-          <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
-        </div>
-      )}
-      <div className="flex items-center gap-4 p-4">
-        <input
-          type={'checkbox'}
-          name={name}
-          required={required}
-          value={form[name]}
-          className="text-primary accent-primary focus:ring-primary border-frameColor h-4 w-4 rounded"
-          onChange={singleCheckBoxHandler}
-        />
-        {label && (
-          <h4 className="text-textPrimary text-base font-medium lg:text-lg">
-            :{required ? '*' : ''}
-            {label}
-          </h4>
+    <div className="flex flex-col gap-2">
+      <div className={`flex flex-col justify-between ${className}`}>
+        {openAiHelpModal && (
+          <Modal onClose={() => setOpenAiHelpModal(false)}>
+            <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
+          </Modal>
         )}
+        {ai_formatting && isDisplayText && (
+          <div className="flex h-full w-full flex-col gap-4 p-4 pb-0">
+            <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
+          </div>
+        )}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 p-4">
+            <input
+              type={'checkbox'}
+              name={name}
+              required={required}
+              value={form[name]}
+              checked={form[name]}
+              className="text-primary accent-primary focus:ring-primary border-frameColor h-4 w-4 rounded"
+              onChange={singleCheckBoxHandler}
+            />
+            {label && (
+              <h4 className="text-textPrimary text-base font-medium lg:text-lg">
+                :{required ? '*' : ''}
+                {label}
+              </h4>
+            )}
+          </div>
+          {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
+        </div>
       </div>
-
-      {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
+      <div className="flex w-full gap-2 px-6">
+        {form?.[name] && conditional_fields?.length
+          ? conditional_fields?.map((f, index) => {
+              const fieldName = `${name}/${f?.name}`;
+              return (
+                <div className="flex w-full flex-col gap-2" key={index}>
+                  <TextField
+                    value={form?.[fieldName]}
+                    type={f?.type}
+                    label={f?.label}
+                    name={fieldName}
+                    required={f?.required}
+                    onChange={e => setForm({ ...form, [e.target.name]: e.target.value })}
+                  />
+                </div>
+              );
+            })
+          : null}
+      </div>
     </div>
   );
 };

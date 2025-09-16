@@ -13,6 +13,8 @@ const TextField = ({
   isMasked = false,
   className,
   suggestions,
+  onChange,
+  name,
   ...rest
 }) => {
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
@@ -45,6 +47,8 @@ const TextField = ({
         )}
         <input
           {...rest}
+          onChange={onChange}
+          name={name}
           autoComplete="off"
           type={showMasked ? 'password' : type}
           onFocus={() => setShowSuggestions(true)}
