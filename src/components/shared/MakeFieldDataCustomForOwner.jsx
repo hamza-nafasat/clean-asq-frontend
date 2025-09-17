@@ -98,6 +98,25 @@ const MakeFieldDataCustomForOwner = ({ fieldsData, setFieldsData, index }) => {
       toast.error(err?.data?.message || 'Failed to format text');
     }
   }, [formattingInstructionForAi, field.displayText, formateTextInMarkDown, index, setFieldsData]);
+  const getResponseFromAi = useCallback(async () => {
+    const aiPrompt = field.aiPrompt || '';
+    if (!aiPrompt) {
+      return toast.error('Please enter formatting instruction and text to format');
+    }
+    try {
+      const res = await formateTextInMarkDown({
+        text: aiPrompt,
+      }).unwrap();
+      if (res.success) {
+        let html = DOMPurify.sanitize(res.data);
+        //  update ai_response
+        setFieldsData(prev => prev.map((item, idx) => (idx !== index ? item : { ...item, aiResponse: html })));
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.data?.message || 'Failed to format text');
+    }
+  }, [field.aiPrompt, formateTextInMarkDown, index, setFieldsData]);
 
   const simpleFieldType = [
     FIELD_TYPES.TEXT,
@@ -188,34 +207,22 @@ const MakeFieldDataCustomForOwner = ({ fieldsData, setFieldsData, index }) => {
           <div className="flex w-full flex-col items-center gap-2">
             <div className="flex w-full items-center gap-2">
               <TextField label="Ai Prompt" value={field.aiPrompt} name="aiPrompt" onChange={updateFieldDataField} />
-              <Button onClick={formateTextWithAi} disabled={isLoading} className="bg-primary mt-8 text-white">
+              <Button onClick={getResponseFromAi} disabled={isLoading} className="bg-primary mt-8 text-white">
                 Generate
               </Button>
             </div>
             {field?.aiResponse && (
               <div className="w-full flex-col py-4">
                 <h6 className="text-textPrimary py-2 text-xl font-semibold">Ai Response</h6>
-                <Markdown
-                  components={{
-                    h1: props => <h1 className="mb-6 text-2xl font-medium" {...props} />,
-                    h2: props => <h2 className="mb-6 text-xl font-medium" {...props} />,
-                    h3: props => <h3 className="mb-6 text-lg font-medium" {...props} />,
-                    h4: props => <h4 className="mb-6 text-base font-medium" {...props} />,
-                    p: props => <p className="mb-6 leading-relaxed" {...props} />,
-                    ul: props => <ul className="mb-6 list-inside list-disc" {...props} />,
-                    ol: props => <ol className="mb-6 list-inside list-decimal" {...props} />,
-                    li: props => <li className="mb-1" {...props} />,
-                    strong: props => <strong className="font-semibold" {...props} />,
-                    code: props => <code className="rounded bg-gray-100 px-1 py-0.5" {...props} />,
-                    blockquote: props => <blockquote className="my-2 border-l-4 pl-4 italic" {...props} />,
-                  }}
-                >
-                  {field.aiResponse}
-                </Markdown>
+                <div
+                  className="h-full bg-amber-100 p-4"
+                  dangerouslySetInnerHTML={{ __html: field?.aiResponse ?? '' }}
+                />
               </div>
             )}
           </div>
         )}
+
         {/* Options for radio/select/multi-checkbox */}
         {(radioFieldType || selectFieldType || multiCheckbox) && (
           <div className="flex flex-col gap-2">

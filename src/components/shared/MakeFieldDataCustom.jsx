@@ -10,7 +10,7 @@ import { TrashIcon } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { toast } from 'react-toastify';
 
-const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index, suggestions }) => {
+const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index, suggestions, isArticleForm = false }) => {
   const field = fieldsData[index] || {};
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [formattingInstructionForAi, setFormattingInstructionForAi] = useState('');
@@ -148,23 +148,25 @@ const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index, suggestions }) 
         </div>
         {/* Field Type & Placeholder */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex w-full flex-col items-start gap-2">
-            <p className="text-start text-sm lg:text-base">Field Type</p>
-            <div className="w-full rounded-lg border border-gray-300 p-1.5">
-              <select
-                name="type"
-                value={field.type}
-                onChange={updateFieldDataField}
-                className="w-full p-2 outline-none"
-              >
-                {Object.values(FIELD_TYPES).map(typeOpt => (
-                  <option key={typeOpt} value={typeOpt}>
-                    {typeOpt.charAt(0).toUpperCase() + typeOpt.slice(1)}
-                  </option>
-                ))}
-              </select>
+          {isArticleForm && (
+            <div className="flex w-full flex-col items-start gap-2">
+              <p className="text-start text-sm lg:text-base">Field Type</p>
+              <div className="w-full rounded-lg border border-gray-300 p-1.5">
+                <select
+                  name="type"
+                  value={field.type}
+                  onChange={updateFieldDataField}
+                  className="w-full p-2 outline-none"
+                >
+                  {Object.values(FIELD_TYPES).map(typeOpt => (
+                    <option key={typeOpt} value={typeOpt}>
+                      {typeOpt.charAt(0).toUpperCase() + typeOpt.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
+          )}
           {(simpleFieldType || selectFieldType) && (
             <TextField
               label="Change Placeholder"

@@ -15,12 +15,13 @@ const TextField = ({
   suggestions,
   onChange,
   name,
+  value,
   ...rest
 }) => {
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const inputVal = (rest?.value || '').toLowerCase();
+  const inputVal = String(value ?? '').toLowerCase();
 
   const filteredSuggestions = Array.isArray(suggestions)
     ? suggestions
@@ -49,6 +50,7 @@ const TextField = ({
           {...rest}
           onChange={onChange}
           name={name}
+          value={value}
           autoComplete="off"
           type={showMasked ? 'password' : type}
           onFocus={() => setShowSuggestions(true)}
@@ -56,7 +58,7 @@ const TextField = ({
           className={`${cn} border-frameColor relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''}`}
         />
 
-        {showSuggestions && filteredSuggestions.length > 0 && rest?.value?.length > 0 && (
+        {showSuggestions && filteredSuggestions.length > 0 && value?.length > 0 && (
           <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-2xl border border-gray-200 bg-white shadow-lg">
             <ul className="flex h-full flex-col divide-y divide-gray-100">
               {filteredSuggestions?.map((suggestion, index) => (
@@ -64,8 +66,8 @@ const TextField = ({
                   key={index}
                   className="h-full cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-black"
                   onClick={() => {
-                    if (rest?.onChange) {
-                      rest.onChange({ target: { name: rest?.name, value: suggestion } });
+                    if (onChange) {
+                      onChange({ target: { name: name, value: suggestion } });
                       setShowSuggestions(false);
                     }
                   }}

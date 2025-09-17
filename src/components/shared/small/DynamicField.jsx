@@ -282,14 +282,17 @@ const RadioInputType = ({ field, className, form, setForm, onChange }) => {
           <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
         </Modal>
       )}
-      <h4 className="text-textPrimary text-base font-medium lg:text-lg">
-        {label}:{required ? '*' : ''}
-      </h4>
       {ai_formatting && isDisplayText && (
-        <div className="flex h-full w-full flex-col gap-4 p-4">
+        <div className="flex h-full w-full flex-col gap-4 py-4">
           <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
         </div>
       )}
+      <div className="flex">
+        <h4 className="text-textPrimary text-base font-medium lg:text-lg">
+          {label}:{required ? '*' : ''}
+        </h4>
+        {aiHelp && <Button label="AI Help" className="h-min text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
+      </div>
       <div className="border-b-2 py-6">
         <div className="grid grid-cols-3 gap-4 p-0">
           {options?.map((option, index) => (
@@ -307,7 +310,6 @@ const RadioInputType = ({ field, className, form, setForm, onChange }) => {
               <label className="text-textPrimary text-base">{option?.label}</label>
             </div>
           ))}
-          {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
         </div>
       </div>
     </div>
@@ -498,7 +500,7 @@ const OtherInputType = ({ field, className, form, setForm }) => {
   );
 };
 
-const AiHelpModal = ({ aiPrompt, aiResponse }) => {
+const AiHelpModal = ({ aiResponse }) => {
   const [updateAiPrompt, setUpdateAiPrompt] = useState('');
   const [updatedAiResponse, setUpdatedAiResponse] = useState('');
   const [formateTextInMarkDown, { isLoading }] = useFormateTextInMarkDownMutation();
@@ -546,4 +548,12 @@ const AiHelpModal = ({ aiPrompt, aiResponse }) => {
   );
 };
 
-export { CheckboxInputType, MultiCheckboxInputType, OtherInputType, RadioInputType, RangeInputType, SelectInputType };
+export {
+  CheckboxInputType,
+  MultiCheckboxInputType,
+  OtherInputType,
+  RadioInputType,
+  RangeInputType,
+  SelectInputType,
+  AiHelpModal,
+};

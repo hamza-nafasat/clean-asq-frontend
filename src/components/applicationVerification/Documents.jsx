@@ -4,8 +4,13 @@ import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { updateFileData } from '@/redux/slices/formSlice';
+import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
+
+import Modal from '../shared/small/Modal';
+import { AiHelpModal } from '../shared/small/DynamicField';
 
 function Documents({
+  _id,
   name,
   currentStep,
   totalSteps,
@@ -16,12 +21,15 @@ function Documents({
   fields,
   reduxData,
   title,
+  formRefetch,
   // saveInProgress,
 }) {
   const dispatch = useDispatch();
   const [fileFieldName, setFileFieldName] = useState('');
   const [loadingNext, setLoadingNext] = useState(false);
+  const [customizeModal, setCustomizeModal] = useState(false);
   const [form, setForm] = useState({});
+  const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
 
   const handleFileSelect = file => {
     if (!file) return toast.error('Please select a file');
@@ -56,14 +64,34 @@ function Documents({
   return (
     <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
       <h1 className="text-textPrimary text-base">{name}</h1>
-      {/* <div className="flex gap-2">
-        <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
-      </div> */}
+      <div className="flex justify-end gap-2">
+        {/* <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} /> */}
+        <Button onClick={() => setCustomizeModal(true)} label={'Customize'} />
+      </div>
       <div className="mt-6 w-full">
         {fields?.map((field, i) => {
           if (field.type === 'file') {
             return (
-              <div className="w-full p-6" key={i}>
+              <div className="flex w-full flex-col gap-4 p-6" key={i}>
+                {openAiHelpModal && (
+                  <Modal onClose={() => setOpenAiHelpModal(false)}>
+                    <AiHelpModal
+                      aiPrompt={field?.aiPrompt}
+                      aiResponse={field?.aiResponse}
+                      setOpenAiHelpModal={setOpenAiHelpModal}
+                    />
+                  </Modal>
+                )}
+                {field?.ai_formatting && field?.isDisplayText && (
+                  <div className="flex h-full w-full flex-col gap-4 p-4 pb-0">
+                    <div className="" dangerouslySetInnerHTML={{ __html: field?.ai_formatting ?? '' }} />
+                  </div>
+                )}
+                {field?.aiHelp && (
+                  <div className="flex w-full justify-end">
+                    <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
+                  </div>
+                )}
                 <FileUploader label={field?.label} file={form[fileFieldName]} onFileSelect={handleFileSelect} />
               </div>
             );
@@ -91,6 +119,16 @@ function Documents({
           )}
         </div>
       </div>
+      {customizeModal && (
+        <Modal onClose={() => setCustomizeModal(false)}>
+          <CustomizationFieldsModal
+            sectionId={_id}
+            fields={fields}
+            formRefetch={formRefetch}
+            onClose={() => setCustomizeModal(false)}
+          />
+        </Modal>
+      )}
     </div>
   );
 }
