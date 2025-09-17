@@ -470,27 +470,29 @@ const OtherInputType = ({ field, className, form, setForm }) => {
             </div>
           )}
           <section className="flex w-full gap-2">
-            <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
+            <div className={`w-full ${label ? 'mt-2' : ''}`}>
               {label && (
                 <h4 className="text-textPrimary text-base font-medium lg:text-lg">
                   {label}:{required ? '*' : ''}
                 </h4>
               )}
-              <input
-                onChange={e => setForm(prev => ({ ...prev, [name]: e.target.value }))}
-                placeholder={placeholder}
-                type={showMasked ? 'password' : type}
-                value={form[name]}
-                className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
-              />
-              {isMasked && (
-                <span
-                  onClick={() => setShowMasked(!showMasked)}
-                  className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-sm text-gray-600"
-                >
-                  {!showMasked ? <RxEyeOpen className="h-5 w-5" /> : <IoEyeOffSharp className="h-5 w-5" />}
-                </span>
-              )}
+              <div className="relative">
+                <input
+                  onChange={e => setForm(prev => ({ ...prev, [name]: e.target.value }))}
+                  placeholder={placeholder}
+                  type={showMasked ? 'password' : type}
+                  value={form[name]}
+                  className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
+                />
+                {isMasked && (
+                  <span
+                    onClick={() => setShowMasked(!showMasked)}
+                    className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-sm text-gray-600"
+                  >
+                    {!showMasked ? <RxEyeOpen className="h-5 w-5" /> : <IoEyeOffSharp className="h-5 w-5" />}
+                  </span>
+                )}
+              </div>
             </div>
             {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
           </section>

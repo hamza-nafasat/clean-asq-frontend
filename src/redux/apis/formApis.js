@@ -93,6 +93,16 @@ const formApis = createApi({
         method: 'GET',
       }),
     }),
+    // update form section
+    // ---------------
+    updateFormSection: builder.mutation({
+      query: ({ data, _id }) => ({
+        url: `/update-form-section/${_id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+    }),
     // update form fields delete and create api
     // ---------------
     updateDeleteCreateFormFields: builder.mutation({
@@ -291,6 +301,7 @@ export const {
   useSubmitFormArticleFileMutation,
   useSaveFormInDraftMutation,
   useGetSavedFormMutation,
+  useUpdateFormSectionMutation,
   useUpdateDeleteCreateFormFieldsMutation,
   useFormateTextInMarkDownMutation,
   useGetBeneficialOwnersDataQuery,

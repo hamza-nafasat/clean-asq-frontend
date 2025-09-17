@@ -15,6 +15,8 @@ import {
 import Modal from '../shared/small/Modal';
 import CustomizationOwnerFieldsModal from './companyInfo/CustomizationOwnerFieldsModal';
 import { useSelector } from 'react-redux';
+import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
+import { PencilIcon } from 'lucide-react';
 
 function CompanyOwners({
   _id,
@@ -31,7 +33,10 @@ function CompanyOwners({
   blocks,
   title,
   saveInProgress,
+  step,
 }) {
+  const { user } = useSelector(state => state.auth);
+  const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const { lookupData } = useSelector(state => state?.company);
   const [ownersFromLookup, setOwnersFromLookup] = useState([]);
   const [filteredOwners, setFilteredOwners] = useState([]);
@@ -264,14 +269,32 @@ function CompanyOwners({
   }, [form, requiredNames]);
 
   return (
-    <div className="h-full overflow-auto">
+    <div className="h-full w-full overflow-auto">
+      {updateSectionFromatingModal && (
+        <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
+          <EditSectionDisplayTextFromatingModal step={step} />
+        </Modal>
+      )}
+
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
         <div className="flex gap-2">
           <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
-          <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+          {user?._id && user.role !== 'guest' && (
+            <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+          )}
+          <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
         </div>
       </div>
+      {step?.ai_formatting && (
+        <div className="flex w-full items-end justify-between gap-3">
+          <div
+            dangerouslySetInnerHTML={{
+              __html: step?.ai_formatting,
+            }}
+          />
+        </div>
+      )}
       <div className="mt-5">
         <div className="h-full overflow-auto pb-3">
           <div className="rounded-[8px] border border-[#F0F0F0] p-4">
@@ -280,13 +303,13 @@ function CompanyOwners({
                 <h2 className="text-textPrimary text-[22px] font-medium">Beneficial Owner Information</h2>
                 <p className="text-textPrimary">Provide information about the beneficial owner.</p>
               </div>
-              <div className="flex justify-end">
+              {/* <div className="flex justify-end">
                 <Button
                   icon={Star}
                   className="!text-textPrimary !h-fit !rounded-[4px] !border-none !bg-[#F5F5F5] !shadow-md hover:!bg-gray-300"
                   label="AI Help"
                 />
-              </div>
+              </div> */}
             </div>
 
             {formFields?.map(field => {

@@ -11,6 +11,9 @@ import {
 import { FIELD_TYPES } from '@/data/constants';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 import Modal from '../shared/small/Modal';
+import { useSelector } from 'react-redux';
+import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
+import { PencilIcon } from 'lucide-react';
 
 function BankInfo({
   name,
@@ -26,7 +29,10 @@ function BankInfo({
   _id,
   title,
   saveInProgress,
+  step,
 }) {
+  const { user } = useSelector(state => state.auth);
+  const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const [form, setForm] = useState({});
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
@@ -70,9 +76,26 @@ function BankInfo({
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
         <div className="flex gap-2">
           <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
-          <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+          {user?._id && user.role !== 'guest' && (
+            <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+          )}
+          <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
         </div>
       </div>
+      {updateSectionFromatingModal && (
+        <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
+          <EditSectionDisplayTextFromatingModal step={step} />
+        </Modal>
+      )}
+      {step?.ai_formatting && (
+        <div className="flex w-full items-end justify-between gap-3">
+          <div
+            dangerouslySetInnerHTML={{
+              __html: step?.ai_formatting,
+            }}
+          />
+        </div>
+      )}
       {/* <h5 className="text-textPrimary text-base">Provide Account information.</h5> */}
       {/* {fields?.map((field, i) => (
         <div key={i} className="mt-5">

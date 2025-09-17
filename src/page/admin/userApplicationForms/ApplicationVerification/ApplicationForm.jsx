@@ -134,6 +134,7 @@ export default function ApplicationForm() {
           formLoading,
           formRefetch,
           saveInProgress,
+          step,
         };
         if (step.title === 'company_information_blk') {
           data.push(<CompanyInformation {...commonProps} />);

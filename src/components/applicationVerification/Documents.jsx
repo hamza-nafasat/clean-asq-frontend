@@ -1,13 +1,15 @@
 import FileUploader from './Documents/FileUploader';
 import Button from '../shared/small/Button';
 import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { updateFileData } from '@/redux/slices/formSlice';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 
 import Modal from '../shared/small/Modal';
 import { AiHelpModal } from '../shared/small/DynamicField';
+import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
+import { PencilIcon } from 'lucide-react';
 
 function Documents({
   _id,
@@ -23,7 +25,10 @@ function Documents({
   title,
   formRefetch,
   // saveInProgress,
+  step,
 }) {
+  const { user } = useSelector(state => state.auth);
+  const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const dispatch = useDispatch();
   const [fileFieldName, setFileFieldName] = useState('');
   const [loadingNext, setLoadingNext] = useState(false);
@@ -63,10 +68,29 @@ function Documents({
 
   return (
     <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
-      <h1 className="text-textPrimary text-base">{name}</h1>
-      <div className="flex justify-end gap-2">
-        {/* <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} /> */}
-        <Button onClick={() => setCustomizeModal(true)} label={'Customize'} />
+      <div className="flex flex-col gap-4">
+        <h1 className="text-textPrimary text-base">{name}</h1>
+        <div className="flex w-full justify-end gap-2">
+          {user?._id && user.role !== 'guest' && (
+            <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+          )}
+          <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
+        </div>
+        {updateSectionFromatingModal && (
+          <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
+            <EditSectionDisplayTextFromatingModal step={step} />
+          </Modal>
+        )}
+        {step?.ai_formatting && (
+          <div className="flex w-full gap-3">
+            <div
+              className="w-full"
+              dangerouslySetInnerHTML={{
+                __html: step?.ai_formatting,
+              }}
+            />
+          </div>
+        )}
       </div>
       <div className="mt-6 w-full">
         {fields?.map((field, i) => {

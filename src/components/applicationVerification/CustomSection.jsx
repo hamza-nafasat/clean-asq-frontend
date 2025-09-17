@@ -11,6 +11,9 @@ import DynamicField, {
 import { FIELD_TYPES } from '@/data/constants';
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
+import { useSelector } from 'react-redux';
+import { PencilIcon } from 'lucide-react';
+import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 
 function CustomSection({
   fields,
@@ -24,7 +27,10 @@ function CustomSection({
   _id,
   title,
   saveInProgress,
+  step,
 }) {
+  const { user } = useSelector(state => state.auth);
+  const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const [form, setForm] = useState({});
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [loadingNext, setLoadingNext] = useState(false);
@@ -66,11 +72,30 @@ function CustomSection({
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
-        <div className="flex gap-2">
-          <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
-          <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
-        </div>
+        <div className="flex gap-2"></div>
       </div>
+      <div className="flex justify-end gap-2">
+        <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
+        {user?._id && user.role !== 'guest' && (
+          <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+        )}
+        <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
+      </div>
+      {updateSectionFromatingModal && (
+        <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
+          <EditSectionDisplayTextFromatingModal step={step} />
+        </Modal>
+      )}
+      {step?.ai_formatting && (
+        <div className="flex w-full items-end justify-between gap-3">
+          <div
+            className="mt-2 w-full"
+            dangerouslySetInnerHTML={{
+              __html: step?.ai_formatting,
+            }}
+          />
+        </div>
+      )}
       <div className="mt-6 flex flex-col gap-4">
         {fields?.map((field, index) => {
           if (field.name === 'main_owner_own_25_percent_or_more' || field.type === 'block') return null;

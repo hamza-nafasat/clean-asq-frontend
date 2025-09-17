@@ -1,5 +1,9 @@
 import { FIELD_TYPES } from '@/data/constants';
-import { useEffect, useState } from 'react';
+import { useFindNaicAndMccMutation, useGetAllSearchStrategiesQuery } from '@/redux/apis/formApis';
+import { PencilIcon } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 import Button from '../shared/small/Button';
 import {
   CheckboxInputType,
@@ -11,10 +15,7 @@ import {
 } from '../shared/small/DynamicField';
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
-import { useMemo } from 'react';
-import { useSelector } from 'react-redux';
-import { useFindNaicAndMccMutation, useGetAllSearchStrategiesQuery } from '@/redux/apis/formApis';
-import { toast } from 'react-toastify';
+import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 
 function CompanyInformation({
   formRefetch,
@@ -30,6 +31,7 @@ function CompanyInformation({
   fields,
   title,
   saveInProgress,
+  step,
 }) {
   const { user } = useSelector(state => state.auth);
   const { lookupData } = useSelector(state => state?.company);
@@ -46,14 +48,13 @@ function CompanyInformation({
   const [findNaicsToMccDetails, { isLoading }] = useFindNaicAndMccMutation();
   const [strategyKeys, setStrategyKeys] = useState([]);
   const { data: strategyKeysData } = useGetAllSearchStrategiesQuery();
+  const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
 
   useEffect(() => {
     if (strategyKeysData?.data) {
       setStrategyKeys(strategyKeysData?.data?.map(item => item?.searchObjectKey));
     }
   }, [strategyKeysData]);
-
-  // console.log('lookup data', lookupData);
 
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
 
@@ -112,8 +113,15 @@ function CompanyInformation({
 
   return (
     <div className="mt-14 h-full overflow-auto">
+      {updateSectionFromatingModal && (
+        <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
+          <EditSectionDisplayTextFromatingModal step={step} />
+        </Modal>
+      )}
+
       <div className="mb-10 flex items-center justify-between">
         <p className="text-textPrimary text-2xl font-semibold">{name}</p>
+
         <div className="flex gap-2">
           <Button
             onClick={() => saveInProgress({ data: { ...form, naics: naicsToMccDetails }, name: title })}
@@ -122,8 +130,19 @@ function CompanyInformation({
           {user?._id && user.role !== 'guest' && (
             <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
           )}
+          <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
         </div>
       </div>
+
+      {step?.ai_formatting && (
+        <div className="flex items-end gap-3">
+          <div
+            dangerouslySetInnerHTML={{
+              __html: step?.ai_formatting,
+            }}
+          />
+        </div>
+      )}
 
       {fields?.length > 0 &&
         fields.map((field, index) => {
