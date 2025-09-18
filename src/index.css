@@ -206,6 +206,25 @@ body {
   width: 0;
 }
 
+.remove-suggestion::-webkit-contacts-auto-fill-button,
+.remove-suggestion::-webkit-credentials-auto-fill-button,
+.remove-suggestion::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
+.remove-suggestion:-webkit-autofill,
+.remove-suggestion:-webkit-autofill:hover,
+.remove-suggestion:-webkit-autofill:focus,
+.remove-suggestion:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0px 1000px #fafbff inset !important;
+  box-shadow: 0 0 0px 1000px #fafbff inset !important;
+  -webkit-text-fill-color: #111 !important;
+}
+
+.remove-suggestion::-ms-clear,
+.remove-suggestion::-ms-reveal {
+  display: none;
+}
 /* bounce Welcome image */
 
 @keyframes bounce {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { IoEyeOffSharp } from 'react-icons/io5';
 import { RxEyeOpen } from 'react-icons/rx';
 import Button from './Button';
@@ -453,8 +453,11 @@ const OtherInputType = ({ field, className, form, setForm }) => {
     isDisplayText,
     ai_formatting,
   } = field;
+
+  const inputRef = useRef(null);
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
+  const [locked, setLocked] = useState(true);
   return (
     <>
       {openAiHelpModal && (
@@ -479,11 +482,13 @@ const OtherInputType = ({ field, className, form, setForm }) => {
               <div className="relative">
                 <input
                   onChange={e => setForm(prev => ({ ...prev, [name]: e.target.value }))}
-                  placeholder={placeholder}
+                  placeholder={showMasked ? '*******' : placeholder}
                   type={showMasked ? 'password' : type}
                   value={form[name]}
+                  autoComplete="off"
                   className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
                 />
+
                 {isMasked && (
                   <span
                     onClick={() => setShowMasked(!showMasked)}
@@ -559,3 +564,58 @@ export {
   SelectInputType,
   AiHelpModal,
 };
+
+{
+  /*  <input
+                  ref={inputRef}
+                  name={name}
+                  value={form[name]}
+                  placeholder={showMasked ? '*******' : placeholder}
+                  type={showMasked ? 'password' : type}
+                  autoComplete="off"
+                  spellCheck={false}
+                  inputMode="text"
+                  className={`remove-suggestion h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none ${className}`}
+                  readOnly={false}
+                  onFocus={() => {
+                    // ensure caret visible at end
+                    setTimeout(() => {
+                      const el = inputRef.current;
+                      if (el) {
+                        const len = el.value?.length ?? 0;
+                        el.setSelectionRange(len, len);
+                        el.focus();
+                      }
+                    }, 0);
+                  }}
+                  onKeyDown={e => {
+                    const printable = e.key.length === 1;
+                    const navOrEdit = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Enter', 'Tab'].includes(
+                      e.key
+                    );
+                    if (locked && (printable || navOrEdit)) {
+                      setLocked(false);
+                      setTimeout(() => {
+                        const el = inputRef.current;
+                        if (el) {
+                          const len = el.value?.length ?? 0;
+                          el.setSelectionRange(len, len);
+                        }
+                      }, 0);
+                    }
+                  }}
+                  onBeforeInput={e => {
+                    if (locked) {
+                      const allowed = ['insertText', 'deleteContentBackward', 'deleteContentForward'];
+                      if (!allowed.includes(e.inputType)) e.preventDefault();
+                    }
+                  }}
+                  onPaste={e => e.preventDefault()}
+                  onDrop={e => e.preventDefault()}
+                  onChange={e => {
+                    if (locked) return;
+                    setForm(prev => ({ ...prev, [name]: e.target.value }));
+                  }}
+                  onBlur={() => setLocked(true)}
+                />*/
+}
