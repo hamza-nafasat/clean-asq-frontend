@@ -50,9 +50,9 @@ function CompanyOwners({
 
   const requiredNames = useMemo(() => formFields.filter(f => f.required).map(f => f.name), [formFields]);
 
-  // console.log('company owners', lookupData);
-  console.log('company owners', ownersFromLookup);
-  console.log('filtered owners', filteredOwners);
+  console.log('company owners', form);
+  // console.log('company owners', ownersFromLookup);
+  // console.log('filtered owners', filteredOwners);
 
   // console.log('company owners', form);
 
@@ -263,6 +263,10 @@ function CompanyOwners({
     }
     if (!isOperatorExist) setSubmitButtonText('At least one primary operator required');
     if (!allFilled) setSubmitButtonText('Some Required Fields are Missing');
+    // remove field with name additional_owners_own_25_percent_or_more and save in new veriable so we can add back if value is smaller the 74
+    if (form?.applicant_percentage > 75) {
+      setFormFields(prev => [...prev.filter(f => f.name !== 'additional_owners_own_25_percent_or_more')]);
+    }
     const isAllChecksTrue = allFilled && isOperatorExist;
     setIsAllRequiredFieldsFilled(isAllChecksTrue);
     // console.log('isOperatorExist:', isOperatorExist, 'allFilled:', allFilled, 'Final Check:', isAllChecksTrue);

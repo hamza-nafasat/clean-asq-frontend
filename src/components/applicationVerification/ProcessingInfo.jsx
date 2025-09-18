@@ -1,5 +1,6 @@
 import { FIELD_TYPES } from '@/data/constants';
 import { useEffect, useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 import Button from '../shared/small/Button';
 import {
   CheckboxInputType,
@@ -9,11 +10,9 @@ import {
   RangeInputType,
   SelectInputType,
 } from '../shared/small/DynamicField';
+import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
-import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
-import { PencilIcon } from 'lucide-react';
-import { useSelector } from 'react-redux';
 
 function ProcessingInfo({
   name,
@@ -57,22 +56,20 @@ function ProcessingInfo({
     }
   }, [fields, name, reduxData]);
 
+  // check required fields
   useEffect(() => {
-    const allFilled = requiredNames.every(name => {
+    const allFilled = requiredNames.some(name => {
       const val = form[name];
+      if (!val) return false;
+      let allConditionalComplete = true;
+      const conditionalFieldsKeys = Object.keys(form).filter(key => key.includes(`${name}/`));
+      conditionalFieldsKeys.some(innerName => {
+        const innerVal = form[innerName];
+        if (!innerVal) allConditionalComplete = false;
+      });
+      if (!allConditionalComplete) return false;
       if (val == null) return false;
       if (typeof val === 'string') return val.trim() !== '';
-      if (Array.isArray(val))
-        return (
-          val.length > 0 &&
-          val.every(item =>
-            typeof item === 'object'
-              ? Object.values(item).every(v => v?.toString().trim() !== '')
-              : item?.toString().trim() !== ''
-          )
-        );
-      if (typeof val === 'object') return Object.values(val).every(v => v?.toString().trim() !== '');
-
       return true;
     });
     setIsAllRequiredFieldsFilled(allFilled);

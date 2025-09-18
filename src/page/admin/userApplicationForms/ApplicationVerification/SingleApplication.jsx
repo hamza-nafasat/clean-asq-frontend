@@ -52,8 +52,12 @@ export default function SingleApplication() {
     phoneNumber: '',
     companyTitle: '',
     issueDate: '',
+    idIssuer: '',
+    idType: '',
+    idExpiryDate: '',
     city: '',
     state: '',
+    dateOfBirth: '',
     zipCode: '',
     country: '',
   });
@@ -63,6 +67,11 @@ export default function SingleApplication() {
   const onLoad = useCallback(autoC => {
     autoC.setFields(['address_components', 'formatted_address', 'geometry', 'place_id']);
     setAutocomplete(autoC);
+  }, []);
+
+  const formatData = useCallback(date => {
+    const [d, m, y] = date.split('/');
+    return `${y}-${m}-${d}`;
   }, []);
 
   const saveInProgress = useCallback(
@@ -94,10 +103,16 @@ export default function SingleApplication() {
       const c = components.find(c => c.types.includes(type));
       return c ? c.long_name : '';
     };
+
+    console.log('all components are', components);
+    const findStreetNumber = getComp('street_number');
+    const findStreetAddress = getComp('sublocality') || getComp('route') || getComp('locality');
+    const combineStreetAddress = findStreetNumber ? `${findStreetNumber} ${findStreetAddress}` : findStreetAddress;
+
     setIdMissionVerifiedData(prev => ({
       ...prev,
-      streetAddress: getComp('sublocality'),
-      city: getComp('locality'),
+      streetAddress: combineStreetAddress,
+      city: getComp('locality') || getComp('administrative_area_level_1'),
       state: getComp('administrative_area_level_1'),
       country: getComp('country'),
       zipCode: getComp('postal_code'), // may be empty
@@ -115,7 +130,7 @@ export default function SingleApplication() {
       if (postal) {
         setIdMissionVerifiedData(prev => ({
           ...prev,
-          zipCode: postal.short_name,
+          zipCode: postal?.short_name,
         }));
       }
     });
@@ -234,23 +249,26 @@ export default function SingleApplication() {
             .catch(() => dispatch(userNotExist()));
         }
       }
-      const raw = data?.Form_Data?.Issue_Date;
-      let isoDate = '';
-      if (raw) {
-        const [d, m, y] = raw.split('/');
-        isoDate = `${y}-${m}-${d}`;
-      }
 
       // console.log('You are verified successfully', data);
       setIsIdMissionProcessing(false);
+
+      const formDataOfIdMission = data?.Form_Data;
       setIdMissionVerifiedData({
-        name: data?.Form_Data?.FullName || '',
-        idNumber: data?.Form_Data?.ID_Number || '',
-        streetAddress: data?.Form_Data?.Address || '',
-        phoneNumber: data?.Form_Data?.PhoneNumber || '',
-        issueDate: isoDate || '',
+        name: formDataOfIdMission?.FullName || ''?.concat(' ', formDataOfIdMission?.Last_Name || ''),
+        idNumber: formDataOfIdMission?.ID_Number || '',
+        idIssuer: formDataOfIdMission?.Issuing_Country || '',
+        idType: formDataOfIdMission?.ID_Type || '',
+        idExpiryDate: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : '',
+        streetAddress: formDataOfIdMission?.ParsedAddressStreetName || '',
+        phoneNumber: formDataOfIdMission?.PhoneNumber || '',
+        zipCode: formDataOfIdMission?.PostalCode_Extracted?.split('-')?.[0] || '',
+        dateOfBirth: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : '',
+        country: formDataOfIdMission?.Issuing_Country || '',
+        issueDate: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : '',
         companyTitle: '',
       });
+
       setIdMissionVerified(true);
     });
     socket.on('idMission_failed', async data => {
@@ -270,7 +288,7 @@ export default function SingleApplication() {
       socket.off('idMission_verified');
       socket.off('idMission_failed');
     };
-  }, [dispatch, formId, getUserProfile, updateMyProfile, user?._id]);
+  }, [dispatch, formId, formatData, getUserProfile, updateMyProfile, user?._id]);
 
   // check validations
   useEffect(() => {
@@ -458,40 +476,71 @@ export default function SingleApplication() {
               required
               value={idMissionVerifiedData?.name}
               label="Name:*"
-              className={'max-w-[500px]!'}
+              className={'max-w-[400px]!'}
             />
             <TextField
-              required
+              value={user?.email}
               onChange={() => {}}
-              value={idMissionVerifiedData?.idNumber}
-              label="Id Number:*"
-              className={'max-w-[500px]!'}
+              label="Email Address:*"
+              required
+              className={'max-w-[400px]!'}
             />
             <TextField
               value={idMissionVerifiedData?.phoneNumber}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, phoneNumber: e.target.value })}
               label="Phone Number:*"
               required
-              className={'max-w-[500px]!'}
+              className={'max-w-[400px]!'}
             />
             <TextField
-              value={idMissionVerifiedData?.companyTitle}
-              onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, companyTitle: e.target.value })}
-              label="Company Title:*"
+              type="date"
+              value={idMissionVerifiedData?.dateOfBirth}
+              onChange={() => {}}
+              label="Date of Birth:*"
               required
-              className={'max-w-[500px]!'}
+              className={'max-w-[400px]!'}
             />
+            <TextField
+              type="text"
+              value={idMissionVerifiedData?.idType}
+              onChange={() => {}}
+              label="Id Type:*"
+              required
+              className={'max-w-[400px]!'}
+            />{' '}
+            <TextField
+              type="text"
+              value={idMissionVerifiedData?.idIssuer}
+              onChange={() => {}}
+              label="Id Type:*"
+              required
+              className={'max-w-[400px]!'}
+            />{' '}
             <TextField
               type="date"
               value={idMissionVerifiedData?.issueDate}
               onChange={() => {}}
               label="Issue Date:*"
               required
-              className={'max-w-[500px]!'}
+              className={'max-w-[400px]!'}
+            />{' '}
+            <TextField
+              required
+              onChange={() => {}}
+              value={idMissionVerifiedData?.idNumber}
+              label="Id Number:*"
+              className={'max-w-[400px]!'}
+            />{' '}
+            <TextField
+              value={idMissionVerifiedData?.companyTitle}
+              onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, companyTitle: e.target.value })}
+              label="Company Title:*"
+              required
+              className={'max-w-[400px]!'}
             />
             <Autocomplete
               onLoad={onLoad}
-              className="w-full max-w-[500px]"
+              className="w-full max-w-[400px]"
               onPlaceChanged={onPlaceChanged}
               options={{ fields: ['address_components', 'formatted_address', 'geometry', 'place_id'] }}
             >
@@ -501,44 +550,40 @@ export default function SingleApplication() {
                 value={idMissionVerifiedData?.streetAddress}
                 onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, streetAddress: e.target.value })}
                 label="Street Address:*"
-                className={'max-w-[500px]!'}
+                className={'max-w-[400px]!'}
               />
             </Autocomplete>
-
             <TextField
               type="text"
               required
               value={idMissionVerifiedData?.city}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, city: e.target.value })}
               label="City:*"
-              className={'max-w-[500px]!'}
+              className={'max-w-[400px]!'}
             />
-
             <TextField
               type="text"
               required
               value={idMissionVerifiedData?.country}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, country: e.target.value })}
               label="Country:*"
-              className={'max-w-[500px]!'}
+              className={'max-w-[400px]!'}
             />
-
             <TextField
               type="text"
               required
               value={idMissionVerifiedData?.zipCode}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, zipCode: e.target.value })}
               label="Zip Code:*"
-              className={'max-w-[500px]!'}
+              className={'max-w-[400px]!'}
             />
-
             <TextField
               type="text"
               required
               value={idMissionVerifiedData?.state}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, state: e.target.value })}
               label="State:*"
-              className={'max-w-[500px]!'}
+              className={'max-w-[400px]!'}
             />
           </form>
           <div className="flex w-full items-center justify-end">

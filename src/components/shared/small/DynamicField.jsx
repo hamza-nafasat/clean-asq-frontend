@@ -348,8 +348,7 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
             />
             {label && (
               <h4 className="text-textPrimary text-base font-medium lg:text-lg">
-                :{required ? '*' : ''}
-                {label}
+                {label} {required ? '*' : ''}:
               </h4>
             )}
           </div>
