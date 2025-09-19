@@ -1,3 +1,4 @@
+import SignatureBox from '@/components/shared/SignatureBox';
 import Button from '@/components/shared/small/Button';
 import CustomLoading from '@/components/shared/small/CustomLoading';
 import { LoadingWithTimer } from '@/components/shared/small/LoadingWithTimer';
@@ -5,7 +6,12 @@ import TextField from '@/components/shared/small/TextField';
 import { useBranding } from '@/hooks/BrandingContext';
 import { socket } from '@/main';
 import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from '@/redux/apis/authApis';
-import { useGetSavedFormMutation, useGetSingleFormQueryQuery, useSaveFormInDraftMutation } from '@/redux/apis/formApis';
+import {
+  useGetSavedFormMutation,
+  useGetSingleFormQueryQuery,
+  useSaveFormInDraftMutation,
+  useSubmitFormArticleFileMutation,
+} from '@/redux/apis/formApis';
 import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
 import { userExist, userNotExist } from '@/redux/slices/authSlice';
 import { addSavedFormData, updateEmailVerified, updateFormState } from '@/redux/slices/formSlice';
@@ -34,6 +40,7 @@ export default function SingleApplication() {
   const [isIdMissionProcessing, setIsIdMissionProcessing] = useState(false);
   const [idMissionVerified, setIdMissionVerified] = useState(false);
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
+  const [signature, setSignature] = useState(null);
 
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const [getIdMissionSession] = useGetIdMissionSessionMutation();
@@ -44,6 +51,8 @@ export default function SingleApplication() {
   const [getSavedFormData] = useGetSavedFormMutation();
   const { formData } = useSelector(state => state?.form);
   const [saveFormInDraft] = useSaveFormInDraftMutation();
+
+  const [submitFormArticleFile, { isLoading }] = useSubmitFormArticleFileMutation();
 
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
     name: '',
@@ -62,6 +71,10 @@ export default function SingleApplication() {
     country: '',
   });
 
+  const handleSignature = signature => {
+    setSignature(signature);
+    setIdMissionVerifiedData(prev => ({ ...prev, signature }));
+  };
   // console.log('idMissionVerifiedData', idMissionVerifiedData);
 
   const onLoad = useCallback(autoC => {
@@ -142,12 +155,27 @@ export default function SingleApplication() {
   const submitIdMissionData = useCallback(
     async e => {
       e.preventDefault();
+      if (!signature) {
+        toast.error('Please do and save the signature');
+        console.log('madrchood');
+        return;
+      }
       const action = await dispatch(updateFormState({ data: idMissionVerifiedData, name: 'idMission' }));
       unwrapResult(action);
+
       await saveInProgress({ data: idMissionVerifiedData, name: 'idMission' });
+
+      const formData = new FormData();
+      formData.append('file', signature); // signature = File (from input/canvas)
+      formData.append('submissionId', formId);
+      formData.append('isSignature', 'true');
+
+      const response = await submitFormArticleFile(formData).unwrap();
+      console.log('Upload success:', response);
+
       navigate(`/singleform/stepper/${formId}`);
     },
-    [dispatch, formId, idMissionVerifiedData, navigate, saveInProgress]
+    [dispatch, formId, idMissionVerifiedData, navigate, saveInProgress, signature, submitFormArticleFile]
   );
 
   const getQrAndWebLink = useCallback(async () => {
@@ -257,7 +285,9 @@ export default function SingleApplication() {
       setIdMissionVerifiedData({
         name: formDataOfIdMission?.FullName || ''?.concat(' ', formDataOfIdMission?.Last_Name || ''),
         idNumber: formDataOfIdMission?.ID_Number || '',
-        idIssuer: formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country || '',
+        idIssuer: formDataOfIdMission?.ID_State
+          ? formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country
+          : formDataOfIdMission?.Issuing_Country || '',
         idType: formDataOfIdMission?.DocumentType || '',
         idExpiryDate: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : '',
         streetAddress: formDataOfIdMission?.ParsedAddressStreetName || '',
@@ -403,7 +433,7 @@ export default function SingleApplication() {
     <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
   ) : (
     <div className="mt-14 h-full overflow-auto text-center">
-      {!idMissionVerified ? (
+      {idMissionVerified ? (
         !emailVerified ? (
           <div className="flex flex-col items-center gap-3">
             <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
@@ -585,6 +615,7 @@ export default function SingleApplication() {
               label="State:*"
               className={'max-w-[400px]!'}
             />
+            <SignatureBox onSave={handleSignature} />
           </form>
           <div className="flex w-full items-center justify-end">
             <Button
