@@ -257,7 +257,7 @@ export default function SingleApplication() {
       setIdMissionVerifiedData({
         name: formDataOfIdMission?.FullName || ''?.concat(' ', formDataOfIdMission?.Last_Name || ''),
         idNumber: formDataOfIdMission?.ID_Number || '',
-        idIssuer: formDataOfIdMission?.Issuing_Country || '',
+        idIssuer: formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country || '',
         idType: formDataOfIdMission?.DocumentType || '',
         idExpiryDate: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : '',
         streetAddress: formDataOfIdMission?.ParsedAddressStreetName || '',
