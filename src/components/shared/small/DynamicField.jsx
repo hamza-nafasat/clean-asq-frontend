@@ -439,6 +439,13 @@ const RangeInputType = ({ field, className, form, setForm }) => {
 };
 
 const OtherInputType = ({ field, className, form, setForm }) => {
+  const isEmpty = value => {
+    if (value === undefined || value === null) return true;
+    if (typeof value === 'string') return value.trim() === '';
+    if (Array.isArray(value)) return value.length === 0;
+    return false;
+  };
+
   const {
     type,
     label,
@@ -485,7 +492,7 @@ const OtherInputType = ({ field, className, form, setForm }) => {
                   type={showMasked ? 'password' : type}
                   value={form[name]}
                   autoComplete="off"
-                  className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
+                  className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'}`}
                 />
 
                 {isMasked && (

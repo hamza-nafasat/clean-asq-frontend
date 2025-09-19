@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Children } from 'react';
 import Button from '../shared/small/Button';
 
-const Stepper = ({ steps, currentStep, visibleSteps = 5, Children }) => {
+const Stepper = ({ steps, currentStep, visibleSteps = 5, Children, emptyRequiredFields = [] }) => {
   const [visibleStepRange, setVisibleStepRange] = useState({ start: 0, end: visibleSteps });
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const totalSteps = steps.length;
@@ -49,10 +49,10 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, Children }) => {
                 <div
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 ${
                     actualIndex < currentStep
-                      ? 'border-primary bg-primary'
+                      ? `border-primary ${emptyRequiredFields.includes(actualIndex) ? 'bg-[#974748]' : 'bg-primary'}`
                       : actualIndex === currentStep
                         ? 'border-primary'
-                        : '!border-gray-300'
+                        : `!border-gray-300 ${emptyRequiredFields.includes(actualIndex) ? 'bg-[#974748]/30' : ''}`
                   }`}
                 >
                   {/* Circle content */}
