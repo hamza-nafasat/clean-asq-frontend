@@ -512,7 +512,7 @@ export default function SingleApplication() {
               type="text"
               value={idMissionVerifiedData?.idIssuer}
               onChange={() => {}}
-              label="Id Type:*"
+              label="Id Issuer:*"
               required
               className={'max-w-[400px]!'}
             />{' '}
