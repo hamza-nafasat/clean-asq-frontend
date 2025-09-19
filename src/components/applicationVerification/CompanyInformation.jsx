@@ -1,7 +1,8 @@
 import { FIELD_TYPES } from '@/data/constants';
 import { useFindNaicAndMccMutation, useGetAllSearchStrategiesQuery } from '@/redux/apis/formApis';
 import { PencilIcon } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
+import { naicsToMcc } from '@/../../server/public/NAICStoMCC';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import Button from '../shared/small/Button';
@@ -41,10 +42,14 @@ function CompanyInformation({
   const [loadingNext, setLoadingNext] = useState(false);
   const [naicsToMccDetails, setNaicsToMccDetails] = useState({
     NAICS: reduxData?.naics?.NAICS || '',
+    NAICS_Description: reduxData?.naics?.NAICS_Description || '',
     MCC: reduxData?.naics?.MCC || '',
   });
   const [showNaicsToMccDetails, setShowNaicsToMccDetails] = useState(true);
   const [naicsApiData, setNaicsApiData] = useState({ bestMatch: {}, otherMatches: [] });
+  const [naicsSuggestions, setNaicsSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const naicsInputRef = useRef(null);
   const [findNaicsToMccDetails, { isLoading }] = useFindNaicAndMccMutation();
   const [strategyKeys, setStrategyKeys] = useState([]);
   const { data: strategyKeysData } = useGetAllSearchStrategiesQuery();
@@ -68,10 +73,70 @@ function CompanyInformation({
         setShowNaicsToMccDetails(true);
       }
     } catch (error) {
-      console.log('Error sending OTP:', error);
-      toast.error(error?.data?.message || 'Failed to send OTP');
+      console.log('Error finding NAICS:', error);
+      toast.error(error?.data?.message || 'Failed to find NAICS code');
     }
   };
+
+  // Filter NAICS codes based on input
+  const handleNaicsInputChange = e => {
+    const value = e.target.value;
+    setNaicsToMccDetails(prev => ({
+      ...prev,
+      NAICS: value,
+      NAICS_Description: '', // Clear description when manually typing
+      MCC: '',
+      MCC_Description: '',
+    }));
+
+    if (value.length > 0) {
+      // First, find all NAICS codes that start with the entered number
+      const startsWithNumber = naicsToMcc.filter(item => item['NAICS Code'].startsWith(value));
+
+      // Then find descriptions containing the value (case insensitive)
+      const containsInDescription = naicsToMcc.filter(
+        item =>
+          !item['NAICS Code'].startsWith(value) && item['NAICS Description'].toLowerCase().includes(value.toLowerCase())
+      );
+
+      // Combine both, with exact matches first, then description matches
+      const allMatches = [...startsWithNumber, ...containsInDescription];
+
+      // Show more results (up to 20) for better discovery
+      const filtered = allMatches.slice(0, 20);
+
+      setNaicsSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+
+  // Handle selection from suggestions
+  const handleSelectNaics = item => {
+    const formattedValue = `${item['NAICS Code']}, ${item['NAICS Description']}`;
+    setNaicsToMccDetails({
+      NAICS: formattedValue,
+      NAICS_Description: item['NAICS Description'],
+      MCC: item['MCC Code'] || '',
+      MCC_Description: item['MCC Description'] || '',
+    });
+    setShowSuggestions(false);
+  };
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (naicsInputRef.current && !naicsInputRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     if (fields && fields.length > 0) {
@@ -214,20 +279,39 @@ function CompanyInformation({
       )}
       <div className="mt-6 flex w-full flex-col items-start">
         <h4 className="text-textPrimary text-base font-medium lg:text-lg">NAICS Code and Description</h4>
-        <div className={`'mt-2' flex w-full gap-4`}>
-          <input
-            placeholder={'NAICS Code and Description'}
-            type={'text'}
-            value={naicsToMccDetails.NAICS}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
-            onChange={e => setNaicsToMccDetails({ ...naicsToMccDetails, NAICS: e.target.value })}
-          />
-          <Button
-            label="Find NAICS"
-            className={`text-nowrap ${isLoading && 'pointer-events-none opacity-30'}`}
-            disabled={isLoading}
-            onClick={findNaicsHandler}
-          />
+        <div className="mt-2 flex w-full flex-col gap-4">
+          <div className="relative w-full" ref={naicsInputRef}>
+            <div className="flex w-full gap-4">
+              <input
+                placeholder="Type NAICS code or description..."
+                type="text"
+                value={naicsToMccDetails.NAICS}
+                className="border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
+                onChange={handleNaicsInputChange}
+                onFocus={() => (naicsToMccDetails.NAICS ? setShowSuggestions(true) : setShowSuggestions(false))}
+              />
+              <Button
+                label="Find NAICS"
+                className={`text-nowrap ${isLoading && 'pointer-events-none opacity-30'}`}
+                disabled={isLoading}
+                onClick={findNaicsHandler}
+              />
+            </div>
+            {showSuggestions && (
+              <div className="absolute z-10 mt-1 max-h-80 w-full overflow-y-auto rounded-md border border-gray-300 bg-white shadow-lg">
+                {naicsSuggestions.map((item, index) => (
+                  <div
+                    key={index}
+                    className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                    onClick={() => handleSelectNaics(item)}
+                  >
+                    <div className="font-medium">{item['NAICS Code']}</div>
+                    <div className="text-sm text-gray-600">{item['NAICS Description']}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       {/* next Previous buttons  */}
