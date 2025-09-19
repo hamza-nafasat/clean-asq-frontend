@@ -2,7 +2,7 @@ import { FIELD_TYPES } from '@/data/constants';
 import { useFindNaicAndMccMutation, useGetAllSearchStrategiesQuery } from '@/redux/apis/formApis';
 import { PencilIcon } from 'lucide-react';
 import { useEffect, useMemo, useState, useRef } from 'react';
-import { naicsToMcc } from '@/../../server/public/NAICStoMCC';
+import { naicsToMcc } from '../../../public/NAICStoMCC.js';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import Button from '../shared/small/Button';
