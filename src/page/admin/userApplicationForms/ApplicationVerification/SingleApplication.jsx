@@ -258,7 +258,7 @@ export default function SingleApplication() {
         name: formDataOfIdMission?.FullName || ''?.concat(' ', formDataOfIdMission?.Last_Name || ''),
         idNumber: formDataOfIdMission?.ID_Number || '',
         idIssuer: formDataOfIdMission?.Issuing_Country || '',
-        idType: formDataOfIdMission?.ID_Type || '',
+        idType: formDataOfIdMission?.DocumentType || '',
         idExpiryDate: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : '',
         streetAddress: formDataOfIdMission?.ParsedAddressStreetName || '',
         phoneNumber: formDataOfIdMission?.PhoneNumber || '',
