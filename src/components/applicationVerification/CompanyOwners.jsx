@@ -450,7 +450,7 @@ function CompanyOwners({
                                 label: 'Do you have full information for this person?',
                                 name: 'have_detail',
                                 options: [
-                                  { label: 'NO', value: 'no' },
+                                  { label: 'No', value: 'no' },
                                   { label: 'Yes', value: 'yes' },
                                 ],
                                 required: true,
