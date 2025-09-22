@@ -14,6 +14,7 @@ import Modal from '../shared/small/Modal';
 import { useSelector } from 'react-redux';
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 import { PencilIcon } from 'lucide-react';
+import { useGetBankLookupQuery } from '@/redux/apis/wiseApi';
 
 function BankInfo({
   name,
@@ -37,8 +38,14 @@ function BankInfo({
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
   const [loadingNext, setLoadingNext] = useState(false);
+
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
-  console.log('bank information', loadingNext);
+
+  const [lookupRouting, setLookupRouting] = useState(null);
+  const { data, refetch, isFetching } = useGetBankLookupQuery(lookupRouting, {
+    skip: !lookupRouting,
+  });
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (fields && fields.length > 0) {
@@ -49,6 +56,15 @@ function BankInfo({
       setForm(initialForm);
     }
   }, [fields, name, reduxData]);
+  useEffect(() => {
+    if (data) {
+      if (Array.isArray(data.bankDetailsList) && data.bankDetailsList.length === 0) {
+        setError('No bank found for this routing number');
+      } else {
+        setError(null);
+      }
+    }
+  }, [data]);
 
   useEffect(() => {
     const allFilled = requiredNames.every(name => {
@@ -70,6 +86,20 @@ function BankInfo({
     });
     setIsAllRequiredFieldsFilled(allFilled);
   }, [form, requiredNames]);
+
+  useEffect(() => {
+    if (data?.bankDetailsList?.length > 0) {
+      const bankName = data.bankDetailsList[0].bankName;
+      if (bankName) {
+        const confirmed = window.confirm(`We found: ${bankName}. Do you want to autofill?`);
+        if (confirmed) {
+          setForm(prev => ({ ...prev, bank_name: bankName }));
+        }
+      }
+      setLookupRouting(null);
+    }
+  }, [data]);
+
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
@@ -96,22 +126,35 @@ function BankInfo({
           />
         </div>
       )}
-      {/* <h5 className="text-textPrimary text-base">Provide Account information.</h5> */}
-      {/* {fields?.map((field, i) => (
-        <div key={i} className="mt-5">
-          <DynamicField
-            key={i}
-            field={field}
-            value={form[field.name] || ''}
-            placeholder={field.placeholder}
-            onChange={e => setForm(prev => ({ ...prev, [field.name]: e.target.value }))}
-            setForm={setForm}
-            form={form}
-          />
-        </div>
-      ))} */}
+
       {fields?.length > 0 &&
         fields.map((field, index) => {
+          if (field.name === 'bank_routing_number') {
+            return (
+              <>
+                <div key={index} className="mt-4 flex items-end gap-2">
+                  <OtherInputType
+                    field={field}
+                    placeholder={field.placeholder}
+                    form={form}
+                    setForm={setForm}
+                    className="flex-1"
+                  />
+                  <Button
+                    label={isFetching ? 'Checking...' : 'Check'}
+                    onClick={() => {
+                      if (form[field.name]) {
+                        setLookupRouting(form[field.name]);
+                        refetch();
+                      }
+                    }}
+                  />
+                </div>
+                {error && <p className="text-red-500">{error}</p>}
+              </>
+            );
+          }
+
           if (field.type === FIELD_TYPES.SELECT) {
             return (
               <div key={index} className="mt-4">
@@ -165,7 +208,7 @@ function BankInfo({
             </div>
           );
         })}
-      {/* next Previous buttons  */}
+
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
