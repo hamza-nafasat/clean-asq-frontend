@@ -72,9 +72,10 @@ export default function SingleApplication() {
   });
 
   const handleSignature = signature => {
-    setSignature(signature);
-    setIdMissionVerifiedData(prev => ({ ...prev, signature }));
-    toast.success('Signature saved successfully');
+    setSignature(signature.value);
+    setIdMissionVerifiedData(prev => ({ ...prev, signature: signature.value }));
+    if (signature.action === 'save') toast.success('Signature saved successfully');
+    if (signature.action === 'clear') toast.success('Signature cleared successfully');
   };
   // console.log('idMissionVerifiedData', idMissionVerifiedData);
 

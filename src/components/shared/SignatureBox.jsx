@@ -85,7 +85,7 @@ const SignatureBox = ({ onSave }) => {
     const dataUrl = canvasRef.current.toDataURL('image/png');
     const file = dataURLtoFile(dataUrl, 'signature.png');
     setPreview(dataUrl);
-    onSave?.(file);
+    onSave?.({ value: file, action: 'save' });
     console.log('file', file);
   };
 
@@ -96,6 +96,7 @@ const SignatureBox = ({ onSave }) => {
     ctxRef.current.fillRect(0, 0, canvas.width, canvas.height);
     setTypedSignature('');
     setPreview(null);
+    onSave?.({ value: null, action: 'clear' });
   };
 
   return (
