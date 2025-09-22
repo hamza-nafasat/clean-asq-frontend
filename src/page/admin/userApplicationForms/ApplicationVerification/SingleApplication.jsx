@@ -287,7 +287,7 @@ export default function SingleApplication() {
       let address2 = formDataOfIdMission?.Address2 || '';
       let address = formDataOfIdMission?.Address || '';
       if (address.includes(address2)) {
-        address2 = '';
+        address2 = 'None';
       }
 
       setIdMissionVerifiedData({
@@ -349,7 +349,6 @@ export default function SingleApplication() {
           )
         );
       if (typeof val === 'object') return Object.values(val).every(v => v?.toString().trim() !== '');
-
       return true;
     });
     setIsAllRequiredFieldsFilled(allFilled);
@@ -606,14 +605,14 @@ export default function SingleApplication() {
               label="State:*"
               className={'max-w-[400px]!'}
             />
-            {/* <TextField
+            <TextField
               type="text"
               required
               value={idMissionVerifiedData?.country}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, country: e.target.value })}
               label="Country:*"
               className={'max-w-[400px]!'}
-            /> */}
+            />
             <TextField
               value={idMissionVerifiedData?.companyTitle}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, companyTitle: e.target.value })}
@@ -632,7 +631,7 @@ export default function SingleApplication() {
           </form>
           <div className="flex w-full items-center justify-end">
             <Button
-              disabled={!isAllRequiredFieldsFilled}
+              disabled={isAllRequiredFieldsFilled}
               label={!isAllRequiredFieldsFilled ? 'Some fields are missing' : 'Submit'}
               onClick={submitIdMissionData}
               className="mt-4"
