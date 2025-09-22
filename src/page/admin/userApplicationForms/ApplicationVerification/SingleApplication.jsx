@@ -74,6 +74,7 @@ export default function SingleApplication() {
   const handleSignature = signature => {
     setSignature(signature);
     setIdMissionVerifiedData(prev => ({ ...prev, signature }));
+    toast.success('Signature saved successfully');
   };
   // console.log('idMissionVerifiedData', idMissionVerifiedData);
 
@@ -290,14 +291,18 @@ export default function SingleApplication() {
           : formDataOfIdMission?.Issuing_Country || '',
         idType: formDataOfIdMission?.DocumentType || '',
         idExpiryDate: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : '',
-        streetAddress: formDataOfIdMission?.ParsedAddressStreetName || '',
+        streetAddress:
+          formDataOfIdMission?.ParsedAddressStreetNumber + formDataOfIdMission?.ParsedAddressStreetName || '',
         phoneNumber: formDataOfIdMission?.PhoneNumber || '',
-        zipCode: formDataOfIdMission?.PostalCode_Extracted?.split('-')?.[0] || '',
+        zipCode: formDataOfIdMission?.PostalCode_Extracted?.split('-') || '',
         dateOfBirth: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : '',
         country: formDataOfIdMission?.Issuing_Country || '',
         issueDate: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : '',
         companyTitle: '',
+        state: formDataOfIdMission?.ParsedAddressProvince || '',
+        city: formDataOfIdMission?.ParsedAddressMunicipality || '',
       });
+      console.log(idMissionVerified);
 
       setIdMissionVerified(true);
     });
@@ -516,13 +521,6 @@ export default function SingleApplication() {
               className={'max-w-[400px]!'}
             />
             <TextField
-              value={idMissionVerifiedData?.phoneNumber}
-              onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, phoneNumber: e.target.value })}
-              label="Phone Number:*"
-              required
-              className={'max-w-[400px]!'}
-            />
-            <TextField
               type="date"
               value={idMissionVerifiedData?.dateOfBirth}
               onChange={() => {}}
@@ -561,13 +559,6 @@ export default function SingleApplication() {
               label="Id Number:*"
               className={'max-w-[400px]!'}
             />{' '}
-            <TextField
-              value={idMissionVerifiedData?.companyTitle}
-              onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, companyTitle: e.target.value })}
-              label="Company Title:*"
-              required
-              className={'max-w-[400px]!'}
-            />
             <Autocomplete
               onLoad={onLoad}
               className="w-full max-w-[400px]"
@@ -594,14 +585,6 @@ export default function SingleApplication() {
             <TextField
               type="text"
               required
-              value={idMissionVerifiedData?.country}
-              onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, country: e.target.value })}
-              label="Country:*"
-              className={'max-w-[400px]!'}
-            />
-            <TextField
-              type="text"
-              required
               value={idMissionVerifiedData?.zipCode}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, zipCode: e.target.value })}
               label="Zip Code:*"
@@ -613,6 +596,28 @@ export default function SingleApplication() {
               value={idMissionVerifiedData?.state}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, state: e.target.value })}
               label="State:*"
+              className={'max-w-[400px]!'}
+            />
+            {/* <TextField
+              type="text"
+              required
+              value={idMissionVerifiedData?.country}
+              onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, country: e.target.value })}
+              label="Country:*"
+              className={'max-w-[400px]!'}
+            /> */}
+            <TextField
+              value={idMissionVerifiedData?.companyTitle}
+              onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, companyTitle: e.target.value })}
+              label="Company Title:*"
+              required
+              className={'max-w-[400px]!'}
+            />
+            <TextField
+              value={idMissionVerifiedData?.phoneNumber}
+              onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, phoneNumber: e.target.value })}
+              label="Phone Number:*"
+              required
               className={'max-w-[400px]!'}
             />
             <SignatureBox onSave={handleSignature} />

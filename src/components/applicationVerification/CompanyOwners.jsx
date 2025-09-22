@@ -256,10 +256,13 @@ function CompanyOwners({
     if (form?.applicant_is_also_primary_operator === 'yes') {
       isOperatorExist = true;
     } else if (!form?.applicant_is_also_primary_operator || form?.applicant_is_also_primary_operator === 'no') {
-      // Check additional_owner for at least one non-empty object
+      // Check additional_owner for at least one valid entry with both name and email
       isOperatorExist =
         Array.isArray(form?.additional_owner) &&
-        form.additional_owner.some(item => Object.values(item).some(v => v?.toString().trim() !== ''));
+        form.additional_owner.some(item => 
+          item?.name?.toString().trim() !== '' && 
+          item?.email?.toString().trim() !== ''
+        );
     }
     if (!isOperatorExist) setSubmitButtonText('At least one primary operator required');
     if (!allFilled) setSubmitButtonText('Some Required Fields are Missing');
@@ -427,6 +430,7 @@ function CompanyOwners({
                               name="email"
                               label="Email Address"
                               value={email}
+                              required
                               onChange={e => handleChangeOnOtherOwnersData(e, index)}
                             />
                           </div>

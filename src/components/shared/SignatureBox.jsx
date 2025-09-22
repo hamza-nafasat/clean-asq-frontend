@@ -99,7 +99,7 @@ const SignatureBox = ({ onSave }) => {
   };
 
   return (
-    <div className="w-fit space-y-4 rounded-md border p-4">
+    <div className="w-fit space-y-4 rounded-md border bg-white p-4">
       {isTouch ? (
         <canvas
           ref={canvasRef}
