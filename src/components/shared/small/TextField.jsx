@@ -52,11 +52,11 @@ const TextField = ({
   };
 
   return (
-    <div className={`flex w-full flex-col items-start ${className}`}>
+    <div className={`input-box flex w-full flex-col items-start ${className} `}>
       {label && <label className="text-textPrimary text-sm lg:text-base">{label}</label>}
-      <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
+      <div className={`relative w-full ${label ? 'mt-2' : ''} `}>
         {leftIcon && (
-          <span className={`absolute top-1/2 left-3 -translate-y-1/2 text-gray-500 ${cnLeft}`}>{leftIcon}</span>
+          <span className={`absolute top-1/2 left-3 -translate-y-1/2 text-gray-500 ${cnLeft} `}>{leftIcon}</span>
         )}
 
         <input
@@ -71,7 +71,7 @@ const TextField = ({
           type={showMasked ? 'password' : type === 'date' ? 'text' : type}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-          className={`${cn} border-frameColor relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''}`}
+          className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''} ${!value ? 'border-accent' : 'border-frameColor'} `}
         />
 
         {showSuggestions && filteredSuggestions.length > 0 && value?.length > 0 && (

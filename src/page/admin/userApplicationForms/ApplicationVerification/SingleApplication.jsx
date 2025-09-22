@@ -284,6 +284,12 @@ export default function SingleApplication() {
       setIsIdMissionProcessing(false);
 
       const formDataOfIdMission = data?.Form_Data;
+      let address2 = formDataOfIdMission?.Address2 || '';
+      let address = formDataOfIdMission?.Address || '';
+      if (address.includes(address2)) {
+        address2 = '';
+      }
+
       setIdMissionVerifiedData({
         name: formDataOfIdMission?.FullName || ''?.concat(' ', formDataOfIdMission?.Last_Name || ''),
         idNumber: formDataOfIdMission?.ID_Number || '',
@@ -302,6 +308,7 @@ export default function SingleApplication() {
         companyTitle: '',
         state: formDataOfIdMission?.ParsedAddressProvince || '',
         city: formDataOfIdMission?.ParsedAddressMunicipality || '',
+        address2: address2,
       });
       console.log(idMissionVerified);
 
@@ -439,7 +446,7 @@ export default function SingleApplication() {
     <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
   ) : (
     <div className="mt-14 h-full overflow-auto text-center">
-      {!idMissionVerified ? (
+      {idMissionVerified ? (
         !emailVerified ? (
           <div className="flex flex-col items-center gap-3">
             <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
