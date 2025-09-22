@@ -444,7 +444,7 @@ export default function SingleApplication() {
     <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
   ) : (
     <div className="mt-14 h-full overflow-auto text-center">
-      {idMissionVerified ? (
+      {!idMissionVerified ? (
         !emailVerified ? (
           <div className="flex flex-col items-center gap-3">
             <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
@@ -630,7 +630,7 @@ export default function SingleApplication() {
           </form>
           <div className="flex w-full items-center justify-end">
             <Button
-              disabled={isAllRequiredFieldsFilled}
+              disabled={!isAllRequiredFieldsFilled}
               label={!isAllRequiredFieldsFilled ? 'Some fields are missing' : 'Submit'}
               onClick={submitIdMissionData}
               className="mt-4"
