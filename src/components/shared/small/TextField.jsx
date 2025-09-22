@@ -18,7 +18,7 @@ const TextField = ({
   value,
   ...rest
 }) => {
-  const [showMasked, setShowMasked] = useState(isMasked ? true : false);
+  const [showMasked, setShowMasked] = useState(isMasked);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const inputVal = String(value ?? '').toLowerCase();
@@ -39,6 +39,18 @@ const TextField = ({
         })
     : [];
 
+  const formatDate = dateStr => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split(/[-/]/);
+    return `${year}-${month}-${day}`;
+  };
+
+  const normalizeDate = dateStr => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split(/[-\s/]/);
+    return `${year}-${month}-${day}`;
+  };
+
   return (
     <div className={`flex w-full flex-col items-start ${className}`}>
       {label && <label className="text-textPrimary text-sm lg:text-base">{label}</label>}
@@ -46,13 +58,17 @@ const TextField = ({
         {leftIcon && (
           <span className={`absolute top-1/2 left-3 -translate-y-1/2 text-gray-500 ${cnLeft}`}>{leftIcon}</span>
         )}
+
         <input
           {...rest}
-          onChange={onChange}
+          onChange={e => {
+            const val = type === 'date' ? normalizeDate(e.target.value) : e.target.value;
+            onChange?.({ target: { name, value: val } });
+          }}
           name={name}
-          value={value}
+          value={type === 'date' ? formatDate(value) : value}
           autoComplete="off"
-          type={showMasked ? 'password' : type}
+          type={showMasked ? 'password' : type === 'date' ? 'text' : type}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           className={`${cn} border-frameColor relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''}`}
