@@ -438,7 +438,7 @@ const RangeInputType = ({ field, className, form, setForm }) => {
   );
 };
 
-const OtherInputType = ({ field, className, form, setForm }) => {
+const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => {
   const isEmpty = value => {
     if (value === undefined || value === null) return true;
     if (typeof value === 'string') return value.trim() === '';
@@ -493,6 +493,13 @@ const OtherInputType = ({ field, className, form, setForm }) => {
                   value={form[name]}
                   autoComplete="off"
                   className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'}`}
+                  {...(isConfirmField
+                    ? {
+                        onPaste: e => e.preventDefault(),
+                        onCopy: e => e.preventDefault(),
+                        onCut: e => e.preventDefault(),
+                      }
+                    : {})}
                 />
 
                 {isMasked && (

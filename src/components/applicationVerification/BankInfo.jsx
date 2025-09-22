@@ -155,6 +155,22 @@ function BankInfo({
             );
           }
 
+          if (field.name === 'confirm_bank_account_number') {
+            return (
+              <div key={index} className="mt-4">
+                <OtherInputType
+                  field={field}
+                  placeholder={field.placeholder}
+                  form={form}
+                  setForm={setForm}
+                  className={''}
+                  isConfirmField
+                />
+                <p className="text-xs text-gray-500">Please type your account number manually (no copy/paste).</p>
+              </div>
+            );
+          }
+
           if (field.type === FIELD_TYPES.SELECT) {
             return (
               <div key={index} className="mt-4">
