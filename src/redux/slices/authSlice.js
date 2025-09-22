@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const authSlice = createSlice({
   name: 'auth',
-  initialState: { user: null },
+  initialState: { user: null, idMissionData: null },
   reducers: {
     userExist: (state, action) => {
       state.user = action.payload;
@@ -10,9 +10,12 @@ const authSlice = createSlice({
     userNotExist: state => {
       state.user = null;
     },
+    setIdMissionData: (state, action) => {
+      state.idMissionData = action.payload;
+    },
   },
 });
 
-export const { userExist, userNotExist } = authSlice.actions;
+export const { userExist, userNotExist, setIdMissionData } = authSlice.actions;
 
 export default authSlice;
