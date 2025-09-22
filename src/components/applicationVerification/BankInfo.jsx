@@ -38,7 +38,7 @@ function BankInfo({
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
   const [loadingNext, setLoadingNext] = useState(false);
-
+  const { idMissionData } = useSelector(state => state.auth);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
 
   const [lookupRouting, setLookupRouting] = useState(null);
@@ -167,6 +167,26 @@ function BankInfo({
                   isConfirmField
                 />
                 <p className="text-xs text-gray-500">Please type your account number manually (no copy/paste).</p>
+              </div>
+            );
+          }
+
+          if (field.name === 'bank_account_holder_name') {
+            return (
+              <div className="flex items-end gap-2">
+                <div key={index} className="mt-4 flex-1">
+                  <OtherInputType
+                    field={field}
+                    placeholder={field.placeholder}
+                    form={form}
+                    setForm={setForm}
+                    className={''}
+                  />
+                </div>
+                <Button
+                  label={`Fill with ${idMissionData.name}`}
+                  onClick={() => setForm(prev => ({ ...prev, [field.name]: idMissionData.name }))}
+                />
               </div>
             );
           }

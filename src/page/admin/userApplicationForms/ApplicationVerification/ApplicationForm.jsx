@@ -105,13 +105,10 @@ export default function ApplicationForm() {
   // get saved data if exist
   useEffect(() => {
     if (form?.data?.sections && form?.data?.sections?.length > 0) {
-      let resp;
       getSavedFormData({ formId: form?.data?._id })
         .then(res => {
-          resp = res;
           const data = res?.data?.data?.savedData;
           dispatch(setIdMissionData(data?.idMission));
-          console.log('My Idmission data', data?.idMission);
           if (data) dispatch(addSavedFormData(data));
         })
         .finally(() => setIsSavedApiRun(true));

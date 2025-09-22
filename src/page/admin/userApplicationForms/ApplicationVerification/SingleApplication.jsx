@@ -159,7 +159,6 @@ export default function SingleApplication() {
       e.preventDefault();
       if (!signature) {
         toast.error('Please do and save the signature');
-        console.log('madrchood');
         return;
       }
       const action = await dispatch(updateFormState({ data: idMissionVerifiedData, name: 'idMission' }));
