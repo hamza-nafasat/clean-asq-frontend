@@ -458,7 +458,7 @@ export default function SingleApplication() {
                 className="max-w-[500px]"
               />
               <Button
-                onClick={sentOtpForEmail}
+                onClick={() => navigate(`/verification?formId=${formId}`)}
                 disabled={otpLoading}
                 className={`min-w-[130px] py-[8px] ${otpLoading && 'cursor-not-allowed opacity-25'}`}
                 label={'Send OTP'}
