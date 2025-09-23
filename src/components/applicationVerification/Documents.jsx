@@ -44,6 +44,13 @@ function Documents({
   const [formateTextInMarkDown] = useFormateTextInMarkDownMutation();
   const [showRequiredDocs, setShowRequiredDocs] = useState(true);
 
+  // Generate the AI prompt
+  const generateAiPrompt = () => {
+    const companyName = idMissionData?.companyTitle || 'your company';
+    const state = idMissionData?.state || 'your state';
+    return `how do I find online images/copies of the articles of incorporation or organization for ${companyName} in ${state} via the state's entity search website?`;
+  };
+
   // Fetch AI help on component mount
   useEffect(() => {
     const fetchRequiredDocuments = async () => {
@@ -51,10 +58,9 @@ function Documents({
 
       try {
         setIsAiLoading(true);
+        const prompt = generateAiPrompt();
         const res = await formateTextInMarkDown({
-          text: `List the specific documents required for business verification in ${idMissionData.state}. 
-          Include document types, formats accepted, and any size or quality requirements. 
-          Be concise and use bullet points.`,
+          text: prompt,
         }).unwrap();
 
         if (res.success) {
@@ -115,32 +121,44 @@ function Documents({
         </div>
 
         {/* Show required documents section */}
-        {showRequiredDocs && aiResponse && (
+        {showRequiredDocs && (
           <div className="mb-6 rounded-lg bg-blue-50 p-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-blue-800">Documents required for {idMissionData?.state || 'your state'}</h3>
-              <button 
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <h3 className="text-lg font-medium text-blue-800">
+                  How to Find Your Articles of Incorporation/Organization
+                </h3>
+                <div className="mt-2 rounded-md bg-blue-100 p-3">
+                  <p className="mt-1 font-mono text-sm text-blue-900">{generateAiPrompt()}</p>
+                </div>
+              </div>
+              <button
                 onClick={() => setShowRequiredDocs(false)}
-                className="text-blue-600 hover:text-blue-800"
+                className="h-fit text-blue-600 hover:text-blue-800"
+                disabled={isAiLoading}
               >
-                Hide
+                {isAiLoading ? 'Loading...' : 'Hide'}
               </button>
             </div>
-            <div 
-              className="prose mt-2 max-w-none text-sm text-gray-700"
-              dangerouslySetInnerHTML={{ __html: aiResponse }}
-            />
+            {isAiLoading ? (
+              <div className="mt-4 flex justify-center py-4">
+                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+              </div>
+            ) : aiResponse ? (
+              <div
+                className="prose mt-2 max-w-none text-sm text-gray-700"
+                dangerouslySetInnerHTML={{ __html: aiResponse }}
+              />
+            ) : (
+              <p className="mt-2 text-sm text-gray-600">Unable to load document requirements at this time.</p>
+            )}
           </div>
         )}
 
         {/* Custom AI help section */}
         {!showRequiredDocs && (
           <div className="mb-4 flex justify-end">
-            <Button 
-              variant="outline" 
-              onClick={() => setShowRequiredDocs(true)}
-              label="Show Required Documents"
-            />
+            <Button variant="outline" onClick={() => setShowRequiredDocs(true)} label="Show Required Documents" />
           </div>
         )}
         {updateSectionFromatingModal && (
