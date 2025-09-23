@@ -44,9 +44,8 @@ function BankInfo({
   const [loadingNext, setLoadingNext] = useState(false);
   const { idMissionData } = useSelector(state => state.auth);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
-  const [showNameSuggestion, setShowNameSuggestion] = useState(true);
-
   const [lookupRouting, setLookupRouting] = useState(null);
+  const [accMatch, setAccMatch] = useState(false);
   const { data, refetch, isFetching } = useGetBankLookupQuery(lookupRouting, {
     skip: !lookupRouting,
   });
@@ -93,6 +92,15 @@ function BankInfo({
       }
     }
   }, [data]);
+
+  useEffect(() => {
+    const isMatch =
+      form.bank_account_number &&
+      form.confirm_bank_account_number &&
+      form.bank_account_number === form.confirm_bank_account_number;
+
+    setAccMatch(isMatch);
+  }, [form.bank_account_number, form.confirm_bank_account_number]);
 
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
@@ -271,12 +279,12 @@ function BankInfo({
           {currentStep < totalSteps - 1 ? (
             <Button
               onClick={() => handleNext({ data: form, name: title, setLoadingNext })}
-              className={`${(!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)) && 'pointer-events-none cursor-not-allowed opacity-20'}`}
-              disabled={!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)}
+              className={`${(!isAllRequiredFieldsFilled || loadingNext || !accMatch || (isSignature && !signUrl)) && 'pointer-events-none cursor-not-allowed opacity-20'}`}
+              disabled={!isAllRequiredFieldsFilled || loadingNext || !accMatch || (isSignature && !signUrl)}
               label={
-                isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)
-                  ? 'Next'
-                  : 'Some Required Fields are Missing'
+                !isAllRequiredFieldsFilled || loadingNext || !accMatch || (isSignature && !signUrl)
+                  ? 'Some Required Fields are Missing'
+                  : 'Next'
               }
             />
           ) : (
