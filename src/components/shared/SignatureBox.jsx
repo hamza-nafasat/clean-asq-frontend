@@ -84,15 +84,34 @@ const SignatureBox = ({ onSave, inSection = false, signUrl, sectionId }) => {
     setPreview(dataUrl);
   };
 
+  const isCanvasBlank = canvas => {
+    const ctx = canvas.getContext('2d');
+    const pixelBuffer = new Uint32Array(ctx.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
+    return !pixelBuffer.some(color => color !== 0xffffffff);
+  };
+
   const handleSave = async () => {
+    if (!isTouch && !typedSignature.trim()) {
+      toast.error('Please type or draw your signature before saving');
+      return;
+    }
+
+    if (isTouch && canvasRef.current && isCanvasBlank(canvasRef.current)) {
+      toast.error('Please draw your signature before saving');
+      return;
+    }
+
     if (!isTouch) renderTypedOnCanvas();
+
     const dataUrl = canvasRef.current.toDataURL('image/png');
     const file = dataURLtoFile(dataUrl, 'signature.png');
     setPreview(dataUrl);
+
     if (!inSection) {
       onSave?.({ value: file, action: 'save' });
       return;
     }
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('sectionId', sectionId);
