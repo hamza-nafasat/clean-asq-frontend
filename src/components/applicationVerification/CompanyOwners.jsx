@@ -50,10 +50,6 @@ function CompanyOwners({
 
   const requiredNames = useMemo(() => formFields.filter(f => f.required).map(f => f.name), [formFields]);
 
-  console.log('company owners', form);
-  // console.log('company owners', ownersFromLookup);
-  // console.log('filtered owners', filteredOwners);
-
   // console.log('company owners', form);
 
   const handleChangeOnOtherOwnersData = (e, index, isFilter = false) => {
@@ -86,9 +82,13 @@ function CompanyOwners({
     }));
   };
 
+  function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+  }
+
   useEffect(() => {
     const isApplicantOwner = 'applicant_is_primary_operator_or_owner_with_more_then_25percentage';
-
     let baseFields;
     if (form?.[isApplicantOwner] === 'yes') {
       const blockFields = blocks.find(block => block?.name === isApplicantOwner)?.fields ?? [];
@@ -98,12 +98,9 @@ function CompanyOwners({
     } else {
       baseFields = [...fields];
     }
-
     const percentage = Number(form?.applicant_percentage);
     const isApplicantPrimaryOperator = form?.applicant_is_also_primary_operator;
-    console.log('isApplicantPrimaryOperator', isApplicantPrimaryOperator);
     const hasOperatorField = baseFields.some(f => f.name === 'applicant_is_owner_and_operator');
-
     // if value is les than 25 then add job title
     if (percentage >= 25 && percentage !== 0 && !hasOperatorField) {
       baseFields = baseFields.filter(f => f.name !== 'applicant_job_title');
@@ -120,12 +117,10 @@ function CompanyOwners({
       };
       baseFields.splice(baseFields?.length - 2, 0, newField);
     }
-
     // if value is les than 25 then add applicant is also primary operator
     if (percentage < 25) {
       baseFields = baseFields.filter(f => f.name !== 'applicant_is_also_primary_operator');
     }
-
     // if applicant is not primary operator then change the label
     if (isApplicantPrimaryOperator === 'yes' || isApplicantPrimaryOperator === 'no') {
       // add new field or remove according to primary operator
@@ -237,19 +232,18 @@ function CompanyOwners({
       const val = form[name];
       if (val == null) return false;
       if (typeof val === 'string') return val.trim() !== '';
-      if (Array.isArray(val)) {
-        return (
-          val.length > 0 &&
-          val.every(item =>
-            typeof item === 'object'
-              ? Object.values(item).some(v => v?.toString().trim() !== '')
-              : item?.toString().trim() !== ''
-          )
-        );
-      }
-      if (typeof val === 'object') return Object.values(val).some(v => v?.toString().trim() !== '');
       return true;
     });
+
+    const additionOwners = form?.['additional_owner'];
+    let isEmailVAlidated = true;
+    if (additionOwners) {
+      isEmailVAlidated =
+        Array.isArray(additionOwners) &&
+        additionOwners.some(
+          item => item?.email?.toString().trim() !== '' && validateEmail(item?.email?.toString().trim())
+        );
+    }
 
     // Logic for primary operator
     let isOperatorExist = false;
@@ -269,9 +263,8 @@ function CompanyOwners({
     if (form?.applicant_percentage > 75) {
       setFormFields(prev => [...prev.filter(f => f.name !== 'additional_owners_own_25_percent_or_more')]);
     }
-    const isAllChecksTrue = allFilled && isOperatorExist;
+    const isAllChecksTrue = allFilled && isOperatorExist && isEmailVAlidated;
     setIsAllRequiredFieldsFilled(isAllChecksTrue);
-    // console.log('isOperatorExist:', isOperatorExist, 'allFilled:', allFilled, 'Final Check:', isAllChecksTrue);
   }, [form, requiredNames]);
 
   return (
@@ -428,6 +421,7 @@ function CompanyOwners({
                             <TextField
                               name="email"
                               label="Email Address"
+                              type="email"
                               value={email}
                               required
                               onChange={e => handleChangeOnOtherOwnersData(e, index)}
@@ -480,6 +474,7 @@ function CompanyOwners({
                                 <TextField
                                   name="phone"
                                   label="Phone Number"
+                                  type="number"
                                   value={phone}
                                   onChange={e => handleChangeOnOtherOwnersData(e, index)}
                                   className={'max-w-[30%] min-w-[400px]'}
@@ -556,7 +551,7 @@ function CompanyOwners({
         </div>
       </div>
 
-      <form className="flex justify-end gap-4 p-4">
+      <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
           {currentStep > 0 && <Button variant="secondary" label="Previous" onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
@@ -575,8 +570,7 @@ function CompanyOwners({
             />
           )}
         </div>
-      </form>
-
+      </div>
       {customizeModal && (
         <Modal onClose={() => setCustomizeModal(false)}>
           <CustomizationOwnerFieldsModal

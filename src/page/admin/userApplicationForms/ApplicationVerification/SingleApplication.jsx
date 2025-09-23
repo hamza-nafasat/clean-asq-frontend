@@ -52,7 +52,7 @@ export default function SingleApplication() {
   const { formData } = useSelector(state => state?.form);
   const [saveFormInDraft] = useSaveFormInDraftMutation();
 
-  const [submitFormArticleFile, { isLoading }] = useSubmitFormArticleFileMutation();
+  const [submitFormArticleFile] = useSubmitFormArticleFileMutation();
 
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
     name: '',
@@ -75,7 +75,7 @@ export default function SingleApplication() {
     setSignature(signature.value);
     setIdMissionVerifiedData(prev => ({ ...prev, signature: signature.value }));
     if (signature.action === 'save') toast.success('Signature saved successfully');
-    if (signature.action === 'clear') toast.success('Signature cleared successfully');
+    // if (signature.action === 'clear') toast.success('Signature cleared successfully');
   };
   // console.log('idMissionVerifiedData', idMissionVerifiedData);
 
@@ -330,7 +330,7 @@ export default function SingleApplication() {
       socket.off('idMission_verified');
       socket.off('idMission_failed');
     };
-  }, [dispatch, formId, formatData, getUserProfile, updateMyProfile, user?._id]);
+  }, [dispatch, formId, formatData, getUserProfile, idMissionVerified, updateMyProfile, user?._id]);
 
   // check validations
   useEffect(() => {
@@ -589,7 +589,7 @@ export default function SingleApplication() {
               className={'max-w-[400px]!'}
             />
             <TextField
-              type="text"
+              type="number"
               required
               value={idMissionVerifiedData?.zipCode}
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, zipCode: e.target.value })}
@@ -624,9 +624,10 @@ export default function SingleApplication() {
               onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, phoneNumber: e.target.value })}
               label="Phone Number:*"
               required
+              type="number"
               className={'max-w-[400px]!'}
             />
-            <SignatureBox onSave={handleSignature} />
+            <SignatureBox className={'min-w-full'} onSave={handleSignature} />
           </form>
           <div className="flex w-full items-center justify-end">
             <Button

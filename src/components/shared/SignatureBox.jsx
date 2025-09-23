@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSubmitFormArticleFileMutation } from '@/redux/apis/formApis';
 import { toast } from 'react-toastify';
 
-const SignatureBox = ({ onSave, inSection = false, signUrl, sectionId }) => {
+const SignatureBox = ({ onSave, inSection = false, signUrl, sectionId, className }) => {
   const [submitFormArticleFile] = useSubmitFormArticleFileMutation();
 
   const [isTouch, setIsTouch] = useState(false);
@@ -50,7 +50,7 @@ const SignatureBox = ({ onSave, inSection = false, signUrl, sectionId }) => {
     updatePreview();
   };
 
-  const renderTypedOnCanvas = () => {
+  const renderTypedOnCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#fff';
@@ -60,13 +60,13 @@ const SignatureBox = ({ onSave, inSection = false, signUrl, sectionId }) => {
     ctx.textBaseline = 'middle';
     ctx.fillText(typedSignature, 20, canvas.height / 2);
     updatePreview();
-  };
+  }, [typedSignature]);
 
   useEffect(() => {
     if (!isTouch && typedSignature) {
       renderTypedOnCanvas();
     }
-  }, [typedSignature]);
+  }, [isTouch, renderTypedOnCanvas, typedSignature]);
 
   const dataURLtoFile = (dataUrl, filename) => {
     const arr = dataUrl.split(',');
@@ -133,7 +133,7 @@ const SignatureBox = ({ onSave, inSection = false, signUrl, sectionId }) => {
   };
 
   return (
-    <div className="w-full max-w-lg rounded-2xl border bg-white p-6 shadow-md">
+    <div className={`w-full max-w-lg rounded-2xl border bg-white p-6 shadow-md ${className}`}>
       <h2 className="mb-4 text-lg font-semibold text-gray-800">Signature</h2>
 
       <div className="flex flex-col items-center gap-4">

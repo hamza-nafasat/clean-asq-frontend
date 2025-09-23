@@ -49,7 +49,7 @@ function BankInfo({
   const { data, refetch, isFetching } = useGetBankLookupQuery(lookupRouting, {
     skip: !lookupRouting,
   });
-  const [error, setError] = useState(null);
+  const [error] = useState(null);
   const [bankModal, setBankModal] = useState(null);
 
   useEffect(() => {
@@ -133,8 +133,8 @@ function BankInfo({
         fields.map((field, index) => {
           if (field.name === 'bank_routing_number') {
             return (
-              <>
-                <div key={index} className="mt-4 flex items-end gap-2">
+              <div key={index}>
+                <div className="mt-4 flex items-end gap-2">
                   <OtherInputType
                     field={field}
                     placeholder={field.placeholder}
@@ -145,15 +145,15 @@ function BankInfo({
                   <Button
                     label={isFetching ? 'Checking...' : 'Check'}
                     onClick={() => {
-                      if (form[field.name]) {
-                        setLookupRouting(form[field.name]);
-                        refetch();
+                      if (form[field?.name]) {
+                        setLookupRouting(form?.[field?.name]);
+                        if (refetch) refetch();
                       }
                     }}
                   />
                 </div>
                 {error && <p className="text-red-500">{error}</p>}
-              </>
+              </div>
             );
           }
 
