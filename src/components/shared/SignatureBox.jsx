@@ -91,16 +91,13 @@ const SignatureBox = ({ onSave, inSection = false, signUrl, sectionId }) => {
     setPreview(dataUrl);
     if (!inSection) {
       onSave?.({ value: file, action: 'save' });
-      console.log('file', file);
       return;
     }
     const formData = new FormData();
     formData.append('file', file);
     formData.append('sectionId', sectionId);
     formData.append('isSignature', 'true');
-
-    const response = await submitFormArticleFile(formData).unwrap();
-    console.log('Upload success:', response);
+    await submitFormArticleFile(formData).unwrap();
     toast.success('Signature saved successfully');
   };
 
@@ -113,60 +110,65 @@ const SignatureBox = ({ onSave, inSection = false, signUrl, sectionId }) => {
     setPreview(null);
     if (!inSection) {
       onSave?.({ value: null, action: 'clear' });
-      return;
     }
   };
 
   return (
-    <div className="w-fit space-y-4 rounded-md border bg-white p-4">
-      {isTouch ? (
-        <canvas
-          ref={canvasRef}
-          onMouseDown={startDraw}
-          onMouseMove={draw}
-          onMouseUp={endDraw}
-          onMouseLeave={endDraw}
-          onTouchStart={e => startDraw({ nativeEvent: e.touches[0] })}
-          onTouchMove={e => draw({ nativeEvent: e.touches[0] })}
-          onTouchEnd={endDraw}
-          className="rounded border bg-white"
-        />
-      ) : (
-        <div>
-          <input
-            type="text"
-            value={typedSignature}
-            onChange={e => setTypedSignature(e.target.value)}
-            placeholder="Type your signature"
-            className="w-64 rounded border p-2"
+    <div className="w-full max-w-lg rounded-2xl border bg-white p-6 shadow-md">
+      <h2 className="mb-4 text-lg font-semibold text-gray-800">Signature</h2>
+
+      <div className="flex flex-col items-center gap-4">
+        {isTouch ? (
+          <canvas
+            ref={canvasRef}
+            onMouseDown={startDraw}
+            onMouseMove={draw}
+            onMouseUp={endDraw}
+            onMouseLeave={endDraw}
+            onTouchStart={e => startDraw({ nativeEvent: e.touches[0] })}
+            onTouchMove={e => draw({ nativeEvent: e.touches[0] })}
+            onTouchEnd={endDraw}
+            className="h-48 w-full max-w-md rounded-lg border bg-white shadow-inner"
           />
-          <canvas ref={canvasRef} className="hidden" />
-        </div>
-      )}
+        ) : (
+          <div className="flex w-full flex-col items-center gap-3">
+            <input
+              type="text"
+              value={typedSignature}
+              onChange={e => setTypedSignature(e.target.value)}
+              placeholder="Type your signature"
+              className="w-full max-w-md rounded-lg border px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            />
+            <canvas ref={canvasRef} className="hidden" />
+          </div>
+        )}
 
-      <div className="flex gap-2">
-        <button
-          onClick={handleSave}
-          type="button"
-          className="cursor-pointer rounded bg-blue-500 px-4 py-2 text-white hover:opacity-80"
-        >
-          Save
-        </button>
-        <button
-          onClick={handleClear}
-          type="button"
-          className="cursor-pointer rounded bg-gray-400 px-4 py-2 text-white hover:opacity-80"
-        >
-          Clear
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleSave}
+            type="button"
+            className="cursor-pointer rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+          >
+            Save
+          </button>
+          <button
+            onClick={handleClear}
+            type="button"
+            className="cursor-pointer rounded-lg bg-gray-500 px-5 py-2 text-sm font-medium text-white shadow hover:bg-gray-600 focus:ring-2 focus:ring-gray-400 focus:outline-none"
+          >
+            Clear
+          </button>
+        </div>
+
+        {preview && (
+          <div className="mt-6 w-full max-w-md">
+            <p className="mb-2 text-sm font-medium text-gray-600">Preview:</p>
+            <div className="flex items-center justify-center rounded-lg border bg-gray-50 p-3 shadow-inner">
+              <img src={preview} alt="Signature Preview" className="h-32 w-auto object-contain" />
+            </div>
+          </div>
+        )}
       </div>
-
-      {preview && (
-        <div className="mt-4">
-          <p className="mb-2 font-medium">Preview:</p>
-          <img src={preview} alt="Signature Preview" className="h-32 w-auto rounded border bg-white p-2" />
-        </div>
-      )}
     </div>
   );
 };

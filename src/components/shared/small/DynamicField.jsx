@@ -463,7 +463,19 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
   const inputRef = useRef(null);
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
-  const [locked, setLocked] = useState(true);
+
+  const formatDate = dateStr => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split(/[-/]/);
+    return `${year}-${month}-${day}`;
+  };
+
+  const normalizeDate = dateStr => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split(/[-\s/]/);
+    return `${year}-${month}-${day}`;
+  };
+
   return (
     <>
       {openAiHelpModal && (
@@ -471,13 +483,15 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
           <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
         </Modal>
       )}
+
       <div className="flex w-full flex-col items-start gap-4">
         <article className="flex w-full flex-col items-start gap-2">
           {ai_formatting && isDisplayText && (
             <div className="gap-4p-4 flex h-full w-full flex-col">
-              <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
+              <div dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
             </div>
           )}
+
           <section className="flex w-full gap-2">
             <div className={`w-full ${label ? 'mt-2' : ''}`}>
               {label && (
@@ -485,14 +499,24 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                   {label}:{required ? '*' : ''}
                 </h4>
               )}
+
               <div className="relative">
                 <input
-                  onChange={e => setForm(prev => ({ ...prev, [name]: e.target.value }))}
+                  ref={inputRef}
+                  name={name}
                   placeholder={showMasked ? '*******' : placeholder}
-                  type={showMasked ? 'password' : type}
-                  value={form[name]}
+                  type={showMasked ? 'password' : type === 'date' ? 'text' : type}
+                  value={type === 'date' ? formatDate(form[name]) : form[name]}
+                  onChange={e =>
+                    setForm(prev => ({
+                      ...prev,
+                      [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
+                    }))
+                  }
                   autoComplete="off"
-                  className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'}`}
+                  className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+                    required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
+                  }`}
                   {...(isConfirmField
                     ? {
                         onPaste: e => e.preventDefault(),
@@ -512,6 +536,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                 )}
               </div>
             </div>
+
             {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
           </section>
         </article>
