@@ -167,9 +167,13 @@ function ProcessingInfo({
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
             <Button
-              className={`${(!isAllRequiredFieldsFilled || loadingNext) && 'pointer-events-none cursor-not-allowed opacity-20'}`}
-              disabled={!isAllRequiredFieldsFilled || loadingNext}
-              label={isAllRequiredFieldsFilled || loadingNext ? 'Next' : 'Some Required Fields are Missing'}
+              className={`${(!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)) && 'pointer-events-none cursor-not-allowed opacity-20'}`}
+              disabled={!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)}
+              label={
+                isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)
+                  ? 'Next'
+                  : 'Some Required Fields are Missing'
+              }
               onClick={() => handleNext({ data: form, name: title, setLoadingNext })}
             />
           ) : (

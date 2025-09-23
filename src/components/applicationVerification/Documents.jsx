@@ -187,8 +187,8 @@ function Documents({
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
             <Button
-              disabled={loadingNext}
-              className={`${loadingNext && 'pinter-events-none cursor-not-allowed opacity-20'}`}
+              disabled={loadingNext || (isSignature && !signUrl)}
+              className={`${loadingNext || (isSignature && !signUrl && 'pinter-events-none cursor-not-allowed opacity-20')}`}
               label={'Next'}
               onClick={updateFileDataHandler}
             />

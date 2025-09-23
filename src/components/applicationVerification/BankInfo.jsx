@@ -256,9 +256,13 @@ function BankInfo({
           {currentStep < totalSteps - 1 ? (
             <Button
               onClick={() => handleNext({ data: form, name: title, setLoadingNext })}
-              className={`${(!isAllRequiredFieldsFilled || loadingNext) && 'pointer-events-none cursor-not-allowed opacity-20'}`}
-              disabled={!isAllRequiredFieldsFilled || loadingNext}
-              label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
+              className={`${(!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)) && 'pointer-events-none cursor-not-allowed opacity-20'}`}
+              disabled={!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)}
+              label={
+                isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)
+                  ? 'Next'
+                  : 'Some Required Fields are Missing'
+              }
             />
           ) : (
             <Button

@@ -170,8 +170,8 @@ function CustomSection({
             />
           ) : (
             <Button
-              disabled={!isAllRequiredFieldsFilled || loadingNext}
-              className={`${!isAllRequiredFieldsFilled || loadingNext ? 'pointer-events-none cursor-not-allowed opacity-20' : 'opacity-100'}`}
+              disabled={!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)}
+              className={`${!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl) ? 'pointer-events-none cursor-not-allowed opacity-20' : 'opacity-100'}`}
               label={!isAllRequiredFieldsFilled ? 'Some required fields are missing' : 'Submit'}
               onClick={() => handleSubmit({ data: form, name: title, setLoadingNext })}
             />
