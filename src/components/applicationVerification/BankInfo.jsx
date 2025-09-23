@@ -8,6 +8,7 @@ import {
   RangeInputType,
   SelectInputType,
 } from '../shared/small/DynamicField';
+import { CheckCircle, XCircle } from 'lucide-react';
 import { FIELD_TYPES } from '@/data/constants';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 import Modal from '../shared/small/Modal';
@@ -43,12 +44,14 @@ function BankInfo({
   const [loadingNext, setLoadingNext] = useState(false);
   const { idMissionData } = useSelector(state => state.auth);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
+  const [showNameSuggestion, setShowNameSuggestion] = useState(true);
 
   const [lookupRouting, setLookupRouting] = useState(null);
   const { data, refetch, isFetching } = useGetBankLookupQuery(lookupRouting, {
     skip: !lookupRouting,
   });
   const [error, setError] = useState(null);
+  const [bankModal, setBankModal] = useState(null);
 
   useEffect(() => {
     if (fields && fields.length > 0) {
@@ -59,15 +62,6 @@ function BankInfo({
       setForm(initialForm);
     }
   }, [fields, name, reduxData]);
-  useEffect(() => {
-    if (data) {
-      if (Array.isArray(data.bankDetailsList) && data.bankDetailsList.length === 0) {
-        setError('No bank found for this routing number');
-      } else {
-        setError(null);
-      }
-    }
-  }, [data]);
 
   useEffect(() => {
     const allFilled = requiredNames.every(name => {
@@ -91,15 +85,12 @@ function BankInfo({
   }, [form, requiredNames]);
 
   useEffect(() => {
-    if (data?.bankDetailsList?.length > 0) {
-      const bankName = data.bankDetailsList[0].bankName;
-      if (bankName) {
-        const confirmed = window.confirm(`We found: ${bankName}. Do you want to autofill?`);
-        if (confirmed) {
-          setForm(prev => ({ ...prev, bank_name: bankName }));
-        }
+    if (data) {
+      if (Array.isArray(data.bankDetailsList) && data.bankDetailsList.length > 0) {
+        setBankModal(data.bankDetailsList[0]);
+      } else {
+        setBankModal({}); // empty modal to show "No bank found"
       }
-      setLookupRouting(null);
     }
   }, [data]);
 
@@ -159,37 +150,61 @@ function BankInfo({
           }
 
           if (field.name === 'confirm_bank_account_number') {
+            const isMatch = form.bank_account_number && form[field.name] === form.bank_account_number;
             return (
-              <div key={index} className="mt-4">
+              <div key={index} className="relative mt-4">
                 <OtherInputType
                   field={field}
                   placeholder={field.placeholder}
                   form={form}
                   setForm={setForm}
-                  className={''}
+                  className="w-full pr-10"
                   isConfirmField
                 />
-                <p className="text-xs text-gray-500">Please type your account number manually (no copy/paste).</p>
+                <div className="mt-2 flex items-center gap-2">
+                  {form[field.name] && (
+                    <span className="">
+                      {isMatch ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-red-500" />
+                      )}
+                    </span>
+                  )}
+                  <p className="text-xs text-gray-500">Please type your account number manually (no copy/paste).</p>
+                </div>
               </div>
             );
           }
 
           if (field.name === 'bank_account_holder_name') {
+            const suggestedName = idMissionData?.name || '';
+            const typedName = form[field.name] || '';
+            const shouldShowSuggestion =
+              suggestedName &&
+              typedName.length > 0 &&
+              suggestedName.toLowerCase().includes(typedName.toLowerCase()) &&
+              suggestedName !== typedName;
+
             return (
-              <div className="flex items-end gap-2">
-                <div key={index} className="mt-4 flex-1">
-                  <OtherInputType
-                    field={field}
-                    placeholder={field.placeholder}
-                    form={form}
-                    setForm={setForm}
-                    className={''}
-                  />
-                </div>
-                <Button
-                  label={`Fill with ${idMissionData.name}`}
-                  onClick={() => setForm(prev => ({ ...prev, [field.name]: idMissionData.name }))}
+              <div key={index} className="relative mt-4">
+                <OtherInputType
+                  field={field}
+                  placeholder={field.placeholder}
+                  form={form}
+                  setForm={setForm}
+                  className="w-full"
                 />
+                {shouldShowSuggestion && (
+                  <div
+                    className="absolute top-full left-0 mt-1 w-full cursor-pointer rounded-md border bg-white p-2 text-sm shadow hover:bg-gray-100"
+                    onClick={() => {
+                      setForm(prev => ({ ...prev, [field.name]: suggestedName }));
+                    }}
+                  >
+                    Use "{suggestedName}"
+                  </div>
+                )}
               </div>
             );
           }
@@ -283,6 +298,39 @@ function BankInfo({
             formRefetch={formRefetch}
             onClose={() => setCustomizeModal(false)}
           />
+        </Modal>
+      )}
+      {bankModal && (
+        <Modal isOpen={true} onClose={() => setBankModal(null)}>
+          <div className="p-4">
+            {bankModal.bankName ? (
+              <>
+                <h2 className="mb-2 text-lg font-semibold">Bank Found</h2>
+                <p className="mb-4">
+                  That routing number belongs to <b>{bankModal.bankName}</b>. Is this the bank you intended to enter
+                  here?
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button variant="secondary" label="No" onClick={() => setBankModal(null)} />
+                  <Button
+                    label="Yes"
+                    onClick={() => {
+                      setForm(prev => ({ ...prev, bank_name: bankModal.bankName }));
+                      setBankModal(null);
+                    }}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="mb-2 text-lg font-semibold text-red-500">No Bank Found</h2>
+                <p className="mb-4">No bank found for this routing number.</p>
+                <div className="flex justify-end">
+                  <Button label="Close" onClick={() => setBankModal(null)} />
+                </div>
+              </>
+            )}
+          </div>
         </Modal>
       )}
     </div>
