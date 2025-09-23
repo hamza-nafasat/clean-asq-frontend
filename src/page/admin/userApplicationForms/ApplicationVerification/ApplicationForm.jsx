@@ -121,12 +121,15 @@ export default function ApplicationForm() {
       const stepNames = [];
       form?.data?.sections?.forEach(step => {
         const sectionDataFromRedux = formData?.[step?.title];
+
         const commonProps = {
           _id: step._id,
           name: step.name,
           title: step.title,
           fields: step?.fields ?? [],
           blocks: step?.blocks ?? [],
+          isSignature: step?.isSignature,
+          signUrl: step?.signature,
           reduxData: sectionDataFromRedux,
           currentStep,
           totalSteps: form?.data?.sections?.length,
@@ -158,7 +161,7 @@ export default function ApplicationForm() {
           stepNames.push(step.name);
         }
       });
-      // console.log('steps', data);
+      console.log('steps', data);
       setStepsComps(data);
       setSectionNames(stepNames);
     }

@@ -140,6 +140,16 @@ const formApis = createApi({
       }),
     }),
 
+    // update signature
+    // ---------------
+    updateSignature: builder.mutation({
+      query: body => ({
+        url: `/update-signature?sectionId`,
+        method: 'PUT',
+        body,
+      }),
+    }),
+
     //===========================
     // Search Strategy APIs
     //===========================
@@ -321,5 +331,6 @@ export const {
   useCompanyVerificationMutation,
   useCompanyLookupMutation,
   useFindNaicAndMccMutation,
+  useUpdateSignatureMutation,
 } = formApis;
 export default formApis;

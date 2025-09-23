@@ -1,9 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useSubmitFormArticleFileMutation } from '@/redux/apis/formApis';
+import { toast } from 'react-toastify';
 
-const SignatureBox = ({ onSave }) => {
+const SignatureBox = ({ onSave, inSection = false, signUrl, sectionId }) => {
+  const [submitFormArticleFile] = useSubmitFormArticleFileMutation();
+
   const [isTouch, setIsTouch] = useState(false);
   const [typedSignature, setTypedSignature] = useState('');
-  const [preview, setPreview] = useState(null);
+  const [preview, setPreview] = useState(signUrl || null);
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
   const [drawing, setDrawing] = useState(false);
@@ -80,13 +84,24 @@ const SignatureBox = ({ onSave }) => {
     setPreview(dataUrl);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!isTouch) renderTypedOnCanvas();
     const dataUrl = canvasRef.current.toDataURL('image/png');
     const file = dataURLtoFile(dataUrl, 'signature.png');
     setPreview(dataUrl);
-    onSave?.({ value: file, action: 'save' });
-    console.log('file', file);
+    if (!inSection) {
+      onSave?.({ value: file, action: 'save' });
+      console.log('file', file);
+      return;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('sectionId', sectionId);
+    formData.append('isSignature', 'true');
+
+    const response = await submitFormArticleFile(formData).unwrap();
+    console.log('Upload success:', response);
+    toast.success('Signature saved successfully');
   };
 
   const handleClear = () => {
@@ -96,7 +111,10 @@ const SignatureBox = ({ onSave }) => {
     ctxRef.current.fillRect(0, 0, canvas.width, canvas.height);
     setTypedSignature('');
     setPreview(null);
-    onSave?.({ value: null, action: 'clear' });
+    if (!inSection) {
+      onSave?.({ value: null, action: 'clear' });
+      return;
+    }
   };
 
   return (

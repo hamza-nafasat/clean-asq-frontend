@@ -1,12 +1,35 @@
 import MakeFieldDataCustom from '@/components/shared/MakeFieldDataCustom';
+import Checkbox from '@/components/shared/small/Checkbox';
 import { Button } from '@/components/ui/button';
-import { useUpdateDeleteCreateFormFieldsMutation } from '@/redux/apis/formApis';
+import { useUpdateDeleteCreateFormFieldsMutation, useUpdateSignatureMutation } from '@/redux/apis/formApis';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
-function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, suggestions, isArticleForm }) {
+function CustomizationFieldsModal({
+  onClose,
+  fields,
+  sectionId,
+  formRefetch,
+  suggestions,
+  isArticleForm,
+  isSignature,
+}) {
   const [fieldsData, setFieldsData] = useState([]);
   const [customizeForm, { isLoading }] = useUpdateDeleteCreateFormFieldsMutation();
+  const [updateSignature] = useUpdateSignatureMutation();
+  const handleUpdateSignature = async e => {
+    const isSignature = e.target.checked;
+    try {
+      const res = await updateSignature({ sectionId, isSignature }).unwrap();
+      if (res.success) {
+        await formRefetch();
+        toast.success(res.message);
+        onClose();
+      }
+    } catch (error) {
+      console.log('Error while updating signature', error);
+    }
+  };
 
   const addNewFieldHandler = () => setFieldsData(prev => [...prev, { label: '', name: '', type: 'text' }]);
 
@@ -46,6 +69,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
             />
           </div>
         ))}
+      <Checkbox label="Enable Signature for this section" checked={isSignature} onChange={handleUpdateSignature} />
       <div className="mt-6 flex w-full justify-between gap-2">
         <Button className="bg-primary w-[45%] cursor-pointer text-white" onClick={addNewFieldHandler}>
           Add New Field

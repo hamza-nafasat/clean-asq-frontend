@@ -15,6 +15,7 @@ import { useSelector } from 'react-redux';
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 import { PencilIcon } from 'lucide-react';
 import { useGetBankLookupQuery } from '@/redux/apis/wiseApi';
+import SignatureBox from '../shared/SignatureBox';
 
 function BankInfo({
   name,
@@ -31,6 +32,8 @@ function BankInfo({
   title,
   saveInProgress,
   step,
+  isSignature,
+  signUrl,
 }) {
   const { user } = useSelector(state => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
@@ -245,6 +248,8 @@ function BankInfo({
           );
         })}
 
+      <div className="mt-4">{isSignature && <SignatureBox inSection={true} signUrl={signUrl} sectionId={_id} />}</div>
+
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
@@ -270,6 +275,7 @@ function BankInfo({
           <CustomizationFieldsModal
             sectionId={_id}
             fields={fields}
+            isSignature={isSignature}
             formRefetch={formRefetch}
             onClose={() => setCustomizeModal(false)}
           />

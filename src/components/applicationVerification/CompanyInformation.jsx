@@ -17,6 +17,7 @@ import {
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
+import SignatureBox from '../shared/SignatureBox.jsx';
 
 function CompanyInformation({
   formRefetch,
@@ -40,6 +41,7 @@ function CompanyInformation({
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [form, setForm] = useState({});
   const [loadingNext, setLoadingNext] = useState(false);
+
   const [naicsToMccDetails, setNaicsToMccDetails] = useState({
     NAICS: reduxData?.naics?.NAICS || '',
     NAICS_Description: reduxData?.naics?.NAICS_Description || '',

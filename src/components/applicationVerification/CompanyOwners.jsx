@@ -259,9 +259,8 @@ function CompanyOwners({
       // Check additional_owner for at least one valid entry with both name and email
       isOperatorExist =
         Array.isArray(form?.additional_owner) &&
-        form.additional_owner.some(item => 
-          item?.name?.toString().trim() !== '' && 
-          item?.email?.toString().trim() !== ''
+        form.additional_owner.some(
+          item => item?.name?.toString().trim() !== '' && item?.email?.toString().trim() !== ''
         );
     }
     if (!isOperatorExist) setSubmitButtonText('At least one primary operator required');
