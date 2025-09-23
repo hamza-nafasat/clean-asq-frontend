@@ -13,6 +13,7 @@ import {
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
+import SignatureBox from '../shared/SignatureBox';
 
 function ProcessingInfo({
   name,
@@ -29,6 +30,8 @@ function ProcessingInfo({
   title,
   saveInProgress,
   step,
+  isSignature,
+  signUrl,
 }) {
   const { user } = useSelector(state => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
@@ -156,6 +159,8 @@ function ProcessingInfo({
           </div>
         );
       })}
+      <div className="mt-4">{isSignature && <SignatureBox inSection={true} signUrl={signUrl} sectionId={_id} />}</div>
+
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
@@ -183,6 +188,7 @@ function ProcessingInfo({
             isArticleForm
             sectionId={_id}
             fields={fields}
+            isSignature={isSignature}
             formRefetch={formRefetch}
             onClose={() => setCustomizeModal(false)}
           />

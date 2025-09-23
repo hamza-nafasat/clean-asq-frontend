@@ -144,7 +144,7 @@ const formApis = createApi({
     // ---------------
     updateSignature: builder.mutation({
       query: body => ({
-        url: `/update-signature?sectionId`,
+        url: `/update-signature`,
         method: 'PUT',
         body,
       }),

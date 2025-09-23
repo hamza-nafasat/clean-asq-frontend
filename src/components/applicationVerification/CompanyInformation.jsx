@@ -34,6 +34,8 @@ function CompanyInformation({
   title,
   saveInProgress,
   step,
+  isSignature,
+  signUrl,
 }) {
   const { user } = useSelector(state => state.auth);
   const { lookupData } = useSelector(state => state?.company);
@@ -314,6 +316,7 @@ function CompanyInformation({
               </div>
             )}
           </div>
+          <div className="">{isSignature && <SignatureBox inSection={true} signUrl={signUrl} sectionId={_id} />}</div>
         </div>
       </div>
       {/* next Previous buttons  */}
@@ -344,6 +347,7 @@ function CompanyInformation({
             sectionId={_id}
             fields={fields}
             formRefetch={formRefetch}
+            isSignature={isSignature}
             onClose={() => setCustomizeModal(false)}
           />
         </Modal>

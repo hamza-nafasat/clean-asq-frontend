@@ -12,6 +12,7 @@ import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectio
 import { PencilIcon } from 'lucide-react';
 import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
 import DOMPurify from 'dompurify';
+import SignatureBox from '../shared/SignatureBox';
 
 function Documents({
   _id,
@@ -28,6 +29,8 @@ function Documents({
   formRefetch,
   // saveInProgress,
   step,
+  isSignature,
+  signUrl,
 }) {
   const { user } = useSelector(state => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
@@ -116,16 +119,16 @@ function Documents({
                   <div className="mb-4 w-full">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-medium">Need help finding your Articles of Incorporation?</h3>
-                      <Button 
-                        label="Get Help" 
-                        variant="outline" 
-                        className="text-nowrap" 
+                      <Button
+                        label="Get Help"
+                        variant="outline"
+                        className="text-nowrap"
                         onClick={async () => {
                           if (!idMissionData?.companyTitle || !idMissionData?.state) {
                             toast.error('Company information not found. Please complete previous sections first.');
                             return;
                           }
-                          
+
                           try {
                             setIsAiLoading(true);
                             const res = await formateTextInMarkDown({
@@ -134,9 +137,9 @@ function Documents({
 2. Step-by-step instructions
 3. Any fees involved
 4. Processing times
-5. Alternative methods if online search is not available`
+5. Alternative methods if online search is not available`,
                             }).unwrap();
-                            
+
                             if (res.success) {
                               const html = DOMPurify.sanitize(res.data);
                               setAiResponse(html);
@@ -176,6 +179,8 @@ function Documents({
           }
         })}
       </div>
+      <div className="mt-4">{isSignature && <SignatureBox inSection={true} signUrl={signUrl} sectionId={_id} />}</div>
+
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
@@ -203,6 +208,7 @@ function Documents({
             sectionId={_id}
             fields={fields}
             formRefetch={formRefetch}
+            isSignature={isSignature}
             onClose={() => setCustomizeModal(false)}
           />
         </Modal>

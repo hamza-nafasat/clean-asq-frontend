@@ -14,6 +14,7 @@ import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 import { useSelector } from 'react-redux';
 import { PencilIcon } from 'lucide-react';
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
+import SignatureBox from '../shared/SignatureBox';
 
 function CustomSection({
   fields,
@@ -28,6 +29,8 @@ function CustomSection({
   title,
   saveInProgress,
   step,
+  isSignature,
+  signUrl,
 }) {
   const { user } = useSelector(state => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
@@ -153,6 +156,8 @@ function CustomSection({
           );
         })}
       </div>
+      <div className="mt-4">{isSignature && <SignatureBox inSection={true} signUrl={signUrl} sectionId={_id} />}</div>
+
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
@@ -180,6 +185,7 @@ function CustomSection({
             fields={fields}
             formRefetch={formRefetch}
             onClose={() => setCustomizeModal(false)}
+            isSignature={isSignature}
           />
         </Modal>
       )}
