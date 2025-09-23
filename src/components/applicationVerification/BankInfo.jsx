@@ -309,36 +309,38 @@ function BankInfo({
         </Modal>
       )}
       {bankModal && (
-        <Modal isOpen={true} onClose={() => setBankModal(null)}>
-          <div className="p-4">
-            {bankModal.bankName ? (
-              <>
-                <h2 className="mb-2 text-lg font-semibold">Bank Found</h2>
-                <p className="mb-4">
-                  That routing number belongs to <b>{bankModal.bankName}</b>. Is this the bank you intended to enter
-                  here?
-                </p>
-                <div className="flex justify-end gap-2">
-                  <Button variant="secondary" label="No" onClick={() => setBankModal(null)} />
-                  <Button
-                    label="Yes"
-                    onClick={() => {
-                      setForm(prev => ({ ...prev, bank_name: bankModal.bankName }));
-                      setBankModal(null);
-                    }}
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <h2 className="mb-2 text-lg font-semibold text-red-500">No Bank Found</h2>
-                <p className="mb-4">No bank found for this routing number.</p>
-                <div className="flex justify-end">
-                  <Button label="Close" onClick={() => setBankModal(null)} />
-                </div>
-              </>
-            )}
-          </div>
+        <Modal title={'Bank for your routing number '} isOpen={true} onClose={() => setBankModal(null)}>
+          {bankModal.bankName ? (
+            <>
+              <p className="mb-6 leading-relaxed text-gray-600">
+                That routing number belongs to <span className="font-semibold text-gray-900">{bankModal.bankName}</span>
+                . Is this the bank you intended to enter?
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="secondary"
+                  label="No"
+                  onClick={() => setBankModal(null)}
+                  className="rounded-lg px-4 py-2"
+                />
+                <Button
+                  label="Yes"
+                  onClick={() => {
+                    setForm(prev => ({ ...prev, bank_name: bankModal.bankName }));
+                    setBankModal(null);
+                  }}
+                  className="rounded-lg px-4 py-2"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="mb-3 text-xl font-semibold text-red-600">No Bank Found</h2>
+              <div className="flex justify-end">
+                <Button label="Close" onClick={() => setBankModal(null)} className="rounded-lg px-4 py-2" />
+              </div>
+            </>
+          )}
         </Modal>
       )}
     </div>

@@ -5,7 +5,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { updateFileData } from '@/redux/slices/formSlice';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
-
 import Modal from '../shared/small/Modal';
 import { AiHelpModal } from '../shared/small/DynamicField';
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
@@ -32,7 +31,7 @@ function Documents({
   isSignature,
   signUrl,
 }) {
-  const { user } = useSelector(state => state.auth);
+  const { user, idMissionData } = useSelector(state => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const dispatch = useDispatch();
   const [fileFieldName, setFileFieldName] = useState('');
@@ -43,7 +42,34 @@ function Documents({
   const [aiResponse, setAiResponse] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [formateTextInMarkDown] = useFormateTextInMarkDownMutation();
-  const { idMissionData } = useSelector(state => state.auth);
+  const [showRequiredDocs, setShowRequiredDocs] = useState(true);
+
+  // Fetch AI help on component mount
+  useEffect(() => {
+    const fetchRequiredDocuments = async () => {
+      if (!idMissionData?.state) return;
+
+      try {
+        setIsAiLoading(true);
+        const res = await formateTextInMarkDown({
+          text: `List the specific documents required for business verification in ${idMissionData.state}. 
+          Include document types, formats accepted, and any size or quality requirements. 
+          Be concise and use bullet points.`,
+        }).unwrap();
+
+        if (res.success) {
+          setAiResponse(DOMPurify.sanitize(res.data));
+        }
+      } catch (error) {
+        console.error('Error fetching required documents:', error);
+        toast.error('Failed to load document requirements. Please try again later.');
+      } finally {
+        setIsAiLoading(false);
+      }
+    };
+
+    fetchRequiredDocuments();
+  }, [idMissionData?.state, formateTextInMarkDown]);
 
   const handleFileSelect = file => {
     if (!file) return toast.error('Please select a file');
@@ -78,26 +104,53 @@ function Documents({
   return (
     <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="flex flex-col gap-4">
-        <h1 className="text-textPrimary text-base">{name}</h1>
-        <div className="flex w-full justify-end gap-2">
-          {user?._id && user.role !== 'guest' && (
-            <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
-          )}
-          <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
+        <div className="flex items-center justify-between">
+          <h1 className="text-textPrimary text-2xl font-semibold">{name}</h1>
+          <div className="flex gap-2">
+            {user?._id && user.role !== 'guest' && (
+              <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+            )}
+            <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
+          </div>
         </div>
+
+        {/* Show required documents section */}
+        {showRequiredDocs && aiResponse && (
+          <div className="mb-6 rounded-lg bg-blue-50 p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-blue-800">Documents required for {idMissionData?.state || 'your state'}</h3>
+              <button 
+                onClick={() => setShowRequiredDocs(false)}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                Hide
+              </button>
+            </div>
+            <div 
+              className="prose mt-2 max-w-none text-sm text-gray-700"
+              dangerouslySetInnerHTML={{ __html: aiResponse }}
+            />
+          </div>
+        )}
+
+        {/* Custom AI help section */}
+        {!showRequiredDocs && (
+          <div className="mb-4 flex justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowRequiredDocs(true)}
+              label="Show Required Documents"
+            />
+          </div>
+        )}
         {updateSectionFromatingModal && (
           <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
             <EditSectionDisplayTextFromatingModal step={step} />
           </Modal>
         )}
         {step?.ai_formatting && (
-          <div className="flex w-full gap-3">
-            <div
-              className="w-full"
-              dangerouslySetInnerHTML={{
-                __html: step?.ai_formatting,
-              }}
-            />
+          <div className="w-full">
+            <div dangerouslySetInnerHTML={{ __html: step.ai_formatting }} />
           </div>
         )}
       </div>
@@ -115,63 +168,15 @@ function Documents({
                     />
                   </Modal>
                 )}
-                {title === 'incorporation_article_blk' ? (
-                  <div className="mb-4 w-full">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium">Need help finding your Articles of Incorporation?</h3>
-                      <Button
-                        label="Get Help"
-                        variant="outline"
-                        className="text-nowrap"
-                        onClick={async () => {
-                          if (!idMissionData?.companyTitle || !idMissionData?.state) {
-                            toast.error('Company information not found. Please complete previous sections first.');
-                            return;
-                          }
-
-                          try {
-                            setIsAiLoading(true);
-                            const res = await formateTextInMarkDown({
-                              text: `You are an expert in business documentation. Provide a helpful, step-by-step guide to find the articles of incorporation for ${idMissionData.companyTitle} in ${idMissionData.state}. Include:
-1. The official state website for business entity search
-2. Step-by-step instructions
-3. Any fees involved
-4. Processing times
-5. Alternative methods if online search is not available`,
-                            }).unwrap();
-
-                            if (res.success) {
-                              const html = DOMPurify.sanitize(res.data);
-                              setAiResponse(html);
-                              setOpenAiHelpModal(true);
-                            }
-                          } catch (error) {
-                            console.error('Error generating AI response:', error);
-                            toast.error('Failed to generate help content. Please try again.');
-                          } finally {
-                            setIsAiLoading(false);
-                          }
-                        }}
-                        loading={isAiLoading}
-                      />
-                    </div>
-                    <p className="mt-2 text-sm text-gray-600">
-                      We can help you locate the required documents if you don't have them handy.
-                    </p>
+                {field?.ai_formatting && field?.isDisplayText && (
+                  <div className="flex h-full w-full flex-col gap-4 p-4 pb-0">
+                    <div className="" dangerouslySetInnerHTML={{ __html: field?.ai_formatting ?? '' }} />
                   </div>
-                ) : (
-                  <>
-                    {field?.ai_formatting && field?.isDisplayText && (
-                      <div className="flex h-full w-full flex-col gap-4 p-4 pb-0">
-                        <div className="" dangerouslySetInnerHTML={{ __html: field?.ai_formatting ?? '' }} />
-                      </div>
-                    )}
-                    {field?.aiHelp && (
-                      <div className="flex w-full justify-end">
-                        <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
-                      </div>
-                    )}
-                  </>
+                )}
+                {field?.aiHelp && (
+                  <div className="flex w-full justify-end">
+                    <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
+                  </div>
                 )}
                 <FileUploader label={field?.label} file={form[fileFieldName]} onFileSelect={handleFileSelect} />
               </div>
