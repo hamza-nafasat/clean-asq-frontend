@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, useRef } from 'react';
 import { naicsToMcc } from '../../../public/NAICStoMCC.js';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import Button from '../shared/small/Button';
+import Button from '../shared/small/Button.jsx';
 import {
   CheckboxInputType,
   MultiCheckboxInputType,
@@ -13,10 +13,10 @@ import {
   RadioInputType,
   RangeInputType,
   SelectInputType,
-} from '../shared/small/DynamicField';
-import Modal from '../shared/small/Modal';
-import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
-import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
+} from '../shared/small/DynamicField.jsx';
+import Modal from '../shared/small/Modal.jsx';
+import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal.jsx';
+import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal.jsx';
 import SignatureBox from '../shared/SignatureBox.jsx';
 
 function CompanyInformation({

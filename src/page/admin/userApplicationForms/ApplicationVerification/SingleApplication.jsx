@@ -2,6 +2,7 @@ import SignatureBox from '@/components/shared/SignatureBox';
 import Button from '@/components/shared/small/Button';
 import CustomLoading from '@/components/shared/small/CustomLoading';
 import { LoadingWithTimer } from '@/components/shared/small/LoadingWithTimer';
+import Modal from '@/components/shared/small/Modal';
 import TextField from '@/components/shared/small/TextField';
 import { useBranding } from '@/hooks/BrandingContext';
 import { socket } from '@/main';
@@ -51,6 +52,7 @@ export default function SingleApplication() {
   const [getSavedFormData] = useGetSavedFormMutation();
   const { formData } = useSelector(state => state?.form);
   const [saveFormInDraft] = useSaveFormInDraftMutation();
+  const [openRedirectModal, setOpenRedirectModal] = useState(false);
 
   const [submitFormArticleFile] = useSubmitFormArticleFileMutation();
 
@@ -92,16 +94,17 @@ export default function SingleApplication() {
   const saveInProgress = useCallback(
     async ({ data, name }) => {
       try {
+        if (!formId) return toast.error('From id not provided');
         const formDataInRedux = { ...formData, [name]: data };
         // console.log('save in progress', formDataInRedux);
-        const res = await saveFormInDraft({ formId: form?.data?._id, formData: formDataInRedux }).unwrap();
+        const res = await saveFormInDraft({ formId: formId, formData: formDataInRedux }).unwrap();
         if (res.success) toast.success(res.message);
       } catch (error) {
         console.log('error while saving form in draft', error);
         toast.error(error?.data?.message || 'Error while saving form in draft');
       }
     },
-    [form?.data?._id, formData, saveFormInDraft]
+    [formData, formId, saveFormInDraft]
   );
 
   const onPlaceChanged = () => {
@@ -233,12 +236,33 @@ export default function SingleApplication() {
   const getQrLinkOnEmailVerified = useCallback(() => {
     if (!qrCode && !webLink && emailVerified) {
       if (formData && formData?.idMission) {
-        return navigate(`/singleform/stepper/${formId}`);
+        console.log('me hn abhi');
+        // return navigate(`/singleform/stepper/${formId}`);
+        const formDataOfIdMission = formData?.idMission;
+        setIdMissionVerifiedData({
+          name: formDataOfIdMission?.name || '',
+          idNumber: formDataOfIdMission?.idNumber || '',
+          idIssuer: formDataOfIdMission?.idIssuer || '',
+          idType: formDataOfIdMission?.idType || '',
+          idExpiryDate: formDataOfIdMission?.idExpiryDate || '',
+          streetAddress: formDataOfIdMission?.streetAddress || '',
+          phoneNumber: formDataOfIdMission?.phoneNumber || '',
+          zipCode: formDataOfIdMission?.zipCode || '',
+          dateOfBirth: formDataOfIdMission?.dateOfBirth || '',
+          country: formDataOfIdMission?.country || '',
+          issueDate: formDataOfIdMission?.issueDate || '',
+          companyTitle: formDataOfIdMission?.companyTitle || '',
+          state: formDataOfIdMission?.state || '',
+          city: formDataOfIdMission?.city || '',
+          address2: formDataOfIdMission?.address2 || '',
+        });
+        setIdMissionVerified(true);
+        setOpenRedirectModal(true);
       }
       setGetQrAndWebLinkLoading(true);
       getQrAndWebLink().finally(() => setGetQrAndWebLinkLoading(false));
     }
-  }, [emailVerified, formData, formId, getQrAndWebLink, navigate, qrCode, webLink]);
+  }, [emailVerified, formData, getQrAndWebLink, qrCode, webLink]);
 
   // get qr and session id
   useEffect(() => {
@@ -365,10 +389,12 @@ export default function SingleApplication() {
 
   // use effect for getting data from draft and save in redux
   useEffect(() => {
-    getSavedFormData({ formId: form?.data?._id }).then(res => {
-      const data = res?.data?.data?.savedData;
-      if (data) dispatch(addSavedFormData(data));
-    });
+    if (form?.data?._id) {
+      getSavedFormData({ formId: form?.data?._id }).then(res => {
+        const data = res?.data?.data?.savedData;
+        if (data) dispatch(addSavedFormData(data));
+      });
+    }
   }, [dispatch, form, getSavedFormData]);
 
   const {
@@ -440,205 +466,257 @@ export default function SingleApplication() {
     setTextColor,
   ]);
 
-  return isIdMissionProcessing ? (
-    <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
-  ) : (
-    <div className="mt-14 h-full overflow-auto text-center">
-      {!idMissionVerified ? (
-        !emailVerified ? (
-          <div className="flex flex-col items-center gap-3">
-            <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
-            <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your email first</p>
-            <div className="flex w-full items-center justify-center gap-4">
-              <TextField
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="max-w-[500px]"
-              />
-              <Button
-                onClick={sentOtpForEmail}
-                disabled={otpLoading}
-                className={`min-w-[130px] py-[8px] ${otpLoading && 'cursor-not-allowed opacity-25'}`}
-                label={'Send OTP'}
-              />
-            </div>
-            {otpSent && (
-              <div className="flex w-full items-center justify-center gap-4">
-                <TextField
-                  type="text"
-                  placeholder="Enter your OTP"
-                  value={otp}
-                  onChange={e => setOtp(e.target.value)}
-                  className="max-w-[500px]"
+  return (
+    <>
+      {openRedirectModal ? (
+        <>
+          <div className="flex h-full"></div>
+          <Modal>
+            <div className="flex flex-col items-center justify-center px-6 py-8 text-center">
+              {/* Success Icon */}
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
+                <svg
+                  className="h-8 w-8 text-green-600"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+
+              {/* Title */}
+              <h1 className="text-xl font-semibold text-gray-900">You’ve completed this step</h1>
+
+              {/* Description */}
+              <p className="mt-2 max-w-sm text-gray-600">
+                You’ve already finished the ID Mission verification. Would you like to edit your details, or move to the
+                next step?
+              </p>
+
+              {/* Buttons */}
+              <div className="mt-6 flex w-full flex-col-reverse gap-3 sm:flex-row sm:justify-center">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setOpenRedirectModal(false)}
+                  label="Edit ID Mission"
                 />
                 <Button
-                  onClick={verifyWithOtp}
-                  disabled={emailLoading}
-                  className={`min-w-[130px] py-[8px] ${emailLoading && 'cursor-not-allowed opacity-25'}`}
-                  label={'SubmitOtp'}
+                  className="flex-1"
+                  onClick={() => {
+                    navigate(`/singleform/stepper/${formId}`);
+                    setOpenRedirectModal(false);
+                  }}
+                  label="Continue to Next"
                 />
               </div>
-            )}
-          </div>
-        ) : getQrAndWebLinkLoading ? (
-          <CustomLoading />
-        ) : (
-          <div className="flex flex-col items-center gap-3">
-            <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
-            <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your identity</p>
-            {qrCode && webLink && (
-              <>
-                <div className="mt-4 flex w-full flex-col items-center gap-4">
-                  <img className="h-[230px] w-[230px]" src={`data:image/jpeg;base64,${qrCode}`} alt="qr code " />
-                </div>
-                <div className="mt-4 flex w-full flex-col items-center gap-4">
+            </div>
+          </Modal>
+        </>
+      ) : isIdMissionProcessing ? (
+        <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
+      ) : (
+        <div className="mt-14 h-full overflow-auto text-center">
+          {!idMissionVerified ? (
+            !emailVerified ? (
+              <div className="flex flex-col items-center gap-3">
+                <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
+                <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your email first</p>
+                <div className="flex w-full items-center justify-center gap-4">
+                  <TextField
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    className="max-w-[500px]"
+                  />
                   <Button
-                    className="max-w-[400px]"
-                    label={'Open LInk in New Tab'}
-                    onClick={async () => {
-                      window.open(webLink, '_blank');
-                      // navigate(`/singleform/stepper/${formId}`);
-                    }}
-                    rightIcon={MdVerifiedUser}
+                    onClick={sentOtpForEmail}
+                    disabled={otpLoading}
+                    className={`min-w-[130px] py-[8px] ${otpLoading && 'cursor-not-allowed opacity-25'}`}
+                    label={'Send OTP'}
                   />
                 </div>
-              </>
-            )}
-          </div>
-        )
-      ) : (
-        <div className="flex w-full flex-col p-2">
-          <h3 className="text-textPrimary text-center text-2xl font-semibold">Id Mission Data</h3>
-          <form className="flex flex-wrap gap-4">
-            <TextField
-              onChange={() => {}}
-              required
-              value={idMissionVerifiedData?.name}
-              label="Name:*"
-              className={'max-w-[400px]!'}
-            />
-            <TextField
-              value={user?.email}
-              onChange={() => {}}
-              label="Email Address:*"
-              required
-              className={'max-w-[400px]!'}
-            />
-            <TextField
-              type="date"
-              value={idMissionVerifiedData?.dateOfBirth}
-              onChange={() => {}}
-              label="Date of Birth:*"
-              required
-              className={'max-w-[400px]!'}
-            />
-            <TextField
-              type="text"
-              value={idMissionVerifiedData?.idType}
-              onChange={() => {}}
-              label="Id Type:*"
-              required
-              className={'max-w-[400px]!'}
-            />{' '}
-            <TextField
-              type="text"
-              value={idMissionVerifiedData?.idIssuer}
-              onChange={() => {}}
-              label="Id Issuer:*"
-              required
-              className={'max-w-[400px]!'}
-            />{' '}
-            <TextField
-              type="date"
-              value={idMissionVerifiedData?.issueDate}
-              onChange={() => {}}
-              label="Issue Date:*"
-              required
-              className={'max-w-[400px]!'}
-            />{' '}
-            <TextField
-              required
-              onChange={() => {}}
-              value={idMissionVerifiedData?.idNumber}
-              label="Id Number:*"
-              className={'max-w-[400px]!'}
-            />{' '}
-            <Autocomplete
-              onLoad={onLoad}
-              className="w-full max-w-[400px]"
-              onPlaceChanged={onPlaceChanged}
-              options={{ fields: ['address_components', 'formatted_address', 'geometry', 'place_id'] }}
-            >
-              <TextField
-                type="text"
-                required
-                value={idMissionVerifiedData?.streetAddress}
-                onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, streetAddress: e.target.value })}
-                label="Street Address:*"
-                className={'max-w-[400px]!'}
-              />
-            </Autocomplete>
-            <TextField
-              type="text"
-              required
-              value={idMissionVerifiedData?.city}
-              onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, city: e.target.value })}
-              label="City:*"
-              className={'max-w-[400px]!'}
-            />
-            <TextField
-              type="number"
-              required
-              value={idMissionVerifiedData?.zipCode}
-              onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, zipCode: e.target.value })}
-              label="Zip Code:*"
-              className={'max-w-[400px]!'}
-            />
-            <TextField
-              type="text"
-              required
-              value={idMissionVerifiedData?.state}
-              onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, state: e.target.value })}
-              label="State:*"
-              className={'max-w-[400px]!'}
-            />
-            <TextField
-              type="text"
-              required
-              value={idMissionVerifiedData?.country}
-              onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, country: e.target.value })}
-              label="Country:*"
-              className={'max-w-[400px]!'}
-            />
-            <TextField
-              value={idMissionVerifiedData?.companyTitle}
-              onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, companyTitle: e.target.value })}
-              label="Company Title:*"
-              required
-              className={'max-w-[400px]!'}
-            />
-            <TextField
-              value={idMissionVerifiedData?.phoneNumber}
-              onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, phoneNumber: e.target.value })}
-              label="Phone Number:*"
-              required
-              type="number"
-              className={'max-w-[400px]!'}
-            />
-            <SignatureBox className={'min-w-full'} onSave={handleSignature} />
-          </form>
-          <div className="flex w-full items-center justify-end">
-            <Button
-              disabled={!isAllRequiredFieldsFilled}
-              label={!isAllRequiredFieldsFilled ? 'Some fields are missing' : 'Submit'}
-              onClick={submitIdMissionData}
-              className="mt-4"
-            />
-          </div>
+                {otpSent && (
+                  <div className="flex w-full items-center justify-center gap-4">
+                    <TextField
+                      type="text"
+                      placeholder="Enter your OTP"
+                      value={otp}
+                      onChange={e => setOtp(e.target.value)}
+                      className="max-w-[500px]"
+                    />
+                    <Button
+                      onClick={verifyWithOtp}
+                      disabled={emailLoading}
+                      className={`min-w-[130px] py-[8px] ${emailLoading && 'cursor-not-allowed opacity-25'}`}
+                      label={'SubmitOtp'}
+                    />
+                  </div>
+                )}
+              </div>
+            ) : getQrAndWebLinkLoading ? (
+              <CustomLoading />
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
+                <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your identity</p>
+                {qrCode && webLink && (
+                  <>
+                    <div className="mt-4 flex w-full flex-col items-center gap-4">
+                      <img className="h-[230px] w-[230px]" src={`data:image/jpeg;base64,${qrCode}`} alt="qr code " />
+                    </div>
+                    <div className="mt-4 flex w-full flex-col items-center gap-4">
+                      <Button
+                        className="max-w-[400px]"
+                        label={'Open LInk in New Tab'}
+                        onClick={async () => {
+                          window.open(webLink, '_blank');
+                        }}
+                        rightIcon={MdVerifiedUser}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            )
+          ) : (
+            <div className="flex w-full flex-col p-2">
+              <h3 className="text-textPrimary text-center text-2xl font-semibold">Id Mission Data</h3>
+              <form className="flex flex-wrap gap-4">
+                <TextField
+                  onChange={() => {}}
+                  required
+                  value={idMissionVerifiedData?.name}
+                  label="Name:*"
+                  className={'max-w-[400px]!'}
+                />
+                <TextField
+                  value={user?.email}
+                  onChange={() => {}}
+                  label="Email Address:*"
+                  required
+                  className={'max-w-[400px]!'}
+                />
+                <TextField
+                  type="date"
+                  value={idMissionVerifiedData?.dateOfBirth}
+                  onChange={() => {}}
+                  label="Date of Birth:*"
+                  required
+                  className={'max-w-[400px]!'}
+                />
+                <TextField
+                  type="text"
+                  value={idMissionVerifiedData?.idType}
+                  onChange={() => {}}
+                  label="Id Type:*"
+                  required
+                  className={'max-w-[400px]!'}
+                />{' '}
+                <TextField
+                  type="text"
+                  value={idMissionVerifiedData?.idIssuer}
+                  onChange={() => {}}
+                  label="Id Issuer:*"
+                  required
+                  className={'max-w-[400px]!'}
+                />{' '}
+                <TextField
+                  type="date"
+                  value={idMissionVerifiedData?.issueDate}
+                  onChange={() => {}}
+                  label="Issue Date:*"
+                  required
+                  className={'max-w-[400px]!'}
+                />{' '}
+                <TextField
+                  required
+                  onChange={() => {}}
+                  value={idMissionVerifiedData?.idNumber}
+                  label="Id Number:*"
+                  className={'max-w-[400px]!'}
+                />{' '}
+                <Autocomplete
+                  onLoad={onLoad}
+                  className="w-full max-w-[400px]"
+                  onPlaceChanged={onPlaceChanged}
+                  options={{ fields: ['address_components', 'formatted_address', 'geometry', 'place_id'] }}
+                >
+                  <TextField
+                    type="text"
+                    required
+                    value={idMissionVerifiedData?.streetAddress}
+                    onChange={e =>
+                      setIdMissionVerifiedData({ ...idMissionVerifiedData, streetAddress: e.target.value })
+                    }
+                    label="Street Address:*"
+                    className={'max-w-[400px]!'}
+                  />
+                </Autocomplete>
+                <TextField
+                  type="text"
+                  required
+                  value={idMissionVerifiedData?.city}
+                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, city: e.target.value })}
+                  label="City:*"
+                  className={'max-w-[400px]!'}
+                />
+                <TextField
+                  type="number"
+                  required
+                  value={idMissionVerifiedData?.zipCode}
+                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, zipCode: e.target.value })}
+                  label="Zip Code:*"
+                  className={'max-w-[400px]!'}
+                />
+                <TextField
+                  type="text"
+                  required
+                  value={idMissionVerifiedData?.state}
+                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, state: e.target.value })}
+                  label="State:*"
+                  className={'max-w-[400px]!'}
+                />
+                <TextField
+                  type="text"
+                  required
+                  value={idMissionVerifiedData?.country}
+                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, country: e.target.value })}
+                  label="Country:*"
+                  className={'max-w-[400px]!'}
+                />
+                <TextField
+                  value={idMissionVerifiedData?.companyTitle}
+                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, companyTitle: e.target.value })}
+                  label="Company Title:*"
+                  required
+                  className={'max-w-[400px]!'}
+                />
+                <TextField
+                  value={idMissionVerifiedData?.phoneNumber}
+                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, phoneNumber: e.target.value })}
+                  label="Phone Number:*"
+                  required
+                  type="number"
+                  className={'max-w-[400px]!'}
+                />
+                <SignatureBox className={'min-w-full'} onSave={handleSignature} />
+              </form>
+              <div className="flex w-full items-center justify-end">
+                <Button
+                  disabled={!isAllRequiredFieldsFilled}
+                  label={!isAllRequiredFieldsFilled ? 'Some fields are missing' : 'Submit'}
+                  onClick={submitIdMissionData}
+                  className="mt-4"
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </>
   );
 }

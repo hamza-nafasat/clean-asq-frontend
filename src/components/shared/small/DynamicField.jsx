@@ -500,41 +500,70 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                 </h4>
               )}
 
-              <div className="relative">
-                <input
-                  ref={inputRef}
-                  name={name}
-                  placeholder={showMasked ? '*******' : placeholder}
-                  type={showMasked ? 'password' : type === 'date' ? 'text' : type}
-                  value={type === 'date' ? formatDate(form[name]) : form[name]}
-                  onChange={e =>
-                    setForm(prev => ({
-                      ...prev,
-                      [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
-                    }))
-                  }
-                  autoComplete="off"
-                  className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
-                    required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
-                  }`}
-                  {...(isConfirmField
-                    ? {
-                        onPaste: e => e.preventDefault(),
-                        onCopy: e => e.preventDefault(),
-                        onCut: e => e.preventDefault(),
-                      }
-                    : {})}
-                />
+              {type == 'textarea' ? (
+                <div className="relative">
+                  <textarea
+                    ref={inputRef}
+                    name={name}
+                    placeholder={showMasked ? '*******' : placeholder}
+                    type={showMasked ? 'password' : type === 'date' ? 'text' : type}
+                    value={type === 'date' ? formatDate(form[name]) : form[name]}
+                    onChange={e =>
+                      setForm(prev => ({
+                        ...prev,
+                        [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
+                      }))
+                    }
+                    autoComplete="off"
+                    className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+                      required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
+                    }`}
+                    {...(isConfirmField
+                      ? {
+                          onPaste: e => e.preventDefault(),
+                          onCopy: e => e.preventDefault(),
+                          onCut: e => e.preventDefault(),
+                        }
+                      : {})}
+                  />
+                </div>
+              ) : (
+                <div className="relative">
+                  <input
+                    ref={inputRef}
+                    name={name}
+                    placeholder={showMasked ? '*******' : placeholder}
+                    type={showMasked ? 'password' : type === 'date' ? 'text' : type}
+                    value={type === 'date' ? formatDate(form[name]) : form[name]}
+                    onChange={e =>
+                      setForm(prev => ({
+                        ...prev,
+                        [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
+                      }))
+                    }
+                    autoComplete="off"
+                    className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+                      required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
+                    }`}
+                    {...(isConfirmField
+                      ? {
+                          onPaste: e => e.preventDefault(),
+                          onCopy: e => e.preventDefault(),
+                          onCut: e => e.preventDefault(),
+                        }
+                      : {})}
+                  />
 
-                {isMasked && (
-                  <span
-                    onClick={() => setShowMasked(!showMasked)}
-                    className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-sm text-gray-600"
-                  >
-                    {!showMasked ? <RxEyeOpen className="h-5 w-5" /> : <IoEyeOffSharp className="h-5 w-5" />}
-                  </span>
-                )}
-              </div>
+                  {isMasked && (
+                    <span
+                      onClick={() => setShowMasked(!showMasked)}
+                      className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-sm text-gray-600"
+                    >
+                      {!showMasked ? <RxEyeOpen className="h-5 w-5" /> : <IoEyeOffSharp className="h-5 w-5" />}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}

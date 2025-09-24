@@ -1,17 +1,26 @@
 import FileUploader from './Documents/FileUploader';
 import Button from '../shared/small/Button';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { updateFileData } from '@/redux/slices/formSlice';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 import Modal from '../shared/small/Modal';
-import { AiHelpModal } from '../shared/small/DynamicField';
+import {
+  AiHelpModal,
+  CheckboxInputType,
+  MultiCheckboxInputType,
+  OtherInputType,
+  RadioInputType,
+  RangeInputType,
+  SelectInputType,
+} from '../shared/small/DynamicField';
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 import { PencilIcon } from 'lucide-react';
 import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
 import DOMPurify from 'dompurify';
 import SignatureBox from '../shared/SignatureBox';
+import { FIELD_TYPES } from '@/data/constants';
 
 function Documents({
   _id,
@@ -45,11 +54,11 @@ function Documents({
   const [showRequiredDocs, setShowRequiredDocs] = useState(true);
 
   // Generate the AI prompt
-  const generateAiPrompt = () => {
+  const generateAiPrompt = useCallback(() => {
     const companyName = idMissionData?.companyTitle || 'your company';
     const state = idMissionData?.state || 'your state';
     return `how do I find online images/copies of the articles of incorporation or organization for ${companyName} in ${state} via the state's entity search website?`;
-  };
+  }, [idMissionData?.companyTitle, idMissionData?.state]);
 
   // Fetch AI help on component mount
   useEffect(() => {
@@ -75,7 +84,7 @@ function Documents({
     };
 
     fetchRequiredDocuments();
-  }, [idMissionData?.state, formateTextInMarkDown]);
+  }, [idMissionData?.state, formateTextInMarkDown, generateAiPrompt]);
 
   const handleFileSelect = file => {
     if (!file) return toast.error('Please select a file');
@@ -84,7 +93,8 @@ function Documents({
   const updateFileDataHandler = () => {
     if (!form?.[fileFieldName]) return toast.error('Please select a file');
     dispatch(updateFileData({ name, file: form[fileFieldName] }));
-    handleNext({ data: { [fileFieldName]: form[fileFieldName] }, name: title, setLoadingNext });
+    dispatch(updateFileData({ name, file: form[fileFieldName] }));
+    handleNext({ data: { ...form, [fileFieldName]: form[fileFieldName] }, name: title, setLoadingNext });
   };
   const submitFileDataHandler = () => {
     if (!form?.[fileFieldName]) return toast.error('Please select a file');
@@ -104,8 +114,6 @@ function Documents({
       setForm(initialForm);
     }
   }, [fields, name, reduxData]);
-
-  console.log('Documents form data:', form);
 
   return (
     <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
@@ -173,10 +181,10 @@ function Documents({
         )}
       </div>
       <div className="mt-6 w-full">
-        {fields?.map((field, i) => {
+        {fields?.map((field, index) => {
           if (field.type === 'file') {
             return (
-              <div className="flex w-full flex-col gap-4 p-6" key={i}>
+              <div className="flex w-full flex-col gap-4 p-6" key={index}>
                 {openAiHelpModal && (
                   <Modal onClose={() => setOpenAiHelpModal(false)}>
                     <AiHelpModal
@@ -197,6 +205,59 @@ function Documents({
                   </div>
                 )}
                 <FileUploader label={field?.label} file={form[fileFieldName]} onFileSelect={handleFileSelect} />
+              </div>
+            );
+          } else {
+            if (field.type === FIELD_TYPES.SELECT) {
+              return (
+                <div key={index} className="mt-4">
+                  <SelectInputType field={field} form={form} setForm={setForm} className={''} />
+                </div>
+              );
+            }
+            if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
+              return (
+                <div key={index} className="mt-4">
+                  <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={''} />
+                </div>
+              );
+            }
+            if (field.type === FIELD_TYPES.RADIO) {
+              return (
+                <div key={index} className="mt-4">
+                  <RadioInputType field={field} form={form} setForm={setForm} className={''} />
+                </div>
+              );
+            }
+            if (field.type === FIELD_TYPES.RANGE) {
+              return (
+                <div key={index} className="mt-4">
+                  <RangeInputType field={field} form={form} setForm={setForm} className={''} />
+                </div>
+              );
+            }
+            if (field.type === FIELD_TYPES.CHECKBOX) {
+              return (
+                <div key={index} className="mt-4">
+                  <CheckboxInputType
+                    field={field}
+                    placeholder={field.placeholder}
+                    form={form}
+                    setForm={setForm}
+                    className={''}
+                  />
+                </div>
+              );
+            }
+            return (
+              <div key={index} className="mt-4">
+                <OtherInputType
+                  field={field}
+                  placeholder={field.placeholder}
+                  form={form}
+                  setForm={setForm}
+                  className={''}
+                />
               </div>
             );
           }
