@@ -55,6 +55,7 @@ const Login = () => {
           <Button
             disabled={isLoading}
             onClick={loginHandler}
+            type="submit"
             label="Sign in"
             className="hover:!bg-secondary text-secondary !border-secondary w-full !rounded-[20px] !border bg-blue-600 hover:!text-white"
           />
