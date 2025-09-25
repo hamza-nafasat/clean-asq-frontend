@@ -16,6 +16,7 @@ import {
 import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
 import { userExist, userNotExist } from '@/redux/slices/authSlice';
 import { addSavedFormData, updateEmailVerified, updateFormState } from '@/redux/slices/formSlice';
+import { collectClientDetails } from '@/utils/userDetails';
 import { Autocomplete } from '@react-google-maps/api';
 import { unwrapResult } from '@reduxjs/toolkit';
 import { useCallback, useEffect, useState } from 'react';
@@ -53,9 +54,7 @@ export default function SingleApplication() {
   const { formData } = useSelector(state => state?.form);
   const [saveFormInDraft] = useSaveFormInDraftMutation();
   const [openRedirectModal, setOpenRedirectModal] = useState(false);
-
   const [submitFormArticleFile] = useSubmitFormArticleFileMutation();
-
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
     name: '',
     idNumber: '',
@@ -95,9 +94,13 @@ export default function SingleApplication() {
     async ({ data, name }) => {
       try {
         if (!formId) return toast.error('From id not provided');
-        const formDataInRedux = { ...formData, [name]: data };
+        const { data: userDetailsData } = await collectClientDetails();
+        const formDataInRedux = { ...formData, [name]: data, ['metadata']: userDetailsData };
         // console.log('save in progress', formDataInRedux);
-        const res = await saveFormInDraft({ formId: formId, formData: formDataInRedux }).unwrap();
+        const res = await saveFormInDraft({
+          formId: formId,
+          formData: { ...formDataInRedux },
+        }).unwrap();
         if (res.success) toast.success(res.message);
       } catch (error) {
         console.log('error while saving form in draft', error);
