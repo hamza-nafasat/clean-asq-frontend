@@ -18,6 +18,16 @@ const formApis = createApi({
       }),
       invalidatesTags: [{ type: 'Form', id: 'LIST' }],
     }),
+    // update  form location status
+    // ---------------
+    updateForm: builder.mutation({
+      query: ({ data, _id }) => ({
+        url: `/update-form-location/${_id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+    }),
     // get my all users
     // --------------
     getMyAllForms: builder.query({
@@ -303,6 +313,7 @@ const formApis = createApi({
 });
 export const {
   useCreateFormMutation,
+  useUpdateFormMutation,
   useGetMyAllFormsQuery,
   useGetSingleFormMutation,
   useGetSingleFormQueryQuery,

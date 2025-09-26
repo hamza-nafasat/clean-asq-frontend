@@ -20,16 +20,16 @@ if (!container._reactRoot) {
   container._reactRoot = root;
 
   root.render(
-    <StrictMode>
-      <LoadScript googleMapsApiKey={'AIzaSyCjIrS-bOHBzGviCsSHDZZUf9F9oonZGnU'} libraries={['places']}>
-        <BrandingProvider>
-          <Provider store={store}>
-            <BrowserRouter>
-              <App />
-            </BrowserRouter>
-          </Provider>
-        </BrandingProvider>
-      </LoadScript>
-    </StrictMode>
+    // <StrictMode>
+    <LoadScript googleMapsApiKey={'AIzaSyCjIrS-bOHBzGviCsSHDZZUf9F9oonZGnU'} libraries={['places']}>
+      <BrandingProvider>
+        <Provider store={store}>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </Provider>
+      </BrandingProvider>
+    </LoadScript>
+    // </StrictMode>
   );
 }

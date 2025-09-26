@@ -1,25 +1,22 @@
-import ApplicationForm from '@/page/admin/userApplicationForms/ApplicationVerification/ApplicationForm';
-import { useCreateFormMutation, useGetMyAllFormsQuery } from '@/redux/apis/formApis';
+import { useAddBrandingInFormMutation, useGetAllBrandingsQuery } from '@/redux/apis/brandingApis';
+import { useCreateFormMutation, useGetMyAllFormsQuery, useUpdateFormMutation } from '@/redux/apis/formApis';
 import { MoreVertical } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { CiSearch } from 'react-icons/ci';
 import { FaCheck } from 'react-icons/fa6';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import FileUploader from '../applicationVerification/Documents/FileUploader';
+import ConfirmationModal from '../shared/ConfirmationModal';
 import Button from '../shared/small/Button';
 import Modal from '../shared/small/Modal';
 import TextField from '../shared/small/TextField';
-import { useNavigate } from 'react-router-dom';
 import ApplyBranding from './brandings/globalBranding/ApplyBranding';
-import ConfirmationModal from '../shared/ConfirmationModal';
-import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
-import { useBranding } from '@/hooks/BrandingContext';
-import { useAddBrandingInFormMutation, useGetAllBrandingsQuery } from '@/redux/apis/brandingApis';
 
 export default function ApplicationsCard() {
   const navigate = useNavigate();
-  const menuRef = useRef(null);
   const buttonRef = useRef(null);
+  const menuButtonRef = useRef(null);
   const [actionMenu, setActionMenu] = useState(null);
   const [clientQuery, setClientQuery] = useState('');
   const [nameQuery, setNameQuery] = useState('');
@@ -34,10 +31,29 @@ export default function ApplicationsCard() {
   const [selectedBranding, setSelectedBranding] = useState(null);
   const [onHome, setOnHome] = useState(false);
   const { data: forms, refetch } = useGetMyAllFormsQuery();
-
   const { data: brandings } = useGetAllBrandingsQuery();
-
   const [addFromBranding] = useAddBrandingInFormMutation();
+  const [locationModal, setLocationModal] = useState(false);
+  const [locationStatus, setLocationStatus] = useState('');
+  const [updateFormLocation] = useUpdateFormMutation();
+
+  const handleFormLocationUpdate = async () => {
+    if (!locationModal) return toast.error('Please select a form');
+    if (!locationStatus) return toast.error('Please select a location status');
+    try {
+      const res = await updateFormLocation({ _id: locationModal, data: { locationStatus } }).unwrap();
+      if (res?.success) {
+        setLocationModal(false);
+        await refetch();
+        toast?.success(res?.message || 'Form location updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating form location:', error);
+      toast.error(error?.data?.message || 'Failed to update form location');
+    }
+  };
+
+  console.log('action menue', actionMenu);
 
   const createFormWithCsvHandler = async () => {
     console.log('file', file);
@@ -83,13 +99,20 @@ export default function ApplicationsCard() {
 
   useEffect(() => {
     const handleClickOutside = event => {
-      if (buttonRef.current && !buttonRef.current.contains(event.target)) {
+      if (
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target) &&
+        menuButtonRef.current &&
+        !menuButtonRef.current.contains(event.target)
+      ) {
         setActionMenu(null);
       }
     };
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
   return (
     <div className="rounded-md bg-white p-5 shadow">
       {/* modal for set branding  */}
@@ -114,7 +137,55 @@ export default function ApplicationsCard() {
           title={'Apply Branding'}
         />
       )}
+      {locationModal && (
+        <Modal onClose={() => setLocationModal(false)} title="Set Location">
+          <div className="flex items-center justify-center p-4">
+            <div className="flex w-full max-w-sm flex-col gap-6">
+              {/* Heading */}
+              <h3 className="text-center text-lg font-semibold text-gray-800">Enable or make the location optional</h3>
 
+              {/* Options */}
+              <div className="space-y-4">
+                {/* Required */}
+                <label
+                  htmlFor="required"
+                  className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 transition hover:bg-gray-100"
+                >
+                  <span className="font-medium text-gray-700">Location Required</span>
+                  <input
+                    name="required"
+                    id="required"
+                    type="checkbox"
+                    className="accent-primary h-5 w-5 cursor-pointer"
+                    checked={locationStatus === 'required'}
+                    onChange={() => setLocationStatus(prev => (prev === 'required' ? 'disabled' : 'required'))}
+                  />
+                </label>
+
+                {/* Optional */}
+                <label
+                  htmlFor="optional"
+                  className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 transition hover:bg-gray-100"
+                >
+                  <span className="font-medium text-gray-700">Optional Location</span>
+                  <input
+                    name="optional"
+                    id="optional"
+                    type="checkbox"
+                    className="accent-primary h-5 w-5 cursor-pointer"
+                    checked={locationStatus === 'optional'}
+                    onChange={() => setLocationStatus(prev => (prev === 'optional' ? 'disabled' : 'optional'))}
+                  />
+                </label>
+              </div>
+              <div className="flex w-full justify-end gap-2">
+                <Button label={'Cancel'} onClick={() => setLocationModal(false)} />
+                <Button label={'Save'} onClick={handleFormLocationUpdate} />
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
       {/* Header Section */}
       {creteFormModal && (
         <Modal onClose={() => setCreateFormModal(false)} title="">
@@ -198,17 +269,16 @@ export default function ApplicationsCard() {
       <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {forms?.data?.map((form, index) => {
           const colors = form?.branding?.colors;
-          console.log('colors', colors);
-
           return (
             <div
               key={index}
               className="relative flex min-w-0 flex-col rounded-[8px] border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
             >
               <div className="flex items-center justify-end">
-                <div ref={menuRef} className="relative">
+                <div className="relative">
                   <button
-                    onClick={() => setActionMenu(form?._id)}
+                    ref={menuButtonRef}
+                    onClick={actionMenu === form?._id ? () => setActionMenu(null) : () => setActionMenu(form?._id)}
                     className="cursor-pointer rounded p-1 hover:bg-gray-100"
                     aria-label="Actions"
                   >
@@ -216,9 +286,8 @@ export default function ApplicationsCard() {
                   </button>
 
                   {actionMenu === form?._id && (
-                    <div className="absolute right-0 mt-2 w-40 rounded border bg-white shadow-lg">
+                    <div ref={buttonRef} className="absolute right-0 mt-2 w-40 rounded border bg-white shadow-lg">
                       <button
-                        ref={buttonRef}
                         className="block w-full px-4 py-2 text-left hover:bg-gray-100"
                         onClick={() => {
                           setSelectedId(form?._id);
@@ -227,7 +296,19 @@ export default function ApplicationsCard() {
                       >
                         Set Branding
                       </button>
-                      <button className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100">
+                      <button
+                        onClick={() => {
+                          setLocationModal(actionMenu);
+                          setLocationStatus(form.locationStatus);
+                        }}
+                        className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                      >
+                        Set Location
+                      </button>
+                      <button
+                        onClick={() => {}}
+                        className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
+                      >
                         Delete Form
                       </button>
                     </div>

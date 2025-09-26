@@ -239,7 +239,6 @@ export default function SingleApplication() {
   const getQrLinkOnEmailVerified = useCallback(() => {
     if (!qrCode && !webLink && emailVerified) {
       if (formData && formData?.idMission) {
-        console.log('me hn abhi');
         // return navigate(`/singleform/stepper/${formId}`);
         const formDataOfIdMission = formData?.idMission;
         setIdMissionVerifiedData({

@@ -1,22 +1,26 @@
 import Button from '@/components/shared/small/Button';
 import CustomLoading from '@/components/shared/small/CustomLoading';
+import Modal from '@/components/shared/small/Modal';
 import TextField from '@/components/shared/small/TextField';
 import { getVerificationTableStyles } from '@/data/data';
 import { useBranding } from '@/hooks/BrandingContext';
 import {
   useCompanyLookupMutation,
   useCompanyVerificationMutation,
+  useGetSingleFormQueryQuery,
   useSaveFormInDraftMutation,
 } from '@/redux/apis/formApis';
 import { addLookupData } from '@/redux/slices/companySlice';
 import { updateFormState } from '@/redux/slices/formSlice';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import DataTable from 'react-data-table-component';
 import { GoCheckCircle } from 'react-icons/go';
 import { IoShieldOutline } from 'react-icons/io5';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import ReCAPTCHA from 'react-google-recaptcha';
+import LocationStatusModal from './LocationStatusModal';
 
 const columns = [
   { name: 'Field', selector: row => row.name, sortable: true, width: '150px' },
@@ -24,8 +28,8 @@ const columns = [
 ];
 
 function CompanyVerification({ formId }) {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [totalSearchStreatgies, setTotalSearchStreatgies] = useState(0);
   const [successfullyVerifiedStreatgies, setSuccessfullyVerifiedStreatgies] = useState(0);
@@ -37,7 +41,9 @@ function CompanyVerification({ formId }) {
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getVerificationTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   const { formData } = useSelector(state => state?.form);
+  const { data: formBackendData, isLoading } = useGetSingleFormQueryQuery({ _id: formId });
   const [saveFormInDraft] = useSaveFormInDraftMutation();
+  const [locationStatusModal, setLocationStatusModal] = useState(false);
 
   const handleSubmit = async () => {
     if (!form?.name || !form?.url) return toast.error('Please fill all fields');
@@ -123,8 +129,24 @@ function CompanyVerification({ formId }) {
   //   navigate(`/singleform/stepper/${formId}`);
   // };
 
-  return (
+  useEffect(() => {
+    if (formBackendData?.data) {
+      setLocationStatusModal(formBackendData?.data?.locationStatus);
+    }
+  }, [formBackendData]);
+
+  return isLoading ? (
+    <CustomLoading />
+  ) : (
     <div className="flex flex-col space-y-8">
+      {locationStatusModal && (
+        <LocationStatusModal
+          locationStatusModal={locationStatusModal}
+          setLocationStatusModal={setLocationStatusModal}
+          formId={formId}
+          navigate={navigate}
+        />
+      )}
       <div className="border-frameColor bg-backgroundColor w-full rounded-md border p-4">
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
