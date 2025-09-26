@@ -182,14 +182,16 @@ export default function ApplicationForm() {
   return !form?.data?._id ? (
     <CustomLoading />
   ) : (
-    <div className="overflow-none h-full w-full rounded-[10px] bg-white px-6 py-6">
+    <div className="overflow-hidden h-full w-full rounded-[10px] bg-white px-6 py-6">
       <Stepper
         steps={sectionNames}
         currentStep={currentStep}
-        onStepChange={step => setCurrentStep(step)}
         visibleSteps={0}
-        Children={stepsComps[currentStep]}
-      />
+        emptyRequiredFields={[]}
+      >
+        {stepsComps[currentStep]}
+      </Stepper>
     </div>
+
   );
 }

@@ -1,7 +1,7 @@
-import React, { useState, useEffect, Children } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '../shared/small/Button';
 
-const Stepper = ({ steps, currentStep, visibleSteps = 5, Children, emptyRequiredFields = [] }) => {
+const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequiredFields = [] }) => {
   const [visibleStepRange, setVisibleStepRange] = useState({ start: 0, end: visibleSteps });
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const totalSteps = steps.length;
@@ -33,9 +33,11 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, Children, emptyRequired
   }, [currentStep, totalSteps, windowWidth]);
 
   const displayedSteps = steps.slice(visibleStepRange.start, visibleStepRange.end);
+
   return (
     <div className="w-full p-4">
-      <div className="mb-8 flex items-center justify-between overflow-x-auto">
+      {/* Stepper Header */}
+      <div className="mb-8 flex items-center justify-between   overflow-y-hidden overflow-x-auto">
         {displayedSteps.map((step, index) => {
           const actualIndex = visibleStepRange.start + index;
           const isLastDisplayedStep = index === displayedSteps.length - 1;
@@ -43,23 +45,23 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, Children, emptyRequired
             <React.Fragment key={actualIndex}>
               {/* Step Circle and Label */}
               <div
-                className={`relative flex flex-col items-center ${actualIndex === currentStep ? 'top-[-14px]' : ''}`}
+                className={`relative flex flex-col items-center ${actualIndex === currentStep ? 'top-[-14px]' : ''
+                  }`}
               >
                 {/* Step Circle */}
                 <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 ${
-                    actualIndex < currentStep
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-200
+    ${actualIndex < currentStep
                       ? `border-primary ${emptyRequiredFields.includes(actualIndex) ? 'bg-[#974748]' : 'bg-primary'}`
                       : actualIndex === currentStep
-                        ? 'border-primary'
-                        : `!border-gray-300 ${emptyRequiredFields.includes(actualIndex) ? 'bg-[#974748]/30' : ''}`
-                  }`}
+                        ? 'border-primary bg-primary'
+                        : `border-gray-300 ${emptyRequiredFields.includes(actualIndex) ? 'bg-[#974748]/30' : 'bg-white'}`
+                    }`}
                 >
-                  {/* Circle content */}
                   {actualIndex < currentStep ? (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-white"
+                      className="h-4 w-4 text-white"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -68,36 +70,38 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, Children, emptyRequired
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   ) : actualIndex === currentStep ? (
-                    <div className="bg-primary h-3 w-3 rounded-full" />
-                  ) : (
-                    <div className="h-3 w-3 rounded-full bg-gray-300" />
-                  )}
+                    <div className="h-2 w-2 rounded-full bg-white" />
+                  ) : null}
                 </div>
 
-                {/* Label positioned below */}
-                {/* Add empty div for consistent spacing when label is hidden */}
-                <div className="fixed top-[166px]">
-                  {actualIndex === currentStep && (
-                    <div className="text-primary mt-2 text-center text-xs font-medium whitespace-nowrap">{step}</div>
-                  )}
+                {/* Step Label */}
+                <div className="mt-2">
+                  <div
+                    className={`text-center text-xs font-medium whitespace-nowrap transition-colors duration-200
+      ${actualIndex === currentStep ? 'text-primary' : 'text-gray-400'}
+    `}
+                  >
+                    {step}
+                  </div>
                 </div>
                 {actualIndex !== currentStep && <div className="mt-2 h-[20px]" />}
               </div>
 
-              {/* Connector Line to the right (only if not the last step in view) */}
+              {/* Connector Line */}
               {!isLastDisplayedStep && (
                 <div
-                  className={`h-[2px] flex-auto ${actualIndex < currentStep ? 'bg-primary' : 'bg-gray-300'}`}
-                  style={{ marginBottom: '28px' }} // Adjusted margin to align with circle center
+                  className={`h-[2px] flex-auto ${actualIndex < currentStep ? 'bg-primary' : 'bg-gray-300'
+                    }`}
+                  style={{ marginBottom: '48px' }}
                 />
               )}
             </React.Fragment>
           );
         })}
       </div>
-      <div className="h-[calc(100vh-420px)]">{Children}</div>
 
-      {/* Navigation Buttons */}
+      {/* Step Content */}
+      <div className="h-[calc(100vh-420px)]">{children}</div>
     </div>
   );
 };
