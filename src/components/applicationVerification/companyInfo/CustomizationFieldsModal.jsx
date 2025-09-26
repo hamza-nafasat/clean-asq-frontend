@@ -70,14 +70,16 @@ function CustomizationFieldsModal({
           </div>
         ))}
       <Checkbox label="Enable Signature for this section" checked={isSignature} onChange={handleUpdateSignature} />
-      <div className="mt-6 flex w-full justify-between gap-2">
-        <Button className="bg-primary w-[45%] cursor-pointer text-white" onClick={addNewFieldHandler}>
-          Add New Field
-        </Button>
+      <div className="mt-6 flex w-full items-center justify-between gap-2">
+        {!isArticleForm && (
+          <Button className="bg-primary w-[45%] cursor-pointer text-white" onClick={addNewFieldHandler}>
+            Add New Field
+          </Button>
+        )}
         <Button
           onClick={() => saveFormHandler(fieldsData)}
           disabled={isLoading}
-          className={`bg-primary w-[45%] cursor-pointer text-white`}
+          className={`bg-primary cursor-pointer text-white ${isArticleForm ? 'w-full' : 'w-[45%]'}`}
         >
           Save Form
         </Button>

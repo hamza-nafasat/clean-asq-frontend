@@ -291,6 +291,7 @@ function Documents({
           <CustomizationFieldsModal
             sectionId={_id}
             fields={fields}
+            isArticleForm={true}
             formRefetch={formRefetch}
             isSignature={isSignature}
             onClose={() => setCustomizeModal(false)}

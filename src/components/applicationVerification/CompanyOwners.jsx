@@ -50,7 +50,7 @@ function CompanyOwners({
 
   const requiredNames = useMemo(() => formFields.filter(f => f.required).map(f => f.name), [formFields]);
 
-  // console.log('company owners', form);
+  console.log('company owners', form);
 
   const handleChangeOnOtherOwnersData = (e, index, isFilter = false) => {
     if (e.target.name == 'name') {
@@ -179,7 +179,7 @@ function CompanyOwners({
     // 1) Build the “canonical” shape for this form
     const initialForm = {};
     formFields.forEach(field => {
-      if (field.type === 'block' && field.name === 'additional_owner') {
+      if (field.type === 'block' && field.name === 'additional_owner' && !otherOwnersStateName) {
         setOtherOwnersStateName(field.name);
         const initialState = {
           name: '',
@@ -199,6 +199,7 @@ function CompanyOwners({
         initialForm[field.name] = reduxData?.[field.name] ?? [initialState];
       } else {
         initialForm[field.name] = reduxData?.[field.name] ?? '';
+        // setOtherOwnersStateName('');
       }
     });
     // 2) Figure out what to add…
@@ -214,7 +215,7 @@ function CompanyOwners({
       // Then merge in any brand-new keys
       return { ...cleaned, ...toAdd };
     });
-  }, [form, formFields, reduxData]);
+  }, [form, formFields, otherOwnersStateName, reduxData]);
 
   // create fields for this section and also for customization
   // ---------------------------------------------------------
@@ -235,12 +236,12 @@ function CompanyOwners({
       return true;
     });
 
-    const additionOwners = form?.['additional_owner'];
+    const additionOwnersGet25OrMore = form?.['additional_owners_own_25_percent_or_more'];
     let isEmailVAlidated = true;
-    if (additionOwners) {
+    if (additionOwnersGet25OrMore) {
       isEmailVAlidated =
-        Array.isArray(additionOwners) &&
-        additionOwners.some(
+        Array.isArray(additionOwnersGet25OrMore) &&
+        additionOwnersGet25OrMore.some(
           item => item?.email?.toString().trim() !== '' && validateEmail(item?.email?.toString().trim())
         );
     }
@@ -260,12 +261,12 @@ function CompanyOwners({
     if (!isOperatorExist) setSubmitButtonText('At least one primary operator required');
     if (!allFilled) setSubmitButtonText('Some Required Fields are Missing');
     // remove field with name additional_owners_own_25_percent_or_more and save in new veriable so we can add back if value is smaller the 74
-    if (form?.applicant_percentage > 75) {
+    if (form?.applicant_percentage > 75 && formFields['additional_owners_own_25_percent_or_more']) {
       setFormFields(prev => [...prev.filter(f => f.name !== 'additional_owners_own_25_percent_or_more')]);
     }
     const isAllChecksTrue = allFilled && isOperatorExist && isEmailVAlidated;
     setIsAllRequiredFieldsFilled(isAllChecksTrue);
-  }, [form, requiredNames]);
+  }, [form, formFields, requiredNames]);
 
   return (
     <div className="h-full w-full overflow-auto">

@@ -189,7 +189,6 @@ function ProcessingInfo({
       {customizeModal && (
         <Modal onClose={() => setCustomizeModal(false)}>
           <CustomizationFieldsModal
-            isArticleForm
             sectionId={_id}
             fields={fields}
             isSignature={isSignature}

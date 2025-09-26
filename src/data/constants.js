@@ -7,6 +7,7 @@ export const APPLICANT_STATUS = {
 
 export const FIELD_TYPES = {
   TEXT: 'text',
+  DATE: 'date',
   EMAIL: 'email',
   NUMBER: 'number',
   PASSWORD: 'password',

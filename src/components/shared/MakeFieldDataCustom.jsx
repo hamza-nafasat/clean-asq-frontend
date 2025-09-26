@@ -148,7 +148,7 @@ const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index, suggestions, is
         </div>
         {/* Field Type & Placeholder */}
         <div className="flex items-center justify-between gap-2">
-          {isArticleForm && (
+          {!isArticleForm && (
             <div className="flex w-full flex-col items-start gap-2">
               <p className="text-start text-sm lg:text-base">Field Type</p>
               <div className="w-full rounded-lg border border-gray-300 p-1.5">
