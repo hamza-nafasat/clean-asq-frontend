@@ -82,9 +82,8 @@ const AdminAside = () => {
 
   return (
     <div
-      className={`relative flex h-full flex-col justify-between rounded-t-md bg-white p-4 transition-all duration-500 ${
-        isNavOpen ? 'w-[250px]' : 'w-[65px]'
-      }`}
+      className={`relative flex h-full flex-col justify-between rounded-t-md bg-white rounded-md p-4 transition-all duration-500 ${isNavOpen ? 'w-[250px]' : 'w-[65px]'
+        }`}
     >
       <div className="absolute top-[6%] right-[-11px] z-10 cursor-pointer" onClick={handleNavOpen}>
         <div className={`hidden transition-all duration-500 lg:block ${isNavOpen ? 'rotate-0' : 'rotate-180'}`}>
@@ -112,24 +111,43 @@ const AdminAside = () => {
               <Link
                 key={i}
                 to={page.link}
-                className={`flex w-full min-w-fit cursor-pointer items-center p-2 text-nowrap transition-all duration-400 ${
-                  isNavOpen ? 'gap-2' : 'gap-[0]'
-                } ${isActive ? 'rounded-md text-white' : ''}`}
+                className={`
+    flex w-full min-w-fit cursor-pointer items-center rounded-md p-2 text-nowrap 
+    transition-all duration-300
+    ${isNavOpen ? 'gap-2' : 'gap-[0]'}
+    
+    /* ✅ Active link styles (highlight bg + white text) */
+    ${isActive
+                    ? 'bg-primary text-white font-semibold'
+
+                    /* ✅ Default styles + hover styles */
+                    : 'text-[#526581] hover:bg-gray-100 hover:text-primary'
+                  }
+  `}
               >
+                {/* Icon with conditional color */}
                 <div className={`text-[20px] ${isActive ? 'text-white' : 'text-[#526581]'}`}>
                   {React.cloneElement(page.icon, {
-                    color: isActive ? '#066969' : '#000000',
+                    color: isActive ? '#ffffff' : '#526581', // ✅ White when active, gray otherwise
                   })}
                 </div>
 
+                {/* Title text with active/hover transition */}
                 <p
-                  className={`navbar-title text-sm font-medium capitalize transition-opacity duration-500 md:text-base ${
-                    isActive ? 'text-primary !font-bold' : 'text-[#526581]'
-                  } ${isNavOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}
+                  className={`
+      navbar-title text-sm font-medium capitalize transition-opacity duration-500 md:text-base
+      
+      /* ✅ Active link text styling */
+      ${isActive ? 'text-white !font-bold' : 'text-[#526581]'}
+      
+      /* ✅ Smooth open/close animation */
+      ${isNavOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'}
+    `}
                 >
                   {page.title}
                 </p>
               </Link>
+
             );
           })}
         </div>
