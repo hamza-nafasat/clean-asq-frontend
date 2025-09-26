@@ -12,6 +12,7 @@ const DEFAULT_COLORS = {
   backgroundColor: '#f9f9f9',
   frameColor: '#db1313',
   fontFamily: 'Inter',
+  buttonTextColor: '#bfff00',
 };
 
 export const BrandingProvider = ({ children }) => {
@@ -24,6 +25,8 @@ export const BrandingProvider = ({ children }) => {
   const [backgroundColor, setBackgroundColor] = useState(DEFAULT_COLORS.backgroundColor);
   const [frameColor, setFrameColor] = useState(DEFAULT_COLORS.frameColor);
   const [fontFamily, setFontFamily] = useState(DEFAULT_COLORS.fontFamily);
+  const [buttonTextColor, setButtonTextColor] = useState(DEFAULT_COLORS.buttonTextColor);
+
 
   // Load saved branding from localStorage on mount
   useEffect(() => {
@@ -37,6 +40,8 @@ export const BrandingProvider = ({ children }) => {
       setBackgroundColor(savedBranding.backgroundColor || DEFAULT_COLORS.backgroundColor);
       setFrameColor(savedBranding.frameColor || DEFAULT_COLORS.frameColor);
       setFontFamily(savedBranding.fontFamily || DEFAULT_COLORS.fontFamily);
+      setButtonTextColor(savedBranding.buttonTextColor || DEFAULT_COLORS.buttonTextColor);
+
     }
   }, []);
 
@@ -51,6 +56,8 @@ export const BrandingProvider = ({ children }) => {
       backgroundColor,
       frameColor,
       fontFamily,
+      buttonTextColor,
+
     };
     localStorage.setItem('brandingData', JSON.stringify(brandingData));
 
@@ -69,10 +76,12 @@ export const BrandingProvider = ({ children }) => {
     document.documentElement.style.setProperty('--backgroundColor', backgroundColor);
     document.documentElement.style.setProperty('--color-frame', frameColor);
     document.documentElement.style.setProperty('--frameColor', frameColor);
+    document.documentElement.style.setProperty('--color-button-text-color', buttonTextColor);
+
 
     // Apply font family globally using CSS variables
     document.documentElement.style.setProperty('--font-primary', `var(--font-${fontFamily.toLowerCase()})`);
-  }, [primaryColor, secondaryColor, accentColor, textColor, linkColor, backgroundColor, frameColor, fontFamily]);
+  }, [primaryColor, secondaryColor, accentColor, textColor, linkColor, backgroundColor, frameColor, fontFamily,buttonTextColor,]);
 
   const value = {
     logo,
@@ -93,6 +102,8 @@ export const BrandingProvider = ({ children }) => {
     setFrameColor,
     fontFamily,
     setFontFamily,
+     buttonTextColor,
+    setButtonTextColor,
   };
 
   return <BrandingContext.Provider value={value}>{children}</BrandingContext.Provider>;

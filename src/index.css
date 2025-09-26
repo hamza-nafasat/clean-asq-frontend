@@ -69,6 +69,7 @@
   --linkColor: #1025e3;
   --backgroundColor: #f9f9f9;
   --frameColor: #db1313;
+  --buttonTextColor: #bfff00;
 
   /* Branding Colors - These will override defaults when set */
   --color-primary: var(--primary);
@@ -78,6 +79,7 @@
   --color-link: var(--linkColor);
   --color-background: var(--backgroundColor);
   --color-frame: var(--frameColor);
+   --color-button-text-color: var(--buttonTextColor);
   --color-new-green: #15a090;
   --font-primary: var(--font-inter);
 
@@ -514,6 +516,13 @@ body {
 }
 .hover\:text-link:hover {
   color: var(--linkColor);
+}
+
+.text-buttonText {
+  color: var(--color-button-text-color);
+}
+.bg-buttonText {
+  background-color: var(--color-button-text-color);
 }
 
 /* Add these new utility classes for background and frame colors */

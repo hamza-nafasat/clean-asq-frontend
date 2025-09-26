@@ -60,6 +60,8 @@ const BrandElementAssignment = ({
   // setPrimaryFont,
   fontFamily,
   setFontFamily,
+  buttonTextColor,
+  setButtonTextColor,
 }) => {
   return (
     <div className="mt-6">
@@ -73,7 +75,10 @@ const BrandElementAssignment = ({
         <ColorInput label="Link Color" color={linkColor} setColor={setLinkColor} />
         <ColorInput label="Background Color" color={backgroundColor} setColor={setBackgroundColor} />
         <ColorInput label="Frame Color (Input Fields, Borders)" color={frameColor} setColor={setFrameColor} />
+        <ColorInput label="Button text color" color={buttonTextColor} setColor={setButtonTextColor} />
+
       </div>
+      <div className="bg-buttonTextColor text-buttonText size-8">hallo</div>
 
       <div className="flex flex-col space-y-1">
         <label htmlFor="primary-font" className="text-sm font-medium text-gray-700">

@@ -165,15 +165,15 @@ export default function ApplicationsCard() {
             onChange={e => (searchMode === 'client' ? setClientQuery(e.target.value) : setNameQuery(e.target.value))}
             leftIcon={<CiSearch />}
             rightIcon={
-              <div className="flex gap-x-2">
+             <div className="flex gap-x-2">
                 <Button
-                  className={`!border-none ${searchMode === 'client' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'}`}
+                  className={`!border-none ${searchMode === 'client' ? '!bg-primary !text-white' : '!bg-gray-200 !text-gray-600'}`}
                   onClick={() => setSearchMode('client')}
                   label={'BY CLIENT#'}
                 />
 
                 <Button
-                  className={`!border-none ${searchMode === 'name' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'}`}
+                  className={`!border-none ${searchMode === 'name' ? '!bg-primary !text-white' : '!bg-gray-200 !text-gray-600'}`}
                   onClick={() => setSearchMode('name')}
                   label={'BY NAME#'}
                 />

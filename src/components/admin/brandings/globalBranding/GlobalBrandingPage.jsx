@@ -34,6 +34,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [colorPalette, setColorPalette] = useState([]);
   const [selectedLogo, setSelectedLogo] = useState();
   const [extraLogos, setExtraLogos] = useState([]);
+  const [buttonTextColor, setButtonTextColor] = useState('');
 
   const {
     setPrimaryColor: setGlobalPrimaryColor,
@@ -45,6 +46,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
     setFrameColor: setGlobalFrameColor,
     setFontFamily: setGlobalFontFamily,
     setLogo: setGlobalLogo,
+    setButtonTextColor: setButtonColor,
   } = useBranding();
 
   const [extractColorsFromLogos] = useExtractColorsFromLogosMutation();
@@ -85,6 +87,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
         setLinkColor(data?.colors?.link);
         setBackgroundColor(data?.colors?.background);
         setFrameColor(data?.colors?.frame);
+         setButtonTextColor('#bfff00');
         if (Array.isArray(data?.color_palette?.fromLogo) && Array.isArray(data?.color_palette?.fromSite)) {
           setColorPalette([...data.color_palette.fromLogo, ...data.color_palette.fromSite]);
         }
@@ -208,6 +211,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
             setGlobalFrameColor(userBranding.colors.frame);
             setGlobalFontFamily(userBranding.fontFamily);
             setGlobalLogo(userBranding?.selectedLogo);
+            setButtonColor('#bfff00');
           }
         }
 
@@ -262,6 +266,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setBackgroundColor(singleBranding.colors.background);
       setFrameColor(singleBranding.colors.frame);
       setFontFamily(singleBranding.fontFamily);
+      setFontFamily(singleBranding.fontFamily);
+      setButtonTextColor('#bfff00');
 
       // Set the selected logo from the API response if available
       if (singleBranding.selectedLogo) {
@@ -314,6 +320,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
           setFrameColor={setFrameColor}
           fontFamily={fontFamily}
           setFontFamily={setFontFamily}
+          buttonTextColor={buttonTextColor}
+          setButtonTextColor={setButtonTextColor}
         />
         <div className="border-primary my-6 border-t-2"></div>
 
@@ -327,12 +335,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
         />
 
         <div className="mt-6 mb-4 flex justify-between space-x-2 md:space-x-4">
-          <button
-            className="rounded-md bg-teal-500 px-3 py-2 text-white hover:bg-gray-400 md:px-6 md:py-3"
-            onClick={handleCancel}
-          >
-            skip
-          </button>
+           <Button label={'skip'} onClick={handleCancel} />
           <div className="flex gap-2 md:gap-6">
             <Button variant="secondary" label={'Cancel'} onClick={handleCancel} />
             <Button

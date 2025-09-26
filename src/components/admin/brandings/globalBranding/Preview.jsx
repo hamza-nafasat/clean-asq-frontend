@@ -1,3 +1,4 @@
+import Button from '@/components/shared/small/Button';
 import { setCompanyName } from '@/redux/slices/brandingSlice';
 import { detectLogo } from '@/utils/detectLogo';
 import { useEffect, useState } from 'react';
@@ -48,24 +49,9 @@ const Preview = ({ primaryColor, companyName, selectedLogo, secondaryColor, acce
         </p>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
-          <button
-            className="rounded px-3 py-2 text-sm font-normal text-white md:px-5 md:py-4"
-            style={{ backgroundColor: primaryColor }}
-          >
-            Primary Button
-          </button>
-          <button
-            className="rounded px-3 py-2 text-sm font-normal text-white md:px-5 md:py-4"
-            style={{ backgroundColor: secondaryColor }}
-          >
-            Secondary Button
-          </button>
-          <button
-            className="rounded px-3 py-2 text-sm font-normal text-white md:px-5 md:py-4"
-            style={{ backgroundColor: accentColor }}
-          >
-            Accent Button
-          </button>
+         <Button label={'Primary Button'} />
+          <Button variant="secondary" label={'Secondary Button'} />
+          <Button label={' Accent Button'} />
         </div>
       </div>
     </div>

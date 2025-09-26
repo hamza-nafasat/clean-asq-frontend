@@ -1,8 +1,9 @@
 import ApplyBranding from '@/components/admin/brandings/globalBranding/ApplyBranding';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
+import Button from '@/components/shared/small/Button';
 import CustomLoading from '@/components/shared/small/CustomLoading';
 import { ThreeDotEditViewDelete } from '@/components/shared/ThreeDotViewEditDelete';
-import { Button } from '@/components/ui/button';
+// import { Button } from '@/components/ui/button';
 import { getTableStyles } from '@/data/data';
 import { useBranding } from '@/hooks/BrandingContext';
 import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
@@ -207,10 +208,10 @@ const Brandings = () => {
           title={'Apply Branding'}
         />
       )}
-      <div className="flex justify-end">
-        <Button className={'mb-4 cursor-pointer'} onClick={() => navigate('/branding/create')}>
-          Create Branding
-        </Button>
+     <div className="mb-4 flex justify-end">
+        <Button label={'Create Branding'} onClick={() => navigate('/branding/create')} />
+        {/* Create Branding
+        </Button> */}
       </div>
       <DataTable
         data={brandings?.data || []}
