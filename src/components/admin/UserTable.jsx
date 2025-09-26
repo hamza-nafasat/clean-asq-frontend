@@ -137,9 +137,8 @@ const UserTable = () => {
             name={field}
             value={value}
             onChange={onChange}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
-              error ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${error ? 'border-red-500' : 'border-gray-300'
+              }`}
           >
             <option value="">Select {labelText}</option>
             {options.map(option => (
@@ -280,8 +279,8 @@ const UserTable = () => {
   }, [actionMenu]);
 
   return (
-    <div className="p-4">
-      <div className="mb-4 flex items-center justify-between">
+    <div className="mt-5">
+      <div className="mb-5 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-[#323332]">User Table</h2>
         <div className="flex gap-2">
           <Button icon={IoMdPersonAdd} label="Add User" onClick={() => setIsModalOpen(true)} disabled={isLoading} />
@@ -296,6 +295,7 @@ const UserTable = () => {
         highlightOnHover
         progressPending={isLoading}
         noDataComponent="No users found"
+        className='!rounded-t-xl'
       />
 
       {isModalOpen && (

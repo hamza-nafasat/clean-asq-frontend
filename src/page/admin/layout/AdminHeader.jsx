@@ -20,7 +20,7 @@ function AdminHeader() {
   };
   return (
     <div className="flex h-16 items-center justify-between bg-white rounded-md p-2 shadow">
-      <h1 className="text-2xl font-semibold text-gray-800">
+      <h1 className="text-lg font-semibold text-gray-800">
         Welcome {user?.firstName} {user?.lastName}
       </h1>
       <div className="flex items-center gap-4 rounded-bl-[20px] bg-white px-6 py-2">

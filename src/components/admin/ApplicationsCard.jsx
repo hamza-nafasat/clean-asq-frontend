@@ -107,7 +107,7 @@ export default function ApplicationsCard() {
             />
           }
           confirmButtonText="Apply Branding"
-          confirmButtonClassName=" border-none hover:bg-red-600 text-white"
+          confirmButtonClassName="border-none hover:bg-red-600 text-white"
           cancelButtonText="cancel"
           onConfirm={onConfirmApply}
           onClose={() => setOpenModal(false)}
@@ -140,7 +140,7 @@ export default function ApplicationsCard() {
           </p>
         </div>
         <div className="flex gap-6">
-          <Button label={'Help'} variant="secondary" />
+          {/* <Button label={'Help'} variant="secondary" /> */}
           <Button
             label={'Create Form'}
             onClick={() => {
@@ -189,7 +189,7 @@ export default function ApplicationsCard() {
           <TextField label={'To'} type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
         </div>
         {/* Search Button */}
-        <div className="col-span-1 flex w-full items-center">
+        <div className="col-span-1 flex w-full justify-center items-center border">
           <Button icon={CiSearch} label={'Search'} />
         </div>
       </div>
