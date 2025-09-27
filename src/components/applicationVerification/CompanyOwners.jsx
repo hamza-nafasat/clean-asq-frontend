@@ -238,7 +238,7 @@ function CompanyOwners({
 
     const additionOwnersGet25OrMore = form?.['additional_owners_own_25_percent_or_more'];
     let isEmailVAlidated = true;
-    if (additionOwnersGet25OrMore) {
+    if (additionOwnersGet25OrMore !== 'no') {
       isEmailVAlidated =
         Array.isArray(additionOwnersGet25OrMore) &&
         additionOwnersGet25OrMore.some(
@@ -259,11 +259,14 @@ function CompanyOwners({
         );
     }
     if (!isOperatorExist) setSubmitButtonText('At least one primary operator required');
+    console.log('all filled', allFilled);
     if (!allFilled) setSubmitButtonText('Some Required Fields are Missing');
     // remove field with name additional_owners_own_25_percent_or_more and save in new veriable so we can add back if value is smaller the 74
-    if (form?.applicant_percentage > 75 && formFields['additional_owners_own_25_percent_or_more']) {
-      setFormFields(prev => [...prev.filter(f => f.name !== 'additional_owners_own_25_percent_or_more')]);
-    }
+
+    // if (form?.applicant_percentage > 75 && additionOwnersGet25OrMore) {
+    //   setFormFields(prev => [...prev.filter(f => f.name !== 'additional_owners_own_25_percent_or_more')]);
+    // }
+    console.log('formfields are', formFields);
     const isAllChecksTrue = allFilled && isOperatorExist && isEmailVAlidated;
     setIsAllRequiredFieldsFilled(isAllChecksTrue);
   }, [form, formFields, requiredNames]);
