@@ -134,7 +134,7 @@ function Applications() {
   }, []);
 
   return (
-    <div className="h-full bg-white p-4">
+    <div className="h-full rounded-t-md bg-white p-4">
       <div className="mb-4">
         <h2 className="text-textPrimary mb-4 text-xl font-semibold">Applicants</h2>
 

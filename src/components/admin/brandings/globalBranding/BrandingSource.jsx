@@ -184,6 +184,7 @@ const BrandingSource = ({
           icon={IoColorPaletteOutline}
           loading={isFetchLoading}
           disabled={isFetchLoading}
+          className='!h-12.5'
         />
       </div>
       <div className="mt-3 mb-4 flex items-center justify-between gap-5">
@@ -298,7 +299,7 @@ const BrandingSource = ({
                         alt={`Logo ${idx + 1}`}
                         className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain ${logo?.invert ? 'rounded-sm bg-gray-700' : ''}`}
                         referrerPolicy="no-referrer"
-                        // onClick={() => handleLogoSelect(idx)}
+                      // onClick={() => handleLogoSelect(idx)}
                       />
                       <div>logo</div>
                     </div>

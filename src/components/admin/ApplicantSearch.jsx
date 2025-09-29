@@ -80,9 +80,8 @@ const ApplicantSearch = ({ onSearch }) => {
           <button
             key={value}
             onClick={() => handleTypeSelect(value)}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-              selectedType === value ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${selectedType === value ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             {CLIENT_LABELS[value]}
           </button>

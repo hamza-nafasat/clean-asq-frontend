@@ -208,7 +208,7 @@ const Brandings = () => {
           title={'Apply Branding'}
         />
       )}
-     <div className="mb-4 flex justify-end">
+      <div className="mb-5 flex justify-end">
         <Button label={'Create Branding'} onClick={() => navigate('/branding/create')} />
         {/* Create Branding
         </Button> */}
@@ -221,6 +221,7 @@ const Brandings = () => {
         highlightOnHover
         progressPending={isLoading}
         noDataComponent="No Brandings Found"
+        className='!rounded-md'
       />
     </div>
   );

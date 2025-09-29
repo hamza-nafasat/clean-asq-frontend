@@ -210,8 +210,8 @@ export default function ApplicationsCard() {
           <TextField label={'To'} type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
         </div>
         {/* Search Button */}
-        <div className="col-span-1 flex w-full items-center justify-center border">
-          <Button icon={CiSearch} label={'Search'} />
+        <div className="col-span-1 flex w-full justify-center items-center ">
+          <Button icon={CiSearch} label={'Search'} className='!h-12.5' />
         </div>
       </div>
 
@@ -264,7 +264,7 @@ export default function ApplicationsCard() {
                         Set Location
                       </button>
                       <button
-                        onClick={() => {}}
+                        onClick={() => { }}
                         className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
                       >
                         Delete Form

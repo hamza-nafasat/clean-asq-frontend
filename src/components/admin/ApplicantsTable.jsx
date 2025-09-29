@@ -47,11 +47,9 @@ const APPLICANT_TABLE_COLUMNS = [
     sortable: true,
     cell: row => (
       <span
-        className={`w-[100px] rounded-sm px-[10px] py-[3px] text-center font-bold capitalize ${
-          row.status === APPLICANT_STATUS.APPROVED ? 'bg-[#34C7591A] text-[#34C759]' : ''
-        } ${row.status === APPLICANT_STATUS.REJECTED ? 'bg-[#FF3B301A] text-[#FF3B30]' : ''} ${
-          row.status === APPLICANT_STATUS.PENDING ? 'bg-yellow-100 text-yellow-800' : ''
-        } ${row.status === APPLICANT_STATUS.REVIEWING ? 'bg-blue-100 text-blue-500' : ''}`}
+        className={`w-[100px] rounded-sm px-[10px] py-[3px] text-center font-bold capitalize ${row.status === APPLICANT_STATUS.APPROVED ? 'bg-[#34C7591A] text-[#34C759]' : ''
+          } ${row.status === APPLICANT_STATUS.REJECTED ? 'bg-[#FF3B301A] text-[#FF3B30]' : ''} ${row.status === APPLICANT_STATUS.PENDING ? 'bg-yellow-100 text-yellow-800' : ''
+          } ${row.status === APPLICANT_STATUS.REVIEWING ? 'bg-blue-100 text-blue-500' : ''}`}
       >
         {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
       </span>
@@ -141,9 +139,8 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
             name={field}
             value={value}
             onChange={onChange}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
-              error ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${error ? 'border-red-500' : 'border-gray-300'
+              }`}
           >
             <option value="">Select {labelText}</option>
             {options.map(option => (
@@ -247,7 +244,7 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
     <div>
       <ApplicantSearch onSearch={handleSearch} clients={uniqueClients} />
 
-      <div className="mb-4 grid grid-cols-12 gap-4">
+      <div className="mb-4 grid grid-cols-12 gap-4 mt-14">
         <div className="col-span-12 md:col-span-4">
           <TextField
             label={'Search by Name'}
@@ -290,7 +287,7 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
         </div>
       </div>
 
-      <div className="w-full overflow-x-auto">
+      <div className="w-full overflow-x-auto mt-5">
         <DataTable
           className="w-[1000px]"
           customStyles={tableStyles}
