@@ -109,10 +109,10 @@ function Documents({
       fields.forEach(field => {
         if (field.type === 'file') {
           setFileFieldName(field.name);
-          initialForm[field.name] = reduxData.file ? reduxData.file || '' : '';
+          initialForm[field?.name] = reduxData.file ? reduxData.file || '' : '';
         } else {
           const myRedux = formData?.[title];
-          initialForm[field.name] = myRedux[field.name] || '';
+          initialForm[field?.name] = myRedux?.[field?.name] || '';
         }
       });
       setForm(initialForm);

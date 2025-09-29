@@ -20,6 +20,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Stepper from '../../../../components/Stepper/Stepper';
 import { setIdMissionData } from '@/redux/slices/authSlice';
+import AggrementBlock from '@/components/applicationVerification/AggrementBlock';
 
 export default function ApplicationForm() {
   const navigate = useNavigate();
@@ -159,6 +160,9 @@ export default function ApplicationForm() {
         } else if (step.title === 'custom_section') {
           data.push(<CustomSection {...commonProps} />);
           stepNames.push(step.name);
+        } else if (step.title === 'aggrement_blk') {
+          data.push(<AggrementBlock {...commonProps} />);
+          stepNames.push(step.name);
         }
       });
       console.log('steps', data);
@@ -182,16 +186,10 @@ export default function ApplicationForm() {
   return !form?.data?._id ? (
     <CustomLoading />
   ) : (
-    <div className="overflow-hidden h-full w-full rounded-[10px] bg-white px-6 py-6">
-      <Stepper
-        steps={sectionNames}
-        currentStep={currentStep}
-        visibleSteps={0}
-        emptyRequiredFields={[]}
-      >
+    <div className="h-full w-full overflow-hidden rounded-[10px] bg-white px-6 py-6">
+      <Stepper steps={sectionNames} currentStep={currentStep} visibleSteps={0} emptyRequiredFields={[]}>
         {stepsComps[currentStep]}
       </Stepper>
     </div>
-
   );
 }

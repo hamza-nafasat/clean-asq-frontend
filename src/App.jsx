@@ -110,7 +110,6 @@ function App() {
           <Routes>
             {/* root redirects */}
             <Route path="/" element={user ? <Navigate to="/all-users" replace /> : <Navigate to="/login" replace />} />
-
             {/* public routes */}
             <Route path="/" element={<AdminDashboard />}>
               <Route path="application-form/:formId" element={<SingleApplication />} />

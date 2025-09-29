@@ -1,6 +1,9 @@
+import { FIELD_TYPES } from '@/data/constants';
 import { useEffect, useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
+import SignatureBox from '../shared/SignatureBox';
 import Button from '../shared/small/Button';
-import DynamicField, {
+import {
   CheckboxInputType,
   MultiCheckboxInputType,
   OtherInputType,
@@ -8,15 +11,11 @@ import DynamicField, {
   RangeInputType,
   SelectInputType,
 } from '../shared/small/DynamicField';
-import { FIELD_TYPES } from '@/data/constants';
+import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
-import { useSelector } from 'react-redux';
-import { PencilIcon } from 'lucide-react';
-import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
-import SignatureBox from '../shared/SignatureBox';
 
-function CustomSection({
+function AggrementBlock({
   fields,
   name,
   currentStep,
@@ -29,7 +28,6 @@ function CustomSection({
   title,
   saveInProgress,
   step,
-  reduxData,
   isSignature,
   signUrl,
 }) {
@@ -40,17 +38,16 @@ function CustomSection({
   const [loadingNext, setLoadingNext] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
-  console.log('bank information', form);
 
   useEffect(() => {
     const formFields = {};
     if (fields?.length) {
       fields?.forEach(field => {
-        formFields[field?.name] = reduxData[field?.name] || '';
+        formFields[field?.name] = '';
       });
       setForm(formFields);
     }
-  }, [fields, reduxData]);
+  }, [fields]);
 
   useEffect(() => {
     const allFilled = requiredNames.every(name => {
@@ -165,14 +162,14 @@ function CustomSection({
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
           {currentStep < totalSteps - 2 ? (
             <Button
-              disabled={!isAllRequiredFieldsFilled}
-              label={!isAllRequiredFieldsFilled ? 'Some required fields are missing' : 'Next'}
+              disabled={loadingNext}
+              label={'Next'}
               onClick={() => handleNext({ data: form, name: title, setLoadingNext })}
             />
           ) : (
             <Button
-              disabled={!isAllRequiredFieldsFilled || loadingNext}
-              className={`${!isAllRequiredFieldsFilled || loadingNext ? 'pointer-events-none cursor-not-allowed opacity-20' : 'opacity-100'}`}
+              disabled={!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)}
+              className={`${!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl) ? 'pointer-events-none cursor-not-allowed opacity-20' : 'opacity-100'}`}
               label={!isAllRequiredFieldsFilled ? 'Some required fields are missing' : 'Submit'}
               onClick={() => handleSubmit({ data: form, name: title, setLoadingNext })}
             />
@@ -194,4 +191,4 @@ function CustomSection({
   );
 }
 
-export default CustomSection;
+export default AggrementBlock;

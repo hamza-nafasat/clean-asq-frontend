@@ -51,11 +51,13 @@ const EditSectionDisplayTextFromatingModal = ({ step }) => {
   return (
     <div className="flex w-full flex-col gap-2">
       <TextField
+        type="text"
         label="Display Text"
         value={displayText}
         placeholder="Enter display text"
         name="displayText"
         onChange={e => setDisplayText(e.target.value)}
+        autoComplete="off"
       />
       <label htmlFor="formattingInstructionForAi">Enter formatting instruction for AI and click on generate</label>
       <textarea

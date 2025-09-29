@@ -266,13 +266,6 @@ function CompanyOwners({
     setIsAllRequiredFieldsFilled(allFilled && isOperatorExist && isEmailVAlidated);
   }, [form, requiredNames]);
 
-  // useEffect(() => {
-  //   if (form?.applicant_percentage > 75) {
-  //     console.log('field removed');
-  //     setFormFields(prev => [...prev.filter(f => f.name !== 'additional_owners_own_25_percent_or_more')]);
-  //   }
-  // }, [form?.applicant_percentage]);
-
   return (
     <div className="h-full w-full overflow-auto">
       {updateSectionFromatingModal && (
