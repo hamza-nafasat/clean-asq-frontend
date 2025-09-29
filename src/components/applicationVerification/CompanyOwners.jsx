@@ -262,7 +262,7 @@ function CompanyOwners({
     }
     if (!isOperatorExist) setSubmitButtonText('At least one primary operator required');
 
-    console.log('allfields isoperator exist isemailvalidated', allFilled, isOperatorExist, isEmailVAlidated);
+    // console.log('allfields isoperator exist isemailvalidated', allFilled, isOperatorExist, isEmailVAlidated);
     setIsAllRequiredFieldsFilled(allFilled && isOperatorExist && isEmailVAlidated);
   }, [form, requiredNames]);
 

@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
 import DOMPurify from 'dompurify';
 import TextField from './TextField';
+import { FIELD_TYPES } from '@/data/constants';
 
 const DynamicField = ({ cn, field, className = '', form, placeholder, value, setForm, ...rest }) => {
   const { type, label, id, options, name, required } = field;
@@ -506,14 +507,9 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                     ref={inputRef}
                     name={name}
                     placeholder={showMasked ? '*******' : placeholder}
-                    type={showMasked ? 'password' : type === 'date' ? 'text' : type}
-                    value={type === 'date' ? formatDate(form[name]) : form[name]}
-                    onChange={e =>
-                      setForm(prev => ({
-                        ...prev,
-                        [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
-                      }))
-                    }
+                    type={showMasked ? 'password' : type}
+                    value={form[name]}
+                    onChange={e => setForm(prev => ({ ...prev, [name]: e.target.value }))}
                     autoComplete="off"
                     className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
                       required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
@@ -533,7 +529,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                     ref={inputRef}
                     name={name}
                     placeholder={showMasked ? '*******' : placeholder}
-                    type={showMasked ? 'password' : type === 'date' ? 'text' : type}
+                    type={showMasked ? 'password' : type}
                     value={type === 'date' ? formatDate(form[name]) : form[name]}
                     onChange={e =>
                       setForm(prev => ({
