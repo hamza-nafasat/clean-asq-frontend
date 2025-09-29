@@ -41,6 +41,7 @@ function Documents({
   signUrl,
 }) {
   const { user, idMissionData } = useSelector(state => state.auth);
+  const { formData } = useSelector(state => state?.form);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const dispatch = useDispatch();
   const [fileFieldName, setFileFieldName] = useState('');
@@ -109,11 +110,14 @@ function Documents({
         if (field.type === 'file') {
           setFileFieldName(field.name);
           initialForm[field.name] = reduxData.file ? reduxData.file || '' : '';
+        } else {
+          const myRedux = formData?.[title];
+          initialForm[field.name] = myRedux[field.name] || '';
         }
       });
       setForm(initialForm);
     }
-  }, [fields, name, reduxData]);
+  }, [fields, formData, name, reduxData, title]);
 
   return (
     <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
