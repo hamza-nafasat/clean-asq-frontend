@@ -50,7 +50,7 @@ function CompanyOwners({
 
   const requiredNames = useMemo(() => formFields.filter(f => f.required).map(f => f.name), [formFields]);
 
-  console.log('company owners', form);
+  // console.log('company owners', form);
 
   const handleChangeOnOtherOwnersData = (e, index, isFilter = false) => {
     if (e.target.name == 'name') {
@@ -159,6 +159,12 @@ function CompanyOwners({
         ];
       }
     }
+
+    // ✅ Apply your condition here directly in baseFields
+    if (percentage > 75) {
+      baseFields = baseFields.filter(f => f.name !== 'additional_owners_own_25_percent_or_more');
+    }
+
     setFormFields(baseFields);
   }, [blocks, fields, form]);
 
@@ -228,6 +234,8 @@ function CompanyOwners({
   // check if all required fields are filled
   // --------------------------------------
   useEffect(() => {
+    const additionOwnersGet25OrMore = form?.['additional_owners_own_25_percent_or_more'] == 'yes';
+    const applicantIsAlsoPromaryOperator = form?.['applicant_is_also_primary_operator'] == 'yes';
     // Check if all required fields are filled
     const allFilled = requiredNames.every(name => {
       const val = form[name];
@@ -235,41 +243,35 @@ function CompanyOwners({
       if (typeof val === 'string') return val.trim() !== '';
       return true;
     });
+    if (!allFilled) setSubmitButtonText('Some Required Fields are Missing');
 
-    const additionOwnersGet25OrMore = form?.['additional_owners_own_25_percent_or_more'];
+    // if additional owner field exist check email validation
     let isEmailVAlidated = true;
-    if (additionOwnersGet25OrMore !== 'no') {
+    if (additionOwnersGet25OrMore && form?.additional_owner?.length) {
       isEmailVAlidated =
-        Array.isArray(additionOwnersGet25OrMore) &&
-        additionOwnersGet25OrMore.some(
+        Array.isArray(form?.additional_owner) &&
+        form?.additional_owner.some(
           item => item?.email?.toString().trim() !== '' && validateEmail(item?.email?.toString().trim())
         );
     }
 
-    // Logic for primary operator
+    // Logic for is one operator exist or not
     let isOperatorExist = false;
-    if (form?.applicant_is_also_primary_operator === 'yes') {
+    if ((additionOwnersGet25OrMore && form.additional_owner?.length) || applicantIsAlsoPromaryOperator) {
       isOperatorExist = true;
-    } else if (!form?.applicant_is_also_primary_operator || form?.applicant_is_also_primary_operator === 'no') {
-      // Check additional_owner for at least one valid entry with both name and email
-      isOperatorExist =
-        Array.isArray(form?.additional_owner) &&
-        form.additional_owner.some(
-          item => item?.name?.toString().trim() !== '' && item?.email?.toString().trim() !== ''
-        );
     }
     if (!isOperatorExist) setSubmitButtonText('At least one primary operator required');
-    // console.log('all filled', allFilled);
-    if (!allFilled) setSubmitButtonText('Some Required Fields are Missing');
-    // remove field with name additional_owners_own_25_percent_or_more and save in new veriable so we can add back if value is smaller the 74
 
-    // if (form?.applicant_percentage > 75 && additionOwnersGet25OrMore) {
-    //   setFormFields(prev => [...prev.filter(f => f.name !== 'additional_owners_own_25_percent_or_more')]);
-    // }
-    // console.log('formfields are', formFields);
-    const isAllChecksTrue = allFilled && isOperatorExist && isEmailVAlidated;
-    setIsAllRequiredFieldsFilled(isAllChecksTrue);
-  }, [form, formFields, requiredNames]);
+    console.log('allfields isoperator exist isemailvalidated', allFilled, isOperatorExist, isEmailVAlidated);
+    setIsAllRequiredFieldsFilled(allFilled && isOperatorExist && isEmailVAlidated);
+  }, [form, requiredNames]);
+
+  // useEffect(() => {
+  //   if (form?.applicant_percentage > 75) {
+  //     console.log('field removed');
+  //     setFormFields(prev => [...prev.filter(f => f.name !== 'additional_owners_own_25_percent_or_more')]);
+  //   }
+  // }, [form?.applicant_percentage]);
 
   return (
     <div className="h-full w-full overflow-auto">
