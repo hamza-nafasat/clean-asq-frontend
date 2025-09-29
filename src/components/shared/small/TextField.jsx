@@ -53,7 +53,8 @@ const TextField = ({
 
   return (
     <div className={`input-box flex w-full flex-col items-start ${className} `}>
-      {label && <label className="text-textPrimary text-sm lg:text-base">{label}</label>}
+      {label && <h4 className="text-textPrimary text-base font-medium lg:text-lg">{label}</h4>}
+
       <div className={`relative w-full ${label ? 'mt-2' : ''} `}>
         {leftIcon && (
           <span className={`absolute top-1/2 left-3 -translate-y-1/2 text-gray-500 ${cnLeft} `}>{leftIcon}</span>

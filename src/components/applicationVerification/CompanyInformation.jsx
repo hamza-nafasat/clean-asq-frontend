@@ -18,6 +18,7 @@ import Modal from '../shared/small/Modal.jsx';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal.jsx';
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal.jsx';
 import SignatureBox from '../shared/SignatureBox.jsx';
+import TextField from '../shared/small/TextField.jsx';
 
 function CompanyInformation({
   formRefetch,
@@ -39,6 +40,7 @@ function CompanyInformation({
 }) {
   const { user } = useSelector(state => state.auth);
   const { lookupData } = useSelector(state => state?.company);
+  const { formData } = useSelector(state => state?.form);
   const [customizeModal, setCustomizeModal] = useState(false);
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [form, setForm] = useState({});
@@ -176,9 +178,21 @@ function CompanyInformation({
       return true;
     });
     const isNaicsFilled = naicsToMccDetails.NAICS;
-    const isAllRequiredFieldsFilled = allFilled && isNaicsFilled;
+
+    // stock symbol logic
+    let isCompanyStockSymbol = true;
+    if (form?.['company_ownership_type'] == 'public') {
+      isCompanyStockSymbol = false;
+      if (form?.['company_stock_symbol']) {
+        isCompanyStockSymbol = true;
+      } else if (reduxData?.['company_stock_symbol']) {
+        setForm({ ...form, ['company_stock_symbol']: reduxData?.['company_stock_symbol'] });
+        isCompanyStockSymbol = true;
+      }
+    }
+    const isAllRequiredFieldsFilled = allFilled && isNaicsFilled && isCompanyStockSymbol;
     setIsAllRequiredFieldsFilled(isAllRequiredFieldsFilled);
-  }, [form, naicsToMccDetails?.NAICS, requiredNames]);
+  }, [form, naicsToMccDetails.NAICS, reduxData, requiredNames]);
 
   return (
     <div className="mt-14 h-full overflow-auto">
@@ -231,8 +245,21 @@ function CompanyInformation({
           }
           if (field.type === FIELD_TYPES.RADIO) {
             return (
-              <div key={index} className="mt-4">
+              <div key={index} className="mt-4 flex flex-col gap-2">
                 <RadioInputType field={field} form={form} setForm={setForm} className={''} />
+                {form?.['company_ownership_type'] == 'public' && field.name == 'company_ownership_type' && (
+                  <TextField
+                    label={'Company Stock symbol'}
+                    type="text"
+                    value={form?.['company_stock_symbol'] || reduxData?.['company_stock_symbol'] || ''}
+                    onChange={e => setForm({ ...form, ['company_stock_symbol']: e.target.value })}
+                    placeholder="Company Stock symbol"
+                    name="company_stock_symbol"
+                    suggestions={[
+                      formData?.company_lookup_data?.find(item => item.name == 'stocksymbol')?.result || '',
+                    ]}
+                  />
+                )}
               </div>
             );
           }
@@ -268,7 +295,6 @@ function CompanyInformation({
             </div>
           );
         })}
-
       {/* NAICS to MCC SECTION  */}
       {naicsApiData?.bestMatch?.naics && showNaicsToMccDetails && (
         <Modal isOpen={showNaicsToMccDetails} onClose={() => setShowNaicsToMccDetails(false)}>
