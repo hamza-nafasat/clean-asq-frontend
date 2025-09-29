@@ -1,14 +1,13 @@
+import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
 import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
+import { userExist, userNotExist } from '@/redux/slices/authSlice';
 import { updateEmailVerified } from '@/redux/slices/formSlice';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MdVerifiedUser } from 'react-icons/md';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import Button from '../shared/small/Button';
 import TextField from '../shared/small/TextField';
-import { socket } from '@/main';
-import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
-import { userExist, userNotExist } from '@/redux/slices/authSlice';
 
 function Verification() {
   const dispatch = useDispatch();

@@ -1,5 +1,5 @@
 import { useAddBrandingInFormMutation, useGetAllBrandingsQuery } from '@/redux/apis/brandingApis';
-import { useCreateFormMutation, useGetMyAllFormsQuery, useUpdateFormMutation } from '@/redux/apis/formApis';
+import { useCreateFormMutation, useGetMyAllFormsQuery } from '@/redux/apis/formApis';
 import { MoreVertical } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { CiSearch } from 'react-icons/ci';
@@ -12,6 +12,7 @@ import Button from '../shared/small/Button';
 import Modal from '../shared/small/Modal';
 import TextField from '../shared/small/TextField';
 import ApplyBranding from './brandings/globalBranding/ApplyBranding';
+import { LocationModalComponent } from './varification/LocationStatusModal';
 
 export default function ApplicationsCard() {
   const navigate = useNavigate();
@@ -34,26 +35,14 @@ export default function ApplicationsCard() {
   const { data: brandings } = useGetAllBrandingsQuery();
   const [addFromBranding] = useAddBrandingInFormMutation();
   const [locationModal, setLocationModal] = useState(false);
-  const [locationStatus, setLocationStatus] = useState('');
-  const [updateFormLocation] = useUpdateFormMutation();
-
-  const handleFormLocationUpdate = async () => {
-    if (!locationModal) return toast.error('Please select a form');
-    if (!locationStatus) return toast.error('Please select a location status');
-    try {
-      const res = await updateFormLocation({ _id: locationModal, data: { locationStatus } }).unwrap();
-      if (res?.success) {
-        setLocationModal(false);
-        await refetch();
-        toast?.success(res?.message || 'Form location updated successfully');
-      }
-    } catch (error) {
-      console.error('Error updating form location:', error);
-      toast.error(error?.data?.message || 'Failed to update form location');
-    }
-  };
-
-  console.log('action menue', actionMenu);
+  const [formLocationData, setFormLocationData] = useState({
+    title: '',
+    subtitle: '',
+    message: '',
+    status: '',
+    formatedText: '',
+    formatingTextInstructions: '',
+  });
 
   const createFormWithCsvHandler = async () => {
     console.log('file', file);
@@ -139,51 +128,12 @@ export default function ApplicationsCard() {
       )}
       {locationModal && (
         <Modal onClose={() => setLocationModal(false)} title="Set Location">
-          <div className="flex items-center justify-center p-4">
-            <div className="flex w-full max-w-sm flex-col gap-6">
-              {/* Heading */}
-              <h3 className="text-center text-lg font-semibold text-gray-800">Enable or make the location optional</h3>
-
-              {/* Options */}
-              <div className="space-y-4">
-                {/* Required */}
-                <label
-                  htmlFor="required"
-                  className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 transition hover:bg-gray-100"
-                >
-                  <span className="font-medium text-gray-700">Location Required</span>
-                  <input
-                    name="required"
-                    id="required"
-                    type="checkbox"
-                    className="accent-primary h-5 w-5 cursor-pointer"
-                    checked={locationStatus === 'required'}
-                    onChange={() => setLocationStatus(prev => (prev === 'required' ? 'disabled' : 'required'))}
-                  />
-                </label>
-
-                {/* Optional */}
-                <label
-                  htmlFor="optional"
-                  className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 transition hover:bg-gray-100"
-                >
-                  <span className="font-medium text-gray-700">Optional Location</span>
-                  <input
-                    name="optional"
-                    id="optional"
-                    type="checkbox"
-                    className="accent-primary h-5 w-5 cursor-pointer"
-                    checked={locationStatus === 'optional'}
-                    onChange={() => setLocationStatus(prev => (prev === 'optional' ? 'disabled' : 'optional'))}
-                  />
-                </label>
-              </div>
-              <div className="flex w-full justify-end gap-2">
-                <Button label={'Cancel'} onClick={() => setLocationModal(false)} />
-                <Button label={'Save'} onClick={handleFormLocationUpdate} />
-              </div>
-            </div>
-          </div>
+          <LocationModalComponent
+            locationModal={locationModal}
+            setLocationModal={setLocationModal}
+            refetch={refetch}
+            formLocationData={formLocationData}
+          />
         </Modal>
       )}
       {/* Header Section */}
@@ -236,7 +186,7 @@ export default function ApplicationsCard() {
             onChange={e => (searchMode === 'client' ? setClientQuery(e.target.value) : setNameQuery(e.target.value))}
             leftIcon={<CiSearch />}
             rightIcon={
-             <div className="flex gap-x-2">
+              <div className="flex gap-x-2">
                 <Button
                   className={`!border-none ${searchMode === 'client' ? '!bg-primary !text-white' : '!bg-gray-200 !text-gray-600'}`}
                   onClick={() => setSearchMode('client')}
@@ -260,7 +210,7 @@ export default function ApplicationsCard() {
           <TextField label={'To'} type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
         </div>
         {/* Search Button */}
-        <div className="col-span-1 flex w-full justify-center items-center border">
+        <div className="col-span-1 flex w-full items-center justify-center border">
           <Button icon={CiSearch} label={'Search'} />
         </div>
       </div>
@@ -269,6 +219,7 @@ export default function ApplicationsCard() {
       <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {forms?.data?.map((form, index) => {
           const colors = form?.branding?.colors;
+
           return (
             <div
               key={index}
@@ -299,7 +250,14 @@ export default function ApplicationsCard() {
                       <button
                         onClick={() => {
                           setLocationModal(actionMenu);
-                          setLocationStatus(form.locationStatus);
+                          setFormLocationData({
+                            title: form?.locationTitle,
+                            subtitle: form?.locationSubtitle,
+                            status: form?.locationStatus,
+                            message: form?.locationMessage,
+                            formatedText: form?.formatedLocationMessage,
+                            formatingTextInstructions: form?.formateTextInstructions,
+                          });
                         }}
                         className="block w-full px-4 py-2 text-left hover:bg-gray-100"
                       >

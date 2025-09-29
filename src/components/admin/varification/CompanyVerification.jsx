@@ -44,6 +44,7 @@ function CompanyVerification({ formId }) {
   const { data: formBackendData, isLoading } = useGetSingleFormQueryQuery({ _id: formId });
   const [saveFormInDraft] = useSaveFormInDraftMutation();
   const [locationStatusModal, setLocationStatusModal] = useState(false);
+  const [locationData, setLocationData] = useState({});
 
   const handleSubmit = async () => {
     if (!form?.name || !form?.url) return toast.error('Please fill all fields');
@@ -132,6 +133,11 @@ function CompanyVerification({ formId }) {
   useEffect(() => {
     if (formBackendData?.data) {
       setLocationStatusModal(formBackendData?.data?.locationStatus);
+      setLocationData({
+        title: formBackendData?.data?.locationTitle,
+        subtitle: formBackendData?.data?.locationSubtitle,
+        message: formBackendData?.data?.formatedLocationMessage,
+      });
     }
   }, [formBackendData]);
 
@@ -143,6 +149,7 @@ function CompanyVerification({ formId }) {
         <LocationStatusModal
           locationStatusModal={locationStatusModal}
           setLocationStatusModal={setLocationStatusModal}
+          locationData={locationData}
           formId={formId}
           navigate={navigate}
         />
