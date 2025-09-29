@@ -4,10 +4,19 @@ import { detectLogo } from '@/utils/detectLogo';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
-const Preview = ({ primaryColor, companyName, selectedLogo, secondaryColor, accentColor, linkColor }) => {
+const Preview = ({
+  primaryColor,
+  companyName,
+  selectedLogo,
+  secondaryColor,
+  accentColor,
+  buttonTextColor,
+  linkColor,
+}) => {
   const formattedText = companyName.toLowerCase().replace(/\s+/g, '-');
   const dispatch = useDispatch();
   const [isLight, setIsLight] = useState(false);
+  console.log('buttontexstcolor', buttonTextColor);
 
   useEffect(() => {
     dispatch(setCompanyName(companyName));
@@ -49,7 +58,7 @@ const Preview = ({ primaryColor, companyName, selectedLogo, secondaryColor, acce
         </p>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
-         <Button label={'Primary Button'} />
+          <Button label={'Primary Button'} />
           <Button variant="secondary" label={'Secondary Button'} />
           <Button label={' Accent Button'} />
         </div>

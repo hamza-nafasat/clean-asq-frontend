@@ -46,6 +46,7 @@ function App() {
     setFrameColor,
     setFontFamily,
     setLogo,
+    setButtonTextColor,
   } = useBranding();
 
   useEffect(() => {
@@ -78,6 +79,7 @@ function App() {
               setFrameColor(userBranding.colors.frame);
               setFontFamily(userBranding.fontFamily);
               setLogo(userBranding?.selectedLogo);
+              setButtonTextColor(userBranding.colors.buttonText);
             }
           }
         } else dispatch(userNotExist());
@@ -96,6 +98,7 @@ function App() {
     setFrameColor,
     setFontFamily,
     setLogo,
+    setButtonTextColor,
   ]);
 
   return (

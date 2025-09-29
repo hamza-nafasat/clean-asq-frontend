@@ -27,7 +27,6 @@ export const BrandingProvider = ({ children }) => {
   const [fontFamily, setFontFamily] = useState(DEFAULT_COLORS.fontFamily);
   const [buttonTextColor, setButtonTextColor] = useState(DEFAULT_COLORS.buttonTextColor);
 
-
   // Load saved branding from localStorage on mount
   useEffect(() => {
     const savedBranding = JSON.parse(localStorage.getItem('brandingData'));
@@ -41,7 +40,6 @@ export const BrandingProvider = ({ children }) => {
       setFrameColor(savedBranding.frameColor || DEFAULT_COLORS.frameColor);
       setFontFamily(savedBranding.fontFamily || DEFAULT_COLORS.fontFamily);
       setButtonTextColor(savedBranding.buttonTextColor || DEFAULT_COLORS.buttonTextColor);
-
     }
   }, []);
 
@@ -57,7 +55,6 @@ export const BrandingProvider = ({ children }) => {
       frameColor,
       fontFamily,
       buttonTextColor,
-
     };
     localStorage.setItem('brandingData', JSON.stringify(brandingData));
 
@@ -78,10 +75,19 @@ export const BrandingProvider = ({ children }) => {
     document.documentElement.style.setProperty('--frameColor', frameColor);
     document.documentElement.style.setProperty('--color-button-text-color', buttonTextColor);
 
-
     // Apply font family globally using CSS variables
     document.documentElement.style.setProperty('--font-primary', `var(--font-${fontFamily.toLowerCase()})`);
-  }, [primaryColor, secondaryColor, accentColor, textColor, linkColor, backgroundColor, frameColor, fontFamily,buttonTextColor,]);
+  }, [
+    primaryColor,
+    secondaryColor,
+    accentColor,
+    textColor,
+    linkColor,
+    backgroundColor,
+    frameColor,
+    fontFamily,
+    buttonTextColor,
+  ]);
 
   const value = {
     logo,
@@ -102,11 +108,13 @@ export const BrandingProvider = ({ children }) => {
     setFrameColor,
     fontFamily,
     setFontFamily,
-     buttonTextColor,
+    buttonTextColor,
     setButtonTextColor,
   };
 
   return <BrandingContext.Provider value={value}>{children}</BrandingContext.Provider>;
 };
 
-export const useBranding = () => useContext(BrandingContext);
+const useBranding = () => useContext(BrandingContext);
+
+export { useBranding };

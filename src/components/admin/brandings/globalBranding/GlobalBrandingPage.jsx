@@ -87,7 +87,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
         setLinkColor(data?.colors?.link);
         setBackgroundColor(data?.colors?.background);
         setFrameColor(data?.colors?.frame);
-         setButtonTextColor('#bfff00');
+        setButtonTextColor(data?.colors?.buttonText);
         if (Array.isArray(data?.color_palette?.fromLogo) && Array.isArray(data?.color_palette?.fromSite)) {
           setColorPalette([...data.color_palette.fromLogo, ...data.color_palette.fromSite]);
         }
@@ -111,7 +111,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !textColor ||
       !linkColor ||
       !backgroundColor ||
-      !frameColor
+      !frameColor ||
+      !buttonTextColor
     ) {
       return toast.error('Please fill all fields before creating branding');
     }
@@ -123,6 +124,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       text: textColor,
       background: backgroundColor,
       frame: frameColor,
+      buttonText: buttonTextColor,
     };
 
     let finalLogos = logos.filter(logo => !logo.preview);
@@ -166,7 +168,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !textColor ||
       !linkColor ||
       !backgroundColor ||
-      !frameColor
+      !frameColor ||
+      !buttonTextColor
     ) {
       return toast.error('Please fill all fields before creating branding');
     }
@@ -178,6 +181,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       text: textColor,
       background: backgroundColor,
       frame: frameColor,
+      buttonText: buttonTextColor,
     };
 
     let finalLogos = logos.filter(logo => !logo.preview);
@@ -211,7 +215,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
             setGlobalFrameColor(userBranding.colors.frame);
             setGlobalFontFamily(userBranding.fontFamily);
             setGlobalLogo(userBranding?.selectedLogo);
-            setButtonColor('#bfff00');
+            setButtonColor(userBranding.colors.buttonText);
           }
         }
 
@@ -267,7 +271,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setFrameColor(singleBranding.colors.frame);
       setFontFamily(singleBranding.fontFamily);
       setFontFamily(singleBranding.fontFamily);
-      setButtonTextColor('#bfff00');
+      setButtonTextColor(singleBranding.colors.buttonText);
 
       // Set the selected logo from the API response if available
       if (singleBranding.selectedLogo) {
@@ -332,15 +336,16 @@ const GlobalBrandingPage = ({ brandingId }) => {
           accentColor={accentColor}
           linkColor={linkColor}
           selectedLogo={selectedLogo}
+          buttonTextColor={buttonTextColor}
         />
 
         <div className="mt-6 mb-4 flex justify-between space-x-2 md:space-x-4">
-           <Button label={'skip'} onClick={handleCancel} />
+          <Button label={'skip'} onClick={handleCancel} />
           <div className="flex gap-2 md:gap-6">
             <Button variant="secondary" label={'Cancel'} onClick={handleCancel} />
             <Button
               disabled={isLoading || isUpdateLoading}
-              className={`${isLoading || isUpdateLoading ? 'cursor-not-allowed opacity-50' : ''}`}
+              className={`${isLoading || isUpdateLoading ? 'cursor-not-allowed opacity-50' : ''} `}
               label={brandingId ? 'Update Branding' : 'Create Branding'}
               onClick={brandingId ? () => updateBrandingHandler(brandingId) : () => createBrandingHandler()}
             />
