@@ -124,7 +124,7 @@ function AllStrategies() {
 
   return (
     <div>
-      <div className="mb-4 flex w-full justify-end gap-3">
+      <div className="mb-4 flex w-full justify-end gap-3 px-4">
         <Button onClick={() => setIsModalOpen(true)} label={'Add new'} />
       </div>
       <DataTable

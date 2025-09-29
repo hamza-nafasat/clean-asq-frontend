@@ -144,7 +144,7 @@ function AllFormsStrategies() {
 
   return (
     <div>
-      <div className="mb-4 flex w-full justify-end gap-3">
+      <div className="mb-4 flex w-full justify-end gap-3 px-4">
         <Button onClick={() => setIsModalOpen(true)} label={'Add new'} />
         <Button
           onClick={handleCreateDefaultStrategies}
@@ -152,16 +152,18 @@ function AllFormsStrategies() {
           label={'Create Default'}
         />
       </div>
-
-      <DataTable
-        data={data?.data || []}
-        columns={columns}
-        customStyles={tableStyles}
-        pagination
-        highlightOnHover
-        noDataComponent="No data found"
-      />
-
+      <div className="mt-5 w-full lg:w-[670px] xl:w-full">
+        <div className="min-w-[500px]">
+          <DataTable
+            data={data?.data || []}
+            columns={columns}
+            customStyles={tableStyles}
+            pagination
+            highlightOnHover
+            noDataComponent="No data found"
+          />
+        </div>
+      </div>
       {/* Add Modal */}
       {isModalOpen && (
         <Modal hideSaveButton={true} hideCancelButton={true} title="Add Strategy" onClose={() => setIsModalOpen(false)}>

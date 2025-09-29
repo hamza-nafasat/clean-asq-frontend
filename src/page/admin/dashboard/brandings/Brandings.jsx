@@ -187,7 +187,7 @@ const Brandings = () => {
   return isBrandingsLoading ? (
     <CustomLoading />
   ) : (
-    <div>
+    <div className="mt-5 w-full">
       {applyModal && (
         <ConfirmationModal
           isOpen={!!applyModal}
@@ -208,21 +208,25 @@ const Brandings = () => {
           title={'Apply Branding'}
         />
       )}
-      <div className="mb-5 flex justify-end">
+      <div className="mb-4 flex justify-end px-4">
         <Button label={'Create Branding'} onClick={() => navigate('/branding/create')} />
         {/* Create Branding
         </Button> */}
       </div>
-      <DataTable
-        data={brandings?.data || []}
-        columns={columns()}
-        customStyles={tableStyles}
-        pagination
-        highlightOnHover
-        progressPending={isLoading}
-        noDataComponent="No Brandings Found"
-        className='!rounded-md'
-      />
+      <div className="mt-5 w-full lg:w-[670px] xl:w-full">
+        <div className="min-w-[500px]">
+          <DataTable
+            data={brandings?.data || []}
+            columns={columns()}
+            customStyles={tableStyles}
+            pagination
+            highlightOnHover
+            progressPending={isLoading}
+            noDataComponent="No Brandings Found"
+            className="!rounded-md"
+          />
+        </div>
+      </div>
     </div>
   );
 };

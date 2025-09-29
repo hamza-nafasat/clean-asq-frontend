@@ -10,149 +10,91 @@ import { BrushIcon, CheckCircle, Layers2 } from 'lucide-react';
 import { detectLogo } from '@/utils/detectLogo';
 import { PiStrategyBold } from 'react-icons/pi';
 
-const AdminAside = () => {
+const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
   const [isNavOpen, setIsNavOpen] = useState(true);
   const location = useLocation();
   const { logo } = useBranding();
   const [isLight, setIsLight] = useState(false);
 
-  // console.log('logo', logo);
   useEffect(() => {
     if (logo) {
-      detectLogo(logo).then(res => {
-        console.log('res', res);
-        setIsLight(res);
-      });
+      detectLogo(logo).then(res => setIsLight(res));
     }
   }, [logo]);
 
   const handleNavOpen = () => setIsNavOpen(!isNavOpen);
+
   const pages = [
-    {
-      title: 'Role Management',
-      link: '/all-roles',
-      icon: <AllRoles />,
-    },
-    {
-      title: 'User Management',
-      link: '/all-users',
-      icon: <AllUsers />,
-    },
-    {
-      title: 'Application forms',
-      link: '/application-forms',
-      icon: <Applications />,
-    },
-    {
-      title: 'Applications',
-      link: '/applications',
-      icon: <Applicants />,
-    },
-    {
-      title: 'Branding Management',
-      link: '/branding',
-      icon: <BrushIcon />,
-    },
-    // {
-    //   title: '1st application',
-    //   link: '/user-application-forms/application-verification',
-    //   icon: <HiOutlineLightBulb />,
-    // },
-    {
-      title: 'Lookup management',
-      link: '/strategies-key',
-      icon: <HiOutlineLightBulb />,
-    },
-    // {
-    //   title: 'Extraction Context',
-    //   link: '/extraction-context',
-    //   icon: <Layers2 />,
-    // },
-    {
-      title: 'Verification',
-      link: '/verification-test',
-      icon: <CheckCircle />,
-    },
-    {
-      title: 'Strategies',
-      link: '/strategies',
-      icon: <PiStrategyBold />,
-    },
+    { title: 'Role Management', link: '/all-roles', icon: <AllRoles /> },
+    { title: 'User Management', link: '/all-users', icon: <AllUsers /> },
+    { title: 'Application forms', link: '/application-forms', icon: <Applications /> },
+    { title: 'Applications', link: '/applications', icon: <Applicants /> },
+    { title: 'Branding Management', link: '/branding', icon: <BrushIcon /> },
+    { title: 'Lookup management', link: '/strategies-key', icon: <HiOutlineLightBulb /> },
+    { title: 'Verification', link: '/verification-test', icon: <CheckCircle /> },
+    { title: 'Strategies', link: '/strategies', icon: <PiStrategyBold /> },
   ];
 
   return (
-    <div
-      className={`relative flex h-full flex-col justify-between rounded-t-md bg-white rounded-md p-4 transition-all duration-500 ${isNavOpen ? 'w-[250px]' : 'w-[65px]'
-        }`}
-    >
-      <div className="absolute top-[6%] right-[-11px] z-10 cursor-pointer" onClick={handleNavOpen}>
-        <div className={`hidden transition-all duration-500 lg:block ${isNavOpen ? 'rotate-0' : 'rotate-180'}`}>
-          <ArrowBackIcon color="var(--primary)" />
-        </div>
-      </div>
+    <>
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
 
-      <div className="py-4">
-        <div className={`mb-5 flex w-full items-center justify-center gap-1 xl:mb-12`}>
-          <Link to="/application-forms">
-            <img
-              src={logo || logoApply}
-              alt="logo"
-              className={`block h-[31px] w-full ${isNavOpen ? 'h-[50px] max-w-[160px]' : 'h-[31px] max-w-[31px]'} object-contain ${isLight ? 'rounded-sm bg-gray-700' : ''}`}
-              referrerPolicy="no-referrer"
-            />
-          </Link>
+      <div
+        className={`fixed top-0 left-0 z-40 h-full rounded-md bg-white ${isNavOpen ? 'p-4' : 'p-8'} transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-[110%]'} lg:static lg:flex lg:translate-x-0 lg:flex-col lg:justify-between ${isNavOpen ? 'w-[250px]' : 'w-[20px]'} `}
+      >
+        {/* Toggle Button (desktop only) */}
+        <div className="absolute top-[6%] right-[-11px] z-10 hidden cursor-pointer lg:block" onClick={handleNavOpen}>
+          <div className={`transition-all duration-500 ${isNavOpen ? 'rotate-0' : 'rotate-180'}`}>
+            <ArrowBackIcon color="var(--primary)" />
+          </div>
         </div>
 
-        <div className={`flex flex-col justify-center gap-2 ${isNavOpen ? 'items-start' : 'items-center'}`}>
-          {pages.map((page, i) => {
-            const isActive = location.pathname === page.link;
+        {/* Logo + Nav */}
+        <div className="py-4">
+          <div className="mb-5 flex w-full items-center justify-center xl:mb-12">
+            <Link to="/application-forms" className="flex min-w-[40px] items-center justify-center">
+              <img
+                src={logo || logoApply}
+                alt="logo"
+                className={`object-contain ${
+                  isNavOpen
+                    ? 'h-[50px] max-w-[160px]' // full logo when open
+                    : 'h-[40px] w-[40px]'
+                } // compact logo when closed ${isLight ? 'rounded-sm bg-gray-700' : ''} `}
+              />
+            </Link>
+          </div>
 
-            return (
-              <Link
-                key={i}
-                to={page.link}
-                className={`
-    flex w-full min-w-fit cursor-pointer items-center rounded-md p-2 text-nowrap 
-    transition-all duration-300
-    ${isNavOpen ? 'gap-2' : 'gap-[0]'}
-    
-    /* ✅ Active link styles (highlight bg + white text) */
-    ${isActive
-                    ? 'bg-primary text-white font-semibold'
-
-                    /* ✅ Default styles + hover styles */
-                    : 'text-[#526581] hover:bg-gray-100 hover:text-primary'
-                  }
-  `}
-              >
-                {/* Icon with conditional color */}
-                <div className={`text-[20px] ${isActive ? 'text-white' : 'text-[#526581]'}`}>
-                  {React.cloneElement(page.icon, {
-                    color: isActive ? '#ffffff' : '#526581', // ✅ White when active, gray otherwise
-                  })}
-                </div>
-
-                {/* Title text with active/hover transition */}
-                <p
-                  className={`
-      navbar-title text-sm font-medium capitalize transition-opacity duration-500 md:text-base
-      
-      /* ✅ Active link text styling */
-      ${isActive ? 'text-white !font-bold' : 'text-[#526581]'}
-      
-      /* ✅ Smooth open/close animation */
-      ${isNavOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'}
-    `}
+          <div className={`flex flex-col justify-center gap-2 ${isNavOpen ? 'items-start' : 'items-center'}`}>
+            {pages.map((page, i) => {
+              const isActive = location.pathname === page.link;
+              return (
+                <Link
+                  key={i}
+                  to={page.link}
+                  onClick={() => setSidebarOpen(false)} // ✅ close sidebar on mobile click
+                  className={`flex w-full min-w-fit items-center rounded-md p-2 ${isNavOpen ? 'gap-2' : ''} ${isActive ? 'bg-primary font-semibold text-white' : 'hover:text-primary text-[#526581] hover:bg-gray-100'} `}
                 >
-                  {page.title}
-                </p>
-              </Link>
-
-            );
-          })}
+                  <div className={`text-[20px] ${isActive ? 'text-white' : 'text-[#526581]'}`}>
+                    {React.cloneElement(page.icon, {
+                      color: isActive ? '#ffffff' : '#526581',
+                    })}
+                  </div>
+                  <p
+                    className={`text-sm font-medium capitalize transition-all duration-300 md:text-base ${isActive ? '!font-bold text-white' : 'text-[#526581]'} ${isNavOpen ? 'ml-2 w-auto opacity-100' : 'w-0 overflow-hidden opacity-0'} `}
+                  >
+                    {page.title}
+                  </p>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

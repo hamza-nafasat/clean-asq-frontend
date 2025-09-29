@@ -9,20 +9,28 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom'; // or 'next/link' if using Next.js
 import { toast } from 'react-toastify';
 
-function AdminHeader() {
+import { HiMenu } from 'react-icons/hi';
+
+function AdminHeader({ setSidebarOpen }) {
   const navigate = useNavigate();
   const { user } = useSelector(state => state.auth);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef(null);
 
-  const profileOpenHandler = () => {
-    setIsProfileOpen(prev => !prev);
-  };
+  const profileOpenHandler = () => setIsProfileOpen(prev => !prev);
+
   return (
-    <div className="flex h-16 items-center justify-between bg-white rounded-md p-2 shadow">
-      <h1 className="text-lg font-semibold text-gray-800">
-        Welcome {user?.firstName} {user?.lastName}
-      </h1>
+    <div className="flex h-16 items-center justify-between rounded-md bg-white p-2 shadow">
+      {/* Hamburger Icon (mobile only) */}
+      <div className="flex items-center gap-2">
+        <button className="rounded-md p-2 hover:bg-gray-100 lg:hidden" onClick={() => setSidebarOpen(true)}>
+          <HiMenu size={24} className="text-gray-800" />
+        </button>
+        <h1 className="text-lg font-semibold text-gray-800">
+          Welcome {user?.firstName} {user?.lastName}
+        </h1>
+      </div>
+
       <div className="flex items-center gap-4 rounded-bl-[20px] bg-white px-6 py-2">
         {user ? (
           <div className="relative flex items-center gap-2">
@@ -47,8 +55,7 @@ function AdminHeader() {
 
             {/* Dropdown */}
             <div
-              className={`custom-scroll absolute top-[45px] right-0 z-10 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? 'opacity-100' : 'invisible opacity-0'
-                }`}
+              className={`custom-scroll absolute top-[45px] right-0 z-10 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? 'opacity-100' : 'invisible opacity-0'}`}
             >
               <Profile />
             </div>
@@ -63,6 +70,7 @@ function AdminHeader() {
     </div>
   );
 }
+
 export default AdminHeader;
 
 const Profile = () => {

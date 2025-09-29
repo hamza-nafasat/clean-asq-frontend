@@ -18,6 +18,14 @@ const Preview = ({
   const formattedText = companyName.toLowerCase().replace(/\s+/g, '-');
   const dispatch = useDispatch();
   const [isLight, setIsLight] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const text = `https://${formattedText || 'company'}.apply-secure.com`;
+
+  const handleCopy = async e => {
+    await navigator.clipboard.writeText(e.target.value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
 
   useEffect(() => {
     dispatch(setCompanyName(companyName));
@@ -32,7 +40,12 @@ const Preview = ({
     <div className="mt-6 rounded-[8px] border border-[#F0F0F0] p-3 shadow-sm md:p-6">
       <h2 className="text-textPrimary text-[18px] font-medium">Preview</h2>
       <div className="mt-5 rounded-md border p-3 md:p-6">
-        <p className="text-textPrimary mb-2 text-[22px] font-medium">
+        <p
+          className="text-textPrimary mb-2 text-[22px] font-medium"
+          style={{
+            color: accentColor || '#000000',
+          }}
+        >
           {companyName ? companyName.charAt(0).toUpperCase() + companyName.slice(1) : 'Company Name'}
         </p>
         <div className="flex h-[100px] w-[80%] cursor-pointer items-center justify-center">
@@ -43,16 +56,23 @@ const Preview = ({
             // onClick={() => handleLogoSelect(idx)}
           />
         </div>
-        <input
-          type="text"
-          readOnly
-          value={`https://${formattedText || 'company'}.apply-secure.com`}
-          style={{
-            width: `${`https://${formattedText || 'company'}.apply-secure.com`.length}ch`,
-            borderColor: frameColor || '#A7A7A7',
-          }}
-          className="rounded border bg-white px-3 py-1 text-sm text-gray-700"
-        />
+        <div className="relative inline-block">
+          <input
+            type="text"
+            readOnly
+            value={text}
+            onClick={handleCopy}
+            style={{
+              width: `${text.length}ch`,
+              borderColor: frameColor || '#A7A7A7',
+              cursor: 'pointer',
+            }}
+            className="rounded border bg-white px-3 py-1 text-sm text-gray-700"
+          />
+          {copied && (
+            <span className="absolute top-full left-1/2 mt-1 -translate-x-1/2 text-xs text-green-600">Copied!</span>
+          )}
+        </div>
 
         <p className="mt-6 text-[16px] font-normal" style={{ color: textColor || '#000000' }}>
           This is how your form will appear with the selected branding.{' '}

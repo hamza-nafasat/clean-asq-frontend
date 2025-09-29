@@ -283,8 +283,9 @@ function AllUserRoles() {
             name={field}
             value={value}
             onChange={onChange}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base${error ? 'border-red-500' : 'border-frameColor'
-              }`}
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base${
+              error ? 'border-red-500' : 'border-frameColor'
+            }`}
           >
             {options.map(option => (
               <option key={option.value} value={option.value}>
@@ -315,8 +316,8 @@ function AllUserRoles() {
   }, []);
 
   return (
-    <div className="mt-5">
-      <div className="mb-5 flex items-center justify-between">
+    <div className="mt-5 w-full">
+      <div className="mb-5 flex items-center justify-between px-4">
         <h2 className="text-textPrimary text-xl font-semibold">Role Management</h2>
         <div>
           <Button icon={FaUserShield} label="Add Role" onClick={() => setIsModalOpen(true)} disabled={isLoading} />
@@ -331,7 +332,7 @@ function AllUserRoles() {
         highlightOnHover
         progressPending={isLoading}
         noDataComponent="No roles found"
-        className='!rounded-t-xl'
+        className="!rounded-t-xl"
       />
 
       {/* Add Role Modal */}

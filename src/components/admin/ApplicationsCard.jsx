@@ -173,10 +173,10 @@ export default function ApplicationsCard() {
       </div>
 
       {/* Filter Bar */}
-      <div className="mb-6 grid w-full grid-cols-1 items-end gap-[8px] md:grid-cols-12">
+      <div className="mb-6 grid w-full grid-cols-1 items-end gap-[8px] xl:grid-cols-2">
         {/* Search Input with Toggle */}
 
-        <div className="w-full rounded-[4px] md:col-span-5">
+        <div className="w-full rounded-[4px]">
           <TextField
             label={'Advance search'}
             type="text"
@@ -203,15 +203,17 @@ export default function ApplicationsCard() {
           />
         </div>
         {/* Date Pickers */}
-        <div className="col-span-3 w-full">
-          <TextField label={'From'} type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
-        </div>
-        <div className="col-span-3 w-full">
-          <TextField label={'To'} type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
-        </div>
-        {/* Search Button */}
-        <div className="col-span-1 flex w-full justify-center items-center ">
-          <Button icon={CiSearch} label={'Search'} className='!h-12.5' />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
+          <div className="col-span-4 w-full">
+            <TextField label={'From'} type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+          </div>
+          <div className="col-span-4 w-full">
+            <TextField label={'To'} type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+          </div>
+          {/* Search Button */}
+          <div className="col-span-4 flex items-center justify-center">
+            <Button icon={CiSearch} label={'Search'} className="mt-0 !h-12.5 md:mt-8" />
+          </div>
         </div>
       </div>
 
@@ -264,7 +266,7 @@ export default function ApplicationsCard() {
                         Set Location
                       </button>
                       <button
-                        onClick={() => { }}
+                        onClick={() => {}}
                         className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
                       >
                         Delete Form
