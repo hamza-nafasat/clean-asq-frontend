@@ -185,10 +185,12 @@ function CompanyInformation({
       isCompanyStockSymbol = false;
       if (form?.['company_stock_symbol']) {
         isCompanyStockSymbol = true;
-      } else if (reduxData?.['company_stock_symbol']) {
-        setForm({ ...form, ['company_stock_symbol']: reduxData?.['company_stock_symbol'] });
-        isCompanyStockSymbol = true;
       }
+
+      // else if (reduxData?.['company_stock_symbol']) {
+      // setForm({ ...form, ['company_stock_symbol']: reduxData?.['company_stock_symbol'] });
+      // isCompanyStockSymbol = true;
+      // }
     }
     const isAllRequiredFieldsFilled = allFilled && isNaicsFilled && isCompanyStockSymbol;
     setIsAllRequiredFieldsFilled(isAllRequiredFieldsFilled);

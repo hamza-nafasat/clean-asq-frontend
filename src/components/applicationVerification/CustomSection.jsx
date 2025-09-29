@@ -46,7 +46,7 @@ function CustomSection({
     const formFields = {};
     if (fields?.length) {
       fields?.forEach(field => {
-        formFields[field?.name] = reduxData[field?.name] || '';
+        formFields[field?.name] = reduxData?.[field?.name] || '';
       });
       setForm(formFields);
     }

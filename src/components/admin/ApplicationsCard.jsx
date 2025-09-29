@@ -227,6 +227,13 @@ export default function ApplicationsCard() {
               key={index}
               className="relative flex min-w-0 flex-col rounded-[8px] border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
             >
+              <img
+                src={form?.branding?.logos?.[0]?.url}
+                width={100}
+                height={100}
+                alt="logo"
+                referrerPolicy="no-referrer"
+              />
               <div className="flex items-center justify-end">
                 <div className="relative">
                   <button
@@ -237,7 +244,6 @@ export default function ApplicationsCard() {
                   >
                     <MoreVertical size={18} />
                   </button>
-
                   {actionMenu === form?._id && (
                     <div ref={buttonRef} className="absolute right-0 mt-2 w-40 rounded border bg-white shadow-lg">
                       <button
@@ -277,9 +283,12 @@ export default function ApplicationsCard() {
               </div>
 
               {/* Menu icon */}
+
               <div className="absolute top-3 right-3 cursor-pointer sm:top-4 sm:right-4">{/* <CiMenuKebab /> */}</div>
+
               <div className="flex items-start gap-2 md:gap-4">
                 {/* <CardIcon /> */}
+
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <h2 className="text-base leading-tight font-bold break-words text-gray-700 sm:text-lg md:text-2xl">
