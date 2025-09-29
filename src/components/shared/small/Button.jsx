@@ -1,34 +1,3 @@
-// import React from 'react';
-
-// const Button = ({
-//   label,
-//   onClick,
-//   className = '',
-//   type = 'button',
-//   icon: LeftIcon,
-//   rightIcon: RightIcon,
-//   cnLeft,
-//   cnRight,
-//   ...props
-// }) => {
-//   return (
-//     <button
-//       type={type}
-//       onClick={onClick}
-//       className={`hover:bg-secondary hover:border-secondary border-primary bg-primary cursor-pointer rounded-[4px] border-2 px-[14px] py-[4px] text-base font-medium text-white transition-all duration-300 hover:text-white ${className}`}
-//       {...props}
-//     >
-//       <div className="flex items-center justify-center gap-2">
-//         {LeftIcon && <LeftIcon className={`${cnLeft}`} />}
-//         <span>{label}</span>
-//         {RightIcon && <RightIcon className={`${cnRight} `} />}
-//       </div>
-//     </button>
-//   );
-// };
-
-// export default Button;
-
 import React from 'react';
 
 const Button = ({
@@ -48,10 +17,14 @@ const Button = ({
   const baseClasses =
     'cursor-pointer rounded-[4px] border-2 px-[14px] py-[4px] text-buttonText font-medium transition-all duration-300 flex items-center justify-center gap-2';
 
+  // ✅ Use brightness filter on hover (works dynamically with CSS vars from API)
   const variantClasses = {
-    primary: 'bg-primary border-primary text-white hover:bg-secondary hover:border-secondary hover:text-white',
-    secondary:
-      'bg-buttonSecondary border-buttonSecondary text-buttonText hover:bg-gray-500 hover:text-white hover:border-gray-500',
+    primary: `
+      bg-[var(--primary)] border-[var(--primary)] text-white 
+      hover:brightness-120 hover:border-[var(--primary)]`,
+    secondary: `
+      bg-[var(--buttonSecondary)] border-[var(--buttonSecondary)] text-[var(--textPrimary)] 
+      hover:brightness-120 hover:border-[var(--buttonSecondary)] `,
   };
 
   const disabledClasses = disabled || loading ? 'opacity-50 cursor-not-allowed' : '';
@@ -76,7 +49,10 @@ const Button = ({
             <path
               className="opacity-75"
               fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              d="M4 12a8 8 0 018-8V0C5.373 0 
+              0 5.373 0 12h4zm2 5.291A7.962 
+              7.962 0 014 12H0c0 3.042 1.135 
+              5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
           {label}

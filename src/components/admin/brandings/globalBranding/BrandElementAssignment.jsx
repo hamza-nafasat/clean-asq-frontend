@@ -24,7 +24,7 @@ const ColorInput = ({ label, color, setColor }) => {
         <div
           type="text"
           // id={label.toLowerCase().replace(/\s/g, '-') + '-color'}
-          className="flex h-12 w-28 items-center justify-center rounded-md border px-4 py-2 text-center text-sm shadow-sm "
+          className="flex h-12 w-28 items-center justify-center rounded-md border px-4 py-2 text-center text-sm shadow-sm"
           // {color}
           // onChange={handleChange}
         >
@@ -76,7 +76,6 @@ const BrandElementAssignment = ({
         <ColorInput label="Background Color" color={backgroundColor} setColor={setBackgroundColor} />
         <ColorInput label="Frame Color (Input Fields, Borders)" color={frameColor} setColor={setFrameColor} />
         <ColorInput label="Button text color" color={buttonTextColor} setColor={setButtonTextColor} />
-
       </div>
       <div className="bg-buttonTextColor text-buttonText size-8">hallo</div>
 

@@ -56,6 +56,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [updateBranding, { isLoading: isUpdateLoading }] = useUpdateSingleBrandingMutation();
   const { data: singleBrandingData } = useGetSingleBrandingQuery(brandingId || '');
   console.log('extraLogos', extraLogos);
+  console.log('singleBranding.colors.buttonText)', singleBrandingData?.data.colors.buttonText);
 
   const handleExtraLogoUpload = logo => {
     setExtraLogos([...extraLogos, logo]);
@@ -271,7 +272,11 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setFrameColor(singleBranding.colors.frame);
       setFontFamily(singleBranding.fontFamily);
       setFontFamily(singleBranding.fontFamily);
-      setButtonTextColor(singleBranding.colors.buttonText);
+      setButtonTextColor(
+        singleBranding?.colors?.buttonText && singleBranding.colors.buttonText.trim() !== ''
+          ? singleBranding.colors.buttonText
+          : '#000000'
+      );
 
       // Set the selected logo from the API response if available
       if (singleBranding.selectedLogo) {
@@ -337,6 +342,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
           linkColor={linkColor}
           selectedLogo={selectedLogo}
           buttonTextColor={buttonTextColor}
+          textColor={textColor}
+          frameColor={frameColor}
         />
 
         <div className="mt-6 mb-4 flex justify-between space-x-2 md:space-x-4">

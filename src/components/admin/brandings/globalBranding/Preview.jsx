@@ -12,11 +12,12 @@ const Preview = ({
   accentColor,
   buttonTextColor,
   linkColor,
+  textColor,
+  frameColor,
 }) => {
   const formattedText = companyName.toLowerCase().replace(/\s+/g, '-');
   const dispatch = useDispatch();
   const [isLight, setIsLight] = useState(false);
-  console.log('buttontexstcolor', buttonTextColor);
 
   useEffect(() => {
     dispatch(setCompanyName(companyName));
@@ -46,11 +47,14 @@ const Preview = ({
           type="text"
           readOnly
           value={`https://${formattedText || 'company'}.apply-secure.com`}
-          style={{ width: `${`https://${formattedText || 'company'}.apply-secure.com`.length}ch` }}
-          className="rounded border border-[#A7A7A7] bg-white px-3 py-1 text-sm text-gray-700"
+          style={{
+            width: `${`https://${formattedText || 'company'}.apply-secure.com`.length}ch`,
+            borderColor: frameColor || '#A7A7A7',
+          }}
+          className="rounded border bg-white px-3 py-1 text-sm text-gray-700"
         />
 
-        <p className="mt-6 text-[16px] font-normal text-gray-700">
+        <p className="mt-6 text-[16px] font-normal" style={{ color: textColor || '#000000' }}>
           This is how your form will appear with the selected branding.{' '}
           <a href="#" className="underline" style={{ color: linkColor }}>
             Link will use the link color.
@@ -58,9 +62,32 @@ const Preview = ({
         </p>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
-          <Button label={'Primary Button'} />
-          <Button variant="secondary" label={'Secondary Button'} />
-          <Button label={' Accent Button'} />
+          <Button
+            label={'Primary Button'}
+            style={{
+              color: buttonTextColor || '#000000',
+              backgroundColor: primaryColor || '#E5E7EB',
+              border: `1px solid ${primaryColor || '#E5E7EB'}`,
+            }}
+          />
+          <Button
+            variant="secondary"
+            label={'Secondary Button'}
+            className="!border-none"
+            style={{
+              color: buttonTextColor || '#000000',
+              backgroundColor: secondaryColor || '#E5E7EB',
+              border: `1px solid ${secondaryColor || '#E5E7EB'}`,
+            }}
+          />
+          <Button
+            label={' Accent Button'}
+            style={{
+              color: buttonTextColor || '#000000',
+              backgroundColor: primaryColor || '#E5E7EB',
+              border: `1px solid ${primaryColor || '#E5E7EB'}`,
+            }}
+          />
         </div>
       </div>
     </div>
