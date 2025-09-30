@@ -335,7 +335,9 @@ function BankInfo({
             </>
           ) : (
             <>
-              <h2 className="mb-3 text-xl font-semibold text-red-600">No Bank Found</h2>
+              <h2 className="mb-3 text-xl font-semibold text-red-600">
+                We could not identify a bank with this routing number. Please double-check the number or try again.
+              </h2>
               <div className="flex justify-end">
                 <Button label="Close" onClick={() => setBankModal(null)} className="rounded-lg px-4 py-2" />
               </div>

@@ -39,7 +39,6 @@ function CompanyInformation({
   signUrl,
 }) {
   const { user } = useSelector(state => state.auth);
-  const { lookupData } = useSelector(state => state?.company);
   const { formData } = useSelector(state => state?.form);
   const [customizeModal, setCustomizeModal] = useState(false);
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
@@ -146,9 +145,10 @@ function CompanyInformation({
 
   useEffect(() => {
     if (fields && fields.length > 0) {
+      const lookupData = formData?.company_lookup_data;
       const initialForm = {};
       fields.forEach(field => {
-        const fieldValueFromLookupData = lookupData?.find(item => item.name === field.name)?.result;
+        const fieldValueFromLookupData = lookupData?.find(item => item?.name === field?.name)?.result;
         initialForm[field.name] = reduxData
           ? reduxData[field.name]
           : fieldValueFromLookupData
@@ -157,7 +157,7 @@ function CompanyInformation({
       });
       setForm(initialForm);
     }
-  }, [fields, lookupData, name, reduxData]);
+  }, [fields, formData?.company_lookup_data, name, reduxData]);
 
   // checking is all required fields are filled or not
   // ---------------------------------------------------
@@ -175,15 +175,15 @@ function CompanyInformation({
               : item?.toString().trim() !== ''
           )
         );
+
       return true;
     });
     const isNaicsFilled = naicsToMccDetails.NAICS;
 
-    // stock symbol logic
     let isCompanyStockSymbol = true;
     if (form?.['company_ownership_type'] == 'public') {
       isCompanyStockSymbol = false;
-      if (form?.['company_stock_symbol']) {
+      if (form?.['stocksymbol']) {
         isCompanyStockSymbol = true;
       }
 
@@ -249,19 +249,6 @@ function CompanyInformation({
             return (
               <div key={index} className="mt-4 flex flex-col gap-2">
                 <RadioInputType field={field} form={form} setForm={setForm} className={''} />
-                {form?.['company_ownership_type'] == 'public' && field.name == 'company_ownership_type' && (
-                  <TextField
-                    label={'Company Stock symbol'}
-                    type="text"
-                    value={form?.['company_stock_symbol'] || reduxData?.['company_stock_symbol'] || ''}
-                    onChange={e => setForm({ ...form, ['company_stock_symbol']: e.target.value })}
-                    placeholder="Company Stock symbol"
-                    name="company_stock_symbol"
-                    suggestions={[
-                      formData?.company_lookup_data?.find(item => item.name == 'stocksymbol')?.result || '',
-                    ]}
-                  />
-                )}
               </div>
             );
           }
