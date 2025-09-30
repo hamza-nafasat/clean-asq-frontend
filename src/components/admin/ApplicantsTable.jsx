@@ -295,16 +295,16 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
           </div>
         </div>
       </div>
-      <div className="mt-5 w-full lg:w-[670px] xl:w-full">
-        <div className="min-w-[500px]">
-          <DataTable
-            columns={columns}
-            data={filteredApplicants}
-            highlightOnHover
-            progressPending={isLoading}
-            noDataComponent="No applicants found"
-          />
-        </div>
+      <div className="mt-5 w-full overflow-x-auto lg:!w-[calc(100vw-350px)] xl:w-full">
+        <DataTable
+          columns={columns}
+          data={filteredApplicants}
+          highlightOnHover
+          progressPending={isLoading}
+          noDataComponent="No applicants found"
+          fixedHeader
+          persistTableHead
+        />
       </div>
 
       {/* Edit Modal */}

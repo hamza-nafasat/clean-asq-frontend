@@ -34,17 +34,20 @@ function AdminHeader({ setSidebarOpen }) {
       <div className="flex items-center gap-4 rounded-bl-[20px] bg-white px-6 py-2">
         {user ? (
           <div className="relative flex items-center gap-2">
-            <img
-              src="https://placehold.co/600x400/white/18bc9c?text=AZ"
-              alt="User avatar"
-              className="h-9 w-9 rounded-full border border-gray-700 object-cover"
-            />
-            <div>
-              <h6 className="text-sm font-semibold text-gray-800">
-                {user?.firstName} {user?.lastName}
-              </h6>
-              <p className="text-xs text-gray-600">{user?.email}</p>
+            <div className="hidden items-center gap-2 md:flex">
+              <img
+                src="https://placehold.co/600x400/white/18bc9c?text=AZ"
+                alt="User avatar"
+                className="h-9 w-9 rounded-full border border-gray-700 object-cover"
+              />
+              <div>
+                <h6 className="text-sm font-semibold text-gray-800">
+                  {user?.firstName} {user?.lastName}
+                </h6>
+                <p className="text-xs text-gray-600">{user?.email}</p>
+              </div>
             </div>
+
             <div
               onClick={profileOpenHandler}
               ref={profileRef}

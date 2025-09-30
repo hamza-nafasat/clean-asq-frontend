@@ -15,10 +15,10 @@ function AdminDashboard() {
           <AdminAside sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
           {/* Main Content */}
-          <div className="mr-5 w-full flex-1 items-center justify-center">
+          <div className="w-full flex-1 items-center justify-center">
             <AdminHeader setSidebarOpen={setSidebarOpen} />
-            <main className="scroll-0 mt-[14px] h-[calc(100vh-95px)] overflow-x-hidden overflow-y-scroll xl:h-[calc(100vh-100px)]">
-              <div className="flex h-full flex-col justify-between overflow-auto px-2">
+            <main className="scroll-0 mt-[14px] h-[calc(100vh-80px)] overflow-x-hidden overflow-y-scroll xl:h-[calc(100vh-100px)]">
+              <div className="flex h-full w-full flex-col justify-between gap-4 overflow-auto px-2">
                 <Outlet />
                 <Footer />
               </div>

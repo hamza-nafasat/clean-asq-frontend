@@ -206,21 +206,21 @@ export default function ApplicationsCard() {
         </div>
         {/* Date Pickers */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
-          <div className="col-span-4 w-full">
+          <div className="col-span-6 md:col-span-5 xl:col-span-5">
             <TextField label={'From'} type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
           </div>
-          <div className="col-span-4 w-full">
+          <div className="col-span-6 md:col-span-4 xl:col-span-4">
             <TextField label={'To'} type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
           </div>
           {/* Search Button */}
-          <div className="col-span-4 flex items-center justify-center">
-            <Button icon={CiSearch} label={'Search'} className="mt-0 !h-12.5 md:mt-8" />
+          <div className="col-span-6 flex items-center justify-center md:col-span-3 xl:col-span-3">
+            <Button icon={CiSearch} label={'Search'} className="mt-0 !h-12.5 md:mt-8 md:!w-full" />
           </div>
         </div>
       </div>
 
       {/* Cards */}
-      <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
         {forms?.data?.map((form, index) => {
           const colors = form?.branding?.colors;
 

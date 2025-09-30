@@ -24,6 +24,8 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
 
   const handleNavOpen = () => setIsNavOpen(!isNavOpen);
 
+  console.log('isNavOpen', isNavOpen);
+
   const pages = [
     { title: 'Role Management', link: '/all-roles', icon: <AllRoles /> },
     { title: 'User Management', link: '/all-users', icon: <AllUsers /> },
@@ -75,10 +77,12 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
                 <Link
                   key={i}
                   to={page.link}
-                  onClick={() => setSidebarOpen(false)} // ✅ close sidebar on mobile click
-                  className={`flex w-full min-w-fit items-center rounded-md p-2 ${isNavOpen ? 'gap-2' : ''} ${isActive ? 'bg-primary font-semibold text-white' : 'hover:text-primary text-[#526581] hover:bg-gray-100'} `}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`flex w-full min-w-fit items-center rounded-md p-2 ${isNavOpen ? 'size-12 gap-2' : 'size-12'} ${isActive ? 'bg-primary font-semibold text-white' : 'hover:text-primary text-[#526581] hover:bg-gray-100'} `}
                 >
-                  <div className={`text-[20px] ${isActive ? 'text-white' : 'text-[#526581]'}`}>
+                  <div
+                    className={`${isNavOpen ? '!p-6' : '!bg-red-500'}text-[20px] ${isActive ? 'text-white' : 'text-[#526581]'}`}
+                  >
                     {React.cloneElement(page.icon, {
                       color: isActive ? '#ffffff' : '#526581',
                     })}

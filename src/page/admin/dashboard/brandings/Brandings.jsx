@@ -213,19 +213,19 @@ const Brandings = () => {
         {/* Create Branding
         </Button> */}
       </div>
-      <div className="mt-5 w-full lg:w-[670px] xl:w-full">
-        <div className="min-w-[500px]">
-          <DataTable
-            data={brandings?.data || []}
-            columns={columns()}
-            customStyles={tableStyles}
-            pagination
-            highlightOnHover
-            progressPending={isLoading}
-            noDataComponent="No Brandings Found"
-            className="!rounded-md"
-          />
-        </div>
+      <div className="mt-5 w-full lg:w-[calc(100vw-250px)] xl:w-full">
+        {/* <div className="min-w-[500px]"> */}
+        <DataTable
+          data={brandings?.data || []}
+          columns={columns()}
+          customStyles={tableStyles}
+          pagination
+          highlightOnHover
+          progressPending={isLoading}
+          noDataComponent="No Brandings Found"
+          className="!rounded-md"
+        />
+        {/* </div> */}
       </div>
     </div>
   );

@@ -152,17 +152,17 @@ function AllFormsStrategies() {
           label={'Create Default'}
         />
       </div>
-      <div className="mt-5 w-full lg:w-[670px] xl:w-full">
-        <div className="min-w-[500px]">
-          <DataTable
-            data={data?.data || []}
-            columns={columns}
-            customStyles={tableStyles}
-            pagination
-            highlightOnHover
-            noDataComponent="No data found"
-          />
-        </div>
+      <div className="mt-5 w-full lg:w-[calc(100vw-250px)] xl:w-full">
+        {/* <div className="min-w-[500px]"> */}
+        <DataTable
+          data={data?.data || []}
+          columns={columns}
+          customStyles={tableStyles}
+          pagination
+          highlightOnHover
+          noDataComponent="No data found"
+        />
+        {/* </div> */}
       </div>
       {/* Add Modal */}
       {isModalOpen && (
