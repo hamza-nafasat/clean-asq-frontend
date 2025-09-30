@@ -13,6 +13,7 @@ import Modal from '../shared/small/Modal';
 import TextField from '../shared/small/TextField';
 import ApplyBranding from './brandings/globalBranding/ApplyBranding';
 import { LocationModalComponent } from './varification/LocationStatusModal';
+import { useBranding } from '@/hooks/BrandingContext';
 
 export default function ApplicationsCard() {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ export default function ApplicationsCard() {
   const { data: brandings } = useGetAllBrandingsQuery();
   const [addFromBranding] = useAddBrandingInFormMutation();
   const [locationModal, setLocationModal] = useState(false);
+  const { logo } = useBranding();
   const [formLocationData, setFormLocationData] = useState({
     title: '',
     subtitle: '',
@@ -228,9 +230,9 @@ export default function ApplicationsCard() {
               className="relative flex min-w-0 flex-col rounded-[8px] border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
             >
               <img
-                src={form?.branding?.logos?.[0]?.url}
-                width={100}
-                height={100}
+                src={form?.branding?.selectedLogo || logo}
+                width={50}
+                height={50}
                 alt="logo"
                 referrerPolicy="no-referrer"
               />

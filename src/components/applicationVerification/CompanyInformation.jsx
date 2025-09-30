@@ -175,22 +175,13 @@ function CompanyInformation({
               : item?.toString().trim() !== ''
           )
         );
-
       return true;
     });
     const isNaicsFilled = naicsToMccDetails.NAICS;
-
     let isCompanyStockSymbol = true;
     if (form?.['company_ownership_type'] == 'public') {
       isCompanyStockSymbol = false;
-      if (form?.['stocksymbol']) {
-        isCompanyStockSymbol = true;
-      }
-
-      // else if (reduxData?.['company_stock_symbol']) {
-      // setForm({ ...form, ['company_stock_symbol']: reduxData?.['company_stock_symbol'] });
-      // isCompanyStockSymbol = true;
-      // }
+      if (form?.['stocksymbol']) isCompanyStockSymbol = true;
     }
     const isAllRequiredFieldsFilled = allFilled && isNaicsFilled && isCompanyStockSymbol;
     setIsAllRequiredFieldsFilled(isAllRequiredFieldsFilled);

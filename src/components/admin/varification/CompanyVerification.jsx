@@ -38,7 +38,7 @@ function CompanyVerification({ formId }) {
   const [apisRes, setApisRes] = useState({ companyLookup: {}, companyVerify: {} });
   const [verifyCompany, { isLoading: verifyCompanyLoading }] = useCompanyVerificationMutation();
   const [lookupCompany, { isLoading: lookupCompanyLoading }] = useCompanyLookupMutation();
-  const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
+  const { primaryColor, textColor, backgroundColor, secondaryColor, logo } = useBranding();
   const tableStyles = getVerificationTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   const { formData } = useSelector(state => state?.form);
   const { data: formBackendData, isLoading } = useGetSingleFormQueryQuery({ _id: formId });
@@ -134,12 +134,13 @@ function CompanyVerification({ formId }) {
     if (formBackendData?.data) {
       setLocationStatusModal(formBackendData?.data?.locationStatus);
       setLocationData({
+        logo: formBackendData?.data?.branding?.selectedLogo || logo,
         title: formBackendData?.data?.locationTitle,
         subtitle: formBackendData?.data?.locationSubtitle,
         message: formBackendData?.data?.formatedLocationMessage,
       });
     }
-  }, [formBackendData]);
+  }, [formBackendData, logo]);
 
   return isLoading ? (
     <CustomLoading />

@@ -29,14 +29,7 @@ export default function LocationStatusModal({
       <div className="flex flex-col items-center gap-6 p-6">
         {/* Icon */}
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100">
-          <svg className="h-7 w-7 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 22c4.97 0 9-4.03 9-9s-4.03-9-9-9-9 4.03-9 9 4.03 9 9 9z"
-            />
-            <circle cx="12" cy="11" r="1.5" />
-          </svg>
+          <img src={locationData?.logo} alt="logo" referrerPolicy="no-referrer" />
         </div>
 
         {/* Title & Info */}
