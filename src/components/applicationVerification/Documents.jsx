@@ -1,26 +1,16 @@
-import FileUploader from './Documents/FileUploader';
-import Button from '../shared/small/Button';
+import { useFormateTextInMarkDownMutation, useUpdateFormSectionMutation } from '@/redux/apis/formApis';
+import { updateFileData } from '@/redux/slices/formSlice';
+import DOMPurify from 'dompurify';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { updateFileData } from '@/redux/slices/formSlice';
-import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
-import Modal from '../shared/small/Modal';
-import {
-  AiHelpModal,
-  CheckboxInputType,
-  MultiCheckboxInputType,
-  OtherInputType,
-  RadioInputType,
-  RangeInputType,
-  SelectInputType,
-} from '../shared/small/DynamicField';
-import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
-import { PencilIcon } from 'lucide-react';
-import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
-import DOMPurify from 'dompurify';
 import SignatureBox from '../shared/SignatureBox';
-import { FIELD_TYPES } from '@/data/constants';
+import Button from '../shared/small/Button';
+import { AiHelpModal, OtherInputType } from '../shared/small/DynamicField';
+import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
+import Modal from '../shared/small/Modal';
+import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
+import FileUploader from './Documents/FileUploader';
 
 function Documents({
   _id,
@@ -54,13 +44,16 @@ function Documents({
   const [formateTextInMarkDown] = useFormateTextInMarkDownMutation();
   const [showRequiredDocs, setShowRequiredDocs] = useState(true);
   const [urls, setUrls] = useState([]);
+  const [aiPromptModal, setAiPromptModal] = useState(false);
 
   // Generate the AI prompt
   const generateAiPrompt = useCallback(() => {
     const companyName = idMissionData?.companyTitle || 'your company';
     const state = idMissionData?.state || 'your state';
-    return `how do I find online images/copies of the articles of incorporation or organization for ${companyName} in ${state} via the state's entity search website?`;
-  }, [idMissionData?.companyTitle, idMissionData?.state]);
+    const prompt = step?.aiCustomizablePrompt || '';
+    // return `how do I find online images/copies of the articles of incorporation or organization for ${companyName} in ${state} via the state's entity search website?`;
+    return prompt?.replace('${companyName}', companyName).replace('${state}', state);
+  }, [idMissionData?.companyTitle, idMissionData?.state, step?.aiCustomizablePrompt]);
 
   // Fetch AI help on component mount
   useEffect(() => {
@@ -137,9 +130,20 @@ function Documents({
             {user?._id && user.role !== 'guest' && (
               <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
             )}
+            <Button onClick={() => setAiPromptModal(true)} label={'Customize Prompt'} />
             <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
           </div>
         </div>
+        {aiPromptModal && (
+          <Modal title="Customize Prompt" onClose={() => setAiPromptModal(false)}>
+            <AiPromptCustomizablePrompt
+              aiCustomizablePrompt={step?.aiCustomizablePrompt}
+              sectionId={step?._id}
+              aiPromptModal={aiPromptModal}
+              setAiPromptModal={setAiPromptModal}
+            />
+          </Modal>
+        )}
 
         {/* Show required documents section */}
         {showRequiredDocs && (
@@ -298,3 +302,65 @@ function Documents({
 }
 
 export default Documents;
+
+export const AiPromptCustomizablePrompt = ({ aiCustomizablePrompt, sectionId, setAiPromptModal }) => {
+  const [prompt, setPrompt] = useState(aiCustomizablePrompt || '');
+  const [updateFormSection, { isLoading: isUpdating }] = useUpdateFormSectionMutation();
+
+  const insertVariable = variable => {
+    setPrompt(prev => prev + ` ${variable}`);
+  };
+
+  const updateFormSectionHandler = async () => {
+    try {
+      if (!prompt) return toast.error('Please enter display text and AI formatting');
+      const res = await updateFormSection({
+        _id: sectionId,
+        data: { aiCustomizablePrompt: prompt },
+      }).unwrap();
+      if (res.success) {
+        toast.success('Section Updated Successfully');
+        setAiPromptModal(false);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.data?.message || 'Failed to update section');
+    }
+  };
+  return (
+    <div className="flex flex-col gap-6 p-6">
+      {/* Input Area */}
+      <div>
+        <label htmlFor="prompt" className="block text-sm font-medium text-gray-700">
+          Enter your custom prompt
+        </label>
+        <textarea
+          id="prompt"
+          rows={5}
+          value={prompt}
+          onChange={e => setPrompt(e.target.value)}
+          className="mt-2 w-full rounded-md border border-gray-300 p-3 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+          placeholder="Write your AI prompt here..."
+        />
+      </div>
+
+      {/* Dynamic Variables */}
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium text-gray-700">Available variables:</span>
+        <div className="flex gap-3">
+          <Button label={`companyName`} type="button" onClick={() => insertVariable('${companyName}')} />
+          <Button label={`state`} type="button" onClick={() => insertVariable('${state}')} />
+        </div>
+        <p className="text-xs text-gray-500">
+          Click to insert variables into your prompt. These will be dynamically replaced by real values.
+        </p>
+      </div>
+
+      {/* Actions */}
+      <div className="flex justify-end gap-3">
+        <Button onClick={() => setAiPromptModal(false)} variant="secondary" label={'Cancel'} />
+        <Button onClick={updateFormSectionHandler} label={isUpdating ? 'Saving...' : 'Save'} />
+      </div>
+    </div>
+  );
+};

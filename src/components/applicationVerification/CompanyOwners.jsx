@@ -16,7 +16,10 @@ import Modal from '../shared/small/Modal';
 import CustomizationOwnerFieldsModal from './companyInfo/CustomizationOwnerFieldsModal';
 import { useSelector } from 'react-redux';
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
-import { PencilIcon } from 'lucide-react';
+import { PencilIcon, X } from 'lucide-react';
+import { useGetAllSearchStrategiesQuery, useUpdateFormSectionMutation } from '@/redux/apis/formApis';
+import CustomLoading from '../shared/small/CustomLoading';
+import { toast } from 'react-toastify';
 
 function CompanyOwners({
   _id,
@@ -37,7 +40,7 @@ function CompanyOwners({
 }) {
   const { user } = useSelector(state => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
-  const { lookupData } = useSelector(state => state?.company);
+  const { formData } = useSelector(state => state?.form);
   const [ownersFromLookup, setOwnersFromLookup] = useState([]);
   const [filteredOwners, setFilteredOwners] = useState([]);
   const [loadingNext, setLoadingNext] = useState(false);
@@ -47,10 +50,11 @@ function CompanyOwners({
   const [form, setForm] = useState({});
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [submitButtonText, setSubmitButtonText] = useState('Some Required Fields are Missing');
+  const [ownerSuggesstionsModal, setOwnerSuggesstionsModal] = useState(false);
+
+  console.log('owners from loogup', ownersFromLookup);
 
   const requiredNames = useMemo(() => formFields.filter(f => f.required).map(f => f.name), [formFields]);
-
-  // console.log('company owners', form);
 
   const handleChangeOnOtherOwnersData = (e, index, isFilter = false) => {
     if (e.target.name == 'name') {
@@ -170,13 +174,29 @@ function CompanyOwners({
 
   // add owners for suggestions
   useEffect(() => {
-    const founders = Array.isArray(lookupData) && lookupData?.filter(item => item?.name == 'founders');
-    if (founders?.length) {
-      setOwnersFromLookup(founders[0]?.result);
-    } else {
-      setOwnersFromLookup([]);
+    if (formData) {
+      const lookupData = formData?.company_lookup_data;
+      const searchField = step?.ownerSuggesstions || ['founders'];
+      console.log('search fields ', searchField);
+      const founders = [];
+      searchField.forEach(field => {
+        let data = lookupData?.find(item => item?.name == field)?.result;
+        console.log('data is ', data);
+        if (Array.isArray(data) && typeof data === 'object') {
+          founders.push(...data);
+        } else if (typeof data === 'string') {
+          founders.push(data);
+        } else if (typeof data === 'number') {
+          founders.push(data);
+        }
+      });
+      if (founders?.length) {
+        setOwnersFromLookup(founders);
+      } else {
+        setOwnersFromLookup([]);
+      }
     }
-  }, [lookupData]);
+  }, [formData, step?.ownerSuggesstions]);
 
   // making form states according changing fields
   // --------------------------------------------
@@ -273,14 +293,23 @@ function CompanyOwners({
           <EditSectionDisplayTextFromatingModal step={step} />
         </Modal>
       )}
+      {ownerSuggesstionsModal && (
+        <Modal title="Owners Suggesstions" onClose={() => setOwnerSuggesstionsModal(false)}>
+          <OwnerSuggesstionsModal
+            selectedSuggesstions={step?.ownerSuggesstions}
+            sectionId={step?._id}
+            ownerSuggesstionsModal={ownerSuggesstionsModal}
+            setOwnerSuggesstionsModal={setOwnerSuggesstionsModal}
+          />
+        </Modal>
+      )}
 
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
         <div className="flex gap-2">
           <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
-          {user?._id && user.role !== 'guest' && (
-            <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
-          )}
+          {user?._id && user.role !== 'guest' && <Button onClick={() => setCustomizeModal(true)} label={'Customize'} />}
+          <Button onClick={() => setOwnerSuggesstionsModal(true)} label={'Owners Suggesstions'} />
           <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
         </div>
       </div>
@@ -310,39 +339,39 @@ function CompanyOwners({
               </div> */}
             </div>
 
-            {formFields?.map(field => {
+            {formFields?.map((field, index) => {
               if (field.name === 'main_owner_own_25_percent_or_more' || field.type === 'block') return null;
               if (field.type === FIELD_TYPES.SELECT) {
                 return (
-                  <div key={field?.name} className="mt-4">
+                  <div key={index} className="mt-4">
                     <SelectInputType field={field} form={form} setForm={setForm} className={''} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
                 return (
-                  <div key={field?.name} className="mt-4">
+                  <div key={index} className="mt-4">
                     <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={''} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.RADIO) {
                 return (
-                  <div key={field?.name} className="mt-4">
+                  <div key={index} className="mt-4">
                     <RadioInputType field={field} form={form} setForm={setForm} className={''} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.RANGE) {
                 return (
-                  <div key={field?.name} className="mt-4">
+                  <div key={index} className="mt-4">
                     <RangeInputType field={field} form={form} setForm={setForm} className={''} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.CHECKBOX) {
                 return (
-                  <div key={field?.name} className="mt-4">
+                  <div key={index} className="mt-4">
                     <CheckboxInputType
                       field={field}
                       placeholder={field.placeholder}
@@ -354,7 +383,7 @@ function CompanyOwners({
                 );
               }
               return (
-                <div key={field?.name} className="mt-4">
+                <div key={index} className="mt-4">
                   <OtherInputType
                     field={field}
                     placeholder={field.placeholder}
@@ -400,9 +429,9 @@ function CompanyOwners({
                             />
                             {filteredOwners?.length > 0 && (
                               <ul className="absolute top-20 mt-1 w-full max-w-[400px] rounded border bg-white shadow">
-                                {filteredOwners.map(name => (
+                                {filteredOwners.map((name, i) => (
                                   <li
-                                    key={index}
+                                    key={i}
                                     onClick={() =>
                                       handleChangeOnOtherOwnersData(
                                         { target: { name: 'name', value: name } },
@@ -586,3 +615,97 @@ function CompanyOwners({
 }
 
 export default CompanyOwners;
+
+export const OwnerSuggesstionsModal = ({ selectedSuggesstions, setOwnerSuggesstionsModal, sectionId }) => {
+  const [selectedOwners, setSelectedOwners] = useState(Array.isArray(selectedSuggesstions) ? selectedSuggesstions : []);
+  const { data, isLoading } = useGetAllSearchStrategiesQuery();
+  const [suggesstions, setSuggesstions] = useState([]);
+  const [updateFormSection, { isLoading: isUpdating }] = useUpdateFormSectionMutation();
+
+  const updateFormSectionHandler = async () => {
+    try {
+      if (!prompt) return toast.error('Please enter display text and AI formatting');
+      const res = await updateFormSection({
+        _id: sectionId,
+        data: { ownerSuggesstions: selectedOwners },
+      }).unwrap();
+      if (res.success) {
+        toast.success('Section Updated Successfully');
+        setOwnerSuggesstionsModal(false);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.data?.message || 'Failed to update section');
+    }
+  };
+
+  const handleSelect = e => {
+    const value = e.target.value;
+    if (value && !selectedOwners.includes(value)) {
+      setSelectedOwners(prev => [...prev, value]);
+      setSuggesstions(prev => prev.filter(o => o !== value));
+    }
+  };
+
+  const removeOwner = owner => {
+    setSelectedOwners(prev => prev.filter(o => o !== owner));
+    setSuggesstions(prev => [...prev, owner]);
+  };
+
+  useEffect(() => {
+    if (data?.data && !suggesstions?.length) {
+      setSuggesstions(data?.data?.map(item => item?.searchObjectKey) || []);
+    }
+  }, [data, suggesstions?.length]);
+
+  return isLoading ? (
+    <CustomLoading />
+  ) : (
+    <div className="flex flex-col gap-6 p-6">
+      {/* Multi-select */}
+      <div>
+        <label htmlFor="owners" className="block text-sm font-medium text-gray-700">
+          Select Owners
+        </label>
+        <select
+          id="owners"
+          onChange={handleSelect}
+          className="mt-2 w-full rounded-md border border-gray-300 p-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Choose Owner Keys to Suggest</option>
+          {suggesstions.map(owner => (
+            <option key={owner} value={owner}>
+              {owner}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Selected Owners */}
+      <div className="flex flex-wrap gap-2">
+        {selectedOwners.map(owner => (
+          <div key={owner} className="flex items-center gap-2 rounded-md bg-blue-100 px-3 py-1 text-sm text-blue-700">
+            <span>{owner}</span>
+            <button
+              type="button"
+              onClick={() => removeOwner(owner)}
+              className="cursor-pointer text-blue-600 hover:text-blue-800"
+            >
+              <X className="h-4 w-4 text-red-500" />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Actions */}
+      <div className="flex justify-end gap-3 pt-4">
+        <Button variant="secondary" onClick={() => setOwnerSuggesstionsModal(false)} label={'Cancel'} />
+        <Button
+          label={isUpdating ? 'Saving...' : 'Save'}
+          onClick={updateFormSectionHandler}
+          disabled={selectedOwners.length === 0}
+        />
+      </div>
+    </div>
+  );
+};
