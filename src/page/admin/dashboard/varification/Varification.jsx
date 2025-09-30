@@ -1,10 +1,10 @@
-import CompanyVerification from '@/components/admin/varification/CompanyVerification';
-import React from 'react';
 import { useSearchParams } from 'react-router-dom';
+import CompanyVerification from '@/components/admin/varification/CompanyVerification';
 
 function Verification() {
   const [searchParams] = useSearchParams();
-  const formId = searchParams.get('formId');
+  const formId = searchParams.get('formid');
+
   return (
     <div>
       <CompanyVerification formId={formId} />

@@ -51,7 +51,7 @@ export default function LocationStatusModal({
         </div>
 
         {/* Captcha */}
-        <ReCAPTCHA sitekey="YOUR_RECAPTCHA_SITE_KEY" onChange={handleCaptcha} />
+        <ReCAPTCHA sitekey="6Lf5GtkrAAAAANW28Zs4tnFXNkTtxKbzhXkSYF5Y" onChange={handleCaptcha} />
 
         {/* Actions */}
         <div className="flex w-full justify-center gap-4 pt-2">

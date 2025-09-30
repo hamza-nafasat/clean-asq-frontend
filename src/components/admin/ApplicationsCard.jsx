@@ -331,7 +331,6 @@ export default function ApplicationsCard() {
                   style={{
                     backgroundColor: colors?.secondary,
                     borderColor: colors?.secondary,
-
                     transition: 'all 0.3s ease',
                   }}
                   onMouseEnter={e => {
