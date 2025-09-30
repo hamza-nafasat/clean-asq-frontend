@@ -53,6 +53,7 @@ function Documents({
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [formateTextInMarkDown] = useFormateTextInMarkDownMutation();
   const [showRequiredDocs, setShowRequiredDocs] = useState(true);
+  const [urls, setUrls] = useState([]);
 
   // Generate the AI prompt
   const generateAiPrompt = useCallback(() => {
@@ -118,6 +119,14 @@ function Documents({
       setForm(initialForm);
     }
   }, [fields, formData, name, reduxData, title]);
+
+  useEffect(() => {
+    if (form?.article_of_incorporation_urls) {
+      setUrls(form?.article_of_incorporation_urls?.split(',') || []);
+    } else {
+      setUrls([]);
+    }
+  }, [form?.article_of_incorporation_urls]);
 
   return (
     <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
@@ -212,47 +221,6 @@ function Documents({
               </div>
             );
           } else {
-            if (field.type === FIELD_TYPES.SELECT) {
-              return (
-                <div key={index} className="mt-4">
-                  <SelectInputType field={field} form={form} setForm={setForm} className={''} />
-                </div>
-              );
-            }
-            if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
-              return (
-                <div key={index} className="mt-4">
-                  <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={''} />
-                </div>
-              );
-            }
-            if (field.type === FIELD_TYPES.RADIO) {
-              return (
-                <div key={index} className="mt-4">
-                  <RadioInputType field={field} form={form} setForm={setForm} className={''} />
-                </div>
-              );
-            }
-            if (field.type === FIELD_TYPES.RANGE) {
-              return (
-                <div key={index} className="mt-4">
-                  <RangeInputType field={field} form={form} setForm={setForm} className={''} />
-                </div>
-              );
-            }
-            if (field.type === FIELD_TYPES.CHECKBOX) {
-              return (
-                <div key={index} className="mt-4">
-                  <CheckboxInputType
-                    field={field}
-                    placeholder={field.placeholder}
-                    form={form}
-                    setForm={setForm}
-                    className={''}
-                  />
-                </div>
-              );
-            }
             return (
               <div key={index} className="mt-4">
                 <OtherInputType
@@ -267,6 +235,29 @@ function Documents({
           }
         })}
       </div>
+      {urls?.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold text-gray-800">Uploaded URLs Preview</h3>
+          <div className="mt-4 grid gap-3">
+            {urls?.map((url, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3 shadow-sm transition hover:shadow-md"
+              >
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="truncate text-sm font-medium text-blue-600 hover:underline"
+                  title={url}
+                >
+                  {url}
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="mt-4">{isSignature && <SignatureBox inSection={true} signUrl={signUrl} sectionId={_id} />}</div>
 
       {/* next Previous buttons  */}
