@@ -343,5 +343,7 @@ export const {
   useCompanyLookupMutation,
   useFindNaicAndMccMutation,
   useUpdateSignatureMutation,
+  useGetCloudinarySignatureMutation,
+  useDeleteCloudinaryImageMutation,
 } = formApis;
 export default formApis;

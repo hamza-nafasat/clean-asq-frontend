@@ -9,7 +9,6 @@ import {
   useGetSavedFormMutation,
   useGetSingleFormQueryQuery,
   useSaveFormInDraftMutation,
-  useSubmitFormArticleFileMutation,
   useSubmitFormMutation,
 } from '@/redux/apis/formApis';
 import { addSavedFormData, updateFormState } from '@/redux/slices/formSlice';
@@ -36,7 +35,6 @@ export default function ApplicationForm() {
 
   const { data: form, isLoading: formLoading, refetch: formRefetch } = useGetSingleFormQueryQuery({ _id: formId });
   const [formSubmit] = useSubmitFormMutation();
-  const [submitArticle] = useSubmitFormArticleFileMutation();
   const [getSavedFormData] = useGetSavedFormMutation();
   const [saveFormInDraft] = useSaveFormInDraftMutation();
 
@@ -70,15 +68,8 @@ export default function ApplicationForm() {
         setLoadingNext(true);
         const res = await formSubmit({ formId: form?.data?._id, formData: { ...formData, [name]: data } }).unwrap();
         if (res.success) {
-          const formDataStructure = new FormData();
-          formDataStructure.append('submissionId', res?.data?._id);
-          formDataStructure.append('file', fileData?.file);
-          formDataStructure.append('name', fileData?.name);
-          const resp = await submitArticle(formDataStructure).unwrap();
-          if (resp.success) {
-            toast.success(res.message);
-            navigate('/submited-successfully/' + form?.data?._id);
-          }
+          toast.success(res.message);
+          navigate('/submited-successfully/' + form?.data?._id);
         }
       } catch (error) {
         console.log('error submitting form', error);
@@ -87,7 +78,7 @@ export default function ApplicationForm() {
         setLoadingNext(false);
       }
     },
-    [fileData?.file, fileData?.name, form?.data?._id, formData, formSubmit, navigate, submitArticle]
+    [form?.data?._id, formData, formSubmit, navigate]
   );
   const saveInProgress = useCallback(
     async ({ data, name }) => {
@@ -155,7 +146,7 @@ export default function ApplicationForm() {
           data.push(<ProcessingInfo {...commonProps} />);
           stepNames.push(step.name);
         } else if (step.title === 'incorporation_article_blk') {
-          data.push(<Documents {...commonProps} reduxData={fileData} />);
+          data.push(<Documents {...commonProps} />);
           stepNames.push(step.name);
         } else if (step.title === 'custom_section') {
           data.push(<CustomSection {...commonProps} />);

@@ -11,6 +11,7 @@ import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectio
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 import FileUploader from './Documents/FileUploader';
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
 
 function Documents({
   _id,
@@ -31,9 +32,9 @@ function Documents({
   signUrl,
 }) {
   const { user, idMissionData } = useSelector(state => state.auth);
-  const { formData } = useSelector(state => state?.form);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const dispatch = useDispatch();
+  const [file, setFile] = useState(null);
   const [fileFieldName, setFileFieldName] = useState('');
   const [loadingNext, setLoadingNext] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
@@ -45,6 +46,7 @@ function Documents({
   const [showRequiredDocs, setShowRequiredDocs] = useState(true);
   const [urls, setUrls] = useState([]);
   const [aiPromptModal, setAiPromptModal] = useState(false);
+  const [isAllRequiredFilled, setIsAllRequiredFilled] = useState(false);
 
   // Generate the AI prompt
   const generateAiPrompt = useCallback(() => {
@@ -54,6 +56,57 @@ function Documents({
     // return `how do I find online images/copies of the articles of incorporation or organization for ${companyName} in ${state} via the state's entity search website?`;
     return prompt?.replace('${companyName}', companyName).replace('${state}', state);
   }, [idMissionData?.companyTitle, idMissionData?.state, step?.aiCustomizablePrompt]);
+
+  const updateFileDataHandler = async () => {
+    if (!fileFieldName) return toast.error('Please refresh the page once and try again');
+    const oldFileData = form?.[fileFieldName];
+    // check something exist urls or oldFile
+    if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl)) {
+      return toast.error('Please select a file or Enter a URL');
+    }
+    // if old file exist but user want to add new file
+    if (file && oldFileData?.publicId) {
+      const deletedfile = await deleteImageFromCloudinary(oldFileData?.publicId, oldFileData?.resource_type);
+      if (!deletedfile) return toast.error('File Not Deleted Please Try Again');
+      if (file) {
+        const result = await uploadImageOnCloudinary(file);
+        if (!result.publicId || !result.secureUrl) return toast.error('File Not Uploaded Please Try Again');
+        handleNext({ data: { ...form, [fileFieldName]: result }, name: title, setLoadingNext });
+      }
+    } else if (file) {
+      const result = await uploadImageOnCloudinary(file);
+      if (!result.publicId || !result.secureUrl) return toast.error('Something went wrong while uploading image');
+      handleNext({ data: { ...form, [fileFieldName]: result }, name: title, setLoadingNext });
+    } else {
+      // if user only want to add urls
+      handleNext({ data: { ...form }, name: title, setLoadingNext });
+    }
+  };
+  const submitFileDataHandler = async () => {
+    if (!fileFieldName) return toast.error('Please refresh the page once and try again');
+    const oldFileData = form?.[fileFieldName];
+    // check something exist urls or oldFile
+    if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl)) {
+      return toast.error('Please select a file or Enter a URL');
+    }
+    // if old file exist but user want to add new file
+    if (file && oldFileData?.publicId) {
+      const deletedfile = await deleteImageFromCloudinary(oldFileData?.publicId, oldFileData?.resource_type);
+      if (!deletedfile) return toast.error('File Not Deleted Please Try Again');
+      if (file) {
+        const result = await uploadImageOnCloudinary(file);
+        if (!result.publicId || !result.secureUrl) return toast.error('File Not Uploaded Please Try Again');
+        handleSubmit({ data: { ...form, [fileFieldName]: result }, name: title, setLoadingNext });
+      }
+    } else if (file) {
+      const result = await uploadImageOnCloudinary(file);
+      if (!result.publicId || !result.secureUrl) return toast.error('Something went wrong while uploading image');
+      handleSubmit({ data: { ...form, [fileFieldName]: result }, name: title, setLoadingNext });
+    } else {
+      // if user only want to add urls
+      handleSubmit({ data: { ...form }, name: title, setLoadingNext });
+    }
+  };
 
   // Fetch AI help on component mount
   useEffect(() => {
@@ -81,45 +134,33 @@ function Documents({
     fetchRequiredDocuments();
   }, [idMissionData?.state, formateTextInMarkDown, generateAiPrompt]);
 
-  const handleFileSelect = file => {
-    if (!file) return toast.error('Please select a file');
-    setForm(prev => ({ ...prev, [fileFieldName]: file }));
-  };
-  const updateFileDataHandler = () => {
-    if (!form?.[fileFieldName]) return toast.error('Please select a file');
-    dispatch(updateFileData({ name, file: form[fileFieldName] }));
-    dispatch(updateFileData({ name, file: form[fileFieldName] }));
-    handleNext({ data: { ...form, [fileFieldName]: form[fileFieldName] }, name: title, setLoadingNext });
-  };
-  const submitFileDataHandler = () => {
-    if (!form?.[fileFieldName]) return toast.error('Please select a file');
-    dispatch(updateFileData({ name, file: form[fileFieldName] }));
-    handleSubmit({ data: { [fileFieldName]: form[fileFieldName] }, name: title, setLoadingNext });
-  };
-
   useEffect(() => {
     if (fields && fields.length > 0) {
       const initialForm = {};
       fields.forEach(field => {
-        if (field.type === 'file') {
-          setFileFieldName(field.name);
-          initialForm[field?.name] = reduxData.file ? reduxData.file || '' : '';
-        } else {
-          const myRedux = formData?.[title];
-          initialForm[field?.name] = myRedux?.[field?.name] || '';
-        }
+        console.log('fileds.name', field?.name);
+        if (field.type === 'file') setFileFieldName(field?.name);
+        initialForm[field?.name] = reduxData?.[field?.name] ? reduxData?.[field?.name] || '' : '';
       });
       setForm(initialForm);
     }
-  }, [fields, formData, name, reduxData, title]);
+  }, [fields, name, reduxData, title]);
 
   useEffect(() => {
-    if (form?.article_of_incorporation_urls) {
-      setUrls(form?.article_of_incorporation_urls?.split(',') || []);
-    } else {
-      setUrls([]);
-    }
+    if (form?.article_of_incorporation_urls) setUrls(form?.article_of_incorporation_urls?.split(',') || []);
+    else setUrls([]);
   }, [form?.article_of_incorporation_urls]);
+
+  useEffect(() => {
+    const oldFileData = form?.[fileFieldName];
+
+    console.log('oldFilsdfsadfsadfsafdsadfasdfeData', oldFileData);
+    if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl)) {
+      setIsAllRequiredFilled(false);
+    } else {
+      setIsAllRequiredFilled(true);
+    }
+  }, [file, fileFieldName, form, urls]);
 
   return (
     <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
@@ -144,7 +185,6 @@ function Documents({
             />
           </Modal>
         )}
-
         {/* Show required documents section */}
         {showRequiredDocs && (
           <div className="mb-6 rounded-lg bg-blue-50 p-4">
@@ -179,7 +219,6 @@ function Documents({
             )}
           </div>
         )}
-
         {/* Custom AI help section */}
         {!showRequiredDocs && (
           <div className="mb-4 flex justify-end">
@@ -221,7 +260,7 @@ function Documents({
                     <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
                   </div>
                 )}
-                <FileUploader label={field?.label} file={form[fileFieldName]} onFileSelect={handleFileSelect} />
+                <FileUploader label={field?.label} file={file} onFileSelect={setFile} />
               </div>
             );
           } else {
@@ -263,16 +302,15 @@ function Documents({
         </div>
       )}
       <div className="mt-4">{isSignature && <SignatureBox inSection={true} signUrl={signUrl} sectionId={_id} />}</div>
-
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
             <Button
-              disabled={loadingNext || (isSignature && !signUrl)}
-              className={`${loadingNext || (isSignature && !signUrl && 'pinter-events-none cursor-not-allowed opacity-20')}`}
-              label={'Next'}
+              disabled={loadingNext || !isAllRequiredFilled}
+              className={`${(loadingNext || !isAllRequiredFilled) && 'pinter-events-none cursor-not-allowed opacity-20'}`}
+              label={isAllRequiredFilled ? 'Next' : 'Some fields are missing'}
               onClick={updateFileDataHandler}
             />
           ) : (

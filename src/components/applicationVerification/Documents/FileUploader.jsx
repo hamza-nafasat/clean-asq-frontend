@@ -9,18 +9,14 @@ const FileUploader = ({ label = '', accept = '.pdf,image/*,.csv', onFileSelect =
   const inputRef = useRef(null);
 
   const isCSV = file => file.name.toLowerCase().endsWith('.csv');
-
   const handleFile = file => {
     const fileType = file.type;
-
     if (!fileType.includes('image') && !fileType.includes('pdf') && !isCSV(file)) {
       alert('Only PDF, image, or CSV files are allowed.');
       return;
     }
-
     setFileName(file.name);
     onFileSelect(file);
-
     if (fileType.includes('image')) {
       const reader = new FileReader();
       reader.onloadend = () => setPreviewUrl(reader.result);
