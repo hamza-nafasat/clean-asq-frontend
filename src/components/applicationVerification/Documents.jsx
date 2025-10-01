@@ -1,8 +1,8 @@
 import { useFormateTextInMarkDownMutation, useUpdateFormSectionMutation } from '@/redux/apis/formApis';
-import { updateFileData } from '@/redux/slices/formSlice';
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
 import DOMPurify from 'dompurify';
-import { useCallback, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import SignatureBox from '../shared/SignatureBox';
 import Button from '../shared/small/Button';
@@ -11,7 +11,6 @@ import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectio
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 import FileUploader from './Documents/FileUploader';
-import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
 
 function Documents({
   _id,
@@ -33,7 +32,6 @@ function Documents({
 }) {
   const { user, idMissionData } = useSelector(state => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
-  const dispatch = useDispatch();
   const [file, setFile] = useState(null);
   const [fileFieldName, setFileFieldName] = useState('');
   const [loadingNext, setLoadingNext] = useState(false);
@@ -46,7 +44,11 @@ function Documents({
   const [showRequiredDocs, setShowRequiredDocs] = useState(true);
   const [urls, setUrls] = useState([]);
   const [aiPromptModal, setAiPromptModal] = useState(false);
-  const [isAllRequiredFilled, setIsAllRequiredFilled] = useState(false);
+
+  const isAllRequiredFilled = useMemo(() => {
+    const oldFileData = form?.[fileFieldName];
+    return !!(file || urls.length || (oldFileData?.publicId && oldFileData?.secureUrl));
+  }, [file, fileFieldName, form, urls]);
 
   // Generate the AI prompt
   const generateAiPrompt = useCallback(() => {
@@ -56,30 +58,37 @@ function Documents({
     // return `how do I find online images/copies of the articles of incorporation or organization for ${companyName} in ${state} via the state's entity search website?`;
     return prompt?.replace('${companyName}', companyName).replace('${state}', state);
   }, [idMissionData?.companyTitle, idMissionData?.state, step?.aiCustomizablePrompt]);
-
   const updateFileDataHandler = async () => {
-    if (!fileFieldName) return toast.error('Please refresh the page once and try again');
-    const oldFileData = form?.[fileFieldName];
-    // check something exist urls or oldFile
-    if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl)) {
-      return toast.error('Please select a file or Enter a URL');
-    }
-    // if old file exist but user want to add new file
-    if (file && oldFileData?.publicId) {
-      const deletedfile = await deleteImageFromCloudinary(oldFileData?.publicId, oldFileData?.resource_type);
-      if (!deletedfile) return toast.error('File Not Deleted Please Try Again');
-      if (file) {
-        const result = await uploadImageOnCloudinary(file);
-        if (!result.publicId || !result.secureUrl) return toast.error('File Not Uploaded Please Try Again');
-        handleNext({ data: { ...form, [fileFieldName]: result }, name: title, setLoadingNext });
+    try {
+      setLoadingNext(true);
+      if (!fileFieldName) return toast.error('Please refresh the page once and try again');
+      const oldFileData = form?.[fileFieldName];
+      // check something exist urls or oldFile
+      if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl)) {
+        return toast.error('Please select a file or Enter a URL');
       }
-    } else if (file) {
-      const result = await uploadImageOnCloudinary(file);
-      if (!result.publicId || !result.secureUrl) return toast.error('Something went wrong while uploading image');
-      handleNext({ data: { ...form, [fileFieldName]: result }, name: title, setLoadingNext });
-    } else {
-      // if user only want to add urls
-      handleNext({ data: { ...form }, name: title, setLoadingNext });
+      // if old file exist but user want to add new file
+      if (file && oldFileData?.publicId) {
+        const deletedfile = await deleteImageFromCloudinary(oldFileData?.publicId, oldFileData?.resource_type);
+        if (!deletedfile) return toast.error('File Not Deleted Please Try Again');
+        if (file) {
+          const result = await uploadImageOnCloudinary(file);
+          if (!result.publicId || !result.secureUrl) return toast.error('File Not Uploaded Please Try Again');
+          handleNext({ data: { ...form, [fileFieldName]: result }, name: title, setLoadingNext });
+        }
+      } else if (file) {
+        const result = await uploadImageOnCloudinary(file);
+        if (!result.publicId || !result.secureUrl) return toast.error('Something went wrong while uploading image');
+        handleNext({ data: { ...form, [fileFieldName]: result }, name: title, setLoadingNext });
+      } else {
+        // if user only want to add urls
+        handleNext({ data: { ...form }, name: title, setLoadingNext });
+      }
+      setLoadingNext(false);
+    } catch (error) {
+      console.log('error while uploading image', error);
+      toast.error('Something went wrong while uploading image');
+      setLoadingNext(false);
     }
   };
   const submitFileDataHandler = async () => {
@@ -150,17 +159,6 @@ function Documents({
     if (form?.article_of_incorporation_urls) setUrls(form?.article_of_incorporation_urls?.split(',') || []);
     else setUrls([]);
   }, [form?.article_of_incorporation_urls]);
-
-  useEffect(() => {
-    const oldFileData = form?.[fileFieldName];
-
-    console.log('oldFilsdfsadfsadfsafdsadfasdfeData', oldFileData);
-    if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl)) {
-      setIsAllRequiredFilled(false);
-    } else {
-      setIsAllRequiredFilled(true);
-    }
-  }, [file, fileFieldName, form, urls]);
 
   return (
     <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">

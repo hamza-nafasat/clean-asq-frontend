@@ -125,7 +125,6 @@ export default function SingleApplication() {
       return c ? c.long_name : '';
     };
 
-    console.log('all components are', components);
     const findStreetNumber = getComp('street_number');
     const findStreetAddress = getComp('sublocality') || getComp('route') || getComp('locality');
     const combineStreetAddress = findStreetNumber ? `${findStreetNumber} ${findStreetAddress}` : findStreetAddress;
