@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 
-export default function SignatureBox({ onSave, signUrl, className = '' }) {
+export default function SignatureBox({ onSave, signUrl, oldSignatureUrl, className = '' }) {
   const [mode, setMode] = useState('draw');
   const [typedSignature, setTypedSignature] = useState('');
   const [preview, setPreview] = useState(signUrl || null);
@@ -15,7 +15,7 @@ export default function SignatureBox({ onSave, signUrl, className = '' }) {
   const historyRef = useRef([]);
   const historyPos = useRef(-1);
 
-  // Setup canvas
+  // ---------- Setup Canvas ----------
   const setupCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -28,7 +28,7 @@ export default function SignatureBox({ onSave, signUrl, className = '' }) {
     canvas.style.height = `${rect.height}px`;
 
     const ctx = canvas.getContext('2d');
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // reset
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(ratio, ratio);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -36,6 +36,7 @@ export default function SignatureBox({ onSave, signUrl, className = '' }) {
     ctx.strokeStyle = color;
     ctxRef.current = ctx;
 
+    // Draw old preview if available
     if (preview) {
       const img = new Image();
       img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
@@ -51,7 +52,7 @@ export default function SignatureBox({ onSave, signUrl, className = '' }) {
     return () => window.removeEventListener('resize', setupCanvas);
   }, [setupCanvas, mode]);
 
-  // Update style when color/width changes
+  // ---------- Update stroke style ----------
   useEffect(() => {
     if (ctxRef.current) {
       ctxRef.current.lineWidth = lineWidth;
@@ -59,6 +60,7 @@ export default function SignatureBox({ onSave, signUrl, className = '' }) {
     }
   }, [lineWidth, color]);
 
+  // ---------- Draw Handlers ----------
   const pointerPos = e => {
     const rect = canvasRef.current.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -66,19 +68,15 @@ export default function SignatureBox({ onSave, signUrl, className = '' }) {
 
   const startDraw = e => {
     if (mode !== 'draw') return;
-    e.preventDefault();
     drawing.current = true;
     lastPoint.current = pointerPos(e);
     try {
       canvasRef.current.setPointerCapture(e.pointerId);
-    } catch {
-      // do nothing
-    }
+    } catch {}
   };
 
   const draw = e => {
     if (!drawing.current) return;
-    e.preventDefault();
     const ctx = ctxRef.current;
     const p = pointerPos(e);
     ctx.beginPath();
@@ -93,19 +91,51 @@ export default function SignatureBox({ onSave, signUrl, className = '' }) {
     drawing.current = false;
     try {
       canvasRef.current.releasePointerCapture(e.pointerId);
-    } catch {
-      // do nothing
-    }
+    } catch {}
     historyRef.current = historyRef.current.slice(0, historyPos.current + 1);
     historyRef.current.push(canvasRef.current.toDataURL());
     historyPos.current = historyRef.current.length - 1;
   };
 
+  // ---------- Helpers ----------
+  const exportCanvas = useCallback(() => {
+    return canvasRef.current?.toDataURL('image/png') || null;
+  }, []);
+  const generateSignatureData = useCallback(() => {
+    if (mode === 'type') {
+      if (!typedSignature.trim()) return null;
+      const canvas = document.createElement('canvas');
+      canvas.width = 1600;
+      canvas.height = 400;
+      const ctx = canvas.getContext('2d');
+      ctx.font = '200px "Dancing Script", cursive';
+      ctx.fillStyle = color;
+      ctx.textBaseline = 'middle';
+      const text = typedSignature;
+      const x = (canvas.width - ctx.measureText(text).width) / 2;
+      ctx.fillText(text, x, canvas.height / 2);
+      return canvas.toDataURL('image/png');
+    }
+    // Always get latest drawn canvas
+    return exportCanvas();
+  }, [mode, typedSignature, color, exportCanvas]);
+
+  const dataURLtoFile = (dataUrl, filename) => {
+    const arr = dataUrl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) u8arr[n] = bstr.charCodeAt(n);
+    return new File([u8arr], filename, { type: mime });
+  };
+
+  // ---------- Button Handlers ----------
   const handleClear = () => {
     const rect = canvasRef.current.getBoundingClientRect();
     ctxRef.current.clearRect(0, 0, rect.width, rect.height);
-    setPreview(null);
     setTypedSignature('');
+    setPreview(null); // fallback
   };
 
   const undo = () => {
@@ -134,79 +164,68 @@ export default function SignatureBox({ onSave, signUrl, className = '' }) {
     img.src = url;
   };
 
-  const exportCanvas = useCallback(() => {
-    return canvasRef.current?.toDataURL('image/png') || null;
-  }, []);
-
-  // Generate signature image (same for draw/type)
-  const generateSignatureData = useCallback(() => {
-    if (mode === 'type') {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1600;
-      canvas.height = 400;
-      const ctx = canvas.getContext('2d');
-      ctx.font = '140px "Dancing Script", cursive';
-      ctx.fillStyle = color;
-      ctx.textBaseline = 'middle';
-      const text = typedSignature || '—';
-      const x = (canvas.width - ctx.measureText(text).width) / 2;
-      ctx.fillText(text, x, canvas.height / 2);
-      return canvas.toDataURL('image/png');
-    } else {
-      return exportCanvas();
-    }
-  }, [mode, typedSignature, color, exportCanvas]);
-
-  // Save without showing preview
   const handleSave = async () => {
-    setIsSaving(true);
-    const dataUrl = generateSignatureData();
-    if (dataUrl) onSave?.(dataUrl);
-    setIsSaving(false);
+    try {
+      setIsSaving(true);
+      const dataUrl = generateSignatureData();
+      if (dataUrl) {
+        const file = dataURLtoFile(dataUrl, 'signature.png');
+        const result = onSave?.(file);
+        if (result !== false) setPreview(dataUrl);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  // Show preview
   const handlePreview = () => {
     const dataUrl = generateSignatureData();
-    if (dataUrl) setPreview(dataUrl);
+    if (dataUrl) {
+      setPreview(dataUrl); // always update with new
+    } else {
+      setPreview(null); // fallback only if nothing
+    }
   };
-
   const handleDownload = () => {
     const url = preview || exportCanvas();
     if (!url) return;
     const a = document.createElement('a');
     a.href = url;
     a.download = 'signature.png';
+    document.body.appendChild(a); // ✅ ensure works on all browsers
     a.click();
+    document.body.removeChild(a);
   };
 
+  // ---------- UI ----------
   const buttonClasses =
     'cursor-pointer rounded px-4 py-2 text-sm font-medium transition-transform duration-200 hover:scale-105 active:scale-95';
 
   return (
     <div className={`w-full rounded-2xl bg-white p-6 shadow-xl ${className}`}>
       <h3 className="text-lg font-semibold text-gray-900">Signature Pad</h3>
+
+      {/* Mode Switch */}
       <div className="mt-4 flex gap-3">
         <button
           type="button"
           onClick={() => setMode('draw')}
-          className={`${buttonClasses} flex-1 ${
-            mode === 'draw' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'
-          }`}
+          className={`${buttonClasses} flex-1 ${mode === 'draw' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'}`}
         >
           ✍️ Draw
         </button>
         <button
           type="button"
           onClick={() => setMode('type')}
-          className={`${buttonClasses} flex-1 ${
-            mode === 'type' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'
-          }`}
+          className={`${buttonClasses} flex-1 ${mode === 'type' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'}`}
         >
           ⌨️ Type
         </button>
       </div>
 
+      {/* Drawing / Typing Area */}
       <div className="mt-4 h-56 rounded-md border bg-gray-50">
         {mode === 'draw' ? (
           <canvas
@@ -229,6 +248,7 @@ export default function SignatureBox({ onSave, signUrl, className = '' }) {
         )}
       </div>
 
+      {/* Controls */}
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" onClick={handleSave} className={`${buttonClasses} bg-indigo-600 text-white`}>
           {isSaving ? 'Saving...' : 'Save'}
@@ -264,10 +284,17 @@ export default function SignatureBox({ onSave, signUrl, className = '' }) {
         />
       </div>
 
+      {/* Preview */}
       {preview && (
         <div className="mt-4 rounded-md border bg-white p-2">
           <p className="text-sm text-gray-600">Preview:</p>
           <img src={preview} alt="Signature" className="mt-2 max-h-28 object-contain" />
+        </div>
+      )}
+      {!preview && oldSignatureUrl && (
+        <div className="mt-4 rounded-md border bg-white p-2">
+          <p className="text-sm text-gray-600">Preview:</p>
+          <img src={oldSignatureUrl} alt="Signature" className="mt-2 max-h-28 object-contain" />
         </div>
       )}
     </div>

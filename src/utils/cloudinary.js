@@ -5,7 +5,7 @@ const uploadImageOnCloudinary = async file => {
   try {
     if (!file) return toast.error('Please select a file');
     const isCSV = file.type === 'text/csv' || file.name.endsWith('.csv');
-    const resourceType = isCSV ? 'raw' : 'auto';
+    const resourceType = isCSV ? 'raw' : 'image';
     const formData = new FormData();
     // 1. Get signature + timestamp from backend
     const url = `${getEnv('SERVER_URL')}/api/form/get-cloudinary-signature`;

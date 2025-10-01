@@ -16,6 +16,7 @@ import {
 import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
 import { userExist, userNotExist } from '@/redux/slices/authSlice';
 import { addSavedFormData, updateEmailVerified, updateFormState } from '@/redux/slices/formSlice';
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
 import { collectClientDetails } from '@/utils/userDetails';
 import { Autocomplete } from '@react-google-maps/api';
 import { unwrapResult } from '@reduxjs/toolkit';
@@ -42,7 +43,6 @@ export default function SingleApplication() {
   const [isIdMissionProcessing, setIsIdMissionProcessing] = useState(false);
   const [idMissionVerified, setIdMissionVerified] = useState(false);
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
-  const [signature, setSignature] = useState(null);
 
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const [getIdMissionSession] = useGetIdMissionSessionMutation();
@@ -70,15 +70,26 @@ export default function SingleApplication() {
     dateOfBirth: '',
     zipCode: '',
     country: '',
+    signature: { secureUrl: '', publicId: '', resource_type: '' },
   });
 
-  const handleSignature = signature => {
-    setSignature(signature.value);
-    setIdMissionVerifiedData(prev => ({ ...prev, signature: signature.value }));
-    if (signature.action === 'save') toast.success('Signature saved successfully');
-    // if (signature.action === 'clear') toast.success('Signature cleared successfully');
+  const handleSignature = async file => {
+    try {
+      if (!file) return toast.error('Please add signature');
+      if (idMissionVerifiedData?.signature?.publicId || idMissionVerifiedData?.signature?.secureUrl) {
+        const result = await deleteImageFromCloudinary(
+          idMissionVerifiedData?.signature?.publicId,
+          idMissionVerifiedData?.signature?.resource_type
+        );
+      }
+      const { secureUrl, publicId, resource_type } = await uploadImageOnCloudinary(file);
+      if (!secureUrl || !publicId) return toast.error('Something went wrong while uploading image');
+      setIdMissionVerifiedData(prev => ({ ...prev, signature: { secureUrl, publicId, resource_type } }));
+    } catch (error) {
+      console.log('error while uploading image', error);
+      toast.error('Something went wrong while uploading image');
+    }
   };
-  // console.log('idMissionVerifiedData', idMissionVerifiedData);
 
   const onLoad = useCallback(autoC => {
     autoC.setFields(['address_components', 'formatted_address', 'geometry', 'place_id']);
@@ -162,26 +173,15 @@ export default function SingleApplication() {
   const submitIdMissionData = useCallback(
     async e => {
       e.preventDefault();
-      if (!signature) {
-        toast.error('Please do and save the signature');
-        return;
+      if (!idMissionVerifiedData?.signature?.publicId && !idMissionVerifiedData?.signature?.secureUrl) {
+        return toast.error('Please do and save the signature');
       }
       const action = await dispatch(updateFormState({ data: idMissionVerifiedData, name: 'idMission' }));
       unwrapResult(action);
-
       await saveInProgress({ data: idMissionVerifiedData, name: 'idMission' });
-
-      const formData = new FormData();
-      formData.append('file', signature); // signature = File (from input/canvas)
-      formData.append('submissionId', formId);
-      formData.append('isSignature', 'true');
-
-      const response = await submitFormArticleFile(formData).unwrap();
-      console.log('Upload success:', response);
-
       navigate(`/singleform/stepper/${formId}`);
     },
-    [dispatch, formId, idMissionVerifiedData, navigate, saveInProgress, signature, submitFormArticleFile]
+    [dispatch, formId, idMissionVerifiedData, navigate, saveInProgress]
   );
 
   const getQrAndWebLink = useCallback(async () => {
@@ -256,6 +256,7 @@ export default function SingleApplication() {
           state: formDataOfIdMission?.state || '',
           city: formDataOfIdMission?.city || '',
           address2: formDataOfIdMission?.address2 || '',
+          signature: formDataOfIdMission?.signature || '',
         });
         setIdMissionVerified(true);
         setOpenRedirectModal(true);
@@ -704,7 +705,11 @@ export default function SingleApplication() {
                   type="number"
                   className={'max-w-[400px]!'}
                 />
-                <SignatureBox className={'min-w-full'} onSave={handleSignature} />
+                <SignatureBox
+                  oldSignatureUrl={idMissionVerifiedData?.signature?.secureUrl}
+                  className={'min-w-full'}
+                  onSave={handleSignature}
+                />
               </form>
               <div className="flex w-full items-center justify-end">
                 <Button
