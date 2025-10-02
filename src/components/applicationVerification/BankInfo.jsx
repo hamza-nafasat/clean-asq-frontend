@@ -17,6 +17,8 @@ import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectio
 import { PencilIcon } from 'lucide-react';
 import { useGetBankLookupQuery } from '@/redux/apis/wiseApi';
 import SignatureBox from '../shared/SignatureBox';
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
+import { toast } from 'react-toastify';
 
 function BankInfo({
   name,
@@ -34,7 +36,6 @@ function BankInfo({
   saveInProgress,
   step,
   isSignature,
-  signUrl,
 }) {
   const { user } = useSelector(state => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
@@ -52,6 +53,43 @@ function BankInfo({
   const [error] = useState(null);
   const [bankModal, setBankModal] = useState(null);
 
+  const signatureUploadHandler = async file => {
+    if (!file) return toast.error('Please select a file');
+
+    if (file) {
+      const oldSign = form?.['signature'];
+      if (oldSign?.publicId) {
+        console.log('i am running');
+        const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
+        if (!result) return toast.error('File Not Deleted Please Try Again');
+      }
+      const res = await uploadImageOnCloudinary(file);
+      if (!res.publicId || !res.secureUrl || !res.resourceType) {
+        return toast.error('File Not Uploaded Please Try Again');
+      }
+      setForm(prev => ({ ...prev, signature: res }));
+    }
+  };
+
+  useEffect(() => {
+    if (data) {
+      if (Array.isArray(data.bankDetailsList) && data.bankDetailsList.length > 0) {
+        setBankModal(data.bankDetailsList[0]);
+      } else {
+        setBankModal({});
+      }
+    }
+  }, [data]);
+
+  useEffect(() => {
+    const isMatch =
+      form.bank_account_number &&
+      form.confirm_bank_account_number &&
+      form.bank_account_number === form.confirm_bank_account_number;
+
+    setAccMatch(isMatch);
+  }, [form.bank_account_number, form.confirm_bank_account_number]);
+
   useEffect(() => {
     if (fields && fields.length > 0) {
       const initialForm = {};
@@ -60,8 +98,21 @@ function BankInfo({
       });
       setForm(initialForm);
     }
-  }, [fields, name, reduxData]);
+    if (isSignature) {
+      const isSignatureExistingData = {};
+      if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
+      if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
+      if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
+      setForm(prev => ({
+        ...prev,
+        ['signature']: isSignatureExistingData?.publicId
+          ? isSignatureExistingData
+          : { publicId: '', secureUrl: '', resourceType: '' },
+      }));
+    }
+  }, [fields, isSignature, name, reduxData]);
 
+  // check all required fields filled
   useEffect(() => {
     const allFilled = requiredNames.every(name => {
       const val = form[name];
@@ -77,30 +128,18 @@ function BankInfo({
           )
         );
       if (typeof val === 'object') return Object.values(val).every(v => v?.toString().trim() !== '');
-
       return true;
     });
-    setIsAllRequiredFieldsFilled(allFilled);
-  }, [form, requiredNames]);
 
-  useEffect(() => {
-    if (data) {
-      if (Array.isArray(data.bankDetailsList) && data.bankDetailsList.length > 0) {
-        setBankModal(data.bankDetailsList[0]);
-      } else {
-        setBankModal({}); // empty modal to show "No bank found"
+    let isSignatureDone = true;
+    if (isSignature) {
+      let dataOfSign = form?.['signature'];
+      if (!dataOfSign?.publicId || !dataOfSign?.secureUrl || !dataOfSign?.resourceType) {
+        isSignatureDone = false;
       }
     }
-  }, [data]);
-
-  useEffect(() => {
-    const isMatch =
-      form.bank_account_number &&
-      form.confirm_bank_account_number &&
-      form.bank_account_number === form.confirm_bank_account_number;
-
-    setAccMatch(isMatch);
-  }, [form.bank_account_number, form.confirm_bank_account_number]);
+    setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
+  }, [form, isSignature, requiredNames]);
 
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
@@ -271,7 +310,11 @@ function BankInfo({
           );
         })}
 
-      <div className="mt-4">{isSignature && <SignatureBox inSection={true} signUrl={signUrl} sectionId={_id} />}</div>
+      <div className="mt-4">
+        {isSignature && (
+          <SignatureBox onSave={signatureUploadHandler} oldSignatureUrl={form?.signature?.secureUrl || ''} />
+        )}
+      </div>
 
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
@@ -279,13 +322,9 @@ function BankInfo({
           {currentStep < totalSteps - 1 ? (
             <Button
               onClick={() => handleNext({ data: form, name: title, setLoadingNext })}
-              className={`${(!isAllRequiredFieldsFilled || loadingNext || !accMatch || (isSignature && !signUrl)) && 'pointer-events-none cursor-not-allowed opacity-20'}`}
-              disabled={!isAllRequiredFieldsFilled || loadingNext || !accMatch || (isSignature && !signUrl)}
-              label={
-                !isAllRequiredFieldsFilled || loadingNext || !accMatch || (isSignature && !signUrl)
-                  ? 'Some Required Fields are Missing'
-                  : 'Next'
-              }
+              className={`${(!isAllRequiredFieldsFilled || loadingNext || !accMatch) && 'pointer-events-none cursor-not-allowed opacity-20'}`}
+              disabled={!isAllRequiredFieldsFilled || loadingNext || !accMatch}
+              label={!isAllRequiredFieldsFilled || !accMatch ? 'Some Required Fields are Missing' : 'Next'}
             />
           ) : (
             <Button

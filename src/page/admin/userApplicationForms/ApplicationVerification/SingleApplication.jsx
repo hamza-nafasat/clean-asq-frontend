@@ -7,12 +7,7 @@ import TextField from '@/components/shared/small/TextField';
 import { useBranding } from '@/hooks/BrandingContext';
 import { socket } from '@/main';
 import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from '@/redux/apis/authApis';
-import {
-  useGetSavedFormMutation,
-  useGetSingleFormQueryQuery,
-  useSaveFormInDraftMutation,
-  useSubmitFormArticleFileMutation,
-} from '@/redux/apis/formApis';
+import { useGetSavedFormMutation, useGetSingleFormQueryQuery, useSaveFormInDraftMutation } from '@/redux/apis/formApis';
 import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
 import { userExist, userNotExist } from '@/redux/slices/authSlice';
 import { addSavedFormData, updateEmailVerified, updateFormState } from '@/redux/slices/formSlice';
@@ -54,7 +49,6 @@ export default function SingleApplication() {
   const { formData } = useSelector(state => state?.form);
   const [saveFormInDraft] = useSaveFormInDraftMutation();
   const [openRedirectModal, setOpenRedirectModal] = useState(false);
-  const [submitFormArticleFile] = useSubmitFormArticleFileMutation();
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
     name: '',
     idNumber: '',
@@ -70,21 +64,21 @@ export default function SingleApplication() {
     dateOfBirth: '',
     zipCode: '',
     country: '',
-    signature: { secureUrl: '', publicId: '', resource_type: '' },
+    signature: { secureUrl: '', publicId: '', resourceType: '' },
   });
 
   const handleSignature = async file => {
     try {
       if (!file) return toast.error('Please add signature');
       if (idMissionVerifiedData?.signature?.publicId || idMissionVerifiedData?.signature?.secureUrl) {
-        const result = await deleteImageFromCloudinary(
+        await deleteImageFromCloudinary(
           idMissionVerifiedData?.signature?.publicId,
-          idMissionVerifiedData?.signature?.resource_type
+          idMissionVerifiedData?.signature?.resourceType
         );
       }
-      const { secureUrl, publicId, resource_type } = await uploadImageOnCloudinary(file);
+      const { secureUrl, publicId, resourceType } = await uploadImageOnCloudinary(file);
       if (!secureUrl || !publicId) return toast.error('Something went wrong while uploading image');
-      setIdMissionVerifiedData(prev => ({ ...prev, signature: { secureUrl, publicId, resource_type } }));
+      setIdMissionVerifiedData(prev => ({ ...prev, signature: { secureUrl, publicId, resourceType } }));
     } catch (error) {
       console.log('error while uploading image', error);
       toast.error('Something went wrong while uploading image');

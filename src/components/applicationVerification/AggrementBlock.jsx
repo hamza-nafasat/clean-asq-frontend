@@ -1,6 +1,6 @@
 import { FIELD_TYPES } from '@/data/constants';
 import { useEffect, useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import SignatureBox from '../shared/SignatureBox';
 import Button from '../shared/small/Button';
 import {
@@ -14,6 +14,10 @@ import {
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
+import { toast } from 'react-toastify';
+import { updateFormState } from '@/redux/slices/formSlice';
+import { unwrapResult } from '@reduxjs/toolkit';
 
 function AggrementBlock({
   fields,
@@ -29,8 +33,9 @@ function AggrementBlock({
   saveInProgress,
   step,
   isSignature,
-  signUrl,
+  reduxData,
 }) {
+  const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const [form, setForm] = useState({});
@@ -39,15 +44,47 @@ function AggrementBlock({
   const [customizeModal, setCustomizeModal] = useState(false);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
 
+  console.log('redux data', reduxData);
+
+  const signatureUploadHandler = async file => {
+    if (!file) return toast.error('Please select a file');
+    if (file) {
+      const oldSign = form?.['signature'];
+      if (oldSign?.publicId) {
+        const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
+        if (!result) return toast.error('File Not Deleted Please Try Again');
+      }
+      const res = await uploadImageOnCloudinary(file);
+      if (!res.publicId || !res.secureUrl || !res.resourceType)
+        return toast.error('File Not Uploaded Please Try Again');
+      const action = await dispatch(updateFormState({ data: { signature: res }, name: title }));
+      unwrapResult(action);
+      setForm(prev => ({ ...prev, signature: res }));
+      await saveInProgress({ data: { signature: res }, name: title });
+    }
+  };
+
   useEffect(() => {
     const formFields = {};
     if (fields?.length) {
       fields?.forEach(field => {
-        formFields[field?.name] = '';
+        formFields[field?.name] = reduxData?.[field?.name] || '';
       });
       setForm(formFields);
     }
-  }, [fields]);
+    if (isSignature) {
+      const isSignatureExistingData = {};
+      if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
+      if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
+      if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
+      setForm(prev => ({
+        ...prev,
+        ['signature']: isSignatureExistingData?.publicId
+          ? isSignatureExistingData
+          : { publicId: '', secureUrl: '', resourceType: '' },
+      }));
+    }
+  }, [fields, isSignature, reduxData]);
 
   useEffect(() => {
     const allFilled = requiredNames.every(name => {
@@ -67,8 +104,15 @@ function AggrementBlock({
 
       return true;
     });
-    setIsAllRequiredFieldsFilled(allFilled);
-  }, [form, requiredNames]);
+    let isSignatureDone = true;
+    if (isSignature) {
+      let dataOfSign = form?.['signature'];
+      if (!dataOfSign?.publicId || !dataOfSign?.secureUrl || !dataOfSign?.resourceType) {
+        isSignatureDone = false;
+      }
+    }
+    setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
+  }, [form, isSignature, requiredNames]);
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
@@ -97,7 +141,7 @@ function AggrementBlock({
           />
         </div>
       )}
-      <div className="mt-6 flex flex-col gap-4">
+      {/* <div className="mt-6 flex flex-col gap-4">
         {fields?.map((field, index) => {
           if (field.name === 'main_owner_own_25_percent_or_more' || field.type === 'block') return null;
           if (field.type === FIELD_TYPES.SELECT) {
@@ -153,8 +197,12 @@ function AggrementBlock({
             </div>
           );
         })}
+      </div> */}
+      <div className="mt-4">
+        {isSignature && (
+          <SignatureBox onSave={signatureUploadHandler} oldSignatureUrl={form?.signature?.secureUrl || ''} />
+        )}
       </div>
-      <div className="mt-4">{isSignature && <SignatureBox inSection={true} signUrl={signUrl} sectionId={_id} />}</div>
 
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
@@ -168,8 +216,8 @@ function AggrementBlock({
             />
           ) : (
             <Button
-              disabled={!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)}
-              className={`${!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl) ? 'pointer-events-none cursor-not-allowed opacity-20' : 'opacity-100'}`}
+              disabled={!isAllRequiredFieldsFilled || loadingNext}
+              className={`${!isAllRequiredFieldsFilled || loadingNext ? 'pointer-events-none cursor-not-allowed opacity-20' : 'opacity-100'}`}
               label={!isAllRequiredFieldsFilled ? 'Some required fields are missing' : 'Submit'}
               onClick={() => handleSubmit({ data: form, name: title, setLoadingNext })}
             />
@@ -180,7 +228,7 @@ function AggrementBlock({
         <Modal onClose={() => setCustomizeModal(false)}>
           <CustomizationFieldsModal
             sectionId={_id}
-            fields={fields}
+            fields={[]}
             formRefetch={formRefetch}
             onClose={() => setCustomizeModal(false)}
             isSignature={isSignature}

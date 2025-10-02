@@ -121,7 +121,6 @@ export default function ApplicationForm() {
           fields: step?.fields ?? [],
           blocks: step?.blocks ?? [],
           isSignature: step?.isSignature,
-          signUrl: step?.signature,
           reduxData: sectionDataFromRedux,
           currentStep,
           totalSteps: form?.data?.sections?.length,

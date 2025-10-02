@@ -15,6 +15,8 @@ import { useSelector } from 'react-redux';
 import { PencilIcon } from 'lucide-react';
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 import SignatureBox from '../shared/SignatureBox';
+import { toast } from 'react-toastify';
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
 
 function CustomSection({
   fields,
@@ -31,7 +33,6 @@ function CustomSection({
   step,
   reduxData,
   isSignature,
-  signUrl,
 }) {
   const { user } = useSelector(state => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
@@ -40,7 +41,23 @@ function CustomSection({
   const [loadingNext, setLoadingNext] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
-  console.log('bank information', form);
+
+  const signatureUploadHandler = async file => {
+    if (!file) return toast.error('Please select a file');
+    if (file) {
+      const oldSign = form?.['signature'];
+      if (oldSign?.publicId) {
+        console.log('i am running');
+        const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
+        if (!result) return toast.error('File Not Deleted Please Try Again');
+      }
+      const res = await uploadImageOnCloudinary(file);
+      if (!res.publicId || !res.secureUrl || !res.resourceType) {
+        return toast.error('File Not Uploaded Please Try Again');
+      }
+      setForm(prev => ({ ...prev, signature: res }));
+    }
+  };
 
   useEffect(() => {
     const formFields = {};
@@ -50,7 +67,19 @@ function CustomSection({
       });
       setForm(formFields);
     }
-  }, [fields, reduxData]);
+    if (isSignature) {
+      const isSignatureExistingData = {};
+      if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
+      if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
+      if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
+      setForm(prev => ({
+        ...prev,
+        ['signature']: isSignatureExistingData?.publicId
+          ? isSignatureExistingData
+          : { publicId: '', secureUrl: '', resourceType: '' },
+      }));
+    }
+  }, [fields, isSignature, reduxData]);
 
   useEffect(() => {
     const allFilled = requiredNames.every(name => {
@@ -70,8 +99,16 @@ function CustomSection({
 
       return true;
     });
-    setIsAllRequiredFieldsFilled(allFilled);
-  }, [form, requiredNames]);
+
+    let isSignatureDone = true;
+    if (isSignature) {
+      let dataOfSign = form?.['signature'];
+      if (!dataOfSign?.publicId || !dataOfSign?.secureUrl || !dataOfSign?.resourceType) {
+        isSignatureDone = false;
+      }
+    }
+    setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
+  }, [form, isSignature, requiredNames]);
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
@@ -157,7 +194,11 @@ function CustomSection({
           );
         })}
       </div>
-      <div className="mt-4">{isSignature && <SignatureBox inSection={true} signUrl={signUrl} sectionId={_id} />}</div>
+      <div className="mt-4">
+        {isSignature && (
+          <SignatureBox onSave={signatureUploadHandler} oldSignatureUrl={form?.signature?.secureUrl || ''} />
+        )}
+      </div>
 
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">

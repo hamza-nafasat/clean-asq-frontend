@@ -28,7 +28,6 @@ function Documents({
   // saveInProgress,
   step,
   isSignature,
-  signUrl,
 }) {
   const { user, idMissionData } = useSelector(state => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
@@ -47,9 +46,27 @@ function Documents({
 
   const isAllRequiredFilled = useMemo(() => {
     const oldFileData = form?.[fileFieldName];
-    return !!(file || urls.length || (oldFileData?.publicId && oldFileData?.secureUrl));
-  }, [file, fileFieldName, form, urls]);
+    const sign = isSignature ? form?.['signature']?.publicId : true;
+    return !!((file || urls.length || (oldFileData?.publicId && oldFileData?.secureUrl)) && sign);
+  }, [file, fileFieldName, form, isSignature, urls.length]);
 
+  const signatureUploadHandler = async file => {
+    if (!file) return toast.error('Please select a file');
+
+    if (file) {
+      const oldSign = form?.['signature'];
+      if (oldSign?.publicId) {
+        console.log('i am running');
+        const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
+        if (!result) return toast.error('File Not Deleted Please Try Again');
+      }
+      const res = await uploadImageOnCloudinary(file);
+      if (!res.publicId || !res.secureUrl || !res.resourceType) {
+        return toast.error('File Not Uploaded Please Try Again');
+      }
+      setForm(prev => ({ ...prev, signature: res }));
+    }
+  };
   // Generate the AI prompt
   const generateAiPrompt = useCallback(() => {
     const companyName = idMissionData?.companyTitle || 'your company';
@@ -58,6 +75,7 @@ function Documents({
     // return `how do I find online images/copies of the articles of incorporation or organization for ${companyName} in ${state} via the state's entity search website?`;
     return prompt?.replace('${companyName}', companyName).replace('${state}', state);
   }, [idMissionData?.companyTitle, idMissionData?.state, step?.aiCustomizablePrompt]);
+  // handle next and submit functions
   const updateFileDataHandler = async () => {
     try {
       setLoadingNext(true);
@@ -67,21 +85,16 @@ function Documents({
       if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl)) {
         return toast.error('Please select a file or Enter a URL');
       }
-      // if old file exist but user want to add new file
-      if (file && oldFileData?.publicId) {
-        const deletedfile = await deleteImageFromCloudinary(oldFileData?.publicId, oldFileData?.resource_type);
-        if (!deletedfile) return toast.error('File Not Deleted Please Try Again');
-        if (file) {
-          const result = await uploadImageOnCloudinary(file);
-          if (!result.publicId || !result.secureUrl) return toast.error('File Not Uploaded Please Try Again');
-          handleNext({ data: { ...form, [fileFieldName]: result }, name: title, setLoadingNext });
+      //  if file or if urls
+      if (file) {
+        if (oldFileData?.publicId) {
+          const deletedfile = await deleteImageFromCloudinary(oldFileData?.publicId, oldFileData?.resourceType);
+          if (!deletedfile) return toast.error('File Not Deleted Please Try Again');
         }
-      } else if (file) {
         const result = await uploadImageOnCloudinary(file);
-        if (!result.publicId || !result.secureUrl) return toast.error('Something went wrong while uploading image');
+        if (!result.publicId || !result.secureUrl) return toast.error('File Not Uploaded Please Try Again');
         handleNext({ data: { ...form, [fileFieldName]: result }, name: title, setLoadingNext });
       } else {
-        // if user only want to add urls
         handleNext({ data: { ...form }, name: title, setLoadingNext });
       }
       setLoadingNext(false);
@@ -98,21 +111,16 @@ function Documents({
     if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl)) {
       return toast.error('Please select a file or Enter a URL');
     }
-    // if old file exist but user want to add new file
-    if (file && oldFileData?.publicId) {
-      const deletedfile = await deleteImageFromCloudinary(oldFileData?.publicId, oldFileData?.resource_type);
-      if (!deletedfile) return toast.error('File Not Deleted Please Try Again');
-      if (file) {
-        const result = await uploadImageOnCloudinary(file);
-        if (!result.publicId || !result.secureUrl) return toast.error('File Not Uploaded Please Try Again');
-        handleSubmit({ data: { ...form, [fileFieldName]: result }, name: title, setLoadingNext });
+    // if file or if urls
+    if (file) {
+      if (oldFileData?.publicId) {
+        const deletedfile = await deleteImageFromCloudinary(oldFileData?.publicId, oldFileData?.resourceType);
+        if (!deletedfile) return toast.error('File Not Deleted Please Try Again');
       }
-    } else if (file) {
       const result = await uploadImageOnCloudinary(file);
-      if (!result.publicId || !result.secureUrl) return toast.error('Something went wrong while uploading image');
+      if (!result.publicId || !result.secureUrl) return toast.error('File Not Uploaded Please Try Again');
       handleSubmit({ data: { ...form, [fileFieldName]: result }, name: title, setLoadingNext });
     } else {
-      // if user only want to add urls
       handleSubmit({ data: { ...form }, name: title, setLoadingNext });
     }
   };
@@ -153,7 +161,19 @@ function Documents({
       });
       setForm(initialForm);
     }
-  }, [fields, name, reduxData, title]);
+    if (isSignature) {
+      const isSignatureExistingData = {};
+      if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
+      if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
+      if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
+      setForm(prev => ({
+        ...prev,
+        ['signature']: isSignatureExistingData?.publicId
+          ? isSignatureExistingData
+          : { publicId: '', secureUrl: '', resourceType: '' },
+      }));
+    }
+  }, [fields, isSignature, name, reduxData, title]);
 
   useEffect(() => {
     if (form?.article_of_incorporation_urls) setUrls(form?.article_of_incorporation_urls?.split(',') || []);
@@ -299,7 +319,11 @@ function Documents({
           </div>
         </div>
       )}
-      <div className="mt-4">{isSignature && <SignatureBox inSection={true} signUrl={signUrl} sectionId={_id} />}</div>
+      <div className="mt-4">
+        {isSignature && (
+          <SignatureBox onSave={signatureUploadHandler} oldSignatureUrl={form?.signature?.secureUrl || ''} />
+        )}
+      </div>
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">

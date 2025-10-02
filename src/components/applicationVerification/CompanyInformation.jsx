@@ -19,6 +19,7 @@ import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal.jsx
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal.jsx';
 import SignatureBox from '../shared/SignatureBox.jsx';
 import TextField from '../shared/small/TextField.jsx';
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary.js';
 
 function CompanyInformation({
   formRefetch,
@@ -36,7 +37,6 @@ function CompanyInformation({
   saveInProgress,
   step,
   isSignature,
-  signUrl,
 }) {
   const { user } = useSelector(state => state.auth);
   const { formData } = useSelector(state => state?.form);
@@ -59,14 +59,25 @@ function CompanyInformation({
   const [strategyKeys, setStrategyKeys] = useState([]);
   const { data: strategyKeysData } = useGetAllSearchStrategiesQuery();
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
-
-  useEffect(() => {
-    if (strategyKeysData?.data) {
-      setStrategyKeys(strategyKeysData?.data?.map(item => item?.searchObjectKey));
-    }
-  }, [strategyKeysData]);
-
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
+
+  const signatureUploadHandler = async file => {
+    if (!file) return toast.error('Please select a file');
+
+    if (file) {
+      const oldSign = form?.['signature'];
+      if (oldSign?.publicId) {
+        console.log('i am running');
+        const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
+        if (!result) return toast.error('File Not Deleted Please Try Again');
+      }
+      const res = await uploadImageOnCloudinary(file);
+      if (!res.publicId || !res.secureUrl || !res.resourceType) {
+        return toast.error('File Not Uploaded Please Try Again');
+      }
+      setForm(prev => ({ ...prev, signature: res }));
+    }
+  };
 
   const findNaicsHandler = async () => {
     const description = form?.['companydescription'];
@@ -129,14 +140,17 @@ function CompanyInformation({
     setShowSuggestions(false);
   };
 
+  useEffect(() => {
+    if (strategyKeysData?.data) {
+      setStrategyKeys(strategyKeysData?.data?.map(item => item?.searchObjectKey));
+    }
+  }, [strategyKeysData]);
+
   // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = event => {
-      if (naicsInputRef.current && !naicsInputRef.current.contains(event.target)) {
-        setShowSuggestions(false);
-      }
+      if (naicsInputRef.current && !naicsInputRef.current.contains(event.target)) setShowSuggestions(false);
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -157,7 +171,19 @@ function CompanyInformation({
       });
       setForm(initialForm);
     }
-  }, [fields, formData?.company_lookup_data, name, reduxData]);
+    if (isSignature) {
+      const isSignatureExistingData = {};
+      if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
+      if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
+      if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
+      setForm(prev => ({
+        ...prev,
+        ['signature']: isSignatureExistingData?.publicId
+          ? isSignatureExistingData
+          : { publicId: '', secureUrl: '', resourceType: '' },
+      }));
+    }
+  }, [fields, formData?.company_lookup_data, isSignature, reduxData]);
 
   // checking is all required fields are filled or not
   // ---------------------------------------------------
@@ -177,15 +203,25 @@ function CompanyInformation({
         );
       return true;
     });
+    // check naics filled
     const isNaicsFilled = naicsToMccDetails.NAICS;
     let isCompanyStockSymbol = true;
     if (form?.['company_ownership_type'] == 'public') {
       isCompanyStockSymbol = false;
       if (form?.['stocksymbol']) isCompanyStockSymbol = true;
     }
-    const isAllRequiredFieldsFilled = allFilled && isNaicsFilled && isCompanyStockSymbol;
+    // check signature done
+    let isSignatureDone = true;
+    if (isSignature) {
+      let dataOfSign = form?.['signature'];
+      if (!dataOfSign?.publicId || !dataOfSign?.secureUrl || !dataOfSign?.resourceType) {
+        isSignatureDone = false;
+      }
+    }
+
+    const isAllRequiredFieldsFilled = allFilled && isNaicsFilled && isCompanyStockSymbol && isSignatureDone;
     setIsAllRequiredFieldsFilled(isAllRequiredFieldsFilled);
-  }, [form, naicsToMccDetails.NAICS, reduxData, requiredNames]);
+  }, [form, isSignature, naicsToMccDetails.NAICS, requiredNames]);
 
   return (
     <div className="mt-14 h-full overflow-auto">
@@ -322,7 +358,11 @@ function CompanyInformation({
               </div>
             )}
           </div>
-          <div className="">{isSignature && <SignatureBox inSection={true} signUrl={signUrl} sectionId={_id} />}</div>
+          <div className="">
+            {isSignature && (
+              <SignatureBox onSave={signatureUploadHandler} oldSignatureUrl={form?.signature?.secureUrl || ''} />
+            )}
+          </div>
         </div>
       </div>
       {/* next Previous buttons  */}
@@ -331,13 +371,9 @@ function CompanyInformation({
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
             <Button
-              className={`${(!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)) && 'pointer-events-none cursor-not-allowed opacity-50'}`}
-              disabled={!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)}
-              label={
-                isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)
-                  ? 'Next'
-                  : 'Some Required Fields are Missing'
-              }
+              className={`${(!isAllRequiredFieldsFilled || loadingNext) && 'pointer-events-none cursor-not-allowed opacity-50'}`}
+              disabled={!isAllRequiredFieldsFilled || loadingNext}
+              label={isAllRequiredFieldsFilled || loadingNext ? 'Next' : 'Some Required Fields are Missing'}
               onClick={() => handleNext({ data: { ...form, naics: naicsToMccDetails }, name: title, setLoadingNext })}
             />
           ) : (

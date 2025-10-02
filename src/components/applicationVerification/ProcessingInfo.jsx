@@ -14,6 +14,8 @@ import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectio
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 import SignatureBox from '../shared/SignatureBox';
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
+import { toast } from 'react-toastify';
 
 function ProcessingInfo({
   name,
@@ -31,7 +33,6 @@ function ProcessingInfo({
   saveInProgress,
   step,
   isSignature,
-  signUrl,
 }) {
   const { user } = useSelector(state => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
@@ -41,6 +42,24 @@ function ProcessingInfo({
   const [customizeModal, setCustomizeModal] = useState(false);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
   console.log('bank information', form);
+
+  const signatureUploadHandler = async file => {
+    if (!file) return toast.error('Please select a file');
+
+    if (file) {
+      const oldSign = form?.['signature'];
+      if (oldSign?.publicId) {
+        console.log('i am running');
+        const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
+        if (!result) return toast.error('File Not Deleted Please Try Again');
+      }
+      const res = await uploadImageOnCloudinary(file);
+      if (!res.publicId || !res.secureUrl || !res.resourceType) {
+        return toast.error('File Not Uploaded Please Try Again');
+      }
+      setForm(prev => ({ ...prev, signature: res }));
+    }
+  };
 
   useEffect(() => {
     if (fields && fields.length > 0) {
@@ -57,7 +76,19 @@ function ProcessingInfo({
       });
       setForm(initialForm);
     }
-  }, [fields, name, reduxData]);
+    if (isSignature) {
+      const isSignatureExistingData = {};
+      if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
+      if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
+      if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
+      setForm(prev => ({
+        ...prev,
+        ['signature']: isSignatureExistingData?.publicId
+          ? isSignatureExistingData
+          : { publicId: '', secureUrl: '', resourceType: '' },
+      }));
+    }
+  }, [fields, isSignature, name, reduxData]);
 
   // check required fields
   useEffect(() => {
@@ -75,8 +106,16 @@ function ProcessingInfo({
       if (typeof val === 'string') return val.trim() !== '';
       return true;
     });
-    setIsAllRequiredFieldsFilled(allFilled);
-  }, [form, requiredNames]);
+
+    let isSignatureDone = true;
+    if (isSignature) {
+      let dataOfSign = form?.['signature'];
+      if (!dataOfSign?.publicId || !dataOfSign?.secureUrl || !dataOfSign?.resourceType) {
+        isSignatureDone = false;
+      }
+    }
+    setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
+  }, [form, isSignature, requiredNames]);
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
@@ -159,7 +198,11 @@ function ProcessingInfo({
           </div>
         );
       })}
-      <div className="mt-4">{isSignature && <SignatureBox inSection={true} signUrl={signUrl} sectionId={_id} />}</div>
+      <div className="mt-4">
+        {isSignature && (
+          <SignatureBox onSave={signatureUploadHandler} oldSignatureUrl={form?.signature?.secureUrl || ''} />
+        )}
+      </div>
 
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
@@ -167,20 +210,16 @@ function ProcessingInfo({
           {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
             <Button
-              className={`${(!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)) && 'pointer-events-none cursor-not-allowed opacity-20'}`}
-              disabled={!isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)}
-              label={
-                isAllRequiredFieldsFilled || loadingNext || (isSignature && !signUrl)
-                  ? 'Next'
-                  : 'Some Required Fields are Missing'
-              }
+              className={`${(!isAllRequiredFieldsFilled || loadingNext) && 'pointer-events-none cursor-not-allowed opacity-20'}`}
+              disabled={!isAllRequiredFieldsFilled || loadingNext}
+              label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
               onClick={() => handleNext({ data: form, name: title, setLoadingNext })}
             />
           ) : (
             <Button
               disabled={formLoading || loadingNext}
               className={`${formLoading || loadingNext ? 'pinter-events-none cursor-not-allowed opacity-20' : ''}`}
-              label={'Submit'}
+              label={isAllRequiredFieldsFilled ? 'submit' : 'Some Required Fields are Missing'}
               onClick={() => handleSubmit({ data: form, name: title, setLoadingNext })}
             />
           )}

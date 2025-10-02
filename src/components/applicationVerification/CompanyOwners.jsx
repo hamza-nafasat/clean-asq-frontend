@@ -1,9 +1,15 @@
-import Star from '@/assets/svgs/UserApplicationForm/Star';
 import TextField from '@/components/shared/small/TextField';
 import { FIELD_TYPES } from '@/data/constants';
+import { useGetAllSearchStrategiesQuery, useUpdateFormSectionMutation } from '@/redux/apis/formApis';
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
+import { X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { GoPlus } from 'react-icons/go';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import SignatureBox from '../shared/SignatureBox';
 import Button from '../shared/small/Button';
+import CustomLoading from '../shared/small/CustomLoading';
 import {
   CheckboxInputType,
   MultiCheckboxInputType,
@@ -12,14 +18,9 @@ import {
   RangeInputType,
   SelectInputType,
 } from '../shared/small/DynamicField';
+import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 import Modal from '../shared/small/Modal';
 import CustomizationOwnerFieldsModal from './companyInfo/CustomizationOwnerFieldsModal';
-import { useSelector } from 'react-redux';
-import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
-import { PencilIcon, X } from 'lucide-react';
-import { useGetAllSearchStrategiesQuery, useUpdateFormSectionMutation } from '@/redux/apis/formApis';
-import CustomLoading from '../shared/small/CustomLoading';
-import { toast } from 'react-toastify';
 
 function CompanyOwners({
   _id,
@@ -37,6 +38,7 @@ function CompanyOwners({
   title,
   saveInProgress,
   step,
+  isSignature,
 }) {
   const { user } = useSelector(state => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
@@ -55,6 +57,24 @@ function CompanyOwners({
   console.log('owners from loogup', ownersFromLookup);
 
   const requiredNames = useMemo(() => formFields.filter(f => f.required).map(f => f.name), [formFields]);
+
+  const signatureUploadHandler = async file => {
+    if (!file) return toast.error('Please select a file');
+
+    if (file) {
+      const oldSign = form?.['signature'];
+      if (oldSign?.publicId) {
+        console.log('i am running');
+        const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
+        if (!result) return toast.error('File Not Deleted Please Try Again');
+      }
+      const res = await uploadImageOnCloudinary(file);
+      if (!res.publicId || !res.secureUrl || !res.resourceType) {
+        return toast.error('File Not Uploaded Please Try Again');
+      }
+      setForm(prev => ({ ...prev, signature: res }));
+    }
+  };
 
   const handleChangeOnOtherOwnersData = (e, index, isFilter = false) => {
     if (e.target.name == 'name') {
@@ -199,7 +219,6 @@ function CompanyOwners({
   }, [formData, step?.ownerSuggesstions]);
 
   // making form states according changing fields
-  // --------------------------------------------
   useEffect(() => {
     if (!formFields?.length) return;
     // 1) Build the “canonical” shape for this form
@@ -228,6 +247,16 @@ function CompanyOwners({
         // setOtherOwnersStateName('');
       }
     });
+    if (isSignature) {
+      const isSignatureExistingData = {};
+      if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
+      if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
+      if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
+      initialForm.signature = isSignatureExistingData?.publicId
+        ? isSignatureExistingData
+        : { publicId: '', secureUrl: '', resourceType: '' };
+    }
+
     // 2) Figure out what to add…
     const toAdd = Object.fromEntries(Object.entries(initialForm).filter(([key]) => !(key in form)));
     // 3) …and what to remove
@@ -241,18 +270,15 @@ function CompanyOwners({
       // Then merge in any brand-new keys
       return { ...cleaned, ...toAdd };
     });
-  }, [form, formFields, otherOwnersStateName, reduxData]);
+  }, [form, formFields, isSignature, otherOwnersStateName, reduxData]);
 
   // create fields for this section and also for customization
-  // ---------------------------------------------------------
   useEffect(() => {
     if (fields && fields.length > 0) {
       setFormFields([...fields]);
     }
   }, [fields]);
-
   // check if all required fields are filled
-  // --------------------------------------
   useEffect(() => {
     const additionOwnersGet25OrMore = form?.['additional_owners_own_25_percent_or_more'] == 'yes';
     const applicantIsAlsoPromaryOperator = form?.['applicant_is_also_primary_operator'] == 'yes';
@@ -263,7 +289,16 @@ function CompanyOwners({
       if (typeof val === 'string') return val.trim() !== '';
       return true;
     });
-    if (!allFilled) setSubmitButtonText('Some Required Fields are Missing');
+
+    // check signature done
+    let isSignatureDone = true;
+    if (isSignature) {
+      let dataOfSign = form?.['signature'];
+      if (!dataOfSign?.publicId || !dataOfSign?.secureUrl || !dataOfSign?.resourceType) {
+        isSignatureDone = false;
+      }
+    }
+    if (!allFilled || !isSignatureDone) setSubmitButtonText('Some Required Fields are Missing');
 
     // if additional owner field exist check email validation
     let isEmailVAlidated = true;
@@ -283,8 +318,8 @@ function CompanyOwners({
     if (!isOperatorExist) setSubmitButtonText('At least one primary operator required');
 
     // console.log('allfields isoperator exist isemailvalidated', allFilled, isOperatorExist, isEmailVAlidated);
-    setIsAllRequiredFieldsFilled(allFilled && isOperatorExist && isEmailVAlidated);
-  }, [form, requiredNames]);
+    setIsAllRequiredFieldsFilled(allFilled && isOperatorExist && isEmailVAlidated && isSignatureDone);
+  }, [form, isSignature, requiredNames]);
 
   return (
     <div className="h-full w-full overflow-auto">
@@ -330,13 +365,6 @@ function CompanyOwners({
                 <h2 className="text-textPrimary text-[22px] font-medium">Beneficial Owner Information</h2>
                 <p className="text-textPrimary">Provide information about the beneficial owner.</p>
               </div>
-              {/* <div className="flex justify-end">
-                <Button
-                  icon={Star}
-                  className="!text-textPrimary !h-fit !rounded-[4px] !border-none !bg-[#F5F5F5] !shadow-md hover:!bg-gray-300"
-                  label="AI Help"
-                />
-              </div> */}
             </div>
 
             {formFields?.map((field, index) => {
@@ -575,6 +603,12 @@ function CompanyOwners({
                 </div>
               </div>
             ) : null}
+
+            <div className="">
+              {isSignature && (
+                <SignatureBox onSave={signatureUploadHandler} oldSignatureUrl={form?.signature?.secureUrl || ''} />
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -606,6 +640,7 @@ function CompanyOwners({
             fields={fields?.filter(f => f.type !== 'block')}
             blocks={blocks}
             formRefetch={formRefetch}
+            isSignature={isSignature}
             onClose={() => setCustomizeModal(false)}
           />
         </Modal>

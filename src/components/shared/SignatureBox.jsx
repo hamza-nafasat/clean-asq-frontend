@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 
-export default function SignatureBox({ onSave, signUrl, oldSignatureUrl, className = '' }) {
+export default function SignatureBox({ onSave, oldSignatureUrl, className = '' }) {
   const [mode, setMode] = useState('draw');
   const [typedSignature, setTypedSignature] = useState('');
-  const [preview, setPreview] = useState(signUrl || null);
+  const [preview, setPreview] = useState(oldSignatureUrl || null);
   const [color, setColor] = useState('#0B69FF');
   const [lineWidth, setLineWidth] = useState(3);
   const [isSaving, setIsSaving] = useState(false);
@@ -45,21 +45,6 @@ export default function SignatureBox({ onSave, signUrl, oldSignatureUrl, classNa
       ctx.clearRect(0, 0, rect.width, rect.height);
     }
   }, [lineWidth, color, preview]);
-
-  useEffect(() => {
-    setupCanvas();
-    window.addEventListener('resize', setupCanvas);
-    return () => window.removeEventListener('resize', setupCanvas);
-  }, [setupCanvas, mode]);
-
-  // ---------- Update stroke style ----------
-  useEffect(() => {
-    if (ctxRef.current) {
-      ctxRef.current.lineWidth = lineWidth;
-      ctxRef.current.strokeStyle = color;
-    }
-  }, [lineWidth, color]);
-
   // ---------- Draw Handlers ----------
   const pointerPos = e => {
     const rect = canvasRef.current.getBoundingClientRect();
@@ -72,7 +57,9 @@ export default function SignatureBox({ onSave, signUrl, oldSignatureUrl, classNa
     lastPoint.current = pointerPos(e);
     try {
       canvasRef.current.setPointerCapture(e.pointerId);
-    } catch {}
+    } catch {
+      console.log('Failed to set pointer capture');
+    }
   };
 
   const draw = e => {
@@ -91,7 +78,9 @@ export default function SignatureBox({ onSave, signUrl, oldSignatureUrl, classNa
     drawing.current = false;
     try {
       canvasRef.current.releasePointerCapture(e.pointerId);
-    } catch {}
+    } catch {
+      console.log('Failed to release pointer capture');
+    }
     historyRef.current = historyRef.current.slice(0, historyPos.current + 1);
     historyRef.current.push(canvasRef.current.toDataURL());
     historyPos.current = historyRef.current.length - 1;
@@ -101,6 +90,7 @@ export default function SignatureBox({ onSave, signUrl, oldSignatureUrl, classNa
   const exportCanvas = useCallback(() => {
     return canvasRef.current?.toDataURL('image/png') || null;
   }, []);
+
   const generateSignatureData = useCallback(() => {
     if (mode === 'type') {
       if (!typedSignature.trim()) return null;
@@ -116,7 +106,6 @@ export default function SignatureBox({ onSave, signUrl, oldSignatureUrl, classNa
       ctx.fillText(text, x, canvas.height / 2);
       return canvas.toDataURL('image/png');
     }
-    // Always get latest drawn canvas
     return exportCanvas();
   }, [mode, typedSignature, color, exportCanvas]);
 
@@ -198,6 +187,20 @@ export default function SignatureBox({ onSave, signUrl, oldSignatureUrl, classNa
     a.click();
     document.body.removeChild(a);
   };
+
+  useEffect(() => {
+    setupCanvas();
+    window.addEventListener('resize', setupCanvas);
+    return () => window.removeEventListener('resize', setupCanvas);
+  }, [setupCanvas, mode]);
+
+  // ---------- Update stroke style ----------
+  useEffect(() => {
+    if (ctxRef.current) {
+      ctxRef.current.lineWidth = lineWidth;
+      ctxRef.current.strokeStyle = color;
+    }
+  }, [lineWidth, color]);
 
   // ---------- UI ----------
   const buttonClasses =
