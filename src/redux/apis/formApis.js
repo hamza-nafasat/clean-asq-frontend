@@ -75,15 +75,7 @@ const formApis = createApi({
       }),
       invalidatesTags: [{ type: 'Form', id: 'LIST' }],
     }),
-    // SUBMIT-ARTICLE
-    // ---------------
-    submitFormArticleFile: builder.mutation({
-      query: data => ({
-        url: '/submit-article',
-        method: 'POST',
-        body: data,
-      }),
-    }),
+
     // save form in draft
     // ---------------
     saveFormInDraft: builder.mutation({
@@ -147,16 +139,6 @@ const formApis = createApi({
         url: `/beneficial-owners?submitId=${submitId}&userId=${userId}`,
         method: 'PUT',
         body: form,
-      }),
-    }),
-
-    // update signature
-    // ---------------
-    updateSignature: builder.mutation({
-      query: body => ({
-        url: `/update-signature`,
-        method: 'PUT',
-        body,
       }),
     }),
 
@@ -319,7 +301,6 @@ export const {
   useGetSingleFormQueryQuery,
   useDeleteSingleFormMutation,
   useSubmitFormMutation,
-  useSubmitFormArticleFileMutation,
   useSaveFormInDraftMutation,
   useGetSavedFormMutation,
   useUpdateFormSectionMutation,
@@ -342,8 +323,5 @@ export const {
   useCompanyVerificationMutation,
   useCompanyLookupMutation,
   useFindNaicAndMccMutation,
-  useUpdateSignatureMutation,
-  useGetCloudinarySignatureMutation,
-  useDeleteCloudinaryImageMutation,
 } = formApis;
 export default formApis;
