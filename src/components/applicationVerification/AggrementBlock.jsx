@@ -44,8 +44,6 @@ function AggrementBlock({
   const [customizeModal, setCustomizeModal] = useState(false);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
 
-  console.log('redux data', reduxData);
-
   const signatureUploadHandler = async file => {
     if (!file) return toast.error('Please select a file');
     if (file) {

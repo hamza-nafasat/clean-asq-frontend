@@ -155,7 +155,6 @@ export default function ApplicationForm() {
           stepNames.push(step.name);
         }
       });
-      console.log('steps', data);
       setStepsComps(data);
       setSectionNames(stepNames);
     }
