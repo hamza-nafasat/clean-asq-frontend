@@ -27,21 +27,22 @@ const uploadImageOnCloudinary = async file => {
       { method: 'POST', body: formData }
     );
     const data = await res.json();
-    if (!data?.secure_url || !data?.public_id) return toast.error('Something went wrong while uploading image');
-    return { secureUrl: data?.secure_url, publicId: data?.public_id, resource_type: data?.resource_type };
+    if (!data?.secure_url || !data?.public_id || !data?.resource_type)
+      return toast.error('Something went wrong while uploading image');
+    return { secureUrl: data?.secure_url, publicId: data?.public_id, resourceType: data?.resource_type };
   } catch (error) {
     console.log('error while uploading image', error);
     return toast.error('Something went wrong while uploading image');
   }
 };
 
-const deleteImageFromCloudinary = async (publicId, resource_type = 'image') => {
+const deleteImageFromCloudinary = async (publicId, resourceType = 'image') => {
   try {
     if (!publicId) return toast.error('Something went wrong while deleting image');
     const url = `${getEnv('SERVER_URL')}/api/form/delete-cloudinary-image`;
     const result = await fetch(url, {
       method: 'POST',
-      body: JSON.stringify({ publicId, resource_type }),
+      body: JSON.stringify({ publicId, resourceType }),
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
