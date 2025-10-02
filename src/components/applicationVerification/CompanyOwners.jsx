@@ -54,8 +54,6 @@ function CompanyOwners({
   const [submitButtonText, setSubmitButtonText] = useState('Some Required Fields are Missing');
   const [ownerSuggesstionsModal, setOwnerSuggesstionsModal] = useState(false);
 
-  console.log('owners from loogup', ownersFromLookup);
-
   const requiredNames = useMemo(() => formFields.filter(f => f.required).map(f => f.name), [formFields]);
 
   const signatureUploadHandler = async file => {

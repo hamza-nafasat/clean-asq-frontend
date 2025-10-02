@@ -1,23 +1,14 @@
-import { FIELD_TYPES } from '@/data/constants';
+import { updateFormState } from '@/redux/slices/formSlice';
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
+import { unwrapResult } from '@reduxjs/toolkit';
 import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 import SignatureBox from '../shared/SignatureBox';
 import Button from '../shared/small/Button';
-import {
-  CheckboxInputType,
-  MultiCheckboxInputType,
-  OtherInputType,
-  RadioInputType,
-  RangeInputType,
-  SelectInputType,
-} from '../shared/small/DynamicField';
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
-import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
-import { toast } from 'react-toastify';
-import { updateFormState } from '@/redux/slices/formSlice';
-import { unwrapResult } from '@reduxjs/toolkit';
 
 function AggrementBlock({
   fields,
