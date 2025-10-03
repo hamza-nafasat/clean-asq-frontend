@@ -189,7 +189,11 @@ function AggrementBlock({
       </div> */}
       <div className="mt-4">
         {isSignature && (
-          <SignatureBox onSave={signatureUploadHandler} oldSignatureUrl={form?.signature?.secureUrl || ''} />
+          <SignatureBox
+            step={step}
+            onSave={signatureUploadHandler}
+            oldSignatureUrl={form?.signature?.secureUrl || ''}
+          />
         )}
       </div>
 
@@ -218,9 +222,10 @@ function AggrementBlock({
           <CustomizationFieldsModal
             sectionId={_id}
             fields={[]}
+            isArticleForm={true}
             formRefetch={formRefetch}
             onClose={() => setCustomizeModal(false)}
-            isSignature={isSignature}
+            section={step}
           />
         </Modal>
       )}

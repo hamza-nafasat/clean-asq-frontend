@@ -1,6 +1,11 @@
+import { FIELD_TYPES } from '@/data/constants';
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
 import { useEffect, useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import SignatureBox from '../shared/SignatureBox';
 import Button from '../shared/small/Button';
-import DynamicField, {
+import {
   CheckboxInputType,
   MultiCheckboxInputType,
   OtherInputType,
@@ -8,15 +13,9 @@ import DynamicField, {
   RangeInputType,
   SelectInputType,
 } from '../shared/small/DynamicField';
-import { FIELD_TYPES } from '@/data/constants';
+import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
-import { useSelector } from 'react-redux';
-import { PencilIcon } from 'lucide-react';
-import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
-import SignatureBox from '../shared/SignatureBox';
-import { toast } from 'react-toastify';
-import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
 
 function CustomSection({
   fields,
@@ -196,7 +195,11 @@ function CustomSection({
       </div>
       <div className="mt-4">
         {isSignature && (
-          <SignatureBox onSave={signatureUploadHandler} oldSignatureUrl={form?.signature?.secureUrl || ''} />
+          <SignatureBox
+            step={step}
+            onSave={signatureUploadHandler}
+            oldSignatureUrl={form?.signature?.secureUrl || ''}
+          />
         )}
       </div>
 
@@ -227,7 +230,7 @@ function CustomSection({
             fields={fields}
             formRefetch={formRefetch}
             onClose={() => setCustomizeModal(false)}
-            isSignature={isSignature}
+            section={step}
           />
         </Modal>
       )}

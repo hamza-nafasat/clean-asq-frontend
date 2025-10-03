@@ -321,7 +321,11 @@ function Documents({
       )}
       <div className="mt-4">
         {isSignature && (
-          <SignatureBox onSave={signatureUploadHandler} oldSignatureUrl={form?.signature?.secureUrl || ''} />
+          <SignatureBox
+            step={step}
+            onSave={signatureUploadHandler}
+            oldSignatureUrl={form?.signature?.secureUrl || ''}
+          />
         )}
       </div>
       {/* next Previous buttons  */}
@@ -352,7 +356,7 @@ function Documents({
             fields={fields}
             isArticleForm={true}
             formRefetch={formRefetch}
-            isSignature={isSignature}
+            section={step}
             onClose={() => setCustomizeModal(false)}
           />
         </Modal>

@@ -604,7 +604,11 @@ function CompanyOwners({
 
             <div className="">
               {isSignature && (
-                <SignatureBox onSave={signatureUploadHandler} oldSignatureUrl={form?.signature?.secureUrl || ''} />
+                <SignatureBox
+                  onSave={signatureUploadHandler}
+                  step={step}
+                  oldSignatureUrl={form?.signature?.secureUrl || ''}
+                />
               )}
             </div>
           </div>
@@ -638,7 +642,7 @@ function CompanyOwners({
             fields={fields?.filter(f => f.type !== 'block')}
             blocks={blocks}
             formRefetch={formRefetch}
-            isSignature={isSignature}
+            section={step}
             onClose={() => setCustomizeModal(false)}
           />
         </Modal>

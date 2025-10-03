@@ -200,7 +200,11 @@ function ProcessingInfo({
       })}
       <div className="mt-4">
         {isSignature && (
-          <SignatureBox onSave={signatureUploadHandler} oldSignatureUrl={form?.signature?.secureUrl || ''} />
+          <SignatureBox
+            step={step}
+            onSave={signatureUploadHandler}
+            oldSignatureUrl={form?.signature?.secureUrl || ''}
+          />
         )}
       </div>
 
@@ -230,7 +234,7 @@ function ProcessingInfo({
           <CustomizationFieldsModal
             sectionId={_id}
             fields={fields}
-            isSignature={isSignature}
+            section={step}
             formRefetch={formRefetch}
             onClose={() => setCustomizeModal(false)}
           />

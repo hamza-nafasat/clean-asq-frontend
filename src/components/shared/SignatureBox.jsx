@@ -1,12 +1,16 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import Button from './small/Button';
+import { AiHelpModal } from './small/DynamicField';
+import Modal from './small/Modal';
 
-export default function SignatureBox({ onSave, oldSignatureUrl, className = '' }) {
+export default function SignatureBox({ onSave, step, oldSignatureUrl, className = '' }) {
   const [mode, setMode] = useState('draw');
   const [typedSignature, setTypedSignature] = useState('');
   const [preview, setPreview] = useState(oldSignatureUrl || null);
   const [color, setColor] = useState('#0B69FF');
   const [lineWidth, setLineWidth] = useState(3);
   const [isSaving, setIsSaving] = useState(false);
+  const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
 
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
@@ -208,6 +212,31 @@ export default function SignatureBox({ onSave, oldSignatureUrl, className = '' }
 
   return (
     <div className={`w-full rounded-2xl bg-white p-6 shadow-xl ${className}`}>
+      {openAiHelpModal && (
+        <Modal onClose={() => setOpenAiHelpModal(false)}>
+          <AiHelpModal
+            aiPrompt={step?.signAiPrompt}
+            aiResponse={step?.signAiResponse}
+            setOpenAiHelpModal={setOpenAiHelpModal}
+          />
+        </Modal>
+      )}
+      <div className="flex items-center gap-2">
+        {step?.isSignDisplayText && (
+          <div className="flex items-end gap-3">
+            <div
+              dangerouslySetInnerHTML={{
+                __html: step?.signDisplayText,
+              }}
+            />
+          </div>
+        )}
+        {step?.isSignAiHelp && (
+          <div className="flex items-center justify-center">
+            <Button label="AI Help" className="max-h-fit text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
+          </div>
+        )}
+      </div>
       <h3 className="text-lg font-semibold text-gray-900">Signature Pad</h3>
 
       {/* Mode Switch */}

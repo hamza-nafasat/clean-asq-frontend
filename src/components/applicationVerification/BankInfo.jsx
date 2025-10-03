@@ -73,7 +73,7 @@ function BankInfo({
 
   useEffect(() => {
     if (data?.data) {
-      const result=data?.data
+      const result = data?.data;
       if (Array.isArray(result.bankDetailsList) && result.bankDetailsList.length > 0) {
         setBankModal(result.bankDetailsList?.[0]);
       } else {
@@ -313,7 +313,11 @@ function BankInfo({
 
       <div className="mt-4">
         {isSignature && (
-          <SignatureBox onSave={signatureUploadHandler} oldSignatureUrl={form?.signature?.secureUrl || ''} />
+          <SignatureBox
+            step={step}
+            onSave={signatureUploadHandler}
+            oldSignatureUrl={form?.signature?.secureUrl || ''}
+          />
         )}
       </div>
 
@@ -342,7 +346,7 @@ function BankInfo({
           <CustomizationFieldsModal
             sectionId={_id}
             fields={fields}
-            isSignature={isSignature}
+            section={step}
             formRefetch={formRefetch}
             onClose={() => setCustomizeModal(false)}
           />

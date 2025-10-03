@@ -360,7 +360,11 @@ function CompanyInformation({
           </div>
           <div className="">
             {isSignature && (
-              <SignatureBox onSave={signatureUploadHandler} oldSignatureUrl={form?.signature?.secureUrl || ''} />
+              <SignatureBox
+                onSave={signatureUploadHandler}
+                step={step}
+                oldSignatureUrl={form?.signature?.secureUrl || ''}
+              />
             )}
           </div>
         </div>
@@ -394,6 +398,7 @@ function CompanyInformation({
             fields={fields}
             formRefetch={formRefetch}
             isSignature={isSignature}
+            section={step}
             onClose={() => setCustomizeModal(false)}
           />
         </Modal>
