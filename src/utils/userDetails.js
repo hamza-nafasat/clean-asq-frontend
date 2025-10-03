@@ -1,14 +1,6 @@
-/**
- * collectClientDetails
- * Gathers most client-side signals browsers expose, handles permission failures/timeouts,
- * and returns a single object { data: {...}, errors: [...], deviceFingerprint }.
- *
- * Notes:
- * - Some APIs require secure context (https / localhost).
- * - Geolocation requires user permission.
- * - RTCPeerConnection trick for local IPs may not work in all browsers.
- * - Keep privacy & compliance in mind.
- */
+import getEnv from '@/lib/env';
+import { detectVPN } from './vpnDetection';
+
 export async function collectClientDetails(opts = {}) {
   const {
     geoTimeout = 10000,
@@ -257,6 +249,7 @@ export async function collectClientDetails(opts = {}) {
       try {
         pc.createDataChannel('');
       } catch (e) {
+        console.log('datachannel error', e);
         /* ignore */
       }
 
@@ -285,7 +278,9 @@ export async function collectClientDetails(opts = {}) {
         finished = true;
         try {
           pc.close();
-        } catch {}
+        } catch {
+          // ignore
+        }
         resolve(Array.from(ips));
       }, rtcTimeout);
     });
@@ -310,12 +305,29 @@ export async function collectClientDetails(opts = {}) {
   // 13. Timestamp
   const timestamp = new Date().toISOString();
 
+  //14 vpn detection
+  async function checkClientVpn() {
+    try {
+      const vpnData = await detectVPN();
+      const resp = await fetch(`${getEnv('SERVER_URL')}/api/form/vpn-check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vpnData }),
+      });
+      const result = await resp.json();
+      return result;
+    } catch (e) {
+      console.log('VPN error:', e);
+      return null;
+    }
+  }
   // RUN all collectors (parallel where possible)
-  const [geo, battery, audioFp, localIPs] = await Promise.all([
+  const [geo, battery, audioFp, localIPs, vpnResults] = await Promise.all([
     getGeo(),
     tryGetBattery(),
     tryAudioFingerprint(),
     tryGetLocalIPs(),
+    checkClientVpn(),
   ]);
 
   const browser = getNavigatorInfo();
@@ -355,6 +367,7 @@ export async function collectClientDetails(opts = {}) {
     localIPs,
     connection,
     deviceFingerprint,
+    vpnResults,
   };
 
   return { data, errors };

@@ -24,6 +24,8 @@ import CompanyInformation from './page/admin/userApplicationForms/CompanyInforma
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
 import VerificationTest from './page/admin/dashboard/varification/VerficationTest';
+import { detectVPN } from './utils/vpnDetection';
+import getEnv from './lib/env';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -101,6 +103,20 @@ function App() {
     setButtonTextColor,
   ]);
 
+  useEffect(() => {
+    async function checkClientVpn() {
+      const vpnData = await detectVPN();
+
+      const resp = await fetch(`${getEnv('SERVER_URL')}/api/form/vpn-check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vpnData }),
+      });
+      const result = await resp.json();
+      console.log('VPN result:', result);
+    }
+    checkClientVpn();
+  }, []);
   return (
     <>
       {loading ? (

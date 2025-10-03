@@ -291,6 +291,13 @@ const formApis = createApi({
         body: data,
       }),
     }),
+    detectVpn: builder.mutation({
+      query: data => ({
+        url: '/vpn-check',
+        method: 'POST',
+        body: data,
+      }),
+    }),
   }),
 });
 export const {
@@ -323,5 +330,6 @@ export const {
   useCompanyVerificationMutation,
   useCompanyLookupMutation,
   useFindNaicAndMccMutation,
+  useDetectVpnMutation,
 } = formApis;
 export default formApis;
