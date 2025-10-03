@@ -9,7 +9,6 @@ import formSlice from './slices/formSlice';
 import idMissionApis from './apis/idMissionApis';
 import brandingApis from './apis/brandingApis';
 import companySlice from './slices/companySlice';
-import wiseApi from './apis/wiseApi'; // ✅ import your wiseApi
 
 const store = configureStore({
   reducer: {
@@ -26,7 +25,6 @@ const store = configureStore({
     [formApis.reducerPath]: formApis.reducer,
     [idMissionApis.reducerPath]: idMissionApis.reducer,
     [brandingApis.reducerPath]: brandingApis.reducer,
-    [wiseApi.reducerPath]: wiseApi.reducer,
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({ serializableCheck: false })
@@ -35,8 +33,7 @@ const store = configureStore({
       .concat(roleApis.middleware)
       .concat(formApis.middleware)
       .concat(idMissionApis.middleware)
-      .concat(brandingApis.middleware)
-      .concat(wiseApi.middleware),
+      .concat(brandingApis.middleware),
 });
 
 export default store;

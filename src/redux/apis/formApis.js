@@ -266,6 +266,10 @@ const formApis = createApi({
       invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
     }),
 
+    getBankLookup: builder.query({
+      query: searchTerm => `/routing-lookup?searchTerm=${searchTerm}`,
+    }),
+
     //================================
     // company verification and lookup
     //================================
@@ -327,6 +331,7 @@ export const {
   useCreatePromptMutation,
   useUpdatePromptMutation,
   useGetAllPromptsQuery,
+  useGetBankLookupQuery,
   useCompanyVerificationMutation,
   useCompanyLookupMutation,
   useFindNaicAndMccMutation,

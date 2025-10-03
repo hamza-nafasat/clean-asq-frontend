@@ -15,10 +15,10 @@ import Modal from '../shared/small/Modal';
 import { useSelector } from 'react-redux';
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 import { PencilIcon } from 'lucide-react';
-import { useGetBankLookupQuery } from '@/redux/apis/wiseApi';
 import SignatureBox from '../shared/SignatureBox';
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
 import { toast } from 'react-toastify';
+import { useGetBankLookupQuery } from '@/redux/apis/formApis';
 
 function BankInfo({
   name,
@@ -72,9 +72,10 @@ function BankInfo({
   };
 
   useEffect(() => {
-    if (data) {
-      if (Array.isArray(data.bankDetailsList) && data.bankDetailsList.length > 0) {
-        setBankModal(data.bankDetailsList[0]);
+    if (data?.data) {
+      const result=data?.data
+      if (Array.isArray(result.bankDetailsList) && result.bankDetailsList.length > 0) {
+        setBankModal(result.bankDetailsList?.[0]);
       } else {
         setBankModal({});
       }
