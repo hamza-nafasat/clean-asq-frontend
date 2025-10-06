@@ -56,6 +56,8 @@ function CompanyOwners({
 
   const requiredNames = useMemo(() => formFields.filter(f => f.required).map(f => f.name), [formFields]);
 
+  const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
+
   const signatureUploadHandler = async file => {
     if (!file) return toast.error('Please select a file');
 
@@ -278,6 +280,11 @@ function CompanyOwners({
   }, [fields]);
   // check if all required fields are filled
   useEffect(() => {
+    if (isCreator) {
+      setIsAllRequiredFieldsFilled(true);
+      setSubmitButtonText('Next');
+      return;
+    }
     const additionOwnersGet25OrMore = form?.['additional_owners_own_25_percent_or_more'] == 'yes';
     const applicantIsAlsoPromaryOperator = form?.['applicant_is_also_primary_operator'] == 'yes';
     // Check if all required fields are filled
@@ -317,7 +324,7 @@ function CompanyOwners({
 
     // console.log('allfields isoperator exist isemailvalidated', allFilled, isOperatorExist, isEmailVAlidated);
     setIsAllRequiredFieldsFilled(allFilled && isOperatorExist && isEmailVAlidated && isSignatureDone);
-  }, [form, isSignature, requiredNames]);
+  }, [form, isCreator, isSignature, requiredNames]);
 
   return (
     <div className="h-full w-full overflow-auto">
@@ -339,12 +346,14 @@ function CompanyOwners({
 
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
-        <div className="flex gap-2">
-          <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
-          {user?._id && user.role !== 'guest' && <Button onClick={() => setCustomizeModal(true)} label={'Customize'} />}
-          <Button onClick={() => setOwnerSuggesstionsModal(true)} label={'Owners Suggesstions'} />
-          <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
-        </div>
+        {isCreator && (
+          <div className="flex gap-2">
+            <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
+            <Button onClick={() => setCustomizeModal(true)} label={'Customize'} />
+            <Button onClick={() => setOwnerSuggesstionsModal(true)} label={'Owners Suggesstions'} />
+            <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
+          </div>
+        )}
       </div>
       {step?.ai_formatting && (
         <div className="flex w-full items-end justify-between gap-3">

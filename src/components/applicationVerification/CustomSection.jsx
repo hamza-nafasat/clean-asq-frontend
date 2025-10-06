@@ -16,6 +16,7 @@ import {
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
+import { set } from 'date-fns';
 
 function CustomSection({
   fields,
@@ -40,6 +41,7 @@ function CustomSection({
   const [loadingNext, setLoadingNext] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
+  const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
 
   const signatureUploadHandler = async file => {
     if (!file) return toast.error('Please select a file');
@@ -81,6 +83,10 @@ function CustomSection({
   }, [fields, isSignature, reduxData]);
 
   useEffect(() => {
+    if (isCreator) {
+      setIsAllRequiredFieldsFilled(true);
+      return;
+    }
     const allFilled = requiredNames.every(name => {
       const val = form[name];
       if (val == null) return false;
@@ -114,13 +120,14 @@ function CustomSection({
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
         <div className="flex gap-2"></div>
       </div>
-      <div className="flex justify-end gap-2">
-        <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
-        {user?._id && user.role !== 'guest' && (
+      {isCreator && (
+        <div className="flex justify-end gap-2">
+          <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
           <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
-        )}
-        <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
-      </div>
+          <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
+        </div>
+      )}
+
       {updateSectionFromatingModal && (
         <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
           <EditSectionDisplayTextFromatingModal step={step} />

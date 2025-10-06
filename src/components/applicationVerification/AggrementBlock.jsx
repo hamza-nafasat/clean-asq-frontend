@@ -34,6 +34,7 @@ function AggrementBlock({
   const [loadingNext, setLoadingNext] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
+  const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
 
   const signatureUploadHandler = async file => {
     if (!file) return toast.error('Please select a file');
@@ -76,6 +77,10 @@ function AggrementBlock({
   }, [fields, isSignature, reduxData]);
 
   useEffect(() => {
+    if (!isCreator) {
+      setIsAllRequiredFieldsFilled(true);
+      return;
+    }
     const allFilled = requiredNames.every(name => {
       const val = form[name];
       if (val == null) return false;
@@ -90,7 +95,6 @@ function AggrementBlock({
           )
         );
       if (typeof val === 'object') return Object.values(val).every(v => v?.toString().trim() !== '');
-
       return true;
     });
     let isSignatureDone = true;
@@ -101,25 +105,28 @@ function AggrementBlock({
       }
     }
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
-  }, [form, isSignature, requiredNames]);
+  }, [form, isCreator, isSignature, requiredNames]);
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
         <div className="flex gap-2"></div>
       </div>
-      <div className="flex justify-end gap-2">
-        <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
-        {user?._id && user.role !== 'guest' && (
-          <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
-        )}
-        <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
-      </div>
-      {updateSectionFromatingModal && (
-        <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
-          <EditSectionDisplayTextFromatingModal step={step} />
-        </Modal>
+      {isCreator && (
+        <>
+          <div className="flex justify-end gap-2">
+            <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
+            <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+            <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
+          </div>
+          {updateSectionFromatingModal && (
+            <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
+              <EditSectionDisplayTextFromatingModal step={step} />
+            </Modal>
+          )}
+        </>
       )}
+
       {step?.ai_formatting && (
         <div className="flex w-full items-end justify-between gap-3">
           <div

@@ -44,12 +44,17 @@ function Documents({
   const [urls, setUrls] = useState([]);
   const [aiPromptModal, setAiPromptModal] = useState(false);
 
+  const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
+
   const isAllRequiredFilled = useMemo(() => {
     const oldFileData = form?.[fileFieldName];
     const sign = isSignature ? form?.['signature']?.publicId : true;
-    return !!((file || urls.length || (oldFileData?.publicId && oldFileData?.secureUrl)) && sign);
-  }, [file, fileFieldName, form, isSignature, urls.length]);
-
+    if (isCreator) {
+      return true;
+    } else {
+      return !!((file || urls.length || (oldFileData?.publicId && oldFileData?.secureUrl)) && sign);
+    }
+  }, [file, fileFieldName, form, isCreator, isSignature, urls.length]);
   const signatureUploadHandler = async file => {
     if (!file) return toast.error('Please select a file');
 
@@ -82,7 +87,7 @@ function Documents({
       if (!fileFieldName) return toast.error('Please refresh the page once and try again');
       const oldFileData = form?.[fileFieldName];
       // check something exist urls or oldFile
-      if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl)) {
+      if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl) && !isCreator) {
         return toast.error('Please select a file or Enter a URL');
       }
       //  if file or if urls
@@ -97,10 +102,10 @@ function Documents({
       } else {
         handleNext({ data: { ...form }, name: title, setLoadingNext });
       }
-      setLoadingNext(false);
     } catch (error) {
       console.log('error while uploading image', error);
       toast.error('Something went wrong while uploading image');
+    } finally {
       setLoadingNext(false);
     }
   };
@@ -129,10 +134,10 @@ function Documents({
   useEffect(() => {
     const fetchRequiredDocuments = async () => {
       if (!idMissionData?.state) return;
-
       try {
         setIsAiLoading(true);
         const prompt = generateAiPrompt();
+        if (!prompt) return;
         const res = await formateTextInMarkDown({
           text: prompt,
         }).unwrap();
@@ -185,13 +190,13 @@ function Documents({
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h1 className="text-textPrimary text-2xl font-semibold">{name}</h1>
-          <div className="flex gap-2">
-            {user?._id && user.role !== 'guest' && (
+          {isCreator && (
+            <div className="flex gap-2">
               <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
-            )}
-            <Button onClick={() => setAiPromptModal(true)} label={'Customize Prompt'} />
-            <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
-          </div>
+              <Button onClick={() => setAiPromptModal(true)} label={'Customize Prompt'} />
+              <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
+            </div>
+          )}
         </div>
         {aiPromptModal && (
           <Modal title="Customize Prompt" onClose={() => setAiPromptModal(false)}>
@@ -204,7 +209,7 @@ function Documents({
           </Modal>
         )}
         {/* Show required documents section */}
-        {showRequiredDocs && (
+        {showRequiredDocs && aiResponse && (
           <div className="mb-6 rounded-lg bg-blue-50 p-4">
             <div className="flex items-center justify-between gap-2">
               <div>

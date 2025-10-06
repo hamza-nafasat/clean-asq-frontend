@@ -41,7 +41,8 @@ function ProcessingInfo({
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
-  console.log('bank information', form);
+
+  const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
 
   const signatureUploadHandler = async file => {
     if (!file) return toast.error('Please select a file');
@@ -92,6 +93,10 @@ function ProcessingInfo({
 
   // check required fields
   useEffect(() => {
+    if (isCreator) {
+      setIsAllRequiredFieldsFilled(true);
+      return;
+    }
     const allFilled = requiredNames.some(name => {
       const val = form[name];
       if (!val) return false;
@@ -115,18 +120,18 @@ function ProcessingInfo({
       }
     }
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
-  }, [form, isSignature, requiredNames]);
+  }, [form, isCreator, isSignature, requiredNames]);
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
-        <div className="flex gap-2">
-          <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
-          {user?._id && user.role !== 'guest' && (
+        {isCreator && (
+          <div className="flex gap-2">
+            <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
             <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
-          )}
-          <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
-        </div>
+            <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
+          </div>
+        )}
       </div>
       {updateSectionFromatingModal && (
         <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>

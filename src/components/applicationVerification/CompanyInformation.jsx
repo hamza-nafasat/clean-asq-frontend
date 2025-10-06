@@ -61,6 +61,8 @@ function CompanyInformation({
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
 
+  const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
+
   const signatureUploadHandler = async file => {
     if (!file) return toast.error('Please select a file');
 
@@ -188,6 +190,10 @@ function CompanyInformation({
   // checking is all required fields are filled or not
   // ---------------------------------------------------
   useEffect(() => {
+    if (isCreator) {
+      setIsAllRequiredFieldsFilled(true);
+      return;
+    }
     const allFilled = requiredNames.every(name => {
       const val = form[name];
       if (val == null) return false;
@@ -221,7 +227,7 @@ function CompanyInformation({
 
     const isAllRequiredFieldsFilled = allFilled && isNaicsFilled && isCompanyStockSymbol && isSignatureDone;
     setIsAllRequiredFieldsFilled(isAllRequiredFieldsFilled);
-  }, [form, isSignature, naicsToMccDetails.NAICS, requiredNames]);
+  }, [form, isCreator, isSignature, naicsToMccDetails.NAICS, requiredNames]);
 
   return (
     <div className="mt-14 h-full overflow-auto">
@@ -234,16 +240,16 @@ function CompanyInformation({
       <div className="mb-10 flex items-center justify-between">
         <p className="text-textPrimary text-2xl font-semibold">{name}</p>
 
-        <div className="flex gap-2">
-          <Button
-            onClick={() => saveInProgress({ data: { ...form, naics: naicsToMccDetails }, name: title })}
-            label={'Save in Draft'}
-          />
-          {user?._id && user.role !== 'guest' && (
+        {isCreator && (
+          <div className="flex gap-2">
+            <Button
+              onClick={() => saveInProgress({ data: { ...form, naics: naicsToMccDetails }, name: title })}
+              label={'Save in Draft'}
+            />
             <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
-          )}
-          <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
-        </div>
+            <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
+          </div>
+        )}
       </div>
 
       {step?.ai_formatting && (

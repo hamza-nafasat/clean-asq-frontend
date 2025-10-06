@@ -53,6 +53,8 @@ function BankInfo({
   const [error] = useState(null);
   const [bankModal, setBankModal] = useState(null);
 
+  const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
+
   const signatureUploadHandler = async file => {
     if (!file) return toast.error('Please select a file');
 
@@ -87,7 +89,6 @@ function BankInfo({
       form.bank_account_number &&
       form.confirm_bank_account_number &&
       form.bank_account_number === form.confirm_bank_account_number;
-
     setAccMatch(isMatch);
   }, [form.bank_account_number, form.confirm_bank_account_number]);
 
@@ -115,6 +116,10 @@ function BankInfo({
 
   // check all required fields filled
   useEffect(() => {
+    if (isCreator) {
+      setIsAllRequiredFieldsFilled(true);
+      return;
+    }
     const allFilled = requiredNames.every(name => {
       const val = form[name];
       if (val == null) return false;
@@ -140,19 +145,19 @@ function BankInfo({
       }
     }
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
-  }, [form, isSignature, requiredNames]);
+  }, [form, isCreator, isSignature, requiredNames]);
 
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
-        <div className="flex gap-2">
-          <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
-          {user?._id && user.role !== 'guest' && (
+        {isCreator && (
+          <div className="flex gap-2">
+            <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
             <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
-          )}
-          <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
-        </div>
+            <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
+          </div>
+        )}
       </div>
       {updateSectionFromatingModal && (
         <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
@@ -327,9 +332,11 @@ function BankInfo({
           {currentStep < totalSteps - 1 ? (
             <Button
               onClick={() => handleNext({ data: form, name: title, setLoadingNext })}
-              className={`${(!isAllRequiredFieldsFilled || loadingNext || !accMatch) && 'pointer-events-none cursor-not-allowed opacity-20'}`}
-              disabled={!isAllRequiredFieldsFilled || loadingNext || !accMatch}
-              label={!isAllRequiredFieldsFilled || !accMatch ? 'Some Required Fields are Missing' : 'Next'}
+              className={`${(!isAllRequiredFieldsFilled || loadingNext || (!accMatch && !isCreator)) && 'pointer-events-none cursor-not-allowed opacity-20'}`}
+              disabled={!isAllRequiredFieldsFilled || loadingNext || (!accMatch && !isCreator)}
+              label={
+                !isAllRequiredFieldsFilled || (!accMatch && !isCreator) ? 'Some Required Fields are Missing' : 'Next'
+              }
             />
           ) : (
             <Button
