@@ -15,16 +15,16 @@ const Button = ({
   ...props
 }) => {
   const baseClasses =
-    'cursor-pointer rounded-[4px] border-2 px-[14px] py-[4px] text-buttonText font-medium transition-all duration-300 flex items-center justify-center gap-2';
+    'cursor-pointer rounded-[4px] border-2 px-[14px] py-[4px] text-buttonTextPrimary font-medium transition-all duration-300 flex items-center justify-center gap-2';
 
   // ✅ Use brightness filter on hover (works dynamically with CSS vars from API)
   const variantClasses = {
     primary: `
-      bg-[var(--primary)] border-[var(--primary)] text-white 
+      bg-[var(--primary)] border-[var(--primary)] text-buttonTextPrimary
       hover:brightness-120 hover:border-[var(--primary)]`,
     secondary: `
       bg-[var(--buttonSecondary)] border-[var(--buttonSecondary)] text-[var(--textPrimary)] 
-      hover:brightness-120 hover:border-[var(--buttonSecondary)] `,
+      hover:brightness-120 hover:border-[var(--buttonSecondary)] text-buttonTextSecondary `,
   };
 
   const disabledClasses = disabled || loading ? 'opacity-50 cursor-not-allowed' : '';

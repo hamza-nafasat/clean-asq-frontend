@@ -16,7 +16,6 @@ import {
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
-import { set } from 'date-fns';
 
 function CustomSection({
   fields,
@@ -113,7 +112,7 @@ function CustomSection({
       }
     }
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
-  }, [form, isSignature, requiredNames]);
+  }, [form, isCreator, isSignature, requiredNames]);
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">

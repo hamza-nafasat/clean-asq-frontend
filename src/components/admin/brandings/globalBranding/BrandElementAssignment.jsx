@@ -1,10 +1,7 @@
-import React, { useState } from 'react';
 import { HexColorPicker } from 'react-colorful';
 import FontPicker from './FontPicker';
 
 const ColorInput = ({ label, color, setColor }) => {
-  const [showPicker, setShowPicker] = useState(false);
-
   const handleChange = e => {
     setColor(e.target.value);
   };
@@ -60,8 +57,11 @@ const BrandElementAssignment = ({
   // setPrimaryFont,
   fontFamily,
   setFontFamily,
-  buttonTextColor,
-  setButtonTextColor,
+
+  buttonTextPrimary,
+  setButtonTextPrimary,
+  buttonTextSecondary,
+  setButtonTextSecondary,
 }) => {
   return (
     <div className="mt-6">
@@ -75,9 +75,10 @@ const BrandElementAssignment = ({
         <ColorInput label="Link Color" color={linkColor} setColor={setLinkColor} />
         <ColorInput label="Background Color" color={backgroundColor} setColor={setBackgroundColor} />
         <ColorInput label="Frame Color (Input Fields, Borders)" color={frameColor} setColor={setFrameColor} />
-        <ColorInput label="Button text color" color={buttonTextColor} setColor={setButtonTextColor} />
+        <ColorInput label="Button Primary text" color={buttonTextPrimary} setColor={setButtonTextPrimary} />
+        <ColorInput label="Button Secondary text" color={buttonTextSecondary} setColor={setButtonTextSecondary} />
       </div>
-      <div className="bg-buttonTextColor text-buttonText size-8">hallo</div>
+      <div className="bg-buttonTextPrimary text-buttonText size-8">hallo</div>
 
       <div className="flex flex-col space-y-1">
         <label htmlFor="primary-font" className="text-sm font-medium text-gray-700">

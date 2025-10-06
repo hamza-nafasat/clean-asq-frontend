@@ -10,7 +10,8 @@ const Preview = ({
   selectedLogo,
   secondaryColor,
   accentColor,
-  buttonTextColor,
+  buttonTextPrimary,
+  buttonTextSecondary,
   linkColor,
   textColor,
   frameColor,
@@ -85,7 +86,7 @@ const Preview = ({
           <Button
             label={'Primary Button'}
             style={{
-              color: buttonTextColor || '#000000',
+              color: buttonTextPrimary || '#000000',
               backgroundColor: primaryColor || '#E5E7EB',
               border: `1px solid ${primaryColor || '#E5E7EB'}`,
             }}
@@ -95,7 +96,7 @@ const Preview = ({
             label={'Secondary Button'}
             className="!border-none"
             style={{
-              color: buttonTextColor || '#000000',
+              color: buttonTextSecondary || '#000000',
               backgroundColor: secondaryColor || '#E5E7EB',
               border: `1px solid ${secondaryColor || '#E5E7EB'}`,
             }}
@@ -103,7 +104,7 @@ const Preview = ({
           <Button
             label={' Accent Button'}
             style={{
-              color: buttonTextColor || '#000000',
+              color: accentColor || '#000000',
               backgroundColor: primaryColor || '#E5E7EB',
               border: `1px solid ${primaryColor || '#E5E7EB'}`,
             }}

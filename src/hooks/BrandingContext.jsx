@@ -12,7 +12,8 @@ const DEFAULT_COLORS = {
   backgroundColor: '#f9f9f9',
   frameColor: '#db1313',
   fontFamily: 'Inter',
-  buttonTextColor: '#bfff00',
+  buttonTextPrimary: '#bfff00',
+  buttonTextSecondary: '#bfff00',
 };
 
 export const BrandingProvider = ({ children }) => {
@@ -25,7 +26,8 @@ export const BrandingProvider = ({ children }) => {
   const [backgroundColor, setBackgroundColor] = useState(DEFAULT_COLORS.backgroundColor);
   const [frameColor, setFrameColor] = useState(DEFAULT_COLORS.frameColor);
   const [fontFamily, setFontFamily] = useState(DEFAULT_COLORS.fontFamily);
-  const [buttonTextColor, setButtonTextColor] = useState(DEFAULT_COLORS.buttonTextColor);
+  const [buttonTextPrimary, setButtonTextPrimary] = useState(DEFAULT_COLORS.buttonTextPrimary);
+  const [buttonTextSecondary, setButtonTextSecondary] = useState(DEFAULT_COLORS.buttonTextSecondary);
 
   // Load saved branding from localStorage on mount
   useEffect(() => {
@@ -39,7 +41,8 @@ export const BrandingProvider = ({ children }) => {
       setBackgroundColor(savedBranding.backgroundColor || DEFAULT_COLORS.backgroundColor);
       setFrameColor(savedBranding.frameColor || DEFAULT_COLORS.frameColor);
       setFontFamily(savedBranding.fontFamily || DEFAULT_COLORS.fontFamily);
-      setButtonTextColor(savedBranding.buttonTextColor || DEFAULT_COLORS.buttonTextColor);
+      setButtonTextPrimary(savedBranding.buttonTextPrimary || DEFAULT_COLORS.buttonTextPrimary);
+      setButtonTextSecondary(savedBranding.buttonTextSecondary || DEFAULT_COLORS.buttonTextSecondary);
     }
   }, []);
 
@@ -54,7 +57,8 @@ export const BrandingProvider = ({ children }) => {
       backgroundColor,
       frameColor,
       fontFamily,
-      buttonTextColor,
+      buttonTextPrimary,
+      buttonTextSecondary,
     };
     localStorage.setItem('brandingData', JSON.stringify(brandingData));
 
@@ -73,7 +77,8 @@ export const BrandingProvider = ({ children }) => {
     document.documentElement.style.setProperty('--backgroundColor', backgroundColor);
     document.documentElement.style.setProperty('--color-frame', frameColor);
     document.documentElement.style.setProperty('--frameColor', frameColor);
-    document.documentElement.style.setProperty('--color-button-text-color', buttonTextColor);
+    document.documentElement.style.setProperty('--color-button-text-primary', buttonTextPrimary);
+    document.documentElement.style.setProperty('--color-button-text-secondary', buttonTextSecondary);
 
     // Apply font family globally using CSS variables
     document.documentElement.style.setProperty('--font-primary', `var(--font-${fontFamily.toLowerCase()})`);
@@ -86,7 +91,8 @@ export const BrandingProvider = ({ children }) => {
     backgroundColor,
     frameColor,
     fontFamily,
-    buttonTextColor,
+    buttonTextPrimary,
+    buttonTextSecondary,
   ]);
 
   const value = {
@@ -108,8 +114,10 @@ export const BrandingProvider = ({ children }) => {
     setFrameColor,
     fontFamily,
     setFontFamily,
-    buttonTextColor,
-    setButtonTextColor,
+    buttonTextPrimary,
+    setButtonTextPrimary,
+    buttonTextSecondary,
+    setButtonTextSecondary,
   };
 
   return <BrandingContext.Provider value={value}>{children}</BrandingContext.Provider>;

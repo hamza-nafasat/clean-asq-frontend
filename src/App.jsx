@@ -48,7 +48,8 @@ function App() {
     setFrameColor,
     setFontFamily,
     setLogo,
-    setButtonTextColor,
+    setButtonTextPrimary,
+    setButtonTextSecondary,
   } = useBranding();
 
   useEffect(() => {
@@ -81,7 +82,8 @@ function App() {
               setFrameColor(userBranding.colors.frame);
               setFontFamily(userBranding.fontFamily);
               setLogo(userBranding?.selectedLogo);
-              setButtonTextColor(userBranding.colors.buttonText);
+              setButtonTextPrimary(userBranding.colors.buttonTextPrimary);
+              setButtonTextSecondary(userBranding.colors.buttonTextSecondary);
             }
           }
         } else dispatch(userNotExist());
@@ -100,7 +102,8 @@ function App() {
     setFrameColor,
     setFontFamily,
     setLogo,
-    setButtonTextColor,
+    setButtonTextPrimary,
+    setButtonTextSecondary,
   ]);
 
   useEffect(() => {

@@ -16,7 +16,6 @@ import BrandElementAssignment from './BrandElementAssignment';
 import BrandingSource from './BrandingSource';
 import ColorPalette from './ColorPalette';
 import Preview from './Preview';
-import { Rewind } from 'lucide-react';
 
 const GlobalBrandingPage = ({ brandingId }) => {
   const navigate = useNavigate();
@@ -34,7 +33,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [colorPalette, setColorPalette] = useState([]);
   const [selectedLogo, setSelectedLogo] = useState();
   const [extraLogos, setExtraLogos] = useState([]);
-  const [buttonTextColor, setButtonTextColor] = useState('');
+  const [buttonTextPrimary, setButtonTextPrimary] = useState('');
+  const [buttonTextSecondary, setButtonTextSecondary] = useState('');
 
   const {
     setPrimaryColor: setGlobalPrimaryColor,
@@ -46,7 +46,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
     setFrameColor: setGlobalFrameColor,
     setFontFamily: setGlobalFontFamily,
     setLogo: setGlobalLogo,
-    setButtonTextColor: setButtonColor,
+    setButtonTextPrimary: setButtonTextPrimaryGlobal,
+    setButtonTextSecondary: setButtonTextSecondaryGlobal,
   } = useBranding();
 
   const [extractColorsFromLogos] = useExtractColorsFromLogosMutation();
@@ -88,7 +89,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
         setLinkColor(data?.colors?.link);
         setBackgroundColor(data?.colors?.background);
         setFrameColor(data?.colors?.frame);
-        setButtonTextColor(data?.colors?.buttonText);
+        setButtonTextPrimary(data?.colors?.buttonTextPrimary);
+        setButtonTextSecondary(data?.colors?.buttonTextSecondary);
         if (Array.isArray(data?.color_palette?.fromLogo) && Array.isArray(data?.color_palette?.fromSite)) {
           setColorPalette([...data.color_palette.fromLogo, ...data.color_palette.fromSite]);
         }
@@ -113,7 +115,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !linkColor ||
       !backgroundColor ||
       !frameColor ||
-      !buttonTextColor
+      !buttonTextPrimary ||
+      !buttonTextSecondary
     ) {
       return toast.error('Please fill all fields before creating branding');
     }
@@ -125,7 +128,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       text: textColor,
       background: backgroundColor,
       frame: frameColor,
-      buttonText: buttonTextColor,
+      buttonTextPrimary: buttonTextPrimary,
+      buttonTextSecondary: buttonTextSecondary,
     };
 
     let finalLogos = logos.filter(logo => !logo.preview);
@@ -170,7 +174,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !linkColor ||
       !backgroundColor ||
       !frameColor ||
-      !buttonTextColor
+      !buttonTextPrimary ||
+      !buttonTextSecondary
     ) {
       return toast.error('Please fill all fields before creating branding');
     }
@@ -182,7 +187,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       text: textColor,
       background: backgroundColor,
       frame: frameColor,
-      buttonText: buttonTextColor,
+      buttonTextPrimary: buttonTextPrimary,
+      buttonTextSecondary: buttonTextSecondary,
     };
 
     let finalLogos = logos.filter(logo => !logo.preview);
@@ -216,7 +222,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
             setGlobalFrameColor(userBranding.colors.frame);
             setGlobalFontFamily(userBranding.fontFamily);
             setGlobalLogo(userBranding?.selectedLogo);
-            setButtonColor(userBranding.colors.buttonText);
+            setButtonTextPrimaryGlobal(userBranding.colors.buttonTextPrimary);
+            setButtonTextSecondaryGlobal(userBranding.colors.buttonTextSecondary);
           }
         }
 
@@ -272,11 +279,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setFrameColor(singleBranding.colors.frame);
       setFontFamily(singleBranding.fontFamily);
       setFontFamily(singleBranding.fontFamily);
-      setButtonTextColor(
-        singleBranding?.colors?.buttonText && singleBranding.colors.buttonText.trim() !== ''
-          ? singleBranding.colors.buttonText
-          : '#000000'
-      );
+      setButtonTextPrimary(singleBranding.colors.buttonTextPrimary);
+      setButtonTextSecondary(singleBranding.colors.buttonTextSecondary);
 
       // Set the selected logo from the API response if available
       if (singleBranding.selectedLogo) {
@@ -329,8 +333,10 @@ const GlobalBrandingPage = ({ brandingId }) => {
           setFrameColor={setFrameColor}
           fontFamily={fontFamily}
           setFontFamily={setFontFamily}
-          buttonTextColor={buttonTextColor}
-          setButtonTextColor={setButtonTextColor}
+          buttonTextPrimary={buttonTextPrimary}
+          setButtonTextPrimary={setButtonTextPrimary}
+          buttonTextSecondary={buttonTextSecondary}
+          setButtonTextSecondary={setButtonTextSecondary}
         />
         <div className="border-primary my-6 border-t-2"></div>
 
@@ -341,7 +347,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
           accentColor={accentColor}
           linkColor={linkColor}
           selectedLogo={selectedLogo}
-          buttonTextColor={buttonTextColor}
+          buttonTextPrimary={buttonTextPrimary}
+          buttonTextSecondary={buttonTextSecondary}
           textColor={textColor}
           frameColor={frameColor}
         />

@@ -69,7 +69,8 @@
   --linkColor: #1025e3;
   --backgroundColor: #f9f9f9;
   --frameColor: #db1313;
-  --buttonTextColor: #bfff00;
+  --buttonTextPrimary: #bfff00;
+  --buttonTextSecondary: #e08127;
 
   /* Branding Colors - These will override defaults when set */
   --color-primary: var(--primary);
@@ -79,7 +80,9 @@
   --color-link: var(--linkColor);
   --color-background: var(--backgroundColor);
   --color-frame: var(--frameColor);
-   --color-button-text-color: var(--buttonTextColor);
+  --color-button-text-primary: var(--buttonTextPrimary);
+  --color-button-text-secondary: var(--buttonTextSecondary);
+
   --color-new-green: #15a090;
   --font-primary: var(--font-inter);
 
@@ -518,11 +521,18 @@ body {
   color: var(--linkColor);
 }
 
-.text-buttonText {
-  color: var(--color-button-text-color);
+.text-buttonTextPrimary {
+  color: var(--color-button-text-primary);
 }
-.bg-buttonText {
-  background-color: var(--color-button-text-color);
+.bg-buttonTextPrimary {
+  background-color: var(--color-button-text-primary);
+}
+
+.text-buttonTextSecondary {
+  color: var(--color-button-text-secondary);
+}
+.bg-buttonTextSecondary {
+  background-color: var(--color-button-text-secondary);
 }
 
 /* Add these new utility classes for background and frame colors */
