@@ -414,32 +414,32 @@ export default function SingleApplication() {
     if (form?.data?.branding?.colors) {
       const firstFormBranding = form?.data?.branding;
       if (firstFormBranding?.colors) {
-        setPrimaryColor(firstFormBranding.colors.primary);
-        setSecondaryColor(firstFormBranding.colors.secondary);
-        setAccentColor(firstFormBranding.colors.accent);
-        setTextColor(firstFormBranding.colors.text);
-        setLinkColor(firstFormBranding.colors.link);
-        setBackgroundColor(firstFormBranding.colors.background);
-        setFrameColor(firstFormBranding.colors.frame);
-        setFontFamily(firstFormBranding.fontFamily);
-        setButtonTextPrimary(firstFormBranding.colors.buttonTextPrimary);
-        setButtonTextSecondary(firstFormBranding.colors.buttonTextSecondary);
+        setPrimaryColor(firstFormBranding?.colors?.primary);
+        setSecondaryColor(firstFormBranding?.colors?.secondary);
+        setAccentColor(firstFormBranding?.colors?.accent);
+        setTextColor(firstFormBranding?.colors?.text);
+        setLinkColor(firstFormBranding?.colors?.link);
+        setBackgroundColor(firstFormBranding?.colors?.background);
+        setFrameColor(firstFormBranding?.colors?.frame);
+        setFontFamily(firstFormBranding?.fontFamily);
+        setButtonTextPrimary(firstFormBranding?.colors?.buttonTextPrimary);
+        setButtonTextSecondary(firstFormBranding?.colors?.buttonTextSecondary);
         setLogo(firstFormBranding?.selectedLogo);
       }
     }
 
     return () => {
       const firstFormBranding = user?.branding;
-      setPrimaryColor(firstFormBranding.colors.primary);
-      setSecondaryColor(firstFormBranding.colors.secondary);
-      setAccentColor(firstFormBranding.colors.accent);
-      setTextColor(firstFormBranding.colors.text);
-      setLinkColor(firstFormBranding.colors.link);
-      setBackgroundColor(firstFormBranding.colors.background);
-      setFrameColor(firstFormBranding.colors.frame);
-      setFontFamily(firstFormBranding.fontFamily);
-      setButtonTextPrimary(firstFormBranding.colors.buttonTextPrimary);
-      setButtonTextSecondary(firstFormBranding.colors.buttonTextSecondary);
+      setPrimaryColor(firstFormBranding?.colors?.primary);
+      setSecondaryColor(firstFormBranding?.colors?.secondary);
+      setAccentColor(firstFormBranding?.colors?.accent);
+      setTextColor(firstFormBranding?.colors?.text);
+      setLinkColor(firstFormBranding?.colors?.link);
+      setBackgroundColor(firstFormBranding?.colors?.background);
+      setFrameColor(firstFormBranding?.colors?.frame);
+      setFontFamily(firstFormBranding?.fontFamily);
+      setButtonTextPrimary(firstFormBranding?.colors?.buttonTextPrimary);
+      setButtonTextSecondary(firstFormBranding?.colors?.buttonTextSecondary);
       setLogo(firstFormBranding?.selectedLogo);
     };
   }, [
@@ -456,9 +456,9 @@ export default function SingleApplication() {
     setSecondaryColor,
     setTextColor,
     user?.branding,
-    user?.branding.colors,
-    user?.branding.fontFamily,
-    user?.branding.selectedLogo,
+    user?.branding?.colors,
+    user?.branding?.fontFamily,
+    user?.branding?.selectedLogo,
   ]);
 
   return (
