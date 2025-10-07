@@ -402,18 +402,10 @@ export default function SingleApplication() {
     setBackgroundColor,
     setFrameColor,
     setFontFamily,
+    setLogo,
+    setButtonTextPrimary,
+    setButtonTextSecondary,
   } = useBranding();
-
-  const DEFAULT_COLORS = {
-    primaryColor: '#066969',
-    secondaryColor: '#21ccb0',
-    accentColor: '#72ffe7',
-    textColor: '#1b1b1b',
-    linkColor: '#1025e3',
-    backgroundColor: '#f9f9f9',
-    frameColor: '#db1313',
-    fontFamily: 'Inter',
-  };
 
   useEffect(() => {
     // console.log('form?.data?.branding', form?.data?.branding);
@@ -428,38 +420,43 @@ export default function SingleApplication() {
         setBackgroundColor(firstFormBranding.colors.background);
         setFrameColor(firstFormBranding.colors.frame);
         setFontFamily(firstFormBranding.fontFamily);
-        // setLogo(firstFormBranding?.logos?.[0]?.url);
+        setButtonTextPrimary(firstFormBranding.colors.buttonTextPrimary);
+        setButtonTextSecondary(firstFormBranding.colors.buttonTextSecondary);
+        setLogo(firstFormBranding?.selectedLogo);
       }
     }
 
     return () => {
-      setPrimaryColor(DEFAULT_COLORS.primaryColor);
-      setSecondaryColor(DEFAULT_COLORS.secondaryColor);
-      setAccentColor(DEFAULT_COLORS.accentColor);
-      setTextColor(DEFAULT_COLORS.textColor);
-      setLinkColor(DEFAULT_COLORS.linkColor);
-      setBackgroundColor(DEFAULT_COLORS.backgroundColor);
-      setFrameColor(DEFAULT_COLORS.frameColor);
-      setFontFamily(DEFAULT_COLORS.fontFamily);
+      const firstFormBranding = user?.branding;
+      setPrimaryColor(firstFormBranding.colors.primary);
+      setSecondaryColor(firstFormBranding.colors.secondary);
+      setAccentColor(firstFormBranding.colors.accent);
+      setTextColor(firstFormBranding.colors.text);
+      setLinkColor(firstFormBranding.colors.link);
+      setBackgroundColor(firstFormBranding.colors.background);
+      setFrameColor(firstFormBranding.colors.frame);
+      setFontFamily(firstFormBranding.fontFamily);
+      setButtonTextPrimary(firstFormBranding.colors.buttonTextPrimary);
+      setButtonTextSecondary(firstFormBranding.colors.buttonTextSecondary);
+      setLogo(firstFormBranding?.selectedLogo);
     };
   }, [
-    DEFAULT_COLORS.accentColor,
-    DEFAULT_COLORS.backgroundColor,
-    DEFAULT_COLORS.fontFamily,
-    DEFAULT_COLORS.frameColor,
-    DEFAULT_COLORS.linkColor,
-    DEFAULT_COLORS.primaryColor,
-    DEFAULT_COLORS.secondaryColor,
-    DEFAULT_COLORS.textColor,
     form?.data?.branding,
     setAccentColor,
     setBackgroundColor,
+    setButtonTextPrimary,
+    setButtonTextSecondary,
     setFontFamily,
     setFrameColor,
     setLinkColor,
+    setLogo,
     setPrimaryColor,
     setSecondaryColor,
     setTextColor,
+    user?.branding,
+    user?.branding.colors,
+    user?.branding.fontFamily,
+    user?.branding.selectedLogo,
   ]);
 
   return (
@@ -494,12 +491,13 @@ export default function SingleApplication() {
               {/* Buttons */}
               <div className="mt-6 flex w-full flex-col-reverse gap-3 sm:flex-row sm:justify-center">
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   className="flex-1"
                   onClick={() => setOpenRedirectModal(false)}
                   label="Edit ID Mission"
                 />
                 <Button
+                  variant="primary"
                   className="flex-1"
                   onClick={() => {
                     navigate(`/singleform/stepper/${formId}`);

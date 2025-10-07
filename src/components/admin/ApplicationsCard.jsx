@@ -309,7 +309,8 @@ export default function ApplicationsCard() {
                 <div className="flex items-center gap-1 md:gap-2">
                   <FaCheck className="text-primary" />
                   <span>{form?.sections?.length} form sections</span>
-                </div>
+                </div>{' '}
+                backgroundColor: colors?.secondary, borderColor: colors?.secondary,
                 <div className="flex items-center gap-1 md:gap-2">
                   <FaCheck className="text-primary" />
                   <span>AI-assisted completion available</span>
@@ -333,6 +334,7 @@ export default function ApplicationsCard() {
                   style={{
                     backgroundColor: colors?.secondary,
                     borderColor: colors?.secondary,
+                    color: colors?.buttonTextSecondary,
                     transition: 'all 0.3s ease',
                   }}
                   onMouseEnter={e => {

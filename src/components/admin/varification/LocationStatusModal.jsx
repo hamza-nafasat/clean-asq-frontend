@@ -261,7 +261,7 @@ export const LocationModalComponent = ({ locationModal, setLocationModal, formLo
         {/* Action Buttons */}
         <div className="flex w-full justify-end gap-2">
           <Button label="Cancel" variant="secondary" onClick={() => setLocationModal(false)} />
-          <Button label="Save" onClick={handleFormLocationUpdate} />
+          <Button label="Save" variant="primary" onClick={handleFormLocationUpdate} />
         </div>
       </div>
     </div>

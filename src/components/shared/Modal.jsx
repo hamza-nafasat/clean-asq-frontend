@@ -13,7 +13,7 @@ const Modal = memo(
     isLoading = false,
     saveButtonText = 'Save',
     saveButtonClassName = '',
-    cancelButtonClassName = '!bg-gray-500 !border-gray-500 hover:!bg-gray-400 hover:!border-gray-400',
+    cancelButtonClassName = '',
     cancelButtonText = 'Cancel',
     hideCancelButton = false,
     hideSaveButton = false,
@@ -45,13 +45,13 @@ const Modal = memo(
 
           <div className="flex justify-end gap-2">
             {!hideCancelButton && (
-              <Button label={cancelButtonText} onClick={onClose} className={cancelButtonClassName} disabled={isLoading} />
+              <Button variant="secondary" label={cancelButtonText} onClick={onClose} disabled={isLoading} />
             )}
             {!hideSaveButton && (
               <Button
+                variant="primary"
                 label={isLoading ? 'Loading...' : saveButtonText}
                 onClick={onSave}
-                className={saveButtonClassName}
                 disabled={isLoading}
               />
             )}
