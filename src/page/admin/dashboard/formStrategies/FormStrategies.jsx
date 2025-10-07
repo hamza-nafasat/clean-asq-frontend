@@ -5,32 +5,35 @@ import ExtractionContext from '../extractionContext/ExtractionContext';
 function FormStrategies() {
   const [activeTab, setActiveTab] = useState('one');
 
+  const tabs = [
+    { id: 'one', label: 'Strategies Key' },
+    { id: 'two', label: 'Extraction Prompt' },
+  ];
+
   return (
-    <div>
+    <div className="w-full">
       {/* Tabs aligned top-left */}
-      <div className="flex space-x-2 border-b w-fit">
-        <button
-          onClick={() => setActiveTab('one')}
-          className={`px-3 py-1 text-sm rounded-t-md ${activeTab === 'one'
-              ? 'bg-primary border-primary border-b-2 font-semibold text-white'
-              : 'text-gray-500'
-            }`}
-        >
-          Strategies key
-        </button>
-        <button
-          onClick={() => setActiveTab('two')}
-          className={`px-3 py-1 text-sm rounded-t-md ${activeTab === 'two'
-              ? 'bg-primary border-primary border-b-2 font-semibold text-white'
-              : 'text-gray-500'
-            }`}
-        >
-          Extraction prompt
-        </button>
+      <div className="flex space-x-2 bg-white/80 backdrop-blur-md border rounded-lg w-fit p-1.5 shadow-sm">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`relative px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300
+              ${activeTab === tab.id
+                ? 'bg-primary text-white scale-105'
+                : 'text-gray-600 hover:text-primary hover:bg-gray-100'
+              }`}
+          >
+            {tab.label}
+            {activeTab === tab.id && (
+              <span className="absolute bottom-0 left-0 w-full h-[2px] bg-white rounded-full"></span>
+            )}
+          </button>
+        ))}
       </div>
 
       {/* Tab Content */}
-      <div className="mt-4">
+      <div className="mt-5">
         {activeTab === 'one' ? <AllFormsStrategies /> : <ExtractionContext />}
       </div>
     </div>

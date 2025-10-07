@@ -208,7 +208,7 @@ const Brandings = () => {
           title={'Apply Branding'}
         />
       )}
-      <div className="mb-4 flex justify-end px-4">
+      <div className="mb-4 flex justify-end ">
         <Button label={'Create Branding'} onClick={() => navigate('/branding/create')} />
         {/* Create Branding
         </Button> */}

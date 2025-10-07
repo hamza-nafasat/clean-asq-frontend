@@ -124,7 +124,7 @@ function AllStrategies() {
 
   return (
     <div>
-      <div className="mb-4 flex w-full justify-end gap-3 px-4">
+      <div className="mb-4 flex w-full justify-end gap-3 mt-5">
         <Button onClick={() => setIsModalOpen(true)} label={'Add new'} />
       </div>
       <DataTable
@@ -134,6 +134,7 @@ function AllStrategies() {
         pagination
         highlightOnHover
         noDataComponent="No data found"
+        className='!rounded-lg'
       />
 
       {/* Add Modal */}

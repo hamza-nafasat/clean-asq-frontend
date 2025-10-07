@@ -105,7 +105,7 @@ export default function ApplicationsCard() {
   }, []);
 
   return (
-    <div className="rounded-md bg-white p-5 shadow">
+    <div className="rounded-md bg-white  p-5 shadow">
       {/* modal for set branding  */}
 
       {openModal && (
@@ -157,12 +157,12 @@ export default function ApplicationsCard() {
       )}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-textPrimary text-[22px] font-medium">Financial Services Application Platform</h1>
-          <p className="text-textPrimary text-[14px] font-normal">
+          <h1 className="text-textPrimary text-base md:text-2xl font-medium">Financial Services Application Platform</h1>
+          <p className="text-textPrimary text-base md:text-lg font-normal mt-5">
             Dynamic application forms with AI-assisted completion and automated data lookup
           </p>
         </div>
-        <div className="flex gap-6">
+        <div className="flex gap-6 mt-10 md:mt-0">
           {/* <Button label={'Help'} variant="secondary" /> */}
           <Button
             label={'Create Form'}
@@ -170,6 +170,7 @@ export default function ApplicationsCard() {
               setCreateFormModal(true);
               setFile(null);
             }}
+            className='truncate !text-sm  md:!text-base'
           />
         </div>
       </div>
@@ -182,7 +183,7 @@ export default function ApplicationsCard() {
           <TextField
             label={'Advance search'}
             type="text"
-            className="border-none bg-white px-2 text-sm outline-none"
+            className="border-none bg-white  text-sm outline-none"
             placeholder={searchMode === 'client' ? 'Search From' : 'Search Name'}
             value={searchMode === 'client' ? clientQuery : nameQuery}
             onChange={e => (searchMode === 'client' ? setClientQuery(e.target.value) : setNameQuery(e.target.value))}
@@ -213,7 +214,7 @@ export default function ApplicationsCard() {
             <TextField label={'To'} type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
           </div>
           {/* Search Button */}
-          <div className="col-span-6 flex items-center justify-center md:col-span-3 xl:col-span-3">
+          <div className="col-span-6 flex items-end justify-end md:col-span-3 xl:col-span-3">
             <Button icon={CiSearch} label={'Search'} className="mt-0 !h-12.5 md:mt-8 md:!w-full" />
           </div>
         </div>
@@ -236,7 +237,7 @@ export default function ApplicationsCard() {
                 alt="logo"
                 referrerPolicy="no-referrer"
               />
-              <div className="flex items-center justify-end">
+              <div className="flex items-center  justify-end">
                 <div className="relative">
                   <button
                     ref={menuButtonRef}
@@ -274,7 +275,7 @@ export default function ApplicationsCard() {
                         Set Location
                       </button>
                       <button
-                        onClick={() => {}}
+                        onClick={() => { }}
                         className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
                       >
                         Delete Form
@@ -327,7 +328,7 @@ export default function ApplicationsCard() {
                   })}
                 </span>
               </div>
-              <div className="mt-3 flex w-full flex-col items-center justify-between gap-3 md:mt-6 md:flex-row md:gap-4">
+              <div className="mt-3 flex w-full flex-col items-start justify-between gap-3 md:mt-6 md:flex-row md:gap-4">
                 <Button
                   label="Start Application"
                   onClick={() => navigate(`/application-form/${form?._id}`)}

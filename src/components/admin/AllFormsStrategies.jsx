@@ -144,7 +144,7 @@ function AllFormsStrategies() {
 
   return (
     <div>
-      <div className="mb-4 flex w-full justify-end gap-3 px-4">
+      <div className="mb-4 flex w-full justify-end gap-3">
         <Button onClick={() => setIsModalOpen(true)} label={'Add new'} />
         <Button
           onClick={handleCreateDefaultStrategies}
@@ -161,6 +161,8 @@ function AllFormsStrategies() {
           pagination
           highlightOnHover
           noDataComponent="No data found"
+          className='!rounded-lg'
+
         />
         {/* </div> */}
       </div>

@@ -179,7 +179,7 @@ function CompanyVerification({ formId }) {
             className="w-full rounded px-2 text-sm"
             value={form.name}
             onChange={
-              verifyCompanyLoading || lookupCompanyLoading ? () => {} : e => setForm({ ...form, name: e.target.value })
+              verifyCompanyLoading || lookupCompanyLoading ? () => { } : e => setForm({ ...form, name: e.target.value })
             }
           />
           <TextField
@@ -187,7 +187,7 @@ function CompanyVerification({ formId }) {
             className="w-full rounded px-2 text-sm"
             value={form.url}
             onChange={
-              verifyCompanyLoading || lookupCompanyLoading ? () => {} : e => setForm({ ...form, url: e.target.value })
+              verifyCompanyLoading || lookupCompanyLoading ? () => { } : e => setForm({ ...form, url: e.target.value })
             }
           />
           {apisRes?.companyVerify?.confidenceScore && apisRes?.companyVerify?.verificationStatus && (

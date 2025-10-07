@@ -18,7 +18,7 @@ function AdminDashboard() {
           <div className="w-full flex-1 items-center justify-center">
             <AdminHeader setSidebarOpen={setSidebarOpen} />
             <main className="scroll-0 mt-[14px] h-[calc(100vh-80px)] overflow-x-hidden overflow-y-scroll xl:h-[calc(100vh-100px)]">
-              <div className="flex h-full w-full flex-col justify-between gap-4 overflow-auto px-2">
+              <div className="flex h-full w-full flex-col justify-between gap-4 overflow-auto ">
                 <Outlet />
                 <Footer />
               </div>

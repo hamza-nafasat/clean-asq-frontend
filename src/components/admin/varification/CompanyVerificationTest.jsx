@@ -72,7 +72,7 @@ function CompanyVerificationTest({ formId }) {
 
   return (
     <div className="flex flex-col space-y-8">
-      <div className="border-frameColor bg-backgroundColor w-full rounded-md border p-4">
+      <div className="border-frameColor bg-backgroundColor w-full rounded-md border p-4 mt-5">
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
             <div>
@@ -88,7 +88,7 @@ function CompanyVerificationTest({ formId }) {
             className="w-full rounded px-2 text-sm"
             value={form.name}
             onChange={
-              verifyCompanyLoading || lookupCompanyLoading ? () => {} : e => setForm({ ...form, name: e.target.value })
+              verifyCompanyLoading || lookupCompanyLoading ? () => { } : e => setForm({ ...form, name: e.target.value })
             }
           />
           <TextField
@@ -96,12 +96,12 @@ function CompanyVerificationTest({ formId }) {
             className="w-full rounded px-2 text-sm"
             value={form.url}
             onChange={
-              verifyCompanyLoading || lookupCompanyLoading ? () => {} : e => setForm({ ...form, url: e.target.value })
+              verifyCompanyLoading || lookupCompanyLoading ? () => { } : e => setForm({ ...form, url: e.target.value })
             }
           />
           {apisRes?.companyVerify?.confidenceScore &&
-          apisRes?.companyVerify?.verificationStatus &&
-          apisRes?.companyVerify?.originalCompanyName ? (
+            apisRes?.companyVerify?.verificationStatus &&
+            apisRes?.companyVerify?.originalCompanyName ? (
             <div className="flex w-44 items-center gap-2 rounded-2xl border p-2 py-1">
               <div>
                 <GoCheckCircle className="font-medium text-blue-400" />
