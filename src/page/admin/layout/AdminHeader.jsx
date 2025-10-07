@@ -4,20 +4,24 @@ import { userNotExist } from '@/redux/slices/authSlice';
 import { LogInIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { HiChevronDown } from 'react-icons/hi';
+import logoApply from '../../../assets/images/logo.png';
 import { IoChevronForwardOutline, IoLogOutOutline } from 'react-icons/io5';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom'; // or 'next/link' if using Next.js
 import { toast } from 'react-toastify';
 
 import { HiMenu } from 'react-icons/hi';
+import { useBranding } from '@/hooks/BrandingContext';
 
 function AdminHeader({ setSidebarOpen }) {
   const navigate = useNavigate();
   const { user } = useSelector(state => state.auth);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef(null);
+  const { logo } = useBranding();
 
   const profileOpenHandler = () => setIsProfileOpen(prev => !prev);
+  const isGuest = !user?._id || user?.role?.name == 'guest';
 
   return (
     <div className="flex h-16 items-center justify-between rounded-md bg-white p-2 shadow">
@@ -26,9 +30,18 @@ function AdminHeader({ setSidebarOpen }) {
         <button className="rounded-md p-2 hover:bg-gray-100 lg:hidden" onClick={() => setSidebarOpen(true)}>
           <HiMenu size={24} className="text-gray-800" />
         </button>
-        <h1 className="text-lg font-semibold text-gray-800">
-          Welcome {user?.firstName} {user?.lastName}
-        </h1>
+        {!isGuest ? (
+          <h1 className="text-lg font-semibold text-gray-800">
+            Welcome {user?.firstName} {user?.lastName}
+          </h1>
+        ) : (
+          <img
+            src={logo || logoApply}
+            alt="Logo"
+            className={`object-contain ${'h-[100px] w-[100px]'} }`}
+            referrerPolicy="no-referrer"
+          />
+        )}
       </div>
 
       <div className="flex items-center gap-4 rounded-bl-[20px] bg-white px-6 py-2">
@@ -64,10 +77,12 @@ function AdminHeader({ setSidebarOpen }) {
             </div>
           </div>
         ) : (
-          <Button onClick={() => navigate('/login')} className="bg-primary cursor-pointer text-white">
-            Login
-            <LogInIcon />
-          </Button>
+          !isGuest && (
+            <Button onClick={() => navigate('/login')} className="bg-primary cursor-pointer text-white">
+              Login
+              <LogInIcon />
+            </Button>
+          )
         )}
       </div>
     </div>
