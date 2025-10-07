@@ -161,9 +161,6 @@ export default function SingleApplication() {
     });
   };
 
-  // navigate(`/singleform/stepper/${formId}`);
-  // navigate(`/verification?formId=${formId}`);
-
   const submitIdMissionData = useCallback(
     async e => {
       e.preventDefault();
