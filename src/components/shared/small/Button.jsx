@@ -12,19 +12,24 @@ const Button = ({
   variant = 'primary',
   loading = false,
   disabled = false,
+  style = {},
   ...props
 }) => {
-  const baseClasses =
-    'cursor-pointer rounded-[4px] border-2 px-[14px] py-[4px] text-buttonTextPrimary font-medium transition-all duration-300 flex items-center justify-center gap-2';
+  const baseClasses = `
+    cursor-pointer rounded-[4px] border-2 px-[14px] py-[4px]
+    font-medium transition-all duration-300
+    flex items-center justify-center gap-2
+  `;
 
-  // ✅ Use brightness filter on hover (works dynamically with CSS vars from API)
   const variantClasses = {
     primary: `
       bg-[var(--primary)] border-[var(--primary)] text-buttonTextPrimary
-      hover:brightness-120 hover:border-[var(--primary)]`,
+      hover:brightness-110 hover:border-[var(--primary)]
+    `,
     secondary: `
-      bg-[var(--buttonSecondary)] border-[var(--buttonSecondary)] text-[var(--textPrimary)] 
-      hover:brightness-120 hover:border-[var(--buttonSecondary)] text-buttonTextSecondary `,
+      bg-[var(--buttonSecondary)] border-[var(--buttonSecondary)] text-buttonTextSecondary
+      hover:brightness-110 hover:border-[var(--buttonSecondary)]
+    `,
   };
 
   const disabledClasses = disabled || loading ? 'opacity-50 cursor-not-allowed' : '';
@@ -34,18 +39,19 @@ const Button = ({
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`${baseClasses} ${variantClasses[variant]} ${disabledClasses} ${className}`}
+      className={` ${baseClasses} ${variantClasses[variant] || ''} ${disabledClasses} ${className} `}
+      style={style}
       {...props}
     >
       {loading ? (
         <>
           <svg
-            className="mr-2 -ml-1 h-4 w-4 animate-spin text-white"
+            className="mr-2 -ml-1 h-4 w-4 animate-spin text-current"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
           >
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path
               className="opacity-75"
               fill="currentColor"
@@ -53,7 +59,7 @@ const Button = ({
               0 5.373 0 12h4zm2 5.291A7.962 
               7.962 0 014 12H0c0 3.042 1.135 
               5.824 3 7.938l3-2.647z"
-            ></path>
+            />
           </svg>
           {label}
         </>
