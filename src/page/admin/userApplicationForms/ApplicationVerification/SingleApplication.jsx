@@ -393,6 +393,8 @@ export default function SingleApplication() {
     }
   }, [dispatch, form, getSavedFormData]);
 
+  const isCreator = user?._id && user?._id == form?.data?.owner && user?.role !== 'guest';
+  // const isCreator = true;
   const {
     setPrimaryColor,
     setSecondaryColor,
@@ -515,42 +517,55 @@ export default function SingleApplication() {
         <div className="mt-14 h-full overflow-auto text-center">
           {!idMissionVerified ? (
             !emailVerified ? (
-              <div className="flex flex-col items-center gap-3">
-                <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
-                <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your email first</p>
-                <div className="flex w-full items-center justify-center gap-4">
-                  <TextField
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    className="max-w-[500px]"
-                  />
-                  <Button
-                    onClick={sentOtpForEmail}
-                    disabled={otpLoading}
-                    className={`min-w-[130px] py-[8px] ${otpLoading && 'cursor-not-allowed opacity-25'}`}
-                    label={'Send OTP'}
-                  />
-                </div>
-                {otpSent && (
+              <>
+                <div className="flex flex-col items-center gap-3">
+                  <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
+                  <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your email first</p>
                   <div className="flex w-full items-center justify-center gap-4">
                     <TextField
-                      type="text"
-                      placeholder="Enter your OTP"
-                      value={otp}
-                      onChange={e => setOtp(e.target.value)}
+                      type="email"
+                      placeholder="Enter your email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
                       className="max-w-[500px]"
                     />
                     <Button
-                      onClick={verifyWithOtp}
-                      disabled={emailLoading}
-                      className={`min-w-[130px] py-[8px] ${emailLoading && 'cursor-not-allowed opacity-25'}`}
-                      label={'SubmitOtp'}
+                      onClick={sentOtpForEmail}
+                      disabled={otpLoading}
+                      className={`min-w-[130px] py-[8px] ${otpLoading && 'cursor-not-allowed opacity-25'}`}
+                      label={'Send OTP'}
                     />
                   </div>
-                )}
-              </div>
+                  {otpSent && (
+                    <div className="flex w-full items-center justify-center gap-4">
+                      <TextField
+                        type="text"
+                        placeholder="Enter your OTP"
+                        value={otp}
+                        onChange={e => setOtp(e.target.value)}
+                        className="max-w-[500px]"
+                      />
+                      <Button
+                        onClick={verifyWithOtp}
+                        disabled={emailLoading}
+                        className={`min-w-[130px] py-[8px] ${emailLoading && 'cursor-not-allowed opacity-25'}`}
+                        label={'SubmitOtp'}
+                      />
+                    </div>
+                  )}
+                  {isCreator && (
+                    <Button
+                      onClick={() => {
+                        dispatch(updateEmailVerified(true));
+                        navigate(`/verification?formid=${formId}`);
+                      }}
+                      className="w-full max-w-[650px]"
+                      variant="secondary"
+                      label={'Skip'}
+                    />
+                  )}
+                </div>
+              </>
             ) : getQrAndWebLinkLoading ? (
               <CustomLoading />
             ) : (
@@ -573,6 +588,16 @@ export default function SingleApplication() {
                       />
                     </div>
                   </>
+                )}
+                {isCreator && (
+                  <Button
+                    onClick={() => {
+                      setIdMissionVerified(true);
+                    }}
+                    className="w-full max-w-[230px]"
+                    variant="secondary"
+                    label={'Skip'}
+                  />
                 )}
               </div>
             )
@@ -703,7 +728,17 @@ export default function SingleApplication() {
                   onSave={handleSignature}
                 />
               </form>
-              <div className="flex w-full items-center justify-end">
+              <div className="flex w-full items-center justify-end gap-2 p-2">
+                {isCreator && (
+                  <Button
+                    onClick={() => {
+                      navigate(`/singleform/stepper/${formId}`);
+                    }}
+                    className="mt-4"
+                    variant="secondary"
+                    label={'Skip for now'}
+                  />
+                )}
                 <Button
                   disabled={!isAllRequiredFieldsFilled}
                   label={!isAllRequiredFieldsFilled ? 'Some fields are missing' : 'Submit'}

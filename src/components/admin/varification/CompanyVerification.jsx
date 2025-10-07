@@ -30,6 +30,7 @@ const columns = [
 function CompanyVerification({ formId }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { user } = useSelector(state => state?.auth);
   const [loading, setLoading] = useState(false);
   const [totalSearchStreatgies, setTotalSearchStreatgies] = useState(0);
   const [successfullyVerifiedStreatgies, setSuccessfullyVerifiedStreatgies] = useState(0);
@@ -45,6 +46,13 @@ function CompanyVerification({ formId }) {
   const [saveFormInDraft] = useSaveFormInDraftMutation();
   const [locationStatusModal, setLocationStatusModal] = useState(false);
   const [locationData, setLocationData] = useState({});
+  const [isCreator, setIsCreator] = useState(false);
+
+  useEffect(() => {
+    if (user && formBackendData) {
+      setIsCreator(user?._id && user?._id === formBackendData?.data?.owner && user?.role !== 'guest');
+    }
+  }, [formBackendData, user]);
 
   const handleSubmit = async () => {
     if (!form?.name || !form?.url) return toast.error('Please fill all fields');
@@ -237,9 +245,14 @@ function CompanyVerification({ formId }) {
         </div>
       ) : null}
 
-      {/* {apisRes?.companyVerify?.verificationStatus === 'verified' && formId && (
-        <Button onClick={handleNext} label={'Next to Stepper'} />
-      )} */}
+      {isCreator && (
+        <Button
+          onClick={() => {
+            navigate(`/application-form/${formId}`);
+          }}
+          label={'Skip'}
+        />
+      )}
     </div>
   );
 }

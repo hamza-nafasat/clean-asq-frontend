@@ -34,7 +34,7 @@ function AggrementBlock({
   const [loadingNext, setLoadingNext] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
-  const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
+  const isCreator = user?._id && user?._id == step?.owner && user?.role !== 'guest';
 
   const signatureUploadHandler = async file => {
     if (!file) return toast.error('Please select a file');
@@ -77,7 +77,7 @@ function AggrementBlock({
   }, [fields, isSignature, reduxData]);
 
   useEffect(() => {
-    if (!isCreator) {
+    if (isCreator) {
       setIsAllRequiredFieldsFilled(true);
       return;
     }
