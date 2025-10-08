@@ -217,7 +217,7 @@ export default function SingleApplication() {
         toast.success(res.message);
         // check if company verification already exist then dont navigate to company verification
         if (formData && !formData?.company_lookup_data) {
-          navigate(`/verification?formId=${formId}`);
+          navigate(`/verification?formid=${formId}`);
         }
       }
     } catch (error) {

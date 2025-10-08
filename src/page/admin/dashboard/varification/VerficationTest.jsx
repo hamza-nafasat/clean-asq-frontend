@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 
 function VerificationTest() {
   const [searchParams] = useSearchParams();
-  const formId = searchParams.get('formId');
+  const formId = searchParams.get('formid');
   return (
     <div>
       <CompanyVerificationTest formId={formId} />
