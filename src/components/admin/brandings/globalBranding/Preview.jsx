@@ -49,7 +49,7 @@ const Preview = ({
         >
           {companyName ? companyName.charAt(0).toUpperCase() + companyName.slice(1) : 'Company Name'}
         </p>
-        <div className="flex h-[100px] w-[80%] cursor-pointer items-center justify-center">
+        <div className="flex h-[100px] w-[80%] cursor-pointer">
           <img
             src={typeof selectedLogo === 'string' ? selectedLogo : selectedLogo}
             alt="logo"

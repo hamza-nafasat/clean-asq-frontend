@@ -79,7 +79,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
 
       if (res.success) {
         const data = res.data;
-        setCompanyName(data?.name || '');
+        // setCompanyName(data?.name || '');
         setFontFamily(data?.fontFamily || '');
         setLogos(data?.logos || []);
         setPrimaryColor(data?.colors?.primary);
@@ -150,6 +150,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       const res = await createBranding(formData).unwrap();
       if (res?.success) {
         toast.success(res?.message || 'Branding created successfully!');
+        navigate('/branding');
       } else {
         toast.error('Failed to create branding. Please try again.');
       }
