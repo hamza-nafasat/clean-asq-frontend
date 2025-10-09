@@ -318,7 +318,9 @@ export default function SingleApplication() {
       }
 
       setIdMissionVerifiedData({
-        name: formDataOfIdMission?.FullName || ''?.concat(' ', formDataOfIdMission?.Last_Name || ''),
+        name: (formDataOfIdMission?.FullName || formDataOfIdMission?.name || '')?.concat(
+          formDataOfIdMission?.Last_Name || ''
+        ),
         idNumber: formDataOfIdMission?.ID_Number || '',
         idIssuer: formDataOfIdMission?.ID_State
           ? formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country
@@ -328,7 +330,7 @@ export default function SingleApplication() {
         streetAddress:
           formDataOfIdMission?.ParsedAddressStreetNumber + formDataOfIdMission?.ParsedAddressStreetName || '',
         phoneNumber: formDataOfIdMission?.PhoneNumber || '',
-        zipCode: formDataOfIdMission?.PostalCode_Extracted?.split('-') || '',
+        zipCode: formDataOfIdMission?.PostalCode_Extracted || '',
         dateOfBirth: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : '',
         country: formDataOfIdMission?.Issuing_Country || '',
         issueDate: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : '',

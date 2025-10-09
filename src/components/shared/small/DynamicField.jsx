@@ -571,48 +571,61 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
 
 const AiHelpModal = ({ aiResponse }) => {
   const [updateAiPrompt, setUpdateAiPrompt] = useState('');
-  const [updatedAiResponse, setUpdatedAiResponse] = useState('');
+  const [chatHistory, setChatHistory] = useState([]);
   const [formateTextInMarkDown, { isLoading }] = useFormateTextInMarkDownMutation();
 
   const getResponseFromAi = async () => {
-    if (!updateAiPrompt) return toast.error('Please enter a prompt');
+    if (!updateAiPrompt.trim()) return toast.error('Please enter a prompt');
+
+    // Add user message
+    setChatHistory(prev => [...prev, { role: 'user', content: updateAiPrompt }]);
 
     try {
       const res = await formateTextInMarkDown({
-        text:
-          'you are an expert ai tell the accurate answer of this question is html format the prompt is ' +
-          updateAiPrompt,
+        text: 'You are an expert AI. Give an accurate HTML formatted answer to this prompt: ' + updateAiPrompt,
       }).unwrap();
+
       if (res.success) {
-        let html = DOMPurify.sanitize(res.data);
-        setUpdatedAiResponse(html);
+        const html = DOMPurify.sanitize(res.data);
+        setChatHistory(prev => [...prev, { role: 'ai', content: html }]);
+        setUpdateAiPrompt('');
       }
     } catch (err) {
       console.error(err);
-      toast.error(err?.data?.message || 'Failed to format text');
+      toast.error(err?.data?.message || 'Failed to get AI response');
     }
   };
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-col gap-2 p-4">
-          <div className="" dangerouslySetInnerHTML={{ __html: aiResponse ?? '' }} />
+      <div className="flex flex-col items-start gap-2 border-2 p-4">
+        <div className="" dangerouslySetInnerHTML={{ __html: aiResponse ?? '' }} />
+      </div>
+      {chatHistory?.length > 0 ? (
+        <div className="flex max-h-[60vh] flex-col gap-3 overflow-y-auto rounded-lg border bg-[#FAFBFF] p-4">
+          {chatHistory?.map((msg, index) => (
+            <div
+              key={index}
+              className={`rounded-lg p-3 ${
+                msg.role === 'user' ? 'self-end bg-blue-100 text-gray-800' : 'self-start bg-gray-100 text-gray-700'
+              }`}
+            >
+              <div dangerouslySetInnerHTML={{ __html: msg.content }} className="prose prose-sm max-w-none" />
+            </div>
+          ))}
         </div>
+      ) : null}
+
+      <div className="flex gap-2">
         <input
-          placeholder={'Enter AI Prompt'}
-          type={'text'}
+          placeholder="Enter AI Prompt"
+          type="text"
           value={updateAiPrompt}
           onChange={e => setUpdateAiPrompt(e.target.value)}
-          className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
+          className="border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
         />
-        <Button label="Get Response" className="text-nowrap" onClick={getResponseFromAi} loading={isLoading} />
+        <Button label="Get Response" onClick={getResponseFromAi} loading={isLoading} />
       </div>
-      {updatedAiResponse && (
-        <div className="flex flex-col gap-2 bg-amber-100 p-4">
-          <div className="" dangerouslySetInnerHTML={{ __html: updatedAiResponse ?? '' }} />
-        </div>
-      )}
     </div>
   );
 };

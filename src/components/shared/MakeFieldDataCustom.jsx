@@ -199,13 +199,13 @@ const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index, suggestions, is
             onChange={e => updateFieldDataField(e, true)}
           />
           <Checkbox
-            label="is AI Help Enabled"
+            label="Enable AI Help"
             checked={field.aiHelp}
             name="aiHelp"
             onChange={e => updateFieldDataField(e, true)}
           />
           <Checkbox
-            label="Is Display Text Enable"
+            label="Enable Display Text"
             checked={field.isDisplayText}
             name="isDisplayText"
             onChange={e => updateFieldDataField(e, true)}
