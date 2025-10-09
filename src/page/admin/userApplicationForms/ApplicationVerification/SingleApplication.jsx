@@ -1,13 +1,21 @@
 import SignatureBox from '@/components/shared/SignatureBox';
 import Button from '@/components/shared/small/Button';
+import Checkbox from '@/components/shared/small/Checkbox';
 import CustomLoading from '@/components/shared/small/CustomLoading';
 import { LoadingWithTimer } from '@/components/shared/small/LoadingWithTimer';
 import Modal from '@/components/shared/small/Modal';
 import TextField from '@/components/shared/small/TextField';
+import DOMPurify from 'dompurify';
 import { useBranding } from '@/hooks/BrandingContext';
 import { socket } from '@/main';
 import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from '@/redux/apis/authApis';
-import { useGetSavedFormMutation, useGetSingleFormQueryQuery, useSaveFormInDraftMutation } from '@/redux/apis/formApis';
+import {
+  useFormateTextInMarkDownMutation,
+  useGetSavedFormMutation,
+  useGetSingleFormQueryQuery,
+  useSaveFormInDraftMutation,
+  useUpdateFormSectionMutation,
+} from '@/redux/apis/formApis';
 import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
 import { userExist, userNotExist } from '@/redux/slices/authSlice';
 import { addSavedFormData, updateEmailVerified, updateFormState } from '@/redux/slices/formSlice';
@@ -44,7 +52,7 @@ export default function SingleApplication() {
   const [sendOtp, { isLoading: otpLoading }] = useSendOtpMutation();
   const [verifyEmail, { isLoading: emailLoading }] = useVerifyEmailMutation();
   const [updateMyProfile] = useUpdateMyProfileMutation();
-  const { data: form } = useGetSingleFormQueryQuery({ _id: formId });
+  const { data: form, refetch: formRefetch } = useGetSingleFormQueryQuery({ _id: formId });
   const [getSavedFormData] = useGetSavedFormMutation();
   const { formData } = useSelector(state => state?.form);
   const [saveFormInDraft] = useSaveFormInDraftMutation();
@@ -66,6 +74,9 @@ export default function SingleApplication() {
     country: '',
     signature: { secureUrl: '', publicId: '', resourceType: '' },
   });
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+
+  const idMissionSection = form?.data?.sections?.find(sec => sec?.title?.toLowerCase() == 'id_verification_blk');
 
   const handleSignature = async file => {
     try {
@@ -391,6 +402,7 @@ export default function SingleApplication() {
   }, [dispatch, form, getSavedFormData]);
 
   const isCreator = user?._id && user?._id == form?.data?.owner && user?.role !== 'guest';
+
   // const isCreator = true;
   const {
     setPrimaryColor,
@@ -460,6 +472,15 @@ export default function SingleApplication() {
 
   return (
     <>
+      {showSignatureModal && (
+        <Modal onClose={() => setShowSignatureModal(false)}>
+          <SignatureCustomization
+            formRefetch={formRefetch}
+            setShowSignatureModal={setShowSignatureModal}
+            section={idMissionSection}
+          />
+        </Modal>
+      )}
       {openRedirectModal ? (
         <>
           <div className="flex h-full"></div>
@@ -719,11 +740,26 @@ export default function SingleApplication() {
                   type="number"
                   className={'max-w-[400px]!'}
                 />
-                <SignatureBox
-                  oldSignatureUrl={idMissionVerifiedData?.signature?.secureUrl}
-                  className={'min-w-full'}
-                  onSave={handleSignature}
-                />
+                <div className="flex w-full flex-col">
+                  <div className="my-4 flex w-full items-center justify-between gap-2">
+                    {idMissionSection?.signDisplayText && (
+                      <div className="flex items-end gap-3">
+                        <div
+                          // className="flex flex-1 items-end gap-3"
+                          dangerouslySetInnerHTML={{
+                            __html: idMissionSection?.signDisplayText,
+                          }}
+                        />
+                      </div>
+                    )}
+                    <Button label="Customize Signature" onClick={() => setShowSignatureModal(true)} />
+                  </div>
+                  <SignatureBox
+                    oldSignatureUrl={idMissionVerifiedData?.signature?.secureUrl}
+                    className={'min-w-full'}
+                    onSave={handleSignature}
+                  />
+                </div>
               </form>
               <div className="flex w-full items-center justify-end gap-2 p-2">
                 {isCreator && (
@@ -750,3 +786,95 @@ export default function SingleApplication() {
     </>
   );
 }
+
+const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal }) => {
+  const [updateSection, { isLoading: isUpdatingSection }] = useUpdateFormSectionMutation();
+  const [formateTextInMarkDown, { isLoading: isFormating }] = useFormateTextInMarkDownMutation();
+  const [signatureData, setSignatureData] = useState({
+    isSignature: section?.isSignature || false,
+    isSignDisplayText: section?.isSignDisplayText || false,
+    signFormatedDisplayText: section?.signDisplayText || '',
+    signDisplayText: '',
+    formatingAiInstruction: '',
+  });
+
+  const handleUpdateSectionForSignature = async () => {
+    try {
+      const res = await updateSection({
+        _id: section?._id,
+        data: {
+          isSignature: signatureData.isSignature,
+          isSignDisplayText: signatureData.isSignDisplayText,
+          signDisplayText: signatureData.signFormatedDisplayText,
+        },
+      }).unwrap();
+      if (res.success) {
+        await formRefetch();
+        toast.success(res.message);
+        setShowSignatureModal(false);
+      }
+    } catch (error) {
+      console.log('Error while updating signature', error);
+    }
+  };
+
+  const formateTextWithAi = useCallback(async () => {
+    if (!signatureData?.signDisplayText || !signatureData?.formatingAiInstruction) {
+      toast.error('Please enter formatting instruction and text to format');
+      return;
+    }
+    try {
+      const res = await formateTextInMarkDown({
+        text: signatureData.signDisplayText,
+        instructions: signatureData?.formatingAiInstruction,
+      }).unwrap();
+      if (res.success) {
+        let html = DOMPurify.sanitize(res.data);
+        setSignatureData(prev => ({ ...prev, signFormatedDisplayText: html }));
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.data?.message || 'Failed to format text');
+    }
+  }, [formateTextInMarkDown, signatureData?.formatingAiInstruction, signatureData.signDisplayText]);
+
+  return (
+    <div className="flex flex-col gap-2 border-2 p-2 pb-4">
+      {/* display text  */}
+      <div className="flex w-full flex-col gap-2 pb-4">
+        <TextField
+          label="Display Text"
+          value={signatureData?.signDisplayText}
+          name="displayText"
+          onChange={e => setSignatureData(prev => ({ ...prev, signDisplayText: e.target.value }))}
+        />
+        <label htmlFor="formattingInstructionForAi">Enter formatting instruction for AI and click on generate</label>
+        <textarea
+          id="formattingInstructionForAi"
+          rows={2}
+          value={signatureData?.formatingAiInstruction}
+          onChange={e => setSignatureData(prev => ({ ...prev, formatingAiInstruction: e.target.value }))}
+          className="w-full rounded-md border border-gray-300 p-2 outline-none"
+        />
+        <div className="flex justify-end">
+          <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Fromat Text'} />
+        </div>
+        {signatureData?.signFormatedDisplayText && (
+          <div
+            className="h-full bg-amber-100 p-4"
+            dangerouslySetInnerHTML={{ __html: signatureData?.signFormatedDisplayText ?? '' }}
+          />
+        )}
+      </div>
+
+      <div className="flex w-full">
+        <Button
+          onClick={handleUpdateSectionForSignature}
+          disabled={isUpdatingSection}
+          className="bg-primary mt-8 w-full text-white"
+          label={' Update Signature Data'}
+        />
+      </div>
+    </div>
+  );
+};
