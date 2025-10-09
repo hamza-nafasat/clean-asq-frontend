@@ -35,12 +35,14 @@ function AdminHeader({ setSidebarOpen }) {
             Welcome {user?.firstName} {user?.lastName}
           </h1>
         ) : (
-          <img
-            src={logo || logoApply}
-            alt="Logo"
-            className={`object-contain ${'h-[100px] w-[100px]'} }`}
-            referrerPolicy="no-referrer"
-          />
+          <div className="my-4 flex">
+            <img
+              src={logo || logoApply}
+              alt="Logo"
+              className={`object-contain ${'h-[60px] w-[60px]'} }`}
+              referrerPolicy="no-referrer"
+            />
+          </div>
         )}
       </div>
 

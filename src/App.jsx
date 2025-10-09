@@ -51,7 +51,6 @@ function App() {
     setButtonTextPrimary,
     setButtonTextSecondary,
   } = useBranding();
-  console.log('setButtonTextSecondary', setButtonTextSecondary);
 
   useEffect(() => {
     const userId = user?._id;
@@ -73,8 +72,6 @@ function App() {
           console.log(res?.data?.data?.branding);
           if (res?.data?.data?.branding?.colors) {
             const userBranding = res?.data?.data?.branding;
-            console.log('setButtonTextSecondarytttttttttt', userBranding.colors.buttonTextSecondary);
-
             if (userBranding?.colors) {
               setPrimaryColor(userBranding.colors.primary);
               setSecondaryColor(userBranding.colors.secondary);
@@ -112,7 +109,6 @@ function App() {
   useEffect(() => {
     async function checkClientVpn() {
       const vpnData = await detectVPN();
-
       const resp = await fetch(`${getEnv('SERVER_URL')}/api/form/vpn-check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

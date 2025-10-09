@@ -1,10 +1,11 @@
 import { FIELD_TYPES } from '@/data/constants';
 import { useFindNaicAndMccMutation, useGetAllSearchStrategiesQuery } from '@/redux/apis/formApis';
-import { PencilIcon } from 'lucide-react';
-import { useEffect, useMemo, useState, useRef } from 'react';
-import { naicsToMcc } from '../../assets/NAICStoMCC.js';
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary.js';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
+import { naicsToMcc } from '../../assets/NAICStoMCC.js';
+import SignatureBox from '../shared/SignatureBox.jsx';
 import Button from '../shared/small/Button.jsx';
 import {
   CheckboxInputType,
@@ -14,12 +15,9 @@ import {
   RangeInputType,
   SelectInputType,
 } from '../shared/small/DynamicField.jsx';
+import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal.jsx';
 import Modal from '../shared/small/Modal.jsx';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal.jsx';
-import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal.jsx';
-import SignatureBox from '../shared/SignatureBox.jsx';
-import TextField from '../shared/small/TextField.jsx';
-import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary.js';
 
 function CompanyInformation({
   formRefetch,
