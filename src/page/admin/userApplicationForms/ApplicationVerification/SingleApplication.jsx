@@ -330,7 +330,7 @@ export default function SingleApplication() {
         streetAddress:
           formDataOfIdMission?.ParsedAddressStreetNumber + formDataOfIdMission?.ParsedAddressStreetName || '',
         phoneNumber: formDataOfIdMission?.PhoneNumber || '',
-        zipCode: formDataOfIdMission?.PostalCode_Extracted || '',
+        zipCode: formDataOfIdMission?.ParsedAddressPostalCode || '',
         dateOfBirth: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : '',
         country: formDataOfIdMission?.Issuing_Country || '',
         issueDate: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : '',
@@ -704,7 +704,7 @@ export default function SingleApplication() {
                   className={'max-w-[400px]!'}
                 />
                 <TextField
-                  type="number"
+                  type="text"
                   required
                   value={idMissionVerifiedData?.zipCode}
                   onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, zipCode: e.target.value })}
