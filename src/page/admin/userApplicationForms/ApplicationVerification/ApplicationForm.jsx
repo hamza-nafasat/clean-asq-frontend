@@ -22,6 +22,7 @@ import { setIdMissionData } from '@/redux/slices/authSlice';
 import AggrementBlock from '@/components/applicationVerification/AggrementBlock';
 
 export default function ApplicationForm() {
+  const { user } = useSelector(state => state.auth);
   const navigate = useNavigate();
   const params = useParams();
   const formId = params.formId;
@@ -171,7 +172,7 @@ export default function ApplicationForm() {
     isSavedApiRun,
     saveInProgress,
   ]);
-
+  if (!user?._id) return navigate(`/application-form/${formId}`);
   return !form?.data?._id ? (
     <CustomLoading />
   ) : (

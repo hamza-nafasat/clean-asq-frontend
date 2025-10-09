@@ -133,6 +133,7 @@ function App() {
               <Route path="application-form/:formId" element={<SingleApplication />} />
               <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
               <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
+              <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
             </Route>
             {/* non authentic routes */}
             <Route element={<ProtectedRoute user={!user} redirect="/all-users" />}>
@@ -148,7 +149,6 @@ function App() {
                 <Route path="all-roles" element={<AllRoles />} />
                 <Route path="all-users" element={<AdminAllUsers />} />
                 <Route path="application-forms" element={<ApplicationForms />} />
-                <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
                 <Route path="applications" element={<Applications />} />
                 <Route path="branding" element={<Brandings />} />
                 <Route path="branding/create" element={<CreateBranding />} />
