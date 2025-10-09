@@ -29,7 +29,8 @@ function Documents({
   step,
   isSignature,
 }) {
-  const { user, idMissionData } = useSelector(state => state.auth);
+  const { formData } = useSelector(state => state.form);
+  const { user } = useSelector(state => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const [file, setFile] = useState(null);
   const [fileFieldName, setFileFieldName] = useState('');
@@ -74,12 +75,13 @@ function Documents({
   };
   // Generate the AI prompt
   const generateAiPrompt = useCallback(() => {
+    const idMissionData = formData?.idMission;
     const companyName = idMissionData?.companyTitle || 'your company';
     const state = idMissionData?.state || 'your state';
     const prompt = step?.aiCustomizablePrompt || '';
     // return `how do I find online images/copies of the articles of incorporation or organization for ${companyName} in ${state} via the state's entity search website?`;
     return String(prompt)?.replace('${companyName}', companyName).replace('${state}', state);
-  }, [idMissionData?.companyTitle, idMissionData?.state, step?.aiCustomizablePrompt]);
+  }, [formData?.idMission, step?.aiCustomizablePrompt]);
   // handle next and submit functions
   const updateFileDataHandler = async () => {
     try {
@@ -133,7 +135,6 @@ function Documents({
   // Fetch AI help on component mount
   useEffect(() => {
     const fetchRequiredDocuments = async () => {
-      // if (!idMissionData?.state) return;
       try {
         setIsAiLoading(true);
         const prompt = generateAiPrompt();
@@ -154,7 +155,7 @@ function Documents({
     };
 
     fetchRequiredDocuments();
-  }, [idMissionData?.state, formateTextInMarkDown, generateAiPrompt]);
+  }, [formateTextInMarkDown, generateAiPrompt]);
 
   useEffect(() => {
     if (fields && fields.length > 0) {
