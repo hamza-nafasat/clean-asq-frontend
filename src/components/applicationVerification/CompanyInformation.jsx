@@ -59,8 +59,6 @@ function CompanyInformation({
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
 
-  console.log('form data', form);
-
   const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
 
   const signatureUploadHandler = async file => {
