@@ -88,8 +88,8 @@ const DynamicField = ({ cn, field, className = '', form, placeholder, value, set
             <input
               {...rest}
               type="range"
+              value={value ?? 0}
               className={`${cn} border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
-              defaultValue={0}
               onChange={e => onRangeChange(e, 0, 100)}
             />
             <input
@@ -422,7 +422,6 @@ const RangeInputType = ({ field, className, form, setForm }) => {
           value={Number(form[name]) || 0}
           type="range"
           className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
-          defaultValue={0}
           onChange={onRangeChange}
         />
         <div className="flex w-full gap-2">
@@ -601,7 +600,7 @@ const AiHelpModal = ({ aiResponse }) => {
           <div className="" dangerouslySetInnerHTML={{ __html: aiResponse ?? '' }} />
         </div>
         <input
-          placeholder={'Enter Ai Prompt'}
+          placeholder={'Enter AI Prompt'}
           type={'text'}
           value={updateAiPrompt}
           onChange={e => setUpdateAiPrompt(e.target.value)}

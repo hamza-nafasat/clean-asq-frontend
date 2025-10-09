@@ -78,7 +78,7 @@ function Documents({
     const state = idMissionData?.state || 'your state';
     const prompt = step?.aiCustomizablePrompt || '';
     // return `how do I find online images/copies of the articles of incorporation or organization for ${companyName} in ${state} via the state's entity search website?`;
-    return prompt?.replace('${companyName}', companyName).replace('${state}', state);
+    return String(prompt)?.replace('${companyName}', companyName).replace('${state}', state);
   }, [idMissionData?.companyTitle, idMissionData?.state, step?.aiCustomizablePrompt]);
   // handle next and submit functions
   const updateFileDataHandler = async () => {
@@ -133,7 +133,7 @@ function Documents({
   // Fetch AI help on component mount
   useEffect(() => {
     const fetchRequiredDocuments = async () => {
-      if (!idMissionData?.state) return;
+      // if (!idMissionData?.state) return;
       try {
         setIsAiLoading(true);
         const prompt = generateAiPrompt();
@@ -142,7 +142,7 @@ function Documents({
           text: prompt,
         }).unwrap();
 
-        if (res.success) {
+        if (res?.success) {
           setAiResponse(DOMPurify.sanitize(res.data));
         }
       } catch (error) {
@@ -216,9 +216,9 @@ function Documents({
                 <h3 className="text-lg font-medium text-blue-800">
                   How to Find Your Articles of Incorporation/Organization
                 </h3>
-                <div className="mt-2 rounded-md bg-blue-100 p-3">
+                {/* <div className="mt-2 rounded-md bg-blue-100 p-3">
                   <p className="mt-1 font-mono text-sm text-blue-900">{generateAiPrompt()}</p>
-                </div>
+                </div> */}
               </div>
               <button
                 onClick={() => setShowRequiredDocs(false)}

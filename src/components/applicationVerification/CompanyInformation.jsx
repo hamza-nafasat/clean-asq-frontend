@@ -61,6 +61,8 @@ function CompanyInformation({
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
 
+  console.log('form data', form);
+
   const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
 
   const signatureUploadHandler = async file => {
@@ -163,13 +165,24 @@ function CompanyInformation({
     if (fields && fields.length > 0) {
       const lookupData = formData?.company_lookup_data;
       const initialForm = {};
+      let isDateField = false;
       fields.forEach(field => {
-        const fieldValueFromLookupData = lookupData?.find(item => item?.name === field?.name)?.result;
-        initialForm[field.name] = reduxData
-          ? reduxData[field.name]
-          : fieldValueFromLookupData
-            ? fieldValueFromLookupData
+        let fieldValueFromLookupData = lookupData?.find(item => {
+          const fieldName = field?.name?.trim()?.toLowerCase();
+          const itemName = item?.name?.trim()?.toLowerCase();
+          if (itemName == fieldName && itemName?.includes('date')) isDateField = true;
+          return fieldName === itemName;
+        })?.result;
+        if (isDateField) {
+          let formatedData = fieldValueFromLookupData
+            ? new Date(fieldValueFromLookupData)?.toISOString()?.split('T')?.[0]
             : '';
+          isDateField = false;
+          console.log('asdfakjsljd;fkjasldf', fieldValueFromLookupData);
+          initialForm[field.name] = reduxData?.[field?.name] || formatedData || '';
+        } else {
+          initialForm[field.name] = reduxData?.[field?.name] || fieldValueFromLookupData || '';
+        }
       });
       setForm(initialForm);
     }

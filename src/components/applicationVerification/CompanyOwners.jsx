@@ -197,11 +197,9 @@ function CompanyOwners({
     if (formData) {
       const lookupData = formData?.company_lookup_data;
       const searchField = step?.ownerSuggesstions || ['founders'];
-      console.log('search fields ', searchField);
       const founders = [];
       searchField.forEach(field => {
         let data = lookupData?.find(item => item?.name == field)?.result;
-        console.log('data is ', data);
         if (Array.isArray(data) && typeof data === 'object') {
           founders.push(...data);
         } else if (typeof data === 'string') {

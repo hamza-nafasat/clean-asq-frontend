@@ -1,4 +1,11 @@
+import { FIELD_TYPES } from '@/data/constants';
+import { useGetBankLookupQuery } from '@/redux/apis/formApis';
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
+import { CheckCircle, XCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import SignatureBox from '../shared/SignatureBox';
 import Button from '../shared/small/Button';
 import {
   CheckboxInputType,
@@ -8,17 +15,9 @@ import {
   RangeInputType,
   SelectInputType,
 } from '../shared/small/DynamicField';
-import { CheckCircle, XCircle } from 'lucide-react';
-import { FIELD_TYPES } from '@/data/constants';
-import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
-import Modal from '../shared/small/Modal';
-import { useSelector } from 'react-redux';
 import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
-import { PencilIcon } from 'lucide-react';
-import SignatureBox from '../shared/SignatureBox';
-import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
-import { toast } from 'react-toastify';
-import { useGetBankLookupQuery } from '@/redux/apis/formApis';
+import Modal from '../shared/small/Modal';
+import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 
 function BankInfo({
   name,
@@ -75,14 +74,17 @@ function BankInfo({
 
   useEffect(() => {
     if (data?.data) {
+      console.log('i am running1');
       const result = data?.data;
       if (Array.isArray(result.bankDetailsList) && result.bankDetailsList.length > 0) {
+        console.log('i am running2');
         setBankModal(result.bankDetailsList?.[0]);
       } else {
-        setBankModal({});
+        console.log('i am running3');
+        setBankModal(null);
       }
     }
-  }, [data]);
+  }, [data, refetch, isFetching]);
 
   useEffect(() => {
     const isMatch =
@@ -189,10 +191,12 @@ function BankInfo({
                   />
                   <Button
                     label={isFetching ? 'Checking...' : 'Check'}
-                    onClick={() => {
+                    onClick={async () => {
                       if (form[field?.name]) {
                         setLookupRouting(form?.[field?.name]);
-                        if (refetch) refetch();
+                        if (refetch) {
+                          await refetch();
+                        }
                       }
                     }}
                   />
@@ -360,8 +364,8 @@ function BankInfo({
         </Modal>
       )}
       {bankModal && (
-        <Modal title={'Bank for your routing number '} isOpen={true} onClose={() => setBankModal(null)}>
-          {bankModal.bankName ? (
+        <Modal title={'Bank for your routing number '} isOpen={!!bankModal} onClose={() => setBankModal(null)}>
+          {bankModal?.bankName ? (
             <>
               <p className="mb-6 leading-relaxed text-gray-600">
                 That routing number belongs to <span className="font-semibold text-gray-900">{bankModal.bankName}</span>

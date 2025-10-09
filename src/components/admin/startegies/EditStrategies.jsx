@@ -23,7 +23,7 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
             error ? 'border-red-500' : 'border-frameColor'
           }`}
         >
-          <option value="">Select</option>
+          <option value="">Choose an option</option>
           {options.map(opt => (
             <option key={opt.value} value={opt.value}>
               {opt.label}

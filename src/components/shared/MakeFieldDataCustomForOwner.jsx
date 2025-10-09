@@ -190,13 +190,13 @@ const MakeFieldDataCustomForOwner = ({ fieldsData, setFieldsData, index }) => {
             onChange={e => updateFieldDataField(e, true)}
           />
           <Checkbox
-            label="is Ai Help Enabled"
+            label="is AI Help Enabled"
             checked={field.aiHelp}
             name="aiHelp"
             onChange={e => updateFieldDataField(e, true)}
           />
           <Checkbox
-            label="Is Display Text"
+            label="Is Display Text Enable"
             checked={field.isDisplayText}
             name="isDisplayText"
             onChange={e => updateFieldDataField(e, true)}
@@ -206,14 +206,14 @@ const MakeFieldDataCustomForOwner = ({ fieldsData, setFieldsData, index }) => {
         {field?.aiHelp && (
           <div className="flex w-full flex-col items-center gap-2">
             <div className="flex w-full items-center gap-2">
-              <TextField label="Ai Prompt" value={field.aiPrompt} name="aiPrompt" onChange={updateFieldDataField} />
+              <TextField label="AI Prompt" value={field.aiPrompt} name="aiPrompt" onChange={updateFieldDataField} />
               <Button onClick={getResponseFromAi} disabled={isLoading} className="bg-primary mt-8 text-white">
                 Generate
               </Button>
             </div>
             {field?.aiResponse && (
               <div className="w-full flex-col py-4">
-                <h6 className="text-textPrimary py-2 text-xl font-semibold">Ai Response</h6>
+                <h6 className="text-textPrimary py-2 text-xl font-semibold">AI Response</h6>
                 <div
                   className="h-full bg-amber-100 p-4"
                   dangerouslySetInnerHTML={{ __html: field?.aiResponse ?? '' }}

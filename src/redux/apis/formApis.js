@@ -266,8 +266,14 @@ const formApis = createApi({
       invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
     }),
 
+    // getBankLookup: builder.query({
+    //   query: searchTerm => `/routing-lookup?searchTerm=${searchTerm}`,
+    // }),
     getBankLookup: builder.query({
-      query: searchTerm => `/routing-lookup?searchTerm=${searchTerm}`,
+      query: data => ({
+        url: `/routing-lookup?searchTerm=${data}`,
+        method: 'GET',
+      }),
     }),
 
     //================================

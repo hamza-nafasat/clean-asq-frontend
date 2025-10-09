@@ -151,7 +151,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
           />
           <Checkbox
             id="aiHelp"
-            label="Enable Ai Help"
+            label="Enable AI Help"
             checked={signatureData?.isSignAiHelp}
             disabled={signatureEnabling}
             className={`${signatureEnabling ? 'pointer-events-none opacity-30' : ''}`}
@@ -195,7 +195,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
           <div className="flex w-full flex-col items-center gap-2">
             <div className="flex w-full items-center gap-2">
               <TextField
-                label="Ai Prompt"
+                label="AI Prompt"
                 value={signatureData?.signAiPrompt}
                 name="aiPrompt"
                 onChange={e => setSignatureData(prev => ({ ...prev, signAiPrompt: e.target.value }))}
@@ -206,7 +206,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
             </div>
             {signatureData?.signAiResponse && (
               <div className="w-full flex-col py-4">
-                <h6 className="text-textPrimary py-2 text-xl font-semibold">Ai Response</h6>
+                <h6 className="text-textPrimary py-2 text-xl font-semibold">AI Response</h6>
                 <div
                   className="h-full bg-amber-100 p-4"
                   dangerouslySetInnerHTML={{ __html: signatureData?.signAiResponse ?? '' }}
