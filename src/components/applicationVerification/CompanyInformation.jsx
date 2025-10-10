@@ -42,7 +42,6 @@ function CompanyInformation({
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [form, setForm] = useState({});
   const [loadingNext, setLoadingNext] = useState(false);
-
   const [naicsToMccDetails, setNaicsToMccDetails] = useState({
     NAICS: reduxData?.naics?.NAICS || '',
     NAICS_Description: reduxData?.naics?.NAICS_Description || '',
@@ -249,16 +248,18 @@ function CompanyInformation({
       <div className="mb-10 flex items-center justify-between">
         <p className="text-textPrimary text-2xl font-semibold">{name}</p>
 
-        {isCreator && (
-          <div className="flex gap-2">
-            <Button
-              onClick={() => saveInProgress({ data: { ...form, naics: naicsToMccDetails }, name: title })}
-              label={'Save in Draft'}
-            />
-            <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
-            <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
-          </div>
-        )}
+        <div className="flex gap-2">
+          <Button
+            onClick={() => saveInProgress({ data: { ...form, naics: naicsToMccDetails }, name: title })}
+            label={'Save in Draft'}
+          />
+          {isCreator && (
+            <>
+              <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
+              <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
+            </>
+          )}
+        </div>
       </div>
 
       {step?.ai_formatting && (

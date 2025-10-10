@@ -112,19 +112,19 @@ function AggrementBlock({
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
         <div className="flex gap-2"></div>
       </div>
-      {isCreator && (
-        <>
-          <div className="flex justify-end gap-2">
-            <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
+      <div className="flex justify-end gap-2">
+        <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
+        {isCreator && (
+          <>
             <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
             <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
-          </div>
-          {updateSectionFromatingModal && (
-            <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
-              <EditSectionDisplayTextFromatingModal step={step} />
-            </Modal>
-          )}
-        </>
+          </>
+        )}
+      </div>
+      {updateSectionFromatingModal && (
+        <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
+          <EditSectionDisplayTextFromatingModal step={step} />
+        </Modal>
       )}
 
       {step?.ai_formatting && (

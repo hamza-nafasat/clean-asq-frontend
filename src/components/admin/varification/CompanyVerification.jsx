@@ -179,7 +179,7 @@ function CompanyVerification({ formId }) {
             className="w-full rounded px-2 text-sm"
             value={form.name}
             onChange={
-              verifyCompanyLoading || lookupCompanyLoading ? () => { } : e => setForm({ ...form, name: e.target.value })
+              verifyCompanyLoading || lookupCompanyLoading ? () => {} : e => setForm({ ...form, name: e.target.value })
             }
           />
           <TextField
@@ -187,7 +187,7 @@ function CompanyVerification({ formId }) {
             className="w-full rounded px-2 text-sm"
             value={form.url}
             onChange={
-              verifyCompanyLoading || lookupCompanyLoading ? () => { } : e => setForm({ ...form, url: e.target.value })
+              verifyCompanyLoading || lookupCompanyLoading ? () => {} : e => setForm({ ...form, url: e.target.value })
             }
           />
           {apisRes?.companyVerify?.confidenceScore && apisRes?.companyVerify?.verificationStatus && (
@@ -202,10 +202,6 @@ function CompanyVerification({ formId }) {
             </div>
           )}
 
-          <div className="mb-4 flex items-center space-x-2 px-2">
-            <input type="checkbox" />
-            <label className="text-textPrimary text-sm font-medium">This company has no website</label>
-          </div>
           <div className="flex items-center justify-end">
             <Button
               label="Verify Company"

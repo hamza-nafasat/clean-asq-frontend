@@ -25,7 +25,6 @@ function Documents({
   reduxData,
   title,
   formRefetch,
-  // saveInProgress,
   step,
   isSignature,
 }) {
