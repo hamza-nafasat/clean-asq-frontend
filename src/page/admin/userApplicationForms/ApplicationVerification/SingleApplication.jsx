@@ -319,6 +319,7 @@ export default function SingleApplication() {
 
       setIdMissionVerifiedData({
         name: (formDataOfIdMission?.FullName || formDataOfIdMission?.name || '')?.concat(
+          ' ',
           formDataOfIdMission?.Last_Name || ''
         ),
         idNumber: formDataOfIdMission?.ID_Number || '',
