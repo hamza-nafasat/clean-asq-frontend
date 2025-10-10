@@ -313,7 +313,6 @@ export default function ApplicationsCard() {
                   <FaCheck className="text-primary" />
                   <span>{form?.sections?.length} form sections</span>
                 </div>{' '}
-                backgroundColor: colors?.secondary, borderColor: colors?.secondary,
                 <div className="flex items-center gap-1 md:gap-2">
                   <FaCheck className="text-primary" />
                   <span>AI-assisted completion available</span>
