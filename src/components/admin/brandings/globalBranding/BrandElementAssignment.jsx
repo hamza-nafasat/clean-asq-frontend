@@ -43,8 +43,8 @@ const BrandElementAssignment = ({
   setPrimaryColor,
   secondaryColor,
   setSecondaryColor,
-  accentColor,
-  setAccentColor,
+  // accentColor,
+  // setAccentColor,
   textColor,
   setTextColor,
   linkColor,
@@ -70,7 +70,6 @@ const BrandElementAssignment = ({
       <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <ColorInput label="Primary Color (Buttons, Headers)" color={primaryColor} setColor={setPrimaryColor} />
         <ColorInput label="Secondary Color (Alternative Buttons)" color={secondaryColor} setColor={setSecondaryColor} />
-        <ColorInput label="Accent Color (Highlights, Badges)" color={accentColor} setColor={setAccentColor} />
         <ColorInput label="Text Color" color={textColor} setColor={setTextColor} />
         <ColorInput label="Link Color" color={linkColor} setColor={setLinkColor} />
         <ColorInput label="Background Color" color={backgroundColor} setColor={setBackgroundColor} />

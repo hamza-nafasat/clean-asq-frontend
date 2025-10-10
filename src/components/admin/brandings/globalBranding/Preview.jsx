@@ -101,14 +101,6 @@ const Preview = ({
               border: `1px solid ${secondaryColor || '#E5E7EB'}`,
             }}
           />
-          <Button
-            label={' Accent Button'}
-            style={{
-              color: accentColor || '#000000',
-              backgroundColor: primaryColor || '#E5E7EB',
-              border: `1px solid ${primaryColor || '#E5E7EB'}`,
-            }}
-          />
         </div>
       </div>
     </div>
