@@ -232,38 +232,41 @@ export default function SingleApplication() {
             else dispatch(userNotExist());
           })
           .catch(() => dispatch(userNotExist()));
-
-        const res = await getSavedFormData({ formId: form?.data?._id }).unwrap();
-        const data = res?.data?.savedData;
-        if (data) dispatch(addSavedFormData(data));
-        toast.success(res.message);
-        // check if company verification already exist then dont navigate to company verification
-        if (data && data?.company_lookup_data && data?.idMission) {
-          navigate(`/singleform/stepper/${formId}`);
-        }
-        if (data && !data?.company_lookup_data) {
-          navigate(`/verification?formid=${formId}`);
-        }
-        if (formData && !formData?.company_lookup_data) {
-          navigate(`/verification?formid=${formId}`);
-        }
+        getSavedFormData({ formId: form?.data?._id }).then(res => {
+          const data = res?.data?.data?.savedData;
+          if (data) dispatch(addSavedFormData(data));
+          if (data && !data?.company_lookup_data) {
+            return navigate(`/verification?formid=${formId}`);
+          } else {
+            const formDataOfIdMission = data?.idMission;
+            setIdMissionVerifiedData({
+              name: formDataOfIdMission?.name || '',
+              idNumber: formDataOfIdMission?.idNumber || '',
+              idIssuer: formDataOfIdMission?.idIssuer || '',
+              idType: formDataOfIdMission?.idType || '',
+              idExpiryDate: formDataOfIdMission?.idExpiryDate || '',
+              streetAddress: formDataOfIdMission?.streetAddress || '',
+              phoneNumber: formDataOfIdMission?.phoneNumber || '',
+              zipCode: formDataOfIdMission?.zipCode || '',
+              dateOfBirth: formDataOfIdMission?.dateOfBirth || '',
+              country: formDataOfIdMission?.country || '',
+              issueDate: formDataOfIdMission?.issueDate || '',
+              companyTitle: formDataOfIdMission?.companyTitle || '',
+              state: formDataOfIdMission?.state || '',
+              city: formDataOfIdMission?.city || '',
+              address2: formDataOfIdMission?.address2 || '',
+              signature: formDataOfIdMission?.signature || '',
+            });
+            setIdMissionVerified(true);
+            setOpenRedirectModal(true);
+          }
+        });
       }
     } catch (error) {
       console.log('Error sending OTP:', error);
       toast.error(error?.data?.message || 'Failed to send OTP');
     }
-  }, [
-    email,
-    otp,
-    verifyEmail,
-    dispatch,
-    getUserProfile,
-    getSavedFormData,
-    form?.data?._id,
-    formData,
-    navigate,
-    formId,
-  ]);
+  }, [email, otp, verifyEmail, dispatch, getUserProfile, getSavedFormData, form?.data?._id, navigate, formId]);
 
   const getQrLinkOnEmailVerified = useCallback(() => {
     if (!qrCode && !webLink && emailVerified) {
