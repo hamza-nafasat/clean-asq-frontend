@@ -232,8 +232,15 @@ export default function SingleApplication() {
             else dispatch(userNotExist());
           })
           .catch(() => dispatch(userNotExist()));
+
+        const res = await getSavedFormData({ formId: form?.data?._id }).unwarp();
+        const data = res?.data?.savedData;
+        if (data) dispatch(addSavedFormData(data));
         toast.success(res.message);
         // check if company verification already exist then dont navigate to company verification
+        if (data && !data?.company_lookup_data) {
+          navigate(`/verification?formid=${formId}`);
+        }
         if (formData && !formData?.company_lookup_data) {
           navigate(`/verification?formid=${formId}`);
         }
@@ -242,7 +249,18 @@ export default function SingleApplication() {
       console.log('Error sending OTP:', error);
       toast.error(error?.data?.message || 'Failed to send OTP');
     }
-  }, [dispatch, email, formId, getUserProfile, navigate, otp, formData, verifyEmail]);
+  }, [
+    email,
+    otp,
+    verifyEmail,
+    dispatch,
+    getUserProfile,
+    getSavedFormData,
+    form?.data?._id,
+    formData,
+    navigate,
+    formId,
+  ]);
 
   const getQrLinkOnEmailVerified = useCallback(() => {
     if (!qrCode && !webLink && emailVerified) {
@@ -801,7 +819,7 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
           className="w-full rounded-md border border-gray-300 p-2 outline-none"
         />
         <div className="flex justify-end">
-          <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Fromat Text'} />
+          <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Format Text'} />
         </div>
         {signatureData?.signFormatedDisplayText && (
           <div
