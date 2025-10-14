@@ -22,8 +22,24 @@ const useApplyBranding = ({ formId }) => {
   const { data: form, isLoading } = useGetSingleFormQueryQuery({ _id: formId }, { skip: !formId });
   const { user } = useSelector(state => state.auth);
   useEffect(() => {
-    if ((formId && form?.data?._id && !isLoading) || user?.branding) {
-      const formBranding = form?.data?.branding?._id ? form?.data?.branding : user?.branding;
+    if (formId && form?.data?._id && !isLoading) {
+      const formBranding = form?.data?.branding;
+      if (formBranding?.colors) {
+        setPrimaryColor(formBranding?.colors?.primary);
+        setSecondaryColor(formBranding?.colors?.secondary);
+        setAccentColor(formBranding?.colors?.accent);
+        setTextColor(formBranding?.colors?.text);
+        setLinkColor(formBranding?.colors?.link);
+        setBackgroundColor(formBranding?.colors?.background);
+        setFrameColor(formBranding?.colors?.frame);
+        setFontFamily(formBranding?.fontFamily);
+        setLogo(formBranding?.selectedLogo);
+        setButtonTextPrimary(formBranding?.colors?.buttonTextPrimary);
+        setButtonTextSecondary(formBranding?.colors?.buttonTextSecondary);
+        setIsApplied(true);
+      }
+    } else if (!formId && user?.branding) {
+      const formBranding = user?.branding;
       if (formBranding?.colors) {
         setPrimaryColor(formBranding?.colors?.primary);
         setSecondaryColor(formBranding?.colors?.secondary);
@@ -39,6 +55,24 @@ const useApplyBranding = ({ formId }) => {
         setIsApplied(true);
       }
     }
+
+    return () => {
+      const formBranding = user?.branding;
+      if (formBranding?.colors) {
+        setPrimaryColor(formBranding?.colors?.primary);
+        setSecondaryColor(formBranding?.colors?.secondary);
+        setAccentColor(formBranding?.colors?.accent);
+        setTextColor(formBranding?.colors?.text);
+        setLinkColor(formBranding?.colors?.link);
+        setBackgroundColor(formBranding?.colors?.background);
+        setFrameColor(formBranding?.colors?.frame);
+        setFontFamily(formBranding?.fontFamily);
+        setLogo(formBranding?.selectedLogo);
+        setButtonTextPrimary(formBranding?.colors?.buttonTextPrimary);
+        setButtonTextSecondary(formBranding?.colors?.buttonTextSecondary);
+        setIsApplied(true);
+      }
+    };
   }, [
     form?.data?._id,
     form?.data?.branding,
