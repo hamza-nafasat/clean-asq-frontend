@@ -32,7 +32,6 @@ export default function SingleApplication() {
   const navigate = useNavigate();
   const params = useParams();
   const formId = params.formId;
-  const { isApplied } = useApplyBranding({ formId });
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
   const { emailVerified } = useSelector(state => state.form);
@@ -74,8 +73,8 @@ export default function SingleApplication() {
     country: '',
     signature: { secureUrl: '', publicId: '', resourceType: '' },
   });
+  const { isApplied } = useApplyBranding({ formId: formId || form?.data?._id });
   const [showSignatureModal, setShowSignatureModal] = useState(false);
-
   const idMissionSection = form?.data?.sections?.find(sec => sec?.title?.toLowerCase() == 'id_verification_blk');
 
   const handleSignature = async file => {

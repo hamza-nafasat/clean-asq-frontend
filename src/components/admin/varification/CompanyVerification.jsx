@@ -64,7 +64,7 @@ function CompanyVerification({ formId }) {
         toast.success('Company verified successfully');
         setLoading(false);
         companyLookup();
-        navigate(`/application-form/${formId}`);
+        return navigate(`/application-form/${formId}`);
       } else {
         toast.error('Company verification failed, please try again');
       }
@@ -237,7 +237,7 @@ function CompanyVerification({ formId }) {
       {isCreator && (
         <Button
           onClick={() => {
-            navigate(`/application-form/${formId}`);
+            return navigate(`/application-form/${formId}`);
           }}
           label={'Skip'}
         />

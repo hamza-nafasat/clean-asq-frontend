@@ -24,8 +24,6 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
 
   const handleNavOpen = () => setIsNavOpen(!isNavOpen);
 
-  console.log('isNavOpen', isNavOpen);
-
   const pages = [
     { title: 'Role Management', link: '/all-roles', icon: <AllRoles /> },
     { title: 'User Management', link: '/all-users', icon: <AllUsers /> },

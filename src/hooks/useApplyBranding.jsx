@@ -24,6 +24,7 @@ const useApplyBranding = ({ formId }) => {
   useEffect(() => {
     if (formId && form?.data?._id && !isLoading) {
       const formBranding = form?.data?.branding;
+      console.log('form branding is applied');
       if (formBranding?.colors) {
         setPrimaryColor(formBranding?.colors?.primary);
         setSecondaryColor(formBranding?.colors?.secondary);
@@ -40,6 +41,7 @@ const useApplyBranding = ({ formId }) => {
       }
     } else if (!formId && user?.branding) {
       const formBranding = user?.branding;
+      console.log('user branding is applied');
       if (formBranding?.colors) {
         setPrimaryColor(formBranding?.colors?.primary);
         setSecondaryColor(formBranding?.colors?.secondary);
@@ -58,6 +60,7 @@ const useApplyBranding = ({ formId }) => {
 
     return () => {
       const formBranding = user?.branding;
+      console.log('returned branding is applied');
       if (formBranding?.colors) {
         setPrimaryColor(formBranding?.colors?.primary);
         setSecondaryColor(formBranding?.colors?.secondary);
