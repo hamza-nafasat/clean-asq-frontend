@@ -233,11 +233,14 @@ export default function SingleApplication() {
           })
           .catch(() => dispatch(userNotExist()));
 
-        const res = await getSavedFormData({ formId: form?.data?._id }).unwarp();
+        const res = await getSavedFormData({ formId: form?.data?._id }).unwrap();
         const data = res?.data?.savedData;
         if (data) dispatch(addSavedFormData(data));
         toast.success(res.message);
         // check if company verification already exist then dont navigate to company verification
+        if (data && data?.company_lookup_data && data?.idMission) {
+          navigate(`/singleform/stepper/${formId}`);
+        }
         if (data && !data?.company_lookup_data) {
           navigate(`/verification?formid=${formId}`);
         }
