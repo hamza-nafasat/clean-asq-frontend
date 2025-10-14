@@ -45,6 +45,7 @@ export default function SingleApplication() {
   const [isIdMissionProcessing, setIsIdMissionProcessing] = useState(false);
   const [idMissionVerified, setIdMissionVerified] = useState(false);
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
+  const [submiting, setSubmiting] = useState(false);
 
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const [getIdMissionSession] = useGetIdMissionSessionMutation();
@@ -174,13 +175,20 @@ export default function SingleApplication() {
   const submitIdMissionData = useCallback(
     async e => {
       e.preventDefault();
-      if (!idMissionVerifiedData?.signature?.publicId && !idMissionVerifiedData?.signature?.secureUrl) {
-        return toast.error('Please do and save the signature');
+      setSubmiting(true);
+      try {
+        if (!idMissionVerifiedData?.signature?.publicId && !idMissionVerifiedData?.signature?.secureUrl) {
+          return toast.error('Please do and save the signature');
+        }
+        const action = await dispatch(updateFormState({ data: idMissionVerifiedData, name: 'idMission' }));
+        unwrapResult(action);
+        await saveInProgress({ data: idMissionVerifiedData, name: 'idMission' });
+        return navigate(`/singleform/stepper/${formId}`);
+      } catch (error) {
+        console.log('error while saving form in draft', error);
+      } finally {
+        setSubmiting(false);
       }
-      const action = await dispatch(updateFormState({ data: idMissionVerifiedData, name: 'idMission' }));
-      unwrapResult(action);
-      await saveInProgress({ data: idMissionVerifiedData, name: 'idMission' });
-      navigate(`/singleform/stepper/${formId}`);
     },
     [dispatch, formId, idMissionVerifiedData, navigate, saveInProgress]
   );
@@ -709,7 +717,7 @@ export default function SingleApplication() {
                   />
                 )}
                 <Button
-                  disabled={!isAllRequiredFieldsFilled}
+                  disabled={!isAllRequiredFieldsFilled || submiting}
                   label={!isAllRequiredFieldsFilled ? 'Some fields are missing' : 'Continue to next'}
                   onClick={submitIdMissionData}
                   className="mt-4"
