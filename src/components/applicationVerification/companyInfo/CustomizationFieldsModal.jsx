@@ -13,6 +13,7 @@ import DOMPurify from 'dompurify';
 
 function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, suggestions, isArticleForm, section }) {
   const [fieldsData, setFieldsData] = useState([]);
+  const [originalFieldData, setOriginalFieldData] = useState([]);
   const [customizeForm, { isLoading }] = useUpdateDeleteCreateFormFieldsMutation();
   const [updateSection, { isLoading: isUpdatingSection }] = useUpdateFormSectionMutation();
   const [signatureData, setSignatureData] = useState({
@@ -110,6 +111,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
   useEffect(() => {
     if (fields?.length > 0) {
       setFieldsData(fields);
+      setOriginalFieldData(fields);
     }
   }, [fields]);
 
@@ -123,6 +125,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
             <MakeFieldDataCustom
               isArticleForm={isArticleForm}
               field={field}
+              originalFieldData={originalFieldData}
               fieldsData={fieldsData}
               setFieldsData={setFieldsData}
               index={index}

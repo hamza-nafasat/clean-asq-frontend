@@ -10,6 +10,7 @@ const TextField = ({
   cnLeft,
   rightIcon,
   cnRight,
+  onClickRightIcon,
   isMasked = false,
   className,
   suggestions,
@@ -97,7 +98,13 @@ const TextField = ({
         )}
 
         {rightIcon && (
-          <span className={`absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 ${cnRight}`}>{rightIcon}</span>
+          <span
+            className={`absolute top-1/2 right-3 flex -translate-y-1/2 items-center justify-center text-gray-500 ${cnRight}`}
+          >
+            <button className="cursor-pointer" onClick={onClickRightIcon}>
+              {rightIcon}
+            </button>
+          </span>
         )}
         {isMasked && (
           <span

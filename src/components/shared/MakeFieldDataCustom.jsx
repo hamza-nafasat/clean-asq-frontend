@@ -3,14 +3,20 @@ import Checkbox from '@/components/shared/small/Checkbox';
 import TextField from '@/components/shared/small/TextField';
 import { Button } from '@/components/ui/button';
 import { FIELD_TYPES } from '@/data/constants';
-import React, { useState, useCallback } from 'react';
 import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
 import DOMPurify from 'dompurify';
-import { TrashIcon } from 'lucide-react';
-import Markdown from 'react-markdown';
+import { TrashIcon, XIcon } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
 
-const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index, suggestions, isArticleForm = false }) => {
+const MakeFieldDataCustom = ({
+  originalFieldData,
+  fieldsData,
+  setFieldsData,
+  index,
+  suggestions,
+  isArticleForm = false,
+}) => {
   const field = fieldsData[index] || {};
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [formattingInstructionForAi, setFormattingInstructionForAi] = useState('');
@@ -50,6 +56,23 @@ const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index, suggestions, is
       );
     },
     [setFieldsData, index]
+  );
+
+  const revertBackToOriginalData = useCallback(
+    name => {
+      const originalData = originalFieldData?.[index]?.[name];
+      setFieldsData(prev =>
+        prev.map((item, idx) =>
+          idx !== index
+            ? item
+            : {
+                ...item,
+                [name]: originalData,
+              }
+        )
+      );
+    },
+    [setFieldsData, index, originalFieldData]
   );
 
   const updateFieldDataFieldForOptions = useCallback(
@@ -144,6 +167,9 @@ const MakeFieldDataCustom = ({ fieldsData, setFieldsData, index, suggestions, is
             name="name"
             suggestions={suggestions}
             onChange={updateFieldDataField}
+            rightIcon={<XIcon />}
+            cnRight="cursor-pointer! text-red-500! hover:text-red-600! font-bold"
+            onClickRightIcon={() => revertBackToOriginalData('name')}
           />
         </div>
         {/* Field Type & Placeholder */}
