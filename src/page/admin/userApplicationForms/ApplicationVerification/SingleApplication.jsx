@@ -1,12 +1,10 @@
 import SignatureBox from '@/components/shared/SignatureBox';
 import Button from '@/components/shared/small/Button';
-import Checkbox from '@/components/shared/small/Checkbox';
 import CustomLoading from '@/components/shared/small/CustomLoading';
 import { LoadingWithTimer } from '@/components/shared/small/LoadingWithTimer';
 import Modal from '@/components/shared/small/Modal';
 import TextField from '@/components/shared/small/TextField';
-import DOMPurify from 'dompurify';
-import { useBranding } from '@/hooks/BrandingContext';
+import useApplyBranding from '@/hooks/useApplyBranding';
 import { socket } from '@/main';
 import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from '@/redux/apis/authApis';
 import {
@@ -23,6 +21,7 @@ import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/clou
 import { collectClientDetails } from '@/utils/userDetails';
 import { Autocomplete } from '@react-google-maps/api';
 import { unwrapResult } from '@reduxjs/toolkit';
+import DOMPurify from 'dompurify';
 import { useCallback, useEffect, useState } from 'react';
 import { MdVerifiedUser } from 'react-icons/md';
 import { useDispatch, useSelector } from 'react-redux';
@@ -33,6 +32,7 @@ export default function SingleApplication() {
   const navigate = useNavigate();
   const params = useParams();
   const formId = params.formId;
+  const { isApplied } = useApplyBranding({ formId });
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
   const { emailVerified } = useSelector(state => state.form);
@@ -405,73 +405,7 @@ export default function SingleApplication() {
   }, [dispatch, form, getSavedFormData]);
 
   const isCreator = user?._id && user?._id == form?.data?.owner && user?.role !== 'guest';
-
-  // const isCreator = true;
-  const {
-    setPrimaryColor,
-    setSecondaryColor,
-    setAccentColor,
-    setTextColor,
-    setLinkColor,
-    setBackgroundColor,
-    setFrameColor,
-    setFontFamily,
-    setLogo,
-    setButtonTextPrimary,
-    setButtonTextSecondary,
-  } = useBranding();
-
-  useEffect(() => {
-    // console.log('form?.data?.branding', form?.data?.branding);
-    if (form?.data?.branding?.colors) {
-      const firstFormBranding = form?.data?.branding;
-      if (firstFormBranding?.colors) {
-        setPrimaryColor(firstFormBranding?.colors?.primary);
-        setSecondaryColor(firstFormBranding?.colors?.secondary);
-        setAccentColor(firstFormBranding?.colors?.accent);
-        setTextColor(firstFormBranding?.colors?.text);
-        setLinkColor(firstFormBranding?.colors?.link);
-        setBackgroundColor(firstFormBranding?.colors?.background);
-        setFrameColor(firstFormBranding?.colors?.frame);
-        setFontFamily(firstFormBranding?.fontFamily);
-        setButtonTextPrimary(firstFormBranding?.colors?.buttonTextPrimary);
-        setButtonTextSecondary(firstFormBranding?.colors?.buttonTextSecondary);
-        setLogo(firstFormBranding?.selectedLogo);
-      }
-    }
-
-    return () => {
-      const firstFormBranding = user?.branding;
-      setPrimaryColor(firstFormBranding?.colors?.primary);
-      setSecondaryColor(firstFormBranding?.colors?.secondary);
-      setAccentColor(firstFormBranding?.colors?.accent);
-      setTextColor(firstFormBranding?.colors?.text);
-      setLinkColor(firstFormBranding?.colors?.link);
-      setBackgroundColor(firstFormBranding?.colors?.background);
-      setFrameColor(firstFormBranding?.colors?.frame);
-      setFontFamily(firstFormBranding?.fontFamily);
-      setButtonTextPrimary(firstFormBranding?.colors?.buttonTextPrimary);
-      setButtonTextSecondary(firstFormBranding?.colors?.buttonTextSecondary);
-      setLogo(firstFormBranding?.selectedLogo);
-    };
-  }, [
-    form?.data?.branding,
-    setAccentColor,
-    setBackgroundColor,
-    setButtonTextPrimary,
-    setButtonTextSecondary,
-    setFontFamily,
-    setFrameColor,
-    setLinkColor,
-    setLogo,
-    setPrimaryColor,
-    setSecondaryColor,
-    setTextColor,
-    user?.branding,
-    user?.branding?.colors,
-    user?.branding?.fontFamily,
-    user?.branding?.selectedLogo,
-  ]);
+  if (!isApplied) return <CustomLoading />;
 
   return (
     <>

@@ -20,6 +20,7 @@ import { toast } from 'react-toastify';
 import Stepper from '../../../../components/Stepper/Stepper';
 import { setIdMissionData } from '@/redux/slices/authSlice';
 import AggrementBlock from '@/components/applicationVerification/AggrementBlock';
+import useApplyBranding from '@/hooks/useApplyBranding';
 
 export default function ApplicationForm() {
   const { user } = useSelector(state => state.auth);
@@ -38,6 +39,7 @@ export default function ApplicationForm() {
   const [formSubmit] = useSubmitFormMutation();
   const [getSavedFormData] = useGetSavedFormMutation();
   const [saveFormInDraft] = useSaveFormInDraftMutation();
+  const { isApplied } = useApplyBranding({ formId });
 
   const handlePrevious = useCallback(() => {
     if (currentStep > 0) setCurrentStep(currentStep - 1);
@@ -172,10 +174,9 @@ export default function ApplicationForm() {
     isSavedApiRun,
     saveInProgress,
   ]);
+  if (!isApplied || !form?.data?._id) return <CustomLoading />;
   if (!user?._id) return navigate(`/application-form/${formId}`);
-  return !form?.data?._id ? (
-    <CustomLoading />
-  ) : (
+  return (
     <div className="h-full w-full overflow-hidden rounded-[10px] bg-white px-6 py-6">
       <Stepper steps={sectionNames} currentStep={currentStep} visibleSteps={0} emptyRequiredFields={[]}>
         {stepsComps[currentStep]}

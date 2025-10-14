@@ -1,6 +1,5 @@
 import Button from '@/components/shared/small/Button';
 import CustomLoading from '@/components/shared/small/CustomLoading';
-import Modal from '@/components/shared/small/Modal';
 import TextField from '@/components/shared/small/TextField';
 import { getVerificationTableStyles } from '@/data/data';
 import { useBranding } from '@/hooks/BrandingContext';
@@ -19,7 +18,6 @@ import { IoShieldOutline } from 'react-icons/io5';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import ReCAPTCHA from 'react-google-recaptcha';
 import LocationStatusModal from './LocationStatusModal';
 
 const columns = [
@@ -131,21 +129,15 @@ function CompanyVerification({ formId }) {
     }
   };
 
-  // const handleNext = () => {
-  //   // console.log(lookupDataForTable);
-  //   dispatch(addLookupData(lookupDataForTable));
-  //   dispatch(updateFormState({ data: lookupDataForTable, name: 'company_lookup_data' }));
-  //   navigate(`/singleform/stepper/${formId}`);
-  // };
-
   useEffect(() => {
     if (formBackendData?.data) {
-      setLocationStatusModal(formBackendData?.data?.locationStatus);
+      const form = formBackendData?.data;
+      setLocationStatusModal(form?.locationStatus);
       setLocationData({
-        logo: formBackendData?.data?.branding?.selectedLogo || logo,
-        title: formBackendData?.data?.locationTitle,
-        subtitle: formBackendData?.data?.locationSubtitle,
-        message: formBackendData?.data?.formatedLocationMessage,
+        logo: form?.branding?.selectedLogo || logo,
+        title: form?.locationTitle,
+        subtitle: form?.locationSubtitle,
+        message: form?.formatedLocationMessage,
       });
     }
   }, [formBackendData, logo]);
@@ -204,6 +196,7 @@ function CompanyVerification({ formId }) {
 
           <div className="flex items-center justify-end">
             <Button
+              type="submit"
               label="Verify Company"
               onClick={handleSubmit}
               disabled={loading}

@@ -6,7 +6,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { SubmissionSuccessPage } from './components/LoadingWithTimerAfterSubmission';
 import ProtectedRoute from './components/ProtectedRoute';
 import CustomLoading from './components/shared/small/CustomLoading';
-import { useBranding } from './hooks/BrandingContext';
+import useApplyBranding from './hooks/useApplyBranding';
+import getEnv from './lib/env';
 import { socket } from './main';
 import AdminDashboard from './page/admin/dashboard';
 import AdminAllUsers from './page/admin/dashboard/admin-dashboard/AdminAllUsers';
@@ -16,6 +17,7 @@ import FormStrategies from './page/admin/dashboard/formStrategies/FormStrategies
 import AllRoles from './page/admin/dashboard/role/AllRoles';
 import Strategies from './page/admin/dashboard/strategies/Strategies';
 import Verification from './page/admin/dashboard/varification/Varification';
+import VerificationTest from './page/admin/dashboard/varification/VerficationTest';
 import UserApplicationForms from './page/admin/userApplicationForms';
 import AdditionalOwnersForm from './page/admin/userApplicationForms/ApplicationVerification/AdditionalOwnersForm';
 import ApplicationForm from './page/admin/userApplicationForms/ApplicationVerification/ApplicationForm';
@@ -23,9 +25,7 @@ import SingleApplication from './page/admin/userApplicationForms/ApplicationVeri
 import CompanyInformation from './page/admin/userApplicationForms/CompanyInformation/CompanyInformation';
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
-import VerificationTest from './page/admin/dashboard/varification/VerficationTest';
 import { detectVPN } from './utils/vpnDetection';
-import getEnv from './lib/env';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -37,20 +37,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const { user } = useSelector(state => state.auth);
-
-  const {
-    setPrimaryColor,
-    setSecondaryColor,
-    setAccentColor,
-    setTextColor,
-    setLinkColor,
-    setBackgroundColor,
-    setFrameColor,
-    setFontFamily,
-    setLogo,
-    setButtonTextPrimary,
-    setButtonTextSecondary,
-  } = useBranding();
+  const { _ } = useApplyBranding({ formId: '' });
 
   useEffect(() => {
     const userId = user?._id;
@@ -70,41 +57,11 @@ function App() {
         if (res?.data?.success) {
           dispatch(userExist(res.data.data));
           console.log(res?.data?.data?.branding);
-          if (res?.data?.data?.branding?.colors) {
-            const userBranding = res?.data?.data?.branding;
-            if (userBranding?.colors) {
-              setPrimaryColor(userBranding.colors.primary);
-              setSecondaryColor(userBranding.colors.secondary);
-              setAccentColor(userBranding.colors.accent);
-              setTextColor(userBranding.colors.text);
-              setLinkColor(userBranding.colors.link);
-              setBackgroundColor(userBranding.colors.background);
-              setFrameColor(userBranding.colors.frame);
-              setFontFamily(userBranding.fontFamily);
-              setLogo(userBranding?.selectedLogo);
-              setButtonTextPrimary(userBranding.colors.buttonTextPrimary);
-              setButtonTextSecondary(userBranding.colors.buttonTextSecondary);
-            }
-          }
         } else dispatch(userNotExist());
       })
       .catch(() => dispatch(userNotExist()))
       .finally(() => setLoading(false));
-  }, [
-    getUserProfile,
-    dispatch,
-    setPrimaryColor,
-    setSecondaryColor,
-    setAccentColor,
-    setTextColor,
-    setLinkColor,
-    setBackgroundColor,
-    setFrameColor,
-    setFontFamily,
-    setLogo,
-    setButtonTextPrimary,
-    setButtonTextSecondary,
-  ]);
+  }, [dispatch, getUserProfile]);
 
   useEffect(() => {
     async function checkClientVpn() {
@@ -134,6 +91,7 @@ function App() {
               <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
               <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
               <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
+              <Route path="verification" element={<Verification />} />
             </Route>
             {/* non authentic routes */}
             <Route element={<ProtectedRoute user={!user} redirect="/all-users" />}>
@@ -155,7 +113,6 @@ function App() {
                 <Route path="branding/single/:brandingId" element={<CreateBranding />} />
                 <Route path="strategies-key" element={<FormStrategies />} />
                 {/* <Route path="extraction-context" element={<ExtractionContext />} /> */}
-                <Route path="verification" element={<Verification />} />
                 <Route path="verification-test" element={<VerificationTest />} />
                 <Route path="strategies" element={<Strategies />} />
               </Route>
