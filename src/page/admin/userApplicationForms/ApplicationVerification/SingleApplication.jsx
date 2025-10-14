@@ -524,10 +524,10 @@ export default function SingleApplication() {
               <CustomLoading />
             ) : (
               <div className="flex flex-col items-center gap-3">
-                <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
-                <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your identity</p>
                 {qrCode && webLink && (
                   <>
+                    <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
+                    <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your identity</p>
                     <div className="mt-4 flex w-full flex-col items-center gap-4">
                       <img className="h-[230px] w-[230px]" src={`data:image/jpeg;base64,${qrCode}`} alt="qr code " />
                     </div>
@@ -710,7 +710,7 @@ export default function SingleApplication() {
                 )}
                 <Button
                   disabled={!isAllRequiredFieldsFilled}
-                  label={!isAllRequiredFieldsFilled ? 'Some fields are missing' : 'Submit'}
+                  label={!isAllRequiredFieldsFilled ? 'Some fields are missing' : 'Continue to next'}
                   onClick={submitIdMissionData}
                   className="mt-4"
                 />
