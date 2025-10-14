@@ -1,5 +1,5 @@
-import React, { memo, useCallback } from 'react';
 import PropTypes from 'prop-types';
+import { memo } from 'react';
 import Button from './small/Button';
 // import Button from './Button';
 import { IoCloseSharp } from 'react-icons/io5';
@@ -12,26 +12,24 @@ const Modal = memo(
     onSave,
     isLoading = false,
     saveButtonText = 'Save',
-    saveButtonClassName = '',
-    cancelButtonClassName = '',
     cancelButtonText = 'Cancel',
     hideCancelButton = false,
     hideSaveButton = false,
   }) => {
-    const handleBackdropClick = useCallback(
-      e => {
-        // Only close if clicking the backdrop itself, not its children
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      },
-      [onClose]
-    );
+    // const handleBackdropClick = useCallback(
+    //   e => {
+    //     // Only close if clicking the backdrop itself, not its children
+    //     if (e.target === e.currentTarget) {
+    //       onClose();
+    //     }
+    //   },
+    //   [onClose]
+    // );
 
     return (
       <div
         className="fixed inset-0 z-50 flex h-full items-center justify-center overflow-auto bg-black/50"
-        onClick={handleBackdropClick}
+        // onClick={handleBackdropClick}
       >
         <div className="scroll-0 max-h-[70%] w-[90%] max-w-3xl overflow-auto rounded-md bg-white p-6 shadow-lg">
           <div className="mb-4 flex items-center justify-between">
