@@ -156,8 +156,10 @@ export default function SingleApplication() {
           address2: formDataOfIdMission?.address2 || '',
           signature: formDataOfIdMission?.signature || '',
         });
-        setIdMissionVerified(true);
-        setOpenRedirectModal(true);
+        if (formDataOfIdMission?.name && savedData?.company_lookup_data) {
+          setIdMissionVerified(true);
+          setOpenRedirectModal(true);
+        }
       }
     } catch (error) {
       if (error?.data?.message === 'Form Not Saved in draft') {
@@ -216,6 +218,7 @@ export default function SingleApplication() {
 
   const submitIdMissionData = useCallback(
     async e => {
+      setOpenRedirectModal(false);
       e.preventDefault();
       setSubmiting(true);
       try {
@@ -314,8 +317,10 @@ export default function SingleApplication() {
 
   // get qr and session id
   useEffect(() => {
-    getQrLinkOnEmailVerified();
-  }, [getQrLinkOnEmailVerified]);
+    if (!qrCode && !webLink && !idMissionVerified) {
+      getQrLinkOnEmailVerified();
+    }
+  }, [getQrLinkOnEmailVerified, idMissionVerified, qrCode, webLink]);
 
   // get user when he logged in
   useEffect(() => {
@@ -497,8 +502,8 @@ export default function SingleApplication() {
                   variant="primary"
                   className="flex-1"
                   onClick={() => {
-                    navigate(`/singleform/stepper/${formId}`);
                     setOpenRedirectModal(false);
+                    navigate(`/singleform/stepper/${formId}`);
                   }}
                   label="Continue to Next"
                 />
@@ -729,7 +734,7 @@ export default function SingleApplication() {
                         />
                       </div>
                     )}
-                    <Button label="Customize Signature" onClick={() => setShowSignatureModal(true)} />
+                    {isCreator && <Button label="Customize Signature" onClick={() => setShowSignatureModal(true)} />}
                   </div>
                   <SignatureBox
                     oldSignatureUrl={idMissionVerifiedData?.signature?.secureUrl}
