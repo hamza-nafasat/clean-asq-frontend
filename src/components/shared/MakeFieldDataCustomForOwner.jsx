@@ -1,40 +1,34 @@
-import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import Checkbox from '@/components/shared/small/Checkbox';
 import TextField from '@/components/shared/small/TextField';
 import { Button } from '@/components/ui/button';
 import { FIELD_TYPES } from '@/data/constants';
-import React, { useState, useCallback } from 'react';
 import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
 import DOMPurify from 'dompurify';
-import { TrashIcon } from 'lucide-react';
-import Markdown from 'react-markdown';
+import React, { useCallback, useState } from 'react';
+import { MdOutlineRestore } from 'react-icons/md';
 import { toast } from 'react-toastify';
 
-const MakeFieldDataCustomForOwner = ({ fieldsData, setFieldsData, index }) => {
+const MakeFieldDataCustomForOwner = ({ originalFieldData, fieldsData, setFieldsData, index }) => {
   const field = fieldsData[index] || {};
-  // const [confirmDelete, setConfirmDelete] = useState(false);
   const [formattingInstructionForAi, setFormattingInstructionForAi] = useState('');
   const [formateTextInMarkDown, { isLoading }] = useFormateTextInMarkDownMutation();
 
-  // const addNewOption = useCallback(() => {
-  //   setFieldsData(prev =>
-  //     prev.map((item, idx) =>
-  //       idx !== index ? item : { ...item, options: [...(item.options || []), { label: '', value: '' }] }
-  //     )
-  //   );
-  // }, [setFieldsData, index]);
-
-  // const removeOption = useCallback(
-  //   optionIdx => {
-  //     setFieldsData(prev =>
-  //       prev.map((item, idx) =>
-  //         idx !== index ? item : { ...item, options: item.options.filter((_, i) => i !== optionIdx) }
-  //       )
-  //     );
-  //   },
-  //   [setFieldsData, index]
-  // );
-
+  const revertBackToOriginalData = useCallback(
+    name => {
+      const originalData = originalFieldData?.[index]?.[name];
+      setFieldsData(prev =>
+        prev.map((item, idx) =>
+          idx !== index
+            ? item
+            : {
+                ...item,
+                [name]: originalData,
+              }
+        )
+      );
+    },
+    [setFieldsData, index, originalFieldData]
+  );
   const updateFieldDataField = useCallback(
     (e, isCheckbox) => {
       const { name, value, checked } = e.target;
@@ -68,15 +62,6 @@ const MakeFieldDataCustomForOwner = ({ fieldsData, setFieldsData, index }) => {
     },
     [setFieldsData, index]
   );
-
-  // const handleDeleteField = useCallback(() => {
-  //   setFieldsData(prev => {
-  //     const copy = [...prev];
-  //     copy.splice(index, 1);
-  //     return copy;
-  //   });
-  //   setConfirmDelete(false);
-  // }, [setFieldsData, index]);
 
   const formateTextWithAi = useCallback(async () => {
     const textForDisplay = field.displayText || '';
@@ -137,27 +122,18 @@ const MakeFieldDataCustomForOwner = ({ fieldsData, setFieldsData, index }) => {
         {/* Label & Name */}
         <div className="flex items-center justify-between gap-2">
           <TextField label="Change label" value={field.label} name="label" onChange={updateFieldDataField} />
-          <TextField label="Change Field Name" value={field.name} name="name" onChange={updateFieldDataField} />
+          <TextField
+            label="Change Field Name"
+            value={field.name}
+            name="name"
+            onChange={updateFieldDataField}
+            rightIcon={originalFieldData?.[index]?.name ? <MdOutlineRestore /> : null}
+            cnRight="cursor-pointer! text-red-500! hover:text-red-600! font-bold!"
+            onClickRightIcon={originalFieldData?.[index]?.name ? () => revertBackToOriginalData('name') : null}
+          />
         </div>
         {/* Field Type & Placeholder */}
         <div className="flex items-center justify-between gap-2">
-          {/* <div className="flex w-full flex-col items-start gap-2">
-            <p className="text-start text-sm lg:text-base">Field Type</p>
-            <div className="w-full rounded-lg border border-gray-300 p-1.5">
-              <select
-                name="type"
-                value={field.type}
-                onChange={updateFieldDataField}
-                className="w-full p-2 outline-none"
-              >
-                {Object.values(FIELD_TYPES).map(typeOpt => (
-                  <option key={typeOpt} value={typeOpt}>
-                    {typeOpt.charAt(0).toUpperCase() + typeOpt.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div> */}
           {(simpleFieldType || selectFieldType) && (
             <TextField
               label="Change Placeholder"
@@ -235,22 +211,9 @@ const MakeFieldDataCustomForOwner = ({ fieldsData, setFieldsData, index }) => {
                   name="label"
                   onChange={e => updateFieldDataFieldForOptions(e, i)}
                 />
-                <TextField
-                  label={`Option ${i + 1} Value`}
-                  value={opt.value}
-                  name="value"
-                  // onChange={e => updateFieldDataFieldForOptions(e, i)}
-                />
-                {/* <Button onClick={() => removeOption(i)} className="mt-8 bg-red-500 hover:bg-red-700">
-                  <TrashIcon className="h-5 w-5 text-white" />
-                </Button> */}
+                <TextField label={`Option ${i + 1} Value`} value={opt.value} name="value" />
               </div>
             ))}
-            {/* <div className="flex justify-end">
-              <Button onClick={addNewOption} className="mt-4">
-                Add Option
-              </Button>
-            </div> */}
           </div>
         )}
         {/* Display text & AI formatting */}
@@ -286,21 +249,6 @@ const MakeFieldDataCustomForOwner = ({ fieldsData, setFieldsData, index }) => {
           </div>
         )}
       </div>
-      {/* <div className="flex w-full justify-end">
-        <Button onClick={() => setConfirmDelete(true)} className="max-w-[200px] bg-red-600 text-white hover:bg-red-700">
-          Delete Field
-        </Button>
-      </div> */}
-      {/* <ConfirmationModal
-        isOpen={confirmDelete}
-        onClose={() => setConfirmDelete(false)}
-        onConfirm={handleDeleteField}
-        title="Delete Field"
-        message="Are you sure you want to delete this field?"
-        confirmButtonText="Delete"
-        confirmButtonClassName="bg-red-500 hover:bg-red-600 text-white"
-        cancelButtonText="Cancel"
-      /> */}
     </div>
   );
 };

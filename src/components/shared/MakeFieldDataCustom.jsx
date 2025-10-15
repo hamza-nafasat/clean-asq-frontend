@@ -7,6 +7,7 @@ import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
 import DOMPurify from 'dompurify';
 import { TrashIcon, XIcon } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
+import { MdOutlineRestore } from 'react-icons/md';
 import { toast } from 'react-toastify';
 
 const MakeFieldDataCustom = ({
@@ -167,9 +168,9 @@ const MakeFieldDataCustom = ({
             name="name"
             suggestions={suggestions}
             onChange={updateFieldDataField}
-            rightIcon={<XIcon />}
-            cnRight="cursor-pointer! text-red-500! hover:text-red-600! font-bold"
-            onClickRightIcon={() => revertBackToOriginalData('name')}
+            rightIcon={originalFieldData?.[index]?.name ? <MdOutlineRestore /> : null}
+            cnRight="cursor-pointer! text-red-500! hover:text-red-600! font-bold!"
+            onClickRightIcon={originalFieldData?.[index]?.name ? () => revertBackToOriginalData('name') : null}
           />
         </div>
         {/* Field Type & Placeholder */}

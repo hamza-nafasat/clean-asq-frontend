@@ -1,5 +1,5 @@
 import { useAddBrandingInFormMutation, useGetAllBrandingsQuery } from '@/redux/apis/brandingApis';
-import { useCreateFormMutation, useGetMyAllFormsQuery } from '@/redux/apis/formApis';
+import { useCreateFormMutation, useDeleteSingleFormMutation, useGetMyAllFormsQuery } from '@/redux/apis/formApis';
 import { MoreVertical } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { CiSearch } from 'react-icons/ci';
@@ -37,6 +37,7 @@ export default function ApplicationsCard() {
   const [addFromBranding] = useAddBrandingInFormMutation();
   const [locationModal, setLocationModal] = useState(false);
   const { logo } = useBranding();
+  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const [formLocationData, setFormLocationData] = useState({
     title: '',
     subtitle: '',
@@ -45,6 +46,7 @@ export default function ApplicationsCard() {
     formatedText: '',
     formatingTextInstructions: '',
   });
+  const [deleteForm] = useDeleteSingleFormMutation();
 
   const createFormWithCsvHandler = async () => {
     console.log('file', file);
@@ -103,9 +105,34 @@ export default function ApplicationsCard() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+  const handleDeleteForm = async () => {
+    try {
+      if (!deleteConfirmation) return;
+      const res = await deleteForm({ _id: deleteConfirmation }).unwrap();
+      if (res?.success) {
+        await refetch();
+        toast?.success(res?.message || 'Form deleted successfully');
+      }
+    } catch (error) {
+      console.error('Error deleting form:', error);
+      toast.error(error?.data?.message || 'Failed to delete form');
+    } finally {
+      setDeleteConfirmation(null);
+    }
+  };
 
   return (
     <div className="rounded-md bg-white p-5 shadow">
+      {/* modal for delete form */}
+      <ConfirmationModal
+        isOpen={!!deleteConfirmation}
+        onClose={() => setDeleteConfirmation(null)}
+        onConfirm={handleDeleteForm}
+        title="Delete Form"
+        message={`Are you sure you want to delete tihs form?`}
+        confirmButtonText="Delete"
+        confirmButtonClassName="bg-red-500 text-white"
+      />
       {/* modal for set branding  */}
 
       {openModal && (
@@ -277,7 +304,7 @@ export default function ApplicationsCard() {
                         Set Location
                       </button>
                       <button
-                        onClick={() => {}}
+                        onClick={() => setDeleteConfirmation(form?._id)}
                         className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
                       >
                         Delete Form

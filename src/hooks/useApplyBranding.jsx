@@ -24,8 +24,8 @@ const useApplyBranding = ({ formId }) => {
   useEffect(() => {
     if (formId && form?.data?._id && !isLoading) {
       const formBranding = form?.data?.branding;
-      console.log('form branding is applied');
       if (formBranding?.colors) {
+        console.log('form branding is applied');
         setPrimaryColor(formBranding?.colors?.primary);
         setSecondaryColor(formBranding?.colors?.secondary);
         setAccentColor(formBranding?.colors?.accent);
@@ -37,7 +37,6 @@ const useApplyBranding = ({ formId }) => {
         setLogo(formBranding?.selectedLogo);
         setButtonTextPrimary(formBranding?.colors?.buttonTextPrimary);
         setButtonTextSecondary(formBranding?.colors?.buttonTextSecondary);
-        setIsApplied(true);
       }
     } else if (!formId && user?.branding) {
       const formBranding = user?.branding;
@@ -54,9 +53,9 @@ const useApplyBranding = ({ formId }) => {
         setLogo(formBranding?.selectedLogo);
         setButtonTextPrimary(formBranding?.colors?.buttonTextPrimary);
         setButtonTextSecondary(formBranding?.colors?.buttonTextSecondary);
-        setIsApplied(true);
       }
     }
+    setIsApplied(true);
 
     return () => {
       const formBranding = user?.branding;
@@ -73,8 +72,8 @@ const useApplyBranding = ({ formId }) => {
         setLogo(formBranding?.selectedLogo);
         setButtonTextPrimary(formBranding?.colors?.buttonTextPrimary);
         setButtonTextSecondary(formBranding?.colors?.buttonTextSecondary);
-        setIsApplied(true);
       }
+      setIsApplied(true);
     };
   }, [
     form?.data?._id,

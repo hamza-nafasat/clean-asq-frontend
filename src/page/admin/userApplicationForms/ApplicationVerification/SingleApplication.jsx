@@ -126,6 +126,45 @@ export default function SingleApplication() {
     [formData, formId, saveFormInDraft]
   );
 
+  const getSavedFormDataAndSaveInredux = useCallback(async () => {
+    try {
+      const res = await getSavedFormData({ formId: formId }).unwrap();
+      if (res.success) {
+        const savedData = res?.data?.savedData || [];
+        const formDataOfIdMission = savedData?.idMission;
+        const action = await dispatch(addSavedFormData(savedData || []));
+        unwrapResult(action);
+        setIdMissionVerifiedData({
+          name: formDataOfIdMission?.name || '',
+          idNumber: formDataOfIdMission?.idNumber || '',
+          idIssuer: formDataOfIdMission?.idIssuer || '',
+          idType: formDataOfIdMission?.idType || '',
+          idExpiryDate: formDataOfIdMission?.idExpiryDate || '',
+          streetAddress: formDataOfIdMission?.streetAddress || '',
+          phoneNumber: formDataOfIdMission?.phoneNumber || '',
+          zipCode: formDataOfIdMission?.zipCode || '',
+          dateOfBirth: formDataOfIdMission?.dateOfBirth || '',
+          country: formDataOfIdMission?.country || '',
+          issueDate: formDataOfIdMission?.issueDate || '',
+          companyTitle: formDataOfIdMission?.companyTitle || '',
+          state: formDataOfIdMission?.state || '',
+          city: formDataOfIdMission?.city || '',
+          address2: formDataOfIdMission?.address2 || '',
+          signature: formDataOfIdMission?.signature || '',
+        });
+        setIdMissionVerified(true);
+        setOpenRedirectModal(true);
+        if (!savedData?.company_lookup_data) {
+          console.log('saved data is ,', savedData);
+          return navigate(`/verification?formid=${formId}`);
+        }
+      }
+    } catch (error) {
+      console.log('error while getting saved form data', error);
+      // toast.error(error?.data?.message || 'Error while getting saved form data');
+    }
+  }, [dispatch, formId, getSavedFormData, navigate]);
+
   const onPlaceChanged = () => {
     const place = autocomplete.getPlace();
     // console.log('place', place);
@@ -232,72 +271,39 @@ export default function SingleApplication() {
             else dispatch(userNotExist());
           })
           .catch(() => dispatch(userNotExist()));
-
-        if (formData && !formData?.company_lookup_data) {
-          return navigate(`/verification?formid=${formId}`);
-        }
-        // await getSavedFormData({ formId: form?.data?._id }).then(res => {
-        //   const data = res?.data?.data?.savedData;
-        //   if (data) dispatch(addSavedFormData(data));
-        //   if (data && !data?.company_lookup_data) {
-        //     return navigate(`/verification?formid=${formId}`);
-        //   } else if (data?.IdMission) {
-        //     const formDataOfIdMission = data?.idMission;
-        //     setIdMissionVerifiedData({
-        //       name: formDataOfIdMission?.name || '',
-        //       idNumber: formDataOfIdMission?.idNumber || '',
-        //       idIssuer: formDataOfIdMission?.idIssuer || '',
-        //       idType: formDataOfIdMission?.idType || '',
-        //       idExpiryDate: formDataOfIdMission?.idExpiryDate || '',
-        //       streetAddress: formDataOfIdMission?.streetAddress || '',
-        //       phoneNumber: formDataOfIdMission?.phoneNumber || '',
-        //       zipCode: formDataOfIdMission?.zipCode || '',
-        //       dateOfBirth: formDataOfIdMission?.dateOfBirth || '',
-        //       country: formDataOfIdMission?.country || '',
-        //       issueDate: formDataOfIdMission?.issueDate || '',
-        //       companyTitle: formDataOfIdMission?.companyTitle || '',
-        //       state: formDataOfIdMission?.state || '',
-        //       city: formDataOfIdMission?.city || '',
-        //       address2: formDataOfIdMission?.address2 || '',
-        //       signature: formDataOfIdMission?.signature || '',
-        //     });
-        //     setIdMissionVerified(true);
-        //     setOpenRedirectModal(true);
-        //   }
-        // });
+        await getSavedFormDataAndSaveInredux();
       }
     } catch (error) {
       console.log('Error sending OTP:', error);
       toast.error(error?.data?.message || 'Failed to send OTP');
     }
-  }, [email, otp, verifyEmail, dispatch, getUserProfile, formData, navigate, formId]);
+  }, [dispatch, email, getSavedFormDataAndSaveInredux, getUserProfile, otp, verifyEmail]);
 
   const getQrLinkOnEmailVerified = useCallback(() => {
-    if (!qrCode && !webLink && emailVerified) {
-      if (formData && formData?.idMission) {
-        // return navigate(`/singleform/stepper/${formId}`);
-        const formDataOfIdMission = formData?.idMission;
-        setIdMissionVerifiedData({
-          name: formDataOfIdMission?.name || '',
-          idNumber: formDataOfIdMission?.idNumber || '',
-          idIssuer: formDataOfIdMission?.idIssuer || '',
-          idType: formDataOfIdMission?.idType || '',
-          idExpiryDate: formDataOfIdMission?.idExpiryDate || '',
-          streetAddress: formDataOfIdMission?.streetAddress || '',
-          phoneNumber: formDataOfIdMission?.phoneNumber || '',
-          zipCode: formDataOfIdMission?.zipCode || '',
-          dateOfBirth: formDataOfIdMission?.dateOfBirth || '',
-          country: formDataOfIdMission?.country || '',
-          issueDate: formDataOfIdMission?.issueDate || '',
-          companyTitle: formDataOfIdMission?.companyTitle || '',
-          state: formDataOfIdMission?.state || '',
-          city: formDataOfIdMission?.city || '',
-          address2: formDataOfIdMission?.address2 || '',
-          signature: formDataOfIdMission?.signature || '',
-        });
-        setIdMissionVerified(true);
-        setOpenRedirectModal(true);
-      }
+    if (emailVerified && formData && formData?.idMission) {
+      const formDataOfIdMission = formData?.idMission;
+      setIdMissionVerifiedData({
+        name: formDataOfIdMission?.name || '',
+        idNumber: formDataOfIdMission?.idNumber || '',
+        idIssuer: formDataOfIdMission?.idIssuer || '',
+        idType: formDataOfIdMission?.idType || '',
+        idExpiryDate: formDataOfIdMission?.idExpiryDate || '',
+        streetAddress: formDataOfIdMission?.streetAddress || '',
+        phoneNumber: formDataOfIdMission?.phoneNumber || '',
+        zipCode: formDataOfIdMission?.zipCode || '',
+        dateOfBirth: formDataOfIdMission?.dateOfBirth || '',
+        country: formDataOfIdMission?.country || '',
+        issueDate: formDataOfIdMission?.issueDate || '',
+        companyTitle: formDataOfIdMission?.companyTitle || '',
+        state: formDataOfIdMission?.state || '',
+        city: formDataOfIdMission?.city || '',
+        address2: formDataOfIdMission?.address2 || '',
+        signature: formDataOfIdMission?.signature || '',
+      });
+      setIdMissionVerified(true);
+      setOpenRedirectModal(true);
+    }
+    if (!qrCode && !webLink) {
       setGetQrAndWebLinkLoading(true);
       getQrAndWebLink().finally(() => setGetQrAndWebLinkLoading(false));
     }
@@ -391,7 +397,7 @@ export default function SingleApplication() {
     });
     socket.on('idMission_other', async data => {
       // console.log('you start id mission failed', data);
-      console.log('Id Mission DAta ', data);
+      console.log('Id Mission Data ', data);
       toast.error('you id dindnt approved please try again');
     });
 
@@ -400,6 +406,7 @@ export default function SingleApplication() {
       socket.off('idMission_processing_started');
       socket.off('idMission_verified');
       socket.off('idMission_failed');
+      socket.off('idMission_other');
     };
   }, [dispatch, formId, formatData, getUserProfile, idMissionVerified, updateMyProfile, user?._id]);
 
@@ -433,16 +440,6 @@ export default function SingleApplication() {
     window.addEventListener('keydown', handleEnter);
     return () => window.removeEventListener('keydown', handleEnter);
   }, [otp, otpLoading, sentOtpForEmail, verifyWithOtp]);
-
-  // use effect for getting data from draft and save in redux
-  useEffect(() => {
-    if (form?.data?._id) {
-      getSavedFormData({ formId: form?.data?._id }).then(res => {
-        const data = res?.data?.data?.savedData;
-        if (data) dispatch(addSavedFormData(data));
-      });
-    }
-  }, [dispatch, form, getSavedFormData]);
 
   const isCreator = user?._id && user?._id == form?.data?.owner && user?.role !== 'guest';
   if (!isApplied) return <CustomLoading />;
@@ -544,7 +541,7 @@ export default function SingleApplication() {
                         onClick={verifyWithOtp}
                         disabled={emailLoading}
                         className={`min-w-[130px] py-[8px] ${emailLoading && 'cursor-not-allowed opacity-25'}`}
-                        label={'SubmitOtp'}
+                        label={'Submit OTP'}
                       />
                     </div>
                   )}

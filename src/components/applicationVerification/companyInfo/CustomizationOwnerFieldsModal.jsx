@@ -13,6 +13,7 @@ import TextField from '@/components/shared/small/TextField';
 
 function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, formRefetch, section }) {
   const [fieldsData, setFieldsData] = useState([]);
+  const [originalFieldData, setOriginalFieldData] = useState([]);
   const [blockFieldsData, setBlockFieldsData] = useState([]);
   const [customizeForm, { isLoading }] = useUpdateDeleteCreateFormFieldsMutation();
   const [updateSection, { isLoading: isUpdatingSection }] = useUpdateFormSectionMutation();
@@ -108,6 +109,7 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
   useEffect(() => {
     if (fields?.length > 0) {
       setFieldsData(fields);
+      setOriginalFieldData(fields);
     }
     if (blocks?.length > 0) {
       const allFieldsData = [];
@@ -129,7 +131,12 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
       {fieldsData?.length > 0 &&
         fieldsData?.map((field, index) => (
           <div key={index} className="mt-6 flex flex-col gap-4">
-            <MakeFieldDataCustomForOwner fieldsData={fieldsData} setFieldsData={setFieldsData} index={index} />
+            <MakeFieldDataCustomForOwner
+              originalFieldData={originalFieldData}
+              fieldsData={fieldsData}
+              setFieldsData={setFieldsData}
+              index={index}
+            />
           </div>
         ))}
       {blocks?.length > 0 && (
