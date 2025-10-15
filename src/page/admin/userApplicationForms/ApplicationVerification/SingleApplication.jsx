@@ -134,6 +134,10 @@ export default function SingleApplication() {
         const formDataOfIdMission = savedData?.idMission;
         const action = await dispatch(addSavedFormData(savedData || []));
         unwrapResult(action);
+        if (!savedData?.company_lookup_data) {
+          console.log('saved data is ,', savedData);
+          return navigate(`/verification?formid=${formId}`);
+        }
         setIdMissionVerifiedData({
           name: formDataOfIdMission?.name || '',
           idNumber: formDataOfIdMission?.idNumber || '',
@@ -154,12 +158,11 @@ export default function SingleApplication() {
         });
         setIdMissionVerified(true);
         setOpenRedirectModal(true);
-        if (!savedData?.company_lookup_data) {
-          console.log('saved data is ,', savedData);
-          return navigate(`/verification?formid=${formId}`);
-        }
       }
     } catch (error) {
+      if (error?.data?.message === 'Form Not Saved in draft') {
+        return navigate(`/verification?formid=${formId}`);
+      }
       console.log('error while getting saved form data', error);
       // toast.error(error?.data?.message || 'Error while getting saved form data');
     }
