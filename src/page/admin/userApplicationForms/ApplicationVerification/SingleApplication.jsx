@@ -389,6 +389,11 @@ export default function SingleApplication() {
       );
       unwrapResult(action);
     });
+    socket.on('idMission_other', async data => {
+      // console.log('you start id mission failed', data);
+      console.log('Id Mission DAta ', data);
+      toast.error('you id dindnt approved please try again');
+    });
 
     // Cleanup listener when component unmounts
     return () => {
