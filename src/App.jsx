@@ -84,7 +84,10 @@ function App() {
         <Suspense fallback={<CustomLoading />}>
           <Routes>
             {/* root redirects */}
-            <Route path="/" element={user ? <Navigate to="/all-users" replace /> : <Navigate to="/login" replace />} />
+            <Route
+              path="/"
+              element={user ? <Navigate to="/application-forms" replace /> : <Navigate to="/login" replace />}
+            />
             {/* public routes */}
             <Route path="/" element={<AdminDashboard />}>
               <Route path="application-form/:formId" element={<SingleApplication />} />
@@ -94,7 +97,7 @@ function App() {
               <Route path="verification" element={<Verification />} />
             </Route>
             {/* non authentic routes */}
-            <Route element={<ProtectedRoute user={!user} redirect="/all-users" />}>
+            <Route element={<ProtectedRoute user={!user} redirect="/application-forms" />}>
               <Route path="/login" element={<Login />} />
               <Route path="/otp" element={<Otp />} />
             </Route>
@@ -103,7 +106,7 @@ function App() {
             <Route element={<ProtectedRoute user={user} redirect="/login" />}>
               {/* Admin */}
               <Route path="/" element={<AdminDashboard />}>
-                <Route index element={<Navigate to="all-roles" replace />} />
+                <Route index element={<Navigate to="application-forms" replace />} />
                 <Route path="all-roles" element={<AllRoles />} />
                 <Route path="all-users" element={<AdminAllUsers />} />
                 <Route path="application-forms" element={<ApplicationForms />} />

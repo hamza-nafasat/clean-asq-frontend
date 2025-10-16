@@ -69,7 +69,7 @@ const EditSectionDisplayTextFromatingModal = ({ step }) => {
         className="w-full rounded-md border border-gray-300 p-2 outline-none"
       />
       <div className="flex justify-end">
-        <Button onClick={formateTextWithAi} disabled={isLoading} className="mt-8" label="Formate Text" />
+        <Button onClick={formateTextWithAi} disabled={isLoading} className="mt-8" label="Format Text" />
       </div>
       {aiFormatting && <div className="h-full p-4" dangerouslySetInnerHTML={{ __html: aiFormatting ?? '' }} />}
       <Button onClick={updateFormSectionHandler} disabled={isUpdating} className="mt-8" label="Save" />

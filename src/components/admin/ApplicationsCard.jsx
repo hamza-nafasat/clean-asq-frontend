@@ -313,24 +313,15 @@ export default function ApplicationsCard() {
                   )}
                 </div>
               </div>
-
               {/* Menu icon */}
-
               <div className="absolute top-3 right-3 cursor-pointer sm:top-4 sm:right-4">{/* <CiMenuKebab /> */}</div>
-
               <div className="flex items-start gap-2 md:gap-4">
                 {/* <CardIcon /> */}
-
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <h2 className="text-base leading-tight font-bold break-words text-gray-700 sm:text-lg md:text-2xl">
                       {form?.name}
                     </h2>
-                    <span
-                      className={`rounded-[8px] px-4 py-2 text-xs font-semibold md:text-sm ${form?.status === 'Active' ? 'bg-green-100 text-green-700' : form?.status === 'Draft' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-600'}`}
-                    >
-                      {form?.status}
-                    </span>
                   </div>
                   <div className="mt-1 truncate text-xs text-gray-500 sm:text-sm">Created from CSV import</div>
                 </div>

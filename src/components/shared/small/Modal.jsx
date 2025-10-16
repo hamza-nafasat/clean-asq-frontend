@@ -4,7 +4,7 @@ const Modal = ({ title, onClose, children, width, headingIcon }) => {
   return (
     <div
       className="modal fixed inset-0 top-0 left-0 z-[99] flex items-center justify-center bg-[#000000c5] p-6"
-      onClick={onClose}
+      // onClick={onClose}
     >
       <div
         className={`custom-scroll shadow-card h-fit max-h-full overflow-y-auto rounded-[12px] bg-white p-4 md:p-6 ${

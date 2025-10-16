@@ -53,8 +53,8 @@ const Preview = ({
           <img
             src={typeof selectedLogo === 'string' ? selectedLogo : selectedLogo}
             alt="logo"
+            referrerPolicy="no-referrer"
             className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain ${isLight ? 'rounded-sm bg-gray-700' : ''}`}
-            // onClick={() => handleLogoSelect(idx)}
           />
         </div>
         <div className="relative inline-block">

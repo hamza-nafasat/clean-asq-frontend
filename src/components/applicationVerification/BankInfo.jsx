@@ -188,7 +188,7 @@ function BankInfo({
           if (field.name === 'bank_routing_number') {
             return (
               <div key={index}>
-                <div className="mt-4 flex items-end gap-2">
+                <div className="mt-4 flex items-center gap-2">
                   <OtherInputType
                     field={field}
                     placeholder={field.placeholder}
@@ -197,7 +197,8 @@ function BankInfo({
                     className="flex-1"
                   />
                   <Button
-                    label={isFetching ? 'Checking...' : 'Check'}
+                    label={isFetching ? 'Entering...' : 'Enter'}
+                    className="mt-8"
                     onClick={async () => {
                       if (form[field?.name]) {
                         setLookupRouting(form?.[field?.name]);

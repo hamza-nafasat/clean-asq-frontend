@@ -25,9 +25,9 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
   const handleNavOpen = () => setIsNavOpen(!isNavOpen);
 
   const pages = [
+    { title: 'Application forms', link: '/application-forms', icon: <Applications /> },
     { title: 'Role Management', link: '/all-roles', icon: <AllRoles /> },
     { title: 'User Management', link: '/all-users', icon: <AllUsers /> },
-    { title: 'Application forms', link: '/application-forms', icon: <Applications /> },
     { title: 'Applications', link: '/applications', icon: <Applicants /> },
     { title: 'Branding Management', link: '/branding', icon: <BrushIcon /> },
     { title: 'Lookup management', link: '/strategies-key', icon: <HiOutlineLightBulb /> },
@@ -59,6 +59,7 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
               <img
                 src={logo || logoApply}
                 alt="logo"
+                referrerPolicy="no-referrer"
                 className={`object-contain ${
                   isNavOpen
                     ? 'h-[50px] max-w-[160px]' // full logo when open

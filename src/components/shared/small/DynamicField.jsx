@@ -8,6 +8,7 @@ import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
 import DOMPurify from 'dompurify';
 import TextField from './TextField';
 import { FIELD_TYPES } from '@/data/constants';
+import { useBranding } from '@/hooks/BrandingContext';
 
 const DynamicField = ({ cn, field, className = '', form, placeholder, value, setForm, ...rest }) => {
   const { type, label, id, options, name, required } = field;
@@ -203,7 +204,7 @@ const SelectInputType = ({ field, className, form, setForm }) => {
             <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
           </div>
         )}
-        <div className="flex gap-2">
+        <div className="flex w-full gap-2">
           <select
             name={name}
             required={required}
@@ -217,7 +218,11 @@ const SelectInputType = ({ field, className, form, setForm }) => {
               </option>
             ))}
           </select>
-          {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
+          {aiHelp && (
+            <div className="flex items-center">
+              <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
+            </div>
+          )}
         </div>
       </div>
     </>
@@ -241,7 +246,7 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
           <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
         </Modal>
       )}
-      <h4 className="text-textPrimary text-base font-medium lg:text-lg">
+      <h4 className="text-textPrimary min-w-[200px]lg:text-lg text-base font-medium">
         {label}:{required ? '*' : ''}
       </h4>
       {ai_formatting && isDisplayText && (
@@ -266,7 +271,11 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
             />
           </div>
         ))}
-        {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
+        {aiHelp && (
+          <div className="ml-auto flex items-center">
+            <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -288,11 +297,15 @@ const RadioInputType = ({ field, className, form, setForm, onChange }) => {
           <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
         </div>
       )}
-      <div className="flex">
-        <h4 className="text-textPrimary text-base font-medium lg:text-lg">
+      <div className="flex w-full">
+        <h4 className="text-textPrimary min-w-[200px] text-base font-medium lg:text-lg">
           {label}:{required ? '*' : ''}
         </h4>
-        {aiHelp && <Button label="AI Help" className="h-min text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
+        {aiHelp && (
+          <div className="jsutify-end items-cente ml-auto flex">
+            <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
+          </div>
+        )}
       </div>
       <div className="border-b-2 py-6">
         <div className="grid grid-cols-3 gap-4 p-0">
@@ -349,11 +362,15 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
             />
             {label && (
               <h4 className="text-textPrimary text-base font-medium lg:text-lg">
-                {label} {required ? '*' : ''}:
+                {label} {required ? '*' : ''}
               </h4>
             )}
           </div>
-          {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
+          {aiHelp && (
+            <div className="mt-8 flex items-center">
+              <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
+            </div>
+          )}
         </div>
       </div>
       <div className="flex w-full gap-2 px-6">
@@ -431,7 +448,11 @@ const RangeInputType = ({ field, className, form, setForm }) => {
             className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
             onChange={onRangeChange}
           />
-          {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
+          {aiHelp && (
+            <div className="flex items-center">
+              <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -561,7 +582,11 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
               )}
             </div>
 
-            {aiHelp && <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />}
+            {aiHelp && (
+              <div className="mt-8 flex items-center">
+                <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
+              </div>
+            )}
           </section>
         </article>
       </div>
@@ -573,6 +598,7 @@ const AiHelpModal = ({ aiResponse }) => {
   const [updateAiPrompt, setUpdateAiPrompt] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [formateTextInMarkDown, { isLoading }] = useFormateTextInMarkDownMutation();
+  const { logo } = useBranding();
 
   const getResponseFromAi = async () => {
     if (!updateAiPrompt.trim()) return toast.error('Please enter a prompt');
@@ -598,6 +624,9 @@ const AiHelpModal = ({ aiResponse }) => {
 
   return (
     <div className="flex w-full flex-col gap-4">
+      <div className="flex items-center justify-center">
+        <img src={logo} alt="Logo" className="h-20 w-20" />
+      </div>
       <div className="flex flex-col items-start gap-2 border-2 p-4">
         <div className="" dangerouslySetInnerHTML={{ __html: aiResponse ?? '' }} />
       </div>

@@ -721,7 +721,7 @@ export default function SingleApplication() {
                   onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, phoneNumber: e.target.value })}
                   label="Phone Number:*"
                   required
-                  type="number"
+                  type="tel"
                   className={'max-w-[400px]!'}
                 />
                 <div className="flex w-full flex-col">

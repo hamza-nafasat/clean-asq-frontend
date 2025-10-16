@@ -146,7 +146,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
           />
           <Checkbox
             id="displayText"
-            label="Is Dispaly Text"
+            label="Is Display text"
             checked={signatureData?.isSignDisplayText}
             disabled={signatureEnabling}
             className={`${signatureEnabling ? 'pointer-events-none opacity-30' : ''}`}

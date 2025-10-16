@@ -372,13 +372,6 @@ function CompanyOwners({
       <div className="mt-5">
         <div className="h-full overflow-auto pb-3">
           <div className="rounded-[8px] border border-[#F0F0F0] p-4">
-            <div className="flex flex-col justify-between gap-2 border-b border-[#E8E8E8] pb-3 sm:flex-row sm:gap-0">
-              <div>
-                <h2 className="text-textPrimary text-[22px] font-medium">Beneficial Owner Information</h2>
-                <p className="text-textPrimary">Provide information about the beneficial owner.</p>
-              </div>
-            </div>
-
             {formFields?.map((field, index) => {
               if (field.name === 'main_owner_own_25_percent_or_more' || field.type === 'block') return null;
               if (field.type === FIELD_TYPES.SELECT) {
