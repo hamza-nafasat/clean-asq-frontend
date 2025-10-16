@@ -2,13 +2,12 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Button from './small/Button';
 import { AiHelpModal } from './small/DynamicField';
 import Modal from './small/Modal';
+import { useBranding } from '@/hooks/BrandingContext';
 
 export default function SignatureBox({ onSave, step, oldSignatureUrl, className = '' }) {
+  const { textColor, fontFamily } = useBranding();
   const [mode, setMode] = useState('draw');
   const [typedSignature, setTypedSignature] = useState('');
-  const [preview, setPreview] = useState(oldSignatureUrl || null);
-  const [color, setColor] = useState('#0B69FF');
-  const [lineWidth, setLineWidth] = useState(3);
   const [isSaving, setIsSaving] = useState(false);
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
 
@@ -36,19 +35,20 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
     ctx.scale(ratio, ratio);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.lineWidth = lineWidth;
-    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = textColor;
     ctxRef.current = ctx;
 
     // Draw old preview if available
-    if (preview) {
+    if (oldSignatureUrl) {
       const img = new Image();
+      img.crossOrigin = 'anonymous'; // must come before src
       img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
-      img.src = preview;
+      img.src = oldSignatureUrl;
     } else {
       ctx.clearRect(0, 0, rect.width, rect.height);
     }
-  }, [lineWidth, color, preview]);
+  }, [textColor, oldSignatureUrl]);
   // ---------- Draw Handlers ----------
   const pointerPos = e => {
     const rect = canvasRef.current.getBoundingClientRect();
@@ -86,7 +86,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       console.log('Failed to release pointer capture');
     }
     historyRef.current = historyRef.current.slice(0, historyPos.current + 1);
-    historyRef.current.push(canvasRef.current.toDataURL());
+    historyRef.current?.push(canvasRef?.current?.toDataURL());
     historyPos.current = historyRef.current.length - 1;
   };
 
@@ -103,7 +103,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       canvas.height = 400;
       const ctx = canvas.getContext('2d');
       ctx.font = '200px "Dancing Script", cursive';
-      ctx.fillStyle = color;
+      ctx.fillStyle = textColor;
       ctx.textBaseline = 'middle';
       const text = typedSignature;
       const x = (canvas.width - ctx.measureText(text).width) / 2;
@@ -111,7 +111,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       return canvas.toDataURL('image/png');
     }
     return exportCanvas();
-  }, [mode, typedSignature, color, exportCanvas]);
+  }, [mode, typedSignature, textColor, exportCanvas]);
 
   const dataURLtoFile = (dataUrl, filename) => {
     const arr = dataUrl.split(',');
@@ -128,7 +128,6 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
     const rect = canvasRef.current.getBoundingClientRect();
     ctxRef.current.clearRect(0, 0, rect.width, rect.height);
     setTypedSignature('');
-    setPreview(null); // fallback
   };
 
   const undo = () => {
@@ -163,33 +162,12 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       const dataUrl = generateSignatureData();
       if (dataUrl) {
         const file = dataURLtoFile(dataUrl, 'signature.png');
-        const result = onSave?.(file);
-        if (result !== false) setPreview(dataUrl);
+        onSave?.(file, setIsSaving);
       }
     } catch (err) {
-      console.error(err);
-    } finally {
+      console.error('Error is Handle save signature box', err);
       setIsSaving(false);
     }
-  };
-
-  const handlePreview = () => {
-    const dataUrl = generateSignatureData();
-    if (dataUrl) {
-      setPreview(dataUrl); // always update with new
-    } else {
-      setPreview(null); // fallback only if nothing
-    }
-  };
-  const handleDownload = () => {
-    const url = preview || exportCanvas();
-    if (!url) return;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'signature.png';
-    document.body.appendChild(a); // ✅ ensure works on all browsers
-    a.click();
-    document.body.removeChild(a);
   };
 
   useEffect(() => {
@@ -201,10 +179,10 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
   // ---------- Update stroke style ----------
   useEffect(() => {
     if (ctxRef.current) {
-      ctxRef.current.lineWidth = lineWidth;
-      ctxRef.current.strokeStyle = color;
+      ctxRef.current.lineWidth = 3;
+      ctxRef.current.strokeStyle = textColor;
     }
-  }, [lineWidth, color]);
+  }, [textColor]);
 
   // ---------- UI ----------
   const buttonClasses =
@@ -244,14 +222,14 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
         <button
           type="button"
           onClick={() => setMode('draw')}
-          className={`${buttonClasses} flex-1 ${mode === 'draw' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+          className={`${buttonClasses} flex-1 ${mode === 'draw' ? 'bg-primary text-buttonTextPrimary' : 'bg-secondary text-buttonTextSecondary'}`}
         >
           ✍️ Draw
         </button>
         <button
           type="button"
           onClick={() => setMode('type')}
-          className={`${buttonClasses} flex-1 ${mode === 'type' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+          className={`${buttonClasses} flex-1 ${mode === 'type' ? 'bg-primary text-buttonTextPrimary' : 'bg-secondary text-buttonTextSecondary'}`}
         >
           ⌨️ Type
         </button>
@@ -272,7 +250,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
         ) : (
           <input
             className="w-full bg-transparent text-center text-4xl font-medium"
-            style={{ fontFamily: 'Dancing Script, cursive' }}
+            style={{ fontFamily: fontFamily }}
             placeholder="Type your signature"
             value={typedSignature}
             onChange={e => setTypedSignature(e.target.value)}
@@ -282,15 +260,6 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
 
       {/* Controls */}
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" onClick={handleSave} className={`${buttonClasses} bg-indigo-600 text-white`}>
-          {isSaving ? 'Saving...' : 'Save'}
-        </button>
-        <button type="button" onClick={handlePreview} className={`${buttonClasses} border`}>
-          Preview
-        </button>
-        <button type="button" onClick={handleDownload} className={`${buttonClasses} border`}>
-          Download
-        </button>
         <button type="button" onClick={handleClear} className={`${buttonClasses} border`}>
           Clear
         </button>
@@ -300,35 +269,14 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
         <button type="button" onClick={redo} className={`${buttonClasses} border`}>
           Redo
         </button>
-        <input
-          type="color"
-          value={color}
-          onChange={e => setColor(e.target.value)}
-          className="ml-auto h-10 w-12 cursor-pointer rounded border"
-        />
-        <input
-          type="range"
-          min="1"
-          max="12"
-          value={lineWidth}
-          onChange={e => setLineWidth(+e.target.value)}
-          className="w-28 cursor-pointer"
-        />
+        <button
+          type="button"
+          onClick={handleSave}
+          className={`${buttonClasses} bg-primary text-buttonTextPrimary ml-auto ${isSaving ? 'pointer-events-none opacity-30' : ''}`}
+        >
+          {isSaving ? 'Saving...' : 'Save Signature'}
+        </button>
       </div>
-
-      {/* Preview */}
-      {preview && (
-        <div className="mt-4 rounded-md border bg-white p-2">
-          <p className="text-sm text-gray-600">Preview:</p>
-          <img src={preview} alt="Signature" className="mt-2 max-h-28 object-contain" />
-        </div>
-      )}
-      {!preview && oldSignatureUrl && (
-        <div className="mt-4 rounded-md border bg-white p-2">
-          <p className="text-sm text-gray-600">Preview:</p>
-          <img src={oldSignatureUrl} alt="Signature" className="mt-2 max-h-28 object-contain" />
-        </div>
-      )}
     </div>
   );
 }

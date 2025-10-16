@@ -58,6 +58,22 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
       </div>
     );
   }
+  if (type === 'textarea') {
+    return (
+      <div className="mb-4">
+        <label className="text-textPrimary mb-1 block text-sm font-medium">{labelText}</label>
+        <textarea
+          name={field}
+          value={value}
+          onChange={e => onChange(field, e.target.value)}
+          className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
+            error ? 'border-red-500' : 'border-frameColor'
+          }`}
+        />
+        {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      </div>
+    );
+  }
 
   // ✅ Default input using your TextField component
   return (
@@ -154,7 +170,7 @@ const AddStrategiesKey = ({ selectedRow, companyOptions, extractAsOptions, setEd
       )}
       {renderFormField('extractAs', form.extractAs, handleChange, 'select', extractAsOptions)}
       {renderFormField('searchTerms', form.searchTerms, handleChange)}
-      {renderFormField('extractionPrompt', form.extractionPrompt, handleChange)}
+      {renderFormField('extractionPrompt', form.extractionPrompt, handleChange, 'textarea')}
       {renderFormField('active', form.active, handleChange, 'checkbox')}
 
       {/* <button type="submit" className="w-full rounded bg-blue-600 py-2 text-white hover:bg-blue-700">

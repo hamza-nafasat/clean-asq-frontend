@@ -36,21 +36,27 @@ function AggrementBlock({
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
   const isCreator = user?._id && user?._id == step?.owner && user?.role !== 'guest';
 
-  const signatureUploadHandler = async file => {
-    if (!file) return toast.error('Please select a file');
-    if (file) {
-      const oldSign = form?.['signature'];
-      if (oldSign?.publicId) {
-        const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
-        if (!result) return toast.error('File Not Deleted Please Try Again');
+  const signatureUploadHandler = async (file, setIsSaving) => {
+    try {
+      if (!file) return toast.error('Please select a file');
+      if (file) {
+        const oldSign = form?.['signature'];
+        if (oldSign?.publicId) {
+          const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
+          if (!result) return toast.error('File Not Deleted Please Try Again');
+        }
+        const res = await uploadImageOnCloudinary(file);
+        if (!res.publicId || !res.secureUrl || !res.resourceType)
+          return toast.error('File Not Uploaded Please Try Again');
+        const action = await dispatch(updateFormState({ data: { signature: res }, name: title }));
+        unwrapResult(action);
+        setForm(prev => ({ ...prev, signature: res }));
+        await saveInProgress({ data: { signature: res }, name: title });
       }
-      const res = await uploadImageOnCloudinary(file);
-      if (!res.publicId || !res.secureUrl || !res.resourceType)
-        return toast.error('File Not Uploaded Please Try Again');
-      const action = await dispatch(updateFormState({ data: { signature: res }, name: title }));
-      unwrapResult(action);
-      setForm(prev => ({ ...prev, signature: res }));
-      await saveInProgress({ data: { signature: res }, name: title });
+    } catch (error) {
+      console.log('error while uploading signature', error);
+    } finally {
+      if (setIsSaving) setIsSaving(false);
     }
   };
 

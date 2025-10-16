@@ -42,20 +42,25 @@ function CustomSection({
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
   const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
 
-  const signatureUploadHandler = async file => {
-    if (!file) return toast.error('Please select a file');
-    if (file) {
-      const oldSign = form?.['signature'];
-      if (oldSign?.publicId) {
-        console.log('i am running');
-        const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
-        if (!result) return toast.error('File Not Deleted Please Try Again');
+  const signatureUploadHandler = async (file, setIsSaving) => {
+    try {
+      if (!file) return toast.error('Please select a file');
+      if (file) {
+        const oldSign = form?.['signature'];
+        if (oldSign?.publicId) {
+          const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
+          if (!result) return toast.error('File Not Deleted Please Try Again');
+        }
+        const res = await uploadImageOnCloudinary(file);
+        if (!res.publicId || !res.secureUrl || !res.resourceType) {
+          return toast.error('File Not Uploaded Please Try Again');
+        }
+        setForm(prev => ({ ...prev, signature: res }));
       }
-      const res = await uploadImageOnCloudinary(file);
-      if (!res.publicId || !res.secureUrl || !res.resourceType) {
-        return toast.error('File Not Uploaded Please Try Again');
-      }
-      setForm(prev => ({ ...prev, signature: res }));
+    } catch (error) {
+      console.log('error while uploading signature', error);
+    } finally {
+      if (setIsSaving) setIsSaving(false);
     }
   };
 

@@ -78,7 +78,7 @@ export default function SingleApplication() {
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const idMissionSection = form?.data?.sections?.find(sec => sec?.title?.toLowerCase() == 'id_verification_blk');
 
-  const handleSignature = async file => {
+  const handleSignature = async (file, setIsSaving) => {
     try {
       if (!file) return toast.error('Please add signature');
       if (idMissionVerifiedData?.signature?.publicId || idMissionVerifiedData?.signature?.secureUrl) {
@@ -93,6 +93,8 @@ export default function SingleApplication() {
     } catch (error) {
       console.log('error while uploading image', error);
       toast.error('Something went wrong while uploading image');
+    } finally {
+      if (setIsSaving) setIsSaving(false);
     }
   };
 
