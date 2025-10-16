@@ -59,24 +59,10 @@ const GlobalBrandingPage = ({ brandingId }) => {
   console.log('extraLogos', extraLogos);
   console.log('singleBranding.colors.buttonText)', singleBrandingData?.data.colors.buttonText);
 
-  const handleExtraLogoUpload = logo => {
-    setExtraLogos([...extraLogos, logo]);
-  };
-
-  const handleCancel = () => {
-    console.log('Branding changes cancelled.');
-    alert('Branding Cancelled!');
-    navigate('/branding');
-  };
-  const companyNameHandle = e => {
-    setCompanyName(e.target.value);
-  };
-
   const extractBranding = async () => {
     if (!websiteUrl) toast.error('Please enter a valid website URL');
     try {
       const res = await fetchBranding({ url: websiteUrl }).unwrap();
-
       if (res.success) {
         const data = res.data;
         // setCompanyName(data?.name || '');
@@ -110,7 +96,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !logos?.length ||
       !primaryColor ||
       !secondaryColor ||
-      !accentColor ||
       !textColor ||
       !linkColor ||
       !backgroundColor ||
@@ -170,7 +155,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !logos?.length ||
       !primaryColor ||
       !secondaryColor ||
-      !accentColor ||
       !textColor ||
       !linkColor ||
       !backgroundColor ||
@@ -301,7 +285,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   return (
     <div className="mb-6 rounded-[8px] border border-[#F0F0F0] bg-white px-3 md:px-6">
       <h1 className="mt-12 mb-6 text-lg font-semibold text-gray-500 md:text-2xl">Global Branding</h1>
-      <TextField label={'Company Name'} value={companyName} onChange={companyNameHandle} />
+      <TextField label={'Company Name'} value={companyName} onChange={e => setCompanyName(e.target.value)} />
       <div className="mt-12">
         <BrandingSource
           websiteUrl={websiteUrl}
@@ -313,7 +297,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
           setSelectedLogo={setSelectedLogo}
           selectedLogo={selectedLogo}
           defaultSelectedLogo={brandingId ? selectedLogo : null}
-          handleExtraLogoUpload={handleExtraLogoUpload}
+          handleExtraLogoUpload={logo => setExtraLogos([...extraLogos, logo])}
           extractColorsFromLogosHandler={extractColorsFromLogosHandler}
         />
         <ColorPalette colorPalette={colorPalette} />
@@ -354,10 +338,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
           frameColor={frameColor}
         />
 
-        <div className="mt-6 mb-4 flex justify-between space-x-2 md:space-x-4">
-          <Button label={'skip'} onClick={handleCancel} />
+        <div className="mt-6 mb-4 flex justify-end space-x-2 md:space-x-4">
           <div className="flex gap-2 md:gap-6">
-            <Button variant="secondary" label={'Cancel'} onClick={handleCancel} />
+            <Button variant="secondary" label={'Cancel'} onClick={() => navigate('/branding')} />
             <Button
               disabled={isLoading || isUpdateLoading}
               className={`${isLoading || isUpdateLoading ? 'cursor-not-allowed opacity-50' : ''} `}

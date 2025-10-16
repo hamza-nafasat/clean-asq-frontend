@@ -9,7 +9,7 @@ const Preview = ({
   companyName,
   selectedLogo,
   secondaryColor,
-  accentColor,
+  // accentColor,
   buttonTextPrimary,
   buttonTextSecondary,
   linkColor,
@@ -44,7 +44,7 @@ const Preview = ({
         <p
           className="text-textPrimary mb-2 text-[22px] font-medium"
           style={{
-            color: accentColor || '#000000',
+            color: textColor || '#000000',
           }}
         >
           {companyName ? companyName.charAt(0).toUpperCase() + companyName.slice(1) : 'Company Name'}
