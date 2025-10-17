@@ -43,8 +43,8 @@ const BrandElementAssignment = ({
   setPrimaryColor,
   secondaryColor,
   setSecondaryColor,
-  // accentColor,
-  // setAccentColor,
+  accentColor,
+  setAccentColor,
   textColor,
   setTextColor,
   linkColor,
@@ -72,6 +72,7 @@ const BrandElementAssignment = ({
         <ColorInput label="Secondary Color (Alternative Buttons)" color={secondaryColor} setColor={setSecondaryColor} />
         <ColorInput label="Text Color" color={textColor} setColor={setTextColor} />
         <ColorInput label="Link Color" color={linkColor} setColor={setLinkColor} />
+        <ColorInput label="Accent Color" color={accentColor} setColor={setAccentColor} />
         <ColorInput label="Background Color" color={backgroundColor} setColor={setBackgroundColor} />
         <ColorInput label="Frame Color (Input Fields, Borders)" color={frameColor} setColor={setFrameColor} />
         <ColorInput label="Button Primary text" color={buttonTextPrimary} setColor={setButtonTextPrimary} />

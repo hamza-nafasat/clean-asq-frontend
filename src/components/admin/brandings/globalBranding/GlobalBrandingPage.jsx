@@ -92,6 +92,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !companyName ||
       !websiteUrl ||
       !fontFamily ||
+      !accentColor ||
       !colorPalette?.length ||
       !logos?.length ||
       !primaryColor ||
@@ -151,6 +152,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !companyName ||
       !websiteUrl ||
       !fontFamily ||
+      !accentColor ||
       !colorPalette?.length ||
       !logos?.length ||
       !primaryColor ||

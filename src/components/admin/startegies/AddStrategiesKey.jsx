@@ -104,8 +104,6 @@ const AddStrategiesKey = ({ selectedRow, companyOptions, extractAsOptions, setEd
     active: selectedRow?.isActive || false,
   });
 
-  console.log('form', form);
-
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
   };
@@ -114,7 +112,7 @@ const AddStrategiesKey = ({ selectedRow, companyOptions, extractAsOptions, setEd
     e.preventDefault();
     try {
       const { active, companyIdentification, extractAs, extractionPrompt, searchObjectKey, searchTerms } = form;
-      console.log('searchObjectKey', searchObjectKey);
+
       if (!searchObjectKey || !searchTerms || !extractionPrompt || !extractAs || !companyIdentification.length) {
         return toast.error('Please fill all required fields');
       }

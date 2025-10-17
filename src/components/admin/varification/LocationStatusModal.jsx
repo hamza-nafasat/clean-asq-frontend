@@ -1,11 +1,12 @@
+import Button from '@/components/shared/small/Button';
 import Modal from '@/components/shared/small/Modal';
+import getEnv from '@/lib/env';
 import { useFormateTextInMarkDownMutation, useUpdateFormMutation } from '@/redux/apis/formApis';
+import DOMPurify from 'dompurify';
 import { useCallback, useState } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
-import { toast } from 'react-toastify';
-import DOMPurify from 'dompurify';
 import { CgSpinner } from 'react-icons/cg';
-import Button from '@/components/shared/small/Button';
+import { toast } from 'react-toastify';
 
 export default function LocationStatusModal({
   locationStatusModal,
@@ -16,9 +17,9 @@ export default function LocationStatusModal({
 }) {
   const [captchaVerified, setCaptchaVerified] = useState(false);
 
-  const handleCaptcha = value => {
-    if (value) setCaptchaVerified(true);
-    else setCaptchaVerified(false);
+  const handleCaptchaVerify = token => {
+    if (token) setCaptchaVerified(token);
+    else setCaptchaVerified(null);
   };
 
   return (
@@ -28,7 +29,6 @@ export default function LocationStatusModal({
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100">
           <img src={locationData?.logo} alt="logo" referrerPolicy="no-referrer" />
         </div>
-
         {/* Title & Info */}
         <div className="space-y-3">
           <h2 className="text-center text-xl font-semibold text-gray-800">{locationData?.title}</h2>
@@ -36,35 +36,22 @@ export default function LocationStatusModal({
           <br />
           <div dangerouslySetInnerHTML={{ __html: locationData?.message }} />
         </div>
-
         {/* Captcha */}
-        <ReCAPTCHA sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || ''} onChange={handleCaptcha} />
 
-        {/* Actions */}
+        <ReCAPTCHA sitekey={getEnv('VITE_RECAPTCHA_SITE_KEY')} onChange={handleCaptchaVerify} />
         <div className="flex w-full justify-center gap-4 pt-2">
-          <button
-            onClick={() => navigate(`/application-form/${formId}`)}
-            className="w-32 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Go Back
-          </button>
+          <Button variant="outline" onClick={() => navigate(`/application-form/${formId}`)} label={'Go Back'} />
 
           {locationStatusModal !== 'required' && (
-            <button
-              onClick={() => setLocationStatusModal(false)}
-              className="w-32 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              Skip
-            </button>
+            <Button label={'Skip'} onClick={() => setLocationStatusModal(false)} />
           )}
 
-          <button
+          <Button
+            label={'Continue'}
+            variant="primary"
             disabled={!captchaVerified}
             onClick={() => setLocationStatusModal(false)}
-            className={`w-32 rounded-md px-4 py-2 text-sm font-medium text-white shadow ${captchaVerified ? 'bg-blue-600 hover:bg-blue-700' : 'cursor-not-allowed bg-gray-400'}`}
-          >
-            Continue
-          </button>
+          />
         </div>
       </div>
     </Modal>

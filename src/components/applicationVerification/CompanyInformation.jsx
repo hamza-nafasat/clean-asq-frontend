@@ -63,7 +63,6 @@ function CompanyInformation({
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
       if (!file) return toast.error('Please select a file');
-
       if (file) {
         const oldSign = form?.['signature'];
         if (oldSign?.publicId) {

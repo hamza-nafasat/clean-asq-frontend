@@ -85,7 +85,7 @@ function AddStrategies({ setIsModalOpen, forms = [], formKeys = [] }) {
   };
   const handleSubmit = async e => {
     e.preventDefault();
-    if (!form.name || !form.form || !form.searchStrategies.length) return toast.error('Please fill all the fields');
+    if (!form.name || !form.searchStrategies.length) return toast.error('Please fill all the fields');
     try {
       const res = await createFormStrategy(form).unwrap();
       if (res.success) {

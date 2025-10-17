@@ -18,7 +18,6 @@ const container = document.getElementById('root');
 if (!container._reactRoot) {
   const root = createRoot(container);
   container._reactRoot = root;
-
   root.render(
     // <StrictMode>
     <LoadScript googleMapsApiKey={'AIzaSyCjIrS-bOHBzGviCsSHDZZUf9F9oonZGnU'} libraries={['places']}>
