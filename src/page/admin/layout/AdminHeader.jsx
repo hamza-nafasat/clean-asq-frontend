@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+// import { Button } from '@/components/ui/button';
 import { useLogoutMutation } from '@/redux/apis/authApis';
 import { userNotExist } from '@/redux/slices/authSlice';
 import { LogInIcon } from 'lucide-react';
@@ -12,6 +12,7 @@ import { toast } from 'react-toastify';
 
 import { HiMenu } from 'react-icons/hi';
 import { useBranding } from '@/hooks/BrandingContext';
+import Button from '@/components/shared/small/Button';
 
 function AdminHeader({ setSidebarOpen }) {
   const navigate = useNavigate();
@@ -44,8 +45,10 @@ function AdminHeader({ setSidebarOpen }) {
             />
           </div>
         )}
+        <div>
+          <Button label={'Submission & Draft'} onClick={() => navigate('/submission')} />
+        </div>
       </div>
-
       <div className="flex items-center gap-4 rounded-bl-[20px] bg-white px-6 py-2">
         {user ? (
           <div className="relative flex items-center gap-2">
@@ -80,10 +83,11 @@ function AdminHeader({ setSidebarOpen }) {
           </div>
         ) : (
           !isGuest && (
-            <Button onClick={() => navigate('/login')} className="bg-primary cursor-pointer text-white">
-              Login
-              <LogInIcon />
-            </Button>
+            // <Button onClick={() => navigate('/login')} className="bg-primary cursor-pointer text-white">
+            //   Login
+            //   <LogInIcon />
+            // </Button>
+            <Button onClick={() => navigate('/login')} rightIcon={LogInIcon} />
           )
         )}
       </div>

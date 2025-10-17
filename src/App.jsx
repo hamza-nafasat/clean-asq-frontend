@@ -26,6 +26,7 @@ import CompanyInformation from './page/admin/userApplicationForms/CompanyInforma
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
 import { detectVPN } from './utils/vpnDetection';
+import DraftSubmission from './page/admin/dashboard/draftSubmission/DraftSubmission';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -118,6 +119,7 @@ function App() {
                 {/* <Route path="extraction-context" element={<ExtractionContext />} /> */}
                 <Route path="verification-test" element={<VerificationTest />} />
                 <Route path="strategies" element={<Strategies />} />
+                <Route path="submission" element={<DraftSubmission />} />
               </Route>
 
               {/*all User Forms or application layout  , with out sidebar */}

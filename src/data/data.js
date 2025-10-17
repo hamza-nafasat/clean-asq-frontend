@@ -351,3 +351,180 @@ export const CompleteExtractionPrompt = {
   textarea:
     'This section provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. AdministratorsThis section provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. AdministratorsThis section provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. AdministratorsThis section provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. AdministratorsThis section provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. AdministratorsThis section provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. AdministratorsThis section provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. AdministratorsThis section provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. AdministratorsThis section provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. AdministratorsThis section provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. AdministratorsThis section provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. AdministratorsThis section provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. AdministratorsThis section provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profisection provides detailed guidance on handling user accounts. Administrators can add new users, update their profile information, and assign specific roles. It also includes advanced permission settings that define what each role is allowed to do, ensuring the platform remains secure and well-structured. Additionally, it supports bulk actions for importing and exporting user data, making it easier to manage larger teams without repetitive manual input.',
 };
+
+export const draftData = [
+  {
+    _id: 'form_1',
+    name: 'Employee Application Form',
+    branding: {
+      // selectedLogo: 'https://example.com/logo1.png',
+      colors: {
+        primary: '#1E90FF',
+        buttonTextPrimary: '#FFFFFF',
+      },
+    },
+    sections: [
+      { id: 'sec1', title: 'Personal Details' },
+      { id: 'sec2', title: 'Experience' },
+    ],
+    locationTitle: 'Office Location',
+    locationSubtitle: 'HQ - Building 1',
+    locationStatus: 'Active',
+    locationMessage: 'This form is for main office applicants only.',
+    formatedLocationMessage: '<p>Main office applicants only</p>',
+    formateTextInstructions: 'Use <b>HTML</b> tags for formatting',
+    createdAt: '2025-10-17T08:30:00Z',
+  },
+  {
+    _id: 'form_2',
+    name: 'Customer Feedback Form',
+    branding: {
+      // selectedLogo: 'https://example.com/logo2.png',
+      colors: {
+        primary: '#00B894',
+        buttonTextPrimary: '#FFFFFF',
+      },
+    },
+    sections: [
+      { id: 'sec1', title: 'Feedback Questions' },
+      { id: 'sec2', title: 'Ratings' },
+      { id: 'sec3', title: 'Suggestions' },
+    ],
+    locationTitle: 'Branch Office',
+    locationSubtitle: 'Lahore',
+    locationStatus: 'Inactive',
+    locationMessage: 'This form is temporarily disabled.',
+    formatedLocationMessage: '<p>Form disabled temporarily.</p>',
+    formateTextInstructions: 'Use simple HTML tags only.',
+    createdAt: '2025-09-20T10:15:00Z',
+  },
+  {
+    _id: 'form_3',
+    name: 'Partner Registration Form',
+    branding: {
+      // selectedLogo: 'https://example.com/logo3.png',
+      colors: {
+        primary: '#E17055',
+        buttonTextPrimary: '#FFFFFF',
+      },
+    },
+    sections: [{ id: 'sec1', title: 'Company Info' }],
+    locationTitle: 'Remote',
+    locationSubtitle: 'Online Only',
+    locationStatus: 'Active',
+    locationMessage: 'Available for online registration.',
+    formatedLocationMessage: '<p>Online registration only.</p>',
+    formateTextInstructions: 'Use paragraph tags only.',
+    createdAt: '2025-10-01T15:45:00Z',
+  },
+];
+export const submissionData = [
+  {
+    _id: 'form_1',
+    name: 'Employee Application Form',
+    branding: {
+      // selectedLogo: 'https://example.com/logo1.png',
+      colors: {
+        primary: '#1E90FF',
+        buttonTextPrimary: '#FFFFFF',
+      },
+    },
+    sections: [
+      { id: 'sec1', title: 'Personal Details' },
+      { id: 'sec2', title: 'Experience' },
+    ],
+    locationTitle: 'Office Location',
+    locationSubtitle: 'HQ - Building 1',
+    locationStatus: 'Active',
+    locationMessage: 'This form is for main office applicants only.',
+    formatedLocationMessage: '<p>Main office applicants only</p>',
+    formateTextInstructions: 'Use <b>HTML</b> tags for formatting',
+    createdAt: '2025-10-17T08:30:00Z',
+  },
+  {
+    _id: 'form_1',
+    name: 'Employee Application Form',
+    branding: {
+      // selectedLogo: 'https://example.com/logo1.png',
+      colors: {
+        primary: '#1E90FF',
+        buttonTextPrimary: '#FFFFFF',
+      },
+    },
+    sections: [
+      { id: 'sec1', title: 'Personal Details' },
+      { id: 'sec2', title: 'Experience' },
+    ],
+    locationTitle: 'Office Location',
+    locationSubtitle: 'HQ - Building 1',
+    locationStatus: 'Active',
+    locationMessage: 'This form is for main office applicants only.',
+    formatedLocationMessage: '<p>Main office applicants only</p>',
+    formateTextInstructions: 'Use <b>HTML</b> tags for formatting',
+    createdAt: '2025-10-17T08:30:00Z',
+  },
+  {
+    _id: 'form_1',
+    name: 'Employee Application Form',
+    branding: {
+      // selectedLogo: 'https://example.com/logo1.png',
+      colors: {
+        primary: '#1E90FF',
+        buttonTextPrimary: '#FFFFFF',
+      },
+    },
+    sections: [
+      { id: 'sec1', title: 'Personal Details' },
+      { id: 'sec2', title: 'Experience' },
+    ],
+    locationTitle: 'Office Location',
+    locationSubtitle: 'HQ - Building 1',
+    locationStatus: 'Active',
+    locationMessage: 'This form is for main office applicants only.',
+    formatedLocationMessage: '<p>Main office applicants only</p>',
+    formateTextInstructions: 'Use <b>HTML</b> tags for formatting',
+    createdAt: '2025-10-17T08:30:00Z',
+  },
+  {
+    _id: 'form_2',
+    name: 'Customer Feedback Form',
+    branding: {
+      // selectedLogo: 'https://example.com/logo2.png',
+      colors: {
+        primary: '#00B894',
+        buttonTextPrimary: '#FFFFFF',
+      },
+    },
+    sections: [
+      { id: 'sec1', title: 'Feedback Questions' },
+      { id: 'sec2', title: 'Ratings' },
+      { id: 'sec3', title: 'Suggestions' },
+    ],
+    locationTitle: 'Branch Office',
+    locationSubtitle: 'Lahore',
+    locationStatus: 'Inactive',
+    locationMessage: 'This form is temporarily disabled.',
+    formatedLocationMessage: '<p>Form disabled temporarily.</p>',
+    formateTextInstructions: 'Use simple HTML tags only.',
+    createdAt: '2025-09-20T10:15:00Z',
+  },
+  {
+    _id: 'form_3',
+    name: 'Partner Registration Form',
+    branding: {
+      // selectedLogo: 'https://example.com/logo3.png',
+      colors: {
+        primary: '#E17055',
+        buttonTextPrimary: '#FFFFFF',
+      },
+    },
+    sections: [{ id: 'sec1', title: 'Company Info' }],
+    locationTitle: 'Remote',
+    locationSubtitle: 'Online Only',
+    locationStatus: 'Active',
+    locationMessage: 'Available for online registration.',
+    formatedLocationMessage: '<p>Online registration only.</p>',
+    formateTextInstructions: 'Use paragraph tags only.',
+    createdAt: '2025-10-01T15:45:00Z',
+  },
+];
