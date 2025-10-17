@@ -22,10 +22,7 @@ export default function LocationStatusModal({
   };
 
   return (
-    <Modal
-      title="Location & Device Consent"
-      onClose={locationStatusModal === 'optional' ? () => setLocationStatusModal(false) : null}
-    >
+    <Modal onClose={locationStatusModal === 'optional' ? () => setLocationStatusModal(false) : null}>
       <div className="flex flex-col items-center gap-6 p-6">
         {/* Icon */}
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100">
@@ -38,13 +35,10 @@ export default function LocationStatusModal({
           <p className="text-center text-sm text-gray-600">{locationData?.subtitle}</p>
           <br />
           <div dangerouslySetInnerHTML={{ __html: locationData?.message }} />
-          <p className="text-xs text-gray-500">
-            This information helps us verify your identity and provide a secure experience.
-          </p>
         </div>
 
         {/* Captcha */}
-        <ReCAPTCHA sitekey="6Lf5GtkrAAAAANW28Zs4tnFXNkTtxKbzhXkSYF5Y" onChange={handleCaptcha} />
+        <ReCAPTCHA sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || ''} onChange={handleCaptcha} />
 
         {/* Actions */}
         <div className="flex w-full justify-center gap-4 pt-2">
