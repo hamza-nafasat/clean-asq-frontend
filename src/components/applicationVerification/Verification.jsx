@@ -93,7 +93,7 @@ function Verification() {
               onClick={sentOtpForEmail}
               disabled={otpLoading}
               className={`min-w-[130px] py-[8px] ${otpLoading && 'cursor-not-allowed opacity-25'}`}
-              label={'Send OTP'}
+              label={'Send Code'}
             />
           </div>
           {otpSent && (
@@ -109,7 +109,7 @@ function Verification() {
                 onClick={verifyWithOtp}
                 disabled={emailLoading}
                 className={`min-w-[130px] py-[8px] ${emailLoading && 'cursor-not-allowed opacity-25'}`}
-                label={'SubmitOtp'}
+                label={'Submit Code'}
               />
             </div>
           )}
