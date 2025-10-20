@@ -124,7 +124,7 @@ function AllStrategies() {
 
   return (
     <div>
-      <div className="mb-4 flex w-full justify-end gap-3 mt-5">
+      <div className="mt-5 mb-4 flex w-full justify-end gap-3">
         <Button onClick={() => setIsModalOpen(true)} label={'Add new'} />
       </div>
       <DataTable
@@ -134,7 +134,7 @@ function AllStrategies() {
         pagination
         highlightOnHover
         noDataComponent="No data found"
-        className='!rounded-lg'
+        className="!rounded-lg"
       />
 
       {/* Add Modal */}
@@ -173,7 +173,7 @@ function AllStrategies() {
         onClose={() => setDeleteConfirmation(null)}
         onConfirm={handleDelete}
         title="Delete Strategy"
-        message={`Are you sure you want to delete "${deleteConfirmation?.searchObjectKey}"?`}
+        message={`Are you sure you want to delete ${deleteConfirmation?.searchObjectKey}?`}
         confirmButtonText="Delete"
         confirmButtonClassName="bg-red-500 text-white"
       />

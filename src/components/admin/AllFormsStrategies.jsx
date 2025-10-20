@@ -161,8 +161,7 @@ function AllFormsStrategies() {
           pagination
           highlightOnHover
           noDataComponent="No data found"
-          className='!rounded-lg'
-
+          className="!rounded-lg"
         />
         {/* </div> */}
       </div>
@@ -228,7 +227,7 @@ function AllFormsStrategies() {
         onClose={() => setDeleteConfirmation(null)}
         onConfirm={handleDelete}
         title="Delete Strategy"
-        message={`Are you sure you want to delete "${deleteConfirmation?.searchObjectKey}"?`}
+        message={`Are you sure you want to delete ${deleteConfirmation?.searchObjectKey}?`}
         confirmButtonText="Delete"
         confirmButtonClassName="bg-red-500 text-white"
       />
