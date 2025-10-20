@@ -121,7 +121,7 @@ function CompanyVerification({ formId }) {
         dispatch(addLookupData(totalLookupData));
         dispatch(updateFormState({ data: totalLookupData, name: 'company_lookup_data' }));
         await saveInProgress({ data: totalLookupData, name: 'company_lookup_data' });
-        toast.success('Company Lookup successfully');
+        toast.success('Company lookup successfully completed');
       }
     } catch (error) {
       console.log('Error lookup company:', error);
