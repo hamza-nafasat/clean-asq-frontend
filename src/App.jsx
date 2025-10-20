@@ -96,6 +96,7 @@ function App() {
               <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
               <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
               <Route path="verification" element={<Verification />} />
+              <Route path="submission" element={<DraftSubmission />} />
             </Route>
             {/* non authentic routes */}
             <Route element={<ProtectedRoute user={!user} redirect="/application-forms" />}>
@@ -119,7 +120,6 @@ function App() {
                 {/* <Route path="extraction-context" element={<ExtractionContext />} /> */}
                 <Route path="verification-test" element={<VerificationTest />} />
                 <Route path="strategies" element={<Strategies />} />
-                <Route path="submission" element={<DraftSubmission />} />
               </Route>
 
               {/*all User Forms or application layout  , with out sidebar */}

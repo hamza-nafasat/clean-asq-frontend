@@ -535,14 +535,14 @@ export default function SingleApplication() {
                       onClick={sentOtpForEmail}
                       disabled={otpLoading}
                       className={`min-w-[130px] py-[8px] ${otpLoading && 'cursor-not-allowed opacity-25'}`}
-                      label={'Send OTP'}
+                      label={'Send Code'}
                     />
                   </div>
                   {otpSent && (
                     <div className="flex w-full items-center justify-center gap-4">
                       <TextField
                         type="text"
-                        placeholder="Enter your OTP"
+                        placeholder="Enter your Code"
                         value={otp}
                         onChange={e => setOtp(e.target.value)}
                         className="max-w-[500px]"
@@ -551,7 +551,7 @@ export default function SingleApplication() {
                         onClick={verifyWithOtp}
                         disabled={emailLoading}
                         className={`min-w-[130px] py-[8px] ${emailLoading && 'cursor-not-allowed opacity-25'}`}
-                        label={'Submit OTP'}
+                        label={'Submit Code'}
                       />
                     </div>
                   )}

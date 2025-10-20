@@ -1,13 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import DataTable from 'react-data-table-component';
-import { MoreVertical, Eye, Pencil, Trash } from 'lucide-react';
 import { getTableStyles } from '@/data/data';
-import Modal from '../shared/Modal';
-import ConfirmationModal from '../shared/ConfirmationModal';
-import Button from '../shared/small/Button';
-import { FaUserShield } from 'react-icons/fa';
-import { useBranding } from '../../hooks/BrandingContext';
-import TextField from '../shared/small/TextField';
 import {
   useCreateRoleMutation,
   useDeleteSingleRoleMutation,
@@ -15,8 +6,17 @@ import {
   useGetAllRolesQuery,
   useUpdateSingleRoleMutation,
 } from '@/redux/apis/roleApis';
-import Checkbox from '../shared/small/Checkbox';
+import { Eye, MoreVertical, Pencil, Trash } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import DataTable from 'react-data-table-component';
+import { FaUserShield } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import { useBranding } from '../../hooks/BrandingContext';
+import ConfirmationModal from '../shared/ConfirmationModal';
+import Modal from '../shared/Modal';
+import Button from '../shared/small/Button';
+import Checkbox from '../shared/small/Checkbox';
+import TextField from '../shared/small/TextField';
 import { ThreeDotEditViewDelete } from '../shared/ThreeDotViewEditDelete';
 
 // Define role status
@@ -283,8 +283,9 @@ function AllUserRoles() {
             name={field}
             value={value}
             onChange={onChange}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base${error ? 'border-red-500' : 'border-frameColor'
-              }`}
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base${
+              error ? 'border-red-500' : 'border-frameColor'
+            }`}
           >
             {options.map(option => (
               <option key={option.value} value={option.value}>
@@ -316,7 +317,7 @@ function AllUserRoles() {
 
   return (
     <div className="mt-5 w-full">
-      <div className="mb-5 flex items-center justify-between ">
+      <div className="mb-5 flex items-center justify-between">
         <h2 className="text-textPrimary text-xl font-semibold">Role Management</h2>
         <div>
           <Button icon={FaUserShield} label="Add Role" onClick={() => setIsModalOpen(true)} disabled={isLoading} />

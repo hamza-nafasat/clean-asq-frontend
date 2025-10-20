@@ -4,15 +4,15 @@ import { userNotExist } from '@/redux/slices/authSlice';
 import { LogInIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { HiChevronDown } from 'react-icons/hi';
-import logoApply from '../../../assets/images/logo.png';
 import { IoChevronForwardOutline, IoLogOutOutline } from 'react-icons/io5';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom'; // or 'next/link' if using Next.js
 import { toast } from 'react-toastify';
+import logoApply from '../../../assets/images/logo.png';
 
-import { HiMenu } from 'react-icons/hi';
-import { useBranding } from '@/hooks/BrandingContext';
 import Button from '@/components/shared/small/Button';
+import { useBranding } from '@/hooks/BrandingContext';
+import { HiMenu } from 'react-icons/hi';
 
 function AdminHeader({ setSidebarOpen }) {
   const navigate = useNavigate();
@@ -36,18 +36,16 @@ function AdminHeader({ setSidebarOpen }) {
             Welcome {user?.firstName} {user?.lastName}
           </h1>
         ) : (
-          <div className="my-4 flex">
+          <div className="my-4 flex items-center gap-8">
             <img
               src={logo || logoApply}
               alt="Logo"
               className={`object-contain ${'h-[60px] w-[60px]'} }`}
               referrerPolicy="no-referrer"
             />
+            {user ? <Button label={'Submission & Draft'} onClick={() => navigate('/submission')} /> : null}
           </div>
         )}
-        <div>
-          <Button label={'Submission & Draft'} onClick={() => navigate('/submission')} />
-        </div>
       </div>
       <div className="flex items-center gap-4 rounded-bl-[20px] bg-white px-6 py-2">
         {user ? (

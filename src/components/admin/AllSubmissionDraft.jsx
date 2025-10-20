@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import Submission from './Submission';
+import { useState } from 'react';
 import Draft from './Draft';
+import Submission from './Submission';
 
-function AllSubmissionDraft() {
+function AllSubmissionDraft({ forms }) {
   const [activeTab, setActiveTab] = useState('one');
 
   const tabs = [
-    { id: 'one', label: 'Submission' },
-    { id: 'two', label: 'Draft' },
+    { id: 'one', label: 'Draft' },
+    { id: 'two', label: 'Submission' },
   ];
   return (
     <div className="w-full">
@@ -29,7 +29,9 @@ function AllSubmissionDraft() {
           </button>
         ))}
       </div>
-      <div className="mt-5">{activeTab === 'one' ? <Submission /> : <Draft />}</div>
+      <div className="mt-5">
+        {activeTab === 'one' ? <Draft forms={forms?.saved || []} /> : <Submission forms={forms?.submitted || []} />}
+      </div>
     </div>
   );
 }

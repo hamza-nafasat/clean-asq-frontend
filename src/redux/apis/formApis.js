@@ -95,6 +95,17 @@ const formApis = createApi({
         method: 'GET',
       }),
     }),
+
+    // get all draft and submitions
+    // ---------------
+    getMyAllDraftsAndSubmittions: builder.query({
+      query: () => ({
+        url: '/draft-and-submitions',
+        method: 'GET',
+      }),
+      providesTags: [{ type: 'Form', id: 'LIST' }],
+    }),
+
     // update form section
     // ---------------
     updateFormSection: builder.mutation({
@@ -320,6 +331,7 @@ export const {
   useSubmitFormMutation,
   useSaveFormInDraftMutation,
   useGetSavedFormMutation,
+  useGetMyAllDraftsAndSubmittionsQuery,
   useUpdateFormSectionMutation,
   useUpdateDeleteCreateFormFieldsMutation,
   useFormateTextInMarkDownMutation,
