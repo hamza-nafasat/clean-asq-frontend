@@ -112,7 +112,7 @@ function Draft({ forms }) {
           );
         })
       ) : (
-        <div>No Draft</div>
+        <div className="items-cetner col-span-full flex justify-center">No draft found</div>
       )}
     </div>
   );
