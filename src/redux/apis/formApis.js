@@ -96,6 +96,16 @@ const formApis = createApi({
       }),
     }),
 
+    // remove saved form
+    // ---------------
+    removeSavedForm: builder.mutation({
+      query: ({ formId }) => ({
+        url: `/remove-saved/${formId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+    }),
+
     // get all draft and submitions
     // ---------------
     getMyAllDraftsAndSubmittions: builder.query({
@@ -331,6 +341,7 @@ export const {
   useSubmitFormMutation,
   useSaveFormInDraftMutation,
   useGetSavedFormMutation,
+  useRemoveSavedFormMutation,
   useGetMyAllDraftsAndSubmittionsQuery,
   useUpdateFormSectionMutation,
   useUpdateDeleteCreateFormFieldsMutation,

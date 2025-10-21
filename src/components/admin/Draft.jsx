@@ -5,7 +5,7 @@ import Button from '../shared/small/Button';
 import { useDispatch, useSelector } from 'react-redux';
 import { addSavedFormData, updateEmailVerified } from '@/redux/slices/formSlice';
 import { unwrapResult } from '@reduxjs/toolkit';
-import { useGetSavedFormMutation } from '@/redux/apis/formApis';
+import { useGetSavedFormMutation, useRemoveSavedFormMutation } from '@/redux/apis/formApis';
 
 function Draft({ forms }) {
   const dispatch = useDispatch();
@@ -13,6 +13,7 @@ function Draft({ forms }) {
   const navigate = useNavigate();
   const { logo } = useBranding();
   const [getSavedFormData] = useGetSavedFormMutation();
+  const [removeSavedForm] = useRemoveSavedFormMutation();
 
   const getSavedData = async formId => {
     try {
@@ -37,6 +38,15 @@ function Draft({ forms }) {
     }
   };
 
+  const startOverHandler = async formId => {
+    try {
+      const res = await removeSavedForm({ formId: formId }).unwrap();
+      if (res.success) await getSavedData(formId);
+    } catch (error) {
+      console.log('error while getting saved data', error);
+      return navigate(`/verification?formid=${formId}`);
+    }
+  };
   return (
     <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
       {forms?.length > 0 ? (
@@ -90,9 +100,25 @@ function Draft({ forms }) {
                   })}
                 </span>
               </div>
-              <div className="mt-3 flex w-full flex-col items-start justify-between gap-3 md:mt-6 md:flex-row md:gap-4">
+              <div className="mt-3 flex w-full flex-col items-start justify-end gap-3 md:mt-6 md:flex-row md:gap-4">
                 <Button
-                  label="Start Application"
+                  label="Start Over"
+                  onClick={() => startOverHandler(form?._id)}
+                  style={{
+                    backgroundColor: colors?.primary,
+                    borderColor: colors?.primary,
+                    color: colors?.buttonTextPrimary,
+                    transition: 'all 0.3s ease',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.opacity = '0.6';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.opacity = '1';
+                  }}
+                />
+                <Button
+                  label="Resume"
                   onClick={() => getSavedData(form?._id)}
                   style={{
                     backgroundColor: colors?.primary,

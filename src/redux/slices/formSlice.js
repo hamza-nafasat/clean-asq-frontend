@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const formSlice = createSlice({
   name: 'form',
-  initialState: { formData: {}, emailVerified: true },
+  initialState: { formData: {}, emailVerified: false },
   reducers: {
     updateFormState: (state, action) => {
       const objKey = action.payload.name;
