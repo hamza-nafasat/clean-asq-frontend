@@ -1,6 +1,8 @@
 import SignatureBox from '@/components/shared/SignatureBox';
 import Button from '@/components/shared/small/Button';
 import CustomLoading from '@/components/shared/small/CustomLoading';
+import { AiHelpModal } from '@/components/shared/small/DynamicField';
+import { EditSectionDisplayTextFromatingModal } from '@/components/shared/small/EditSectionDisplayTextFromatingModal';
 import { LoadingWithTimer } from '@/components/shared/small/LoadingWithTimer';
 import Modal from '@/components/shared/small/Modal';
 import TextField from '@/components/shared/small/TextField';
@@ -22,8 +24,8 @@ import { collectClientDetails } from '@/utils/userDetails';
 import { Autocomplete } from '@react-google-maps/api';
 import { unwrapResult } from '@reduxjs/toolkit';
 import DOMPurify from 'dompurify';
+import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { MdVerifiedUser } from 'react-icons/md';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -57,6 +59,11 @@ export default function SingleApplication() {
   const { formData } = useSelector(state => state?.form);
   const [saveFormInDraft] = useSaveFormInDraftMutation();
   const [openRedirectModal, setOpenRedirectModal] = useState(false);
+  const { isApplied } = useApplyBranding({ formId: formId || form?.data?._id });
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [showSignatureHelpModal, setShowSignatureHelpModal] = useState(false);
+  const [customizeIdMissionTextModal, setCustomizeIdMissionTextModal] = useState(false);
+  const [openAiHelpSignModal, setOpenAiHelpSignModal] = useState(false);
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
     name: '',
     idNumber: '',
@@ -74,10 +81,8 @@ export default function SingleApplication() {
     country: '',
     signature: { secureUrl: '', publicId: '', resourceType: '' },
   });
-  const { isApplied } = useApplyBranding({ formId: formId || form?.data?._id });
-  const [showSignatureModal, setShowSignatureModal] = useState(false);
-  const idMissionSection = form?.data?.sections?.find(sec => sec?.title?.toLowerCase() == 'id_verification_blk');
 
+  const idMissionSection = form?.data?.sections?.find(sec => sec?.title?.toLowerCase() == 'id_verification_blk');
   const handleSignature = async (file, setIsSaving) => {
     try {
       if (!file) return toast.error('Please add signature');
@@ -441,20 +446,27 @@ export default function SingleApplication() {
     setIsAllRequiredFieldsFilled(allFilled);
   }, [idMissionVerifiedData]);
 
-  // add a keydown event listener to the document
-  useEffect(() => {
-    const handleEnter = e => {
-      if (e.key === 'Enter' && !otp && !otpLoading) sentOtpForEmail();
-      if (e.key === 'Enter' && otp && !otpLoading) verifyWithOtp();
-    };
-    window.addEventListener('keydown', handleEnter);
-    return () => window.removeEventListener('keydown', handleEnter);
-  }, [otp, otpLoading, sentOtpForEmail, verifyWithOtp]);
+  // // add a keydown event listener to the document
+  // useEffect(() => {
+  //   const handleEnter = e => {
+  //     if (e.key === 'Enter' && !otp && !otpLoading) sentOtpForEmail();
+  //     if (e.key === 'Enter' && otp && !otpLoading) verifyWithOtp();
+  //   };
+  //   window.addEventListener('keydown', handleEnter);
+  //   return () => window.removeEventListener('keydown', handleEnter);
+  // }, [otp, otpLoading, sentOtpForEmail, verifyWithOtp]);
 
   const isCreator = user?._id && user?._id == form?.data?.owner && user?.role !== 'guest';
   if (!isApplied) return <CustomLoading />;
 
-  return (
+  return submiting ? (
+    <div className="flex h-full flex-col items-center justify-center space-y-6 rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-900">
+      <div className="spinner"></div>
+      <p className="animate-fade-in-out text-center text-lg font-medium text-gray-700 dark:text-gray-300">
+        We are personalizing the form for you, please wait...
+      </p>
+    </div>
+  ) : (
     <>
       {showSignatureModal && (
         <Modal onClose={() => setShowSignatureModal(false)}>
@@ -463,6 +475,29 @@ export default function SingleApplication() {
             setShowSignatureModal={setShowSignatureModal}
             section={idMissionSection}
           />
+        </Modal>
+      )}
+      {showSignatureHelpModal && (
+        <Modal onClose={() => setShowSignatureHelpModal(false)}>
+          <SignatureHelpCustomization
+            formRefetch={formRefetch}
+            setShowSignatureHelpModal={setShowSignatureHelpModal}
+            section={idMissionSection}
+          />
+        </Modal>
+      )}
+      {openAiHelpSignModal && idMissionSection?.signAiResponse && (
+        <Modal onClose={() => setOpenAiHelpSignModal(false)}>
+          <AiHelpModal
+            aiPrompt={idMissionSection?.signAiPrompt}
+            aiResponse={idMissionSection?.signAiResponse}
+            setOpenAiHelpModal={setOpenAiHelpSignModal}
+          />
+        </Modal>
+      )}
+      {customizeIdMissionTextModal && idMissionSection && (
+        <Modal isOpen={customizeIdMissionTextModal} onClose={() => setCustomizeIdMissionTextModal(false)}>
+          <EditSectionDisplayTextFromatingModal step={idMissionSection} />
         </Modal>
       )}
       {openRedirectModal ? (
@@ -572,23 +607,40 @@ export default function SingleApplication() {
               <CustomLoading />
             ) : (
               <div className="flex flex-col items-center gap-3">
+                {isCreator && (
+                  <div className="flex w-full items-center justify-end p-4">
+                    <Button onClick={() => setCustomizeIdMissionTextModal(true)} label={'Customize Text'} />
+                  </div>
+                )}
                 {qrCode && webLink && (
                   <>
-                    <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
-                    <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your identity</p>
+                    {/* <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
+                    <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your identity</p> */}
+                    {idMissionSection?.ai_formatting && (
+                      <div className="flex w-full items-center justify-center gap-3">
+                        <div
+                          dangerouslySetInnerHTML={{
+                            __html: idMissionSection?.ai_formatting,
+                          }}
+                        />
+                      </div>
+                    )}
                     <div className="mt-4 flex w-full flex-col items-center gap-4">
                       <img className="h-[230px] w-[230px]" src={`data:image/jpeg;base64,${qrCode}`} alt="qr code " />
                     </div>
                     <div className="mt-4 flex w-full flex-col items-center gap-4">
+                      <Button className="w-full max-w-[230px]" label={'Refresh QR Code'} onClick={getQrAndWebLink} />
+                    </div>
+                    {/* <div className="mt-4 flex w-full flex-col items-center gap-4">
                       <Button
-                        className="max-w-[400px]"
+                      className="w-full max-w-[230px]"
                         label={'Open LInk in New Tab'}
                         onClick={async () => {
                           window.open(webLink, '_blank');
                         }}
                         rightIcon={MdVerifiedUser}
                       />
-                    </div>
+                    </div> */}
                   </>
                 )}
                 {isCreator && (
@@ -736,7 +788,17 @@ export default function SingleApplication() {
                         />
                       </div>
                     )}
-                    {isCreator && <Button label="Customize Signature" onClick={() => setShowSignatureModal(true)} />}
+                    <div className="flex items-center justify-end gap-2">
+                      {isCreator && (
+                        <div className="flex items-center gap-2">
+                          <Button label="Enable Help" onClick={() => setShowSignatureHelpModal(true)} />
+                          <Button label="Customize Signature" onClick={() => setShowSignatureModal(true)} />
+                        </div>
+                      )}
+                      {idMissionSection?.signAiResponse && (
+                        <Button label="Help" onClick={() => setOpenAiHelpSignModal(true)} />
+                      )}
+                    </div>
                   </div>
                   <SignatureBox
                     oldSignatureUrl={idMissionVerifiedData?.signature?.secureUrl}
@@ -847,6 +909,88 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
           <div
             className="h-full bg-amber-100 p-4"
             dangerouslySetInnerHTML={{ __html: signatureData?.signFormatedDisplayText ?? '' }}
+          />
+        )}
+      </div>
+
+      <div className="flex w-full">
+        <Button
+          onClick={handleUpdateSectionForSignature}
+          disabled={isUpdatingSection}
+          className="bg-primary mt-8 w-full text-white"
+          label={' Update Signature Data'}
+        />
+      </div>
+    </div>
+  );
+};
+
+const SignatureHelpCustomization = ({ section, formRefetch, setShowSignatureHelpModal }) => {
+  const [updateSection, { isLoading: isUpdatingSection }] = useUpdateFormSectionMutation();
+  const [formateTextInMarkDown, { isLoading: isFormating }] = useFormateTextInMarkDownMutation();
+  const [signatureData, setSignatureData] = useState({
+    isSignAiHelp: section?.isSignAiHelp || true,
+    signAiPrompt: section?.signAiPrompt || '',
+    signAiResponse: section?.signAiResponse || '',
+  });
+
+  const handleUpdateSectionForSignature = async () => {
+    try {
+      const res = await updateSection({
+        _id: section?._id,
+        data: {
+          isSignAiHelp: signatureData.isSignAiHelp,
+          signAiPrompt: signatureData.signAiPrompt,
+          signAiResponse: signatureData.signAiResponse,
+        },
+      }).unwrap();
+      if (res.success) {
+        await formRefetch();
+        toast.success(res.message);
+        setShowSignatureHelpModal(false);
+      }
+    } catch (error) {
+      console.log('Error while updating signature', error);
+    }
+  };
+
+  const formateTextWithAi = useCallback(async () => {
+    if (!signatureData?.signAiPrompt) {
+      toast.error('Please enter prompt to first');
+      return;
+    }
+    try {
+      const res = await formateTextInMarkDown({
+        text: signatureData.signAiPrompt,
+      }).unwrap();
+      if (res.success) {
+        let html = DOMPurify.sanitize(res.data);
+        setSignatureData(prev => ({ ...prev, signAiResponse: html }));
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.data?.message || 'Failed to format text');
+    }
+  }, [formateTextInMarkDown, signatureData.signAiPrompt]);
+
+  return (
+    <div className="flex flex-col gap-2 border-2 p-2 pb-4">
+      {/* display text  */}
+      <div className="flex w-full flex-col gap-2 pb-4">
+        <TextField
+          label="Ai Prompt"
+          value={signatureData?.signAiPrompt}
+          name="aiPrompt"
+          onChange={e => setSignatureData(prev => ({ ...prev, signAiPrompt: e.target.value }))}
+        />
+
+        <div className="flex justify-end">
+          <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Get Response'} />
+        </div>
+        {signatureData?.signAiResponse && (
+          <div
+            className="h-full bg-amber-100 p-4"
+            dangerouslySetInnerHTML={{ __html: signatureData?.signAiResponse ?? '' }}
           />
         )}
       </div>

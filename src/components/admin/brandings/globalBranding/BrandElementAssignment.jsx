@@ -75,8 +75,8 @@ const BrandElementAssignment = ({
         <ColorInput label="Accent Color" color={accentColor} setColor={setAccentColor} />
         <ColorInput label="Background Color" color={backgroundColor} setColor={setBackgroundColor} />
         <ColorInput label="Frame Color (Input Fields, Borders)" color={frameColor} setColor={setFrameColor} />
-        <ColorInput label="Button Primary text" color={buttonTextPrimary} setColor={setButtonTextPrimary} />
-        <ColorInput label="Button Secondary text" color={buttonTextSecondary} setColor={setButtonTextSecondary} />
+        <ColorInput label="Primary Button text" color={buttonTextPrimary} setColor={setButtonTextPrimary} />
+        <ColorInput label="Secondary Button text" color={buttonTextSecondary} setColor={setButtonTextSecondary} />
       </div>
 
       <div className="flex flex-col space-y-1">

@@ -197,7 +197,7 @@ function CompanyVerification({ formId }) {
           <div className="flex items-center justify-end">
             <Button
               type="submit"
-              label="Verify Company"
+              label="Continue"
               onClick={handleSubmit}
               disabled={loading}
               className={` ${loading && 'pointer-events-auto cursor-not-allowed opacity-20'}`}

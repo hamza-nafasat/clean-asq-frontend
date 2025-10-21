@@ -27,7 +27,7 @@ const ConfirmationModal = ({
       hideSaveButton={false}
     >
       <div className="py-4">
-        <p className="text-gray-700">{message}</p>
+        <div className="text-gray-700">{message}</div>
       </div>
     </Modal>
   );

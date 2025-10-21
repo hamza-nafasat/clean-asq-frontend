@@ -115,7 +115,7 @@ function CompanyVerificationTest({ formId }) {
 
           <div className="flex items-center justify-end">
             <Button
-              label="Verify Company"
+              label="Continue"
               onClick={verifyCompanyAndLookup}
               disabled={verifyCompanyLoading || lookupCompanyLoading}
               className={` ${(verifyCompanyLoading || lookupCompanyLoading) && 'cursor-not-allowed opacity-20'}`}

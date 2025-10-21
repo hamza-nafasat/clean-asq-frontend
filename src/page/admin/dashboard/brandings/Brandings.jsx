@@ -12,14 +12,17 @@ import {
   useDeleteSingleBrandingMutation,
   useGetAllBrandingsQuery,
 } from '@/redux/apis/brandingApis';
+import { userExist, userNotExist } from '@/redux/slices/authSlice';
 import { MoreVertical, Pencil, Trash } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import DataTable from 'react-data-table-component';
 import { FaExchangeAlt } from 'react-icons/fa';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 const Brandings = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const actionMenuRefs = useRef(new Map());
   const [isLoading] = useState(false);
@@ -99,7 +102,6 @@ const Brandings = () => {
       if (res?.success) {
         if (onHome) {
           const res = await getUserProfile().unwrap();
-
           if (res?.data?.branding?.colors) {
             const userBranding = res?.data?.branding;
             if (userBranding?.colors) {
@@ -114,6 +116,14 @@ const Brandings = () => {
               setLogo(userBranding?.selectedLogo);
             }
           }
+          await getUserProfile()
+            .then(res => {
+              if (res?.data?.success) {
+                dispatch(userExist(res.data.data));
+                console.log(res?.data?.data?.branding);
+              } else dispatch(userNotExist());
+            })
+            .catch(() => dispatch(userNotExist()));
         }
         toast?.success(res?.message || 'Branding applied successfully');
       }
@@ -208,7 +218,7 @@ const Brandings = () => {
           title={'Apply Branding'}
         />
       )}
-      <div className="mb-4 flex justify-end ">
+      <div className="mb-4 flex justify-end">
         <Button label={'Create Branding'} onClick={() => navigate('/branding/create')} />
         {/* Create Branding
         </Button> */}

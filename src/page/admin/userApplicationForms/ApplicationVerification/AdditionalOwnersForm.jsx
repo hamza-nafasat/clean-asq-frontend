@@ -166,7 +166,7 @@ const AdditionalOwnersForm = () => {
             <div className="mt-4 flex w-full flex-col items-center gap-4">
               <img className="h-[230px] w-[230px]" src={`data:image/jpeg;base64,${qrCode}`} alt="qr code " />
             </div>
-            <div className="mt-4 flex w-full flex-col items-center gap-4">
+            {/* <div className="mt-4 flex w-full flex-col items-center gap-4">
               <Button
                 className="max-w-[400px]"
                 label={'Open LInk in New Tab'}
@@ -175,7 +175,7 @@ const AdditionalOwnersForm = () => {
                 }}
                 rightIcon={MdVerifiedUser}
               />
-            </div>
+            </div> */}
           </>
         )
       ) : (

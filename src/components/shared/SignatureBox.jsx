@@ -201,7 +201,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       )}
       <div className="flex items-center gap-2">
         {step?.isSignDisplayText && (
-          <div className="flex items-end gap-3">
+          <div className="flex w-full items-end gap-3">
             <div
               dangerouslySetInnerHTML={{
                 __html: step?.signDisplayText,
@@ -210,7 +210,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
           </div>
         )}
         {step?.isSignAiHelp && (
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-end">
             <Button label="AI Help" className="max-h-fit text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
           </div>
         )}
