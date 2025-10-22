@@ -165,11 +165,13 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
         {signatureData?.isSignDisplayText && (
           <div className="flex w-full flex-col gap-2 pb-4">
             <TextField
+              type="textarea"
               label="Display Text"
               value={signatureData?.signDisplayText}
               name="displayText"
               onChange={e => setSignatureData(prev => ({ ...prev, signDisplayText: e.target.value }))}
             />
+
             <label htmlFor="formattingInstructionForAi">
               Enter formatting instruction for AI and click on generate
             </label>

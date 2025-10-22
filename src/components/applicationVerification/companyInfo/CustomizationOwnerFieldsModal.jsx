@@ -200,6 +200,7 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
         {signatureData?.isSignDisplayText && (
           <div className="flex w-full flex-col gap-2 pb-4">
             <TextField
+              type="textarea"
               label="Display Text"
               value={signatureData?.signDisplayText}
               name="displayText"

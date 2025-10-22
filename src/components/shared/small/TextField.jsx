@@ -52,6 +52,40 @@ const TextField = ({
     return `${year}-${month}-${day}`;
   };
 
+  if (type == 'textarea')
+    return (
+      <div className={`input-box flex w-full flex-col items-start ${className} `}>
+        {label && <h4 className="text-textPrimary text-base font-medium lg:text-lg">{label}</h4>}
+        <div className={`relative w-full ${label ? 'mt-2' : ''} `}>
+          {leftIcon && (
+            <span className={`absolute top-1/2 left-3 -translate-y-1/2 text-gray-500 ${cnLeft} `}>{leftIcon}</span>
+          )}
+          <textarea
+            {...rest}
+            onChange={e => {
+              const val = type === 'date' ? normalizeDate(e.target.value) : e.target.value;
+              onChange?.({ target: { name, value: val } });
+            }}
+            name={name}
+            value={type === 'date' ? formatDate(value) : value}
+            autoComplete="off"
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+            className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''} ${!value ? 'border-accent' : 'border-frameColor'} `}
+          />
+          {rightIcon && (
+            <span
+              className={`absolute top-1/2 right-3 flex -translate-y-1/2 items-center justify-center text-gray-500 ${cnRight}`}
+            >
+              <button className="cursor-pointer" onClick={onClickRightIcon}>
+                {rightIcon}
+              </button>
+            </span>
+          )}
+        </div>
+      </div>
+    );
+
   return (
     <div className={`input-box flex w-full flex-col items-start ${className} `}>
       {label && <h4 className="text-textPrimary text-base font-medium lg:text-lg">{label}</h4>}

@@ -14,6 +14,7 @@ import {
   useGetSavedFormMutation,
   useGetSingleFormQueryQuery,
   useSaveFormInDraftMutation,
+  useUpdateFormMutation,
   useUpdateFormSectionMutation,
 } from '@/redux/apis/formApis';
 import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
@@ -24,7 +25,6 @@ import { collectClientDetails } from '@/utils/userDetails';
 import { Autocomplete } from '@react-google-maps/api';
 import { unwrapResult } from '@reduxjs/toolkit';
 import DOMPurify from 'dompurify';
-import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -64,6 +64,7 @@ export default function SingleApplication() {
   const [showSignatureHelpModal, setShowSignatureHelpModal] = useState(false);
   const [customizeIdMissionTextModal, setCustomizeIdMissionTextModal] = useState(false);
   const [openAiHelpSignModal, setOpenAiHelpSignModal] = useState(false);
+  const [openOtpDisplayTextModal, setOpenOtpDisplayTextModal] = useState(false);
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
     name: '',
     idNumber: '',
@@ -468,6 +469,15 @@ export default function SingleApplication() {
     </div>
   ) : (
     <>
+      {openOtpDisplayTextModal && form?.data && (
+        <Modal onClose={() => setOpenOtpDisplayTextModal(false)}>
+          <OtpDisplayText
+            formRefetch={formRefetch}
+            setOpenOtpDisplayTextModal={setOpenOtpDisplayTextModal}
+            form={form?.data}
+          />
+        </Modal>
+      )}
       {showSignatureModal && (
         <Modal onClose={() => setShowSignatureModal(false)}>
           <SignatureCustomization
@@ -556,8 +566,20 @@ export default function SingleApplication() {
             !emailVerified ? (
               <>
                 <div className="flex flex-col items-center gap-3">
-                  <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
-                  <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your email first</p>
+                  {isCreator && (
+                    <div className="flex w-full items-center justify-end">
+                      <Button label="Edit OTP Display Text" onClick={() => setOpenOtpDisplayTextModal(true)} />
+                    </div>
+                  )}
+                  {form?.data?.otpDisplayFormatedText && (
+                    <div className="flex w-full items-center justify-center gap-3">
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: form?.data?.otpDisplayFormatedText,
+                        }}
+                      />
+                    </div>
+                  )}
                   <div className="flex w-full items-center justify-center gap-4">
                     <TextField
                       type="email"
@@ -660,7 +682,7 @@ export default function SingleApplication() {
               <h3 className="text-textPrimary text-center text-2xl font-semibold">Id Mission Data</h3>
               <form className="flex flex-wrap gap-4">
                 <TextField
-                  onChange={() => {}}
+                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, name: e.target.value })}
                   required
                   value={idMissionVerifiedData?.name}
                   label="Name:*"
@@ -668,7 +690,7 @@ export default function SingleApplication() {
                 />
                 <TextField
                   value={user?.email}
-                  onChange={() => {}}
+                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, email: e.target.value })}
                   label="Email Address:*"
                   required
                   className={'max-w-[400px]!'}
@@ -676,7 +698,7 @@ export default function SingleApplication() {
                 <TextField
                   type="date"
                   value={idMissionVerifiedData?.dateOfBirth}
-                  onChange={() => {}}
+                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, dateOfBirth: e.target.value })}
                   label="Date of Birth:*"
                   required
                   className={'max-w-[400px]!'}
@@ -684,7 +706,7 @@ export default function SingleApplication() {
                 <TextField
                   type="text"
                   value={idMissionVerifiedData?.idType}
-                  onChange={() => {}}
+                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, idType: e.target.value })}
                   label="Id Type:*"
                   required
                   className={'max-w-[400px]!'}
@@ -692,7 +714,7 @@ export default function SingleApplication() {
                 <TextField
                   type="text"
                   value={idMissionVerifiedData?.idIssuer}
-                  onChange={() => {}}
+                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, idIssuer: e.target.value })}
                   label="Id Issuer:*"
                   required
                   className={'max-w-[400px]!'}
@@ -700,14 +722,14 @@ export default function SingleApplication() {
                 <TextField
                   type="date"
                   value={idMissionVerifiedData?.issueDate}
-                  onChange={() => {}}
+                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, issueDate: e.target.value })}
                   label="Issue Date:*"
                   required
                   className={'max-w-[400px]!'}
                 />{' '}
                 <TextField
                   required
-                  onChange={() => {}}
+                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, idNumber: e.target.value })}
                   value={idMissionVerifiedData?.idNumber}
                   label="Id Number:*"
                   className={'max-w-[400px]!'}
@@ -889,6 +911,7 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
       {/* display text  */}
       <div className="flex w-full flex-col gap-2 pb-4">
         <TextField
+          type="textarea"
           label="Display Text"
           value={signatureData?.signDisplayText}
           name="displayText"
@@ -924,7 +947,6 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
     </div>
   );
 };
-
 const SignatureHelpCustomization = ({ section, formRefetch, setShowSignatureHelpModal }) => {
   const [updateSection, { isLoading: isUpdatingSection }] = useUpdateFormSectionMutation();
   const [formateTextInMarkDown, { isLoading: isFormating }] = useFormateTextInMarkDownMutation();
@@ -991,6 +1013,96 @@ const SignatureHelpCustomization = ({ section, formRefetch, setShowSignatureHelp
           <div
             className="h-full bg-amber-100 p-4"
             dangerouslySetInnerHTML={{ __html: signatureData?.signAiResponse ?? '' }}
+          />
+        )}
+      </div>
+
+      <div className="flex w-full">
+        <Button
+          onClick={handleUpdateSectionForSignature}
+          disabled={isUpdatingSection}
+          className="bg-primary mt-8 w-full text-white"
+          label={' Update Signature Data'}
+        />
+      </div>
+    </div>
+  );
+};
+const OtpDisplayText = ({ form, formRefetch, setOpenOtpDisplayTextModal }) => {
+  const [updateForm, { isLoading: isUpdatingSection }] = useUpdateFormMutation();
+  const [formateTextInMarkDown, { isLoading: isFormating }] = useFormateTextInMarkDownMutation();
+  const [displayData, setDisplayData] = useState({
+    otpDisplayText: form?.otpDisplayText || '',
+    otpDisplayFormatingInstructions: form?.otpDisplayFormatingInstructions || '',
+    otpDisplayFormatedText: form?.otpDisplayFormatedText || '',
+  });
+
+  const handleUpdateSectionForSignature = async () => {
+    try {
+      const res = await updateForm({
+        _id: form?._id,
+        data: {
+          otpDisplayText: displayData.otpDisplayText,
+          otpDisplayFormatingInstructions: displayData.otpDisplayFormatingInstructions,
+          otpDisplayFormatedText: displayData.otpDisplayFormatedText,
+        },
+      }).unwrap();
+      if (res.success) {
+        await formRefetch();
+        toast.success(res.message);
+        setOpenOtpDisplayTextModal(false);
+      }
+    } catch (error) {
+      console.log('Error while updating signature', error);
+    }
+  };
+
+  const formateTextWithAi = useCallback(async () => {
+    if (!displayData?.otpDisplayText || !displayData?.otpDisplayFormatingInstructions) {
+      toast.error('Please enter formatting instruction and text to format');
+      return;
+    }
+    try {
+      const res = await formateTextInMarkDown({
+        text: displayData.otpDisplayText,
+        instructions: displayData?.otpDisplayFormatingInstructions,
+      }).unwrap();
+      if (res.success) {
+        let html = DOMPurify.sanitize(res.data);
+        setDisplayData(prev => ({ ...prev, otpDisplayFormatedText: html }));
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.data?.message || 'Failed to format text');
+    }
+  }, [displayData.otpDisplayText, displayData?.otpDisplayFormatingInstructions, formateTextInMarkDown]);
+
+  return (
+    <div className="flex flex-col gap-2 border-2 p-2 pb-4">
+      {/* display text  */}
+      <div className="flex w-full flex-col gap-2 pb-4">
+        <TextField
+          type="textarea"
+          label="Display Text"
+          value={displayData?.otpDisplayText}
+          name="displayText"
+          onChange={e => setDisplayData(prev => ({ ...prev, otpDisplayText: e.target.value }))}
+        />
+        <label htmlFor="formattingInstructionForAi">Enter formatting instruction for AI and click on generate</label>
+        <textarea
+          id="formattingInstructionForAi"
+          rows={2}
+          value={displayData?.otpDisplayFormatingInstructions}
+          onChange={e => setDisplayData(prev => ({ ...prev, otpDisplayFormatingInstructions: e.target.value }))}
+          className="w-full rounded-md border border-gray-300 p-2 outline-none"
+        />
+        <div className="flex justify-end">
+          <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Format Text'} />
+        </div>
+        {displayData?.otpDisplayFormatedText && (
+          <div
+            className="h-full bg-amber-100 p-4"
+            dangerouslySetInnerHTML={{ __html: displayData?.otpDisplayFormatedText ?? '' }}
           />
         )}
       </div>

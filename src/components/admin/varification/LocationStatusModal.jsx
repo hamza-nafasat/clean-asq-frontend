@@ -1,7 +1,7 @@
 import Button from '@/components/shared/small/Button';
 import Modal from '@/components/shared/small/Modal';
 import getEnv from '@/lib/env';
-import { useFormateTextInMarkDownMutation, useUpdateFormMutation } from '@/redux/apis/formApis';
+import { useFormateTextInMarkDownMutation, useUpdateFormLocationMutation } from '@/redux/apis/formApis';
 import DOMPurify from 'dompurify';
 import { useCallback, useState } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
@@ -68,7 +68,7 @@ export const LocationModalComponent = ({ locationModal, setLocationModal, formLo
   const [formateTextInstructions, setFormateTextInstructions] = useState(
     formLocationData?.formatingTextInstructions || ''
   );
-  const [updateFormLocation] = useUpdateFormMutation();
+  const [updateFormLocation] = useUpdateFormLocationMutation();
   const [formateText, { isLoading }] = useFormateTextInMarkDownMutation();
 
   const handleFormLocationUpdate = async () => {

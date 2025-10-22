@@ -51,7 +51,7 @@ const EditSectionDisplayTextFromatingModal = ({ step }) => {
   return (
     <div className="flex w-full flex-col gap-2">
       <TextField
-        type="text"
+        type="textarea"
         label="Display Text"
         value={displayText}
         placeholder="Enter display text"

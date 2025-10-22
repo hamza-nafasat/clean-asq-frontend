@@ -18,9 +18,19 @@ const formApis = createApi({
       }),
       invalidatesTags: [{ type: 'Form', id: 'LIST' }],
     }),
-    // update  form location status
+    // update  form
     // ---------------
     updateForm: builder.mutation({
+      query: ({ data, _id }) => ({
+        url: `/update/${_id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+    }),
+    // update  form location status
+    // ---------------
+    updateFormLocation: builder.mutation({
       query: ({ data, _id }) => ({
         url: `/update-form-location/${_id}`,
         method: 'PUT',
@@ -334,6 +344,7 @@ const formApis = createApi({
 export const {
   useCreateFormMutation,
   useUpdateFormMutation,
+  useUpdateFormLocationMutation,
   useGetMyAllFormsQuery,
   useGetSingleFormMutation,
   useGetSingleFormQueryQuery,

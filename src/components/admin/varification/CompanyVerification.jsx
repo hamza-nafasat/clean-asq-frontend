@@ -6,8 +6,10 @@ import { useBranding } from '@/hooks/BrandingContext';
 import {
   useCompanyLookupMutation,
   useCompanyVerificationMutation,
+  useFormateTextInMarkDownMutation,
   useGetSingleFormQueryQuery,
   useSaveFormInDraftMutation,
+  useUpdateFormMutation,
 } from '@/redux/apis/formApis';
 import { addLookupData } from '@/redux/slices/companySlice';
 import { updateFormState } from '@/redux/slices/formSlice';
@@ -19,6 +21,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import LocationStatusModal from './LocationStatusModal';
+import DOMPurify from 'dompurify';
+import Modal from '@/components/shared/small/Modal';
 
 const columns = [
   { name: 'Field', selector: row => row.name, sortable: true, width: '150px' },
@@ -40,11 +44,12 @@ function CompanyVerification({ formId }) {
   const { primaryColor, textColor, backgroundColor, secondaryColor, logo } = useBranding();
   const tableStyles = getVerificationTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   const { formData } = useSelector(state => state?.form);
-  const { data: formBackendData, isLoading } = useGetSingleFormQueryQuery({ _id: formId });
+  const { data: formBackendData, isLoading, refetch } = useGetSingleFormQueryQuery({ _id: formId });
   const [saveFormInDraft] = useSaveFormInDraftMutation();
   const [locationStatusModal, setLocationStatusModal] = useState(false);
   const [locationData, setLocationData] = useState({});
   const [isCreator, setIsCreator] = useState(false);
+  const [openCompanyVerificationDisplayTextModal, setOpenCompanyVerificationDisplayTextModal] = useState(false);
 
   useEffect(() => {
     if (user && formBackendData) {
@@ -145,105 +150,225 @@ function CompanyVerification({ formId }) {
   return isLoading ? (
     <CustomLoading />
   ) : (
-    <div className="flex flex-col space-y-8">
-      {locationStatusModal && (
-        <LocationStatusModal
-          locationStatusModal={locationStatusModal}
-          setLocationStatusModal={setLocationStatusModal}
-          locationData={locationData}
-          formId={formId}
-          navigate={navigate}
-        />
+    <>
+      {openCompanyVerificationDisplayTextModal && formBackendData?.data && (
+        <Modal onClose={() => setOpenCompanyVerificationDisplayTextModal(false)}>
+          <CompanyVerificationDisplayText
+            formRefetch={refetch}
+            setOpenCompanyVerificationDisplayTextModal={setOpenCompanyVerificationDisplayTextModal}
+            form={formBackendData?.data}
+          />
+        </Modal>
       )}
-      <div className="border-frameColor bg-backgroundColor w-full rounded-md border p-4">
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2">
-            <div>
-              <IoShieldOutline className="font-medium text-blue-400" />
+
+      <div className="flex flex-col space-y-8">
+        {locationStatusModal && (
+          <LocationStatusModal
+            locationStatusModal={locationStatusModal}
+            setLocationStatusModal={setLocationStatusModal}
+            locationData={locationData}
+            formId={formId}
+            navigate={navigate}
+          />
+        )}
+        <div className="border-frameColor bg-backgroundColor w-full rounded-md border p-4">
+          <div className="flex items-center justify-center gap-3">
+            {formBackendData?.data?.companyVerificationDisplayFormatedText && (
+              <div className="flex w-full items-center justify-center">
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: formBackendData?.data?.companyVerificationDisplayFormatedText,
+                  }}
+                />
+              </div>
+            )}
+            <div className="flex w-full justify-end">
+              <Button
+                className="h-fit"
+                label={'Customize Display Text'}
+                onClick={() => setOpenCompanyVerificationDisplayTextModal(true)}
+              />
             </div>
-            <div className="text-textPrimary text-xl font-medium">Company Verification</div>
           </div>
-          <div className="text-textPrimary text-xs">Verify that a company name and website URL belong together</div>
+          <div className="flex flex-col space-y-4">
+            <TextField
+              label={'Legal company name *'}
+              className="w-full rounded px-2 text-sm"
+              value={form.name}
+              onChange={
+                verifyCompanyLoading || lookupCompanyLoading
+                  ? () => {}
+                  : e => setForm({ ...form, name: e.target.value })
+              }
+            />
+            <TextField
+              label={'Website URL *'}
+              className="w-full rounded px-2 text-sm"
+              value={form.url}
+              onChange={
+                verifyCompanyLoading || lookupCompanyLoading ? () => {} : e => setForm({ ...form, url: e.target.value })
+              }
+            />
+            {apisRes?.companyVerify?.confidenceScore && apisRes?.companyVerify?.verificationStatus && (
+              <div className="flex w-44 items-center gap-2 rounded-2xl border p-2 py-1">
+                <div>
+                  <GoCheckCircle className="font-medium text-blue-400" />
+                </div>
+                <div className="text-textPrimary text-xs">
+                  {apisRes?.companyVerify?.originalCompanyName || form?.name}{' '}
+                  {apisRes?.companyVerify?.verificationStatus} ({apisRes?.companyVerify?.confidenceScore}%)
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end">
+              <Button
+                type="submit"
+                label="Continue"
+                onClick={handleSubmit}
+                disabled={loading}
+                className={` ${loading && 'pointer-events-auto cursor-not-allowed opacity-20'}`}
+              />
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col space-y-4">
-          <TextField
-            label={'Legal company name *'}
-            className="w-full rounded px-2 text-sm"
-            value={form.name}
-            onChange={
-              verifyCompanyLoading || lookupCompanyLoading ? () => {} : e => setForm({ ...form, name: e.target.value })
-            }
-          />
-          <TextField
-            label={'Website URL *'}
-            className="w-full rounded px-2 text-sm"
-            value={form.url}
-            onChange={
-              verifyCompanyLoading || lookupCompanyLoading ? () => {} : e => setForm({ ...form, url: e.target.value })
-            }
-          />
-          {apisRes?.companyVerify?.confidenceScore && apisRes?.companyVerify?.verificationStatus && (
-            <div className="flex w-44 items-center gap-2 rounded-2xl border p-2 py-1">
+        {(verifyCompanyLoading || lookupCompanyLoading) && <CustomLoading />}
+        {lookupDataForTable?.length && !(verifyCompanyLoading || lookupCompanyLoading) ? (
+          <div className="border-frameColor bg-backgroundColor w-full space-y-4 rounded-md border p-4">
+            <div className="flex items-center gap-3">
               <div>
                 <GoCheckCircle className="font-medium text-blue-400" />
               </div>
-              <div className="text-textPrimary text-xs">
-                {apisRes?.companyVerify?.originalCompanyName || form?.name} {apisRes?.companyVerify?.verificationStatus}{' '}
-                ({apisRes?.companyVerify?.confidenceScore}%)
+              <div className="text-textPrimary text-xl font-medium">Company Information Collected</div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="text-textPrimary text-sm">
+                Collection rate: {apisRes?.companyLookup?.collectionRate}% ({successfullyVerifiedStreatgies}/
+                {totalSearchStreatgies} successful)
+              </div>
+              <div className="border-frameColor rounded-2xl border p-1 text-xs font-medium">
+                {totalSearchStreatgies} strategies
               </div>
             </div>
-          )}
-
-          <div className="flex items-center justify-end">
-            <Button
-              type="submit"
-              label="Continue"
-              onClick={handleSubmit}
-              disabled={loading}
-              className={` ${loading && 'pointer-events-auto cursor-not-allowed opacity-20'}`}
-            />
+            <div className="p-4">
+              <DataTable
+                title="Company Verification"
+                columns={columns}
+                data={lookupDataForTable}
+                customStyles={tableStyles}
+              />
+            </div>
           </div>
-        </div>
+        ) : null}
+
+        {isCreator && (
+          <Button
+            onClick={() => {
+              return navigate(`/application-form/${formId}`);
+            }}
+            label={'Skip'}
+          />
+        )}
       </div>
-      {(verifyCompanyLoading || lookupCompanyLoading) && <CustomLoading />}
-      {lookupDataForTable?.length && !(verifyCompanyLoading || lookupCompanyLoading) ? (
-        <div className="border-frameColor bg-backgroundColor w-full space-y-4 rounded-md border p-4">
-          <div className="flex items-center gap-3">
-            <div>
-              <GoCheckCircle className="font-medium text-blue-400" />
-            </div>
-            <div className="text-textPrimary text-xl font-medium">Company Information Collected</div>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="text-textPrimary text-sm">
-              Collection rate: {apisRes?.companyLookup?.collectionRate}% ({successfullyVerifiedStreatgies}/
-              {totalSearchStreatgies} successful)
-            </div>
-            <div className="border-frameColor rounded-2xl border p-1 text-xs font-medium">
-              {totalSearchStreatgies} strategies
-            </div>
-          </div>
-          <div className="p-4">
-            <DataTable
-              title="Company Verification"
-              columns={columns}
-              data={lookupDataForTable}
-              customStyles={tableStyles}
-            />
-          </div>
-        </div>
-      ) : null}
-
-      {isCreator && (
-        <Button
-          onClick={() => {
-            return navigate(`/application-form/${formId}`);
-          }}
-          label={'Skip'}
-        />
-      )}
-    </div>
+    </>
   );
 }
 
 export default CompanyVerification;
+
+const CompanyVerificationDisplayText = ({ form, formRefetch, setOpenCompanyVerificationDisplayTextModal }) => {
+  const [updateForm, { isLoading: isUpdatingSection }] = useUpdateFormMutation();
+  const [formateTextInMarkDown, { isLoading: isFormating }] = useFormateTextInMarkDownMutation();
+  const [displayData, setDisplayData] = useState({
+    companyVerificationDisplayText: form?.companyVerificationDisplayText || '',
+    companyVerificationDisplayFormatingInstructions: form?.companyVerificationDisplayFormatingInstructions || '',
+    companyVerificationDisplayFormatedText: form?.companyVerificationDisplayFormatedText || '',
+  });
+
+  const handleUpdateSectionForSignature = async () => {
+    try {
+      const res = await updateForm({
+        _id: form?._id,
+        data: {
+          companyVerificationDisplayText: displayData.companyVerificationDisplayText,
+          companyVerificationDisplayFormatingInstructions: displayData.companyVerificationDisplayFormatingInstructions,
+          companyVerificationDisplayFormatedText: displayData.companyVerificationDisplayFormatedText,
+        },
+      }).unwrap();
+      if (res.success) {
+        await formRefetch();
+        toast.success(res.message);
+        setOpenCompanyVerificationDisplayTextModal(false);
+      }
+    } catch (error) {
+      console.log('Error while updating signature', error);
+    }
+  };
+
+  const formateTextWithAi = useCallback(async () => {
+    if (!displayData?.companyVerificationDisplayText || !displayData?.companyVerificationDisplayFormatingInstructions) {
+      toast.error('Please enter formatting instruction and text to format');
+      return;
+    }
+    try {
+      const res = await formateTextInMarkDown({
+        text: displayData.companyVerificationDisplayText,
+        instructions: displayData?.companyVerificationDisplayFormatingInstructions,
+      }).unwrap();
+      if (res.success) {
+        let html = DOMPurify.sanitize(res.data);
+        setDisplayData(prev => ({ ...prev, companyVerificationDisplayFormatedText: html }));
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.data?.message || 'Failed to format text');
+    }
+  }, [
+    displayData.companyVerificationDisplayText,
+    displayData?.companyVerificationDisplayFormatingInstructions,
+    formateTextInMarkDown,
+  ]);
+
+  return (
+    <div className="flex flex-col gap-2 border-2 p-2 pb-4">
+      {/* display text  */}
+      <div className="flex w-full flex-col gap-2 pb-4">
+        <TextField
+          type="textarea"
+          label="Display Text"
+          value={displayData?.companyVerificationDisplayText}
+          name="displayText"
+          onChange={e => setDisplayData(prev => ({ ...prev, companyVerificationDisplayText: e.target.value }))}
+        />
+        <label htmlFor="formattingInstructionForAi">Enter formatting instruction for AI and click on generate</label>
+        <textarea
+          id="formattingInstructionForAi"
+          rows={2}
+          value={displayData?.companyVerificationDisplayFormatingInstructions}
+          onChange={e =>
+            setDisplayData(prev => ({ ...prev, companyVerificationDisplayFormatingInstructions: e.target.value }))
+          }
+          className="w-full rounded-md border border-gray-300 p-2 outline-none"
+        />
+        <div className="flex justify-end">
+          <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Format Text'} />
+        </div>
+        {displayData?.companyVerificationDisplayFormatedText && (
+          <div
+            className="h-full bg-amber-100 p-4"
+            dangerouslySetInnerHTML={{ __html: displayData?.companyVerificationDisplayFormatedText ?? '' }}
+          />
+        )}
+      </div>
+
+      <div className="flex w-full">
+        <Button
+          onClick={handleUpdateSectionForSignature}
+          disabled={isUpdatingSection}
+          className="bg-primary mt-8 w-full text-white"
+          label={' Update Signature Data'}
+        />
+      </div>
+    </div>
+  );
+};

@@ -220,6 +220,7 @@ const MakeFieldDataCustomForOwner = ({ originalFieldData, fieldsData, setFieldsD
         {field.isDisplayText && (
           <div className="flex w-full flex-col gap-2">
             <TextField
+              type="textarea"
               label="Display Text"
               value={field.displayText}
               name="displayText"
