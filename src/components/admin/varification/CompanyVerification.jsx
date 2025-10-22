@@ -174,7 +174,7 @@ function CompanyVerification({ formId }) {
         <div className="border-frameColor bg-backgroundColor w-full rounded-md border p-4">
           <div className="flex items-center justify-center gap-3">
             {formBackendData?.data?.companyVerificationDisplayFormatedText && (
-              <div className="flex w-full items-center justify-center">
+              <div className="flex w-full items-center justify-between">
                 <div
                   dangerouslySetInnerHTML={{
                     __html: formBackendData?.data?.companyVerificationDisplayFormatedText,
