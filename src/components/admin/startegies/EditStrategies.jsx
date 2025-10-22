@@ -83,7 +83,7 @@ function EditStrategies({ selectedRow, setEditModalData, forms = [], formKeys = 
     if (selectedRow) {
       setForm({
         name: selectedRow.name || '',
-        form: selectedRow.form?._id || '',
+        form: selectedRow.forms?.map(f => f?._id) || '',
         searchStrategies: selectedRow?.searchStrategies?.map(s => s?._id) || [],
       });
     }
@@ -112,7 +112,7 @@ function EditStrategies({ selectedRow, setEditModalData, forms = [], formKeys = 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {renderFormField('name', form.name, handleChange, 'text')}
-      {renderFormField('form', form.form, handleChange, 'select', forms)}
+      {renderFormField('form', form.form, handleChange, 'multi-select', forms)}
       {renderFormField('searchStrategies', form.searchStrategies, handleChange, 'multi-select', formKeys)}
       <div className="flex w-full justify-end">
         <Button

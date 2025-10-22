@@ -1,5 +1,6 @@
 import DropdownCheckbox from '@/components/shared/DropdownCheckbox';
 import Button from '@/components/shared/small/Button';
+import CsutomizableSelect from '@/components/shared/small/CustomizeableSelect';
 import TextField from '@/components/shared/small/TextField';
 import { useCreateFormStrategyMutation } from '@/redux/apis/formApis';
 import React, { useState } from 'react';
@@ -77,7 +78,7 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
 };
 
 function AddStrategies({ setIsModalOpen, forms = [], formKeys = [] }) {
-  const [form, setForm] = useState({ name: '', form: '', searchStrategies: [] });
+  const [form, setForm] = useState({ name: '', form: [], searchStrategies: [] });
   const [createFormStrategy, { isLoading }] = useCreateFormStrategyMutation();
 
   const handleChange = (field, value) => {
@@ -101,7 +102,7 @@ function AddStrategies({ setIsModalOpen, forms = [], formKeys = [] }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {renderFormField('name', form.name, handleChange, 'text')}
-      {renderFormField('form', form.form, handleChange, 'select', forms)}
+      {renderFormField('form', form.form, handleChange, 'multi-select', forms)}
       {renderFormField('searchStrategies', form.searchStrategies, handleChange, 'multi-select', formKeys)}
       <div className="flex w-full justify-end">
         <Button

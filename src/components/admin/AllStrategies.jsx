@@ -55,7 +55,7 @@ function AllStrategies() {
     },
     {
       name: 'Form',
-      cell: row => <span>{row?.form?.name || ''}</span>,
+      cell: row => <span>{row?.forms?.map(item => item?.name).join(', ') || ''}</span>,
     },
     {
       name: 'Strategies Key',
