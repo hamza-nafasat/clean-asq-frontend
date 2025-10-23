@@ -18,6 +18,8 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dompurify": "^3.2.6",
+    "html2canvas": "^1.4.1",
+    "html2canvas-pro": "^1.5.12",
     "idmission-web-sdk": "^2.2.164",
     "jsonl-parse-stringify": "^1.0.3",
     "lucide-react": "^0.511.0",
