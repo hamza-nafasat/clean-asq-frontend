@@ -10,36 +10,44 @@ const Login = () => {
   const dispatch = useDispatch();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [cookiesEnabled, setCookiesEnabled] = useState(true);
+  const [cookiesWorking, setCookiesWorking] = useState(true);
   const [showCookiePopup, setShowCookiePopup] = useState(false);
   const [login, { isLoading }] = useLoginMutation();
 
+  const testCookies = () => {
+    try {
+      document.cookie = 'cookie_test=1; SameSite=Lax';
+      const canRead = document.cookie.includes('cookie_test=');
+      // delete test cookie
+      document.cookie = 'cookie_test=; Max-Age=0';
+      return canRead;
+    } catch {
+      return false;
+    }
+  };
+
   useEffect(() => {
-    if (navigator.cookieEnabled) {
-      console.log(' enabled');
-    } else {
-      console.log('not enabled');
-      setCookiesEnabled(false);
+    const enabled = testCookies();
+    if (!enabled) {
+      setCookiesWorking(false);
       setShowCookiePopup(true);
     }
   }, []);
 
-  const checkCookiesManually = () => {
-    document.cookie = 'testcookie=1';
-    const enabled = document.cookie.indexOf('testcookie=') !== -1;
+  const recheckCookies = () => {
+    const enabled = testCookies();
     if (enabled) {
-      setCookiesEnabled(true);
+      setCookiesWorking(true);
       setShowCookiePopup(false);
       toast.success('Cookies are now enabled.');
     } else {
-      toast.error('Please enable cookies manually in your browser settings.');
+      toast.error('Cookies are still blocked or disabled. Please enable them manually in your browser.');
     }
   };
 
-  console.log('cookies enabled', cookiesEnabled);
   const loginHandler = async e => {
     e.preventDefault();
-    if (!cookiesEnabled) {
+    if (!cookiesWorking) {
       toast.error('Please enable cookies before logging in.');
       return;
     }
@@ -73,15 +81,10 @@ const Login = () => {
 
         <form className="space-y-6" action="#" method="POST">
           <div>
-            <TextField type="email" label={'Email address'} value={email} onChange={e => setEmail(e.target.value)} />
+            <TextField type="email" label="Email address" value={email} onChange={e => setEmail(e.target.value)} />
           </div>
           <div>
-            <TextField
-              type="password"
-              label={'Password'}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-            />
+            <TextField type="password" label="Password" value={password} onChange={e => setPassword(e.target.value)} />
           </div>
 
           <Button
@@ -96,15 +99,15 @@ const Login = () => {
 
       {/* Cookie Popup */}
       {showCookiePopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="w-[90%] max-w-sm rounded-xl bg-white p-6 text-center shadow-2xl">
-            <h3 className="mb-3 text-lg font-semibold">Cookies are disabled</h3>
+            <h3 className="mb-3 text-lg font-semibold">Cookies are blocked or disabled</h3>
             <p className="mb-4 text-gray-600">
-              To log in and use this app properly, please enable cookies in your browser settings.
+              Your browser is blocking cookies. Please enable them in settings to continue.
             </p>
             <Button
-              label="Enable Cookies"
-              onClick={checkCookiesManually}
+              label="Check Again"
+              onClick={recheckCookies}
               className="w-full bg-blue-600 text-white hover:bg-blue-700"
             />
           </div>
