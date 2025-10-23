@@ -10,7 +10,10 @@ import { io } from 'socket.io-client';
 import { BrandingProvider } from './hooks/BrandingContext';
 import { BrowserRouter } from 'react-router-dom';
 
-export const socket = io(`${getEnv('SERVER_URL')}/api`, { withCredentials: true });
+export const socket = io(getEnv('SERVER_URL'), {
+  path: '/api/socket.io',
+  withCredentials: true,
+});
 
 const container = document.getElementById('root');
 
