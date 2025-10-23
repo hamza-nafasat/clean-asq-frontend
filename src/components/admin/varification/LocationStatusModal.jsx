@@ -2,10 +2,12 @@ import Button from '@/components/shared/small/Button';
 import Modal from '@/components/shared/small/Modal';
 import getEnv from '@/lib/env';
 import { useFormateTextInMarkDownMutation, useUpdateFormLocationMutation } from '@/redux/apis/formApis';
+import { updateEmailVerified } from '@/redux/slices/formSlice';
 import DOMPurify from 'dompurify';
 import { useCallback, useState } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { CgSpinner } from 'react-icons/cg';
+import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 
 export default function LocationStatusModal({
@@ -16,10 +18,16 @@ export default function LocationStatusModal({
   navigate,
 }) {
   const [captchaVerified, setCaptchaVerified] = useState(false);
+  const dispatch = useDispatch();
 
   const handleCaptchaVerify = token => {
     if (token) setCaptchaVerified(token);
     else setCaptchaVerified(null);
+  };
+
+  const onBackHandler = () => {
+    dispatch(updateEmailVerified(false));
+    navigate(`/application-form/${formId}`);
   };
 
   return (
@@ -40,7 +48,7 @@ export default function LocationStatusModal({
 
         <ReCAPTCHA sitekey={getEnv('VITE_RECAPTCHA_SITE_KEY')} onChange={handleCaptchaVerify} />
         <div className="flex w-full justify-center gap-4 pt-2">
-          <Button variant="outline" onClick={() => navigate(`/application-form/${formId}`)} label={'Go Back'} />
+          <Button variant="outline" onClick={onBackHandler} label={'Go Back'} />
 
           {locationStatusModal !== 'required' && (
             <Button label={'Skip'} onClick={() => setLocationStatusModal(false)} />
