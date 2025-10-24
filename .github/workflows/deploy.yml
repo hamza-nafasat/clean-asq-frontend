@@ -28,6 +28,6 @@ jobs:
             # Copy output to web root
             sudo rm -rf /var/www/apply-super-quick-frontend/*
             sudo mkdir -p /var/www/apply-super-quick-frontend
-            sudo cp -r build/* /var/www/apply-super-quick-frontend/
+            sudo cp -r dist/* /var/www/apply-super-quick-frontend/
             # Optional reload nginx
             sudo systemctl reload nginx
