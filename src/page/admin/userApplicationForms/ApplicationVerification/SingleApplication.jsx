@@ -572,7 +572,7 @@ export default function SingleApplication() {
                     </div>
                   )}
                   {form?.data?.otpDisplayFormatedText && (
-                    <div className="flex w-full items-center justify-center gap-3">
+                    <div className="flex w-full gap-3">
                       <div
                         dangerouslySetInnerHTML={{
                           __html: form?.data?.otpDisplayFormatedText,
@@ -639,7 +639,7 @@ export default function SingleApplication() {
                     {/* <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
                     <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your identity</p> */}
                     {idMissionSection?.ai_formatting && (
-                      <div className="flex w-full items-center justify-center gap-3">
+                      <div className="flex w-full gap-3">
                         <div
                           dangerouslySetInnerHTML={{
                             __html: idMissionSection?.ai_formatting,
@@ -799,7 +799,7 @@ export default function SingleApplication() {
                   className={'max-w-[400px]!'}
                 />
                 <div className="flex w-full flex-col">
-                  <div className="my-4 flex w-full items-center justify-between gap-2">
+                  <div className="my-4 flex w-full gap-2">
                     {idMissionSection?.signDisplayText && (
                       <div className="flex items-end gap-3">
                         <div
