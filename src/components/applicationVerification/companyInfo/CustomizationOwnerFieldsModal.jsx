@@ -181,7 +181,7 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
           />
           <Checkbox
             id="displayText"
-            label="Is Display text"
+            label="include display text"
             checked={signatureData?.isSignDisplayText}
             disabled={signatureEnabling}
             className={`${signatureEnabling ? 'pointer-events-none opacity-30' : ''}`}
@@ -223,7 +223,7 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
             </div>
             {signatureData?.signFormatedDisplayText && (
               <div
-                className="h-full bg-amber-100 p-4"
+                className="h-full p-4"
                 dangerouslySetInnerHTML={{ __html: signatureData?.signFormatedDisplayText ?? '' }}
               />
             )}
@@ -234,6 +234,7 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
           <div className="flex w-full flex-col items-center gap-2">
             <div className="flex w-full items-center gap-2">
               <TextField
+                type="textarea"
                 label="AI Prompt"
                 value={signatureData?.signAiPrompt}
                 name="aiPrompt"
@@ -246,10 +247,7 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
             {signatureData?.signAiResponse && (
               <div className="w-full flex-col py-4">
                 <h6 className="text-textPrimary py-2 text-xl font-semibold">AI Response</h6>
-                <div
-                  className="h-full bg-amber-100 p-4"
-                  dangerouslySetInnerHTML={{ __html: signatureData?.signAiResponse ?? '' }}
-                />
+                <div className="h-full p-4" dangerouslySetInnerHTML={{ __html: signatureData?.signAiResponse ?? '' }} />
               </div>
             )}
           </div>
@@ -260,7 +258,7 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
             disabled={isUpdatingSection}
             className="bg-primary mt-8 w-full text-white"
           >
-            Update Signature Data
+            Update
           </Button>
         </div>
       </div>

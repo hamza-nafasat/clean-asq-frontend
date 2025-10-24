@@ -330,7 +330,7 @@ const UserTable = () => {
 
       {editModalData && (
         <Modal
-          saveButtonText="Edit"
+          saveButtonText="Save"
           title="Edit User"
           onClose={() => {
             setEditModalData(null);

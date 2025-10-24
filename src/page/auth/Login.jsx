@@ -58,7 +58,7 @@ const Login = () => {
         dispatch(userExist(res.data));
       }
     } catch (error) {
-      console.log('error while login', error);
+      console.log('error while logging in', error);
       toast.error(error?.data?.message || 'Error while login');
     }
   };

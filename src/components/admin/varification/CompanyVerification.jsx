@@ -182,13 +182,15 @@ function CompanyVerification({ formId }) {
                 />
               </div>
             )}
-            <div className="flex w-full justify-end">
-              <Button
-                className="h-fit"
-                label={'Customize Display Text'}
-                onClick={() => setOpenCompanyVerificationDisplayTextModal(true)}
-              />
-            </div>
+            {isCreator && (
+              <div className="flex w-full justify-end">
+                <Button
+                  className="h-fit"
+                  label={'Customize Display Text'}
+                  onClick={() => setOpenCompanyVerificationDisplayTextModal(true)}
+                />
+              </div>
+            )}
           </div>
           <div className="flex flex-col space-y-4">
             <TextField
@@ -355,7 +357,7 @@ const CompanyVerificationDisplayText = ({ form, formRefetch, setOpenCompanyVerif
         </div>
         {displayData?.companyVerificationDisplayFormatedText && (
           <div
-            className="h-full bg-amber-100 p-4"
+            className="h-full p-4"
             dangerouslySetInnerHTML={{ __html: displayData?.companyVerificationDisplayFormatedText ?? '' }}
           />
         )}
@@ -366,7 +368,7 @@ const CompanyVerificationDisplayText = ({ form, formRefetch, setOpenCompanyVerif
           onClick={handleUpdateSectionForSignature}
           disabled={isUpdatingSection}
           className="bg-primary mt-8 w-full text-white"
-          label={' Update Signature Data'}
+          label={' Update'}
         />
       </div>
     </div>

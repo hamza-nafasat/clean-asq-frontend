@@ -215,7 +215,6 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
           </div>
         )}
       </div>
-      <h3 className="text-lg font-semibold text-gray-900">Signature Pad</h3>
 
       {/* Mode Switch */}
       <div className="mt-4 flex gap-3">

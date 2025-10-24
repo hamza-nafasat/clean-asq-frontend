@@ -678,6 +678,8 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                         [name]: e.target.value,
                       }))
                     }
+                    onFocus={() => setShowMasked(false)}
+                    onBlur={() => setShowMasked(true)}
                     readOnly={showMasked}
                     autoComplete="off"
                     className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
@@ -706,6 +708,8 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                         [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
                       }))
                     }
+                    onFocus={() => setShowMasked(false)}
+                    onBlur={() => setShowMasked(true)}
                     readOnly={showMasked}
                     autoComplete="off"
                     className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
@@ -797,7 +801,7 @@ const AiHelpModal = ({ aiResponse }) => {
 
       <div className="flex gap-2">
         <input
-          placeholder="Enter AI Prompt"
+          placeholder="ask additional question(s)"
           type="text"
           value={updateAiPrompt}
           onChange={e => setUpdateAiPrompt(e.target.value)}

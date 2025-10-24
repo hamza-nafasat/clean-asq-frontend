@@ -182,7 +182,13 @@ const MakeFieldDataCustomForOwner = ({ originalFieldData, fieldsData, setFieldsD
         {field?.aiHelp && (
           <div className="flex w-full flex-col items-center gap-2">
             <div className="flex w-full items-center gap-2">
-              <TextField label="AI Prompt" value={field.aiPrompt} name="aiPrompt" onChange={updateFieldDataField} />
+              <TextField
+                type="textarea"
+                label="AI Prompt"
+                value={field.aiPrompt}
+                name="aiPrompt"
+                onChange={updateFieldDataField}
+              />
               <Button onClick={getResponseFromAi} disabled={isLoading} className="bg-primary mt-8 text-white">
                 Generate
               </Button>
@@ -190,10 +196,7 @@ const MakeFieldDataCustomForOwner = ({ originalFieldData, fieldsData, setFieldsD
             {field?.aiResponse && (
               <div className="w-full flex-col py-4">
                 <h6 className="text-textPrimary py-2 text-xl font-semibold">AI Response</h6>
-                <div
-                  className="h-full bg-amber-100 p-4"
-                  dangerouslySetInnerHTML={{ __html: field?.aiResponse ?? '' }}
-                />
+                <div className="h-full p-4" dangerouslySetInnerHTML={{ __html: field?.aiResponse ?? '' }} />
               </div>
             )}
           </div>
@@ -242,10 +245,7 @@ const MakeFieldDataCustomForOwner = ({ originalFieldData, fieldsData, setFieldsD
               </Button>
             </div>
             {field.ai_formatting && (
-              <div
-                className="h-full bg-amber-100 p-4"
-                dangerouslySetInnerHTML={{ __html: field?.ai_formatting ?? '' }}
-              />
+              <div className="h-full p-4" dangerouslySetInnerHTML={{ __html: field?.ai_formatting ?? '' }} />
             )}
           </div>
         )}

@@ -159,7 +159,7 @@ function BankInfo({
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
         <div className="flex gap-2">
-          <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
+          <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save my progress'} />
           {isCreator && (
             <>
               <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />

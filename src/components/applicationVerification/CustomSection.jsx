@@ -125,7 +125,7 @@ function CustomSection({
         <div className="flex gap-2"></div>
       </div>
       <div className="flex justify-end gap-2">
-        <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
+        <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save my progress'} />
         {isCreator && (
           <>
             <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />

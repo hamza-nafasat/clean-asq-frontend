@@ -1,5 +1,6 @@
 import Button from '@/components/shared/small/Button';
 import Modal from '@/components/shared/small/Modal';
+import TextField from '@/components/shared/small/TextField';
 import getEnv from '@/lib/env';
 import { useFormateTextInMarkDownMutation, useUpdateFormLocationMutation } from '@/redux/apis/formApis';
 import { updateEmailVerified } from '@/redux/slices/formSlice';
@@ -38,10 +39,7 @@ export default function LocationStatusModal({
           <img src={locationData?.logo} alt="logo" referrerPolicy="no-referrer" />
         </div>
         {/* Title & Info */}
-        <div className="space-y-3">
-          <h2 className="text-center text-xl font-semibold text-gray-800">{locationData?.title}</h2>
-          <p className="text-center text-sm text-gray-600">{locationData?.subtitle}</p>
-          <br />
+        <div className="flex w-full p-4">
           <div dangerouslySetInnerHTML={{ __html: locationData?.message }} />
         </div>
         {/* Captcha */}
@@ -69,21 +67,18 @@ export default function LocationStatusModal({
 export const LocationModalComponent = ({ locationModal, setLocationModal, formLocationData, refetch }) => {
   console.log('form location data', formLocationData);
   const [locationStatus, setLocationStatus] = useState(formLocationData?.status || '');
-  const [locationTitle, setLocationTitle] = useState(formLocationData?.title || '');
-  const [locationSubtitle, setLocationSubtitle] = useState(formLocationData?.subtitle || '');
   const [locationMessage, setLocationMessage] = useState(formLocationData?.message || '');
   const [formatedLocationMessage, setFormatedLocationMessage] = useState(formLocationData?.formatedText || '');
   const [formateTextInstructions, setFormateTextInstructions] = useState(
     formLocationData?.formatingTextInstructions || ''
   );
+  console.log('formatedLocationMessage', formatedLocationMessage);
   const [updateFormLocation] = useUpdateFormLocationMutation();
   const [formateText, { isLoading }] = useFormateTextInMarkDownMutation();
 
   const handleFormLocationUpdate = async () => {
     if (!locationModal) return toast.error('Please select a form');
     if (!locationStatus) return toast.error('Please select a location status');
-    if (!locationTitle) return toast.error('Please enter location title');
-    if (!locationSubtitle) return toast.error('Please enter location subtitle');
     if (!locationMessage) return toast.error('Please enter location message');
     if (!formatedLocationMessage) return toast.error('Please enter formated location message');
     if (!formateTextInstructions) return toast.error('Please enter formating text instructions');
@@ -92,8 +87,6 @@ export const LocationModalComponent = ({ locationModal, setLocationModal, formLo
         _id: locationModal,
         data: {
           locationStatus,
-          locationTitle,
-          locationSubtitle,
           locationMessage,
           formatedLocationMessage,
           formateTextInstructions,
@@ -134,71 +127,41 @@ export const LocationModalComponent = ({ locationModal, setLocationModal, formLo
         <h3 className="text-center text-lg font-semibold text-gray-800">Configure Location Settings</h3>
 
         {/* Title Input */}
-        <div className="flex flex-col gap-2">
-          <label htmlFor="location-title" className="font-medium text-gray-700">
-            Title
-          </label>
-          <input
-            id="location-title"
-            type="text"
-            placeholder="Enter title"
-            className="focus:border-primary focus:ring-primary/20 rounded-lg border border-gray-200 px-4 py-2 focus:ring-2 focus:outline-none"
-            value={locationTitle}
-            onChange={e => setLocationTitle(e.target.value)}
-          />
-        </div>
-
-        {/* Subtitle Input */}
-        <div className="flex flex-col gap-2">
-          <label htmlFor="location-subtitle" className="font-medium text-gray-700">
-            Subtitle
-          </label>
-          <input
-            id="location-subtitle"
-            type="text"
-            placeholder="Enter subtitle"
-            className="focus:border-primary focus:ring-primary/20 rounded-lg border border-gray-200 px-4 py-2 focus:ring-2 focus:outline-none"
-            value={locationSubtitle}
-            onChange={e => setLocationSubtitle(e.target.value)}
-          />
-        </div>
 
         {/* Message Textarea */}
         <div className="flex flex-col gap-2">
-          <label htmlFor="location-message" className="font-medium text-gray-700">
-            Message
-          </label>
-          <textarea
+          <TextField
+            type="textarea"
+            label="Message"
             id="location-message"
-            rows={4}
             placeholder="Enter message"
-            className="focus:border-primary focus:ring-primary/20 rounded-lg border border-gray-200 px-4 py-2 focus:ring-2 focus:outline-none"
             value={locationMessage}
             onChange={e => setLocationMessage(e.target.value)}
+            name="Message"
           />
         </div>
 
         {/* Format Text Label and Button */}
         <div className="flex flex-col gap-2">
-          <label className="font-medium text-gray-700">Format Text</label>
           <div className="flex items-center justify-between gap-2">
-            <input
+            <TextField
+              type="textarea"
+              label="Formating instuctions"
               id="formate-message"
-              type="text"
               placeholder="Enter formating instructions"
-              className="focus:border-primary focus:ring-primary/20 w-full rounded-lg border border-gray-200 px-4 py-2 focus:ring-2 focus:outline-none"
               value={formateTextInstructions}
               onChange={e => setFormateTextInstructions(e.target.value)}
-            />
-            <Button
-              onClick={formateTextHandler}
-              disabled={isLoading}
-              icon={isLoading ? CgSpinner : null}
-              label="Format"
-              variant="primary"
-              className="!w-fit"
+              name="formate-message"
             />
           </div>
+          <Button
+            onClick={formateTextHandler}
+            disabled={isLoading}
+            icon={isLoading ? CgSpinner : null}
+            label="Format"
+            variant="primary"
+            className="!w-fit self-end"
+          />
         </div>
 
         {formatedLocationMessage && (

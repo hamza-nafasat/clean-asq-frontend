@@ -24,9 +24,9 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
           }`}
         >
           <option value="">Choose an option</option>
-          {options.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
+          {options?.map(opt => (
+            <option key={opt?.value} value={opt?.value}>
+              {opt?.label}
             </option>
           ))}
         </select>

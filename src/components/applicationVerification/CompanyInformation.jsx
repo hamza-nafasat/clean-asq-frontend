@@ -255,7 +255,7 @@ function CompanyInformation({
         <div className="flex gap-2">
           <Button
             onClick={() => saveInProgress({ data: { ...form, naics: naicsToMccDetails }, name: title })}
-            label={'Save in Draft'}
+            label={'Save my progress'}
           />
           {isCreator && (
             <>
@@ -447,7 +447,7 @@ const NAICSModal = ({ naicsApiData, setNaicsApiData, setNaicsToMccDetails, setSh
       NAICS: `${bestMatch?.naics}, ${bestMatch?.naicsDescription}`,
       MCC: `${bestMatch?.mcc || ''}, ${bestMatch?.mccDescription || ''}`,
     });
-    setShowNaicsToMccDetails(true);
+    setShowNaicsToMccDetails(false);
   };
   return (
     <div className="flex w-full flex-col items-start gap-4">

@@ -350,7 +350,7 @@ function CompanyOwners({
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
         <div className="flex gap-2">
-          <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save in Draft'} />
+          <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save my progress'} />
           {isCreator && (
             <>
               <Button onClick={() => setCustomizeModal(true)} label={'Customize'} />
@@ -589,7 +589,7 @@ function CompanyOwners({
                           )}
                           <Button
                             onClick={() => handleRemoveOtherOwnersData(index)}
-                            className="!py-2.5"
+                            className="!max-w-fit self-end !py-2.5"
                             variant="secondary"
                             label="Remove"
                           />
@@ -603,7 +603,7 @@ function CompanyOwners({
                     onClick={handleAddOwner}
                     icon={GoPlus}
                     className="!text-textPrimary !rounded-[4px] !border !border-[#D5D8DD] !bg-[#F5F5F5] !font-medium hover:!bg-gray-200"
-                    label="Add Owner"
+                    label="Add additional owner"
                   />
                 </div>
               </div>

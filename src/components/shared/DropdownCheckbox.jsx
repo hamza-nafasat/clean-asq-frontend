@@ -182,27 +182,27 @@ const DropdownCheckbox = memo(
       >
         {label && <li className="border-b border-[#d3d3d3] px-4 py-2 text-sm font-medium text-[#666666]">{label}</li>}
         {options.map(option => {
-          const labelText = option.label ?? option.option;
+          const labelText = option?.label ?? option?.option;
           return (
             <li
-              key={option.value}
+              key={option?.value}
               className="flex items-center space-x-2 border-b border-[#d3d3d3] px-4 py-2 hover:bg-[hsl(208,100%,95%)]"
             >
               <input
                 type="checkbox"
-                id={`checkbox-${option.value}`}
-                checked={selectedValues.includes(option.value)}
+                id={`checkbox-${option?.value}`}
+                checked={selectedValues?.includes(option?.value)}
                 onChange={() => toggleValue(option)}
                 className="h-4 w-4 cursor-pointer"
               />
               <label
-                htmlFor={`checkbox-${option.value}`}
+                htmlFor={`checkbox-${option?.value}`}
                 className="cursor-pointer text-sm"
                 onClick={() => toggleValue(option)}
               >
                 {labelText}
               </label>
-              {option.value === 'others' && showCustomInput && (
+              {option?.value === 'others' && showCustomInput && (
                 <input
                   ref={customInputRef}
                   type="text"

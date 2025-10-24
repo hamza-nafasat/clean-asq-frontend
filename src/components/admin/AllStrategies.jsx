@@ -47,6 +47,18 @@ function AllStrategies() {
     }
   };
 
+  const getAllFormDontAlreadyAdded = (stratigies, forms) => {
+    const allFormsAddedInStrategies = stratigies
+      ?.map(item => item?.forms)
+      ?.flat()
+      ?.map(item => item?._id);
+    const allForms =
+      forms
+        ?.map(item => ({ label: item?.name, value: item?._id }))
+        ?.filter(item => !allFormsAddedInStrategies?.includes(item?.value)) || [];
+    return allForms;
+  };
+
   const columns = [
     {
       name: 'Name',
@@ -143,7 +155,7 @@ function AllStrategies() {
           <AddStrategies
             setIsModalOpen={setIsModalOpen}
             setEditModalData={setEditModalData}
-            forms={formData?.data?.map(item => ({ label: item?.name, value: item?._id })) || []}
+            forms={getAllFormDontAlreadyAdded(allFormStrategies?.data, formData?.data)}
             formKeys={allStrategies?.data?.map(item => ({ label: item?.searchObjectKey, value: item?._id })) || []}
           />
         </Modal>

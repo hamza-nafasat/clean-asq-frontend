@@ -930,7 +930,7 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
         </div>
         {signatureData?.signFormatedDisplayText && (
           <div
-            className="h-full bg-amber-100 p-4"
+            className="h-full p-4"
             dangerouslySetInnerHTML={{ __html: signatureData?.signFormatedDisplayText ?? '' }}
           />
         )}
@@ -941,7 +941,7 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
           onClick={handleUpdateSectionForSignature}
           disabled={isUpdatingSection}
           className="bg-primary mt-8 w-full text-white"
-          label={' Update Signature Data'}
+          label={' Update'}
         />
       </div>
     </div>
@@ -1010,10 +1010,7 @@ const SignatureHelpCustomization = ({ section, formRefetch, setShowSignatureHelp
           <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Get Response'} />
         </div>
         {signatureData?.signAiResponse && (
-          <div
-            className="h-full bg-amber-100 p-4"
-            dangerouslySetInnerHTML={{ __html: signatureData?.signAiResponse ?? '' }}
-          />
+          <div className="h-full p-4" dangerouslySetInnerHTML={{ __html: signatureData?.signAiResponse ?? '' }} />
         )}
       </div>
 
@@ -1022,7 +1019,7 @@ const SignatureHelpCustomization = ({ section, formRefetch, setShowSignatureHelp
           onClick={handleUpdateSectionForSignature}
           disabled={isUpdatingSection}
           className="bg-primary mt-8 w-full text-white"
-          label={' Update Signature Data'}
+          label={' Update'}
         />
       </div>
     </div>
@@ -1100,10 +1097,7 @@ const OtpDisplayText = ({ form, formRefetch, setOpenOtpDisplayTextModal }) => {
           <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Format Text'} />
         </div>
         {displayData?.otpDisplayFormatedText && (
-          <div
-            className="h-full bg-amber-100 p-4"
-            dangerouslySetInnerHTML={{ __html: displayData?.otpDisplayFormatedText ?? '' }}
-          />
+          <div className="h-full p-4" dangerouslySetInnerHTML={{ __html: displayData?.otpDisplayFormatedText ?? '' }} />
         )}
       </div>
 
@@ -1112,7 +1106,7 @@ const OtpDisplayText = ({ form, formRefetch, setOpenOtpDisplayTextModal }) => {
           onClick={handleUpdateSectionForSignature}
           disabled={isUpdatingSection}
           className="bg-primary mt-8 w-full text-white"
-          label={' Update Signature Data'}
+          label={' Update'}
         />
       </div>
     </div>
