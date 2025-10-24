@@ -19,6 +19,9 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
+            set -e
             cd /var/www/asq-frontend
-            ls -a
-            ./deploy_frontend.sh
+            git fetch --all
+            git reset --hard origin/main
+            npm ci
+            npm run build
