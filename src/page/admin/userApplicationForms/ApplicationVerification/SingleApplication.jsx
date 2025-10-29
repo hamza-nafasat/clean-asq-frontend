@@ -65,6 +65,7 @@ export default function SingleApplication() {
   const [customizeIdMissionTextModal, setCustomizeIdMissionTextModal] = useState(false);
   const [openAiHelpSignModal, setOpenAiHelpSignModal] = useState(false);
   const [openOtpDisplayTextModal, setOpenOtpDisplayTextModal] = useState(false);
+  const [loadingForValidatingOtp, setLoadingForValidatingOtp] = useState(false);
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
     name: '',
     idNumber: '',
@@ -276,6 +277,7 @@ export default function SingleApplication() {
   const verifyWithOtp = useCallback(async () => {
     try {
       if (!email || !otp) return toast.error('Please enter your email and otp');
+      setLoadingForValidatingOtp(true);
       const res = await verifyEmail({ email, otp }).unwrap();
       if (res.success) {
         await dispatch(updateEmailVerified(true));
@@ -290,6 +292,8 @@ export default function SingleApplication() {
     } catch (error) {
       console.log('Error sending OTP:', error);
       toast.error(error?.data?.message || 'Failed to send OTP');
+    } finally {
+      setLoadingForValidatingOtp(false);
     }
   }, [dispatch, email, getSavedFormDataAndSaveInredux, getUserProfile, otp, verifyEmail]);
 
@@ -458,7 +462,7 @@ export default function SingleApplication() {
   // }, [otp, otpLoading, sentOtpForEmail, verifyWithOtp]);
 
   const isCreator = user?._id && user?._id == form?.data?.owner && user?.role !== 'guest';
-  if (!isApplied) return <CustomLoading />;
+  if (!isApplied || loadingForValidatingOtp) return <CustomLoading />;
 
   return submiting ? (
     <div className="flex h-full flex-col items-center justify-center space-y-6 rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-900">
