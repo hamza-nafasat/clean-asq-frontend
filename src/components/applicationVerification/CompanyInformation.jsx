@@ -36,6 +36,7 @@ function CompanyInformation({
   step,
   isSignature,
 }) {
+  const prevRef = useRef(null);
   const { user } = useSelector(state => state.auth);
   const { formData } = useSelector(state => state?.form);
   const [customizeModal, setCustomizeModal] = useState(false);
@@ -52,7 +53,8 @@ function CompanyInformation({
   const [naicsSuggestions, setNaicsSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const naicsInputRef = useRef(null);
-  const [findNaicsToMccDetails, { isLoading }] = useFindNaicAndMccMutation();
+  const [naicsLoading, setNaicsLoading] = useState(false);
+  const [findNaicsToMccDetails] = useFindNaicAndMccMutation();
   const [strategyKeys, setStrategyKeys] = useState([]);
   const { data: strategyKeysData } = useGetAllSearchStrategiesQuery();
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
@@ -86,6 +88,7 @@ function CompanyInformation({
     const description = form?.['companydescription'];
     if (!description) return toast.error('Please enter a description first');
     try {
+      setNaicsLoading(true);
       const res = await findNaicsToMccDetails({ description }).unwrap();
       if (res.success) {
         setNaicsApiData(res?.data);
@@ -94,6 +97,8 @@ function CompanyInformation({
     } catch (error) {
       console.log('Error finding NAICS:', error);
       toast.error(error?.data?.message || 'Failed to find NAICS code');
+    } finally {
+      setNaicsLoading(false);
     }
   };
 
@@ -148,6 +153,35 @@ function CompanyInformation({
       setStrategyKeys(strategyKeysData?.data?.map(item => item?.searchObjectKey));
     }
   }, [strategyKeysData]);
+
+  useEffect(() => {
+    const prev = prevRef.current;
+    const curr = formData?.company_lookup_data;
+    // Compare actual values, not just reference
+    if (JSON.stringify(prev) === JSON.stringify(curr)) return;
+    prevRef.current = curr;
+    if (!curr) return;
+    (async () => {
+      const description = curr.find(i => i?.name === 'companydescription')?.result;
+      if (!description) return toast.error('Please enter a description first');
+      try {
+        setNaicsLoading(true);
+        const res = await findNaicsToMccDetails({ description }).unwrap();
+        if (res.success) {
+          console.log('i am called baby');
+          const bestMatch = res.data.bestMatch;
+          setNaicsToMccDetails({
+            NAICS: `${bestMatch.naics}, ${bestMatch.naicsDescription}`,
+            MCC: `${bestMatch.mcc || ''}, ${bestMatch.mccDescription || ''}`,
+          });
+        }
+      } catch (err) {
+        toast.error(err?.data?.message || 'Failed to find NAICS code');
+      } finally {
+        setNaicsLoading(false);
+      }
+    })();
+  }, [findNaicsToMccDetails, formData?.company_lookup_data]);
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -358,8 +392,8 @@ function CompanyInformation({
               />
               <Button
                 label="Find NAICS"
-                className={`text-nowrap ${isLoading && 'pointer-events-none opacity-30'}`}
-                disabled={isLoading}
+                className={`text-nowrap ${naicsLoading && 'pointer-events-none opacity-30'}`}
+                disabled={naicsLoading}
                 onClick={findNaicsHandler}
               />
             </div>
