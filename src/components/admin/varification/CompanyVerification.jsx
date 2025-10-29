@@ -23,6 +23,7 @@ import { toast } from 'react-toastify';
 import LocationStatusModal from './LocationStatusModal';
 import DOMPurify from 'dompurify';
 import Modal from '@/components/shared/small/Modal';
+import Checkbox from '@/components/shared/small/Checkbox';
 
 const columns = [
   { name: 'Field', selector: row => row.name, sortable: true, width: '150px' },
@@ -37,7 +38,7 @@ function CompanyVerification({ formId }) {
   const [totalSearchStreatgies, setTotalSearchStreatgies] = useState(0);
   const [successfullyVerifiedStreatgies, setSuccessfullyVerifiedStreatgies] = useState(0);
   const [lookupDataForTable, setLookupDataForTable] = useState([]);
-  const [form, setForm] = useState({ name: '', url: '' });
+  const [form, setForm] = useState({ name: '', url: '', noWebsite: false });
   const [apisRes, setApisRes] = useState({ companyLookup: {}, companyVerify: {} });
   const [verifyCompany, { isLoading: verifyCompanyLoading }] = useCompanyVerificationMutation();
   const [lookupCompany, { isLoading: lookupCompanyLoading }] = useCompanyLookupMutation();
@@ -58,20 +59,24 @@ function CompanyVerification({ formId }) {
   }, [formBackendData, user]);
 
   const handleSubmit = async () => {
-    if (!form?.name || !form?.url) return toast.error('Please fill all fields');
     try {
-      setLoading(true);
-      const companyVerifyPromise = verifyCompany({ name: form?.name, url: form?.url, formId }).unwrap();
-      const companyVerifyRes = await companyVerifyPromise;
-      if (companyVerifyRes?.success && companyVerifyRes?.data?.verificationStatus !== 'unverified') {
-        setApisRes({ companyVerify: companyVerifyRes?.data });
-        setApisRes(prev => ({ ...prev, companyVerify: companyVerifyRes?.data }));
-        toast.success('Company verified successfully');
-        setLoading(false);
-        companyLookup();
+      if (form?.noWebsite) {
         return navigate(`/application-form/${formId}`);
       } else {
-        toast.error('Company verification failed, please try again');
+        if (!form?.name || !form?.url) return toast.error('Please fill all fields');
+        setLoading(true);
+        const companyVerifyPromise = verifyCompany({ name: form?.name, url: form?.url, formId }).unwrap();
+        const companyVerifyRes = await companyVerifyPromise;
+        if (companyVerifyRes?.success && companyVerifyRes?.data?.verificationStatus !== 'unverified') {
+          setApisRes({ companyVerify: companyVerifyRes?.data });
+          setApisRes(prev => ({ ...prev, companyVerify: companyVerifyRes?.data }));
+          toast.success('Company verified successfully');
+          setLoading(false);
+          companyLookup();
+          return navigate(`/application-form/${formId}`);
+        } else {
+          toast.error('Company verification failed, please try again');
+        }
       }
     } catch (error) {
       console.log('Error verifying company:', error);
@@ -210,6 +215,13 @@ function CompanyVerification({ formId }) {
               onChange={
                 verifyCompanyLoading || lookupCompanyLoading ? () => {} : e => setForm({ ...form, url: e.target.value })
               }
+            />
+            <Checkbox
+              id={'noWebsite'}
+              label={'This company has no website'}
+              name={'noWebsite'}
+              checked={form.noWebsite}
+              onChange={e => setForm({ ...form, noWebsite: e.target.checked })}
             />
             {apisRes?.companyVerify?.confidenceScore && apisRes?.companyVerify?.verificationStatus && (
               <div className="flex w-44 items-center gap-2 rounded-2xl border p-2 py-1">
