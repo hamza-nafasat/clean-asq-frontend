@@ -12,6 +12,7 @@ import {
   useDeleteSingleBrandingMutation,
   useGetAllBrandingsQuery,
 } from '@/redux/apis/brandingApis';
+import { useGetMyAllFormsQuery } from '@/redux/apis/formApis';
 import { userExist, userNotExist } from '@/redux/slices/authSlice';
 import { MoreVertical, Pencil, Trash } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
@@ -33,6 +34,8 @@ const Brandings = () => {
   const [onHome, setOnHome] = React.useState(false);
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   const [selectedBranding, setSelectedBranding] = useState(null);
+
+  const { refetch: formRefetch } = useGetMyAllFormsQuery();
 
   const { data: brandings = [], isLoading: isBrandingsLoading, refetch } = useGetAllBrandingsQuery();
   const [deleteBranding, { isLoading: isDeleting }] = useDeleteSingleBrandingMutation();
@@ -125,6 +128,7 @@ const Brandings = () => {
             })
             .catch(() => dispatch(userNotExist()));
         }
+        await formRefetch();
         toast?.success(res?.message || 'Branding applied successfully');
       }
     } catch (error) {

@@ -574,6 +574,7 @@ export default function SingleApplication() {
                   {form?.data?.otpDisplayFormatedText && (
                     <div className="flex w-full gap-3">
                       <div
+                        className="w-full"
                         dangerouslySetInnerHTML={{
                           __html: form?.data?.otpDisplayFormatedText,
                         }}
@@ -641,6 +642,7 @@ export default function SingleApplication() {
                     {idMissionSection?.ai_formatting && (
                       <div className="flex w-full gap-3">
                         <div
+                          className="w-full"
                           dangerouslySetInnerHTML={{
                             __html: idMissionSection?.ai_formatting,
                           }}
@@ -804,6 +806,7 @@ export default function SingleApplication() {
                       <div className="flex items-end gap-3">
                         <div
                           // className="flex flex-1 items-end gap-3"
+                          className="w-full"
                           dangerouslySetInnerHTML={{
                             __html: idMissionSection?.signDisplayText,
                           }}
@@ -929,10 +932,7 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
           <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Format Text'} />
         </div>
         {signatureData?.signFormatedDisplayText && (
-          <div
-            className="h-full p-4"
-            dangerouslySetInnerHTML={{ __html: signatureData?.signFormatedDisplayText ?? '' }}
-          />
+          <div className="w-full" dangerouslySetInnerHTML={{ __html: signatureData?.signFormatedDisplayText ?? '' }} />
         )}
       </div>
 
@@ -1010,7 +1010,7 @@ const SignatureHelpCustomization = ({ section, formRefetch, setShowSignatureHelp
           <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Get Response'} />
         </div>
         {signatureData?.signAiResponse && (
-          <div className="h-full p-4" dangerouslySetInnerHTML={{ __html: signatureData?.signAiResponse ?? '' }} />
+          <div className="w-full" dangerouslySetInnerHTML={{ __html: signatureData?.signAiResponse ?? '' }} />
         )}
       </div>
 
@@ -1097,7 +1097,7 @@ const OtpDisplayText = ({ form, formRefetch, setOpenOtpDisplayTextModal }) => {
           <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Format Text'} />
         </div>
         {displayData?.otpDisplayFormatedText && (
-          <div className="h-full p-4" dangerouslySetInnerHTML={{ __html: displayData?.otpDisplayFormatedText ?? '' }} />
+          <div className="w-full" dangerouslySetInnerHTML={{ __html: displayData?.otpDisplayFormatedText ?? '' }} />
         )}
       </div>
 

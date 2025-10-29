@@ -1,4 +1,8 @@
-import { useFormateTextInMarkDownMutation, useUpdateFormSectionMutation } from '@/redux/apis/formApis';
+import {
+  useFormateTextInMarkDownMutation,
+  useGetAllSearchStrategiesQuery,
+  useUpdateFormSectionMutation,
+} from '@/redux/apis/formApis';
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
 import DOMPurify from 'dompurify';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -11,6 +15,7 @@ import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectio
 import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 import FileUploader from './Documents/FileUploader';
+import CustomLoading from '../shared/small/CustomLoading';
 
 function Documents({
   _id,
@@ -79,13 +84,18 @@ function Documents({
   };
   // Generate the AI prompt
   const generateAiPrompt = useCallback(() => {
-    const idMissionData = formData?.idMission;
-    const companyName = idMissionData?.companyTitle || 'your company';
-    const state = idMissionData?.state || 'your state';
+    const companyLookupData = formData?.company_lookup_data;
     const prompt = step?.aiCustomizablePrompt || '';
-    // return `how do I find online images/copies of the articles of incorporation or organization for ${companyName} in ${state} via the state's entity search website?`;
-    return String(prompt)?.replace('${companyName}', companyName).replace('${state}', state);
-  }, [formData?.idMission, step?.aiCustomizablePrompt]);
+    let newPrompt = prompt;
+    prompt.split(' ').forEach(word => {
+      if (word.startsWith('[') && word.endsWith(']')) {
+        const exactWord = word.slice(1, -1);
+        const lookupDataForWord = companyLookupData?.find(item => item?.name === exactWord)?.result;
+        newPrompt = newPrompt.replace(word, (lookupDataForWord || word).toString());
+      }
+    });
+    return newPrompt;
+  }, [formData?.company_lookup_data, step?.aiCustomizablePrompt]);
   // handle next and submit functions
   const updateFileDataHandler = async () => {
     try {
@@ -203,6 +213,11 @@ function Documents({
             </div>
           )}
         </div>
+        {step?.ai_formatting && (
+          <div className="w-full">
+            <div dangerouslySetInnerHTML={{ __html: step.ai_formatting }} />
+          </div>
+        )}
         {aiPromptModal && (
           <Modal title="Customize Prompt" onClose={() => setAiPromptModal(false)}>
             <AiPromptCustomizablePrompt
@@ -258,11 +273,6 @@ function Documents({
             <EditSectionDisplayTextFromatingModal step={step} />
           </Modal>
         )}
-        {step?.ai_formatting && (
-          <div className="w-full">
-            <div dangerouslySetInnerHTML={{ __html: step.ai_formatting }} />
-          </div>
-        )}
       </div>
       <div className="mt-6 w-full">
         {fields?.map((field, index) => {
@@ -278,17 +288,17 @@ function Documents({
                     />
                   </Modal>
                 )}
-                {field?.ai_formatting && field?.isDisplayText && (
-                  <div className="flex h-full w-full flex-col gap-4 p-4 pb-0">
-                    <div className="" dangerouslySetInnerHTML={{ __html: field?.ai_formatting ?? '' }} />
-                  </div>
-                )}
                 {field?.aiHelp && (
                   <div className="flex w-full justify-end">
                     <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
                   </div>
                 )}
                 <FileUploader label={field?.label} file={file} onFileSelect={setFile} />
+                {field?.ai_formatting && field?.isDisplayText && (
+                  <div className="flex w-full flex-col gap-4 p-4 pb-0">
+                    <div className="w-full" dangerouslySetInnerHTML={{ __html: field?.ai_formatting ?? '' }} />
+                  </div>
+                )}
               </div>
             );
           } else {
@@ -378,6 +388,8 @@ function Documents({
 export default Documents;
 
 export const AiPromptCustomizablePrompt = ({ aiCustomizablePrompt, sectionId, setAiPromptModal }) => {
+  const [strategieKey, setStrategieKey] = useState([]);
+  const { data: searchStreatgies, isLoading } = useGetAllSearchStrategiesQuery();
   const [prompt, setPrompt] = useState(aiCustomizablePrompt || '');
   const [updateFormSection, { isLoading: isUpdating }] = useUpdateFormSectionMutation();
 
@@ -401,7 +413,16 @@ export const AiPromptCustomizablePrompt = ({ aiCustomizablePrompt, sectionId, se
       toast.error(error?.data?.message || 'Failed to update section');
     }
   };
-  return (
+
+  useEffect(() => {
+    if (searchStreatgies?.data?.length > 0) {
+      const keys = searchStreatgies?.data?.map(s => s?.searchObjectKey);
+      setStrategieKey(keys);
+    }
+  }, [searchStreatgies?.data]);
+  return isLoading ? (
+    <CustomLoading />
+  ) : (
     <div className="flex flex-col gap-6 p-6">
       {/* Input Area */}
       <div>
@@ -421,9 +442,11 @@ export const AiPromptCustomizablePrompt = ({ aiCustomizablePrompt, sectionId, se
       {/* Dynamic Variables */}
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium text-gray-700">Available variables:</span>
-        <div className="flex gap-3">
-          <Button label={`companyName`} type="button" onClick={() => insertVariable('${companyName}')} />
-          <Button label={`state`} type="button" onClick={() => insertVariable('${state}')} />
+        <div className="flex flex-wrap gap-3">
+          {/* <Button label={`state`} type="button" onClick={() => insertVariable('${state}')} /> */}
+          {strategieKey?.map((item, index) => {
+            return <Button key={index} label={item} type="button" onClick={() => insertVariable(`[${item}]`)} />;
+          })}
         </div>
         <p className="text-xs text-gray-500">
           Click to insert variables into your prompt. These will be dynamically replaced by real values.

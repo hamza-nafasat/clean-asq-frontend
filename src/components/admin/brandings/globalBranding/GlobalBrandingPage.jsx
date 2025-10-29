@@ -56,8 +56,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [createBranding, { isLoading }] = useCreateBrandingMutation();
   const [updateBranding, { isLoading: isUpdateLoading }] = useUpdateSingleBrandingMutation();
   const { data: singleBrandingData } = useGetSingleBrandingQuery(brandingId || '');
-  console.log('extraLogos', extraLogos);
-  console.log('singleBranding.colors.buttonText)', singleBrandingData?.data.colors.buttonText);
+  // console.log('extraLogos', extraLogos);
+  // console.log('singleBranding.colors.buttonText)', singleBrandingData?.data.colors.buttonText);
 
   const extractBranding = async () => {
     if (!websiteUrl) toast.error('Please enter a valid website URL');
@@ -282,7 +282,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       }
     }
   }, [brandingId, singleBrandingData]);
-  console.log('selectedLogo', selectedLogo);
+  // console.log('selectedLogo', selectedLogo);
 
   return (
     <div className="mb-6 rounded-[8px] border border-[#F0F0F0] bg-white px-3 md:px-6">
