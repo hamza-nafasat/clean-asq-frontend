@@ -300,13 +300,13 @@ const formApis = createApi({
     // getBankLookup: builder.query({
     //   query: searchTerm => `/routing-lookup?searchTerm=${searchTerm}`,
     // }),
-    getBankLookup: builder.query({
+
+    getBankLookup: builder.mutation({
       query: data => ({
         url: `/routing-lookup?searchTerm=${data}`,
         method: 'GET',
       }),
     }),
-
     //================================
     // company verification and lookup
     //================================
@@ -371,7 +371,7 @@ export const {
   useCreatePromptMutation,
   useUpdatePromptMutation,
   useGetAllPromptsQuery,
-  useGetBankLookupQuery,
+  useGetBankLookupMutation,
   useCompanyVerificationMutation,
   useCompanyLookupMutation,
   useFindNaicAndMccMutation,

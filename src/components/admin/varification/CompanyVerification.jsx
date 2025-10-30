@@ -375,13 +375,15 @@ const CompanyVerificationDisplayText = ({ form, formRefetch, setOpenCompanyVerif
         )}
       </div>
 
-      <div className="flex w-full">
+      <div className="flex w-full items-center justify-end gap-2">
         <Button
-          onClick={handleUpdateSectionForSignature}
+          onClick={() => setOpenCompanyVerificationDisplayTextModal(false)}
           disabled={isUpdatingSection}
-          className="bg-primary mt-8 w-full text-white"
-          label={' Update'}
+          className=" "
+          variant="secondary"
+          label={'Cancel'}
         />
+        <Button onClick={handleUpdateSectionForSignature} disabled={isUpdatingSection} className="" label={'Save'} />
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { FIELD_TYPES } from '@/data/constants';
-import { useGetBankLookupQuery } from '@/redux/apis/formApis';
+import { useGetBankLookupMutation } from '@/redux/apis/formApis';
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -44,11 +44,8 @@ function BankInfo({
   const [loadingNext, setLoadingNext] = useState(false);
   const { idMissionData } = useSelector(state => state.auth);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
-  const [lookupRouting, setLookupRouting] = useState(null);
   const [accMatch, setAccMatch] = useState(false);
-  const { data, refetch, isFetching } = useGetBankLookupQuery(lookupRouting, {
-    skip: !lookupRouting,
-  });
+  const [getBankLookup, { isLoading }] = useGetBankLookupMutation();
   const [error] = useState(null);
   const [bankModal, setBankModal] = useState(null);
 
@@ -77,19 +74,25 @@ function BankInfo({
     }
   };
 
-  useEffect(() => {
-    if (data?.data) {
-      console.log('i am running1');
-      const result = data?.data;
-      if (Array.isArray(result.bankDetailsList) && result.bankDetailsList.length > 0) {
-        console.log('i am running2');
-        setBankModal(result.bankDetailsList?.[0]);
+  const getLookupRoutingHandler = async routing => {
+    try {
+      const res = await getBankLookup(routing).unwrap();
+      if (res.success && Array.isArray(res?.data?.bankDetailsList) && res?.data?.bankDetailsList?.length > 0) {
+        setBankModal(res?.data?.bankDetailsList?.[0]);
       } else {
-        console.log('i am running3');
         setBankModal(null);
+        toast.error(
+          'we’re unable to verify this routing number, if you are sure it’s correct please continue. Otherwise correct any errors before moving forward.'
+        );
       }
+    } catch (error) {
+      console.log('error while getting bank lookup', error);
+      setBankModal(null);
+      toast.error(
+        'we’re unable to verify this routing number, if you are sure it’s correct please continue. Otherwise correct any errors before moving forward.'
+      );
     }
-  }, [data, refetch, isFetching]);
+  };
 
   useEffect(() => {
     const isMatch =
@@ -197,14 +200,15 @@ function BankInfo({
                     className="flex-1"
                   />
                   <Button
-                    label={isFetching ? 'Entering...' : 'Enter'}
+                    label={isLoading ? 'Entering...' : 'Enter'}
                     className="mt-8"
                     onClick={async () => {
                       if (form[field?.name]) {
-                        setLookupRouting(form?.[field?.name]);
-                        if (refetch) {
-                          await refetch();
-                        }
+                        getLookupRoutingHandler(form?.[field?.name]);
+                        // setLookupRouting(form?.[field?.name]);
+                        // if (refetch) {
+                        //   await refetch();
+                        // }
                       }
                     }}
                   />

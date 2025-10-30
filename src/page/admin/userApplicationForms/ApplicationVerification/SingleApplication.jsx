@@ -370,7 +370,6 @@ export default function SingleApplication() {
 
       // console.log('You are verified successfully', data);
       setIsIdMissionProcessing(false);
-
       const formDataOfIdMission = data?.Form_Data;
       let address2 = formDataOfIdMission?.Address2 || '';
       let address = formDataOfIdMission?.Address || '';
@@ -401,12 +400,11 @@ export default function SingleApplication() {
         city: formDataOfIdMission?.ParsedAddressMunicipality || '',
         address2: address2,
       });
-      console.log(idMissionVerified);
-
       setIdMissionVerified(true);
     });
     socket.on('idMission_failed', async data => {
       // console.log('you start id mission failed', data);
+      toast.error('you id dindnt approved please try again');
       const action = await dispatch(
         updateFormState({
           data: { idMissionVerification: 'failed', verificationStatus: data?.Form_Status || 'rejected' },
@@ -414,11 +412,21 @@ export default function SingleApplication() {
         })
       );
       unwrapResult(action);
+      setIsIdMissionProcessing(false);
+      setIdMissionVerified(false);
     });
     socket.on('idMission_other', async data => {
-      // console.log('you start id mission failed', data);
       console.log('Id Mission Data ', data);
+      const action = await dispatch(
+        updateFormState({
+          data: { idMissionVerification: 'failed', verificationStatus: data?.Form_Status || 'rejected' },
+          name: 'idMission',
+        })
+      );
+      unwrapResult(action);
       toast.error('you id dindnt approved please try again');
+      setIsIdMissionProcessing(false);
+      setIdMissionVerified(false);
     });
 
     // Cleanup listener when component unmounts
@@ -450,16 +458,6 @@ export default function SingleApplication() {
     });
     setIsAllRequiredFieldsFilled(allFilled);
   }, [idMissionVerifiedData]);
-
-  // // add a keydown event listener to the document
-  // useEffect(() => {
-  //   const handleEnter = e => {
-  //     if (e.key === 'Enter' && !otp && !otpLoading) sentOtpForEmail();
-  //     if (e.key === 'Enter' && otp && !otpLoading) verifyWithOtp();
-  //   };
-  //   window.addEventListener('keydown', handleEnter);
-  //   return () => window.removeEventListener('keydown', handleEnter);
-  // }, [otp, otpLoading, sentOtpForEmail, verifyWithOtp]);
 
   const isCreator = user?._id && user?._id == form?.data?.owner && user?.role !== 'guest';
   if (!isApplied || loadingForValidatingOtp) return <CustomLoading />;
@@ -511,7 +509,7 @@ export default function SingleApplication() {
       )}
       {customizeIdMissionTextModal && idMissionSection && (
         <Modal isOpen={customizeIdMissionTextModal} onClose={() => setCustomizeIdMissionTextModal(false)}>
-          <EditSectionDisplayTextFromatingModal step={idMissionSection} />
+          <EditSectionDisplayTextFromatingModal step={idMissionSection} setModal={setCustomizeIdMissionTextModal} />
         </Modal>
       )}
       {openRedirectModal ? (
@@ -942,6 +940,12 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
 
       <div className="flex w-full">
         <Button
+          onClick={() => setShowSignatureModal(false)}
+          disabled={isUpdatingSection}
+          variant="secondary"
+          label={' Cancel'}
+        />
+        <Button
           onClick={handleUpdateSectionForSignature}
           disabled={isUpdatingSection}
           className="bg-primary mt-8 w-full text-white"
@@ -1005,6 +1009,7 @@ const SignatureHelpCustomization = ({ section, formRefetch, setShowSignatureHelp
       <div className="flex w-full flex-col gap-2 pb-4">
         <TextField
           label="Ai Prompt"
+          type="textarea"
           value={signatureData?.signAiPrompt}
           name="aiPrompt"
           onChange={e => setSignatureData(prev => ({ ...prev, signAiPrompt: e.target.value }))}
@@ -1106,6 +1111,12 @@ const OtpDisplayText = ({ form, formRefetch, setOpenOtpDisplayTextModal }) => {
       </div>
 
       <div className="flex w-full">
+        <Button
+          onClick={() => setOpenOtpDisplayTextModal(false)}
+          disabled={isUpdatingSection}
+          variant="secondary"
+          label={' Cancel'}
+        />
         <Button
           onClick={handleUpdateSectionForSignature}
           disabled={isUpdatingSection}

@@ -214,7 +214,8 @@ function CompanyOwners({
         }
       });
       if (founders?.length) {
-        setOwnersFromLookup(founders);
+        const uniqueFounders = founders.filter((item, index) => founders.indexOf(item) === index);
+        setOwnersFromLookup(uniqueFounders);
       } else {
         setOwnersFromLookup([]);
       }

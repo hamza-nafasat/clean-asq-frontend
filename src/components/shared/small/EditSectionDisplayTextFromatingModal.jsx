@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import TextField from './TextField';
 import Button from './Button';
 
-const EditSectionDisplayTextFromatingModal = ({ step }) => {
+const EditSectionDisplayTextFromatingModal = ({ step, setModal }) => {
   const [displayText, setDisplayText] = useState(step.displayText || '');
   const [formattingInstructionForAi, setFormattingInstructionForAi] = useState('');
   const [aiFormatting, setAiFormatting] = useState(step.ai_formatting || '');
@@ -72,7 +72,18 @@ const EditSectionDisplayTextFromatingModal = ({ step }) => {
         <Button onClick={formateTextWithAi} disabled={isLoading} className="mt-8" label="Format Text" />
       </div>
       {aiFormatting && <div className="h-full p-4" dangerouslySetInnerHTML={{ __html: aiFormatting ?? '' }} />}
-      <Button onClick={updateFormSectionHandler} disabled={isUpdating} className="mt-8" label="Save" />
+      <div className="align-center flex w-full justify-end gap-2">
+        <Button
+          onClick={() => {
+            if (setModal) setModal(false);
+          }}
+          disabled={isUpdating}
+          variant="secondary"
+          className="mt-8"
+          label="Cancel"
+        />
+        <Button onClick={updateFormSectionHandler} disabled={isUpdating} className="mt-8" label="Save" />
+      </div>
     </div>
   );
 };

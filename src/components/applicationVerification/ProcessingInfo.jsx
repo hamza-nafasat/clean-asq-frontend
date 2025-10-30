@@ -41,6 +41,7 @@ function ProcessingInfo({
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
+  const allNames = useMemo(() => fields.map(f => f.name), [fields]);
 
   const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
 
@@ -101,20 +102,39 @@ function ProcessingInfo({
       setIsAllRequiredFieldsFilled(true);
       return;
     }
-    const allFilled = requiredNames.some(name => {
-      const val = form[name];
-      if (!val) return false;
-      let allConditionalComplete = true;
-      const conditionalFieldsKeys = Object.keys(form).filter(key => key.includes(`${name}/`));
-      conditionalFieldsKeys.some(innerName => {
-        const innerVal = form[innerName];
-        if (!innerVal) allConditionalComplete = false;
+    let allFilled = false;
+    if (requiredNames.length > 0) {
+      allFilled = requiredNames.some(name => {
+        const val = form[name];
+        if (!val) return false;
+        let allConditionalComplete = true;
+        const conditionalFieldsKeys = Object.keys(form).filter(key => key.includes(`${name}/`));
+        conditionalFieldsKeys.some(innerName => {
+          const innerVal = form[innerName];
+          if (!innerVal) allConditionalComplete = false;
+        });
+        if (!allConditionalComplete) return false;
+        if (val == null) return false;
+        if (typeof val === 'string') return val.trim() !== '';
+        return true;
       });
-      if (!allConditionalComplete) return false;
-      if (val == null) return false;
-      if (typeof val === 'string') return val.trim() !== '';
-      return true;
-    });
+    } else {
+      // if any field is completed then allFilled will be true
+      allFilled = allNames.some(name => {
+        const val = form[name];
+        if (!val) return false;
+        let allConditionalComplete = true;
+        const conditionalFieldsKeys = Object.keys(form).filter(key => key.includes(`${name}/`));
+        conditionalFieldsKeys.some(innerName => {
+          const innerVal = form[innerName];
+          if (!innerVal) allConditionalComplete = false;
+        });
+        if (!allConditionalComplete) return false;
+        if (val == null) return false;
+        if (typeof val === 'string') return val.trim() !== '';
+        return true;
+      });
+    }
 
     let isSignatureDone = true;
     if (isSignature) {
@@ -124,7 +144,7 @@ function ProcessingInfo({
       }
     }
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
-  }, [form, isCreator, isSignature, requiredNames]);
+  }, [allNames, form, isCreator, isSignature, requiredNames]);
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">

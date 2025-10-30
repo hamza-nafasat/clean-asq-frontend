@@ -163,7 +163,8 @@ function CompanyInformation({
     if (!curr) return;
     (async () => {
       const description = curr.find(i => i?.name === 'companydescription')?.result;
-      if (!description) return toast.error('Please enter a description first');
+      if (naicsToMccDetails?.NAICS) return;
+      if (!description) return;
       try {
         setNaicsLoading(true);
         const res = await findNaicsToMccDetails({ description }).unwrap();
@@ -181,7 +182,7 @@ function CompanyInformation({
         setNaicsLoading(false);
       }
     })();
-  }, [findNaicsToMccDetails, formData?.company_lookup_data]);
+  }, [findNaicsToMccDetails, formData?.company_lookup_data, naicsToMccDetails?.NAICS]);
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -398,7 +399,7 @@ function CompanyInformation({
               />
             </div>
             {showSuggestions && (
-              <div className="absolute z-10 mt-1 max-h-80 w-full overflow-y-auto rounded-md border border-gray-300 bg-white shadow-lg">
+              <div className="rounded-m absolute z-10 mt-1 max-h-80 w-full overflow-y-auto">
                 {naicsSuggestions.map((item, index) => (
                   <div
                     key={index}
@@ -507,14 +508,20 @@ const NAICSModal = ({ naicsApiData, setNaicsApiData, setNaicsToMccDetails, setSh
                 type={'text'}
                 readOnly
                 value={`${match?.naics}, ${match?.naicsDescription}`}
-                className={`border-frameColor h-[45px] w-full cursor-pointer! rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
+                className={`border-frameColor h-[45px] w-full cursor-pointer! rounded-lg bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
               />
             </button>
           ))}
         </div>
       </section>
       <div className="flex w-full items-center justify-end">
-        <Button label="Save Best Match" onClick={() => saveHandler(naicsApiData?.bestMatch)} />
+        <Button
+          label="Save Best Match"
+          onClick={() => {
+            saveHandler(naicsApiData?.bestMatch);
+            setShowNaicsToMccDetails(false);
+          }}
+        />
       </div>
     </div>
   );
