@@ -803,7 +803,7 @@ export default function SingleApplication() {
                   className={'max-w-[400px]!'}
                 />
                 <div className="flex w-full flex-col">
-                  <div className="my-4 flex w-full gap-2">
+                  <div className="my-4 flex w-full justify-between gap-2">
                     {idMissionSection?.signDisplayText && (
                       <div className="flex items-end gap-3">
                         <div
@@ -938,19 +938,14 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
         )}
       </div>
 
-      <div className="flex w-full">
+      <div className="flex w-full items-center justify-end gap-2">
         <Button
           onClick={() => setShowSignatureModal(false)}
           disabled={isUpdatingSection}
           variant="secondary"
-          label={' Cancel'}
+          label={'Cancel'}
         />
-        <Button
-          onClick={handleUpdateSectionForSignature}
-          disabled={isUpdatingSection}
-          className="bg-primary mt-8 w-full text-white"
-          label={' Update'}
-        />
+        <Button onClick={handleUpdateSectionForSignature} disabled={isUpdatingSection} label={'Save'} />
       </div>
     </div>
   );
@@ -1023,13 +1018,14 @@ const SignatureHelpCustomization = ({ section, formRefetch, setShowSignatureHelp
         )}
       </div>
 
-      <div className="flex w-full">
+      <div className="flex w-full items-center justify-end gap-2">
         <Button
-          onClick={handleUpdateSectionForSignature}
+          onClick={() => setShowSignatureHelpModal(false)}
+          variant="secondary"
           disabled={isUpdatingSection}
-          className="bg-primary mt-8 w-full text-white"
-          label={' Update'}
+          label={'Cancel'}
         />
+        <Button onClick={handleUpdateSectionForSignature} disabled={isUpdatingSection} label={'Save'} />
       </div>
     </div>
   );
@@ -1110,19 +1106,14 @@ const OtpDisplayText = ({ form, formRefetch, setOpenOtpDisplayTextModal }) => {
         )}
       </div>
 
-      <div className="flex w-full">
+      <div className="flex w-full items-center justify-end gap-2">
         <Button
           onClick={() => setOpenOtpDisplayTextModal(false)}
           disabled={isUpdatingSection}
           variant="secondary"
           label={' Cancel'}
         />
-        <Button
-          onClick={handleUpdateSectionForSignature}
-          disabled={isUpdatingSection}
-          className="bg-primary mt-8 w-full text-white"
-          label={' Update'}
-        />
+        <Button onClick={handleUpdateSectionForSignature} disabled={isUpdatingSection} label={'Save'} />
       </div>
     </div>
   );
