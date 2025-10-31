@@ -41,6 +41,7 @@ const EditSectionDisplayTextFromatingModal = ({ step, setModal }) => {
       }).unwrap();
       if (res.success) {
         toast.success('Section Updated Successfully');
+        if (setModal) setModal(false);
       }
     } catch (error) {
       console.error(error);

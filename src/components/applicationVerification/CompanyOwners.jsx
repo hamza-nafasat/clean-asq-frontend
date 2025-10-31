@@ -22,6 +22,33 @@ import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectio
 import Modal from '../shared/small/Modal';
 import CustomizationOwnerFieldsModal from './companyInfo/CustomizationOwnerFieldsModal';
 
+const ssnField = {
+  label: 'What is your Social Security Number?',
+  name: 'rolling_owner_ssn',
+  required: true,
+  aiHelp: false,
+  isMasked: true,
+  type: 'text',
+};
+const areUAnOwnerField = {
+  label: 'Are you also an owner',
+  name: 'rolling_owner_is_also_owner',
+  required: true,
+  aiHelp: false,
+  type: 'radio',
+  options: [
+    { label: 'Yes', value: 'yes' },
+    { label: 'No', value: 'no' },
+  ],
+};
+const ownerPercentageField = {
+  label: 'What is you percentage of ownership?',
+  name: 'rolling_owner_percentage',
+  required: true,
+  aiHelp: false,
+  type: 'range',
+};
+
 function CompanyOwners({
   _id,
   formRefetch,
@@ -57,7 +84,10 @@ function CompanyOwners({
   const requiredNames = useMemo(() => formFields.filter(f => f.required).map(f => f.name), [formFields]);
 
   const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
-
+  const validateEmail = email => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+  };
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
       if (!file) return toast.error('Please select a file');
@@ -111,91 +141,24 @@ function CompanyOwners({
     }));
   };
 
-  function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(String(email).toLowerCase());
-  }
-
   useEffect(() => {
-    const isApplicantOwner = 'applicant_is_primary_operator_or_owner_with_more_then_25percentage';
-    let baseFields;
-    if (form?.[isApplicantOwner] === 'yes') {
-      const blockFields = blocks.find(block => block?.name === isApplicantOwner)?.fields ?? [];
-      baseFields = [fields[0], ...blockFields, ...fields.slice(1)];
-    } else if (form?.[isApplicantOwner] === 'no') {
-      baseFields = [fields[0], ...fields.slice(1)];
-    } else {
-      baseFields = [...fields];
-    }
-    const percentage = Number(form?.applicant_percentage);
-    const isApplicantPrimaryOperator = form?.applicant_is_also_primary_operator;
-    const hasOperatorField = baseFields.some(f => f.name === 'applicant_is_owner_and_operator');
-    // if value is les than 25 then add job title
-    if (percentage >= 25 && percentage !== 0 && !hasOperatorField) {
-      baseFields = baseFields.filter(f => f.name !== 'applicant_job_title');
-      const newField = {
-        label: 'Are you also a primary operator',
-        name: 'applicant_is_also_primary_operator',
-        required: true,
-        aiHelp: false,
-        type: 'radio',
-        options: [
-          { label: 'Yes', value: 'yes' },
-          { label: 'No', value: 'no' },
-        ],
-      };
-      baseFields.splice(baseFields?.length - 2, 0, newField);
-    }
-    // if value is les than 25 then add applicant is also primary operator
-    if (percentage < 25) {
-      baseFields = baseFields.filter(f => f.name !== 'applicant_is_also_primary_operator');
-    }
-    // if applicant is not primary operator then change the label
-    if (isApplicantPrimaryOperator === 'yes' || isApplicantPrimaryOperator === 'no') {
-      // add new field or remove according to primary operator
-      if (isApplicantPrimaryOperator == 'yes') {
-        const newField = {
-          label: 'What is your job title in the company?',
-          name: 'applicant_job_title',
-          required: true,
-          aiHelp: false,
-          type: 'text',
-        };
-        baseFields.splice(baseFields?.length - 2, 0, newField);
-      } else {
-        baseFields = baseFields.filter(f => f.name !== 'applicant_job_title');
+    const idMissionData = formData?.idMission;
+    const idMissionField = idMissionData?.roleFillingForCompany;
+    let baseFields = [...fields];
+    if (idMissionField == 'primaryOperatorAndController' || idMissionField == 'both') {
+      baseFields = [ssnField, areUAnOwnerField, ...baseFields];
+      if (form?.rolling_owner_is_also_owner == 'yes') {
+        //  add percentage field after ssn and areUAnOwnerField
+        baseFields = [ssnField, areUAnOwnerField, ownerPercentageField, ...fields];
       }
-      // change label of next field according to primary operator
-      const label =
-        isApplicantPrimaryOperator === 'yes'
-          ? 'Are there any additional primary operators and/or owners (25% or more)?:'
-          : 'Are there any primary operators and/or owners (25% or more)? We need at least one primary operator.';
-      // Find the last radio field
-      const lastRadioFieldIndex = [...baseFields]
-        .map((f, i) => ({ ...f, _index: i }))
-        .reverse()
-        .find(f => f.type === 'radio')?._index;
-      if (typeof lastRadioFieldIndex === 'number') {
-        const updatedField = {
-          ...baseFields[lastRadioFieldIndex],
-          label,
-        };
-        // Replace the field with updated label
-        baseFields = [
-          ...baseFields.slice(0, lastRadioFieldIndex),
-          updatedField,
-          ...baseFields.slice(lastRadioFieldIndex + 1),
-        ];
+    } else if (idMissionField == 'primaryContact') {
+      baseFields = [areUAnOwnerField, ...baseFields];
+      if (form?.rolling_owner_is_also_owner == 'yes') {
+        baseFields = [areUAnOwnerField, ssnField, ownerPercentageField, ...fields];
       }
     }
-
-    // ✅ Apply your condition here directly in baseFields
-    if (percentage > 75) {
-      baseFields = baseFields.filter(f => f.name !== 'additional_owners_own_25_percent_or_more');
-    }
-
     setFormFields(baseFields);
-  }, [blocks, fields, form]);
+  }, [blocks, fields, form, formData?.idMission]);
 
   // add owners for suggestions
   useEffect(() => {

@@ -1,7 +1,7 @@
 import SignatureBox from '@/components/shared/SignatureBox';
 import Button from '@/components/shared/small/Button';
 import CustomLoading from '@/components/shared/small/CustomLoading';
-import { AiHelpModal } from '@/components/shared/small/DynamicField';
+import { AiHelpModal, RadioInputType } from '@/components/shared/small/DynamicField';
 import { EditSectionDisplayTextFromatingModal } from '@/components/shared/small/EditSectionDisplayTextFromatingModal';
 import { LoadingWithTimer } from '@/components/shared/small/LoadingWithTimer';
 import Modal from '@/components/shared/small/Modal';
@@ -81,9 +81,11 @@ export default function SingleApplication() {
     dateOfBirth: '',
     zipCode: '',
     country: '',
+    roleFillingForCompany: '',
+    address2: 'None',
     signature: { secureUrl: '', publicId: '', resourceType: '' },
   });
-
+  console.log('id mission data ', idMissionVerifiedData);
   const idMissionSection = form?.data?.sections?.find(sec => sec?.title?.toLowerCase() == 'id_verification_blk');
   const handleSignature = async (file, setIsSaving) => {
     try {
@@ -162,7 +164,7 @@ export default function SingleApplication() {
           companyTitle: formDataOfIdMission?.companyTitle || '',
           state: formDataOfIdMission?.state || '',
           city: formDataOfIdMission?.city || '',
-          address2: formDataOfIdMission?.address2 || '',
+          address2: formDataOfIdMission?.address2 || 'None',
           signature: formDataOfIdMission?.signature || '',
         });
         if (formDataOfIdMission?.name && savedData?.company_lookup_data) {
@@ -315,8 +317,9 @@ export default function SingleApplication() {
         companyTitle: formDataOfIdMission?.companyTitle || '',
         state: formDataOfIdMission?.state || '',
         city: formDataOfIdMission?.city || '',
-        address2: formDataOfIdMission?.address2 || '',
+        address2: formDataOfIdMission?.address2 || 'None',
         signature: formDataOfIdMission?.signature || '',
+        roleFillingForCompany: formDataOfIdMission?.roleFillingForCompany || '',
       });
       setIdMissionVerified(true);
       setOpenRedirectModal(true);
@@ -442,6 +445,7 @@ export default function SingleApplication() {
   useEffect(() => {
     const allFilled = Object.keys(idMissionVerifiedData).every(name => {
       const val = idMissionVerifiedData[name];
+      console.log('val is ', val);
       if (val == null) return false;
       if (typeof val === 'string') return val.trim() !== '';
       if (Array.isArray(val))
@@ -724,7 +728,15 @@ export default function SingleApplication() {
                   className={'max-w-[400px]!'}
                 />{' '}
                 <TextField
-                  type="date"
+                  type="text"
+                  value={idMissionVerifiedData?.idExpiryDate}
+                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, idExpiryDate: e.target.value })}
+                  label="Id Expiry Date:*"
+                  required
+                  className={'max-w-[400px]!'}
+                />{' '}
+                <TextField
+                  type="text"
                   value={idMissionVerifiedData?.issueDate}
                   onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, issueDate: e.target.value })}
                   label="Issue Date:*"
@@ -802,6 +814,37 @@ export default function SingleApplication() {
                   type="tel"
                   className={'max-w-[400px]!'}
                 />
+                <div className="flex w-full border bg-white p-4">
+                  <RadioInputType
+                    className={'w-full'}
+                    field={{
+                      label: 'What is the role you are filling for the company as you complete this application? ',
+                      options: [
+                        {
+                          label:
+                            'A primary company operator/controller (C-level executive, owner or other person that holds significant control over company direction and decisions)',
+                          value: 'primaryOperatorAndController',
+                        },
+                        {
+                          label:
+                            'The primary contact for the company for this product and service, but not a company operator/controller ',
+                          value: 'primaryContact',
+                        },
+                        {
+                          label: 'Both a company operator and the primary contact',
+                          value: 'both',
+                        },
+                      ],
+                      name: 'roleFillingForCompany',
+                      required: true,
+                    }}
+                    form={{ roleFillingForCompany: idMissionVerifiedData?.roleFillingForCompany }}
+                    onChange={e =>
+                      setIdMissionVerifiedData({ ...idMissionVerifiedData, roleFillingForCompany: e.target?.value })
+                    }
+                    setForm={setIdMissionVerifiedData}
+                  />
+                </div>
                 <div className="flex w-full flex-col">
                   <div className="my-4 flex w-full justify-between gap-2">
                     {idMissionSection?.signDisplayText && (

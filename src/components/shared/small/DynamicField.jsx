@@ -310,18 +310,20 @@ const RadioInputType = ({ field, className, form, setForm, onChange }) => {
       <div className="border-b-2 py-6">
         <div className="grid grid-cols-3 gap-4 p-0">
           {options?.map((option, index) => (
-            <div key={index} className="flex items-center gap-2 p-2">
+            <div key={index} className="flex items-center gap-2 p-2 text-start">
               <input
                 name={name}
                 type={'radio'}
-                id={option.value}
+                id={option.value + index + name}
                 value={option.value}
                 checked={form[name] === option.value}
                 className="text-textPrimary accent-primary size-5"
                 required={required}
                 onChange={onChange ? onChange : () => radioHandler(option)}
               />
-              <label className="text-textPrimary text-base">{option?.label}</label>
+              <label htmlFor={option.value + index + name} className="text-textPrimary text-base">
+                {option?.label}
+              </label>
             </div>
           ))}
         </div>
