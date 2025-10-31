@@ -176,7 +176,7 @@ function CompanyVerification({ formId }) {
             navigate={navigate}
           />
         )}
-        <div className="border-frameColor bg-backgroundColor w-full rounded-md border p-4">
+        <div className="border-frameColor w-full rounded-md border p-4">
           <div className="flex items-center justify-center gap-3">
             {formBackendData?.data?.companyVerificationDisplayFormatedText && (
               <div className="flex w-full items-center justify-between">
@@ -248,7 +248,7 @@ function CompanyVerification({ formId }) {
         </div>
         {(verifyCompanyLoading || lookupCompanyLoading) && <CustomLoading />}
         {lookupDataForTable?.length && !(verifyCompanyLoading || lookupCompanyLoading) ? (
-          <div className="border-frameColor bg-backgroundColor w-full space-y-4 rounded-md border p-4">
+          <div className="border-frameColor w-full space-y-4 rounded-md border p-4">
             <div className="flex items-center gap-3">
               <div>
                 <GoCheckCircle className="font-medium text-blue-400" />

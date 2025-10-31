@@ -72,7 +72,7 @@ function CompanyVerificationTest({ formId }) {
 
   return (
     <div className="flex flex-col space-y-8">
-      <div className="border-frameColor bg-backgroundColor mt-5 w-full rounded-md border p-4">
+      <div className="border-frameColor mt-5 w-full rounded-md border p-4">
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
             <div>
@@ -125,7 +125,7 @@ function CompanyVerificationTest({ formId }) {
       </div>
       {(verifyCompanyLoading || lookupCompanyLoading) && <CustomLoading />}
       {lookupDataForTable?.length && !(verifyCompanyLoading || lookupCompanyLoading) ? (
-        <div className="border-frameColor bg-backgroundColor w-full space-y-4 rounded-md border p-4">
+        <div className="border-frameColor w-full space-y-4 rounded-md border p-4">
           <div className="flex items-center gap-3">
             <div>
               <GoCheckCircle className="font-medium text-blue-400" />
