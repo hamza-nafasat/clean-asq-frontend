@@ -1,5 +1,5 @@
 import { useGetSingleFormQueryQuery } from '@/redux/apis/formApis';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useBranding } from './BrandingContext';
 
@@ -21,9 +21,9 @@ const useApplyBranding = ({ formId }) => {
 
   const { data: form, isLoading } = useGetSingleFormQueryQuery({ _id: formId }, { skip: !formId });
   const { user } = useSelector(state => state.auth);
-  useEffect(() => {
-    if (formId && form?.data?._id && !isLoading) {
-      const formBranding = form?.data?.branding;
+
+  const setBrandingHandler = useCallback(
+    formBranding => {
       if (formBranding?.colors) {
         console.log('form branding is applied');
         setPrimaryColor(formBranding?.colors?.primary);
@@ -33,66 +33,47 @@ const useApplyBranding = ({ formId }) => {
         setLinkColor(formBranding?.colors?.link);
         setBackgroundColor(formBranding?.colors?.background);
         setFrameColor(formBranding?.colors?.frame);
-        setFontFamily(formBranding?.fontFamily);
-        setLogo(formBranding?.selectedLogo);
         setButtonTextPrimary(formBranding?.colors?.buttonTextPrimary);
         setButtonTextSecondary(formBranding?.colors?.buttonTextSecondary);
       }
-    } else if (!formId && user?.branding) {
+      if (formBranding?.logos) setLogo(formBranding?.selectedLogo);
+      if (formBranding?.fontFamily) setFontFamily(formBranding?.fontFamily);
+    },
+    [
+      setAccentColor,
+      setBackgroundColor,
+      setButtonTextPrimary,
+      setButtonTextSecondary,
+      setFontFamily,
+      setFrameColor,
+      setLinkColor,
+      setLogo,
+      setPrimaryColor,
+      setSecondaryColor,
+      setTextColor,
+    ]
+  );
+
+  useEffect(() => {
+    if (isLoading || !formId) return;
+    if (formId && !isLoading) {
+      const formBranding = form?.data?.branding;
+      setBrandingHandler(formBranding);
+    } else if (user?.branding) {
       const formBranding = user?.branding;
       console.log('user branding is applied');
-      if (formBranding?.colors) {
-        setPrimaryColor(formBranding?.colors?.primary);
-        setSecondaryColor(formBranding?.colors?.secondary);
-        setAccentColor(formBranding?.colors?.accent);
-        setTextColor(formBranding?.colors?.text);
-        setLinkColor(formBranding?.colors?.link);
-        setBackgroundColor(formBranding?.colors?.background);
-        setFrameColor(formBranding?.colors?.frame);
-        setFontFamily(formBranding?.fontFamily);
-        setLogo(formBranding?.selectedLogo);
-        setButtonTextPrimary(formBranding?.colors?.buttonTextPrimary);
-        setButtonTextSecondary(formBranding?.colors?.buttonTextSecondary);
-      }
+      setBrandingHandler(formBranding);
     }
+
     setIsApplied(true);
 
     return () => {
       const formBranding = user?.branding;
       console.log('returned branding is applied');
-      if (formBranding?.colors) {
-        setPrimaryColor(formBranding?.colors?.primary);
-        setSecondaryColor(formBranding?.colors?.secondary);
-        setAccentColor(formBranding?.colors?.accent);
-        setTextColor(formBranding?.colors?.text);
-        setLinkColor(formBranding?.colors?.link);
-        setBackgroundColor(formBranding?.colors?.background);
-        setFrameColor(formBranding?.colors?.frame);
-        setFontFamily(formBranding?.fontFamily);
-        setLogo(formBranding?.selectedLogo);
-        setButtonTextPrimary(formBranding?.colors?.buttonTextPrimary);
-        setButtonTextSecondary(formBranding?.colors?.buttonTextSecondary);
-      }
+      setBrandingHandler(formBranding);
       setIsApplied(true);
     };
-  }, [
-    form?.data?._id,
-    form?.data?.branding,
-    formId,
-    isLoading,
-    setAccentColor,
-    setBackgroundColor,
-    setButtonTextPrimary,
-    setButtonTextSecondary,
-    setFontFamily,
-    setFrameColor,
-    setLinkColor,
-    setLogo,
-    setPrimaryColor,
-    setSecondaryColor,
-    setTextColor,
-    user?.branding,
-  ]);
+  }, [form?.data?._id, form?.data?.branding, formId, isLoading, setBrandingHandler, user?.branding]);
 
   return { isApplied: isApplied };
 };

@@ -59,7 +59,7 @@ export default function SingleApplication() {
   const { formData } = useSelector(state => state?.form);
   const [saveFormInDraft] = useSaveFormInDraftMutation();
   const [openRedirectModal, setOpenRedirectModal] = useState(false);
-  const { isApplied } = useApplyBranding({ formId: formId || form?.data?._id });
+  const { isApplied } = useApplyBranding({ formId: formId });
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [showSignatureHelpModal, setShowSignatureHelpModal] = useState(false);
   const [customizeIdMissionTextModal, setCustomizeIdMissionTextModal] = useState(false);

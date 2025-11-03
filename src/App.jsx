@@ -6,13 +6,14 @@ import 'react-toastify/dist/ReactToastify.css';
 import { SubmissionSuccessPage } from './components/LoadingWithTimerAfterSubmission';
 import ProtectedRoute from './components/ProtectedRoute';
 import CustomLoading from './components/shared/small/CustomLoading';
-import useApplyBranding from './hooks/useApplyBranding';
+import { useBranding } from './hooks/BrandingContext';
 import getEnv from './lib/env';
 import { socket } from './main';
 import AdminDashboard from './page/admin/dashboard';
 import AdminAllUsers from './page/admin/dashboard/admin-dashboard/AdminAllUsers';
 import ApplicationForms from './page/admin/dashboard/applicationForms/ApplicationForms';
 import Applications from './page/admin/dashboard/applications/Applications';
+import DraftSubmission from './page/admin/dashboard/draftSubmission/DraftSubmission';
 import FormStrategies from './page/admin/dashboard/formStrategies/FormStrategies';
 import AllRoles from './page/admin/dashboard/role/AllRoles';
 import Strategies from './page/admin/dashboard/strategies/Strategies';
@@ -26,7 +27,6 @@ import CompanyInformation from './page/admin/userApplicationForms/CompanyInforma
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
 import { detectVPN } from './utils/vpnDetection';
-import DraftSubmission from './page/admin/dashboard/draftSubmission/DraftSubmission';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -38,7 +38,19 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const { user } = useSelector(state => state.auth);
-  const { _ } = useApplyBranding({ formId: '' });
+  const {
+    setPrimaryColor,
+    setSecondaryColor,
+    setAccentColor,
+    setTextColor,
+    setLinkColor,
+    setBackgroundColor,
+    setFrameColor,
+    setFontFamily,
+    setLogo,
+    setButtonTextPrimary,
+    setButtonTextSecondary,
+  } = useBranding();
 
   useEffect(() => {
     const userId = user?._id;
@@ -57,12 +69,42 @@ function App() {
       .then(res => {
         if (res?.data?.success) {
           dispatch(userExist(res.data.data));
+
+          const formBranding = res?.data?.data?.branding;
+          console.log('returned branding is applied');
+          if (formBranding?.colors) {
+            setPrimaryColor(formBranding?.colors?.primary);
+            setSecondaryColor(formBranding?.colors?.secondary);
+            setAccentColor(formBranding?.colors?.accent);
+            setTextColor(formBranding?.colors?.text);
+            setLinkColor(formBranding?.colors?.link);
+            setBackgroundColor(formBranding?.colors?.background);
+            setFrameColor(formBranding?.colors?.frame);
+            setFontFamily(formBranding?.fontFamily);
+            setLogo(formBranding?.selectedLogo);
+            setButtonTextPrimary(formBranding?.colors?.buttonTextPrimary);
+            setButtonTextSecondary(formBranding?.colors?.buttonTextSecondary);
+          }
           console.log(res?.data?.data?.branding);
         } else dispatch(userNotExist());
       })
       .catch(() => dispatch(userNotExist()))
       .finally(() => setLoading(false));
-  }, [dispatch, getUserProfile]);
+  }, [
+    dispatch,
+    getUserProfile,
+    setAccentColor,
+    setBackgroundColor,
+    setButtonTextPrimary,
+    setButtonTextSecondary,
+    setFontFamily,
+    setFrameColor,
+    setLinkColor,
+    setLogo,
+    setPrimaryColor,
+    setSecondaryColor,
+    setTextColor,
+  ]);
 
   useEffect(() => {
     async function checkClientVpn() {
