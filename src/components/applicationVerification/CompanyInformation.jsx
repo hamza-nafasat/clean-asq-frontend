@@ -2,6 +2,7 @@ import { FIELD_TYPES } from '@/data/constants';
 import { useFindNaicAndMccMutation, useGetAllSearchStrategiesQuery } from '@/redux/apis/formApis';
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { CgSpinner } from 'react-icons/cg';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { naicsToMcc } from '../../assets/NAICStoMCC.js';
@@ -76,6 +77,7 @@ function CompanyInformation({
           return toast.error('File Not Uploaded Please Try Again');
         }
         setForm(prev => ({ ...prev, signature: res }));
+        toast.success('Signature uploaded successfully');
       }
     } catch (error) {
       console.log('error while uploading signature', error);
@@ -302,7 +304,7 @@ function CompanyInformation({
       </div>
 
       {step?.ai_formatting && (
-        <div className="flex items-end gap-3">
+        <div className="mb-4 flex items-end gap-3">
           <div
             dangerouslySetInnerHTML={{
               __html: step?.ai_formatting,
@@ -392,10 +394,12 @@ function CompanyInformation({
                 onFocus={() => (naicsToMccDetails.NAICS ? setShowSuggestions(true) : setShowSuggestions(false))}
               />
               <Button
-                label="Find NAICS"
+                label={`Find NAICS`}
                 className={`text-nowrap ${naicsLoading && 'pointer-events-none opacity-30'}`}
                 disabled={naicsLoading}
                 onClick={findNaicsHandler}
+                icon={naicsLoading && CgSpinner}
+                cnLeft={'animate-spin h-5 w-5'}
               />
             </div>
             {showSuggestions && (

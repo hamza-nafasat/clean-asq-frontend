@@ -436,7 +436,7 @@ const RangeInputType = ({ field, className, form, setForm }) => {
         </div>
       )}
       <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
-        <div className="mb-2 w-full text-center text-sm font-semibold text-gray-700">{Number(form[name]) || 0}</div>
+        <div className="mb-2 w-full text-center text-sm font-semibold text-gray-700">{Number(form[name]) || 0} %</div>
         <input
           value={Number(form[name]) || 0}
           type="range"

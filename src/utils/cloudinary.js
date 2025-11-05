@@ -48,7 +48,7 @@ const deleteImageFromCloudinary = async (publicId, resourceType = 'image') => {
     });
     const response = await result.json();
     if (response.success) {
-      toast.success('Image deleted successfully');
+      // toast.success('Image deleted successfully');
     }
     return true;
   } catch (error) {

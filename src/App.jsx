@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
@@ -52,44 +52,37 @@ function App() {
     setButtonTextSecondary,
   } = useBranding();
 
-  useEffect(() => {
-    const userId = user?._id;
-    if (!userId) return;
-    const register = () => {
-      socket.emit('register_user', userId);
-      console.log(`📌 User registered: ${userId} -> ${socket.id}`);
-    };
-    if (socket.connected) register();
-    else socket.on('connect', register);
-    return () => socket.off('connect', register);
-  }, [user?._id]);
-
-  useEffect(() => {
-    getUserProfile()
-      .then(res => {
-        if (res?.data?.success) {
-          dispatch(userExist(res.data.data));
-
-          const formBranding = res?.data?.data?.branding;
-          console.log('returned branding is applied');
-          if (formBranding?.colors) {
-            setPrimaryColor(formBranding?.colors?.primary);
-            setSecondaryColor(formBranding?.colors?.secondary);
-            setAccentColor(formBranding?.colors?.accent);
-            setTextColor(formBranding?.colors?.text);
-            setLinkColor(formBranding?.colors?.link);
-            setBackgroundColor(formBranding?.colors?.background);
-            setFrameColor(formBranding?.colors?.frame);
-            setFontFamily(formBranding?.fontFamily);
-            setLogo(formBranding?.selectedLogo);
-            setButtonTextPrimary(formBranding?.colors?.buttonTextPrimary);
-            setButtonTextSecondary(formBranding?.colors?.buttonTextSecondary);
-          }
-          console.log(res?.data?.data?.branding);
-        } else dispatch(userNotExist());
-      })
-      .catch(() => dispatch(userNotExist()))
-      .finally(() => setLoading(false));
+  const getUserAndSetBranding = useCallback(async () => {
+    try {
+      const res = await getUserProfile().unwrap();
+      console.log('res', res);
+      if (res?.success) {
+        dispatch(userExist(res?.data));
+        const formBranding = res?.data?.branding;
+        console.log('form branding is ', formBranding);
+        console.log('returned branding is applied');
+        if (formBranding?.colors) {
+          setPrimaryColor(formBranding.colors.primary);
+          setSecondaryColor(formBranding.colors.secondary);
+          setAccentColor(formBranding.colors.accent);
+          setTextColor(formBranding.colors.text);
+          setLinkColor(formBranding.colors.link);
+          setBackgroundColor(formBranding.colors.background);
+          setFrameColor(formBranding.colors.frame);
+          setFontFamily(formBranding.fontFamily);
+          setLogo(formBranding.selectedLogo);
+          setButtonTextPrimary(formBranding.colors.buttonTextPrimary);
+          setButtonTextSecondary(formBranding.colors.buttonTextSecondary);
+        }
+      } else {
+        dispatch(userNotExist());
+      }
+    } catch (err) {
+      console.log('error in app.jsx', err);
+      dispatch(userNotExist());
+    } finally {
+      setLoading(false);
+    }
   }, [
     dispatch,
     getUserProfile,
@@ -107,6 +100,22 @@ function App() {
   ]);
 
   useEffect(() => {
+    getUserAndSetBranding();
+  }, [getUserAndSetBranding]);
+
+  useEffect(() => {
+    const userId = user?._id;
+    if (!userId) return;
+    const register = () => {
+      socket.emit('register_user', userId);
+      console.log(`📌 User registered: ${userId} -> ${socket.id}`);
+    };
+    if (socket.connected) register();
+    else socket.on('connect', register);
+    return () => socket.off('connect', register);
+  }, [user?._id]);
+
+  useEffect(() => {
     async function checkClientVpn() {
       const vpnData = await detectVPN();
       const resp = await fetch(`${getEnv('SERVER_URL')}/api/form/vpn-check`, {
@@ -119,63 +128,60 @@ function App() {
     }
     checkClientVpn();
   }, []);
+  if (!user || loading) return <CustomLoading />;
   return (
     <>
-      {loading ? (
-        <CustomLoading />
-      ) : (
-        <Suspense fallback={<CustomLoading />}>
-          <Routes>
-            {/* root redirects */}
-            <Route
-              path="/"
-              element={user ? <Navigate to="/application-forms" replace /> : <Navigate to="/login" replace />}
-            />
-            {/* public routes */}
+      <Suspense fallback={<CustomLoading />}>
+        <Routes>
+          {/* root redirects */}
+          <Route
+            path="/"
+            element={user ? <Navigate to="/application-forms" replace /> : <Navigate to="/login" replace />}
+          />
+          {/* public routes */}
+          <Route path="/" element={<AdminDashboard />}>
+            <Route path="application-form/:formId" element={<SingleApplication />} />
+            <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
+            <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
+            <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
+            <Route path="verification" element={<Verification />} />
+            <Route path="submission" element={<DraftSubmission />} />
+          </Route>
+          {/* non authentic routes */}
+          <Route element={<ProtectedRoute user={!user} redirect="/application-forms" />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/otp" element={<Otp />} />
+          </Route>
+
+          {/* authentic routes */}
+          <Route element={<ProtectedRoute user={user} redirect="/login" />}>
+            {/* Admin */}
             <Route path="/" element={<AdminDashboard />}>
-              <Route path="application-form/:formId" element={<SingleApplication />} />
-              <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
-              <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
-              <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
-              <Route path="verification" element={<Verification />} />
-              <Route path="submission" element={<DraftSubmission />} />
-            </Route>
-            {/* non authentic routes */}
-            <Route element={<ProtectedRoute user={!user} redirect="/application-forms" />}>
-              <Route path="/login" element={<Login />} />
-              <Route path="/otp" element={<Otp />} />
-            </Route>
-
-            {/* authentic routes */}
-            <Route element={<ProtectedRoute user={user} redirect="/login" />}>
-              {/* Admin */}
-              <Route path="/" element={<AdminDashboard />}>
-                <Route index element={<Navigate to="application-forms" replace />} />
-                <Route path="all-roles" element={<AllRoles />} />
-                <Route path="all-users" element={<AdminAllUsers />} />
-                <Route path="application-forms" element={<ApplicationForms />} />
-                <Route path="applications" element={<Applications />} />
-                <Route path="branding" element={<Brandings />} />
-                <Route path="branding/create" element={<CreateBranding />} />
-                <Route path="branding/single/:brandingId" element={<CreateBranding />} />
-                <Route path="strategies-key" element={<FormStrategies />} />
-                {/* <Route path="extraction-context" element={<ExtractionContext />} /> */}
-                <Route path="verification-test" element={<VerificationTest />} />
-                <Route path="strategies" element={<Strategies />} />
-              </Route>
-
-              {/*all User Forms or application layout  , with out sidebar */}
-              <Route path="/user-application-forms" element={<UserApplicationForms />}>
-                <Route index element={<Navigate to="application-verification" replace />} />
-                <Route path="company-information" element={<CompanyInformation />} />
-              </Route>
+              <Route index element={<Navigate to="application-forms" replace />} />
+              <Route path="all-roles" element={<AllRoles />} />
+              <Route path="all-users" element={<AdminAllUsers />} />
+              <Route path="application-forms" element={<ApplicationForms />} />
+              <Route path="applications" element={<Applications />} />
+              <Route path="branding" element={<Brandings />} />
+              <Route path="branding/create" element={<CreateBranding />} />
+              <Route path="branding/single/:brandingId" element={<CreateBranding />} />
+              <Route path="strategies-key" element={<FormStrategies />} />
+              {/* <Route path="extraction-context" element={<ExtractionContext />} /> */}
+              <Route path="verification-test" element={<VerificationTest />} />
+              <Route path="strategies" element={<Strategies />} />
             </Route>
 
-            {/* Fallback */}
-            {/* <Route path="*" element={<RoleRedirect user={user} />} /> */}
-          </Routes>
-        </Suspense>
-      )}
+            {/*all User Forms or application layout  , with out sidebar */}
+            <Route path="/user-application-forms" element={<UserApplicationForms />}>
+              <Route index element={<Navigate to="application-verification" replace />} />
+              <Route path="company-information" element={<CompanyInformation />} />
+            </Route>
+          </Route>
+
+          {/* Fallback */}
+          {/* <Route path="*" element={<RoleRedirect user={user} />} /> */}
+        </Routes>
+      </Suspense>
       <ToastContainer autoClose={3000} />
     </>
   );

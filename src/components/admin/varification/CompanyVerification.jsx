@@ -1,5 +1,7 @@
 import Button from '@/components/shared/small/Button';
+import Checkbox from '@/components/shared/small/Checkbox';
 import CustomLoading from '@/components/shared/small/CustomLoading';
+import Modal from '@/components/shared/small/Modal';
 import TextField from '@/components/shared/small/TextField';
 import { getVerificationTableStyles } from '@/data/data';
 import { useBranding } from '@/hooks/BrandingContext';
@@ -13,17 +15,14 @@ import {
 } from '@/redux/apis/formApis';
 import { addLookupData } from '@/redux/slices/companySlice';
 import { updateFormState } from '@/redux/slices/formSlice';
+import DOMPurify from 'dompurify';
 import { useCallback, useEffect, useState } from 'react';
 import DataTable from 'react-data-table-component';
 import { GoCheckCircle } from 'react-icons/go';
-import { IoShieldOutline } from 'react-icons/io5';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import LocationStatusModal from './LocationStatusModal';
-import DOMPurify from 'dompurify';
-import Modal from '@/components/shared/small/Modal';
-import Checkbox from '@/components/shared/small/Checkbox';
 
 const columns = [
   { name: 'Field', selector: row => row.name, sortable: true, width: '150px' },
@@ -165,7 +164,6 @@ function CompanyVerification({ formId }) {
           />
         </Modal>
       )}
-
       <div className="flex flex-col space-y-8">
         {locationStatusModal && (
           <LocationStatusModal
@@ -179,7 +177,7 @@ function CompanyVerification({ formId }) {
         <div className="border-frameColor w-full rounded-md border p-4">
           <div className="flex items-center justify-center gap-3">
             {formBackendData?.data?.companyVerificationDisplayFormatedText && (
-              <div className="flex w-full items-center justify-between">
+              <div className="mb-4 flex w-full items-center justify-between">
                 <div
                   dangerouslySetInnerHTML={{
                     __html: formBackendData?.data?.companyVerificationDisplayFormatedText,

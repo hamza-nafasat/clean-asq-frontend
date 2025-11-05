@@ -99,6 +99,7 @@ export default function SingleApplication() {
       const { secureUrl, publicId, resourceType } = await uploadImageOnCloudinary(file);
       if (!secureUrl || !publicId) return toast.error('Something went wrong while uploading image');
       setIdMissionVerifiedData(prev => ({ ...prev, signature: { secureUrl, publicId, resourceType } }));
+      toast.success('Signature uploaded successfully');
     } catch (error) {
       console.log('error while uploading image', error);
       toast.error('Something went wrong while uploading image');

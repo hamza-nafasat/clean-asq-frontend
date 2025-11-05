@@ -75,6 +75,7 @@ function Documents({
           return toast.error('File Not Uploaded Please Try Again');
         }
         setForm(prev => ({ ...prev, signature: res }));
+        toast.success('Signature uploaded successfully');
       }
     } catch (error) {
       console.log('error while uploading signature', error);
@@ -214,7 +215,7 @@ function Documents({
           )}
         </div>
         {step?.ai_formatting && (
-          <div className="w-full">
+          <div className="mb-4 w-full">
             <div dangerouslySetInnerHTML={{ __html: step.ai_formatting }} />
           </div>
         )}

@@ -52,6 +52,7 @@ function AggrementBlock({
         unwrapResult(action);
         setForm(prev => ({ ...prev, signature: res }));
         await saveInProgress({ data: { signature: res }, name: title });
+        toast.success('Signature uploaded successfully');
       }
     } catch (error) {
       console.log('error while uploading signature', error);
@@ -134,7 +135,7 @@ function AggrementBlock({
       )}
 
       {step?.ai_formatting && (
-        <div className="flex w-full items-end justify-between gap-3">
+        <div className="mb-4 flex w-full items-end justify-between gap-3">
           <div
             className="mt-2 w-full"
             dangerouslySetInnerHTML={{

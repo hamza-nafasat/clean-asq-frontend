@@ -56,6 +56,7 @@ function CustomSection({
           return toast.error('File Not Uploaded Please Try Again');
         }
         setForm(prev => ({ ...prev, signature: res }));
+        toast.success('Signature uploaded successfully');
       }
     } catch (error) {
       console.log('error while uploading signature', error);
@@ -142,7 +143,7 @@ function CustomSection({
       {step?.ai_formatting && (
         <div className="flex w-full items-end justify-between gap-3">
           <div
-            className="mt-2 w-full"
+            className="mt-2 mb-4 w-full"
             dangerouslySetInnerHTML={{
               __html: step?.ai_formatting,
             }}
