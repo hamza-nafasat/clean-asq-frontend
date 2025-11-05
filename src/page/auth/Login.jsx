@@ -1,7 +1,8 @@
 import Button from '@/components/shared/small/Button';
-import { useLoginMutation } from '@/redux/apis/authApis';
-import { userExist } from '@/redux/slices/authSlice';
-import { useState, useEffect } from 'react';
+import { useBranding } from '@/hooks/BrandingContext';
+import { useGetMyProfileFirstTimeMutation, useLoginMutation } from '@/redux/apis/authApis';
+import { userExist, userNotExist } from '@/redux/slices/authSlice';
+import { useCallback, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import TextField from '../../components/shared/small/TextField';
@@ -10,52 +11,74 @@ const Login = () => {
   const dispatch = useDispatch();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [cookiesWorking, setCookiesWorking] = useState(true);
-  const [showCookiePopup, setShowCookiePopup] = useState(false);
   const [login, { isLoading }] = useLoginMutation();
+  const [getUserProfile] = useGetMyProfileFirstTimeMutation();
+  const {
+    setPrimaryColor,
+    setSecondaryColor,
+    setAccentColor,
+    setTextColor,
+    setLinkColor,
+    setBackgroundColor,
+    setFrameColor,
+    setFontFamily,
+    setLogo,
+    setButtonTextPrimary,
+    setButtonTextSecondary,
+  } = useBranding();
 
-  const testCookies = () => {
+  const getUserAndSetBranding = useCallback(async () => {
     try {
-      document.cookie = 'cookie_test=1; SameSite=Lax';
-      const canRead = document.cookie.includes('cookie_test=');
-      // delete test cookie
-      document.cookie = 'cookie_test=; Max-Age=0';
-      return canRead;
-    } catch {
-      return false;
+      const res = await getUserProfile().unwrap();
+      console.log('res', res);
+      if (res?.success) {
+        dispatch(userExist(res?.data));
+        const formBranding = res?.data?.branding;
+        console.log('form branding is ', formBranding);
+        console.log('returned branding is applied');
+        if (formBranding?.colors) {
+          setPrimaryColor(formBranding.colors.primary);
+          setSecondaryColor(formBranding.colors.secondary);
+          setAccentColor(formBranding.colors.accent);
+          setTextColor(formBranding.colors.text);
+          setLinkColor(formBranding.colors.link);
+          setBackgroundColor(formBranding.colors.background);
+          setFrameColor(formBranding.colors.frame);
+          setFontFamily(formBranding.fontFamily);
+          setLogo(formBranding.selectedLogo);
+          setButtonTextPrimary(formBranding.colors.buttonTextPrimary);
+          setButtonTextSecondary(formBranding.colors.buttonTextSecondary);
+        }
+      } else {
+        dispatch(userNotExist());
+      }
+    } catch (err) {
+      console.log('error in app.jsx', err);
+      dispatch(userNotExist());
     }
-  };
-
-  useEffect(() => {
-    const enabled = testCookies();
-    if (!enabled) {
-      setCookiesWorking(false);
-      setShowCookiePopup(true);
-    }
-  }, []);
-
-  const recheckCookies = () => {
-    const enabled = testCookies();
-    if (enabled) {
-      setCookiesWorking(true);
-      setShowCookiePopup(false);
-      toast.success('Cookies are now enabled.');
-    } else {
-      toast.error('Cookies are still blocked or disabled. Please enable them manually in your browser.');
-    }
-  };
+  }, [
+    dispatch,
+    getUserProfile,
+    setAccentColor,
+    setBackgroundColor,
+    setButtonTextPrimary,
+    setButtonTextSecondary,
+    setFontFamily,
+    setFrameColor,
+    setLinkColor,
+    setLogo,
+    setPrimaryColor,
+    setSecondaryColor,
+    setTextColor,
+  ]);
 
   const loginHandler = async e => {
     e.preventDefault();
-    if (!cookiesWorking) {
-      toast.error('Please enable cookies before logging in.');
-      return;
-    }
 
     try {
       const res = await login({ email, password }).unwrap();
       if (res.success) {
-        dispatch(userExist(res.data));
+        await getUserAndSetBranding();
       }
     } catch (error) {
       console.log('error while logging in', error);
@@ -96,23 +119,6 @@ const Login = () => {
           />
         </form>
       </div>
-
-      {/* Cookie Popup */}
-      {showCookiePopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="w-[90%] max-w-sm rounded-xl bg-white p-6 text-center shadow-2xl">
-            <h3 className="mb-3 text-lg font-semibold">Cookies are blocked or disabled</h3>
-            <p className="mb-4 text-gray-600">
-              Your browser is blocking cookies. Please enable them in settings to continue.
-            </p>
-            <Button
-              label="Check Again"
-              onClick={recheckCookies}
-              className="w-full bg-blue-600 text-white hover:bg-blue-700"
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };

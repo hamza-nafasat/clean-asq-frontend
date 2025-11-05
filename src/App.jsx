@@ -36,7 +36,7 @@ const Otp = lazy(() => import('./page/auth/Otp'));
 function App() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
-  const [getUserProfile] = useGetMyProfileFirstTimeMutation();
+  const [getUserProfile, { isLoading }] = useGetMyProfileFirstTimeMutation();
   const { user } = useSelector(state => state.auth);
   const {
     setPrimaryColor,
@@ -128,7 +128,7 @@ function App() {
     }
     checkClientVpn();
   }, []);
-  if (!user || loading) return <CustomLoading />;
+  if (loading || isLoading) return <CustomLoading />;
   return (
     <>
       <Suspense fallback={<CustomLoading />}>
