@@ -23,6 +23,7 @@
     "idmission-web-sdk": "^2.2.164",
     "jsonl-parse-stringify": "^1.0.3",
     "lucide-react": "^0.511.0",
+    "pdfmake": "^0.2.20",
     "prop-types": "^15.8.1",
     "qrcode.react": "^4.2.0",
     "react": "^19.1.0",

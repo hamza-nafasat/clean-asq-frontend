@@ -97,6 +97,16 @@ const formApis = createApi({
       invalidatesTags: [{ type: 'Form', id: 'LIST' }],
     }),
 
+    // generate pdf form
+    // ---------------
+    generatePdfForm: builder.mutation({
+      query: data => ({
+        url: `/generate-pdf/${data?._id}`,
+        method: 'GET',
+        responseHandler: response => response.blob(), // important
+      }),
+    }),
+
     // get saved form
     // ---------------
     getSavedForm: builder.mutation({
@@ -351,6 +361,7 @@ export const {
   useDeleteSingleFormMutation,
   useSubmitFormMutation,
   useSaveFormInDraftMutation,
+  useGeneratePdfFormMutation,
   useGetSavedFormMutation,
   useRemoveSavedFormMutation,
   useGetMyAllDraftsAndSubmittionsQuery,

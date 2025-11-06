@@ -5,7 +5,8 @@ import Button from '../shared/small/Button';
 import { useDispatch, useSelector } from 'react-redux';
 import { addSavedFormData, updateEmailVerified } from '@/redux/slices/formSlice';
 import { unwrapResult } from '@reduxjs/toolkit';
-import { useGetSavedFormMutation } from '@/redux/apis/formApis';
+import { useGeneratePdfFormMutation, useGetSavedFormMutation } from '@/redux/apis/formApis';
+import { CgSpinner } from 'react-icons/cg';
 
 function Submission({ forms }) {
   const dispatch = useDispatch();
@@ -13,6 +14,22 @@ function Submission({ forms }) {
   const navigate = useNavigate();
   const { logo } = useBranding();
   const [getSavedFormData] = useGetSavedFormMutation();
+  const [generatePdfForm, { isLoading }] = useGeneratePdfFormMutation();
+
+  const handleDownload = async formId => {
+    try {
+      const blob = await generatePdfForm({ _id: formId }).unwrap();
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `form-${formId}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.log('PDF download failed', err);
+    }
+  };
 
   const getSavedData = async formId => {
     try {
@@ -92,6 +109,25 @@ function Submission({ forms }) {
                 <Button
                   label="Start Application"
                   onClick={() => getSavedData(form?._id)}
+                  style={{
+                    backgroundColor: colors?.primary,
+                    borderColor: colors?.primary,
+                    color: colors?.buttonTextPrimary,
+                    transition: 'all 0.3s ease',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.opacity = '0.6';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.opacity = '1';
+                  }}
+                />
+                <Button
+                  label="Download PDF"
+                  icon={isLoading && CgSpinner}
+                  cnLeft={`animate-spin h-5 w-5`}
+                  disabled={isLoading}
+                  onClick={() => handleDownload(form?._id)}
                   style={{
                     backgroundColor: colors?.primary,
                     borderColor: colors?.primary,
