@@ -27,6 +27,7 @@ import CompanyInformation from './page/admin/userApplicationForms/CompanyInforma
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
 import { detectVPN } from './utils/vpnDetection';
+import ApplicationPdfView from './page/admin/userApplicationForms/ApplicationVerification/ApplicationPdfView';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -144,6 +145,7 @@ function App() {
             <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
             <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
             <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
+            <Route path="singleform/pdf-view/:pdfId" element={<ApplicationPdfView />} />
             <Route path="verification" element={<Verification />} />
             <Route path="submission" element={<DraftSubmission />} />
           </Route>

@@ -9,6 +9,7 @@ import { MdOutlineBrandingWatermark } from 'react-icons/md';
 import { BrushIcon, CheckCircle, Layers2 } from 'lucide-react';
 import { detectLogo } from '@/utils/detectLogo';
 import { PiStrategyBold } from 'react-icons/pi';
+import { RiHistoryLine } from 'react-icons/ri';
 
 const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
   const [isNavOpen, setIsNavOpen] = useState(true);
@@ -33,6 +34,7 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
     { title: 'Lookup management', link: '/strategies-key', icon: <HiOutlineLightBulb /> },
     { title: 'Verification', link: '/verification-test', icon: <CheckCircle /> },
     { title: 'Strategies', link: '/strategies', icon: <PiStrategyBold /> },
+    { title: 'Pdf View', link: 'singleform/pdf-view/:pdfId', icon: <RiHistoryLine size={20} /> },
   ];
 
   return (

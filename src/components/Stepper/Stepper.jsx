@@ -37,7 +37,7 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
   return (
     <div className="w-full p-4">
       {/* Stepper Header */}
-      <div className="mb-8 flex items-center justify-between   overflow-y-hidden overflow-x-auto">
+      <div className="mb-8 flex items-center justify-between overflow-x-auto overflow-y-hidden">
         {displayedSteps.map((step, index) => {
           const actualIndex = visibleStepRange.start + index;
           const isLastDisplayedStep = index === displayedSteps.length - 1;
@@ -45,18 +45,17 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
             <React.Fragment key={actualIndex}>
               {/* Step Circle and Label */}
               <div
-                className={`relative flex flex-col items-center ${actualIndex === currentStep ? 'top-[-14px]' : ''
-                  }`}
+                className={`relative flex flex-col items-center ${actualIndex === currentStep ? 'top-[-14px]' : ''}`}
               >
                 {/* Step Circle */}
                 <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-200
-    ${actualIndex < currentStep
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-200 ${
+                    actualIndex < currentStep
                       ? `border-primary ${emptyRequiredFields.includes(actualIndex) ? 'bg-[#974748]' : 'bg-primary'}`
                       : actualIndex === currentStep
                         ? 'border-primary bg-primary'
                         : `border-gray-300 ${emptyRequiredFields.includes(actualIndex) ? 'bg-[#974748]/30' : 'bg-white'}`
-                    }`}
+                  }`}
                 >
                   {actualIndex < currentStep ? (
                     <svg
@@ -77,9 +76,7 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
                 {/* Step Label */}
                 <div className="mt-2">
                   <div
-                    className={`text-center text-xs font-medium whitespace-nowrap transition-colors duration-200
-      ${actualIndex === currentStep ? 'text-primary' : 'text-gray-400'}
-    `}
+                    className={`text-center text-xs font-medium whitespace-nowrap transition-colors duration-200 ${actualIndex === currentStep ? 'text-primary' : 'text-gray-400'} `}
                   >
                     {step}
                   </div>
@@ -90,8 +87,7 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
               {/* Connector Line */}
               {!isLastDisplayedStep && (
                 <div
-                  className={`h-[2px] flex-auto ${actualIndex < currentStep ? 'bg-primary' : 'bg-gray-300'
-                    }`}
+                  className={`h-[2px] flex-auto ${actualIndex < currentStep ? 'bg-primary' : 'bg-gray-300'}`}
                   style={{ marginBottom: '48px' }}
                 />
               )}
