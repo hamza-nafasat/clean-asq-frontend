@@ -34,7 +34,7 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
     { title: 'Lookup management', link: '/strategies-key', icon: <HiOutlineLightBulb /> },
     { title: 'Verification', link: '/verification-test', icon: <CheckCircle /> },
     { title: 'Strategies', link: '/strategies', icon: <PiStrategyBold /> },
-    { title: 'Pdf View', link: 'singleform/pdf-view/:pdfId', icon: <RiHistoryLine size={20} /> },
+    { title: 'Pdf View', link: 'singleform/pdf-view/6904a7e037da446e85b46a4d', icon: <RiHistoryLine size={20} /> },
   ];
 
   return (
