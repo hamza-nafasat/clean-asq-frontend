@@ -31,6 +31,7 @@ import ProcessingInfoPdf from '@/components/applicationVerification/ApplicationP
 import DocumentsPdf from '@/components/applicationVerification/ApplicationPdfForm/DocumentsPdf';
 import CustomSectionPdf from '@/components/applicationVerification/ApplicationPdfForm/CustomSectionPdf';
 import AggrementBlockPdf from '@/components/applicationVerification/ApplicationPdfForm/AgreementBlockPdf';
+import IdMissionDataPdf from './IdMissionDataPdf';
 
 const ApplicationPdfView = () => {
   const { user } = useSelector(state => state.auth);
@@ -129,6 +130,7 @@ const ApplicationPdfView = () => {
 
   return (
     <div className="h-full w-full space-y-12 overflow-y-auto rounded-[10px] bg-white px-6 py-8">
+      <IdMissionDataPdf />
       {form?.data?.sections?.map((section, index) => {
         const sectionDataFromRedux = formData?.[section?.title];
         const commonProps = {
