@@ -10,8 +10,10 @@ import { BrushIcon, CheckCircle, Layers2 } from 'lucide-react';
 import { detectLogo } from '@/utils/detectLogo';
 import { PiStrategyBold } from 'react-icons/pi';
 import { RiHistoryLine } from 'react-icons/ri';
+import { useSelector } from 'react-redux';
 
 const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
+  const { user } = useSelector(state => state.auth);
   const [isNavOpen, setIsNavOpen] = useState(true);
   const location = useLocation();
   const { logo } = useBranding();
@@ -34,7 +36,11 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
     { title: 'Lookup management', link: '/strategies-key', icon: <HiOutlineLightBulb /> },
     { title: 'Verification', link: '/verification-test', icon: <CheckCircle /> },
     { title: 'Strategies', link: '/strategies', icon: <PiStrategyBold /> },
-    { title: 'Pdf View', link: 'singleform/pdf-view/6904a7e037da446e85b46a4d', icon: <RiHistoryLine size={20} /> },
+    {
+      title: 'Pdf View',
+      link: `singleform/pdf-view/6904a7e037da446e85b46a4d/${user?._id}`,
+      icon: <RiHistoryLine size={20} />,
+    },
   ];
 
   return (

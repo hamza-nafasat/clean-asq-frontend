@@ -100,8 +100,8 @@ const formApis = createApi({
     // generate pdf form
     // ---------------
     generatePdfForm: builder.mutation({
-      query: data => ({
-        url: `/generate-pdf/${data?._id}`,
+      query: ({ _id, userId }) => ({
+        url: `/generate-pdf/${_id}/${userId}`,
         method: 'GET',
         responseHandler: response => response.blob(), // important
       }),
@@ -112,6 +112,15 @@ const formApis = createApi({
     getSavedForm: builder.mutation({
       query: ({ formId }) => ({
         url: `/get-saved/${formId}`,
+        method: 'GET',
+      }),
+    }),
+
+    // get saved form by userId
+    // ---------------
+    getSavedFormByUserId: builder.mutation({
+      query: ({ formId, userId }) => ({
+        url: `/get-submitted-form/${formId}/${userId}`,
         method: 'GET',
       }),
     }),
@@ -363,6 +372,7 @@ export const {
   useSaveFormInDraftMutation,
   useGeneratePdfFormMutation,
   useGetSavedFormMutation,
+  useGetSavedFormByUserIdMutation,
   useRemoveSavedFormMutation,
   useGetMyAllDraftsAndSubmittionsQuery,
   useUpdateFormSectionMutation,

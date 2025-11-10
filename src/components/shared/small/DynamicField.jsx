@@ -636,9 +636,11 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
 
   // derived display value (masked only for UI)
   const getDisplayValue = (type, value) => {
+    console.log('type ', type);
     if (!value) return '';
     if (showMasked && isMasked) return '*'.repeat(value.toString().length);
     if (type === 'date') return formatDate(value);
+    console.log('value ', value);
     return value;
   };
 
@@ -701,7 +703,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                     ref={inputRef}
                     name={name}
                     placeholder={placeholder}
-                    type={type}
+                    type={isMasked && type !== 'date' ? 'text' : type}
                     value={getDisplayValue(type, form[name])}
                     onChange={e =>
                       setForm(prev => ({

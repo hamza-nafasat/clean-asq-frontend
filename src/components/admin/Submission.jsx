@@ -13,12 +13,13 @@ function Submission({ forms }) {
   const { emailVerified } = useSelector(state => state.form);
   const navigate = useNavigate();
   const { logo } = useBranding();
+  const { user } = useSelector(state => state.auth);
   const [getSavedFormData] = useGetSavedFormMutation();
   const [generatePdfForm, { isLoading }] = useGeneratePdfFormMutation();
 
-  const handleDownload = async formId => {
+  const handleDownload = async (formId, userId) => {
     try {
-      const blob = await generatePdfForm({ _id: formId }).unwrap();
+      const blob = await generatePdfForm({ _id: formId, userId }).unwrap();
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -127,7 +128,7 @@ function Submission({ forms }) {
                   icon={isLoading && CgSpinner}
                   cnLeft={`animate-spin h-5 w-5`}
                   disabled={isLoading}
-                  onClick={() => handleDownload(form?._id)}
+                  onClick={() => handleDownload(form?._id, user?._id)}
                   style={{
                     backgroundColor: colors?.primary,
                     borderColor: colors?.primary,

@@ -139,13 +139,13 @@ function App() {
             path="/"
             element={user ? <Navigate to="/application-forms" replace /> : <Navigate to="/login" replace />}
           />
+          <Route path="singleform/pdf-view/:pdfId/:userId" element={<ApplicationPdfView />} />
           {/* public routes */}
           <Route path="/" element={<AdminDashboard />}>
             <Route path="application-form/:formId" element={<SingleApplication />} />
             <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
             <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
             <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
-            <Route path="singleform/pdf-view/:pdfId" element={<ApplicationPdfView />} />
             <Route path="verification" element={<Verification />} />
             <Route path="submission" element={<DraftSubmission />} />
           </Route>

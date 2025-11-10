@@ -68,6 +68,7 @@ export default function SingleApplication() {
   const [loadingForValidatingOtp, setLoadingForValidatingOtp] = useState(false);
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
     name: '',
+    email: '',
     idNumber: '',
     streetAddress: '',
     phoneNumber: '',
@@ -152,6 +153,7 @@ export default function SingleApplication() {
         }
         setIdMissionVerifiedData({
           name: formDataOfIdMission?.name || '',
+          email: formDataOfIdMission?.email || user?.email,
           idNumber: formDataOfIdMission?.idNumber || '',
           idIssuer: formDataOfIdMission?.idIssuer || '',
           idType: formDataOfIdMission?.idType || '',
@@ -180,7 +182,7 @@ export default function SingleApplication() {
       console.log('error while getting saved form data', error);
       // toast.error(error?.data?.message || 'Error while getting saved form data');
     }
-  }, [dispatch, formId, getSavedFormData, navigate]);
+  }, [dispatch, formId, getSavedFormData, navigate, user?.email]);
 
   const onPlaceChanged = () => {
     const place = autocomplete.getPlace();
@@ -305,6 +307,7 @@ export default function SingleApplication() {
       const formDataOfIdMission = formData?.idMission;
       setIdMissionVerifiedData({
         name: formDataOfIdMission?.name || '',
+        email: formDataOfIdMission?.email || user?.email || '',
         idNumber: formDataOfIdMission?.idNumber || '',
         idIssuer: formDataOfIdMission?.idIssuer || '',
         idType: formDataOfIdMission?.idType || '',
@@ -329,7 +332,7 @@ export default function SingleApplication() {
       setGetQrAndWebLinkLoading(true);
       getQrAndWebLink().finally(() => setGetQrAndWebLinkLoading(false));
     }
-  }, [emailVerified, formData, getQrAndWebLink, qrCode, webLink]);
+  }, [emailVerified, formData, getQrAndWebLink, qrCode, user?.email, webLink]);
 
   // get qr and session id
   useEffect(() => {
@@ -698,7 +701,7 @@ export default function SingleApplication() {
                   className={'max-w-[400px]!'}
                 />
                 <TextField
-                  value={user?.email}
+                  value={idMissionVerifiedData?.email}
                   onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, email: e.target.value })}
                   label="Email Address:*"
                   required
