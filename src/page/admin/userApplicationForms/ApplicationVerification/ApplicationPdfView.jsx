@@ -16,10 +16,13 @@ import useApplyBranding from '@/hooks/useApplyBranding';
 import { useGetSavedFormByUserIdMutation, useGetSingleFormQueryQuery } from '@/redux/apis/formApis';
 import { addSavedFormData } from '@/redux/slices/formSlice';
 import IdMissionDataPdf from './IdMissionDataPdf';
+import { useBranding } from '@/hooks/BrandingContext';
+import logoApply from '../../../../assets/images/logo.png';
 
 const ApplicationPdfView = () => {
   const { pdfId, userId } = useParams();
   useApplyBranding({ formId: pdfId });
+  const { logo } = useBranding();
   const { formData } = useSelector(state => state.form);
   const dispatch = useDispatch();
   // Queries & Mutations
@@ -50,6 +53,18 @@ const ApplicationPdfView = () => {
   if (!form || getSavedFormDataLoading || formLoading) return;
   return (
     <>
+      <div className="flex h-16 items-center justify-between rounded-md bg-white px-6 shadow">
+        {/* Hamburger Icon (mobile only) */}
+        <div className="my-4 flex items-center gap-8">
+          <img
+            src={logo || logoApply}
+            alt="Logo"
+            className={`object-contain ${'h-[60px] w-[60px]'} }`}
+            referrerPolicy="no-referrer"
+          />
+          <h1 className="text-2xl font-semibold text-gray-800">{form?.data?.name}</h1>
+        </div>
+      </div>
       <div className="h-full w-full space-y-12 overflow-visible bg-white px-6 py-8">
         <IdMissionDataPdf formId={pdfId} />
         {form?.data?.sections?.map((section, index) => {
