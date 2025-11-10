@@ -215,7 +215,7 @@ const BrandElementAssignment = ({
             src={URL.createObjectURL(image)}
             alt="Preview"
             style={{
-              width: 400,
+              width: '30vw',
               height: 'auto',
               borderRadius: 8,
               objectFit: 'contain',

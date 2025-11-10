@@ -184,7 +184,7 @@ const BrandingSource = ({
           icon={IoColorPaletteOutline}
           loading={isFetchLoading}
           disabled={isFetchLoading}
-          className='!h-12.5'
+          className="!h-12.5"
         />
       </div>
       <div className="mt-3 mb-4 flex items-center justify-between gap-5">
@@ -275,7 +275,7 @@ const BrandingSource = ({
                   <div
                     key={idx}
                     onClick={() => handleLogoSelect(idx, logo?.url)}
-                    className={`relative flex h-[130px] w-[200px] cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-md border-2 transition-all duration-200 ${selectedLogoIndex === idx ? 'ring-opacity-50 border-green-500 ring-2 ring-green-500' : 'border-gray-200 hover:border-gray-300'}`}
+                    className={`relative flex h-[130px] w-[200px] cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 transition-all duration-200 ${selectedLogoIndex === idx ? 'ring-opacity-50 border-green-500 ring-2 ring-green-500' : 'border-gray-200 hover:border-gray-300'}`}
                   >
                     {selectedLogoIndex === idx && (
                       <div className="absolute top-0 left-0 rounded-bl-md px-2 py-1 text-xs font-medium text-green-500">
@@ -285,21 +285,22 @@ const BrandingSource = ({
                     {/* Close icon */}
                     <button
                       type="button"
-                      className="bg-primary hover:bg-secondary absolute -top-2 -right-2 z-10 rounded-full p-1 text-gray-500 hover:text-red-500"
                       onClick={e => {
                         e.stopPropagation();
                         handleRemoveLogo(idx);
                       }}
+                      className="bg-primary absolute top-1 right-1 z-10 cursor-pointer rounded-full p-1 text-gray-500 transition-transform duration-200 hover:scale-110 hover:text-red-500"
                     >
-                      <FiX size={18} />
+                      <FiX size={18} className="text-buttonTextPrimary hover:text-buttonTextSecondary" />
                     </button>
+
                     <div className="flex h-[100px] w-[80%] cursor-pointer flex-col items-center justify-center">
                       <img
                         src={typeof logo === 'string' ? logo : logo?.url}
                         alt={`Logo ${idx + 1}`}
                         className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain ${logo?.invert ? 'rounded-sm bg-gray-700' : ''}`}
                         referrerPolicy="no-referrer"
-                      // onClick={() => handleLogoSelect(idx)}
+                        // onClick={() => handleLogoSelect(idx)}
                       />
                       <div>logo</div>
                     </div>
