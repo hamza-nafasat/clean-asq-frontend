@@ -129,6 +129,7 @@ function Submission({ forms }) {
                   cnLeft={`animate-spin h-5 w-5`}
                   disabled={isLoading}
                   onClick={() => handleDownload(form?._id, user?._id)}
+                  className={`${isLoading ? 'cursor-not-allowed opacity-30' : ''}`}
                   style={{
                     backgroundColor: colors?.primary,
                     borderColor: colors?.primary,
