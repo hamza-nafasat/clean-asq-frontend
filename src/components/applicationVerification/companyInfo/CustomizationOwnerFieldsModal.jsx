@@ -22,11 +22,11 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
     isSignature: section?.isSignature || false,
     isSignDisplayText: section?.isSignDisplayText || false,
     isSignAiHelp: section?.isSignAiHelp || false,
-    signFormatedDisplayText: section?.signDisplayText || '',
-    signDisplayText: '',
+    signFormatedDisplayText: section?.signFormatedDisplayText || '',
+    signDisplayText: section?.signDisplayText || '',
     signAiPrompt: section?.signAiPrompt || '',
     signAiResponse: section?.signAiResponse || '',
-    formatingAiInstruction: '',
+    formatingAiInstruction: section?.signatureTextFormattingInstructions || '',
   });
   const [formateTextInMarkDown, { isLoading: isFormating }] = useFormateTextInMarkDownMutation();
 
@@ -39,9 +39,11 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
           isSignature: signatureData.isSignature,
           isSignDisplayText: signatureData.isSignDisplayText,
           isSignAiHelp: signatureData.isSignAiHelp,
-          signDisplayText: signatureData.signFormatedDisplayText,
+          signDisplayText: signatureData.signDisplayText,
+          signFormatedDisplayText: signatureData.signFormatedDisplayText,
           signAiPrompt: signatureData.signAiPrompt,
           signAiResponse: signatureData.signAiResponse,
+          signatureTextFormattingInstructions: signatureData.formatingAiInstruction,
         },
       }).unwrap();
       if (res.success) {

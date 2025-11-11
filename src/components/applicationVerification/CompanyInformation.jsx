@@ -282,7 +282,7 @@ function CompanyInformation({
     <div className="mt-14 h-full overflow-auto">
       {updateSectionFromatingModal && (
         <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
-          <EditSectionDisplayTextFromatingModal step={step} />
+          <EditSectionDisplayTextFromatingModal step={step} setModal={setUpdateSectionFromatingModal} />
         </Modal>
       )}
 
@@ -304,8 +304,9 @@ function CompanyInformation({
       </div>
 
       {step?.ai_formatting && (
-        <div className="mb-4 flex items-end gap-3">
+        <div className="mb-4 flex w-full items-end gap-3">
           <div
+            className="w-full"
             dangerouslySetInnerHTML={{
               __html: step?.ai_formatting,
             }}

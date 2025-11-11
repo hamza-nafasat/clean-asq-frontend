@@ -203,8 +203,9 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
         {step?.isSignDisplayText && (
           <div className="flex w-full items-end gap-3">
             <div
+              className="w-full"
               dangerouslySetInnerHTML={{
-                __html: step?.signDisplayText,
+                __html: step?.signFormatedDisplayText,
               }}
             />
           </div>

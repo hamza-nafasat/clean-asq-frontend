@@ -62,6 +62,7 @@ export default function SingleApplication() {
   const { isApplied } = useApplyBranding({ formId: formId });
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [showSignatureHelpModal, setShowSignatureHelpModal] = useState(false);
+  const [showIdMissionDataModal, setShowIdMissionDataModal] = useState(false);
   const [customizeIdMissionTextModal, setCustomizeIdMissionTextModal] = useState(false);
   const [openAiHelpSignModal, setOpenAiHelpSignModal] = useState(false);
   const [openOtpDisplayTextModal, setOpenOtpDisplayTextModal] = useState(false);
@@ -488,6 +489,15 @@ export default function SingleApplication() {
           />
         </Modal>
       )}
+      {showIdMissionDataModal && (
+        <Modal isOpen={customizeIdMissionTextModal} onClose={() => setShowIdMissionDataModal(false)}>
+          <IdMissionDataModal
+            formRefetch={formRefetch}
+            setOpenIdMissionDataDisplayTextModal={setShowIdMissionDataModal}
+            form={form?.data}
+          />
+        </Modal>
+      )}
       {showSignatureModal && (
         <Modal onClose={() => setShowSignatureModal(false)}>
           <SignatureCustomization
@@ -572,7 +582,7 @@ export default function SingleApplication() {
         <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
       ) : (
         <div className="mt-14 h-full overflow-auto text-center">
-          {!idMissionVerified ? (
+          {idMissionVerified ? ( // TODO add not
             !emailVerified ? (
               <>
                 <div className="flex flex-col items-center gap-3">
@@ -691,7 +701,25 @@ export default function SingleApplication() {
             )
           ) : (
             <div className="flex w-full flex-col p-2">
-              <h3 className="text-textPrimary text-center text-2xl font-semibold">Id Mission Data</h3>
+              <div className="flex items-center justify-between">
+                {form?.data?.idMissionDataDisplayFormatedText && (
+                  <div className="flex items-end gap-3">
+                    <div
+                      className="w-full"
+                      dangerouslySetInnerHTML={{
+                        __html: form?.data?.idMissionDataDisplayFormatedText,
+                      }}
+                    />
+                  </div>
+                )}
+                {isCreator && (
+                  <Button
+                    className="self-end"
+                    onClick={() => setShowIdMissionDataModal(true)}
+                    label={'Customize Display Text'}
+                  />
+                )}
+              </div>
               <form className="flex flex-wrap gap-4">
                 <TextField
                   onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, name: e.target.value })}
@@ -1156,6 +1184,104 @@ const OtpDisplayText = ({ form, formRefetch, setOpenOtpDisplayTextModal }) => {
       <div className="flex w-full items-center justify-end gap-2">
         <Button
           onClick={() => setOpenOtpDisplayTextModal(false)}
+          disabled={isUpdatingSection}
+          variant="secondary"
+          label={' Cancel'}
+        />
+        <Button onClick={handleUpdateSectionForSignature} disabled={isUpdatingSection} label={'Save'} />
+      </div>
+    </div>
+  );
+};
+
+const IdMissionDataModal = ({ form, formRefetch, setOpenIdMissionDataDisplayTextModal }) => {
+  const [updateForm, { isLoading: isUpdatingSection }] = useUpdateFormMutation();
+  const [formateTextInMarkDown, { isLoading: isFormating }] = useFormateTextInMarkDownMutation();
+  const [displayData, setDisplayData] = useState({
+    idMissionDataDisplayText: form?.idMissionDataDisplayText || '',
+    idMissionDataDisplayFormatingInstructions: form?.idMissionDataDisplayFormatingInstructions || '',
+    idMissionDataDisplayFormatedText: form?.idMissionDataDisplayFormatedText || '',
+  });
+
+  const handleUpdateSectionForSignature = async () => {
+    try {
+      const res = await updateForm({
+        _id: form?._id,
+        data: {
+          idMissionDataDisplayText: displayData.idMissionDataDisplayText,
+          idMissionDataDisplayFormatingInstructions: displayData.idMissionDataDisplayFormatingInstructions,
+          idMissionDataDisplayFormatedText: displayData.idMissionDataDisplayFormatedText,
+        },
+      }).unwrap();
+      if (res.success) {
+        await formRefetch();
+        toast.success(res.message);
+        setOpenIdMissionDataDisplayTextModal(false);
+      }
+    } catch (error) {
+      console.log('Error while updating signature', error);
+    }
+  };
+
+  const formateTextWithAi = useCallback(async () => {
+    if (!displayData?.idMissionDataDisplayText || !displayData?.idMissionDataDisplayFormatingInstructions) {
+      toast.error('Please enter formatting instruction and text to format');
+      return;
+    }
+    try {
+      const res = await formateTextInMarkDown({
+        text: displayData.idMissionDataDisplayText,
+        instructions: displayData?.idMissionDataDisplayFormatingInstructions,
+      }).unwrap();
+      if (res.success) {
+        let html = DOMPurify.sanitize(res.data);
+        setDisplayData(prev => ({ ...prev, idMissionDataDisplayFormatedText: html }));
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.data?.message || 'Failed to format text');
+    }
+  }, [
+    displayData.idMissionDataDisplayText,
+    displayData?.idMissionDataDisplayFormatingInstructions,
+    formateTextInMarkDown,
+  ]);
+
+  return (
+    <div className="flex flex-col gap-2 border-2 p-2 pb-4">
+      {/* display text  */}
+      <div className="flex w-full flex-col gap-2 pb-4">
+        <TextField
+          type="textarea"
+          label="Display Text"
+          value={displayData?.idMissionDataDisplayText}
+          name="displayText"
+          onChange={e => setDisplayData(prev => ({ ...prev, idMissionDataDisplayText: e.target.value }))}
+        />
+        <label htmlFor="formattingInstructionForAi">Enter formatting instruction for AI and click on generate</label>
+        <textarea
+          id="formattingInstructionForAi"
+          rows={2}
+          value={displayData?.idMissionDataDisplayFormatingInstructions}
+          onChange={e =>
+            setDisplayData(prev => ({ ...prev, idMissionDataDisplayFormatingInstructions: e.target.value }))
+          }
+          className="w-full rounded-md border border-gray-300 p-2 outline-none"
+        />
+        <div className="flex justify-end">
+          <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Format Text'} />
+        </div>
+        {displayData?.idMissionDataDisplayFormatedText && (
+          <div
+            className="w-full"
+            dangerouslySetInnerHTML={{ __html: displayData?.idMissionDataDisplayFormatedText ?? '' }}
+          />
+        )}
+      </div>
+
+      <div className="flex w-full items-center justify-end gap-2">
+        <Button
+          onClick={() => setOpenIdMissionDataDisplayTextModal(false)}
           disabled={isUpdatingSection}
           variant="secondary"
           label={' Cancel'}

@@ -7,7 +7,9 @@ import Button from './Button';
 
 const EditSectionDisplayTextFromatingModal = ({ step, setModal }) => {
   const [displayText, setDisplayText] = useState(step.displayText || '');
-  const [formattingInstructionForAi, setFormattingInstructionForAi] = useState('');
+  const [formattingInstructionForAi, setFormattingInstructionForAi] = useState(
+    step.displayTextFormattingInstructions || ''
+  );
   const [aiFormatting, setAiFormatting] = useState(step.ai_formatting || '');
   const [formateTextInMarkDown, { isLoading }] = useFormateTextInMarkDownMutation();
   const [updateFormSection, { isLoading: isUpdating }] = useUpdateFormSectionMutation();
@@ -37,7 +39,11 @@ const EditSectionDisplayTextFromatingModal = ({ step, setModal }) => {
       if (!displayText || !aiFormatting) return toast.error('Please enter display text and AI formatting');
       const res = await updateFormSection({
         _id: step._id,
-        data: { displayText, aiFormatting: aiFormatting },
+        data: {
+          displayText,
+          aiFormatting: aiFormatting,
+          displayTextFormattingInstructions: formattingInstructionForAi,
+        },
       }).unwrap();
       if (res.success) {
         toast.success('Section Updated Successfully');

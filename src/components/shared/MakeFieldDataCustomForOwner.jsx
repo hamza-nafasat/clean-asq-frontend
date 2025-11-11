@@ -4,13 +4,12 @@ import { Button } from '@/components/ui/button';
 import { FIELD_TYPES } from '@/data/constants';
 import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
 import DOMPurify from 'dompurify';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import { MdOutlineRestore } from 'react-icons/md';
 import { toast } from 'react-toastify';
 
 const MakeFieldDataCustomForOwner = ({ originalFieldData, fieldsData, setFieldsData, index }) => {
   const field = fieldsData[index] || {};
-  const [formattingInstructionForAi, setFormattingInstructionForAi] = useState('');
   const [formateTextInMarkDown, { isLoading }] = useFormateTextInMarkDownMutation();
 
   const revertBackToOriginalData = useCallback(
@@ -65,14 +64,14 @@ const MakeFieldDataCustomForOwner = ({ originalFieldData, fieldsData, setFieldsD
 
   const formateTextWithAi = useCallback(async () => {
     const textForDisplay = field.displayText || '';
-    if (!formattingInstructionForAi || !textForDisplay) {
+    if (!field?.displayTextFormattingInstructions || !textForDisplay) {
       toast.error('Please enter formatting instruction and text to format');
       return;
     }
     try {
       const res = await formateTextInMarkDown({
         text: textForDisplay,
-        instructions: formattingInstructionForAi,
+        instructions: field?.displayTextFormattingInstructions,
       }).unwrap();
       if (res.success) {
         let html = DOMPurify.sanitize(res.data);
@@ -82,7 +81,7 @@ const MakeFieldDataCustomForOwner = ({ originalFieldData, fieldsData, setFieldsD
       console.error(err);
       toast.error(err?.data?.message || 'Failed to format text');
     }
-  }, [formattingInstructionForAi, field.displayText, formateTextInMarkDown, index, setFieldsData]);
+  }, [field?.displayTextFormattingInstructions, field.displayText, formateTextInMarkDown, index, setFieldsData]);
   const getResponseFromAi = useCallback(async () => {
     const aiPrompt = field.aiPrompt || '';
     if (!aiPrompt) {
@@ -233,10 +232,11 @@ const MakeFieldDataCustomForOwner = ({ originalFieldData, fieldsData, setFieldsD
               Enter formatting instruction for AI and click on generate
             </label>
             <textarea
-              id="formattingInstructionForAi"
+              id="displayTextFormattingInstructions"
+              name="displayTextFormattingInstructions"
               rows={2}
-              value={formattingInstructionForAi}
-              onChange={e => setFormattingInstructionForAi(e.target.value)}
+              value={field?.displayTextFormattingInstructions}
+              onChange={updateFieldDataField}
               className="w-full rounded-md border border-gray-300 p-2 outline-none"
             />
             <div className="flex justify-end">

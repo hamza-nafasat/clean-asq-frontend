@@ -20,8 +20,8 @@ const MakeFieldDataCustom = ({
 }) => {
   const field = fieldsData[index] || {};
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [formattingInstructionForAi, setFormattingInstructionForAi] = useState('');
   const [formateTextInMarkDown, { isLoading }] = useFormateTextInMarkDownMutation();
+  field?.displayTextFormattingInstructions;
 
   const addNewOption = useCallback(() => {
     setFieldsData(prev =>
@@ -104,14 +104,17 @@ const MakeFieldDataCustom = ({
 
   const formateTextWithAi = useCallback(async () => {
     const textForDisplay = field.displayText || '';
-    if (!formattingInstructionForAi || !textForDisplay) {
+    const instructions = field?.displayTextFormattingInstructions || '';
+
+    console.log('textForDisplay', textForDisplay, instructions);
+    if (!instructions || !textForDisplay) {
       toast.error('Please enter formatting instruction and text to format');
       return;
     }
     try {
       const res = await formateTextInMarkDown({
         text: textForDisplay,
-        instructions: formattingInstructionForAi,
+        instructions: instructions,
       }).unwrap();
       if (res.success) {
         let html = DOMPurify.sanitize(res.data);
@@ -121,7 +124,7 @@ const MakeFieldDataCustom = ({
       console.error(err);
       toast.error(err?.data?.message || 'Failed to format text');
     }
-  }, [formattingInstructionForAi, field.displayText, formateTextInMarkDown, index, setFieldsData]);
+  }, [field?.displayTextFormattingInstructions, field.displayText, formateTextInMarkDown, index, setFieldsData]);
 
   const getResponseFromAi = useCallback(async () => {
     const aiPrompt = field.aiPrompt || '';
@@ -301,14 +304,15 @@ const MakeFieldDataCustom = ({
               name="displayText"
               onChange={updateFieldDataField}
             />
-            <label htmlFor="formattingInstructionForAi">
+            <label htmlFor="displayTextFormattingInstructions">
               Enter formatting instruction for AI and click on generate
             </label>
             <textarea
-              id="formattingInstructionForAi"
+              id="displayTextFormattingInstructions"
+              name="displayTextFormattingInstructions"
               rows={2}
-              value={formattingInstructionForAi}
-              onChange={e => setFormattingInstructionForAi(e.target.value)}
+              value={field?.displayTextFormattingInstructions}
+              onChange={updateFieldDataField}
               className="w-full rounded-md border border-gray-300 p-2 outline-none"
             />
             <div className="flex justify-end">
@@ -317,7 +321,7 @@ const MakeFieldDataCustom = ({
               </Button>
             </div>
             {field.ai_formatting && (
-              <div className="h-full p-4" dangerouslySetInnerHTML={{ __html: field?.ai_formatting ?? '' }} />
+              <div className="h-full w-full p-4" dangerouslySetInnerHTML={{ __html: field?.ai_formatting ?? '' }} />
             )}
           </div>
         )}
