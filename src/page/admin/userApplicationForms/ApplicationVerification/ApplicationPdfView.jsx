@@ -53,7 +53,7 @@ const ApplicationPdfView = () => {
   if (!form || getSavedFormDataLoading || formLoading) return;
   return (
     <>
-      <div className="flex h-16 items-center justify-between rounded-md bg-white px-6 shadow">
+      <div className="flex h-16 items-center justify-between rounded-md border-b bg-white px-6 shadow">
         {/* Hamburger Icon (mobile only) */}
         <div className="my-4 flex items-center gap-8">
           <img
@@ -63,6 +63,19 @@ const ApplicationPdfView = () => {
             referrerPolicy="no-referrer"
           />
           <h1 className="text-2xl font-semibold text-gray-800">{form?.data?.name}</h1>
+        </div>
+        <div className="my-4 flex items-center gap-8">
+          {/* current time and date in good formate  */}
+          <h3 className="text-sm text-gray-800">
+            {new Date().toLocaleString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric',
+              hour12: true,
+            })}
+          </h3>
         </div>
       </div>
       <div className="h-full w-full space-y-12 overflow-visible bg-white px-6 py-8">
