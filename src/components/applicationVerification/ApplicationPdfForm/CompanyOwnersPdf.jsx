@@ -25,7 +25,7 @@ const ssnField = {
   type: 'text',
 };
 const areUAnOwnerField = {
-  label: 'Are you also an owner',
+  label: 'Are you a company owner holding 25% or more of the company?',
   name: 'rolling_owner_is_also_owner',
   required: true,
   aiHelp: false,

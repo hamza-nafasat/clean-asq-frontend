@@ -31,7 +31,7 @@ const ssnField = {
   type: 'text',
 };
 const areUAnOwnerField = {
-  label: 'Are you also an owner',
+  label: 'Are you a company owner holding 25% or more of the company?',
   name: 'rolling_owner_is_also_owner',
   required: true,
   aiHelp: false,
@@ -568,7 +568,7 @@ function CompanyOwners({
                     onClick={handleAddOwner}
                     icon={GoPlus}
                     className="!text-textPrimary !rounded-[4px] !border !border-[#D5D8DD] !bg-[#F5F5F5] !font-medium hover:!bg-gray-200"
-                    label="Add additional owner"
+                    label="Add additional owner or operatorr"
                   />
                 </div>
               </div>

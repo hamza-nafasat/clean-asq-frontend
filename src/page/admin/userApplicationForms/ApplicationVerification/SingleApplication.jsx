@@ -859,7 +859,7 @@ export default function SingleApplication() {
                         },
                         {
                           label:
-                            'The primary contact for the company for this product and service, but not a company operator/controller ',
+                            'The primary contact for the company for this product or service, but not a company operator/controller ',
                           value: 'primaryContact',
                         },
                         {
