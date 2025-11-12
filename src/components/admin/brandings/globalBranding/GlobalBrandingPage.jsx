@@ -192,6 +192,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       formData.append(`files`, file);
     });
 
+    console.log(extraLogos);
+
     try {
       const res = await updateBranding({ brandingId, data: formData }).unwrap();
       if (res?.success) {
@@ -215,15 +217,13 @@ const GlobalBrandingPage = ({ brandingId }) => {
         }
 
         toast.success(res?.message || 'Branding updated successfully!');
+        navigate('/branding');
       } else {
         toast.error('Failed to update branding. Please try again.');
       }
     } catch (error) {
       console.error('Error updating branding:', error);
       toast.error('Failed to update branding. Please try again.');
-    } finally {
-      navigate('/branding');
-      // console.log('Branding updated successfully!', logos);
     }
   };
 

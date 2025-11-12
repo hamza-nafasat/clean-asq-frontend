@@ -7,6 +7,7 @@ import { FiUpload, FiX } from 'react-icons/fi';
 import { GrImage } from 'react-icons/gr';
 import { HiOutlineSparkles } from 'react-icons/hi2';
 import { IoColorPaletteOutline } from 'react-icons/io5';
+import { toast } from 'react-toastify';
 
 const BrandingSource = ({
   websiteUrl,
@@ -70,6 +71,7 @@ const BrandingSource = ({
     const handlePaste = e => {
       if (!pasteTarget) return;
       const items = e.clipboardData.items;
+      console.log('items in update branding', items);
       for (let i = 0; i < items.length; i++) {
         if (items[i].type.indexOf('image') !== -1) {
           const blob = items[i].getAsFile();
@@ -77,8 +79,18 @@ const BrandingSource = ({
           if (pasteTarget === 'websiteImage') {
             setWebsiteImage(url);
           } else if (pasteTarget === 'logo') {
-            setLogos(prev => [...prev, url]);
+            const blob = items[i].getAsFile();
+            if (blob) {
+              const fileUrl = URL.createObjectURL(blob);
+
+              // add temporary preview
+              setLogos(prev => [...prev, { url: fileUrl, type: 'img', preview: true, invert: false }]);
+
+              // Upload it properly
+              handleExtraLogoUpload(blob);
+            }
           }
+
           setPasteTarget(null);
           setShowPasteMenu(false);
           break;
@@ -122,9 +134,7 @@ const BrandingSource = ({
   const handlePasteOption = target => {
     setPasteTarget(target);
     setShowPasteMenu(false);
-    setTimeout(() => {
-      alert('Now press Ctrl+V to paste your image.');
-    }, 100);
+    toast.success('Use Ctrl+V to paste');
   };
 
   const handleLogoSelect = (idx, logo) => {
