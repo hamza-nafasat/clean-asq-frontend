@@ -582,7 +582,7 @@ export default function SingleApplication() {
         <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
       ) : (
         <div className="mt-14 h-full overflow-auto text-center">
-          {idMissionVerified ? ( // TODO add not
+          {!idMissionVerified ? ( // TODO add not
             !emailVerified ? (
               <>
                 <div className="flex flex-col items-center gap-3">
