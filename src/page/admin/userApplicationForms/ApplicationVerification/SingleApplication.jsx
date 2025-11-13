@@ -1206,6 +1206,7 @@ const IdMissionDataModal = ({ form, formRefetch, setOpenIdMissionDataDisplayText
 
   const handleUpdateSectionForSignature = async () => {
     try {
+      console.log('');
       const res = await updateForm({
         _id: form?._id,
         data: {
