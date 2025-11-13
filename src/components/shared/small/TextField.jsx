@@ -13,6 +13,7 @@ const TextField = ({
   onClickRightIcon,
   isMasked = false,
   className,
+  formatting,
   suggestions,
   onChange,
   name,
@@ -50,6 +51,33 @@ const TextField = ({
     if (!dateStr) return '';
     const [year, month, day] = dateStr.split(/[-\s/]/);
     return `${year}-${month}-${day}`;
+  };
+
+  const getDisplayValue = value => {
+    const format = formatting?.split(',');
+    if (format && Array.isArray(format) && format.length > 0) {
+      const digits = value.toString().replace(/\D/g, '');
+      let formatted = '';
+      let start = 0;
+      for (let i = 0; i < format.length; i++) {
+        const len = parseInt(format[i], 10);
+        if (start >= digits.length) break;
+        const part = digits.substr(start, len);
+        formatted += part;
+        start += len;
+        // Add a dash if not the last group and still have remaining digits
+        if (i < format.length - 1 && start < digits.length) {
+          formatted += '-';
+        }
+      }
+      // If there are still digits left after pattern ends, append them
+      if (start < digits.length) {
+        formatted += '-' + digits.substr(start);
+      }
+
+      return formatted;
+    }
+    return value;
   };
 
   if (type == 'textarea')
@@ -102,7 +130,7 @@ const TextField = ({
             onChange?.({ target: { name, value: val } });
           }}
           name={name}
-          value={type === 'date' ? formatDate(value) : value}
+          value={type === 'date' ? formatDate(value) : getDisplayValue(value)}
           autoComplete="off"
           type={showMasked ? 'password' : type === 'date' ? 'text' : type}
           onFocus={() => setShowSuggestions(true)}

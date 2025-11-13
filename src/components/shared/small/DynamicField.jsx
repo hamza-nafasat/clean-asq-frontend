@@ -604,11 +604,12 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
     return false;
   };
 
-  const {
+  let {
     type,
     label,
     name,
     required,
+    formatting,
     placeholder,
     isMasked,
     aiHelp,
@@ -617,6 +618,11 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
     isDisplayText,
     ai_formatting,
   } = field;
+
+  if (name.includes('ssn')) formatting = '3,3,3';
+  if (name.includes('phone')) formatting = '3,2,3';
+
+  console.log('nameis ', name);
 
   const inputRef = useRef(null);
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
@@ -634,13 +640,36 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
     return `${year}-${month}-${day}`;
   };
 
-  // derived display value (masked only for UI)
   const getDisplayValue = (type, value) => {
-    console.log('type ', type);
     if (!value) return '';
+    // Masked logic
     if (showMasked && isMasked) return '*'.repeat(value.toString().length);
+    // Date formatting
     if (type === 'date') return formatDate(value);
-    console.log('value ', value);
+    // Dynamic formatting logic
+    const format = formatting?.split(',');
+    if (format && Array.isArray(format) && format.length > 0) {
+      const digits = value.toString().replace(/\D/g, '');
+      let formatted = '';
+      let start = 0;
+      for (let i = 0; i < format.length; i++) {
+        const len = parseInt(format[i], 10);
+        if (start >= digits.length) break;
+        const part = digits.substr(start, len);
+        formatted += part;
+        start += len;
+        // Add a dash if not the last group and still have remaining digits
+        if (i < format.length - 1 && start < digits.length) {
+          formatted += '-';
+        }
+      }
+      // If there are still digits left after pattern ends, append them
+      if (start < digits.length) {
+        formatted += '-' + digits.substr(start);
+      }
+
+      return formatted;
+    }
     return value;
   };
 
@@ -674,7 +703,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                     ref={inputRef}
                     name={name}
                     placeholder={placeholder}
-                    value={getDisplayValue(type, form[name])}
+                    value={getDisplayValue(type, form?.[name])}
                     onChange={e =>
                       setForm(prev => ({
                         ...prev,
@@ -704,7 +733,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                     name={name}
                     placeholder={placeholder}
                     type={isMasked && type !== 'date' ? 'text' : type}
-                    value={getDisplayValue(type, form[name])}
+                    value={getDisplayValue(type, form?.[name])}
                     onChange={e =>
                       setForm(prev => ({
                         ...prev,

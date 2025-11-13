@@ -27,6 +27,7 @@ const ssnField = {
   name: 'rolling_owner_ssn',
   required: true,
   aiHelp: false,
+  formatting: '3,2,3',
   isMasked: true,
   type: 'text',
 };
@@ -509,6 +510,7 @@ function CompanyOwners({
                                   name="ssn"
                                   label="Social Security Number"
                                   value={ssn}
+                                  formatting="3,2,3"
                                   isMasked={true}
                                   onChange={e => handleChangeOnOtherOwnersData(e, index)}
                                   className={'max-w-[30%] min-w-[400px]'}
