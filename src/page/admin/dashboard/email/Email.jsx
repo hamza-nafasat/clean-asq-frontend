@@ -77,10 +77,8 @@ function Email() {
       emailType: 'Billing',
     },
   ];
-  // Predefined sedation keywords
   const sedationKeywords = ['relax', 'calm', 'soothe', 'tranquil', 'peaceful', 'comfort', 'quiet', 'restful'];
 
-  // In your ReactQuill section inside the modal
   <ReactQuill
     className={`h-[200px] border ${!editData.body ? 'border-accent' : 'border-frameColor'}`}
     value={editData.body}
@@ -92,7 +90,6 @@ function Email() {
   />;
 
   {
-    /* Sedation keywords display */
   }
   <div className="mt-2 flex flex-wrap gap-2 text-sm">
     {sedationKeywords.map((keyword, idx) => (
@@ -109,7 +106,6 @@ function Email() {
     ))}
   </div>;
 
-  // Prefill modal when viewModalData changes
   useEffect(() => {
     if (viewModalData) {
       setEditData({
@@ -121,7 +117,6 @@ function Email() {
     }
   }, [viewModalData]);
 
-  // Close menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -141,24 +136,21 @@ function Email() {
     setViewModalData(null);
   };
 
-  // Open modal for editing existing template
   const handleEdit = item => {
-    setIsReadOnly(false); // editable
+    setIsReadOnly(false);
     setViewModalData(item);
     setMenuOpenId(null);
   };
 
-  // Open modal for viewing template (read-only)
   const handleView = item => {
     setIsReadOnly(true);
     setViewModalData(item);
   };
 
-  // Open modal for creating new template
   const handleCreate = () => {
-    setIsReadOnly(false); // editable
-    setEditData({ templateName: '', subject: '', emailType: '', body: '' }); // clear fields
-    setViewModalData({}); // open modal
+    setIsReadOnly(false);
+    setEditData({ templateName: '', subject: '', emailType: '', body: '' });
+    setViewModalData({});
   };
 
   const handleDelete = item => {
@@ -168,7 +160,6 @@ function Email() {
 
   return (
     <div>
-      {/* ------------ MODAL ------------ */}
       {viewModalData && (
         <Modal
           onSave={!isReadOnly ? handleSave : () => setViewModalData(null)}
@@ -185,12 +176,27 @@ function Email() {
               cn={isReadOnly ? 'cursor-not-allowed' : ''}
             />
             <TextField
+              label="Application Name"
+              value={editData.templateName}
+              onChange={e => handleChange('templateName', e.target.value)}
+              readOnly={isReadOnly}
+              cn={isReadOnly ? 'cursor-not-allowed' : ''}
+            />
+            <TextField
+              label="Email Type"
+              value={editData.emailType}
+              onChange={e => handleChange('emailType', e.target.value)}
+              readOnly={isReadOnly}
+              cn={isReadOnly ? 'cursor-not-allowed' : ''}
+            />
+            <TextField
               label="Subject"
               value={editData.subject}
               onChange={e => handleChange('subject', e.target.value)}
               readOnly={isReadOnly}
               cn={isReadOnly ? 'cursor-not-allowed' : ''}
             />
+
             <ReactQuill
               className={`h-[200px]`}
               value={editData.body}
@@ -218,32 +224,22 @@ function Email() {
                   ))}
                 </div>
               )}
-              <TextField
-                label="Email Type"
-                value={editData.emailType}
-                onChange={e => handleChange('emailType', e.target.value)}
-                readOnly={isReadOnly}
-                cn={isReadOnly ? 'cursor-not-allowed' : ''}
-              />
             </div>
           </div>
         </Modal>
       )}
 
-      {/* ------------ HEADING + BUTTON ------------ */}
       <div className="flex items-center justify-between">
         <h1 className="mb-6 text-2xl font-semibold">Email Templates</h1>
         <Button label="Create Email Template" onClick={handleCreate} />
       </div>
 
-      {/* ------------ TEMPLATE CARDS ------------ */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {templates.map(item => (
           <div
             key={item.id}
             className="relative rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
           >
-            {/* Three-dot menu */}
             <div className="absolute top-4 right-4">
               <FiMoreVertical
                 className="cursor-pointer text-gray-500 hover:text-gray-700"
