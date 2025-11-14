@@ -1,5 +1,4 @@
 import { APPLICANT_STATUS } from '@/data/constants';
-import { getTableStyles } from '@/data/data';
 import { Eye, MoreVertical, Pencil, Trash } from 'lucide-react';
 import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -7,48 +6,50 @@ import DataTable from 'react-data-table-component';
 import Modal from '../shared/Modal';
 import TextField from '../shared/small/TextField';
 import { ThreeDotEditViewDelete } from '../shared/ThreeDotViewEditDelete';
-import ApplicantSearch, { CLIENT_LABELS, CLIENT_TYPES } from './ApplicantSearch';
-import { useBranding } from '../../hooks/BrandingContext';
+import ApplicantSearch from './ApplicantSearch';
+import { useDeleteSingleSubmitFormMutation } from '@/redux/apis/formApis';
+import { toast } from 'react-toastify';
+import ConfirmationModal from '../shared/ConfirmationModal';
 // Table columns configuration
 const APPLICANT_TABLE_COLUMNS = [
   {
     name: 'Name',
-    selector: row => row.name,
+    selector: row => `${row?.user?.firstName} ${row?.user?.lastName}`,
     sortable: true,
     width: '200px',
   },
   {
     name: 'Application',
-    selector: row => row.application,
+    selector: row => row?.form?.name || 'N/A',
     sortable: true,
     width: '200px',
   },
   {
     name: 'Email',
-    selector: row => row.email,
+    selector: row => row?.user?.email,
     sortable: true,
     width: '200px',
   },
   {
     name: 'Client Type',
-    selector: row => row.clientType,
+    selector: row => row?.user?.role?.name,
     sortable: true,
-    // width: '200px'
+    width: '200px',
     cell: row => (
       <span className="text-accent w-[130px] rounded-sm bg-gray-100 px-[10px] py-[3px] text-center text-xs font-bold capitalize">
-        {CLIENT_LABELS[row.clientType] || row.clientType}
+        {row?.user?.role?.name}
       </span>
     ),
   },
   {
-    name: 'Date Created',
-    selector: row => row.dateCreated,
+    name: 'Submitted Date',
+    selector: row => new Date(row.createdAt)?.toLocaleDateString(),
     sortable: true,
     width: '200px',
   },
   {
     name: 'Status',
-    selector: row => row.status,
+    selector: row => row?.status,
     sortable: true,
     // width: '200px'
     cell: row => (
@@ -65,55 +66,39 @@ const APPLICANT_TABLE_COLUMNS = [
   },
 ];
 
-const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onFilterChange }) => {
+const ApplicantsTable = ({ applicants, isLoading, onView, filters, onFilterChange }) => {
   const [actionMenu, setActionMenu] = React.useState(null);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [editModalData, setEditModalData] = useState(null);
   const [formErrors, setFormErrors] = useState({});
+  const [deleteSubmitForm, { isLoading: isLoadingDelete }] = useDeleteSingleSubmitFormMutation();
+  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const actionMenuRefs = useRef(new Map());
-  const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
-  const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   // Get unique clients for quick filters
   const uniqueClients = useMemo(() => {
-    return [...new Set(applicants.map(applicant => applicant.clientType))];
+    return [...new Set(applicants.map(applicant => applicant?.user?.role?.name))];
   }, [applicants]);
+
+  const handleDeleteApplicant = useCallback(async () => {
+    try {
+      if (!deleteConfirmation) return;
+      console.log('delete confirmation', deleteConfirmation);
+      const res = await deleteSubmitForm({ _id: deleteConfirmation }).unwrap();
+      if (res.success) {
+        toast.success(res?.message);
+        setDeleteConfirmation(null);
+        setActionMenu(null);
+      }
+    } catch (error) {
+      console.error('Error deleting application:', error);
+      toast.error(error?.data?.message || 'Failed to delete application');
+    }
+  }, [deleteConfirmation, deleteSubmitForm]);
 
   // Handle search
   const handleSearch = useCallback(value => {
     setSearchTerm(value);
   }, []);
-
-  // Handle click outside for action menu
-  useEffect(() => {
-    const handleClickOutside = event => {
-      const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
-        ref => !ref.current?.contains(event.target)
-      );
-
-      if (clickedOutsideAllMenus) {
-        setActionMenu(null);
-      }
-    };
-
-    if (actionMenu !== null) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [actionMenu]);
-
-  const handleDeleteApplicant = useCallback(
-    id => {
-      if (!window.confirm('Are you sure you want to delete this applicant?')) {
-        return;
-      }
-      onDelete(id);
-      setActionMenu(null);
-    },
-    [onDelete]
-  );
 
   const handleEditApplicant = useCallback(async () => {
     // Basic validation
@@ -181,11 +166,13 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
   const filteredApplicants = useMemo(() => {
     return applicants.filter(applicant => {
       const matchesDateRange =
-        (!filters.dateRange.start || applicant.dateCreated >= filters.dateRange.start) &&
-        (!filters.dateRange.end || applicant.dateCreated <= filters.dateRange.end);
-      const matchesStatus = !filters.status || applicant.status === filters.status;
-      const matchesSearch = !searchTerm || applicant.clientType.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesName = !filters.name || applicant.name.toLowerCase().includes(filters.name.toLowerCase());
+        (!filters.dateRange.start || applicant?.createdAt >= filters.dateRange.start) &&
+        (!filters.dateRange.end || applicant?.createdAt <= filters.dateRange.end);
+      const matchesStatus = !filters?.status || applicant?.status === filters?.status;
+      const matchesSearch =
+        !searchTerm || applicant?.user?.tole?.name?.toLowerCase().includes(searchTerm?.toLowerCase());
+      const name = applicant?.user?.firstName + ' ' + applicant?.user?.lastName;
+      const matchesName = !filters?.name || name?.toLowerCase().includes(filters.name.toLowerCase());
 
       return matchesDateRange && matchesStatus && matchesSearch && matchesName;
     });
@@ -213,11 +200,11 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
         name: 'Delete',
         icon: <Trash size={16} className="mr-2" />,
         onClick: row => {
-          handleDeleteApplicant(row?.id);
+          setDeleteConfirmation(row?._id);
         },
       },
     ],
-    [handleDeleteApplicant, onView]
+    [onView]
   );
 
   const columns = useMemo(
@@ -226,21 +213,21 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
       {
         name: 'Action',
         cell: row => {
-          if (!actionMenuRefs.current.has(row.id)) {
-            actionMenuRefs.current.set(row.id, React.createRef());
+          if (!actionMenuRefs.current.has(row?._id)) {
+            actionMenuRefs.current.set(row?._id, React.createRef());
           }
-          const rowRef = actionMenuRefs.current.get(row.id);
+          const rowRef = actionMenuRefs.current.get(row?._id);
 
           return (
             <div className="relative" ref={rowRef}>
               <button
-                onClick={() => setActionMenu(prevActionMenu => (prevActionMenu === row.id ? null : row.id))}
-                className="rounded p-1 hover:bg-gray-100"
+                onClick={() => setActionMenu(prevActionMenu => (prevActionMenu === row?._id ? null : row?._id))}
+                className="cursor-pointer rounded p-1 hover:bg-gray-100"
                 aria-label="Actions"
               >
                 <MoreVertical size={18} />
               </button>
-              {actionMenu === row.id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
+              {actionMenu === row._id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
             </div>
           );
         },
@@ -248,6 +235,27 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
     ],
     [ButtonsForThreeDot, actionMenu]
   );
+
+  // Handle click outside for action menu
+  useEffect(() => {
+    const handleClickOutside = event => {
+      const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
+        ref => !ref.current?.contains(event.target)
+      );
+
+      if (clickedOutsideAllMenus) {
+        setActionMenu(null);
+      }
+    };
+
+    if (actionMenu !== null) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [actionMenu]);
 
   return (
     <div>
@@ -289,8 +297,8 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
             <TextField
               label={'End Date'}
               type="date"
-              value={filters.dateRange.start}
-              onChange={e => onFilterChange('dateRange', { ...filters.dateRange, start: e.target.value })}
+              value={filters.dateRange.end}
+              onChange={e => onFilterChange('dateRange', { ...filters.dateRange, end: e.target.value })}
             />
           </div>
         </div>
@@ -350,7 +358,7 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
               label: status.charAt(0).toUpperCase() + status.slice(1),
             }))
           )}
-          {renderFormField(
+          {/* {renderFormField(
             'clientType',
             editModalData.clientType,
             e => setEditModalData(prev => ({ ...prev, clientType: e.target.value })),
@@ -360,9 +368,20 @@ const ApplicantsTable = ({ applicants, isLoading, onView, onDelete, filters, onF
               value,
               label,
             }))
-          )}
+          )} */}
         </Modal>
       )}
+      <ConfirmationModal
+        isOpen={deleteConfirmation}
+        onClose={() => setDeleteConfirmation(null)}
+        onConfirm={handleDeleteApplicant}
+        title="Delete Submit Form"
+        message={`Are you sure you want to delete this submit form?`}
+        isLoading={isLoadingDelete}
+        confirmButtonText="Delete"
+        confirmButtonClassName="bg-red-500 border-none hover:bg-red-600 text-white"
+        cancelButtonText="Cancer"
+      />
     </div>
   );
 };
@@ -376,7 +395,7 @@ ApplicantsTable.propTypes = {
       email: PropTypes.string.isRequired,
       dateCreated: PropTypes.string.isRequired,
       status: PropTypes.string.isRequired,
-      clientType: PropTypes.oneOf(Object.values(CLIENT_TYPES)).isRequired,
+      // clientType: PropTypes.oneOf(Object.values(CLIENT_TYPES)).isRequired,
     })
   ).isRequired,
   isLoading: PropTypes.bool,

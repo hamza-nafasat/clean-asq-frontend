@@ -6,7 +6,7 @@ const formApis = createApi({
   reducerPath: 'formApi',
   baseQuery: fetchBaseQuery({ baseUrl: `${getEnv('SERVER_URL')}/api/form`, credentials: 'include' }),
 
-  tagTypes: ['Form', 'Strategy', 'prompts', 'FormStrategy'],
+  tagTypes: ['Form', 'Strategy', 'Prompts', 'FormStrategy', 'SubmitForm'],
   endpoints: builder => ({
     // create new form
     // ---------------
@@ -16,7 +16,7 @@ const formApis = createApi({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+      invalidatesTags: ['Form'],
     }),
     // update  form
     // ---------------
@@ -26,7 +26,7 @@ const formApis = createApi({
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+      invalidatesTags: ['Form'],
     }),
     // update  form location status
     // ---------------
@@ -36,7 +36,7 @@ const formApis = createApi({
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+      invalidatesTags: ['Form'],
     }),
     // get my all users
     // --------------
@@ -55,7 +55,7 @@ const formApis = createApi({
         url: `single/${data?._id}`,
         method: 'GET',
       }),
-      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+      invalidatesTags: ['Form'],
     }),
     getSingleFormQuery: builder.query({
       query: data => ({
@@ -72,7 +72,7 @@ const formApis = createApi({
         url: `single/${data?._id}`,
         method: 'Delete',
       }),
-      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+      invalidatesTags: ['Form'],
     }),
 
     // SUBMIT form
@@ -83,7 +83,7 @@ const formApis = createApi({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+      invalidatesTags: ['Form', 'SubmitForm'],
     }),
 
     // save form in draft
@@ -94,7 +94,7 @@ const formApis = createApi({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+      invalidatesTags: ['Form'],
     }),
 
     // generate pdf form
@@ -132,10 +132,10 @@ const formApis = createApi({
         url: `/remove-saved/${formId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+      invalidatesTags: ['Form'],
     }),
 
-    // get all draft and submitions
+    // get all draft and submissions
     // ---------------
     getMyAllDraftsAndSubmittions: builder.query({
       query: () => ({
@@ -153,7 +153,7 @@ const formApis = createApi({
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+      invalidatesTags: ['Form'],
     }),
     // update form fields delete and create api
     // ---------------
@@ -163,8 +163,9 @@ const formApis = createApi({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: [{ type: 'Form', id: 'LIST' }],
+      invalidatesTags: ['Form'],
     }),
+
     // formate display text
     // ---------------
     formateTextInMarkDown: builder.mutation({
@@ -262,7 +263,7 @@ const formApis = createApi({
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: [{ type: 'Prompt', id: 'LIST' }],
+      invalidatesTags: ['Prompts'],
     }),
     // get all prompts
     // ---------------
@@ -271,7 +272,7 @@ const formApis = createApi({
         url: '/get-my-prompts',
         method: 'GET',
       }),
-      providesTags: [{ type: 'Prompt', id: 'LIST' }],
+      providesTags: ['Prompts'],
     }),
     //================================
     // form strategies apis
@@ -358,6 +359,30 @@ const formApis = createApi({
         body: data,
       }),
     }),
+
+    // submit form crud
+    // ============================
+    getAllSubmitForms: builder.query({
+      query: () => ({
+        url: '/all-submit',
+        method: 'GET',
+      }),
+      providesTags: ['SubmitForm'],
+    }),
+    getSingleSubmitFormQuery: builder.query({
+      query: data => ({
+        url: `single-submit/${data?._id}`,
+        method: 'GET',
+      }),
+      providesTags: ['SubmitForm'],
+    }),
+    deleteSingleSubmitForm: builder.mutation({
+      query: data => ({
+        url: `single-submit/${data?._id}`,
+        method: 'Delete',
+      }),
+      invalidatesTags: ['SubmitForm'],
+    }),
   }),
 });
 export const {
@@ -397,5 +422,8 @@ export const {
   useCompanyLookupMutation,
   useFindNaicAndMccMutation,
   useDetectVpnMutation,
+  useGetAllSubmitFormsQuery,
+  useGetSingleSubmitFormQueryQuery,
+  useDeleteSingleSubmitFormMutation,
 } = formApis;
 export default formApis;

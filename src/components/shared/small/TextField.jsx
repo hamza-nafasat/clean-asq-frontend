@@ -132,7 +132,7 @@ const TextField = ({
           name={name}
           value={type === 'date' ? formatDate(value) : getDisplayValue(value)}
           autoComplete="off"
-          type={showMasked ? 'password' : type === 'date' ? 'text' : type}
+          type={showMasked ? 'password' : type}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''} ${!value ? 'border-accent' : 'border-frameColor'} `}
