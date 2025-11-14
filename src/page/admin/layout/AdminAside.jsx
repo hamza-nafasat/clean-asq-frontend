@@ -41,6 +41,11 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
       link: `singleform/pdf-view/6904a7e037da446e85b46a4d/${user?._id}`,
       icon: <RiHistoryLine size={20} />,
     },
+    {
+      title: 'Email',
+      link: `email`,
+      icon: <RiHistoryLine size={20} />,
+    },
   ];
 
   return (

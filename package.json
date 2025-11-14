@@ -35,6 +35,7 @@
     "react-icons": "^5.5.0",
     "react-markdown": "^10.1.0",
     "react-qr-code": "^2.0.18",
+    "react-quill-new": "^3.6.0",
     "react-range-slider-input": "^3.2.1",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.0",

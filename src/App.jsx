@@ -28,6 +28,7 @@ import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
 import { detectVPN } from './utils/vpnDetection';
 import ApplicationPdfView from './page/admin/userApplicationForms/ApplicationVerification/ApplicationPdfView';
+import Email from './page/admin/dashboard/email/Email';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -171,6 +172,7 @@ function App() {
               {/* <Route path="extraction-context" element={<ExtractionContext />} /> */}
               <Route path="verification-test" element={<VerificationTest />} />
               <Route path="strategies" element={<Strategies />} />
+              <Route path="email" element={<Email />} />
             </Route>
 
             {/*all User Forms or application layout  , with out sidebar */}
