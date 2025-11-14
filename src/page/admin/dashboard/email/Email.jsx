@@ -17,6 +17,7 @@ function Email() {
   const [viewModalData, setViewModalData] = useState(null);
   const [editData, setEditData] = useState({
     templateName: '',
+    applicationName: '',
     subject: '',
     emailType: '',
     body: '',
@@ -31,8 +32,6 @@ function Email() {
   const menuRef = useRef(null);
 
   const templates = emailTemplates?.data;
-
-  console.log('edit state', isEdit);
 
   const quillModules = {
     toolbar: [
@@ -79,8 +78,6 @@ function Email() {
     readOnly={isReadOnly}
   />;
 
-  {
-  }
   <div className="mt-2 flex flex-wrap gap-2 text-sm">
     {sedationKeywords.map((keyword, idx) => (
       <span
@@ -100,6 +97,7 @@ function Email() {
     if (viewModalData) {
       setEditData({
         templateName: viewModalData.templateName || '',
+        applicationName: viewModalData.applicationName || '',
         subject: viewModalData.subject || '',
         emailType: viewModalData.emailType || '',
         body: viewModalData.body || '',
@@ -157,7 +155,7 @@ function Email() {
 
   const handleCreate = () => {
     setIsReadOnly(false);
-    setEditData({ templateName: '', subject: '', emailType: '', body: '' });
+    setEditData({ templateName: '', applicationName: '', subject: '', emailType: '', body: '' });
     setViewModalData({});
   };
 
@@ -192,8 +190,8 @@ function Email() {
             />
             <TextField
               label="Application Name"
-              value={editData.templateName}
-              onChange={e => handleChange('templateName', e.target.value)}
+              value={editData.applicationName}
+              onChange={e => handleChange('applicationName', e.target.value)}
               readOnly={isReadOnly}
               cn={isReadOnly ? 'cursor-not-allowed' : ''}
             />
