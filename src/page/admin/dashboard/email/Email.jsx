@@ -5,6 +5,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { FiMoreVertical } from 'react-icons/fi';
+import { toast } from 'react-toastify';
+import {
+  useCreateEmailTemplateMutation,
+  useUpdateSingleEmailTemplateMutation,
+  useDeleteSingleEmailTemplateMutation,
+  useGetAllEmailTemplatesQuery,
+} from '@/redux/apis/emailTemplateApis';
 
 function Email() {
   const [viewModalData, setViewModalData] = useState(null);
@@ -16,7 +23,16 @@ function Email() {
   });
   const [menuOpenId, setMenuOpenId] = useState(null);
   const [isReadOnly, setIsReadOnly] = useState(true);
+  const [isEdit, setIsEdit] = useState(false);
+  const [createEmailTemplate] = useCreateEmailTemplateMutation();
+  const [updateEmailTemplate] = useUpdateSingleEmailTemplateMutation();
+  const [deleteEmailTemplate] = useDeleteSingleEmailTemplateMutation();
+  const { data: emailTemplates } = useGetAllEmailTemplatesQuery();
   const menuRef = useRef(null);
+
+  const templates = emailTemplates?.data;
+
+  console.log('edit state', isEdit);
 
   const quillModules = {
     toolbar: [
@@ -51,32 +67,6 @@ function Email() {
     'image',
   ];
 
-  const templates = [
-    {
-      id: 1,
-      templateName: 'Welcome Template',
-      subject: 'Welcome to our platform!',
-      body: 'This is the welcome email body.',
-      email: 'welcome@example.com',
-      emailType: 'Welcome',
-    },
-    {
-      id: 2,
-      templateName: 'Reset Password',
-      subject: 'Reset Your Password',
-      body: 'Click to reset your password.',
-      email: 'reset@example.com',
-      emailType: 'Security',
-    },
-    {
-      id: 3,
-      templateName: 'Invoice Email',
-      subject: 'Your Invoice',
-      body: 'Your invoice is attached.',
-      email: 'billing@example.com',
-      emailType: 'Billing',
-    },
-  ];
   const sedationKeywords = ['relax', 'calm', 'soothe', 'tranquil', 'peaceful', 'comfort', 'quiet', 'restful'];
 
   <ReactQuill
@@ -131,12 +121,30 @@ function Email() {
     setEditData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     console.log('Saved Data:', editData);
-    setViewModalData(null);
+
+    try {
+      const res = isEdit
+        ? await updateEmailTemplate({
+            id: viewModalData?._id,
+            ...editData,
+          }).unwrap()
+        : await createEmailTemplate(editData).unwrap();
+
+      if (res?.success) {
+        toast.success(res.message);
+      }
+
+      setIsEdit(false);
+      setViewModalData(null);
+    } catch (error) {
+      toast.error(error?.data?.message || 'Failed to save template');
+    }
   };
 
   const handleEdit = item => {
+    setIsEdit(true);
     setIsReadOnly(false);
     setViewModalData(item);
     setMenuOpenId(null);
@@ -153,9 +161,14 @@ function Email() {
     setViewModalData({});
   };
 
-  const handleDelete = item => {
-    console.log('Deleted:', item);
-    setMenuOpenId(null);
+  const handleDelete = async item => {
+    try {
+      const res = await deleteEmailTemplate({ emailTemplateId: item?._id }).unwrap();
+      toast.success(res?.message || 'Deleted successfully');
+      setMenuOpenId(null);
+    } catch (error) {
+      toast.error(error?.data?.message || 'Failed to delete template');
+    }
   };
 
   return (
@@ -164,8 +177,10 @@ function Email() {
         <Modal
           onSave={!isReadOnly ? handleSave : () => setViewModalData(null)}
           saveButtonText={!isReadOnly ? 'Save' : 'Close'}
-          title={isReadOnly ? 'Template Details' : viewModalData.id ? 'Edit Template' : 'Create Template'}
-          onClose={() => setViewModalData(null)}
+          title={isReadOnly ? 'Template Details' : viewModalData._id ? 'Edit Template' : 'Create Template'}
+          onClose={() => {
+            (setViewModalData(null), setIsEdit(false));
+          }}
         >
           <div className="mt-4 space-y-4 overflow-auto">
             <TextField
@@ -235,17 +250,17 @@ function Email() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {templates.map(item => (
+        {templates?.map(item => (
           <div
-            key={item.id}
+            key={item?._id}
             className="relative rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
           >
             <div className="absolute top-4 right-4">
               <FiMoreVertical
                 className="cursor-pointer text-gray-500 hover:text-gray-700"
-                onClick={() => setMenuOpenId(menuOpenId === item.id ? null : item.id)}
+                onClick={() => setMenuOpenId(menuOpenId === item._id ? null : item._id)}
               />
-              {menuOpenId === item.id && (
+              {menuOpenId === item._id && (
                 <div
                   ref={menuRef}
                   className="absolute top-6 right-0 z-50 w-32 rounded-md border border-gray-200 bg-white shadow-lg"

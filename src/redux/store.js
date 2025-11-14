@@ -9,6 +9,7 @@ import formSlice from './slices/formSlice';
 import idMissionApis from './apis/idMissionApis';
 import brandingApis from './apis/brandingApis';
 import companySlice from './slices/companySlice';
+import emailTemplateApis from './apis/emailTemplateApis';
 
 const store = configureStore({
   reducer: {
@@ -25,6 +26,7 @@ const store = configureStore({
     [formApis.reducerPath]: formApis.reducer,
     [idMissionApis.reducerPath]: idMissionApis.reducer,
     [brandingApis.reducerPath]: brandingApis.reducer,
+    [emailTemplateApis.reducerPath]: emailTemplateApis.reducer,
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({ serializableCheck: false })
@@ -33,7 +35,8 @@ const store = configureStore({
       .concat(roleApis.middleware)
       .concat(formApis.middleware)
       .concat(idMissionApis.middleware)
-      .concat(brandingApis.middleware),
+      .concat(brandingApis.middleware)
+      .concat(emailTemplateApis.middleware),
 });
 
 export default store;
