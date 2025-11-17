@@ -50,6 +50,22 @@ const emailTemplateApis = createApi({
       }),
       invalidatesTags: ['EmailTemplate'],
     }),
+
+    // attach to forms
+    attachTemplateToForm: builder.mutation({
+      query: data => ({
+        url: '/attach',
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['EmailTemplate'],
+    }),
+    // unattached forms list
+
+    unAttachedFormsList: builder.query({
+      query: data => `/all-unattached-forms?emailTemplateId=${data?.emailTemplateId}`,
+      providesTags: ['EmailTemplate'],
+    }),
   }),
 });
 
@@ -59,5 +75,7 @@ export const {
   useGetSingleEmailTemplateQuery,
   useUpdateSingleEmailTemplateMutation,
   useDeleteSingleEmailTemplateMutation,
+  useAttachTemplateToFormMutation,
+  useUnAttachedFormsListQuery,
 } = emailTemplateApis;
 export default emailTemplateApis;

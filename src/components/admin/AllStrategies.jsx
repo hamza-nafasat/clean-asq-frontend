@@ -146,7 +146,7 @@ function AllStrategies() {
         pagination
         highlightOnHover
         noDataComponent="No data found"
-        className="!rounded-lg"
+        className="rounded-lg!"
       />
 
       {/* Add Modal */}
