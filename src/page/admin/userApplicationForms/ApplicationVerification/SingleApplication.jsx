@@ -269,7 +269,7 @@ export default function SingleApplication() {
   const sentOtpForEmail = useCallback(async () => {
     try {
       if (!email) return toast.error('Please enter your email');
-      const res = await sendOtp({ email }).unwrap();
+      const res = await sendOtp({ email, formId }).unwrap();
       if (res.success) {
         setOtpSent(true);
         toast.success(res.message);
@@ -278,7 +278,7 @@ export default function SingleApplication() {
       console.log('Error sending OTP:', error);
       toast.error(error?.data?.message || 'Failed to send OTP');
     }
-  }, [email, sendOtp]);
+  }, [email, formId, sendOtp]);
 
   const verifyWithOtp = useCallback(async () => {
     try {
@@ -612,7 +612,7 @@ export default function SingleApplication() {
                     <Button
                       onClick={sentOtpForEmail}
                       disabled={otpLoading}
-                      className={`min-w-[130px] py-[8px] ${otpLoading && 'cursor-not-allowed opacity-25'}`}
+                      className={`min-w-[130px] py-2 ${otpLoading && 'cursor-not-allowed opacity-25'}`}
                       label={'Send Code'}
                     />
                   </div>
@@ -628,7 +628,7 @@ export default function SingleApplication() {
                       <Button
                         onClick={verifyWithOtp}
                         disabled={emailLoading}
-                        className={`min-w-[130px] py-[8px] ${emailLoading && 'cursor-not-allowed opacity-25'}`}
+                        className={`min-w-[130px] py-2 ${emailLoading && 'cursor-not-allowed opacity-25'}`}
                         label={'Submit Code'}
                       />
                     </div>

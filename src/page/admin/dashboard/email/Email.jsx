@@ -23,6 +23,10 @@ const emailTypes = [
     label: 'Otp Email Template',
     value: 'otp_email_template',
   },
+  {
+    label: 'Beneficial Owners Email Template',
+    value: 'beneficial_owners_email_template',
+  },
 ];
 
 const quillModules = {
@@ -40,23 +44,7 @@ const quillModules = {
   ],
 };
 
-const quillFormats = [
-  'header',
-  'bold',
-  'italic',
-  'underline',
-  'strike',
-  'list',
-  'bullet',
-  'script',
-  'indent',
-  'direction',
-  'color',
-  'background',
-  'align',
-  'link',
-  'image',
-];
+const quillFormats = ['link', 'otp'];
 
 function Email() {
   const [viewModalData, setViewModalData] = useState(null);
@@ -347,11 +335,11 @@ const ModalForAttachForms = React.memo(({ setIsAttachFormModalOpen, selectedTemp
   const [attachEmailToForms, { isLoading }] = useAttachTemplateToFormMutation();
 
   const onSaveHandler = async () => {
-    if (!selectedTemplate?._id || !selectedForms.length) return toast.error('Please select template and forms');
+    if (!selectedTemplate?._id) return toast.error('Please select template and forms');
     try {
       const res = await attachEmailToForms({
         emailTemplateId: selectedTemplate?._id,
-        formIds: selectedForms,
+        formIds: selectedForms?.length ? selectedForms : [],
       }).unwrap();
       if (res.success) {
         toast.success('Template attached to forms successfully');

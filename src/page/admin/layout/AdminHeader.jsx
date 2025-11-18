@@ -40,7 +40,7 @@ function AdminHeader({ setSidebarOpen }) {
             <img
               src={logo || logoApply}
               alt="Logo"
-              className={`object-contain ${'h-[60px] w-[60px]'} }`}
+              className={`object-contain ${'h-[120px] w-[120px]'} }`}
               referrerPolicy="no-referrer"
             />
             {user ? <Button label={'Submission & Draft'} onClick={() => navigate('/submission')} /> : null}
