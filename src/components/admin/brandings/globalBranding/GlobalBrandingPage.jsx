@@ -26,11 +26,11 @@ const emailHeaderTemplate = `
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: {{primary}};">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: {{emailPrimaryColor}};">
     <tr>
       <td align="center" style="padding: 40px 20px;">
         
-        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{secondary}}; border-radius: 8px;">
+        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{emailSecondaryColor}}; border-radius: 8px;">
           
           <!-- Logo -->
           <tr>
@@ -46,8 +46,8 @@ const emailHeaderTemplate = `
           <!-- Company Name -->
           <tr>
             <td align="center" style="padding: 20px 20px;">
-              <h1 style="margin: 0; font-size: 28px; font-weight: bold; color: {{headingColor}};">
-                {{companyName}}
+              <h1 style="margin: 0; font-size: 28px; font-weight: bold; color: {{emailHeadingColor}};">
+                {{headerHeading}}
               </h1>
             </td>
           </tr>
@@ -55,8 +55,8 @@ const emailHeaderTemplate = `
           <!-- Subtitle -->
           <tr>
             <td align="center" style="padding: 0 20px 40px 20px;">
-              <p style="margin: 0; font-size: 13px; color: {{textColor}};">
-                Automated Email — Please Do Not Reply
+              <p style="margin: 0; font-size: 13px; color: {{emailTextColor}};">
+                {{headerDescription}}
               </p>
             </td>
           </tr>
@@ -67,9 +67,8 @@ const emailHeaderTemplate = `
   </table>
 </body>
 </html>
-`;
+  `;
 
-// Email Footer Template
 const emailFooterTemplate = `
 <!DOCTYPE html>
 <html>
@@ -78,20 +77,20 @@ const emailFooterTemplate = `
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: {{primary}};">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: {{emailPrimaryColor}};">
     <tr>
       <td align="center" style="padding: 40px 20px;">
         
-        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{secondary}}; border-radius: 8px;">
+        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{emailSecondaryColor}}; border-radius: 8px;">
           
           <!-- Content -->
           <tr>
             <td align="center" style="padding: 40px 20px;">
-              <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: bold; color: {{headingColor}};">
-                Thank You
+              <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: bold; color: {{emailHeadingColor}};">
+                {{footerHeading}}
               </h2>
-              <p style="margin: 0; font-size: 14px; color: {{textColor}}; line-height: 1.6;">
-                We appreciate your business and support.
+              <p style="margin: 0; font-size: 14px; color: {{emailTextColor}}; line-height: 1.6;">
+                {{footerDescription}}
               </p>
             </td>
           </tr>
@@ -99,11 +98,8 @@ const emailFooterTemplate = `
           <!-- Copyright -->
           <tr>
             <td align="center" style="padding: 0 20px 40px 20px;">
-              <p style="margin: 0; font-size: 12px; color: {{textColor}};">
-                © 2025 <strong style="color: {{headingColor}};">{{companyName}}</strong>. All rights reserved.
-              </p>
-              <p style="margin: 10px 0 0 0; font-size: 11px; color: {{textColor}};">
-                This is an automated message. Please do not reply to this email.
+              <p style="margin: 0; font-size: 12px; color: {{emailTextColor}};">
+                © 2025 <strong style="color: {{emailHeadingColor}};">{{companyName}}</strong>. All rights reserved.
               </p>
             </td>
           </tr>
@@ -114,8 +110,7 @@ const emailFooterTemplate = `
   </table>
 </body>
 </html>
-`;
-
+  `;
 const GlobalBrandingPage = ({ brandingId }) => {
   const [image, setImage] = useState(null);
   const navigate = useNavigate();
@@ -137,6 +132,10 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [buttonTextSecondary, setButtonTextSecondary] = useState('');
   const [emailHeader, setEmailHeader] = useState(emailHeaderTemplate);
   const [emailFooter, setEmailFooter] = useState(emailFooterTemplate);
+  const [headerHeading, setHeaderHeading] = useState('Email Header');
+  const [headerDescription, setHeaderDescription] = useState('Automated Email — Please Do Not Reply');
+  const [footerHeading, setFooterHeading] = useState('Thank You');
+  const [footerDescription, setFooterDescription] = useState('Thank We appreciate your business and support.');
   const [emailPrimaryColor, setEmailPrimaryColor] = useState('#ffffff');
   const [emailSecondaryColor, setEmailSecondaryColor] = useState('#d9d9d9');
   const [emailHeadingColor, setEmailHeadingColor] = useState('#1a1a1a');
@@ -147,11 +146,17 @@ const GlobalBrandingPage = ({ brandingId }) => {
 
   useEffect(() => {
     const context = {
-      primary: emailPrimaryColor,
-      secondary: emailSecondaryColor,
-      textColor: emailTextColor,
-      headingColor: emailHeadingColor,
+      emailPrimaryColor,
+      emailSecondaryColor,
+      emailTextColor,
+      emailHeadingColor,
+
       companyName,
+      headerHeading,
+      headerDescription,
+      footerHeading,
+      footerDescription,
+
       logo: selectedLogo,
     };
     setEmailHeader(compileHeader(context));
@@ -165,6 +170,10 @@ const GlobalBrandingPage = ({ brandingId }) => {
     selectedLogo,
     compileHeader,
     compileFooter,
+    headerHeading,
+    headerDescription,
+    footerHeading,
+    footerDescription,
   ]);
 
   const {
@@ -503,6 +512,30 @@ const GlobalBrandingPage = ({ brandingId }) => {
               label={'Email Heading'}
               color={emailHeadingColor}
               setColor={setEmailHeadingColor}
+            />
+          </div>
+          <div className="flex flex-col gap-4 py-4">
+            <TextField
+              label={'Header Heading'}
+              value={headerHeading}
+              onChange={e => setHeaderHeading(e.target.value)}
+            />
+            <TextField
+              type="textarea"
+              label={'Footer Heading'}
+              value={footerHeading}
+              onChange={e => setFooterHeading(e.target.value)}
+            />
+            <TextField
+              label={'Header Description'}
+              value={headerDescription}
+              onChange={e => setHeaderDescription(e.target.value)}
+            />
+            <TextField
+              type="textarea"
+              label={'Footer Description'}
+              value={footerDescription}
+              onChange={e => setFooterDescription(e.target.value)}
             />
           </div>
         </div>
