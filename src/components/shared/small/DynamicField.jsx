@@ -619,8 +619,8 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
     ai_formatting,
   } = field;
 
-  if (name.includes('ssn')) formatting = '3,3,3';
-  if (name.includes('phone')) formatting = '3,2,3';
+  if (name.includes('ssn')) formatting = '3,2,4';
+  if (name.includes('phone')) formatting = '3,3,4';
 
   console.log('nameis ', name);
 

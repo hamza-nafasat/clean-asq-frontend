@@ -27,7 +27,7 @@ const ssnField = {
   name: 'rolling_owner_ssn',
   required: true,
   aiHelp: false,
-  formatting: '3,2,3',
+  formatting: '3,2,4',
   isMasked: true,
   type: 'text',
 };
@@ -337,7 +337,7 @@ function CompanyOwners({
       )}
       <div className="mt-5">
         <div className="h-full overflow-auto pb-3">
-          <div className="rounded-[8px] border border-[#F0F0F0] p-4">
+          <div className="rounded-xl border border-[#F0F0F0] p-4">
             {formFields?.map((field, index) => {
               if (field.name === 'main_owner_own_25_percent_or_more' || field.type === 'block') return null;
               if (field.type === FIELD_TYPES.SELECT) {
@@ -488,6 +488,7 @@ function CompanyOwners({
                             <div className="flex w-full gap-4">
                               <TextField
                                 name="job_title"
+                                formatting="3,3,4"
                                 label="Job Title"
                                 value={job_title}
                                 onChange={e => handleChangeOnOtherOwnersData(e, index)}
@@ -510,7 +511,7 @@ function CompanyOwners({
                                   name="ssn"
                                   label="Social Security Number"
                                   value={ssn}
-                                  formatting="3,2,3"
+                                  formatting="3,2,4"
                                   isMasked={true}
                                   onChange={e => handleChangeOnOtherOwnersData(e, index)}
                                   className={'max-w-[30%] min-w-[400px]'}
@@ -556,7 +557,7 @@ function CompanyOwners({
                           )}
                           <Button
                             onClick={() => handleRemoveOtherOwnersData(index)}
-                            className="!max-w-fit self-end !py-2.5"
+                            className="max-w-fit! self-end py-2.5!"
                             variant="secondary"
                             label="Remove"
                           />
@@ -569,7 +570,7 @@ function CompanyOwners({
                   <Button
                     onClick={handleAddOwner}
                     icon={GoPlus}
-                    className="!text-textPrimary !rounded-[4px] !border !border-[#D5D8DD] !bg-[#F5F5F5] !font-medium hover:!bg-gray-200"
+                    className="text-textPrimary! rounded-lg! border! border-[#D5D8DD]! bg-[#F5F5F5]! font-medium! hover:bg-gray-200!"
                     label="Add additional owner or operatorr"
                   />
                 </div>

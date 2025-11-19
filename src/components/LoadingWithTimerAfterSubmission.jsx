@@ -11,7 +11,6 @@ export const SubmissionSuccessPage = () => {
   const [generatePdfForm, { isLoading }] = useGeneratePdfFormMutation();
   const { data: form } = useGetSingleFormQueryQuery({ _id: formId });
 
-  const submissionViewUrl = `/submission`;
   const continueUrl = form?.data?.redirectUrl || '/';
 
   const handleDownload = async (formId, userId) => {
@@ -45,10 +44,6 @@ export const SubmissionSuccessPage = () => {
       </div>
 
       <div className="mt-3 flex gap-4">
-        <Link to={submissionViewUrl}>
-          <Button variant="link" className="text-primary underline-offset-4 hover:underline" label="View Submission" />
-        </Link>
-
         <Button
           disabled={isLoading}
           onClick={() => handleDownload(formId, user?._id)}
@@ -58,7 +53,7 @@ export const SubmissionSuccessPage = () => {
         />
 
         <Link to={continueUrl}>
-          <Button variant="link" className="text-primary underline-offset-4 hover:underline" label="Continue to Next" />
+          <Button variant="link" className="text-primary underline-offset-4 hover:underline" label="I’m finished" />
         </Link>
       </div>
     </div>

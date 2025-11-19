@@ -69,7 +69,7 @@ export default function SingleApplication() {
   const [loadingForValidatingOtp, setLoadingForValidatingOtp] = useState(false);
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
     name: '',
-    email: '',
+    email: user?.email,
     idNumber: '',
     streetAddress: '',
     phoneNumber: '',
@@ -87,7 +87,6 @@ export default function SingleApplication() {
     address2: 'None',
     signature: { secureUrl: '', publicId: '', resourceType: '' },
   });
-  console.log('id mission data ', idMissionVerifiedData);
   const idMissionSection = form?.data?.sections?.find(sec => sec?.title?.toLowerCase() == 'id_verification_blk');
   const handleSignature = async (file, setIsSaving) => {
     try {
@@ -390,6 +389,7 @@ export default function SingleApplication() {
           ' ',
           formDataOfIdMission?.Last_Name || ''
         ),
+        email: formDataOfIdMission?.Email || user?.email || '',
         idNumber: formDataOfIdMission?.ID_Number || '',
         idIssuer: formDataOfIdMission?.ID_State
           ? formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country
@@ -444,7 +444,7 @@ export default function SingleApplication() {
       socket.off('idMission_failed');
       socket.off('idMission_other');
     };
-  }, [dispatch, formId, formatData, getUserProfile, idMissionVerified, updateMyProfile, user?._id]);
+  }, [dispatch, formId, formatData, getUserProfile, idMissionVerified, updateMyProfile, user?._id, user?.email]);
 
   // check validations
   useEffect(() => {
@@ -841,7 +841,7 @@ export default function SingleApplication() {
                 <TextField
                   value={idMissionVerifiedData?.phoneNumber}
                   onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, phoneNumber: e.target.value })}
-                  formatting="3,3,3"
+                  formatting="3,3,4"
                   label="Phone Number:*"
                   required
                   type="tel"
