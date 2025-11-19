@@ -12,12 +12,112 @@ import {
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import BrandElementAssignment from './BrandElementAssignment';
+import BrandElementAssignment, { ColorInput } from './BrandElementAssignment';
 import BrandingSource from './BrandingSource';
 import ColorPalette from './ColorPalette';
-import Preview from './Preview';
+import Preview, { EmailTemplatePreview } from './Preview';
+import Handlebars from 'handlebars';
+
+const emailHeaderTemplate = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: {{primary}};">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        
+        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{secondary}}; border-radius: 8px;">
+          
+          <!-- Logo -->
+          <tr>
+            <td align="center" style="padding: 40px 20px 20px 20px;">
+              <img 
+                src="{{logo}}" 
+                alt="{{companyName}}"
+                style="max-width: 140px; height: auto; display: block;"
+              />
+            </td>
+          </tr>
+
+          <!-- Company Name -->
+          <tr>
+            <td align="center" style="padding: 20px 20px;">
+              <h1 style="margin: 0; font-size: 28px; font-weight: bold; color: {{headingColor}};">
+                {{companyName}}
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Subtitle -->
+          <tr>
+            <td align="center" style="padding: 0 20px 40px 20px;">
+              <p style="margin: 0; font-size: 13px; color: {{textColor}};">
+                Automated Email — Please Do Not Reply
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
+
+// Email Footer Template
+const emailFooterTemplate = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: {{primary}};">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        
+        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{secondary}}; border-radius: 8px;">
+          
+          <!-- Content -->
+          <tr>
+            <td align="center" style="padding: 40px 20px;">
+              <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: bold; color: {{headingColor}};">
+                Thank You
+              </h2>
+              <p style="margin: 0; font-size: 14px; color: {{textColor}}; line-height: 1.6;">
+                We appreciate your business and support.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Copyright -->
+          <tr>
+            <td align="center" style="padding: 0 20px 40px 20px;">
+              <p style="margin: 0; font-size: 12px; color: {{textColor}};">
+                © 2025 <strong style="color: {{headingColor}};">{{companyName}}</strong>. All rights reserved.
+              </p>
+              <p style="margin: 10px 0 0 0; font-size: 11px; color: {{textColor}};">
+                This is an automated message. Please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
 
 const GlobalBrandingPage = ({ brandingId }) => {
+  const [image, setImage] = useState(null);
   const navigate = useNavigate();
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [primaryColor, setPrimaryColor] = useState('');
@@ -35,6 +135,37 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [extraLogos, setExtraLogos] = useState([]);
   const [buttonTextPrimary, setButtonTextPrimary] = useState('');
   const [buttonTextSecondary, setButtonTextSecondary] = useState('');
+  const [emailHeader, setEmailHeader] = useState(emailHeaderTemplate);
+  const [emailFooter, setEmailFooter] = useState(emailFooterTemplate);
+  const [emailPrimaryColor, setEmailPrimaryColor] = useState('#ffffff');
+  const [emailSecondaryColor, setEmailSecondaryColor] = useState('#d9d9d9');
+  const [emailHeadingColor, setEmailHeadingColor] = useState('#1a1a1a');
+  const [emailTextColor, setEmailTextColor] = useState('#666666');
+
+  const compileHeader = Handlebars.compile(emailHeaderTemplate);
+  const compileFooter = Handlebars.compile(emailFooterTemplate);
+
+  useEffect(() => {
+    const context = {
+      primary: emailPrimaryColor,
+      secondary: emailSecondaryColor,
+      textColor: emailTextColor,
+      headingColor: emailHeadingColor,
+      companyName,
+      logo: selectedLogo,
+    };
+    setEmailHeader(compileHeader(context));
+    setEmailFooter(compileFooter(context));
+  }, [
+    companyName,
+    emailPrimaryColor,
+    emailSecondaryColor,
+    emailTextColor,
+    emailHeadingColor,
+    selectedLogo,
+    compileHeader,
+    compileFooter,
+  ]);
 
   const {
     setPrimaryColor: setGlobalPrimaryColor,
@@ -285,7 +416,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   // console.log('selectedLogo', selectedLogo);
 
   return (
-    <div className="mb-6 rounded-[8px] border border-[#F0F0F0] bg-white px-3 md:px-6">
+    <div className="mb-6 rounded-xl border border-[#F0F0F0] bg-white px-3 md:px-6">
       <h1 className="mt-12 mb-6 text-lg font-semibold text-gray-500 md:text-2xl">Global Branding</h1>
       <TextField label={'Company Name'} value={companyName} onChange={e => setCompanyName(e.target.value)} />
       <div className="mt-12">
@@ -304,6 +435,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
         />
         <ColorPalette colorPalette={colorPalette} />
         <BrandElementAssignment
+          image={image}
+          setImage={setImage}
           primaryColor={primaryColor}
           setPrimaryColor={setPrimaryColor}
           secondaryColor={secondaryColor}
@@ -339,6 +472,40 @@ const GlobalBrandingPage = ({ brandingId }) => {
           textColor={textColor}
           frameColor={frameColor}
         />
+        <div className="border-primary my-6 border-t-2"></div>
+        <div className="mt-6 rounded-xl border border-[#F0F0F0] p-3 shadow-sm md:p-6">
+          <EmailTemplatePreview emailHeader={emailHeader} emailFooter={emailFooter} emailPrimary={emailPrimaryColor} />
+          <div className="flex py-4">
+            <ColorInput
+              image={image}
+              setImage={setImage}
+              label={'Email Primary'}
+              color={emailPrimaryColor}
+              setColor={setEmailPrimaryColor}
+            />
+            <ColorInput
+              image={image}
+              setImage={setImage}
+              label={'Email Secondary'}
+              color={emailSecondaryColor}
+              setColor={setEmailSecondaryColor}
+            />
+            <ColorInput
+              image={image}
+              setImage={setImage}
+              label={'Email Text'}
+              color={emailTextColor}
+              setColor={setEmailTextColor}
+            />
+            <ColorInput
+              image={image}
+              setImage={setImage}
+              label={'Email Heading'}
+              color={emailHeadingColor}
+              setColor={setEmailHeadingColor}
+            />
+          </div>
+        </div>
 
         <div className="mt-6 mb-4 flex justify-end space-x-2 md:space-x-4">
           <div className="flex gap-2 md:gap-6">

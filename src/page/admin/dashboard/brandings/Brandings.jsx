@@ -237,7 +237,7 @@ const Brandings = () => {
           highlightOnHover
           progressPending={isLoading}
           noDataComponent="No Brandings Found"
-          className="!rounded-md"
+          className="rounded-md!"
         />
         {/* </div> */}
       </div>

@@ -1,94 +1,86 @@
-// import { HexColorPicker } from 'react-colorful';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import FontPicker from './FontPicker';
-//////////////////////////////////////////////////////
-//////////////////////////////////////////
-// import html2canvas from 'html2canvas';
 import html2canvas from 'html2canvas-pro';
-import { uploadImageOnCloudinary } from '@/utils/cloudinary';
 
-const ColorInput = ({ label, color, setColor, setImage, image }) => {
-  const handleChange = async e => {
-    const newColor = e.target.value;
-    setColor(newColor);
-    console.log(`[ColorInput] 🎨 Color changed to:`, newColor);
+export const ColorInput = ({ label, color, setColor, setImage, image }) => {
+  const [colorPicker, setColorPicker] = useState('');
+  const handleChange = useCallback(
+    async e => {
+      const newColor = e.target.value;
+      setColorPicker(newColor);
+      console.log(`[ColorInput] 🎨 Color changed to:`, newColor);
 
-    setTimeout(async () => {
-      const selector =
-        '#root > div:nth-child(2) > section > section > div.w-full.flex-1.items-center.justify-center > main > div > div:nth-child(1) > div';
+      setTimeout(async () => {
+        const selector =
+          '#root > div:nth-child(2) > section > section > div.w-full.flex-1.items-center.justify-center > main > div > div:nth-child(1) > div';
 
-      console.log(`[ColorInput] 🔍 Trying to capture element:`, selector);
-      const element = document.querySelector(selector);
-      if (!element) {
-        console.warn(`[ColorInput] ❌ Element not found`);
-        return;
-      }
-
-      const previousFilter = element.style.filter;
-      element.style.filter = 'none';
-      element.style.colorScheme = 'light';
-
-      console.log(`[ColorInput] ✅ Element found. Starting html2canvas...`);
-
-      try {
-        const canvas = await html2canvas(element, {
-          useCORS: true,
-          scale: 2,
-          backgroundColor: null,
-        });
-
-        console.log(`[ColorInput] 📸 Screenshot captured successfully.`);
-
-        const imageData = canvas.toDataURL('image/png');
-        const fileName = `screenshot-${Date.now()}.png`;
-
-        // ✅ Convert base64 → File
-        const response = await fetch(imageData);
-        const blob = await response.blob();
-        const file = new File([blob], fileName, { type: 'image/png' });
-
-        // ✅ Optional: trigger download (kept original functionality)
-        const link = document.createElement('a');
-        // link.download = fileName;
-        link.href = imageData;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        console.log(`[ColorInput] ✅ Image downloaded successfully as "${fileName}".`);
-
-        // ✅ Save only filename to localStorage
-        try {
-          localStorage.setItem('lastScreenshot', fileName);
-          console.log(`[ColorInput] 💾 Stored only filename in localStorage.`);
-        } catch (err) {
-          console.error(`[ColorInput] ⚠️ Failed to save filename:`, err);
+        console.log(`[ColorInput] 🔍 Trying to capture element:`, selector);
+        const element = document.querySelector(selector);
+        if (!element) {
+          console.warn(`[ColorInput] ❌ Element not found`);
+          return;
         }
 
-        setImage(file); // ✅ Set actual File object
-      } catch (error) {
-        console.error(`[ColorInput] ❌ Error capturing screenshot:`, error);
-      } finally {
-        element.style.filter = previousFilter;
-      }
+        const previousFilter = element.style.filter;
+        element.style.filter = 'none';
+        element.style.colorScheme = 'light';
+
+        console.log(`[ColorInput] ✅ Element found. Starting html2canvas...`);
+
+        try {
+          const canvas = await html2canvas(element, {
+            useCORS: true,
+            scale: 2,
+            backgroundColor: null,
+          });
+
+          console.log(`[ColorInput] 📸 Screenshot captured successfully.`);
+
+          const imageData = canvas.toDataURL('image/png');
+          const fileName = `screenshot-${Date.now()}.png`;
+
+          // ✅ Convert base64 → File
+          const response = await fetch(imageData);
+          const blob = await response.blob();
+          const file = new File([blob], fileName, { type: 'image/png' });
+
+          // ✅ Optional: trigger download (kept original functionality)
+          const link = document.createElement('a');
+          // link.download = fileName;
+          link.href = imageData;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          console.log(`[ColorInput] ✅ Image downloaded successfully as "${fileName}".`);
+
+          // ✅ Save only filename to localStorage
+          try {
+            localStorage.setItem('lastScreenshot', fileName);
+            console.log(`[ColorInput] 💾 Stored only filename in localStorage.`);
+          } catch (err) {
+            console.error(`[ColorInput] ⚠️ Failed to save filename:`, err);
+          }
+
+          setImage(file); // ✅ Set actual File object
+        } catch (error) {
+          console.error(`[ColorInput] ❌ Error capturing screenshot:`, error);
+        } finally {
+          element.style.filter = previousFilter;
+        }
+      }, 1000);
+    },
+    [setColorPicker, setImage]
+  );
+
+  useEffect(() => {
+    if (!colorPicker) return;
+    setColor(colorPicker);
+    const timeout = setTimeout(() => {
+      if (image) return;
+      handleChange({ target: { value: colorPicker } });
     }, 500);
-  };
-
-  // useEffect(() => {
-  //   const uploadImage = async () => {
-  //     if (!image) return;
-
-  //     console.log('imageimageimageimage', image);
-
-  //     try {
-  //       const { secureUrl, publicId, resourceType } = await uploadImageOnCloudinary(image);
-  //       console.log('✅ Uploaded Image:', { secureUrl, publicId, resourceType });
-  //     } catch (error) {
-  //       console.error('❌ Error uploading image:', error);
-  //     }
-  //   };
-
-  //   uploadImage();
-  // }, [image]);
+    return () => clearTimeout(timeout);
+  }, [colorPicker, setColor, handleChange]);
 
   return (
     <div className="relative flex flex-col space-y-1">
@@ -101,7 +93,7 @@ const ColorInput = ({ label, color, setColor, setImage, image }) => {
           type="color"
           className="size-14 cursor-pointer appearance-none rounded-lg border-none outline-none focus:ring-0"
           value={color}
-          onChange={handleChange}
+          onChange={e => setColorPicker(e.target.value)}
         />
 
         <div className="flex h-12 w-28 items-center justify-center rounded-md border px-4 py-2 text-center text-sm shadow-sm">
@@ -127,18 +119,16 @@ const BrandElementAssignment = ({
   setBackgroundColor,
   frameColor,
   setFrameColor,
-  // primaryFont,
-  // setPrimaryFont,
   fontFamily,
   setFontFamily,
+  image,
+  setImage,
 
   buttonTextPrimary,
   setButtonTextPrimary,
   buttonTextSecondary,
   setButtonTextSecondary,
 }) => {
-  const [image, setImage] = useState(null);
-
   return (
     <div className="mt-6">
       <h2 className="mb-4 text-xl font-semibold text-gray-800">Assign Brand Element</h2>
@@ -197,7 +187,7 @@ const BrandElementAssignment = ({
         />
       </div>
       {image && (
-        <div className="fixed top-1/2 right-0 z-50 -translate-y-1/2">
+        <div className="fixed top-1/2 right-0 z-50 max-h-[95vh] -translate-y-1/2">
           {/* ❌ Close Button */}
           <button
             onClick={() => {
