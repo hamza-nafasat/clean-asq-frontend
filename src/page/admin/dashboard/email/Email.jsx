@@ -57,9 +57,10 @@ function Email() {
     emailType: '',
     body: '',
   });
+  const [isEdit, setIsEdit] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState(null);
   const [isReadOnly, setIsReadOnly] = useState(true);
-  const [isEdit, setIsEdit] = useState(false);
+
   const [createEmailTemplate] = useCreateEmailTemplateMutation();
   const [updateEmailTemplate] = useUpdateSingleEmailTemplateMutation();
   const [deleteEmailTemplate] = useDeleteSingleEmailTemplateMutation();
@@ -221,15 +222,20 @@ function Email() {
               cn={isReadOnly ? 'cursor-not-allowed' : ''}
             />
 
-            <ReactQuill
-              className={`h-[200px]`}
-              value={editData.body}
-              onChange={value => handleChange('body', value)}
-              modules={quillModules}
-              formats={quillFormats}
-              theme="snow"
-              readOnly={isReadOnly}
-            />
+            <div className="custom-quill-wrapper">
+              <ReactQuill
+                className="custom-quill h-[200px]"
+                value={editData.body}
+                onChange={value => handleChange('body', value)}
+                modules={quillModules}
+                formats={quillFormats}
+                theme="snow"
+                readOnly={isReadOnly}
+                style={{
+                  '--border-color': editData.body ? 'var(--frameColor)' : 'var(--accent)',
+                }}
+              />
+            </div>
 
             <div className="mt-20">
               {!isReadOnly && (

@@ -1178,7 +1178,10 @@ const OtpDisplayText = ({ form, formRefetch, setOpenOtpDisplayTextModal }) => {
           <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Format Text'} />
         </div>
         {displayData?.otpDisplayFormatedText && (
-          <div className="w-full" dangerouslySetInnerHTML={{ __html: displayData?.otpDisplayFormatedText ?? '' }} />
+          <div
+            className="w-full text-center"
+            dangerouslySetInnerHTML={{ __html: displayData?.otpDisplayFormatedText ?? '' }}
+          />
         )}
       </div>
 

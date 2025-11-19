@@ -38,9 +38,17 @@ const Preview = ({
     }
   }, [companyName, dispatch, formattedText, selectedLogo]);
   return (
-    <div className="mt-6 rounded-[8px] border border-[#F0F0F0] p-3 shadow-sm md:p-6">
+    <div className="mt-6 rounded-xl border border-[#F0F0F0] p-3 shadow-sm md:p-6">
       <h2 className="text-textPrimary text-[18px] font-medium">Preview</h2>
       <div className="mt-5 rounded-md border p-3 md:p-6">
+        <div className="flex h-[100px] w-[80%] cursor-pointer items-center">
+          <img
+            src={typeof selectedLogo === 'string' ? selectedLogo : selectedLogo}
+            alt="logo"
+            referrerPolicy="no-referrer"
+            className={`size-24 cursor-pointer object-contain ${isLight ? 'rounded-sm bg-gray-700' : ''}`}
+          />
+        </div>
         <p
           className="text-textPrimary mb-2 text-[22px] font-medium"
           style={{
@@ -49,14 +57,7 @@ const Preview = ({
         >
           {companyName ? companyName.charAt(0).toUpperCase() + companyName.slice(1) : 'Company Name'}
         </p>
-        <div className="flex h-[100px] w-[80%] cursor-pointer">
-          <img
-            src={typeof selectedLogo === 'string' ? selectedLogo : selectedLogo}
-            alt="logo"
-            referrerPolicy="no-referrer"
-            className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain ${isLight ? 'rounded-sm bg-gray-700' : ''}`}
-          />
-        </div>
+
         <div className="relative inline-block">
           <input
             type="text"

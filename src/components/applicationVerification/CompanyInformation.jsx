@@ -509,11 +509,12 @@ const NAICSModal = ({ naicsApiData, setNaicsApiData, setNaicsToMccDetails, setSh
           {naicsApiData?.otherMatches?.map((match, i) => (
             <button className="cursor-pointer" key={i} onClick={() => handlerOnClickOnOtherMatches(i)}>
               <input
-                placeholder={'NAICS Code and Description'}
-                type={'text'}
+                placeholder="NAICS Code and Description"
+                type="text"
                 readOnly
                 value={`${match?.naics}, ${match?.naicsDescription}`}
-                className={`border-frameColor h-[45px] w-full cursor-pointer! rounded-lg bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
+                title={`${match?.naics}, ${match?.naicsDescription}`}
+                className="border-frameColor h-[45px] w-full cursor-pointer rounded-lg bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
               />
             </button>
           ))}
