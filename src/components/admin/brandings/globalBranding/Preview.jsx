@@ -114,17 +114,15 @@ export const EmailTemplatePreview = ({ emailHeader, emailPrimary, emailFooter, e
       <h2 className="text-textPrimary text-[18px] font-medium">Email Preview</h2>
 
       <div className="mt-5 rounded-md p-3 md:p-6">
-        <div className="flex w-full flex-col px-4">
+        <div className="flex w-full flex-col border-4">
           {/* Render processed HTML */}
           <div dangerouslySetInnerHTML={{ __html: emailHeader }} />
-
           <div
             className={`align-center flex w-full justify-center p-4 md:p-6`}
             style={{ color: emailText, backgroundColor: emailPrimary }}
           >
             Email Body will be here ...
           </div>
-
           <div dangerouslySetInnerHTML={{ __html: emailFooter }} />
         </div>
       </div>

@@ -26,11 +26,9 @@ const emailHeaderTemplate = `
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: {{emailPrimaryColor}};">
-    <tr>
-      <td align="center" style="padding: 40px 20px;">
+
         
-        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{emailSecondaryColor}}; border-radius: 8px;">
+        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{emailSecondaryColor}};  border-top-left-radius: 8px; border-top-right-radius: 8px;">
           
           <!-- Logo -->
           <tr>
@@ -62,9 +60,6 @@ const emailHeaderTemplate = `
           </tr>
 
         </table>
-      </td>
-    </tr>
-  </table>
 </body>
 </html>
   `;
@@ -77,11 +72,7 @@ const emailFooterTemplate = `
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: {{emailPrimaryColor}};">
-    <tr>
-      <td align="center" style="padding: 40px 20px;">
-        
-        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{emailSecondaryColor}}; border-radius: 8px;">
+        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{emailSecondaryColor}}; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
           
           <!-- Content -->
           <tr>
@@ -105,9 +96,6 @@ const emailFooterTemplate = `
           </tr>
 
         </table>
-      </td>
-    </tr>
-  </table>
 </body>
 </html>
   `;
@@ -143,38 +131,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
 
   const compileHeader = Handlebars.compile(emailHeaderTemplate);
   const compileFooter = Handlebars.compile(emailFooterTemplate);
-
-  useEffect(() => {
-    const context = {
-      emailPrimaryColor,
-      emailSecondaryColor,
-      emailTextColor,
-      emailHeadingColor,
-
-      companyName,
-      headerHeading,
-      headerDescription,
-      footerHeading,
-      footerDescription,
-
-      logo: selectedLogo,
-    };
-    setEmailHeader(compileHeader(context));
-    setEmailFooter(compileFooter(context));
-  }, [
-    companyName,
-    emailPrimaryColor,
-    emailSecondaryColor,
-    emailTextColor,
-    emailHeadingColor,
-    selectedLogo,
-    compileHeader,
-    compileFooter,
-    headerHeading,
-    headerDescription,
-    footerHeading,
-    footerDescription,
-  ]);
 
   const {
     setPrimaryColor: setGlobalPrimaryColor,
@@ -242,7 +198,18 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !backgroundColor ||
       !frameColor ||
       !buttonTextPrimary ||
-      !buttonTextSecondary
+      !buttonTextSecondary ||
+      // email
+      !emailHeader ||
+      !emailFooter ||
+      !headerHeading ||
+      !headerDescription ||
+      !footerHeading ||
+      !footerDescription ||
+      !emailPrimaryColor ||
+      !emailSecondaryColor ||
+      !emailHeadingColor ||
+      !emailTextColor
     ) {
       return toast.error('Please fill all fields before creating branding');
     }
@@ -271,6 +238,18 @@ const GlobalBrandingPage = ({ brandingId }) => {
     extraLogos.forEach(file => {
       formData.append(`files`, file);
     });
+    // email
+    formData.append('emailHeader', emailHeader);
+    formData.append('emailFooter', emailFooter);
+    formData.append('headerHeading', headerHeading);
+    formData.append('headerDescription', headerDescription);
+    formData.append('footerHeading', footerHeading);
+    formData.append('footerDescription', footerDescription);
+    formData.append('emailPrimaryColor', emailPrimaryColor);
+    formData.append('emailSecondaryColor', emailSecondaryColor);
+    formData.append('emailHeadingColor', emailHeadingColor);
+    formData.append('emailTextColor', emailTextColor);
+
     console.log(extraLogos);
     try {
       const res = await createBranding(formData).unwrap();
@@ -302,7 +281,18 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !backgroundColor ||
       !frameColor ||
       !buttonTextPrimary ||
-      !buttonTextSecondary
+      !buttonTextSecondary ||
+      // email
+      !emailHeader ||
+      !emailFooter ||
+      !headerHeading ||
+      !headerDescription ||
+      !footerHeading ||
+      !footerDescription ||
+      !emailPrimaryColor ||
+      !emailSecondaryColor ||
+      !emailHeadingColor ||
+      !emailTextColor
     ) {
       return toast.error('Please fill all fields before creating branding');
     }
@@ -328,6 +318,19 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append('colorPalette', JSON.stringify(colorPalette));
     formData.append('colors', JSON.stringify(colors));
     formData.append('logos', JSON.stringify(finalLogos));
+
+    // email
+    formData.append('emailHeader', emailHeader);
+    formData.append('emailFooter', emailFooter);
+    formData.append('headerHeading', headerHeading);
+    formData.append('headerDescription', headerDescription);
+    formData.append('footerHeading', footerHeading);
+    formData.append('footerDescription', footerDescription);
+    formData.append('emailPrimaryColor', emailPrimaryColor);
+    formData.append('emailSecondaryColor', emailSecondaryColor);
+    formData.append('emailHeadingColor', emailHeadingColor);
+    formData.append('emailTextColor', emailTextColor);
+
     extraLogos.forEach(file => {
       formData.append(`files`, file);
     });
@@ -338,7 +341,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
       const res = await updateBranding({ brandingId, data: formData }).unwrap();
       if (res?.success) {
         const res = await getUserProfile().unwrap();
-
         if (res?.data?.branding?.colors) {
           const userBranding = res?.data?.branding;
           if (userBranding?.colors) {
@@ -353,6 +355,17 @@ const GlobalBrandingPage = ({ brandingId }) => {
             setGlobalLogo(userBranding?.selectedLogo);
             setButtonTextPrimaryGlobal(userBranding.colors.buttonTextPrimary);
             setButtonTextSecondaryGlobal(userBranding.colors.buttonTextSecondary);
+            // email
+            setEmailHeader(userBranding.emailHeader);
+            setEmailFooter(userBranding.emailFooter);
+            setHeaderHeading(userBranding.headerHeading);
+            setHeaderDescription(userBranding.headerDescription);
+            setFooterHeading(userBranding.footerHeading);
+            setFooterDescription(userBranding.footerDescription);
+            setEmailPrimaryColor(userBranding.emailPrimaryColor);
+            setEmailSecondaryColor(userBranding.emailSecondaryColor);
+            setEmailHeadingColor(userBranding.emailHeadingColor);
+            setEmailTextColor(userBranding.emailTextColor);
           }
         }
 
@@ -408,6 +421,16 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setFontFamily(singleBranding.fontFamily);
       setButtonTextPrimary(singleBranding.colors.buttonTextPrimary);
       setButtonTextSecondary(singleBranding.colors.buttonTextSecondary);
+      setEmailHeader(singleBranding.emailHeader);
+      setEmailFooter(singleBranding.emailFooter);
+      setHeaderHeading(singleBranding.headerHeading);
+      setHeaderDescription(singleBranding.headerDescription);
+      setFooterHeading(singleBranding.footerHeading);
+      setFooterDescription(singleBranding.footerDescription);
+      setEmailPrimaryColor(singleBranding.emailPrimaryColor);
+      setEmailSecondaryColor(singleBranding.emailSecondaryColor);
+      setEmailHeadingColor(singleBranding.emailHeadingColor);
+      setEmailTextColor(singleBranding.emailTextColor);
 
       // Set the selected logo from the API response if available
       if (singleBranding.selectedLogo) {
@@ -422,7 +445,37 @@ const GlobalBrandingPage = ({ brandingId }) => {
       }
     }
   }, [brandingId, singleBrandingData]);
-  // console.log('selectedLogo', selectedLogo);
+
+  useEffect(() => {
+    const context = {
+      emailPrimaryColor,
+      emailSecondaryColor,
+      emailTextColor,
+      emailHeadingColor,
+      companyName,
+      headerHeading,
+      headerDescription,
+      footerHeading,
+      footerDescription,
+
+      logo: selectedLogo,
+    };
+    setEmailHeader(compileHeader(context));
+    setEmailFooter(compileFooter(context));
+  }, [
+    companyName,
+    emailPrimaryColor,
+    emailSecondaryColor,
+    emailTextColor,
+    emailHeadingColor,
+    selectedLogo,
+    compileHeader,
+    compileFooter,
+    headerHeading,
+    headerDescription,
+    footerHeading,
+    footerDescription,
+  ]);
 
   return (
     <div className="mb-6 rounded-xl border border-[#F0F0F0] bg-white px-3 md:px-6">
