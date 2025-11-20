@@ -26,7 +26,7 @@ jobs:
             npm ci
             npm run build
             # Copy output to web root
-            sudo rm -rf /var/www/apply-super-quick-frontend/*
+            sudo rm -rf /var/www/apply-super-quick-frontend
             sudo mkdir -p /var/www/apply-super-quick-frontend
             sudo cp -r dist/* /var/www/apply-super-quick-frontend/
             # Optional reload nginx
