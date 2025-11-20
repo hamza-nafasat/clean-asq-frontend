@@ -44,8 +44,23 @@ const quillModules = {
   ],
 };
 
-const quillFormats = ['link', 'otp'];
-
+const quillFormats = [
+  'header',
+  'bold',
+  'italic',
+  'underline',
+  'strike',
+  'list',
+  'bullet',
+  'script',
+  'indent',
+  'direction',
+  'color',
+  'background',
+  'align',
+  'link',
+  'image',
+];
 function Email() {
   const [viewModalData, setViewModalData] = useState(null);
 
@@ -70,7 +85,7 @@ function Email() {
 
   const templates = emailTemplates?.data;
 
-  const sedationKeywords = ['relax', 'calm', 'soothe', 'tranquil', 'peaceful', 'comfort', 'quiet', 'restful'];
+  const sedationKeywords = ['link', 'otp'];
 
   <ReactQuill
     className={`h-[200px] border ${!editData.body ? 'border-accent' : 'border-frameColor'}`}
@@ -83,10 +98,10 @@ function Email() {
   />;
 
   <div className="mt-2 flex flex-wrap gap-2 text-sm">
-    {sedationKeywords.map((keyword, idx) => (
+    {sedationKeywords?.map((keyword, idx) => (
       <span
         key={idx}
-        className={`rounded-full border px-2 py-1 ${
+        className={`cursor-pointer rounded-md border px-2 py-1 ${
           editData.body.toLowerCase().includes(keyword.toLowerCase())
             ? 'border-green-400 bg-green-100'
             : 'border-gray-300 bg-gray-100'
@@ -243,7 +258,8 @@ function Email() {
                   {sedationKeywords.map((keyword, idx) => (
                     <span
                       key={idx}
-                      className={`rounded-full border px-2 py-1 ${
+                      onClick={() => setEditData(prev => ({ ...prev, body: `${prev.body} {{${keyword}}}` }))}
+                      className={`cursor-pointer rounded-md border px-2 py-1 ${
                         editData.body.toLowerCase().includes(keyword.toLowerCase())
                           ? 'border-green-400 bg-green-100'
                           : 'border-gray-300 bg-gray-100'
