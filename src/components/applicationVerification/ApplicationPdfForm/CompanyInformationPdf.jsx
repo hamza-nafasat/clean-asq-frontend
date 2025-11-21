@@ -16,7 +16,7 @@ import {
   RadioInputType,
   RangeInputType,
   SelectInputType,
-} from '../../shared/small/DynamicField';
+} from './shared/DynamicField';
 import { EditSectionDisplayTextFromatingModal } from '../../shared/small/EditSectionDisplayTextFromatingModal.jsx';
 import Modal from '../../shared/small/Modal.jsx';
 // import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal.jsx';
@@ -315,6 +315,7 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
           <div className="">
             {isSignature && (
               <SignatureBox
+                isPdf={true}
                 onSave={signatureUploadHandler}
                 step={step}
                 oldSignatureUrl={form?.signature?.secureUrl || ''}

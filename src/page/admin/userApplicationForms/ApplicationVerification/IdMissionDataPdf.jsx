@@ -5,7 +5,6 @@ import { useGetSingleFormQueryQuery } from '@/redux/apis/formApis';
 import { Autocomplete } from '@react-google-maps/api';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-
 const IdMissionDataPdf = ({ formId }) => {
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
     name: '',
@@ -60,7 +59,7 @@ const IdMissionDataPdf = ({ formId }) => {
   return (
     <div className="flex w-full flex-col p-2">
       <h3 className="text-textPrimary mb-3 text-2xl font-semibold">ID Mission Data</h3>
-      <form className="flex flex-wrap gap-4">
+      <form className="flex flex-wrap justify-center gap-4">
         <TextField
           onChange={() => {}}
           required
@@ -226,6 +225,7 @@ const IdMissionDataPdf = ({ formId }) => {
             )}
           </div>
           <SignatureBox
+            isPdf={true}
             oldSignatureUrl={idMissionVerifiedData?.signature?.secureUrl}
             className={'min-w-full'}
             onSave={() => {}}

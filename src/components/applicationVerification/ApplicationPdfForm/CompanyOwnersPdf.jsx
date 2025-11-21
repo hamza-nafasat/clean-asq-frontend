@@ -12,7 +12,7 @@ import {
   RadioInputType,
   RangeInputType,
   SelectInputType,
-} from '../../shared/small/DynamicField';
+} from './shared/DynamicField';
 import { EditSectionDisplayTextFromatingModal } from '../../shared/small/EditSectionDisplayTextFromatingModal';
 import Modal from '../../shared/small/Modal';
 
@@ -220,7 +220,7 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }
       )}
       <div className="mt-5">
         <div className="h-full overflow-auto pb-3">
-          <div className="rounded-[8px] border border-[#F0F0F0] p-4">
+          <div className="rounded-xl border border-[#F0F0F0] p-4">
             {formFields?.map((field, index) => {
               if (field.name === 'main_owner_own_25_percent_or_more' || field.type === 'block') return null;
               if (field.type === FIELD_TYPES.SELECT) {
@@ -449,6 +449,7 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }
                 <SignatureBox
                   onSave={signatureUploadHandler}
                   step={step}
+                  isPdf={true}
                   oldSignatureUrl={form?.signature?.secureUrl || ''}
                 />
               )}

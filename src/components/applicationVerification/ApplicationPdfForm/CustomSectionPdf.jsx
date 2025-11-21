@@ -10,7 +10,7 @@ import {
   RadioInputType,
   RangeInputType,
   SelectInputType,
-} from '../../shared/small/DynamicField';
+} from './shared/DynamicField';
 
 function CustomSectionPdf({ fields, name, step, reduxData, isSignature }) {
   const [form, setForm] = useState({});
@@ -138,6 +138,7 @@ function CustomSectionPdf({ fields, name, step, reduxData, isSignature }) {
         {isSignature && (
           <SignatureBox
             step={step}
+            isPdf={true}
             onSave={signatureUploadHandler}
             oldSignatureUrl={form?.signature?.secureUrl || ''}
           />

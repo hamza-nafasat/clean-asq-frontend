@@ -10,7 +10,7 @@ import {
   RadioInputType,
   RangeInputType,
   SelectInputType,
-} from '../../shared/small/DynamicField';
+} from './shared/DynamicField';
 
 function ProcessingInfoPdf({ name, fields, reduxData, step, isSignature }) {
   const [form, setForm] = useState({});
@@ -141,6 +141,7 @@ function ProcessingInfoPdf({ name, fields, reduxData, step, isSignature }) {
         {isSignature && (
           <SignatureBox
             step={step}
+            isPdf={true}
             onSave={signatureUploadHandler}
             oldSignatureUrl={form?.signature?.secureUrl || ''}
           />

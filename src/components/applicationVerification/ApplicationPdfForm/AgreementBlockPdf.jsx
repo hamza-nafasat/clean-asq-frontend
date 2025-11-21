@@ -81,6 +81,7 @@ function AggrementBlockPdf({ fields, name, title, saveInProgress, step, isSignat
             step={step}
             onSave={signatureUploadHandler}
             oldSignatureUrl={form?.signature?.secureUrl || ''}
+            isPdf={true}
           />
         )}
       </div>

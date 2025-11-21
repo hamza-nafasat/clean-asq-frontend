@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import SignatureBox from '../../shared/SignatureBox';
 import Button from '../../shared/small/Button';
-import { AiHelpModal, OtherInputType } from '../../shared/small/DynamicField';
+import { AiHelpModal, OtherInputType } from './shared/DynamicField';
 import Modal from '../../shared/small/Modal';
 import FileUploader from '../Documents/FileUploader';
 
@@ -208,6 +208,7 @@ function DocumentsPdf({ name, fields, title, step, isSignature }) {
         {isSignature && (
           <SignatureBox
             step={step}
+            isPdf={true}
             onSave={signatureUploadHandler}
             oldSignatureUrl={form?.signature?.secureUrl || ''}
           />

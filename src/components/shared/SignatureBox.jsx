@@ -4,7 +4,7 @@ import { AiHelpModal } from './small/DynamicField';
 import Modal from './small/Modal';
 import { useBranding } from '@/hooks/BrandingContext';
 
-export default function SignatureBox({ onSave, step, oldSignatureUrl, className = '' }) {
+export default function SignatureBox({ onSave, step, oldSignatureUrl, className = '', isPdf = false }) {
   const { textColor, fontFamily } = useBranding();
   const [mode, setMode] = useState('draw');
   const [typedSignature, setTypedSignature] = useState('');
@@ -259,24 +259,26 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       </div>
 
       {/* Controls */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" onClick={handleClear} className={`${buttonClasses} border`}>
-          Clear
-        </button>
-        <button type="button" onClick={undo} className={`${buttonClasses} border`}>
-          Undo
-        </button>
-        <button type="button" onClick={redo} className={`${buttonClasses} border`}>
-          Redo
-        </button>
-        <button
-          type="button"
-          onClick={handleSave}
-          className={`${buttonClasses} bg-primary text-buttonTextPrimary ml-auto ${isSaving ? 'pointer-events-none opacity-30' : ''}`}
-        >
-          {isSaving ? 'Saving...' : 'Save Signature'}
-        </button>
-      </div>
+      {!isPdf && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button type="button" onClick={handleClear} className={`${buttonClasses} border`}>
+            Clear
+          </button>
+          <button type="button" onClick={undo} className={`${buttonClasses} border`}>
+            Undo
+          </button>
+          <button type="button" onClick={redo} className={`${buttonClasses} border`}>
+            Redo
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            className={`${buttonClasses} bg-primary text-buttonTextPrimary ml-auto ${isSaving ? 'pointer-events-none opacity-30' : ''}`}
+          >
+            {isSaving ? 'Saving...' : 'Save Signature'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
