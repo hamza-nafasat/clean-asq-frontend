@@ -45,24 +45,17 @@ const formApis = createApi({
         url: '/my',
         method: 'GET',
       }),
-      providesTags: [{ type: 'Form', id: 'LIST' }],
+      providesTags: ['Form'],
     }),
 
     // get single form
     // ---------------
-    getSingleForm: builder.mutation({
-      query: data => ({
-        url: `single/${data?._id}`,
-        method: 'GET',
-      }),
-      invalidatesTags: ['Form'],
-    }),
     getSingleFormQuery: builder.query({
       query: data => ({
         url: `single/${data?._id}`,
         method: 'GET',
       }),
-      providesTags: [{ type: 'Form', id: 'LIST' }],
+      providesTags: ['Form'],
     }),
 
     // DELETE single form
@@ -114,6 +107,7 @@ const formApis = createApi({
         url: `/get-saved/${formId}`,
         method: 'GET',
       }),
+      invalidatesTags: ['SubmitForm'],
     }),
 
     // get saved form by userId
@@ -123,6 +117,7 @@ const formApis = createApi({
         url: `/get-submitted-form/${formId}/${userId}`,
         method: 'GET',
       }),
+      invalidatesTags: ['SubmitForm'],
     }),
 
     // remove saved form

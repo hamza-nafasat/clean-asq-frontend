@@ -17,6 +17,7 @@ const DEFAULT_COLORS = {
 };
 
 export const BrandingProvider = ({ children }) => {
+  const [name, setName] = useState('Apply Super Quick');
   const [primaryColor, setPrimaryColor] = useState(DEFAULT_COLORS.primaryColor);
   const [logo, setLogo] = useState('');
   const [secondaryColor, setSecondaryColor] = useState(DEFAULT_COLORS.secondaryColor);
@@ -33,6 +34,7 @@ export const BrandingProvider = ({ children }) => {
   useEffect(() => {
     const savedBranding = JSON.parse(localStorage.getItem('brandingData'));
     if (savedBranding) {
+      setName(savedBranding.name || 'Apply Super Quick');
       setPrimaryColor(savedBranding.primaryColor || DEFAULT_COLORS.primaryColor);
       setSecondaryColor(savedBranding.secondaryColor || DEFAULT_COLORS.secondaryColor);
       setAccentColor(savedBranding.accentColor || DEFAULT_COLORS.accentColor);
@@ -59,6 +61,7 @@ export const BrandingProvider = ({ children }) => {
       fontFamily,
       buttonTextPrimary,
       buttonTextSecondary,
+      name,
     };
     localStorage.setItem('brandingData', JSON.stringify(brandingData));
 
@@ -83,6 +86,7 @@ export const BrandingProvider = ({ children }) => {
     // Apply font family globally using CSS variables
     document.documentElement.style.setProperty('--font-primary', `var(--font-${fontFamily?.toLowerCase()})`);
   }, [
+    name,
     primaryColor,
     secondaryColor,
     accentColor,
@@ -96,6 +100,8 @@ export const BrandingProvider = ({ children }) => {
   ]);
 
   const value = {
+    name,
+    setName,
     logo,
     setLogo,
     primaryColor,
@@ -125,4 +131,5 @@ export const BrandingProvider = ({ children }) => {
 
 const useBranding = () => useContext(BrandingContext);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { useBranding };

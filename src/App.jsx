@@ -41,6 +41,7 @@ function App() {
   const [getUserProfile, { isLoading }] = useGetMyProfileFirstTimeMutation();
   const { user } = useSelector(state => state.auth);
   const {
+    setName,
     setPrimaryColor,
     setSecondaryColor,
     setAccentColor,
@@ -61,9 +62,8 @@ function App() {
       if (res?.success) {
         dispatch(userExist(res?.data));
         const formBranding = res?.data?.branding;
-        console.log('form branding is ', formBranding);
-        console.log('returned branding is applied');
         if (formBranding?.colors) {
+          setName(formBranding.name);
           setPrimaryColor(formBranding.colors.primary);
           setSecondaryColor(formBranding.colors.secondary);
           setAccentColor(formBranding.colors.accent);
@@ -86,6 +86,7 @@ function App() {
       setLoading(false);
     }
   }, [
+    setName,
     dispatch,
     getUserProfile,
     setAccentColor,

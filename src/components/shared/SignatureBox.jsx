@@ -218,22 +218,24 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       </div>
 
       {/* Mode Switch */}
-      <div className="mt-4 flex gap-3">
-        <button
-          type="button"
-          onClick={() => setMode('draw')}
-          className={`${buttonClasses} flex-1 ${mode === 'draw' ? 'bg-primary text-buttonTextPrimary' : 'bg-secondary text-buttonTextSecondary'}`}
-        >
-          ✍️ Draw
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode('type')}
-          className={`${buttonClasses} flex-1 ${mode === 'type' ? 'bg-primary text-buttonTextPrimary' : 'bg-secondary text-buttonTextSecondary'}`}
-        >
-          ⌨️ Type
-        </button>
-      </div>
+      {!isPdf && (
+        <div className="mt-4 flex gap-3">
+          <button
+            type="button"
+            onClick={() => setMode('draw')}
+            className={`${buttonClasses} flex-1 ${mode === 'draw' ? 'bg-primary text-buttonTextPrimary' : 'bg-secondary text-buttonTextSecondary'}`}
+          >
+            ✍️ Draw
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('type')}
+            className={`${buttonClasses} flex-1 ${mode === 'type' ? 'bg-primary text-buttonTextPrimary' : 'bg-secondary text-buttonTextSecondary'}`}
+          >
+            ⌨️ Type
+          </button>
+        </div>
+      )}
 
       {/* Drawing / Typing Area */}
       <div className="mt-4 h-56 rounded-md border bg-gray-50">

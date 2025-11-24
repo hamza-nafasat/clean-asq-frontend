@@ -14,6 +14,7 @@ const Login = () => {
   const [login, { isLoading }] = useLoginMutation();
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const {
+    setName,
     setPrimaryColor,
     setSecondaryColor,
     setAccentColor,
@@ -37,6 +38,7 @@ const Login = () => {
         console.log('form branding is ', formBranding);
         console.log('returned branding is applied');
         if (formBranding?.colors) {
+          setName(formBranding.name);
           setPrimaryColor(formBranding.colors.primary);
           setSecondaryColor(formBranding.colors.secondary);
           setAccentColor(formBranding.colors.accent);
@@ -57,6 +59,7 @@ const Login = () => {
       dispatch(userNotExist());
     }
   }, [
+    setName,
     dispatch,
     getUserProfile,
     setAccentColor,
@@ -115,7 +118,7 @@ const Login = () => {
             onClick={loginHandler}
             type="submit"
             label="Sign in"
-            className="hover:!bg-secondary text-secondary !border-secondary w-full !rounded-[20px] !border bg-blue-600 hover:!text-white"
+            className="hover:bg-secondary! text-secondary border-secondary! w-full rounded-[20px]! border! bg-blue-600 hover:text-white!"
           />
         </form>
       </div>

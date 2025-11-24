@@ -1,20 +1,16 @@
+import { useBranding } from '@/hooks/BrandingContext';
 import React from 'react';
-import { useSelector } from 'react-redux';
 
 function Footer() {
-  const { user } = useSelector(state => state.auth);
+  // const { user } = useSelector(state => state.auth);
+  const { name } = useBranding();
 
   return (
     <div className="flex h-20 w-full flex-col items-center justify-between gap-2 rounded-t-md border-t-2 bg-white px-4 py-4 shadow md:h-16 md:flex-row md:gap-0 md:px-4 xl:px-20">
       {/* Left side */}
       <div className="text-textPrimary">
         © 2025
-        <span className="text-primary px-2">
-          {user?.branding?.name
-            ? user?.branding?.name.charAt(0).toUpperCase() + user?.branding?.name.slice(1)
-            : 'Apply Super Quick'}
-          .
-        </span>
+        <span className="px-2">{name || 'Apply Super Quick'}</span>
         All rights reserved
       </div>
 

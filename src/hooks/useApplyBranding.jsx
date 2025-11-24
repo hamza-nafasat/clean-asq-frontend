@@ -6,6 +6,7 @@ import { useBranding } from './BrandingContext';
 const useApplyBranding = ({ formId }) => {
   const [isApplied, setIsApplied] = useState(false);
   const {
+    setName,
     setPrimaryColor,
     setSecondaryColor,
     setAccentColor,
@@ -26,6 +27,7 @@ const useApplyBranding = ({ formId }) => {
     formBranding => {
       if (formBranding?.colors) {
         console.log('form branding is applied');
+        setName(formBranding?.name || 'Apply Super Quick');
         setPrimaryColor(formBranding?.colors?.primary);
         setSecondaryColor(formBranding?.colors?.secondary);
         setAccentColor(formBranding?.colors?.accent);
@@ -40,6 +42,7 @@ const useApplyBranding = ({ formId }) => {
       if (formBranding?.fontFamily) setFontFamily(formBranding?.fontFamily);
     },
     [
+      setName,
       setAccentColor,
       setBackgroundColor,
       setButtonTextPrimary,
