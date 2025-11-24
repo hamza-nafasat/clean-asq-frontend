@@ -1,14 +1,14 @@
-import { useRef, useState } from 'react';
-import { IoEyeOffSharp } from 'react-icons/io5';
-import { RxEyeOpen } from 'react-icons/rx';
-import Button from './Button';
-import Modal from './Modal';
-import { toast } from 'react-toastify';
+import { useBranding } from '@/hooks/BrandingContext';
 import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
 import DOMPurify from 'dompurify';
+import { useCallback, useRef, useState } from 'react';
+import { IoEyeOffSharp } from 'react-icons/io5';
+import { RxEyeOpen } from 'react-icons/rx';
+import { toast } from 'react-toastify';
+import Button from './Button';
+import Modal from './Modal';
 import TextField from './TextField';
-import { FIELD_TYPES } from '@/data/constants';
-import { useBranding } from '@/hooks/BrandingContext';
+import { Autocomplete } from '@react-google-maps/api';
 
 const DynamicField = ({ cn, field, className = '', form, placeholder, value, setForm, ...rest }) => {
   const { type, label, id, options, name, required } = field;
@@ -617,16 +617,16 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
     aiResponse,
     isDisplayText,
     ai_formatting,
+    isGooglePlaces = false,
   } = field;
 
   if (name.includes('ssn')) formatting = '3,2,4';
   if (name.includes('phone')) formatting = '3,3,4';
 
-  console.log('nameis ', name);
-
   const inputRef = useRef(null);
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
+  const [autocomplete, setAutocomplete] = useState(null);
 
   const formatDate = dateStr => {
     if (!dateStr) return '';
@@ -671,6 +671,17 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
       return formatted;
     }
     return value;
+  };
+
+  const onLoad = useCallback(autoC => {
+    autoC.setFields(['address_components', 'formatted_address', 'geometry', 'place_id']);
+    setAutocomplete(autoC);
+  }, []);
+
+  const onPlaceChanged = () => {
+    const place = autocomplete.getPlace();
+    console.log('Selected place:', place.formatted_address);
+    setForm(prev => ({ ...prev, [name]: place.formatted_address }));
   };
 
   return (
@@ -728,33 +739,59 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                 </div>
               ) : (
                 <div className="relative">
-                  <input
-                    ref={inputRef}
-                    name={name}
-                    placeholder={placeholder}
-                    type={isMasked && type !== 'date' ? 'text' : type}
-                    value={getDisplayValue(type, form?.[name])}
-                    onChange={e =>
-                      setForm(prev => ({
-                        ...prev,
-                        [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
-                      }))
-                    }
-                    onFocus={() => setShowMasked(false)}
-                    onBlur={() => setShowMasked(true)}
-                    readOnly={showMasked}
-                    autoComplete="off"
-                    className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
-                      required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
-                    }`}
-                    {...(isConfirmField
-                      ? {
-                          onPaste: e => e.preventDefault(),
-                          onCopy: e => e.preventDefault(),
-                          onCut: e => e.preventDefault(),
+                  {isGooglePlaces && type == 'text' ? (
+                    <Autocomplete
+                      onLoad={onLoad}
+                      className="w-full"
+                      onPlaceChanged={onPlaceChanged}
+                      options={{ fields: ['address_components', 'formatted_address', 'geometry', 'place_id'] }}
+                    >
+                      <input
+                        ref={inputRef}
+                        name={name}
+                        placeholder={placeholder}
+                        type={type}
+                        value={form?.[name] || ''}
+                        onChange={e =>
+                          setForm(prev => ({
+                            ...prev,
+                            [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
+                          }))
                         }
-                      : {})}
-                  />
+                        className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+                          required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
+                        }`}
+                      />
+                    </Autocomplete>
+                  ) : (
+                    <input
+                      ref={inputRef}
+                      name={name}
+                      placeholder={placeholder}
+                      type={isMasked && type !== 'date' ? 'text' : type}
+                      value={getDisplayValue(type, form?.[name])}
+                      onChange={e =>
+                        setForm(prev => ({
+                          ...prev,
+                          [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
+                        }))
+                      }
+                      onFocus={() => setShowMasked(false)}
+                      onBlur={() => setShowMasked(true)}
+                      readOnly={showMasked}
+                      autoComplete="off"
+                      className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+                        required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
+                      }`}
+                      {...(isConfirmField
+                        ? {
+                            onPaste: e => e.preventDefault(),
+                            onCopy: e => e.preventDefault(),
+                            onCut: e => e.preventDefault(),
+                          }
+                        : {})}
+                    />
+                  )}
 
                   {isMasked && (
                     <span
@@ -846,11 +883,11 @@ const AiHelpModal = ({ aiResponse }) => {
 };
 
 export {
+  AiHelpModal,
   CheckboxInputType,
   MultiCheckboxInputType,
   OtherInputType,
   RadioInputType,
   RangeInputType,
   SelectInputType,
-  AiHelpModal,
 };

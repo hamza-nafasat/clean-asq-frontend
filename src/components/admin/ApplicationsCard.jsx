@@ -199,16 +199,16 @@ export default function ApplicationsCard() {
               setCreateFormModal(true);
               setFile(null);
             }}
-            className="truncate !text-sm md:!text-base"
+            className="truncate text-sm! md:text-base!"
           />
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="mb-6 grid w-full grid-cols-1 items-end gap-[8px] xl:grid-cols-2">
+      <div className="mb-6 grid w-full grid-cols-1 items-end gap-2 xl:grid-cols-2">
         {/* Search Input with Toggle */}
 
-        <div className="w-full rounded-[4px]">
+        <div className="w-full rounded-lg">
           <TextField
             label={'Advance search'}
             type="text"
@@ -220,13 +220,13 @@ export default function ApplicationsCard() {
             rightIcon={
               <div className="flex gap-x-2">
                 <Button
-                  className={`!border-none ${searchMode === 'client' ? '!bg-primary !text-white' : '!bg-gray-200 !text-gray-600'}`}
+                  className={`border-none! ${searchMode === 'client' ? 'bg-primary! text-white!' : 'bg-gray-200! text-gray-600!'}`}
                   onClick={() => setSearchMode('client')}
                   label={'BY CLIENT#'}
                 />
 
                 <Button
-                  className={`!border-none ${searchMode === 'name' ? '!bg-primary !text-white' : '!bg-gray-200 !text-gray-600'}`}
+                  className={`border-none! ${searchMode === 'name' ? 'bg-primary! text-white!' : 'bg-gray-200! text-gray-600!'}`}
                   onClick={() => setSearchMode('name')}
                   label={'BY NAME#'}
                 />
@@ -244,7 +244,7 @@ export default function ApplicationsCard() {
           </div>
           {/* Search Button */}
           <div className="col-span-6 flex items-end justify-end md:col-span-3 xl:col-span-3">
-            <Button icon={CiSearch} label={'Search'} className="mt-0 !h-12.5 md:mt-8 md:!w-full" />
+            <Button icon={CiSearch} label={'Search'} className="mt-0 h-12.5! md:mt-8 md:w-full!" />
           </div>
         </div>
       </div>
@@ -257,7 +257,7 @@ export default function ApplicationsCard() {
           return (
             <div
               key={index}
-              className="relative flex min-w-0 flex-col rounded-[8px] border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
+              className="relative flex min-w-0 flex-col rounded-xl border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
             >
               <img
                 src={form?.branding?.selectedLogo || logo}
@@ -319,7 +319,7 @@ export default function ApplicationsCard() {
                 {/* <CardIcon /> */}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <h2 className="text-base leading-tight font-bold break-words text-gray-700 sm:text-lg md:text-2xl">
+                    <h2 className="text-base leading-tight font-bold wrap-break-word text-gray-700 sm:text-lg md:text-2xl">
                       {form?.name}
                     </h2>
                   </div>

@@ -332,7 +332,7 @@ function AllUserRoles() {
         highlightOnHover
         progressPending={isLoading}
         noDataComponent="No roles found"
-        className="!rounded-t-xl"
+        className="rounded-t-xl!"
       />
 
       {/* Add Role Modal */}

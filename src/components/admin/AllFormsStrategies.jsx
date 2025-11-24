@@ -161,7 +161,7 @@ function AllFormsStrategies() {
           pagination
           highlightOnHover
           noDataComponent="No data found"
-          className="!rounded-lg"
+          className="rounded-lg!"
         />
         {/* </div> */}
       </div>
