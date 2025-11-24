@@ -38,6 +38,7 @@ function CompanyInformation({
   isSignature,
 }) {
   const prevRef = useRef(null);
+  const containerRef = useRef(null);
   const { user } = useSelector(state => state.auth);
   const { formData } = useSelector(state => state?.form);
   const [customizeModal, setCustomizeModal] = useState(false);
@@ -278,6 +279,20 @@ function CompanyInformation({
     setIsAllRequiredFieldsFilled(isAllRequiredFieldsFilled);
   }, [form, isCreator, isSignature, naicsToMccDetails.NAICS, requiredNames]);
 
+  // for dangerouslySetInnerHTML redirection
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const links = container.querySelectorAll('a');
+    links.forEach(link => {
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener noreferrer');
+      link.addEventListener('click', e => {
+        e.stopPropagation();
+      });
+    });
+  }, [step?.ai_formatting]);
+
   return (
     <div className="mt-14 h-full overflow-auto">
       {updateSectionFromatingModal && (
@@ -307,8 +322,9 @@ function CompanyInformation({
         <div className="mb-4 flex w-full items-end gap-3">
           <div
             className="w-full"
+            ref={containerRef}
             dangerouslySetInnerHTML={{
-              __html: step?.ai_formatting,
+              __html: step?.ai_formatting || '',
             }}
           />
         </div>

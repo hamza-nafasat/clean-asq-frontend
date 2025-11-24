@@ -6,7 +6,6 @@ import TextField from './TextField';
 import Button from './Button';
 
 const EditSectionDisplayTextFromatingModal = ({ step, setModal }) => {
-  console.log('step is ', step);
   const [displayText, setDisplayText] = useState(step.displayText || '');
   const [formattingInstructionForAi, setFormattingInstructionForAi] = useState(
     step.displayTextFormattingInstructions || ''

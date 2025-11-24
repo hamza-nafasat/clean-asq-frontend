@@ -76,7 +76,6 @@ function ProcessingInfo({
         if (field?.conditional_fields?.length > 0) {
           field?.conditional_fields?.forEach(cf => {
             const fieldName = `${field.name}/${cf?.name}`;
-            console.log('fieldname is ', fieldName);
             initialForm[fieldName] = reduxData ? reduxData[fieldName] || '' : '';
           });
         }
