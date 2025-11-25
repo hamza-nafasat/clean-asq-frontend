@@ -176,7 +176,6 @@ function Documents({
     if (fields && fields.length > 0) {
       const initialForm = {};
       fields.forEach(field => {
-        console.log('fileds.name', field?.name);
         if (field.type === 'file') setFileFieldName(field?.name);
         initialForm[field?.name] = reduxData?.[field?.name] ? reduxData?.[field?.name] || '' : '';
       });
@@ -294,12 +293,12 @@ function Documents({
                     <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
                   </div>
                 )}
-                <FileUploader label={field?.label} file={file} onFileSelect={setFile} />
                 {field?.ai_formatting && field?.isDisplayText && (
                   <div className="flex w-full flex-col gap-4 p-4 pb-0">
                     <div className="w-full" dangerouslySetInnerHTML={{ __html: field?.ai_formatting ?? '' }} />
                   </div>
                 )}
+                <FileUploader label={field?.label} file={file} onFileSelect={setFile} />
               </div>
             );
           } else {

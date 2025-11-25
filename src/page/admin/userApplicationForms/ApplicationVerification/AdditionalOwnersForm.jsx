@@ -201,6 +201,7 @@ const AdditionalOwnersForm = () => {
               label={'SSN'}
               type="text"
               placeholder="Enter your ssn"
+              formatting="3,2,4"
               value={form?.ssn}
               onChange={e => setForm({ ...form, ssn: e.target.value })}
               className="max-w-[500px]"
@@ -216,7 +217,7 @@ const AdditionalOwnersForm = () => {
             <Button
               disabled={updateLoading}
               onClick={updateBeneficialOwnersHandler}
-              className={`min-w-[130px] py-[8px] ${updateLoading ? 'cursor-not-allowed opacity-30' : ''}`}
+              className={`min-w-[130px] py-2 ${updateLoading ? 'cursor-not-allowed opacity-30' : ''}`}
               label={'Submit'}
             />
           </form>

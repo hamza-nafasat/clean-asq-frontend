@@ -255,7 +255,7 @@ function CompanyOwners({
       return;
     }
     const additionOwnersGet25OrMore = form?.['additional_owners_own_25_percent_or_more'] == 'yes';
-    const applicantIsAlsoPromaryOperator = form?.['applicant_is_also_primary_operator'] == 'yes';
+    const applicantIsAlsoPrimaryOperator = form?.['rolling_owner_is_also_owner'] == 'yes';
     // Check if all required fields are filled
     const allFilled = requiredNames.every(name => {
       const val = form[name];
@@ -286,7 +286,7 @@ function CompanyOwners({
 
     // Logic for is one operator exist or not
     let isOperatorExist = false;
-    if ((additionOwnersGet25OrMore && form.additional_owner?.length) || applicantIsAlsoPromaryOperator) {
+    if ((additionOwnersGet25OrMore && form.additional_owner?.length) || applicantIsAlsoPrimaryOperator) {
       isOperatorExist = true;
     }
     if (!isOperatorExist) setSubmitButtonText('At least one primary operator required');
@@ -488,7 +488,6 @@ function CompanyOwners({
                             <div className="flex w-full gap-4">
                               <TextField
                                 name="job_title"
-                                formatting="3,3,4"
                                 label="Job Title"
                                 value={job_title}
                                 onChange={e => handleChangeOnOtherOwnersData(e, index)}
@@ -571,7 +570,7 @@ function CompanyOwners({
                     onClick={handleAddOwner}
                     icon={GoPlus}
                     className="text-textPrimary! rounded-lg! border! border-[#D5D8DD]! bg-[#F5F5F5]! font-medium! hover:bg-gray-200!"
-                    label="Add additional owner or operatorr"
+                    label="Add additional owner or operator"
                   />
                 </div>
               </div>

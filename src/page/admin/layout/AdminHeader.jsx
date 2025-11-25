@@ -25,7 +25,7 @@ function AdminHeader({ setSidebarOpen }) {
   const isGuest = !user?._id || user?.role?.name == 'guest';
 
   return (
-    <div className="flex h-16 items-center justify-between rounded-md bg-white p-2 shadow">
+    <div className="flex h-20 items-center justify-between rounded-md bg-white p-2 shadow">
       {/* Hamburger Icon (mobile only) */}
       <div className="flex items-center gap-2">
         <button className="rounded-md p-2 hover:bg-gray-100 lg:hidden" onClick={() => setSidebarOpen(true)}>
@@ -40,7 +40,7 @@ function AdminHeader({ setSidebarOpen }) {
             <img
               src={logo || logoApply}
               alt="Logo"
-              className={`object-contain ${'h-[120px] w-[120px]'} }`}
+              className={`object-contain ${'h-[140px] w-[140px]'} }`}
               referrerPolicy="no-referrer"
             />
             {user ? <Button label={'Submission & Draft'} onClick={() => navigate('/submission')} /> : null}
