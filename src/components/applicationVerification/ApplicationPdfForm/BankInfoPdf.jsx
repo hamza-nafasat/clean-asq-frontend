@@ -2,7 +2,6 @@ import { FIELD_TYPES } from '@/data/constants';
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import SignatureBox from '../../shared/SignatureBox';
 import {
@@ -16,7 +15,6 @@ import {
 
 function BankInfoPdf({ name, fields, reduxData, step, isSignature }) {
   const [form, setForm] = useState({});
-  const { idMissionData } = useSelector(state => state.auth);
   const [error] = useState(null);
 
   const signatureUploadHandler = async (file, setIsSaving) => {
@@ -128,14 +126,6 @@ function BankInfoPdf({ name, fields, reduxData, step, isSignature }) {
           }
 
           if (field.name === 'bank_account_holder_name') {
-            const suggestedName = idMissionData?.name || '';
-            const typedName = form[field.name] || '';
-            const shouldShowSuggestion =
-              suggestedName &&
-              typedName.length > 0 &&
-              suggestedName.toLowerCase().includes(typedName.toLowerCase()) &&
-              suggestedName !== typedName;
-
             return (
               <div key={index} className="relative mt-4">
                 <OtherInputType
@@ -145,16 +135,6 @@ function BankInfoPdf({ name, fields, reduxData, step, isSignature }) {
                   setForm={setForm}
                   className="w-full"
                 />
-                {shouldShowSuggestion && (
-                  <div
-                    className="absolute top-full left-0 mt-1 w-full cursor-pointer rounded-md border bg-white p-2 text-sm shadow hover:bg-gray-100"
-                    onClick={() => {
-                      setForm(prev => ({ ...prev, [field.name]: suggestedName }));
-                    }}
-                  >
-                    Use "{suggestedName}"
-                  </div>
-                )}
               </div>
             );
           }

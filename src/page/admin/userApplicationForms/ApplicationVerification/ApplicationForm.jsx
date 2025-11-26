@@ -112,6 +112,7 @@ export default function ApplicationForm() {
 
   useEffect(() => {
     if (form?.data?.sections && form?.data?.sections?.length > 0 && isSavedApiRun) {
+      const companyInformationStep = form?.data?.sections.find(step => step.title === 'company_information_blk');
       const data = [];
       const stepNames = [];
       form?.data?.sections?.forEach(step => {
@@ -147,7 +148,7 @@ export default function ApplicationForm() {
           data.push(<ProcessingInfo {...commonProps} />);
           stepNames.push(step.name);
         } else if (step.title === 'incorporation_article_blk') {
-          data.push(<Documents {...commonProps} />);
+          data.push(<Documents {...commonProps} companyInformationStep={companyInformationStep} />);
           stepNames.push(step.name);
         } else if (step.title === 'custom_section') {
           data.push(<CustomSection {...commonProps} />);

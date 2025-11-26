@@ -432,7 +432,7 @@ const RangeInputType = ({ field, className, form, setForm }) => {
   );
 };
 
-const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => {
+const OtherInputType = ({ field, className, form, setForm, isConfirmField, suggestions = ['john', 'doe'] }) => {
   const isEmpty = value => {
     if (value === undefined || value === null) return true;
     if (typeof value === 'string') return value.trim() === '';
@@ -460,6 +460,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
   const inputRef = useRef(null);
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
 
   const formatDate = dateStr => {
     if (!dateStr) return '';
@@ -573,8 +574,14 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                         [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
                       }))
                     }
-                    onFocus={() => setShowMasked(false)}
-                    onBlur={() => setShowMasked(true)}
+                    onFocus={() => {
+                      setShowMasked(false);
+                      if (suggestions.length) setShowSuggestions(true);
+                    }}
+                    onBlur={() => {
+                      setShowMasked(true);
+                      setTimeout(() => setShowSuggestions(false), 200);
+                    }}
                     readOnly={showMasked}
                     autoComplete="off"
                     className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
@@ -588,6 +595,26 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                         }
                       : {})}
                   />
+
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute top-full left-0 z-10 mt-1 max-h-40 w-full overflow-y-auto rounded-md border bg-black shadow-lg">
+                      {suggestions.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                          onMouseDown={() => {
+                            setForm(prev => ({
+                              ...prev,
+                              [name]: suggestion,
+                            }));
+                            setShowSuggestions(false);
+                          }}
+                        >
+                          {suggestion}
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {isMasked && (
                     <span

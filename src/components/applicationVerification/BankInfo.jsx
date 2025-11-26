@@ -37,12 +37,14 @@ function BankInfo({
   isSignature,
 }) {
   const { user } = useSelector(state => state.auth);
+  const { formData } = useSelector(state => state?.form);
+
+  const [ownersFromLookup, setOwnersFromLookup] = useState([]);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const [form, setForm] = useState({});
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
   const [loadingNext, setLoadingNext] = useState(false);
-  const { idMissionData } = useSelector(state => state.auth);
   const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
   const [accMatch, setAccMatch] = useState(false);
   const [getBankLookup, { isLoading }] = useGetBankLookupMutation();
@@ -50,6 +52,30 @@ function BankInfo({
   const [bankModal, setBankModal] = useState(null);
 
   const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
+
+  useEffect(() => {
+    if (formData) {
+      const lookupData = formData?.company_lookup_data;
+      const searchField = ['founders'];
+      const founders = [];
+      searchField.forEach(field => {
+        let data = lookupData?.find(item => item?.name == field)?.result;
+        if (Array.isArray(data) && typeof data === 'object') {
+          founders.push(...data);
+        } else if (typeof data === 'string') {
+          founders.push(data);
+        } else if (typeof data === 'number') {
+          founders.push(data);
+        }
+      });
+      if (founders?.length) {
+        const uniqueFounders = founders.filter((item, index) => founders.indexOf(item) === index);
+        setOwnersFromLookup(uniqueFounders);
+      } else {
+        setOwnersFromLookup([]);
+      }
+    }
+  }, [formData, step?.ownerSuggesstions]);
 
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
@@ -248,33 +274,16 @@ function BankInfo({
           }
 
           if (field.name === 'bank_account_holder_name') {
-            const suggestedName = idMissionData?.name || '';
-            const typedName = form[field.name] || '';
-            const shouldShowSuggestion =
-              suggestedName &&
-              typedName.length > 0 &&
-              suggestedName.toLowerCase().includes(typedName.toLowerCase()) &&
-              suggestedName !== typedName;
-
             return (
               <div key={index} className="relative mt-4">
                 <OtherInputType
                   field={field}
+                  suggestions={ownersFromLookup}
                   placeholder={field.placeholder}
                   form={form}
                   setForm={setForm}
                   className="w-full"
                 />
-                {shouldShowSuggestion && (
-                  <div
-                    className="absolute top-full left-0 mt-1 w-full cursor-pointer rounded-md border bg-white p-2 text-sm shadow hover:bg-gray-100"
-                    onClick={() => {
-                      setForm(prev => ({ ...prev, [field.name]: suggestedName }));
-                    }}
-                  >
-                    Use "{suggestedName}"
-                  </div>
-                )}
               </div>
             );
           }

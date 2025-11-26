@@ -596,7 +596,7 @@ const RangeInputType = ({ field, className, form, setForm }) => {
 //   );
 // };
 
-const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => {
+const OtherInputType = ({ field, className, form, setForm, isConfirmField, suggestions = [] }) => {
   const isEmpty = value => {
     if (value === undefined || value === null) return true;
     if (typeof value === 'string') return value.trim() === '';
@@ -627,6 +627,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const [autocomplete, setAutocomplete] = useState(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const formatDate = dateStr => {
     if (!dateStr) return '';
@@ -758,7 +759,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                             [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
                           }))
                         }
-                        className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+                        className={`relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
                           required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
                         }`}
                       />
@@ -776,11 +777,17 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                           [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
                         }))
                       }
-                      onFocus={() => setShowMasked(false)}
-                      onBlur={() => setShowMasked(true)}
+                      onFocus={() => {
+                        setShowMasked(false);
+                        if (suggestions.length > 0) setShowSuggestions(true);
+                      }}
+                      onBlur={() => {
+                        setShowMasked(true);
+                        setTimeout(() => setShowSuggestions(false), 100);
+                      }}
                       readOnly={showMasked}
                       autoComplete="off"
-                      className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+                      className={`relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
                         required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
                       }`}
                       {...(isConfirmField
@@ -791,6 +798,26 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                           }
                         : {})}
                     />
+                  )}
+
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute top-full left-0 z-10 mt-1 max-h-40 w-full overflow-y-auto rounded-md border bg-white shadow-lg">
+                      {suggestions.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                          onMouseDown={() => {
+                            setForm(prev => ({
+                              ...prev,
+                              [name]: suggestion,
+                            }));
+                            setShowSuggestions(false);
+                          }}
+                        >
+                          {suggestion}
+                        </div>
+                      ))}
+                    </div>
                   )}
 
                   {isMasked && (
