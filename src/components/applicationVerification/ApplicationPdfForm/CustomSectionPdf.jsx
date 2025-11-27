@@ -10,7 +10,7 @@ import {
   RadioInputType,
   RangeInputType,
   SelectInputType,
-} from './shared/DynamicField';
+} from './shared/DynamicFieldForPdf';
 
 function CustomSectionPdf({ fields, name, step, reduxData, isSignature }) {
   const [form, setForm] = useState({});

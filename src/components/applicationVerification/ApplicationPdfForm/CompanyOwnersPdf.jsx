@@ -12,7 +12,7 @@ import {
   RadioInputType,
   RangeInputType,
   SelectInputType,
-} from './shared/DynamicField';
+} from './shared/DynamicFieldForPdf';
 import { EditSectionDisplayTextFromatingModal } from '../../shared/small/EditSectionDisplayTextFromatingModal';
 import Modal from '../../shared/small/Modal';
 

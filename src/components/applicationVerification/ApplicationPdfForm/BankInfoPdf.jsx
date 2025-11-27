@@ -11,7 +11,7 @@ import {
   RadioInputType,
   RangeInputType,
   SelectInputType,
-} from './shared/DynamicField';
+} from './shared/DynamicFieldForPdf';
 
 function BankInfoPdf({ name, fields, reduxData, step, isSignature }) {
   const [form, setForm] = useState({});

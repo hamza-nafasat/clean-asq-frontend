@@ -186,6 +186,19 @@ const SelectInputType = ({ field, className, form, setForm }) => {
     field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const selectHandler = e => setForm({ ...form, [name]: e.target.value });
+
+  // Determine current value to display
+  let displayValue = form?.[name] ?? '';
+  // If the value matches an option label, convert to its value
+  const isValueInOptions = options?.some(option => option.value === displayValue);
+  if (!isValueInOptions) {
+    const matchedOptionByLabel = options?.find(
+      option => String(option.label).toLowerCase() === String(displayValue).toLowerCase()
+    );
+    if (matchedOptionByLabel) displayValue = matchedOptionByLabel.value;
+  }
+  // Check if the display value exists in options
+
   return (
     <>
       <div className={`flex w-full flex-col items-start ${className}`}>
@@ -207,11 +220,18 @@ const SelectInputType = ({ field, className, form, setForm }) => {
         <div className="flex w-full gap-2">
           <select
             name={name}
+            value={displayValue}
             required={required}
             className="border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
             onChange={selectHandler}
           >
+            {/* Show placeholder if value is not in options */}
             <option value="">{placeholder ?? 'Choose an option'}</option>
+            {!isValueInOptions && displayValue && form[name] && (
+              <option className="hidden" value={form[name]}>
+                {form[name]}
+              </option>
+            )}
             {options?.map((option, index) => (
               <option key={index} value={option?.value}>
                 {option?.label}
