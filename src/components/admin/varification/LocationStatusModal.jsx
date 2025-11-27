@@ -160,7 +160,7 @@ export const LocationModalComponent = ({ locationModal, setLocationModal, formLo
             icon={isLoading ? CgSpinner : null}
             label="Format"
             variant="primary"
-            className="!w-fit self-end"
+            className="w-fit! self-end"
           />
         </div>
 

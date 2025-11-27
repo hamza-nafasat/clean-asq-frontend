@@ -54,12 +54,12 @@ export default function SingleApplication() {
   const [sendOtp, { isLoading: otpLoading }] = useSendOtpMutation();
   const [verifyEmail, { isLoading: emailLoading }] = useVerifyEmailMutation();
   const [updateMyProfile] = useUpdateMyProfileMutation();
-  const { data: form, refetch: formRefetch } = useGetSingleFormQueryQuery({ _id: formId });
+  const { data: form, refetch: formRefetch, isLoading: isFormLoading } = useGetSingleFormQueryQuery({ _id: formId });
   const [getSavedFormData] = useGetSavedFormMutation();
   const { formData } = useSelector(state => state?.form);
   const [saveFormInDraft] = useSaveFormInDraftMutation();
   const [openRedirectModal, setOpenRedirectModal] = useState(false);
-  const { isApplied } = useApplyBranding({ formId: formId });
+  const { isApplied, isApplying } = useApplyBranding({ formId: formId });
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [showSignatureHelpModal, setShowSignatureHelpModal] = useState(false);
   const [showIdMissionDataModal, setShowIdMissionDataModal] = useState(false);
@@ -469,7 +469,7 @@ export default function SingleApplication() {
   }, [idMissionVerifiedData]);
 
   const isCreator = user?._id && user?._id == form?.data?.owner && user?.role !== 'guest';
-  if (!isApplied || loadingForValidatingOtp) return <CustomLoading />;
+  if (!isApplied || loadingForValidatingOtp || isFormLoading || isApplying) return <CustomLoading />;
 
   return submiting ? (
     <div className="flex h-full flex-col items-center justify-center space-y-6 rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-900">

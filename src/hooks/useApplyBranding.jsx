@@ -5,6 +5,7 @@ import { useBranding } from './BrandingContext';
 
 const useApplyBranding = ({ formId }) => {
   const [isApplied, setIsApplied] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
   const {
     setName,
     setPrimaryColor,
@@ -59,6 +60,7 @@ const useApplyBranding = ({ formId }) => {
 
   useEffect(() => {
     if (isLoading || !formId) return;
+    setIsApplying(true);
     if (formId && !isLoading) {
       const formBranding = form?.data?.branding;
       setBrandingHandler(formBranding);
@@ -67,7 +69,7 @@ const useApplyBranding = ({ formId }) => {
       console.log('user branding is applied');
       setBrandingHandler(formBranding);
     }
-
+    setIsApplying(false);
     setIsApplied(true);
 
     return () => {
@@ -78,7 +80,7 @@ const useApplyBranding = ({ formId }) => {
     };
   }, [form?.data?._id, form?.data?.branding, formId, isLoading, setBrandingHandler, user?.branding]);
 
-  return { isApplied: isApplied };
+  return { isApplied, isApplying };
 };
 
 export default useApplyBranding;

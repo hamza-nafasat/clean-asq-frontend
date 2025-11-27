@@ -2,7 +2,7 @@
 import { useLogoutMutation } from '@/redux/apis/authApis';
 import { userNotExist } from '@/redux/slices/authSlice';
 import { LogInIcon } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { HiChevronDown } from 'react-icons/hi';
 import { IoChevronForwardOutline, IoLogOutOutline } from 'react-icons/io5';
 import { useDispatch, useSelector } from 'react-redux';
@@ -11,6 +11,7 @@ import { toast } from 'react-toastify';
 import logoApply from '../../../assets/images/logo.png';
 
 import Button from '@/components/shared/small/Button';
+import CustomLoading from '@/components/shared/small/CustomLoading';
 import { useBranding } from '@/hooks/BrandingContext';
 import { HiMenu } from 'react-icons/hi';
 
@@ -21,9 +22,19 @@ function AdminHeader({ setSidebarOpen }) {
   const profileRef = useRef(null);
   const { logo } = useBranding();
 
+  const [loadingTime, setLoadingTime] = useState(500);
+
   const profileOpenHandler = () => setIsProfileOpen(prev => !prev);
   const isGuest = !user?._id || user?.role?.name == 'guest';
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoadingTime(0);
+    }, loadingTime);
+    return () => clearTimeout(timer);
+  }, [loadingTime]);
+
+  if (isGuest && loadingTime) return <CustomLoading />;
   return (
     <div className="flex h-20 items-center justify-between rounded-md bg-white p-2 shadow">
       {/* Hamburger Icon (mobile only) */}
@@ -40,7 +51,7 @@ function AdminHeader({ setSidebarOpen }) {
             <img
               src={logo || logoApply}
               alt="Logo"
-              className={`object-contain ${'h-[140px] w-[140px]'} }`}
+              className={`object-contain ${'h-[200px] max-h-[200px] w-[200px]'} }`}
               referrerPolicy="no-referrer"
             />
             {user ? <Button label={'Submission & Draft'} onClick={() => navigate('/submission')} /> : null}

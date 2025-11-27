@@ -1,5 +1,10 @@
 import { useAddBrandingInFormMutation, useGetAllBrandingsQuery } from '@/redux/apis/brandingApis';
-import { useCreateFormMutation, useDeleteSingleFormMutation, useGetMyAllFormsQuery } from '@/redux/apis/formApis';
+import {
+  useCreateFormMutation,
+  useDeleteSingleFormMutation,
+  useGetMyAllFormsQuery,
+  useUpdateFormMutation,
+} from '@/redux/apis/formApis';
 import { MoreVertical } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { CiSearch } from 'react-icons/ci';
@@ -29,7 +34,9 @@ export default function ApplicationsCard() {
   const [file, setFile] = useState(null);
   const [createForm, { isLoading }] = useCreateFormMutation();
   const [openModal, setOpenModal] = useState(false);
+  const [openFormUpdate, setOpenFormUpdate] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
+  const [selectedForm, setSelectedForm] = useState(null);
   const [selectedBranding, setSelectedBranding] = useState(null);
   const [onHome, setOnHome] = useState(false);
   const { data: forms, refetch } = useGetMyAllFormsQuery();
@@ -129,7 +136,7 @@ export default function ApplicationsCard() {
         onClose={() => setDeleteConfirmation(null)}
         onConfirm={handleDeleteForm}
         title="Delete Form"
-        message={`Are you sure you want to delete tihs form?`}
+        message={`Are you sure you want to delete this form?`}
         confirmButtonText="Delete"
         confirmButtonClassName="bg-red-500 text-white"
       />
@@ -154,6 +161,11 @@ export default function ApplicationsCard() {
           onClose={() => setOpenModal(false)}
           title={'Apply Branding'}
         />
+      )}
+      {openFormUpdate && (
+        <Modal onClose={() => setOpenFormUpdate(false)} title="Set Location">
+          <FormConfigurationModal form={selectedForm} refetch={refetch} setModal={setOpenFormUpdate} />
+        </Modal>
       )}
       {locationModal && (
         <Modal onClose={() => setLocationModal(false)} title="Set Location">
@@ -260,13 +272,14 @@ export default function ApplicationsCard() {
               className="relative flex min-w-0 flex-col rounded-xl border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
             >
               {' '}
-              <img
-                src={form?.branding?.selectedLogo || logo}
-                width={100}
-                height={100}
-                alt="logo"
-                referrerPolicy="no-referrer"
-              />
+              <div className="flex h-[100px] max-h-[100px] w-[250px] max-w-[250px] items-start!">
+                <img
+                  src={form?.branding?.selectedLogo || logo}
+                  alt="logo"
+                  className="flex h-full w-full"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
               <div className="flex items-center justify-end">
                 <div className="relative">
                   <button
@@ -279,6 +292,16 @@ export default function ApplicationsCard() {
                   </button>
                   {actionMenu === form?._id && (
                     <div ref={buttonRef} className="absolute right-0 mt-2 w-40 rounded border bg-white shadow-lg">
+                      <button
+                        className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                        onClick={() => {
+                          setSelectedId(form?._id);
+                          setSelectedForm(form);
+                          setOpenFormUpdate(true);
+                        }}
+                      >
+                        Update Form
+                      </button>
                       <button
                         className="block w-full px-4 py-2 text-left hover:bg-gray-100"
                         onClick={() => {
@@ -374,3 +397,54 @@ export default function ApplicationsCard() {
     </div>
   );
 }
+
+export const FormConfigurationModal = ({ form, refetch, setModal }) => {
+  const [redirectUrl, setRedirectUrl] = useState(form?.redirectUrl || '');
+  const [updateForm] = useUpdateFormMutation();
+
+  const handleFormLocationUpdate = async () => {
+    if (!redirectUrl) return toast.error('Please select a form');
+    try {
+      const res = await updateForm({ _id: form?._id, data: { redirectUrl } }).unwrap();
+      if (res?.success) {
+        await refetch();
+        toast?.success(res?.message || 'Form updated successfully');
+        setModal(false);
+      }
+    } catch (error) {
+      console.error('Error updating form:', error);
+      toast.error(error?.data?.message || 'Failed to update form');
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center p-4">
+      <div className="flex w-full max-w-2xl flex-col gap-6">
+        {/* Heading */}
+        <h3 className="text-center text-lg font-semibold text-gray-800">Configure Location Settings</h3>
+
+        {/* Title Input */}
+
+        {/* Message Textarea */}
+        <div className="flex flex-col gap-2">
+          <TextField
+            label="Redirect URL"
+            id="redirect-url"
+            placeholder="Enter redirect URL"
+            value={redirectUrl}
+            onChange={e => setRedirectUrl(e.target.value)}
+            name="redirect-url"
+          />
+        </div>
+
+        {/* Format Text Label and Button */}
+
+        {/* Action Buttons */}
+        <div className="flex w-full justify-end gap-2">
+          <Button label="Cancel" variant="secondary" onClick={() => setModal(false)} />
+          <Button label="Save" variant="primary" onClick={handleFormLocationUpdate} />
+        </div>
+      </div>
+    </div>
+  );
+};
