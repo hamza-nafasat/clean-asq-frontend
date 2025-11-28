@@ -21,7 +21,6 @@ function AdminHeader({ setSidebarOpen }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef(null);
   const { logo } = useBranding();
-
   const [loadingTime, setLoadingTime] = useState(500);
 
   const profileOpenHandler = () => setIsProfileOpen(prev => !prev);
@@ -36,7 +35,7 @@ function AdminHeader({ setSidebarOpen }) {
 
   if (isGuest && loadingTime) return <CustomLoading />;
   return (
-    <div className="flex h-20 items-center justify-between rounded-md bg-white p-2 shadow">
+    <div className="flex min-h-20 items-center justify-between rounded-md bg-white p-2 shadow">
       {/* Hamburger Icon (mobile only) */}
       <div className="flex items-center gap-2">
         <button className="rounded-md p-2 hover:bg-gray-100 lg:hidden" onClick={() => setSidebarOpen(true)}>
@@ -51,7 +50,7 @@ function AdminHeader({ setSidebarOpen }) {
             <img
               src={logo || logoApply}
               alt="Logo"
-              className={`object-contain ${'h-[200px] max-h-[200px] w-[200px]'} }`}
+              className={`object-contain ${'h-[100px] max-h-[200px] w-auto'} }`}
               referrerPolicy="no-referrer"
             />
             {user ? <Button label={'Submission & Draft'} onClick={() => navigate('/submission')} /> : null}

@@ -508,7 +508,11 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
   if (fieldSuggestions) fieldSuggestions = fieldSuggestions.split(',');
 
   if (name.includes('ssn')) formatting = '3,2,4';
-  if (name.includes('phone')) formatting = '2,3,3,4';
+  const isPhone = name.toLowerCase().includes('phone');
+
+  if (isPhone) {
+    formatting = '1,3,3,4';
+  }
 
   const inputRef = useRef(null);
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
@@ -528,8 +532,18 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
     return `${year}-${month}-${day}`;
   };
 
+  const ensureCountryCode = val => {
+    if (!val) return '+1';
+    if (!val.startsWith('+1')) {
+      return '+1' + val.replace(/^\+/, '');
+    }
+    return val;
+  };
+
   const getDisplayValue = (type, value) => {
-    if (!value) return '';
+    if (!value) return isPhone ? '+1' : '';
+
+    if (isPhone && type == 'text') return ensureCountryCode(value);
     // Masked logic
     if (showMasked && isMasked) return '*'.repeat(value.toString().length);
     // Date formatting
@@ -658,12 +672,30 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                       placeholder={placeholder}
                       type={isMasked && type !== 'date' ? 'text' : type}
                       value={getDisplayValue(type, form?.[name])}
-                      onChange={e =>
+                      // onChange={e =>
+                      //   setForm(prev => ({
+                      //     ...prev,
+                      //     [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
+                      //   }))
+                      // }
+                      onChange={e => {
+                        let val = e.target.value;
+
+                        if (isPhone) {
+                          // remove non-digits except +
+                          val = val.replace(/[^\d+]/g, '');
+
+                          // force +1 prefix
+                          if (!val.startsWith('+1')) {
+                            val = '+1' + val.replace(/^\+/, '').replace(/^1/, '');
+                          }
+                        }
+
                         setForm(prev => ({
                           ...prev,
-                          [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
-                        }))
-                      }
+                          [name]: type === 'date' ? normalizeDate(val) : val,
+                        }));
+                      }}
                       onFocus={() => {
                         setShowMasked(false);
                         if (suggestions?.length || fieldSuggestions?.length) setShowSuggestions(true);
