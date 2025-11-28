@@ -179,7 +179,6 @@ const DynamicField = ({ cn, field, className = '', form, placeholder, value, set
     </>
   );
 };
-export default DynamicField;
 
 const SelectInputType = ({ field, className, form, setForm }) => {
   const { label, options, name, required, placeholder, aiHelp, aiPrompt, aiResponse, isDisplayText, ai_formatting } =
@@ -480,141 +479,6 @@ const RangeInputType = ({ field, className, form, setForm }) => {
     </div>
   );
 };
-
-// const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => {
-//   const isEmpty = value => {
-//     if (value === undefined || value === null) return true;
-//     if (typeof value === 'string') return value.trim() === '';
-//     if (Array.isArray(value)) return value.length === 0;
-//     return false;
-//   };
-
-//   const {
-//     type,
-//     label,
-//     name,
-//     required,
-//     placeholder,
-//     isMasked,
-//     aiHelp,
-//     aiPrompt,
-//     aiResponse,
-//     isDisplayText,
-//     ai_formatting,
-//   } = field;
-
-//   const inputRef = useRef(null);
-//   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
-//   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
-
-//   const formatDate = dateStr => {
-//     if (!dateStr) return '';
-//     const [year, month, day] = dateStr.split(/[-/]/);
-//     return `${year}-${month}-${day}`;
-//   };
-
-//   const normalizeDate = dateStr => {
-//     if (!dateStr) return '';
-//     const [year, month, day] = dateStr.split(/[-\s/]/);
-//     return `${year}-${month}-${day}`;
-//   };
-
-//   return (
-//     <>
-//       {openAiHelpModal && (
-//         <Modal onClose={() => setOpenAiHelpModal(false)}>
-//           <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
-//         </Modal>
-//       )}
-
-//       <div className="flex w-full flex-col items-start gap-4">
-//         <article className="flex w-full flex-col items-start gap-2">
-//           {ai_formatting && isDisplayText && (
-//             <div className="gap-4p-4 flex h-full w-full flex-col">
-//               <div dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
-//             </div>
-//           )}
-
-//           <section className="flex w-full gap-2">
-//             <div className={`w-full ${label ? 'mt-2' : ''}`}>
-//               {label && (
-//                 <h4 className="text-textPrimary text-base font-medium lg:text-lg">
-//                   {label}:{required ? '*' : ''}
-//                 </h4>
-//               )}
-
-//               {type == 'textarea' ? (
-//                 <div className="relative">
-//                   <textarea
-//                     ref={inputRef}
-//                     name={name}
-//                     placeholder={showMasked ? '*******' : placeholder}
-//                     type={showMasked ? 'password' : type}
-//                     value={form[name]}
-//                     onChange={e => setForm(prev => ({ ...prev, [name]: e.target.value }))}
-//                     autoComplete="off"
-//                     className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
-//                       required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
-//                     }`}
-//                     {...(isConfirmField
-//                       ? {
-//                           onPaste: e => e.preventDefault(),
-//                           onCopy: e => e.preventDefault(),
-//                           onCut: e => e.preventDefault(),
-//                         }
-//                       : {})}
-//                   />
-//                 </div>
-//               ) : (
-//                 <div className="relative">
-//                   <input
-//                     ref={inputRef}
-//                     name={name}
-//                     placeholder={showMasked ? '*******' : placeholder}
-//                     type={showMasked ? 'password' : type}
-//                     value={type === 'date' ? formatDate(form[name]) : form[name]}
-//                     onChange={e =>
-//                       setForm(prev => ({
-//                         ...prev,
-//                         [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
-//                       }))
-//                     }
-//                     autoComplete="off"
-//                     className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
-//                       required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
-//                     }`}
-//                     {...(isConfirmField
-//                       ? {
-//                           onPaste: e => e.preventDefault(),
-//                           onCopy: e => e.preventDefault(),
-//                           onCut: e => e.preventDefault(),
-//                         }
-//                       : {})}
-//                   />
-
-//                   {isMasked && (
-//                     <span
-//                       onClick={() => setShowMasked(!showMasked)}
-//                       className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-sm text-gray-600"
-//                     >
-//                       {!showMasked ? <RxEyeOpen className="h-5 w-5" /> : <IoEyeOffSharp className="h-5 w-5" />}
-//                     </span>
-//                   )}
-//                 </div>
-//               )}
-//             </div>
-
-//             {aiHelp && (
-//               <div className="mt-8 flex items-center">
-//                 <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
-//               </div>
-//             )}
-//           </section>
-//         </article>
-//       </div>
-//     </>
-//   );
-// };
 
 const OtherInputType = ({ field, className, form, setForm, isConfirmField, suggestions = [] }) => {
   const isEmpty = value => {
@@ -962,3 +826,4 @@ export {
   RangeInputType,
   SelectInputType,
 };
+export default DynamicField;
