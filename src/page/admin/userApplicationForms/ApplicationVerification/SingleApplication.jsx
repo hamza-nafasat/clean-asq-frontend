@@ -1003,7 +1003,7 @@ export default function SingleApplication() {
                   type="tel"
                   className={'max-w-[400px]!'}
                 />
-                <div className="flex w-full border bg-white p-4">
+                <div className="bg-backgroundColor flex w-full border p-4">
                   <RadioInputType
                     className={'w-full'}
                     field={{

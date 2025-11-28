@@ -177,7 +177,7 @@ export default function ApplicationForm() {
   if (!isApplied || !form?.data?._id) return <CustomLoading />;
   if (!user?._id) return navigate(`/application-form/${formId}`);
   return (
-    <div className="h-full w-full overflow-hidden rounded-[10px] bg-white px-6 py-6">
+    <div className="bg-backgroundColor h-full w-full overflow-hidden rounded-[10px] px-6 py-6">
       <Stepper steps={sectionNames} currentStep={currentStep} visibleSteps={0} emptyRequiredFields={[]}>
         {stepsComps[currentStep]}
       </Stepper>

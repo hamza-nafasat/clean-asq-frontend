@@ -49,7 +49,7 @@ function Applications() {
   }, [data, isLoadingForm]);
 
   return (
-    <div className="rounded-t-md bg-white p-4">
+    <div className="bg-backgroundColor rounded-t-md p-4">
       <div className="mb-4">
         <h2 className="text-textPrimary mb-4 text-xl font-semibold">Applicants</h2>
 

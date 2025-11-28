@@ -4,7 +4,7 @@ export const getTableStyles = ({ primaryColor, textColor, secondaryColor, backgr
       fontSize: '14px',
       fontWeight: 700,
       color: textColor || '#171717',
-      backgroundColor: backgroundColor || 'transparent',
+      backgroundColor: '#ffffff' || 'transparent',
     },
   },
   rows: {
@@ -24,7 +24,7 @@ export const getTableStyles = ({ primaryColor, textColor, secondaryColor, backgr
   pagination: {
     style: {
       color: textColor || '#171717',
-      backgroundColor: backgroundColor || 'transparent',
+      backgroundColor: '#ffffff' || 'transparent',
     },
     pageButtonsStyle: {
       color: textColor || '#066969',

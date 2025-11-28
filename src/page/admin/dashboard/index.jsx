@@ -12,7 +12,7 @@ function AdminDashboard() {
 
   return (
     <div>
-      <section className="grid h-screen w-screen place-items-center overflow-hidden bg-[#3582e715]">
+      <section className="bg-backgroundColor grid h-screen w-screen place-items-center overflow-hidden">
         <section className="flex h-[calc(100vh-16px)] w-[calc(100vw-16px)] flex-col items-start justify-center gap-5 md:flex-row">
           {/* Sidebar */}
           {!isGuest && <AdminAside sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />}

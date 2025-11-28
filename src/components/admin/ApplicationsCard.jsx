@@ -129,7 +129,7 @@ export default function ApplicationsCard() {
   };
 
   return (
-    <div className="rounded-md bg-white p-5 shadow">
+    <div className="bg-backgroundColor rounded-md p-5 shadow">
       {/* modal for delete form */}
       <ConfirmationModal
         isOpen={!!deleteConfirmation}
@@ -224,7 +224,7 @@ export default function ApplicationsCard() {
           <TextField
             label={'Advance search'}
             type="text"
-            className="border-none bg-white text-sm outline-none"
+            className="bg-backgroundColor border-none text-sm outline-none"
             placeholder={searchMode === 'client' ? 'Search From' : 'Search Name'}
             value={searchMode === 'client' ? clientQuery : nameQuery}
             onChange={e => (searchMode === 'client' ? setClientQuery(e.target.value) : setNameQuery(e.target.value))}
@@ -271,72 +271,74 @@ export default function ApplicationsCard() {
               key={index}
               className="relative flex min-w-0 flex-col rounded-xl border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
             >
-              {' '}
-              <div className="flex h-[100px] max-h-[100px] w-[250px] max-w-[250px] items-start!">
-                <img
-                  src={form?.branding?.selectedLogo || logo}
-                  alt="logo"
-                  className="flex h-full w-full"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <div className="flex items-center justify-end">
-                <div className="relative">
-                  <button
-                    ref={menuButtonRef}
-                    onClick={actionMenu === form?._id ? () => setActionMenu(null) : () => setActionMenu(form?._id)}
-                    className="cursor-pointer rounded p-1 hover:bg-gray-100"
-                    aria-label="Actions"
-                  >
-                    <MoreVertical size={18} />
-                  </button>
-                  {actionMenu === form?._id && (
-                    <div ref={buttonRef} className="absolute right-0 mt-2 w-40 rounded border bg-white shadow-lg">
-                      <button
-                        className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-                        onClick={() => {
-                          setSelectedId(form?._id);
-                          setSelectedForm(form);
-                          setOpenFormUpdate(true);
-                        }}
-                      >
-                        Update Form
-                      </button>
-                      <button
-                        className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-                        onClick={() => {
-                          setSelectedId(form?._id);
-                          setOpenModal(true);
-                        }}
-                      >
-                        Set Branding
-                      </button>
-                      <button
-                        onClick={() => {
-                          setLocationModal(actionMenu);
-                          setFormLocationData({
-                            title: form?.locationTitle,
-                            subtitle: form?.locationSubtitle,
-                            status: form?.locationStatus,
-                            message: form?.locationMessage,
-                            formatedText: form?.formatedLocationMessage,
-                            formatingTextInstructions: form?.formateTextInstructions,
-                          });
-                        }}
-                        className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-                      >
-                        Set Location
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirmation(form?._id)}
-                        className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
-                      >
-                        Delete Form
-                      </button>
-                    </div>
-                  )}
+              <div className="flex justify-between">
+                <div className="flex h-[100px] max-h-[100px] w-[250px] max-w-[250px] items-start!">
+                  <img
+                    src={form?.branding?.selectedLogo || logo}
+                    alt="logo"
+                    className="flex h-full max-w-full object-contain object-center"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div className="">
+                  <div className="relative">
+                    <button
+                      ref={menuButtonRef}
+                      onClick={actionMenu === form?._id ? () => setActionMenu(null) : () => setActionMenu(form?._id)}
+                      className="cursor-pointer rounded p-1 hover:bg-gray-100"
+                      aria-label="Actions"
+                    >
+                      <MoreVertical size={18} />
+                    </button>
+                    {actionMenu === form?._id && (
+                      <div ref={buttonRef} className="absolute right-0 mt-2 w-40 rounded border bg-white shadow-lg">
+                        <button
+                          className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                          onClick={() => {
+                            setSelectedId(form?._id);
+                            setSelectedForm(form);
+                            setOpenFormUpdate(true);
+                          }}
+                        >
+                          Update Form
+                        </button>
+                        <button
+                          className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                          onClick={() => {
+                            setSelectedId(form?._id);
+                            setOpenModal(true);
+                          }}
+                        >
+                          Set Branding
+                        </button>
+                        <button
+                          onClick={() => {
+                            setLocationModal(actionMenu);
+                            setFormLocationData({
+                              title: form?.locationTitle,
+                              subtitle: form?.locationSubtitle,
+                              status: form?.locationStatus,
+                              message: form?.locationMessage,
+                              formatedText: form?.formatedLocationMessage,
+                              formatingTextInstructions: form?.formateTextInstructions,
+                            });
+                          }}
+                          className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                        >
+                          Set Location
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirmation(form?._id)}
+                          className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
+                        >
+                          Delete Form
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
+
               {/* Menu icon */}
               <div className="absolute top-3 right-3 cursor-pointer sm:top-4 sm:right-4">{/* <CiMenuKebab /> */}</div>
               <div className="flex items-start gap-2 md:gap-4">

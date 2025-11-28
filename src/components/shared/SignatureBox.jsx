@@ -189,7 +189,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
     'cursor-pointer rounded px-4 py-2 text-sm font-medium transition-transform duration-200 hover:scale-105 active:scale-95';
 
   return (
-    <div className={`w-full rounded-2xl bg-white p-6 shadow-xl ${className}`}>
+    <div className={`bg-backgroundColor w-full rounded-2xl p-6 shadow-xl ${className}`}>
       {openAiHelpModal && (
         <Modal onClose={() => setOpenAiHelpModal(false)}>
           <AiHelpModal
