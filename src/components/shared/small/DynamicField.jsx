@@ -529,46 +529,77 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
     return `${year}-${month}-${day}`;
   };
 
-  const ensureCountryCode = val => {
-    if (!val) return '+1';
-    if (!val.startsWith('+1')) {
-      return '+1' + val.replace(/^\+/, '');
-    }
-    return val;
-  };
-
   const getDisplayValue = (type, value) => {
     if (!value) return isPhone ? '+1' : '';
 
-    if (isPhone && type == 'text') return ensureCountryCode(value);
     // Masked logic
     if (showMasked && isMasked) return '*'.repeat(value.toString().length);
+
     // Date formatting
     if (type === 'date') return formatDate(value);
-    // Dynamic formatting logic
+
     const format = formatting?.split(',');
+
+    // ✅ PHONE NUMBER LOGIC
+    if (isPhone) {
+      // Remove +1 and non-digits
+      let clean = String(value)
+        .replace(/^\+1/, '') // remove +1
+        .replace(/\D/g, ''); // remove non-digits
+
+      if (format && Array.isArray(format) && format.length > 0) {
+        let formatted = '';
+        let start = 0;
+
+        for (let i = 0; i < format.length; i++) {
+          const len = parseInt(format[i], 10);
+          if (start >= clean.length) break;
+
+          const part = clean.substr(start, len);
+          formatted += part;
+          start += len;
+
+          if (i < format.length - 1 && start < clean.length) {
+            formatted += '-';
+          }
+        }
+
+        if (start < clean.length) {
+          formatted += '-' + clean.substr(start);
+        }
+
+        return '+1' + formatted;
+      }
+
+      return '+1' + clean;
+    }
+
+    // ✅ NORMAL FORMATTING (NON-PHONE)
     if (format && Array.isArray(format) && format.length > 0) {
       const digits = value.toString().replace(/\D/g, '');
       let formatted = '';
       let start = 0;
+
       for (let i = 0; i < format.length; i++) {
         const len = parseInt(format[i], 10);
         if (start >= digits.length) break;
+
         const part = digits.substr(start, len);
         formatted += part;
         start += len;
-        // Add a dash if not the last group and still have remaining digits
+
         if (i < format.length - 1 && start < digits.length) {
           formatted += '-';
         }
       }
-      // If there are still digits left after pattern ends, append them
+
       if (start < digits.length) {
         formatted += '-' + digits.substr(start);
       }
 
       return formatted;
     }
+
     return value;
   };
 
