@@ -25,6 +25,17 @@ const TextField = ({
 
   const inputVal = String(value ?? '').toLowerCase();
 
+  const ensureCountryCode = val => {
+    if (!val) return '+1';
+    if (!val.startsWith('+1')) {
+      return '+1' + val.replace(/^\+/, '');
+    }
+    return val;
+  };
+
+  const isPhone = name?.toLowerCase().includes('phone');
+  if (isPhone && (type == 'text' || type == 'tel')) ensureCountryCode(value);
+
   const filteredSuggestions = Array.isArray(suggestions)
     ? suggestions
         .filter(s => {
@@ -54,29 +65,41 @@ const TextField = ({
   };
 
   const getDisplayValue = value => {
-    const format = formatting?.split(',');
-    if (format && Array.isArray(format) && format.length > 0) {
-      const digits = value.toString().replace(/\D/g, '');
-      let formatted = '';
-      let start = 0;
-      for (let i = 0; i < format.length; i++) {
-        const len = parseInt(format[i], 10);
-        if (start >= digits.length) break;
-        const part = digits.substr(start, len);
-        formatted += part;
-        start += len;
-        // Add a dash if not the last group and still have remaining digits
-        if (i < format.length - 1 && start < digits.length) {
-          formatted += '-';
+    if (!value) return isPhone ? '+1' : '';
+
+    if (isPhone) {
+      // Remove +1 and all non-digits for formatting
+      let clean = String(value).replace(/^\+1/, '').replace(/\D/g, '');
+
+      const format = formatting?.split(',');
+
+      if (format && format.length > 0) {
+        let formatted = '';
+        let start = 0;
+
+        for (let i = 0; i < format.length; i++) {
+          const len = parseInt(format[i], 10);
+          if (start >= clean.length) break;
+
+          const part = clean.substr(start, len);
+          formatted += part;
+          start += len;
+
+          if (i < format.length - 1 && start < clean.length) {
+            formatted += '-';
+          }
         }
-      }
-      // If there are still digits left after pattern ends, append them
-      if (start < digits.length) {
-        formatted += '-' + digits.substr(start);
+
+        if (start < clean.length) {
+          formatted += '-' + clean.substr(start);
+        }
+
+        return '+1' + formatted;
       }
 
-      return formatted;
+      return '+1' + clean;
     }
+
     return value;
   };
 
@@ -125,8 +148,16 @@ const TextField = ({
 
         <input
           {...rest}
+          // onChange={e => {
+          //   const val = type === 'date' ? normalizeDate(e.target.value) : e.target.value;
+          //   onChange?.({ target: { name, value: val } });
+          // }}
           onChange={e => {
-            const val = type === 'date' ? normalizeDate(e.target.value) : e.target.value;
+            let val = type === 'date' ? normalizeDate(e.target.value) : e.target.value;
+            if (isPhone) {
+              val = val.replace(/[^\d+]/g, '');
+              if (!val.startsWith('+1')) val = '+1' + val.replace(/^\+/, '').replace(/^1/, '');
+            }
             onChange?.({ target: { name, value: val } });
           }}
           name={name}

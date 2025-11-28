@@ -1000,7 +1000,8 @@ export default function SingleApplication() {
                   formatting="1,3,3,4"
                   label="Phone Number:*"
                   required
-                  type="tel"
+                  name={'phoneNumber'}
+                  type="text"
                   className={'max-w-[400px]!'}
                 />
                 <div className="bg-backgroundColor flex w-full border p-4">

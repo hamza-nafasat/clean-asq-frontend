@@ -509,10 +509,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
 
   if (name.includes('ssn')) formatting = '3,2,4';
   const isPhone = name.toLowerCase().includes('phone');
-
-  if (isPhone) {
-    formatting = '1,3,3,4';
-  }
+  if (isPhone) formatting = '1,3,3,4';
 
   const inputRef = useRef(null);
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
