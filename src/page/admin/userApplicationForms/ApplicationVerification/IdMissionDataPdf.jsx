@@ -58,7 +58,7 @@ const IdMissionDataPdf = ({ formId }) => {
 
   return (
     <div className="flex w-full flex-col p-2">
-      <h3 className="text-textPrimary mb-3 text-2xl font-semibold">ID Mission Data</h3>
+      <h3 className="text-textPrimary mb-3 text-2xl font-semibold">Primary Applicant Information</h3>
       <form className="flex flex-wrap justify-center gap-4">
         <TextField
           onChange={() => {}}

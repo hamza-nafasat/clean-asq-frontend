@@ -354,10 +354,12 @@ export default function SingleApplication() {
   // check and get socket events
   useEffect(() => {
     // Setup listener ONCE when component mounts
+    // start id mission
     socket.on('idMission_processing_started', data => {
       console.log('you start id mission verification', data);
       setIsIdMissionProcessing(true);
     });
+    // id mission verified success fully
     socket.on('idMission_verified', async data => {
       if (user?._id && data?.Form_Data?.FullName) {
         const res = await updateMyProfile({
@@ -385,10 +387,11 @@ export default function SingleApplication() {
       }
 
       setIdMissionVerifiedData({
-        name: (formDataOfIdMission?.FullName || formDataOfIdMission?.name || '')?.concat(
-          ' ',
-          formDataOfIdMission?.Last_Name || ''
-        ),
+        // name: (formDataOfIdMission?.FullName || formDataOfIdMission?.name || '')?.concat(
+        //   ' ',
+        //   formDataOfIdMission?.Last_Name || ''
+        // ),
+        name: (formDataOfIdMission?.name || '')?.concat(' ', formDataOfIdMission?.Last_Name || ''),
         email: formDataOfIdMission?.Email || user?.email || '',
         idNumber: formDataOfIdMission?.ID_Number || '',
         idIssuer: formDataOfIdMission?.ID_State
@@ -410,31 +413,40 @@ export default function SingleApplication() {
       });
       setIdMissionVerified(true);
     });
+    // id mission failed
     socket.on('idMission_failed', async data => {
       // console.log('you start id mission failed', data);
-      toast.error('you id dindnt approved please try again');
+      // toast.error("you id didn't approved please try again");
       const action = await dispatch(
         updateFormState({
-          data: { idMissionVerification: 'failed', verificationStatus: data?.Form_Status || 'rejected' },
+          data: {
+            idMissionVerification: 'failed',
+            verificationStatus: data?.Form_Status || 'rejected',
+            idMissionData: data,
+          },
           name: 'idMission',
         })
       );
       unwrapResult(action);
       setIsIdMissionProcessing(false);
-      setIdMissionVerified(false);
+      setIdMissionVerified(true);
     });
     socket.on('idMission_other', async data => {
       console.log('Id Mission Data ', data);
       const action = await dispatch(
         updateFormState({
-          data: { idMissionVerification: 'failed', verificationStatus: data?.Form_Status || 'rejected' },
+          data: {
+            idMissionVerification: 'failed',
+            verificationStatus: data?.Form_Status || 'rejected',
+            idMissionData: data,
+          },
           name: 'idMission',
         })
       );
       unwrapResult(action);
-      toast.error('you id dindnt approved please try again');
+      toast.error("you id didn't approved please try again");
       setIsIdMissionProcessing(false);
-      setIdMissionVerified(false);
+      setIdMissionVerified(true);
     });
 
     // Cleanup listener when component unmounts
@@ -841,7 +853,7 @@ export default function SingleApplication() {
                 <TextField
                   value={idMissionVerifiedData?.phoneNumber}
                   onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, phoneNumber: e.target.value })}
-                  formatting="3,3,4"
+                  formatting="2,3,3,4"
                   label="Phone Number:*"
                   required
                   type="tel"
