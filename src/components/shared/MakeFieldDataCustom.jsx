@@ -206,6 +206,18 @@ const MakeFieldDataCustom = ({
             />
           )}
         </div>
+
+        {/* for text field add suggestions list */}
+        {field?.type == 'text' && (
+          <div className="flex items-center justify-between gap-2">
+            <TextField
+              label="Enter suggestions (comma separated)"
+              value={field.suggestions || ''}
+              name="suggestions"
+              onChange={updateFieldDataField}
+            />
+          </div>
+        )}
         {/* Range settings */}
         {rangeFieldType && (
           <div className="flex w-full items-center gap-2">

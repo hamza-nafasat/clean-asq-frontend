@@ -637,8 +637,11 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
     aiResponse,
     isDisplayText,
     ai_formatting,
+    suggestions: fieldSuggestions,
     isGooglePlaces = false,
   } = field;
+
+  if (fieldSuggestions) fieldSuggestions = fieldSuggestions.split(',');
 
   if (name.includes('ssn')) formatting = '3,2,4';
   if (name.includes('phone')) formatting = '2,3,3,4';
@@ -799,11 +802,12 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                       }
                       onFocus={() => {
                         setShowMasked(false);
-                        if (suggestions.length > 0) setShowSuggestions(true);
+                        if (suggestions?.length || fieldSuggestions?.length) setShowSuggestions(true);
                       }}
                       onBlur={() => {
                         setShowMasked(true);
-                        setTimeout(() => setShowSuggestions(false), 100);
+                        if (suggestions?.length || fieldSuggestions?.length)
+                          setTimeout(() => setShowSuggestions(false), 100);
                       }}
                       readOnly={showMasked}
                       autoComplete="off"
@@ -820,7 +824,27 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                     />
                   )}
 
-                  {showSuggestions && suggestions.length > 0 && (
+                  {showSuggestions && type == 'text' && fieldSuggestions?.length && (
+                    <div className="absolute top-full left-0 z-10 mt-1 max-h-40 w-full overflow-y-auto rounded-md border bg-white shadow-lg">
+                      {fieldSuggestions?.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                          onMouseDown={() => {
+                            setForm(prev => ({
+                              ...prev,
+                              [name]: suggestion,
+                            }));
+                            setShowSuggestions(false);
+                          }}
+                        >
+                          {suggestion}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {showSuggestions && !fieldSuggestions?.length && suggestions?.length > 0 && (
                     <div className="absolute top-full left-0 z-10 mt-1 max-h-40 w-full overflow-y-auto rounded-md border bg-white shadow-lg">
                       {suggestions.map((suggestion, index) => (
                         <div
