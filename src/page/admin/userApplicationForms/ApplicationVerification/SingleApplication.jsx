@@ -25,7 +25,7 @@ import { collectClientDetails } from '@/utils/userDetails';
 import { Autocomplete } from '@react-google-maps/api';
 import { unwrapResult } from '@reduxjs/toolkit';
 import DOMPurify from 'dompurify';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -42,7 +42,6 @@ export default function SingleApplication() {
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
   const [otpSent, setOtpSent] = useState(false);
-  const [autocomplete, setAutocomplete] = useState(null);
   const [getQrAndWebLinkLoading, setGetQrAndWebLinkLoading] = useState(false);
   const [isIdMissionProcessing, setIsIdMissionProcessing] = useState(false);
   const [idMissionVerified, setIdMissionVerified] = useState(false);
@@ -87,6 +86,9 @@ export default function SingleApplication() {
     address2: 'None',
     signature: { secureUrl: '', publicId: '', resourceType: '' },
   });
+
+  const autocompleteRef = useRef(null);
+
   const idMissionSection = form?.data?.sections?.find(sec => sec?.title?.toLowerCase() == 'id_verification_blk');
   const handleSignature = async (file, setIsSaving) => {
     try {
@@ -109,10 +111,195 @@ export default function SingleApplication() {
     }
   };
 
-  const onLoad = useCallback(autoC => {
-    autoC.setFields(['address_components', 'formatted_address', 'geometry', 'place_id']);
-    setAutocomplete(autoC);
-  }, []);
+  // functions for autocomplete ÷÷
+  // ===========================
+
+  const onLoad = autocompleteInstance => {
+    autocompleteRef.current = autocompleteInstance;
+  };
+
+  const onPlaceChanged = () => {
+    const place = autocompleteRef.current?.getPlace();
+    if (!place) return;
+
+    if (!place.address_components?.length && place.place_id) {
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ placeId: place.place_id }, (results, status) => {
+        if (status === 'OK' && results?.length) {
+          handleGeocodeResults(results);
+        } else {
+          handlePlace(place);
+        }
+      });
+      return;
+    }
+
+    handlePlace(place);
+
+    const hasPostal = (place.address_components || []).some(c => c.types.includes('postal_code'));
+
+    if (!hasPostal && place.geometry?.location) {
+      reverseGeocode(place.geometry.location.lat(), place.geometry.location.lng());
+    }
+  };
+
+  const handlePlace = place => {
+    const components = place.address_components || [];
+    const geometry = place.geometry;
+    const parsed = parseComponents(components, geometry);
+
+    setIdMissionVerifiedData(prev => ({ ...prev, ...parsed }));
+  };
+
+  const handleGeocodeResults = results => {
+    const parsed = parseComponentsFromResults(results);
+    setIdMissionVerifiedData(prev => ({ ...prev, ...parsed }));
+  };
+
+  const parseComponents = (components = [], geometry) => {
+    const find = types => {
+      const t = Array.isArray(types) ? types : [types];
+      return components.find(c => t.some(x => c.types.includes(x)));
+    };
+
+    const getLong = types => find(types)?.long_name || '';
+    const getShort = types => find(types)?.short_name || '';
+
+    const streetNumber = getLong('street_number');
+    const route = getLong('route');
+    const subpremise = getLong('subpremise');
+    const premise = getLong('premise');
+
+    const city =
+      getLong('locality') ||
+      getLong('postal_town') ||
+      getLong('administrative_area_level_3') ||
+      getLong('administrative_area_level_2') ||
+      getLong(['sublocality', 'sublocality_level_1']) ||
+      '';
+
+    const stateShort = getShort('administrative_area_level_1');
+    const stateLong = getLong('administrative_area_level_1');
+
+    const postal = getLong('postal_code');
+    const postalSuffix = getLong('postal_code_suffix');
+    const zipCode = postalSuffix ? `${postal}-${postalSuffix}` : postal;
+
+    const country = getLong('country');
+
+    const streetAddress = [premise, streetNumber, route, subpremise].filter(Boolean).join(' ').trim();
+
+    return {
+      streetAddress: streetAddress,
+      city,
+      state: stateShort || stateLong,
+      country,
+      zipCode,
+      lat: geometry?.location?.lat?.() ?? null,
+      lng: geometry?.location?.lng?.() ?? null,
+    };
+  };
+
+  const parseComponentsFromResults = results => {
+    let city = '';
+    let state = '';
+    let postal = '';
+    let suffix = '';
+    let country = '';
+    let lat, lng;
+    let streetAddress = '';
+
+    for (const result of results) {
+      const comps = result.address_components || [];
+
+      const find = types => {
+        const t = Array.isArray(types) ? types : [types];
+        return comps.find(c => t.some(x => c.types.includes(x)));
+      };
+
+      if (!city) {
+        city =
+          find('locality')?.long_name ||
+          find('postal_town')?.long_name ||
+          find('administrative_area_level_3')?.long_name ||
+          find('administrative_area_level_2')?.long_name ||
+          '';
+      }
+
+      if (!state) {
+        const s = find('administrative_area_level_1');
+        if (s) state = s.short_name || s.long_name;
+      }
+
+      if (!postal) {
+        const p = find('postal_code');
+        if (p) postal = p.long_name;
+      }
+
+      if (!suffix) {
+        const s = find('postal_code_suffix');
+        if (s) suffix = s.long_name;
+      }
+
+      if (!country) {
+        const c = find('country');
+        if (c) country = c.long_name;
+      }
+
+      if (!lat && result.geometry?.location) {
+        lat = result.geometry.location.lat();
+        lng = result.geometry.location.lng();
+      }
+
+      if (!streetAddress) {
+        const sn = find('street_number')?.long_name || '';
+        const rt = find('route')?.long_name || '';
+        const pm = find('premise')?.long_name || '';
+        const sp = find('subpremise')?.long_name || '';
+
+        const assembled = [pm, sn, rt, sp].filter(Boolean).join(' ').trim();
+        if (assembled) streetAddress = assembled;
+      }
+
+      if (city && state && postal && country) break;
+    }
+
+    const zipCode = suffix ? `${postal}-${suffix}` : postal;
+
+    return {
+      streetAddress,
+      city,
+      state,
+      country,
+      zipCode,
+      lat,
+      lng,
+    };
+  };
+
+  const reverseGeocode = (lat, lng) => {
+    const geocoder = new window.google.maps.Geocoder();
+
+    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+      if (status !== 'OK' || !results?.length) return;
+
+      const parsed = parseComponentsFromResults(results);
+
+      setIdMissionVerifiedData(prev => ({
+        ...prev,
+        streetAddress: prev.streetAddress || parsed.streetAddress,
+        city: prev.city || parsed.city,
+        state: prev.state || parsed.state,
+        country: prev.country || parsed.country,
+        zipCode: prev.zipCode || parsed.zipCode,
+        lat: parsed.lat ?? prev.lat,
+        lng: parsed.lng ?? prev.lng,
+      }));
+    });
+  };
+
+  // other functions
+  // ==============
 
   const formatData = useCallback(date => {
     const [d, m, y] = date.split('/');
@@ -183,52 +370,6 @@ export default function SingleApplication() {
       // toast.error(error?.data?.message || 'Error while getting saved form data');
     }
   }, [dispatch, formId, getSavedFormData, navigate, user?.email]);
-
-  const onPlaceChanged = () => {
-    const place = autocomplete.getPlace();
-    // console.log('place', place);
-    fillBasicComponents(place.address_components || []);
-    if (!place.address_components.some(c => c.types.includes('postal_code'))) {
-      const { lat, lng } = place.geometry.location;
-      reverseGeocode(lat(), lng());
-    }
-  };
-  const fillBasicComponents = components => {
-    const getComp = type => {
-      const c = components.find(c => c.types.includes(type));
-      return c ? c.long_name : '';
-    };
-
-    const findStreetNumber = getComp('street_number');
-    const findStreetAddress = getComp('sublocality') || getComp('route') || getComp('locality');
-    const combineStreetAddress = findStreetNumber ? `${findStreetNumber} ${findStreetAddress}` : findStreetAddress;
-
-    setIdMissionVerifiedData(prev => ({
-      ...prev,
-      streetAddress: combineStreetAddress,
-      city: getComp('locality') || getComp('administrative_area_level_1'),
-      state: getComp('administrative_area_level_1'),
-      country: getComp('country'),
-      zipCode: getComp('postal_code'), // may be empty
-    }));
-  };
-  const reverseGeocode = (lat, lng) => {
-    const geocoder = new window.google.maps.Geocoder();
-    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-      if (status !== 'OK' || !results || !results.length) {
-        console.warn('Geocoder failed:', status);
-        return;
-      }
-      const comp = results[0].address_components;
-      const postal = comp.find(c => c.types.includes('postal_code'));
-      if (postal) {
-        setIdMissionVerifiedData(prev => ({
-          ...prev,
-          zipCode: postal?.short_name,
-        }));
-      }
-    });
-  };
 
   const submitIdMissionData = useCallback(
     async e => {
@@ -798,7 +939,10 @@ export default function SingleApplication() {
                   onLoad={onLoad}
                   className="w-full max-w-[400px]"
                   onPlaceChanged={onPlaceChanged}
-                  options={{ fields: ['address_components', 'formatted_address', 'geometry', 'place_id'] }}
+                  options={{
+                    types: ['address'],
+                    fields: ['address_components', 'geometry', 'formatted_address', 'place_id'],
+                  }}
                 >
                   <TextField
                     type="text"
