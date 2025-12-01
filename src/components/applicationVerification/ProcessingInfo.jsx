@@ -168,7 +168,10 @@ function ProcessingInfo({
         <div className="mb-4 flex w-full items-end justify-between gap-3">
           <div
             dangerouslySetInnerHTML={{
-              __html: step?.ai_formatting,
+              __html: String(step?.ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
+                if (match.includes('target=')) return match; // avoid duplicates
+                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              }),
             }}
           />
         </div>

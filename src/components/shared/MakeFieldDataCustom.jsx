@@ -271,7 +271,15 @@ const MakeFieldDataCustom = ({
             {field?.aiResponse && (
               <div className="w-full flex-col py-4">
                 <h6 className="text-textPrimary py-2 text-xl font-semibold">AI Response</h6>
-                <div className="h-full p-4" dangerouslySetInnerHTML={{ __html: field?.aiResponse ?? '' }} />
+                <div
+                  className="h-full p-4"
+                  dangerouslySetInnerHTML={{
+                    __html: String(field?.aiResponse || '').replace(/<a(\s+.*?)?>/g, match => {
+                      if (match.includes('target=')) return match; // avoid duplicates
+                      return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                    }),
+                  }}
+                />
               </div>
             )}
           </div>
@@ -333,7 +341,15 @@ const MakeFieldDataCustom = ({
               </Button>
             </div>
             {field.ai_formatting && (
-              <div className="h-full w-full p-4" dangerouslySetInnerHTML={{ __html: field?.ai_formatting ?? '' }} />
+              <div
+                className="h-full w-full p-4"
+                dangerouslySetInnerHTML={{
+                  __html: String(field?.ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
+                    if (match.includes('target=')) return match; // avoid duplicates
+                    return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                  }),
+                }}
+              />
             )}
           </div>
         )}

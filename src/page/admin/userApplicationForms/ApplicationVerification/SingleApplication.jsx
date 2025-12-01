@@ -749,7 +749,10 @@ export default function SingleApplication() {
                       <div
                         className="w-full"
                         dangerouslySetInnerHTML={{
-                          __html: form?.data?.otpDisplayFormatedText,
+                          __html: String(form?.data?.otpDisplayFormatedText || '').replace(/<a(\s+.*?)?>/g, match => {
+                            if (match.includes('target=')) return match; // avoid duplicates
+                            return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                          }),
                         }}
                       />
                     </div>
@@ -817,7 +820,10 @@ export default function SingleApplication() {
                         <div
                           className="w-full"
                           dangerouslySetInnerHTML={{
-                            __html: idMissionSection?.ai_formatting,
+                            __html: String(idMissionSection?.ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
+                              if (match.includes('target=')) return match; // avoid duplicates
+                              return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                            }),
                           }}
                         />
                       </div>
@@ -860,7 +866,13 @@ export default function SingleApplication() {
                     <div
                       className="w-full"
                       dangerouslySetInnerHTML={{
-                        __html: form?.data?.idMissionDataDisplayFormatedText,
+                        __html: String(form?.data?.idMissionDataDisplayFormatedText || '').replace(
+                          /<a(\s+.*?)?>/g,
+                          match => {
+                            if (match.includes('target=')) return match; // avoid duplicates
+                            return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                          }
+                        ),
                       }}
                     />
                   </div>
@@ -1043,7 +1055,10 @@ export default function SingleApplication() {
                           // className="flex flex-1 items-end gap-3"
                           className="w-full"
                           dangerouslySetInnerHTML={{
-                            __html: idMissionSection?.signDisplayText,
+                            __html: String(idMissionSection?.signDisplayText || '').replace(/<a(\s+.*?)?>/g, match => {
+                              if (match.includes('target=')) return match; // avoid duplicates
+                              return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                            }),
                           }}
                         />
                       </div>
@@ -1167,7 +1182,15 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
           <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Format Text'} />
         </div>
         {signatureData?.signFormatedDisplayText && (
-          <div className="w-full" dangerouslySetInnerHTML={{ __html: signatureData?.signFormatedDisplayText ?? '' }} />
+          <div
+            className="w-full"
+            dangerouslySetInnerHTML={{
+              __html: String(signatureData?.signFormatedDisplayText || '').replace(/<a(\s+.*?)?>/g, match => {
+                if (match.includes('target=')) return match; // avoid duplicates
+                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              }),
+            }}
+          />
         )}
       </div>
 
@@ -1247,7 +1270,15 @@ const SignatureHelpCustomization = ({ section, formRefetch, setShowSignatureHelp
           <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Get Response'} />
         </div>
         {signatureData?.signAiResponse && (
-          <div className="w-full" dangerouslySetInnerHTML={{ __html: signatureData?.signAiResponse ?? '' }} />
+          <div
+            className="w-full"
+            dangerouslySetInnerHTML={{
+              __html: String(signatureData?.signAiResponse || '').replace(/<a(\s+.*?)?>/g, match => {
+                if (match.includes('target=')) return match; // avoid duplicates
+                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              }),
+            }}
+          />
         )}
       </div>
 
@@ -1337,7 +1368,12 @@ const OtpDisplayText = ({ form, formRefetch, setOpenOtpDisplayTextModal }) => {
         {displayData?.otpDisplayFormatedText && (
           <div
             className="w-full text-center"
-            dangerouslySetInnerHTML={{ __html: displayData?.otpDisplayFormatedText ?? '' }}
+            dangerouslySetInnerHTML={{
+              __html: String(displayData?.otpDisplayFormatedText || '').replace(/<a(\s+.*?)?>/g, match => {
+                if (match.includes('target=')) return match; // avoid duplicates
+                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              }),
+            }}
           />
         )}
       </div>
@@ -1436,7 +1472,12 @@ const IdMissionDataModal = ({ form, formRefetch, setOpenIdMissionDataDisplayText
         {displayData?.idMissionDataDisplayFormatedText && (
           <div
             className="w-full"
-            dangerouslySetInnerHTML={{ __html: displayData?.idMissionDataDisplayFormatedText ?? '' }}
+            dangerouslySetInnerHTML={{
+              __html: String(displayData?.idMissionDataDisplayFormatedText || '').replace(/<a(\s+.*?)?>/g, match => {
+                if (match.includes('target=')) return match; // avoid duplicates
+                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              }),
+            }}
           />
         )}
       </div>

@@ -180,7 +180,13 @@ function CompanyVerification({ formId }) {
               <div className="mb-4 flex w-full items-center justify-between">
                 <div
                   dangerouslySetInnerHTML={{
-                    __html: formBackendData?.data?.companyVerificationDisplayFormatedText,
+                    __html: String(formBackendData?.data?.companyVerificationDisplayFormatedText).replace(
+                      /<a(\s+.*?)?>/g,
+                      match => {
+                        if (match.includes('target=')) return match; // avoid duplicates
+                        return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                      }
+                    ),
                   }}
                 />
               </div>
@@ -368,7 +374,15 @@ const CompanyVerificationDisplayText = ({ form, formRefetch, setOpenCompanyVerif
         {displayData?.companyVerificationDisplayFormatedText && (
           <div
             className="h-full p-4"
-            dangerouslySetInnerHTML={{ __html: displayData?.companyVerificationDisplayFormatedText ?? '' }}
+            dangerouslySetInnerHTML={{
+              __html: String(displayData?.companyVerificationDisplayFormatedText || '').replace(
+                /<a(\s+.*?)?>/g,
+                match => {
+                  if (match.includes('target=')) return match; // avoid duplicates
+                  return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                }
+              ),
+            }}
           />
         )}
       </div>

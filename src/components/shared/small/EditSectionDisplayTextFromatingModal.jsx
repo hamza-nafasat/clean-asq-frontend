@@ -78,7 +78,17 @@ const EditSectionDisplayTextFromatingModal = ({ step, setModal }) => {
       <div className="flex justify-end">
         <Button onClick={formateTextWithAi} disabled={isLoading} className="mt-8" label="Format Text" />
       </div>
-      {aiFormatting && <div className="h-full p-4" dangerouslySetInnerHTML={{ __html: aiFormatting ?? '' }} />}
+      {aiFormatting && (
+        <div
+          className="h-full p-4"
+          dangerouslySetInnerHTML={{
+            __html: String(aiFormatting || '').replace(/<a(\s+.*?)?>/g, match => {
+              if (match.includes('target=')) return match; // avoid duplicates
+              return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+            }),
+          }}
+        />
+      )}
       <div className="align-center flex w-full justify-end gap-2">
         <Button
           onClick={() => {

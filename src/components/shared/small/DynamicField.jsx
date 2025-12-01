@@ -213,7 +213,15 @@ const SelectInputType = ({ field, className, form, setForm }) => {
         )}
         {ai_formatting && isDisplayText && (
           <div className="flex h-full w-full flex-col gap-4">
-            <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
+            <div
+              className=""
+              dangerouslySetInnerHTML={{
+                __html: String(ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
+                  if (match.includes('target=')) return match; // avoid duplicates
+                  return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                }),
+              }}
+            />
           </div>
         )}
         <div className="flex w-full gap-2">
@@ -270,7 +278,15 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
       </h4>
       {ai_formatting && isDisplayText && (
         <div className="gap-4p-4 flex h-full w-full flex-col">
-          <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
+          <div
+            className=""
+            dangerouslySetInnerHTML={{
+              __html: String(ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
+                if (match.includes('target=')) return match; // avoid duplicates
+                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              }),
+            }}
+          />
         </div>
       )}
       <div className="flex w-full items-center gap-8">
@@ -313,7 +329,15 @@ const RadioInputType = ({ field, className, form, setForm, onChange }) => {
       )}
       {ai_formatting && isDisplayText && (
         <div className="flex h-full w-full flex-col gap-4 py-4">
-          <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
+          <div
+            className=""
+            dangerouslySetInnerHTML={{
+              __html: String(ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
+                if (match.includes('target=')) return match; // avoid duplicates
+                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              }),
+            }}
+          />
         </div>
       )}
       <div className="flex w-full">
@@ -367,7 +391,15 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
         )}
         {ai_formatting && isDisplayText && (
           <div className="flex h-full w-full flex-col gap-4 p-4 pb-0">
-            <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
+            <div
+              className=""
+              dangerouslySetInnerHTML={{
+                __html: String(ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
+                  if (match.includes('target=')) return match; // avoid duplicates
+                  return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                }),
+              }}
+            />
           </div>
         )}
         <div className="flex items-center justify-between">
@@ -451,7 +483,15 @@ const RangeInputType = ({ field, className, form, setForm }) => {
       )}
       {ai_formatting && isDisplayText && (
         <div className="flex h-full w-full flex-col gap-4 p-4">
-          <div className="" dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
+          <div
+            className=""
+            dangerouslySetInnerHTML={{
+              __html: String(ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
+                if (match.includes('target=')) return match; // avoid duplicates
+                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              }),
+            }}
+          />
         </div>
       )}
       <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
@@ -626,7 +666,14 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
         <article className="flex w-full flex-col items-start gap-2">
           {ai_formatting && isDisplayText && (
             <div className="gap-4p-4 flex h-full w-full flex-col">
-              <div dangerouslySetInnerHTML={{ __html: ai_formatting ?? '' }} />
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: String(ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
+                    if (match.includes('target=')) return match; // avoid duplicates
+                    return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                  }),
+                }}
+              />
             </div>
           )}
 
@@ -846,7 +893,15 @@ const AiHelpModal = ({ aiResponse }) => {
         <img src={logo} alt="Logo" className="h-20 w-20" />
       </div>
       <div className="flex flex-col items-start gap-2 border-2 p-4">
-        <div className="" dangerouslySetInnerHTML={{ __html: aiResponse ?? '' }} />
+        <div
+          className=""
+          dangerouslySetInnerHTML={{
+            __html: String(aiResponse || '').replace(/<a(\s+.*?)?>/g, match => {
+              if (match.includes('target=')) return match; // avoid duplicates
+              return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+            }),
+          }}
+        />
       </div>
       {chatHistory?.length > 0 ? (
         <div className="flex max-h-[60vh] flex-col gap-3 overflow-y-auto rounded-lg border bg-[#FAFBFF] p-4">
@@ -857,7 +912,15 @@ const AiHelpModal = ({ aiResponse }) => {
                 msg.role === 'user' ? 'self-end bg-blue-100 text-gray-800' : 'self-start bg-gray-100 text-gray-700'
               }`}
             >
-              <div dangerouslySetInnerHTML={{ __html: msg.content }} className="prose prose-sm max-w-none" />
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: String(msg.content || '').replace(/<a(\s+.*?)?>/g, match => {
+                    if (match.includes('target=')) return match; // avoid duplicates
+                    return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                  }),
+                }}
+                className="prose prose-sm max-w-none"
+              />
             </div>
           ))}
         </div>

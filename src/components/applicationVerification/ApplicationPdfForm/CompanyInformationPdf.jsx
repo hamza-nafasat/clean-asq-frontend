@@ -172,7 +172,6 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
             ? new Date(fieldValueFromLookupData)?.toISOString()?.split('T')?.[0]
             : '';
           isDateField = false;
-          console.log('asdfakjsljd;fkjasldf', fieldValueFromLookupData);
           initialForm[field.name] = reduxData?.[field?.name] || formatedData || '';
         } else {
           initialForm[field.name] = reduxData?.[field?.name] || fieldValueFromLookupData || '';
@@ -210,7 +209,10 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
         <div className="mb-4 flex items-end gap-3">
           <div
             dangerouslySetInnerHTML={{
-              __html: step?.ai_formatting,
+              __html: String(step?.ai_formatting).replace(/<a(\s+.*?)?>/g, match => {
+                if (match.includes('target=')) return match; // avoid duplicates
+                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              }),
             }}
           />
         </div>

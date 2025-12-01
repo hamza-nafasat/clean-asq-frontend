@@ -40,7 +40,14 @@ export default function LocationStatusModal({
         </div>
         {/* Title & Info */}
         <div className="flex w-full p-4">
-          <div dangerouslySetInnerHTML={{ __html: locationData?.message }} />
+          <div
+            dangerouslySetInnerHTML={{
+              __html: String(locationData?.message || '').replace(/<a(\s+.*?)?>/g, match => {
+                if (match.includes('target=')) return match; // avoid duplicates
+                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              }),
+            }}
+          />
         </div>
         {/* Captcha */}
 

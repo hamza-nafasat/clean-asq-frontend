@@ -205,7 +205,10 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
             <div
               className="w-full"
               dangerouslySetInnerHTML={{
-                __html: step?.signFormatedDisplayText,
+                __html: String(step?.signFormatedDisplayText || '').replace(/<a(\s+.*?)?>/g, match => {
+                  if (match.includes('target=')) return match; // avoid duplicates
+                  return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                }),
               }}
             />
           </div>

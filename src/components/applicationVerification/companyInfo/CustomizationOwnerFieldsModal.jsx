@@ -226,7 +226,12 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
             {signatureData?.signFormatedDisplayText && (
               <div
                 className="h-full p-4"
-                dangerouslySetInnerHTML={{ __html: signatureData?.signFormatedDisplayText ?? '' }}
+                dangerouslySetInnerHTML={{
+                  __html: String(signatureData?.signFormatedDisplayText || '').replace(/<a(\s+.*?)?>/g, match => {
+                    if (match.includes('target=')) return match; // avoid duplicates
+                    return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                  }),
+                }}
               />
             )}
           </div>
@@ -249,7 +254,15 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
             {signatureData?.signAiResponse && (
               <div className="w-full flex-col py-4">
                 <h6 className="text-textPrimary py-2 text-xl font-semibold">AI Response</h6>
-                <div className="h-full p-4" dangerouslySetInnerHTML={{ __html: signatureData?.signAiResponse ?? '' }} />
+                <div
+                  className="h-full p-4"
+                  dangerouslySetInnerHTML={{
+                    __html: String(signatureData?.signAiResponse || '').replace(/<a(\s+.*?)?>/g, match => {
+                      if (match.includes('target=')) return match; // avoid duplicates
+                      return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                    }),
+                  }}
+                />
               </div>
             )}
           </div>

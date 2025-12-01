@@ -211,7 +211,14 @@ function Documents({
         </div>
         {step?.ai_formatting && (
           <div className="mb-4 w-full">
-            <div dangerouslySetInnerHTML={{ __html: step.ai_formatting }} />
+            <div
+              dangerouslySetInnerHTML={{
+                __html: String(step?.ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
+                  if (match.includes('target=')) return match; // avoid duplicates
+                  return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                }),
+              }}
+            />
           </div>
         )}
         {aiPromptModal && (
@@ -252,7 +259,12 @@ function Documents({
             ) : aiResponse ? (
               <div
                 className="prose mt-2 max-w-none text-sm text-gray-700"
-                dangerouslySetInnerHTML={{ __html: aiResponse }}
+                dangerouslySetInnerHTML={{
+                  __html: String(aiResponse || '').replace(/<a(\s+.*?)?>/g, match => {
+                    if (match.includes('target=')) return match; // avoid duplicates
+                    return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                  }),
+                }}
               />
             ) : (
               <p className="mt-2 text-sm text-gray-600">Unable to load document requirements at this time.</p>
@@ -292,7 +304,15 @@ function Documents({
                 )}
                 {field?.ai_formatting && field?.isDisplayText && (
                   <div className="flex w-full flex-col gap-4 p-4 pb-0">
-                    <div className="w-full" dangerouslySetInnerHTML={{ __html: field?.ai_formatting ?? '' }} />
+                    <div
+                      className="w-full"
+                      dangerouslySetInnerHTML={{
+                        __html: String(field?.ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
+                          if (match.includes('target=')) return match; // avoid duplicates
+                          return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                        }),
+                      }}
+                    />
                   </div>
                 )}
                 <FileUploader label={field?.label} file={file} onFileSelect={setFile} />
