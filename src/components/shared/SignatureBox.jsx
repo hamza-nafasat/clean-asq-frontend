@@ -162,7 +162,8 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       const dataUrl = generateSignatureData();
       if (dataUrl) {
         const file = dataURLtoFile(dataUrl, 'signature.png');
-        onSave?.(file, setIsSaving);
+        await onSave?.(file, setIsSaving);
+        setMode('draw');
       }
     } catch (err) {
       console.error('Error is Handle save signature box', err);
