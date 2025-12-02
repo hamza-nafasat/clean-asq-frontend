@@ -28,7 +28,7 @@ const emailHeaderTemplate = `
 <body style="margin: 0; padding: 0; font-family: Arial, sans-serif;">
 
         
-        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{emailSecondaryColor}};  border-top-left-radius: 8px; border-top-right-radius: 8px;">
+        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{emailHeaderColor}};  border-top-left-radius: 8px; border-top-right-radius: 8px;">
           
           <!-- Logo -->
           <tr>
@@ -72,7 +72,7 @@ const emailFooterTemplate = `
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, sans-serif;">
-        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{emailSecondaryColor}}; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{emailFooterColor}}; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
           
           <!-- Content -->
           <tr>
@@ -109,9 +109,12 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [textColor, setTextColor] = useState('');
   const [linkColor, setLinkColor] = useState('');
   const [backgroundColor, setBackgroundColor] = useState('');
+  const [headerBackground, setHeaderBackground] = useState('#000000');
+  const [footerBackground, setFooterBackground] = useState('#000000');
   const [frameColor, setFrameColor] = useState('');
   const [fontFamily, setFontFamily] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [headerAlignment, setHeaderAlignment] = useState('center');
   const [logos, setLogos] = useState([]);
   const [colorPalette, setColorPalette] = useState([]);
   const [selectedLogo, setSelectedLogo] = useState();
@@ -128,6 +131,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [emailSecondaryColor, setEmailSecondaryColor] = useState('#d9d9d9');
   const [emailHeadingColor, setEmailHeadingColor] = useState('#1a1a1a');
   const [emailTextColor, setEmailTextColor] = useState('#666666');
+  const [emailHeaderColor, setEmailHeaderColor] = useState('#1a1a1a');
+  const [emailFooterColor, setEmailFooterColor] = useState('#1a1a1a');
+  const [emailBodyColor, setEmailBodyColor] = useState('#1a1a1a');
 
   const compileHeader = Handlebars.compile(emailHeaderTemplate);
   const compileFooter = Handlebars.compile(emailFooterTemplate);
@@ -173,6 +179,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
         setFrameColor(data?.colors?.frame);
         setButtonTextPrimary(data?.colors?.buttonTextPrimary);
         setButtonTextSecondary(data?.colors?.buttonTextSecondary);
+        // setHeaderAlignment(data?.headerAlignment);
+        // setHeaderBackground(data?.headerBackground);
+        // setFooterBackground(data?.footerBackground);
         if (Array.isArray(data?.color_palette?.fromLogo) && Array.isArray(data?.color_palette?.fromSite)) {
           setColorPalette([...data.color_palette.fromLogo, ...data.color_palette.fromSite]);
         }
@@ -199,6 +208,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !frameColor ||
       !buttonTextPrimary ||
       !buttonTextSecondary ||
+      !headerAlignment ||
+      !headerBackground ||
+      !footerBackground ||
       // email
       !emailHeader ||
       !emailFooter ||
@@ -209,7 +221,10 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !emailPrimaryColor ||
       !emailSecondaryColor ||
       !emailHeadingColor ||
-      !emailTextColor
+      !emailTextColor ||
+      !emailHeaderColor ||
+      !emailFooterColor ||
+      !emailBodyColor
     ) {
       return toast.error('Please fill all fields before creating branding');
     }
@@ -223,12 +238,15 @@ const GlobalBrandingPage = ({ brandingId }) => {
       frame: frameColor,
       buttonTextPrimary: buttonTextPrimary,
       buttonTextSecondary: buttonTextSecondary,
+      headerBackground: headerBackground,
+      footerBackground: footerBackground,
     };
 
     let finalLogos = logos.filter(logo => !logo.preview);
 
     const formData = new FormData();
     formData.append('name', companyName);
+    formData.append('headerAlignment', headerAlignment);
     formData.append('url', websiteUrl);
     formData.append('fontFamily', fontFamily);
     formData.append('selectedLogo', selectedLogo);
@@ -282,6 +300,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !frameColor ||
       !buttonTextPrimary ||
       !buttonTextSecondary ||
+      !headerAlignment ||
+      !headerBackground ||
+      !footerBackground ||
       // email
       !emailHeader ||
       !emailFooter ||
@@ -292,7 +313,10 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !emailPrimaryColor ||
       !emailSecondaryColor ||
       !emailHeadingColor ||
-      !emailTextColor
+      !emailTextColor ||
+      !emailHeaderColor ||
+      !emailFooterColor ||
+      !emailBodyColor
     ) {
       return toast.error('Please fill all fields before creating branding');
     }
@@ -306,6 +330,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       frame: frameColor,
       buttonTextPrimary: buttonTextPrimary,
       buttonTextSecondary: buttonTextSecondary,
+      headerBackground: headerBackground,
+      footerBackground: footerBackground,
     };
 
     let finalLogos = logos.filter(logo => !logo.preview);
@@ -313,6 +339,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
     const formData = new FormData();
     formData.append('name', companyName);
     formData.append('url', websiteUrl);
+    formData.append('headerAlignment', headerAlignment);
     formData.append('fontFamily', fontFamily);
     formData.append('selectedLogo', selectedLogo);
     formData.append('colorPalette', JSON.stringify(colorPalette));
@@ -330,6 +357,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append('emailSecondaryColor', emailSecondaryColor);
     formData.append('emailHeadingColor', emailHeadingColor);
     formData.append('emailTextColor', emailTextColor);
+    formData.append('emailHeaderColor', emailHeaderColor);
+    formData.append('emailFooterColor', emailFooterColor);
+    formData.append('emailBodyColor', emailBodyColor);
 
     extraLogos.forEach(file => {
       formData.append(`files`, file);
@@ -355,6 +385,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
             setGlobalLogo(userBranding?.selectedLogo);
             setButtonTextPrimaryGlobal(userBranding.colors.buttonTextPrimary);
             setButtonTextSecondaryGlobal(userBranding.colors.buttonTextSecondary);
+
             // email
             setEmailHeader(userBranding.emailHeader);
             setEmailFooter(userBranding.emailFooter);
@@ -417,6 +448,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setLinkColor(singleBranding.colors.link);
       setBackgroundColor(singleBranding.colors.background);
       setFrameColor(singleBranding.colors.frame);
+      setHeaderAlignment(singleBranding.headerAlignment);
+      setHeaderBackground(singleBranding.colors.headerBackground);
+      setFooterBackground(singleBranding.colors.footerBackground);
       setFontFamily(singleBranding.fontFamily);
       setFontFamily(singleBranding.fontFamily);
       setButtonTextPrimary(singleBranding.colors.buttonTextPrimary);
@@ -431,6 +465,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setEmailSecondaryColor(singleBranding.emailSecondaryColor);
       setEmailHeadingColor(singleBranding.emailHeadingColor);
       setEmailTextColor(singleBranding.emailTextColor);
+      setEmailBodyColor(singleBranding.emailBodyColor);
+      setEmailHeaderColor(singleBranding.emailHeaderColor);
+      setEmailFooterColor(singleBranding.emailFooterColor);
 
       // Set the selected logo from the API response if available
       if (singleBranding.selectedLogo) {
@@ -452,6 +489,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
       emailSecondaryColor,
       emailTextColor,
       emailHeadingColor,
+      emailHeaderColor,
+      emailFooterColor,
+      emailBodyColor,
       companyName,
       headerHeading,
       headerDescription,
@@ -475,6 +515,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
     headerDescription,
     footerHeading,
     footerDescription,
+    emailHeaderColor,
+    emailFooterColor,
+    emailBodyColor,
   ]);
 
   return (
@@ -519,6 +562,12 @@ const GlobalBrandingPage = ({ brandingId }) => {
           setButtonTextPrimary={setButtonTextPrimary}
           buttonTextSecondary={buttonTextSecondary}
           setButtonTextSecondary={setButtonTextSecondary}
+          headerBackground={headerBackground}
+          setHeaderBackground={setHeaderBackground}
+          footerBackground={footerBackground}
+          setFooterBackground={setFooterBackground}
+          headerAlignment={headerAlignment}
+          setHeaderAlignment={setHeaderAlignment}
         />
         <div className="border-primary my-6 border-t-2"></div>
 
@@ -536,7 +585,12 @@ const GlobalBrandingPage = ({ brandingId }) => {
         />
         <div className="border-primary my-6 border-t-2"></div>
         <div className="mt-6 rounded-xl border border-[#F0F0F0] p-3 shadow-sm md:p-6">
-          <EmailTemplatePreview emailHeader={emailHeader} emailFooter={emailFooter} emailPrimary={emailPrimaryColor} />
+          <EmailTemplatePreview
+            emailHeader={emailHeader}
+            emailFooter={emailFooter}
+            emailPrimary={emailPrimaryColor}
+            emailBodyColor={emailBodyColor}
+          />
           <div className="flex py-4">
             <ColorInput
               image={image}
@@ -565,6 +619,27 @@ const GlobalBrandingPage = ({ brandingId }) => {
               label={'Email Heading'}
               color={emailHeadingColor}
               setColor={setEmailHeadingColor}
+            />
+            <ColorInput
+              image={image}
+              setImage={setImage}
+              label={'Email Header Background'}
+              color={emailHeaderColor}
+              setColor={setEmailHeaderColor}
+            />
+            <ColorInput
+              image={image}
+              setImage={setImage}
+              label={'Email Footer Background'}
+              color={emailFooterColor}
+              setColor={setEmailFooterColor}
+            />
+            <ColorInput
+              image={image}
+              setImage={setImage}
+              label={'Email Body Background'}
+              color={emailBodyColor}
+              setColor={setEmailBodyColor}
             />
           </div>
           <div className="flex flex-col gap-4 py-4">

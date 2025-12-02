@@ -108,7 +108,7 @@ const Preview = ({
   );
 };
 
-export const EmailTemplatePreview = ({ emailHeader, emailPrimary, emailFooter, emailText }) => {
+export const EmailTemplatePreview = ({ emailHeader, emailFooter, emailText, emailBodyColor }) => {
   return (
     <div className="rounded-xlp-3 mt-6 md:p-6">
       <h2 className="text-textPrimary text-[18px] font-medium">Email Preview</h2>
@@ -119,7 +119,7 @@ export const EmailTemplatePreview = ({ emailHeader, emailPrimary, emailFooter, e
           <div dangerouslySetInnerHTML={{ __html: emailHeader }} />
           <div
             className={`align-center flex w-full justify-center p-4 md:p-6`}
-            style={{ color: emailText, backgroundColor: emailPrimary }}
+            style={{ color: emailText, backgroundColor: emailBodyColor }}
           >
             Email Body will be here ...
           </div>

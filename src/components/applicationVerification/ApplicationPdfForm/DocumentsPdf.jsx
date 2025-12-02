@@ -65,31 +65,16 @@ function DocumentsPdf({ name, fields, step, isSignature }) {
       <div className="mt-6 w-full">
         {fields?.map((field, index) => {
           if (field.type === 'file') {
-            return null;
-            // return (
-            //   <div className="flex w-full flex-col gap-4 p-6" key={index}>
-            //     {openAiHelpModal && (
-            //       <Modal onClose={() => setOpenAiHelpModal(false)}>
-            //         <AiHelpModal
-            //           aiPrompt={field?.aiPrompt}
-            //           aiResponse={field?.aiResponse}
-            //           setOpenAiHelpModal={setOpenAiHelpModal}
-            //         />
-            //       </Modal>
-            //     )}
-            //     {field?.aiHelp && (
-            //       <div className="flex w-full justify-end">
-            //         <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
-            //       </div>
-            //     )}
-            //     <FileUploader label={field?.label} file={file} onFileSelect={setFile} />
-            //     {field?.ai_formatting && field?.isDisplayText && (
-            //       <div className="flex w-full flex-col gap-4 p-4 pb-0">
-            //         <div className="w-full" dangerouslySetInnerHTML={{ __html: field?.ai_formatting ?? '' }} />
-            //       </div>
-            //     )}
-            //   </div>
-            // );
+            return (
+              <div className="flex w-full flex-col gap-4 p-6" key={index}>
+                {formData?.[step?.title]?.[`${field?.name}`]?.secureUrl && (
+                  <div className="flex-col items-center justify-center">
+                    <h3 className="text-lg font-semibold text-gray-800">Uploaded file Url</h3>
+                    <p>{formData?.[step?.title]?.[`${field?.name}`]?.secureUrl}</p>
+                  </div>
+                )}
+              </div>
+            );
           } else {
             return (
               <div key={index} className="mt-4">

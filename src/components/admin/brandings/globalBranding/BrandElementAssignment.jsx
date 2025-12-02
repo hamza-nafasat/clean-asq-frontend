@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import FontPicker from './FontPicker';
 import html2canvas from 'html2canvas-pro';
+import TextField from '@/components/shared/small/TextField';
 
 export const ColorInput = ({ label, color, setColor, setImage, image }) => {
   const [colorPicker, setColorPicker] = useState('');
@@ -128,6 +129,13 @@ const BrandElementAssignment = ({
   setButtonTextPrimary,
   buttonTextSecondary,
   setButtonTextSecondary,
+
+  headerBackground,
+  setHeaderBackground,
+  footerBackground,
+  setFooterBackground,
+  headerAlignment,
+  setHeaderAlignment,
 }) => {
   return (
     <div className="mt-6">
@@ -185,6 +193,20 @@ const BrandElementAssignment = ({
           color={buttonTextSecondary}
           setColor={setButtonTextSecondary}
         />
+        <ColorInput
+          setImage={setImage}
+          image={image}
+          label="Header Background"
+          color={headerBackground}
+          setColor={setHeaderBackground}
+        />
+        <ColorInput
+          setImage={setImage}
+          image={image}
+          label="Footer Background"
+          color={footerBackground}
+          setColor={setFooterBackground}
+        />
       </div>
       {image && (
         <div className="fixed top-1/2 right-0 z-50 max-h-[95vh] -translate-y-1/2">
@@ -230,6 +252,14 @@ const BrandElementAssignment = ({
           >
             Reset
           </button>
+        </div>
+        <div className="flex">
+          <TextField
+            label="Header Alignment (left, center, right)"
+            value={headerAlignment}
+            onChange={e => setHeaderAlignment(e.target.value)}
+            placeholder="e.g 'left', 'center', 'right'"
+          />
         </div>
       </div>
     </div>
