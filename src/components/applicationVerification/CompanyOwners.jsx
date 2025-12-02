@@ -504,7 +504,8 @@ function CompanyOwners({
                                 <TextField
                                   name="phone"
                                   label="Phone Number"
-                                  type="number"
+                                  formatting={'1,3,3,4'}
+                                  type="text"
                                   value={phone}
                                   onChange={e => handleChangeOnOtherOwnersData(e, index)}
                                   className={'max-w-[30%] min-w-[400px]'}

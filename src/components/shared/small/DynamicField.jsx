@@ -547,6 +547,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
 
   if (fieldSuggestions) fieldSuggestions = fieldSuggestions.split(',');
 
+  // Auto formatting overrides
   if (name.includes('ssn')) formatting = '3,2,4';
   const isPhone = name.toLowerCase().includes('phone');
   if (isPhone) formatting = '1,3,3,4';
@@ -556,6 +557,16 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const [autocomplete, setAutocomplete] = useState(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const limitByFormat = (value, format) => {
+    const maxDigits = format
+      .split(',')
+      .map(n => parseInt(n.trim(), 10))
+      .reduce((a, b) => a + b, 0);
+
+    const digits = value.replace(/\D/g, '');
+    return digits.slice(0, maxDigits);
+  };
 
   const formatDate = dateStr => {
     if (!dateStr) return '';
@@ -569,23 +580,23 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
     return `${year}-${month}-${day}`;
   };
 
+  // ==========================
+  //      DISPLAY VALUE FIX
+  // ==========================
   const getDisplayValue = (type, value) => {
-    if (!value) return isPhone ? '+1' : '';
+    if (!value) return isPhone ? '+1 ' : '';
 
-    // Masked logic
     if (showMasked && isMasked) return '*'.repeat(value.toString().length);
 
-    // Date formatting
     if (type === 'date') return formatDate(value);
 
     const format = formatting?.split(',');
 
-    // ✅ PHONE NUMBER LOGIC
+    // --------------------------
+    //        PHONE FORMAT
+    // --------------------------
     if (isPhone) {
-      // Remove +1 and non-digits
-      let clean = String(value)
-        .replace(/^\+1/, '') // remove +1
-        .replace(/\D/g, ''); // remove non-digits
+      let clean = String(value).replace(/\D/g, ''); // raw digits only
 
       if (format && Array.isArray(format) && format.length > 0) {
         let formatted = '';
@@ -604,17 +615,17 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
           }
         }
 
-        if (start < clean.length) {
-          formatted += '-' + clean.substr(start);
-        }
+        if (start < clean.length) formatted += '-' + clean.substr(start);
 
-        return '+1' + formatted;
+        return '+1 ' + formatted;
       }
 
-      return '+1' + clean;
+      return '+1 ' + clean;
     }
 
-    // ✅ NORMAL FORMATTING (NON-PHONE)
+    // --------------------------
+    //      NORMAL FORMATTING
+    // --------------------------
     if (format && Array.isArray(format) && format.length > 0) {
       const digits = value.toString().replace(/\D/g, '');
       let formatted = '';
@@ -633,16 +644,14 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
         }
       }
 
-      if (start < digits.length) {
-        formatted += '-' + digits.substr(start);
-      }
-
+      if (start < digits.length) formatted += '-' + digits.substr(start);
       return formatted;
     }
 
     return value;
   };
 
+  // Google Places
   const onLoad = useCallback(autoC => {
     autoC.setFields(['address_components', 'formatted_address', 'geometry', 'place_id']);
     setAutocomplete(autoC);
@@ -650,7 +659,6 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
 
   const onPlaceChanged = () => {
     const place = autocomplete.getPlace();
-    console.log('Selected place:', place.formatted_address);
     setForm(prev => ({ ...prev, [name]: place.formatted_address }));
   };
 
@@ -669,7 +677,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
               <div
                 dangerouslySetInnerHTML={{
                   __html: String(ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
-                    if (match.includes('target=')) return match; // avoid duplicates
+                    if (match.includes('target=')) return match;
                     return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
                   }),
                 }}
@@ -716,7 +724,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                 </div>
               ) : (
                 <div className="relative">
-                  {isGooglePlaces && type == 'text' ? (
+                  {isGooglePlaces && type === 'text' ? (
                     <Autocomplete
                       onLoad={onLoad}
                       className="w-full"
@@ -747,23 +755,29 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                       placeholder={placeholder}
                       type={isMasked && type !== 'date' ? 'text' : type}
                       value={getDisplayValue(type, form?.[name])}
-                      // onChange={e =>
-                      //   setForm(prev => ({
-                      //     ...prev,
-                      //     [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
-                      //   }))
-                      // }
                       onChange={e => {
                         let val = e.target.value;
 
+                        // ==========================
+                        //      PHONE RAW DIGITS
+                        // ==========================
                         if (isPhone) {
-                          // remove non-digits except +
-                          val = val.replace(/[^\d+]/g, '');
+                          let digits = e.target.value.replace(/\D/g, '');
 
-                          // force +1 prefix
-                          if (!val.startsWith('+1')) {
-                            val = '+1' + val.replace(/^\+/, '').replace(/^1/, '');
-                          }
+                          if (digits.startsWith('1')) digits = digits.slice(1);
+
+                          digits = limitByFormat(digits, '1,3,3,4'); // 10 digits total
+
+                          val = digits;
+                        }
+
+                        // ==========================
+                        //      SSN RAW DIGITS
+                        // ==========================
+                        else if (name.includes('ssn')) {
+                          let digits = e.target.value.replace(/\D/g, '');
+                          digits = limitByFormat(digits, '3,2,4'); // 9 digits total
+                          val = digits;
                         }
 
                         setForm(prev => ({
@@ -795,17 +809,14 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                     />
                   )}
 
-                  {showSuggestions && type == 'text' && fieldSuggestions?.length && (
+                  {showSuggestions && type === 'text' && fieldSuggestions?.length > 0 && (
                     <div className="absolute top-full left-0 z-10 mt-1 max-h-40 w-full overflow-y-auto rounded-md border bg-white shadow-lg">
-                      {fieldSuggestions?.map((suggestion, index) => (
+                      {fieldSuggestions.map((suggestion, index) => (
                         <div
                           key={index}
                           className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                           onMouseDown={() => {
-                            setForm(prev => ({
-                              ...prev,
-                              [name]: suggestion,
-                            }));
+                            setForm(prev => ({ ...prev, [name]: suggestion }));
                             setShowSuggestions(false);
                           }}
                         >
@@ -815,17 +826,14 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                     </div>
                   )}
 
-                  {showSuggestions && !fieldSuggestions?.length && suggestions?.length > 0 && (
+                  {showSuggestions && suggestions?.length > 0 && (!fieldSuggestions || !fieldSuggestions.length) && (
                     <div className="absolute top-full left-0 z-10 mt-1 max-h-40 w-full overflow-y-auto rounded-md border bg-white shadow-lg">
                       {suggestions.map((suggestion, index) => (
                         <div
                           key={index}
                           className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                           onMouseDown={() => {
-                            setForm(prev => ({
-                              ...prev,
-                              [name]: suggestion,
-                            }));
+                            setForm(prev => ({ ...prev, [name]: suggestion }));
                             setShowSuggestions(false);
                           }}
                         >
