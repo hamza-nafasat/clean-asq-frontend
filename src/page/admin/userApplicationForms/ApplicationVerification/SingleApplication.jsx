@@ -568,6 +568,37 @@ export default function SingleApplication() {
           name: 'idMission',
         })
       );
+
+      // console.log('You are verified successfully', data);
+      setIsIdMissionProcessing(false);
+      const formDataOfIdMission = data?.Form_Data;
+      let address2 = formDataOfIdMission?.Address2 || '';
+      let address = formDataOfIdMission?.Address || '';
+      if (address.includes(address2)) {
+        address2 = 'None';
+      }
+
+      setIdMissionVerifiedData({
+        name: (formDataOfIdMission?.name || '')?.concat(' ', formDataOfIdMission?.Last_Name || ''),
+        email: formDataOfIdMission?.Email || user?.email || '',
+        idNumber: formDataOfIdMission?.ID_Number || '',
+        idIssuer: formDataOfIdMission?.ID_State
+          ? formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country
+          : formDataOfIdMission?.Issuing_Country || '',
+        idType: formDataOfIdMission?.DocumentType || '',
+        idExpiryDate: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : '',
+        streetAddress:
+          formDataOfIdMission?.ParsedAddressStreetNumber + formDataOfIdMission?.ParsedAddressStreetName || '',
+        phoneNumber: formDataOfIdMission?.PhoneNumber || '',
+        zipCode: formDataOfIdMission?.ParsedAddressPostalCode || '',
+        dateOfBirth: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : '',
+        country: formDataOfIdMission?.Issuing_Country || '',
+        issueDate: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : '',
+        companyTitle: '',
+        state: formDataOfIdMission?.ParsedAddressProvince || '',
+        city: formDataOfIdMission?.ParsedAddressMunicipality || '',
+        address2: address2,
+      });
       unwrapResult(action);
       setIsIdMissionProcessing(false);
       setIdMissionVerified(true);
@@ -584,6 +615,37 @@ export default function SingleApplication() {
           name: 'idMission',
         })
       );
+
+      // console.log('You are verified successfully', data);
+      setIsIdMissionProcessing(false);
+      const formDataOfIdMission = data?.Form_Data;
+      let address2 = formDataOfIdMission?.Address2 || '';
+      let address = formDataOfIdMission?.Address || '';
+      if (address.includes(address2)) {
+        address2 = 'None';
+      }
+
+      setIdMissionVerifiedData({
+        name: (formDataOfIdMission?.name || '')?.concat(' ', formDataOfIdMission?.Last_Name || ''),
+        email: formDataOfIdMission?.Email || user?.email || '',
+        idNumber: formDataOfIdMission?.ID_Number || '',
+        idIssuer: formDataOfIdMission?.ID_State
+          ? formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country
+          : formDataOfIdMission?.Issuing_Country || '',
+        idType: formDataOfIdMission?.DocumentType || '',
+        idExpiryDate: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : '',
+        streetAddress:
+          formDataOfIdMission?.ParsedAddressStreetNumber + formDataOfIdMission?.ParsedAddressStreetName || '',
+        phoneNumber: formDataOfIdMission?.PhoneNumber || '',
+        zipCode: formDataOfIdMission?.ParsedAddressPostalCode || '',
+        dateOfBirth: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : '',
+        country: formDataOfIdMission?.Issuing_Country || '',
+        issueDate: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : '',
+        companyTitle: '',
+        state: formDataOfIdMission?.ParsedAddressProvince || '',
+        city: formDataOfIdMission?.ParsedAddressMunicipality || '',
+        address2: address2,
+      });
       unwrapResult(action);
       toast.error("you id didn't approved please try again");
       setIsIdMissionProcessing(false);
