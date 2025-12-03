@@ -923,7 +923,7 @@ export default function SingleApplication() {
           ) : (
             <div className="flex w-full flex-col p-2">
               <div className="flex items-center justify-between">
-                {form?.data?.idMissionDataDisplayFormatedText && (
+                {form?.data?.idMissionDataDisplayFormatedText ? (
                   <div className="flex items-end gap-3">
                     <div
                       className="w-full"
@@ -937,6 +937,12 @@ export default function SingleApplication() {
                         ),
                       }}
                     />
+                  </div>
+                ) : (
+                  <div className="flex w-full gap-3">
+                    <h3 className="text-textPrimary mb-4 w-full text-center text-2xl font-semibold">
+                      Primary Applicant Information
+                    </h3>
                   </div>
                 )}
                 {isCreator && (
