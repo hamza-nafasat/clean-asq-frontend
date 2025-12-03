@@ -550,7 +550,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
   // Auto formatting overrides
   if (name.includes('ssn')) formatting = '3,2,4';
   const isPhone = name.toLowerCase().includes('phone');
-  if (isPhone) formatting = '1,3,3,4';
+  if (isPhone) formatting = '3,3,4';
 
   const inputRef = useRef(null);
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
@@ -766,7 +766,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
 
                           if (digits.startsWith('1')) digits = digits.slice(1);
 
-                          digits = limitByFormat(digits, '1,3,3,4'); // 10 digits total
+                          digits = limitByFormat(digits, '3,3,4'); // 10 digits total
 
                           val = digits;
                         }

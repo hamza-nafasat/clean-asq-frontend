@@ -17,8 +17,8 @@ const formatSSN = raw => {
   return out;
 };
 
-const formatPhone = (raw, formatting = '1,3,3,4') => {
-  let clean = raw.replace(/^\+1/, '').replace(/\D/g, '').slice(0, 11);
+const formatPhone = (raw, formatting = '3,3,4') => {
+  let clean = raw.replace(/^\+1/, '').replace(/\D/g, '').slice(0, 10);
 
   const parts = formatting.split(',').map(n => parseInt(n, 10));
   let formatted = '';
@@ -100,7 +100,7 @@ const TextField = ({
   const getDisplayValue = value => {
     if (!value) return isPhone ? '+1 ' : '';
 
-    if (isPhone) return formatPhone(String(value), formatting || '1,3,3,4');
+    if (isPhone) return formatPhone(String(value), formatting || '3,3,4');
 
     if (isSSN && formatting === '3,2,4') return formatSSN(String(value));
 

@@ -1009,7 +1009,7 @@ export default function SingleApplication() {
                 <TextField
                   value={idMissionVerifiedData?.phoneNumber}
                   onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, phoneNumber: e.target.value })}
-                  formatting="1,3,3,4"
+                  formatting="3,3,4"
                   label="Phone Number:*"
                   required
                   name={'phoneNumber'}

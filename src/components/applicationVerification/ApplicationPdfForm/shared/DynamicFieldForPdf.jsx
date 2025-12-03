@@ -495,7 +495,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
   } = field;
 
   if (name.includes('ssn')) formatting = '3,2,4';
-  if (name.includes('phone')) formatting = '1,3,3,4';
+  if (name.includes('phone')) formatting = '3,3,4';
 
   const inputRef = useRef(null);
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
