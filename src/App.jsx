@@ -14,6 +14,7 @@ import AdminAllUsers from './page/admin/dashboard/admin-dashboard/AdminAllUsers'
 import ApplicationForms from './page/admin/dashboard/applicationForms/ApplicationForms';
 import Applications from './page/admin/dashboard/applications/Applications';
 import DraftSubmission from './page/admin/dashboard/draftSubmission/DraftSubmission';
+import Email from './page/admin/dashboard/email/Email';
 import FormStrategies from './page/admin/dashboard/formStrategies/FormStrategies';
 import AllRoles from './page/admin/dashboard/role/AllRoles';
 import Strategies from './page/admin/dashboard/strategies/Strategies';
@@ -22,13 +23,12 @@ import VerificationTest from './page/admin/dashboard/varification/VerficationTes
 import UserApplicationForms from './page/admin/userApplicationForms';
 import AdditionalOwnersForm from './page/admin/userApplicationForms/ApplicationVerification/AdditionalOwnersForm';
 import ApplicationForm from './page/admin/userApplicationForms/ApplicationVerification/ApplicationForm';
+import ApplicationPdfView from './page/admin/userApplicationForms/ApplicationVerification/ApplicationPdfView';
 import SingleApplication from './page/admin/userApplicationForms/ApplicationVerification/SingleApplication';
 import CompanyInformation from './page/admin/userApplicationForms/CompanyInformation/CompanyInformation';
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
 import { detectVPN } from './utils/vpnDetection';
-import ApplicationPdfView from './page/admin/userApplicationForms/ApplicationVerification/ApplicationPdfView';
-import Email from './page/admin/dashboard/email/Email';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -53,6 +53,9 @@ function App() {
     setLogo,
     setButtonTextPrimary,
     setButtonTextSecondary,
+    setHeaderAlignment,
+    setHeaderBackground,
+    setFooterBackground,
   } = useBranding();
 
   const getUserAndSetBranding = useCallback(async () => {
@@ -75,6 +78,9 @@ function App() {
           setLogo(formBranding.selectedLogo);
           setButtonTextPrimary(formBranding.colors.buttonTextPrimary);
           setButtonTextSecondary(formBranding.colors.buttonTextSecondary);
+          setHeaderBackground(formBranding.colors.headerBackground);
+          setFooterBackground(formBranding.colors.footerBackground);
+          setHeaderAlignment(formBranding.headerAlignment);
         }
       } else {
         dispatch(userNotExist());
@@ -86,20 +92,23 @@ function App() {
       setLoading(false);
     }
   }, [
-    setName,
-    dispatch,
     getUserProfile,
-    setAccentColor,
-    setBackgroundColor,
-    setButtonTextPrimary,
-    setButtonTextSecondary,
-    setFontFamily,
-    setFrameColor,
-    setLinkColor,
-    setLogo,
+    dispatch,
+    setName,
     setPrimaryColor,
     setSecondaryColor,
+    setAccentColor,
     setTextColor,
+    setLinkColor,
+    setBackgroundColor,
+    setFrameColor,
+    setFontFamily,
+    setLogo,
+    setButtonTextPrimary,
+    setButtonTextSecondary,
+    setHeaderBackground,
+    setFooterBackground,
+    setHeaderAlignment,
   ]);
 
   useEffect(() => {

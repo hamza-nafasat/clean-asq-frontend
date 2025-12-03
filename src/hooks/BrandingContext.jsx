@@ -10,6 +10,8 @@ const DEFAULT_COLORS = {
   textColor: '#1b1b1b',
   linkColor: '#1025e3',
   backgroundColor: '#f9f9f9',
+  headerBackgroundColor: '#f9f9f9',
+  footerBackgroundColor: '#f9f9f9',
   frameColor: '#db1313',
   fontFamily: 'Inter',
   buttonTextPrimary: '#bfff00',
@@ -29,6 +31,9 @@ export const BrandingProvider = ({ children }) => {
   const [fontFamily, setFontFamily] = useState(DEFAULT_COLORS.fontFamily);
   const [buttonTextPrimary, setButtonTextPrimary] = useState(DEFAULT_COLORS.buttonTextPrimary);
   const [buttonTextSecondary, setButtonTextSecondary] = useState(DEFAULT_COLORS.buttonTextSecondary);
+  const [headerBackground, setHeaderBackground] = useState(DEFAULT_COLORS.headerBackgroundColor);
+  const [footerBackground, setFooterBackground] = useState(DEFAULT_COLORS.footerBackgroundColor);
+  const [headerAlignment, setHeaderAlignment] = useState('left');
 
   // Load saved branding from localStorage on mount
   useEffect(() => {
@@ -45,6 +50,9 @@ export const BrandingProvider = ({ children }) => {
       setFontFamily(savedBranding.fontFamily || DEFAULT_COLORS.fontFamily);
       setButtonTextPrimary(savedBranding.buttonTextPrimary || DEFAULT_COLORS.buttonTextPrimary);
       setButtonTextSecondary(savedBranding.buttonTextSecondary || DEFAULT_COLORS.buttonTextSecondary);
+      setHeaderBackground(savedBranding.headerBackgroundColor || DEFAULT_COLORS.headerBackgroundColor);
+      setFooterBackground(savedBranding.footerBackgroundColor || DEFAULT_COLORS.footerBackgroundColor);
+      setHeaderAlignment(savedBranding.headerAlignment || 'left');
     }
   }, []);
 
@@ -124,6 +132,12 @@ export const BrandingProvider = ({ children }) => {
     setButtonTextPrimary,
     buttonTextSecondary,
     setButtonTextSecondary,
+    headerBackground,
+    setHeaderBackground,
+    footerBackground,
+    setFooterBackground,
+    headerAlignment,
+    setHeaderAlignment,
   };
 
   return <BrandingContext.Provider value={value}>{children}</BrandingContext.Provider>;

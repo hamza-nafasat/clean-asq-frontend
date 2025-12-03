@@ -19,6 +19,9 @@ const useApplyBranding = ({ formId }) => {
     setLogo,
     setButtonTextPrimary,
     setButtonTextSecondary,
+    setHeaderAlignment,
+    setHeaderBackground,
+    setFooterBackground,
   } = useBranding();
 
   const { data: form, isLoading } = useGetSingleFormQueryQuery({ _id: formId }, { skip: !formId });
@@ -38,23 +41,29 @@ const useApplyBranding = ({ formId }) => {
         setFrameColor(formBranding?.colors?.frame);
         setButtonTextPrimary(formBranding?.colors?.buttonTextPrimary);
         setButtonTextSecondary(formBranding?.colors?.buttonTextSecondary);
+        setHeaderBackground(formBranding?.colors?.headerBackground);
+        setFooterBackground(formBranding?.colors?.footerBackground);
+        setHeaderAlignment(formBranding?.headerAlignment);
       }
       if (formBranding?.logos) setLogo(formBranding?.selectedLogo);
       if (formBranding?.fontFamily) setFontFamily(formBranding?.fontFamily);
     },
     [
-      setName,
-      setAccentColor,
-      setBackgroundColor,
-      setButtonTextPrimary,
-      setButtonTextSecondary,
-      setFontFamily,
-      setFrameColor,
-      setLinkColor,
       setLogo,
+      setFontFamily,
+      setName,
       setPrimaryColor,
       setSecondaryColor,
+      setAccentColor,
       setTextColor,
+      setLinkColor,
+      setBackgroundColor,
+      setFrameColor,
+      setButtonTextPrimary,
+      setButtonTextSecondary,
+      setHeaderBackground,
+      setFooterBackground,
+      setHeaderAlignment,
     ]
   );
 
