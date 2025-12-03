@@ -150,6 +150,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
     setLogo: setGlobalLogo,
     setButtonTextPrimary: setButtonTextPrimaryGlobal,
     setButtonTextSecondary: setButtonTextSecondaryGlobal,
+    setHeaderAlignment: setHeaderAlignmentGlobal,
+    setHeaderBackground: setHeaderBackgroundGlobal,
+    setFooterBackground: setFooterBackgroundGlobal,
   } = useBranding();
 
   const [extractColorsFromLogos] = useExtractColorsFromLogosMutation();
@@ -385,6 +388,10 @@ const GlobalBrandingPage = ({ brandingId }) => {
             setGlobalLogo(userBranding?.selectedLogo);
             setButtonTextPrimaryGlobal(userBranding.colors.buttonTextPrimary);
             setButtonTextSecondaryGlobal(userBranding.colors.buttonTextSecondary);
+            setHeaderAlignmentGlobal(userBranding.headerAlignment);
+
+            setHeaderBackgroundGlobal(userBranding.colors.headerBackground);
+            setFooterBackgroundGlobal(userBranding.colors.footerBackground);
 
             // email
             setEmailHeader(userBranding.emailHeader);

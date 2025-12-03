@@ -6,7 +6,7 @@ function Footer() {
   const { name } = useBranding();
 
   return (
-    <div className="flex h-20 w-full flex-col items-center justify-between gap-2 rounded-t-md border-t-2 bg-white px-4 py-4 shadow md:h-16 md:flex-row md:gap-0 md:px-4 xl:px-20">
+    <div className="bg-footer flex h-20 w-full flex-col items-center justify-between gap-2 rounded-t-md border-t-2 px-4 py-4 shadow md:h-16 md:flex-row md:gap-0 md:px-4 xl:px-20">
       {/* Left side */}
       <div className="text-textPrimary">
         © 2025

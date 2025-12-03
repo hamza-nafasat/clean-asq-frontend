@@ -20,12 +20,13 @@ function AdminHeader({ setSidebarOpen }) {
   const { user } = useSelector(state => state.auth);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef(null);
-  const { logo } = useBranding();
+  const { logo, headerAlignment } = useBranding();
   const [loadingTime, setLoadingTime] = useState(500);
+  console.log('headerAlignment', headerAlignment);
 
   const profileOpenHandler = () => setIsProfileOpen(prev => !prev);
   const isGuest = !user?._id || user?.role?.name == 'guest';
-
+  // const { headerAlignment } = useBranding();
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoadingTime(0);
@@ -35,7 +36,7 @@ function AdminHeader({ setSidebarOpen }) {
 
   if (isGuest && loadingTime) return <CustomLoading />;
   return (
-    <div className="flex min-h-20 items-center justify-between rounded-md bg-white p-2 shadow">
+    <div className="bg-header flex min-h-20 items-center justify-between rounded-md p-2 shadow">
       {/* Hamburger Icon (mobile only) */}
       <div className="flex items-center gap-2">
         <button className="rounded-md p-2 hover:bg-gray-100 lg:hidden" onClick={() => setSidebarOpen(true)}>

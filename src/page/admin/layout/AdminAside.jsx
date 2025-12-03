@@ -15,8 +15,9 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
   const { user } = useSelector(state => state.auth);
   const [isNavOpen, setIsNavOpen] = useState(true);
   const location = useLocation();
-  const { logo } = useBranding();
+  const { logo, headerAlignment } = useBranding();
   const [isLight, setIsLight] = useState(false);
+  console.log('isNavOpenisNavOpen', isNavOpen);
 
   useEffect(() => {
     if (logo) {
@@ -25,6 +26,14 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
   }, [logo]);
 
   const handleNavOpen = () => setIsNavOpen(!isNavOpen);
+
+  const justifyClass = !isNavOpen
+    ? 'justify-center'
+    : headerAlignment === 'left'
+      ? 'justify-start'
+      : headerAlignment === 'center'
+        ? 'justify-center'
+        : 'justify-end';
 
   const pages = [
     { title: 'Application forms', link: '/application-forms', icon: <Applications /> },
@@ -55,7 +64,7 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
       )}
 
       <div
-        className={`fixed top-0 left-0 z-40 h-full rounded-md bg-white ${isNavOpen ? 'p-4' : 'p-8'} transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-[110%]'} lg:static lg:flex lg:translate-x-0 lg:flex-col lg:justify-between ${isNavOpen ? 'w-[250px]' : 'w-5'} `}
+        className={`bg-header fixed top-0 left-0 z-40 h-full rounded-md ${isNavOpen ? 'p-4' : 'p-8'} transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-[110%]'} lg:static lg:flex lg:translate-x-0 lg:flex-col lg:justify-between ${isNavOpen ? 'w-[250px]' : 'w-5'} `}
       >
         {/* Toggle Button (desktop only) */}
         <div className="absolute top-[6%] right-[-11px] z-10 hidden cursor-pointer lg:block" onClick={handleNavOpen}>
@@ -66,7 +75,8 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
 
         {/* Logo + Nav */}
         <div className="py-4">
-          <div className="mb-5 flex w-full items-center justify-center xl:mb-12">
+          <div className={`mb-5 flex w-full items-center xl:mb-12 ${justifyClass}`}>
+            {' '}
             <Link to="/application-forms" className="flex min-w-10 items-center justify-center">
               <img
                 src={logo || logoApply}

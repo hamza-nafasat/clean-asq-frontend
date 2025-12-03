@@ -16,6 +16,8 @@ const DEFAULT_COLORS = {
   fontFamily: 'Inter',
   buttonTextPrimary: '#bfff00',
   buttonTextSecondary: '#bfff00',
+  footerBackground: '#998069',
+  headerBackground: '#f3e1d0',
 };
 
 export const BrandingProvider = ({ children }) => {
@@ -70,6 +72,8 @@ export const BrandingProvider = ({ children }) => {
       buttonTextPrimary,
       buttonTextSecondary,
       name,
+      headerBackground,
+      footerBackground,
     };
     localStorage.setItem('brandingData', JSON.stringify(brandingData));
 
@@ -90,6 +94,8 @@ export const BrandingProvider = ({ children }) => {
     document.documentElement.style.setProperty('--frameColor', frameColor);
     document.documentElement.style.setProperty('--color-button-text-primary', buttonTextPrimary);
     document.documentElement.style.setProperty('--color-button-text-secondary', buttonTextSecondary);
+    document.documentElement.style.setProperty('--color-header', headerBackground);
+    document.documentElement.style.setProperty('--color-footer', footerBackground);
 
     // Apply font family globally using CSS variables
     document.documentElement.style.setProperty('--font-primary', `var(--font-${fontFamily?.toLowerCase()})`);
@@ -105,6 +111,8 @@ export const BrandingProvider = ({ children }) => {
     fontFamily,
     buttonTextPrimary,
     buttonTextSecondary,
+    headerBackground,
+    footerBackground,
   ]);
 
   const value = {
