@@ -58,7 +58,23 @@ const IdMissionDataPdf = ({ formId }) => {
 
   return (
     <div className="flex w-full flex-col p-2">
-      <h3 className="text-textPrimary mb-3 text-2xl font-semibold">Primary Applicant Information</h3>
+      {form?.data?.idMissionDataDisplayFormatedText ? (
+        <div className="flex items-end gap-3">
+          <div
+            className="w-full"
+            dangerouslySetInnerHTML={{
+              __html: String(form?.data?.idMissionDataDisplayFormatedText || '').replace(/<a(\s+.*?)?>/g, match => {
+                if (match.includes('target=')) return match; // avoid duplicates
+                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              }),
+            }}
+          />
+        </div>
+      ) : (
+        <div className="flex w-full gap-3">
+          <h3 className="text-textPrimary mb-4 w-full text-2xl font-semibold">Primary Applicant Information</h3>
+        </div>
+      )}
       <form className="flex flex-wrap justify-center gap-4">
         <TextField
           onChange={() => {}}

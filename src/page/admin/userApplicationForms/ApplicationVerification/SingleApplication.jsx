@@ -502,6 +502,7 @@ export default function SingleApplication() {
     });
     // id mission verified success fully
     socket.on('idMission_verified', async data => {
+      console.log('verified id mission data is', data);
       if (user?._id && data?.Form_Data?.FullName) {
         const res = await updateMyProfile({
           _id: user?._id,
@@ -528,11 +529,7 @@ export default function SingleApplication() {
       }
 
       setIdMissionVerifiedData({
-        // name: (formDataOfIdMission?.FullName || formDataOfIdMission?.name || '')?.concat(
-        //   ' ',
-        //   formDataOfIdMission?.Last_Name || ''
-        // ),
-        name: (formDataOfIdMission?.name || '')?.concat(' ', formDataOfIdMission?.Last_Name || ''),
+        name: (formDataOfIdMission?.Name || '').concat(' ', formDataOfIdMission?.Last_Name || ''),
         email: formDataOfIdMission?.Email || user?.email || '',
         idNumber: formDataOfIdMission?.ID_Number || '',
         idIssuer: formDataOfIdMission?.ID_State
@@ -541,7 +538,9 @@ export default function SingleApplication() {
         idType: formDataOfIdMission?.DocumentType || '',
         idExpiryDate: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : '',
         streetAddress:
-          formDataOfIdMission?.ParsedAddressStreetNumber + formDataOfIdMission?.ParsedAddressStreetName || '',
+          (formDataOfIdMission?.ParsedAddressStreetNumber || '') +
+          ' ' +
+          (formDataOfIdMission?.ParsedAddressStreetName || ''),
         phoneNumber: formDataOfIdMission?.PhoneNumber || '',
         zipCode: formDataOfIdMission?.ParsedAddressPostalCode || '',
         dateOfBirth: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : '',
@@ -556,6 +555,8 @@ export default function SingleApplication() {
     });
     // id mission failed
     socket.on('idMission_failed', async data => {
+      console.log('failed id mission data is', data);
+
       // console.log('you start id mission failed', data);
       // toast.error("you id didn't approved please try again");
       const action = await dispatch(
@@ -604,6 +605,8 @@ export default function SingleApplication() {
       setIdMissionVerified(true);
     });
     socket.on('idMission_other', async data => {
+      console.log('other id mission data is', data);
+
       console.log('Id Mission Data ', data);
       const action = await dispatch(
         updateFormState({
@@ -616,7 +619,6 @@ export default function SingleApplication() {
         })
       );
 
-      // console.log('You are verified successfully', data);
       setIsIdMissionProcessing(false);
       const formDataOfIdMission = data?.Form_Data;
       let address2 = formDataOfIdMission?.Address2 || '';
