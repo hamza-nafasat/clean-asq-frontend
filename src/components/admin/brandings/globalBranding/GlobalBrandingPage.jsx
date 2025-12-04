@@ -182,9 +182,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
         setFrameColor(data?.colors?.frame);
         setButtonTextPrimary(data?.colors?.buttonTextPrimary);
         setButtonTextSecondary(data?.colors?.buttonTextSecondary);
-        // setHeaderAlignment(data?.headerAlignment);
-        // setHeaderBackground(data?.headerBackground);
-        // setFooterBackground(data?.footerBackground);
+        setHeaderAlignment(data?.headerAlignment || 'left');
+        setHeaderBackground(data?.headerBackground || '#ffffff');
+        setFooterBackground(data?.footerBackground || '#ffffff');
         if (Array.isArray(data?.color_palette?.fromLogo) && Array.isArray(data?.color_palette?.fromSite)) {
           setColorPalette([...data.color_palette.fromLogo, ...data.color_palette.fromSite]);
         }
@@ -270,6 +270,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append('emailSecondaryColor', emailSecondaryColor);
     formData.append('emailHeadingColor', emailHeadingColor);
     formData.append('emailTextColor', emailTextColor);
+    formData.append('emailHeaderColor', emailHeaderColor);
+    formData.append('emailFooterColor', emailFooterColor);
+    formData.append('emailBodyColor', emailBodyColor);
 
     console.log(extraLogos);
     try {

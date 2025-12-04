@@ -18,7 +18,6 @@ const Preview = ({
 }) => {
   const formattedText = companyName.toLowerCase().replace(/\s+/g, '-');
   const dispatch = useDispatch();
-  const [isLight, setIsLight] = useState(false);
   const [copied, setCopied] = useState(false);
   const text = `https://${formattedText || 'company'}.apply-secure.com`;
 
@@ -33,7 +32,6 @@ const Preview = ({
     if (selectedLogo) {
       detectLogo(selectedLogo).then(res => {
         console.log('res', res);
-        setIsLight(res);
       });
     }
   }, [companyName, dispatch, formattedText, selectedLogo]);
@@ -41,12 +39,12 @@ const Preview = ({
     <div className="mt-6 rounded-xl border border-[#F0F0F0] p-3 shadow-sm md:p-6">
       <h2 className="text-textPrimary text-[18px] font-medium">Preview</h2>
       <div className="mt-5 rounded-md border p-3 md:p-6">
-        <div className="flex h-[100px] w-[80%] cursor-pointer items-center">
+        <div className="flex h-[100px] max-h-[100px] w-[250px] max-w-[250px] items-start!">
           <img
             src={typeof selectedLogo === 'string' ? selectedLogo : selectedLogo}
             alt="logo"
             referrerPolicy="no-referrer"
-            className={`size-24 cursor-pointer object-contain ${isLight ? 'rounded-sm bg-gray-700' : ''}`}
+            className="flex h-full max-w-full object-contain object-center"
           />
         </div>
         <p

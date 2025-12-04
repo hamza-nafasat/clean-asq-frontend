@@ -10,7 +10,7 @@ function DocumentsPdf({ name, fields, step, isSignature }) {
   const { formData } = useSelector(state => state.form);
   const [form, setForm] = useState({});
   const [showRequiredDocs, setShowRequiredDocs] = useState(true);
-  const [urls, setUrls] = useState([]);
+  // const [urls, setUrls] = useState([]);
 
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
@@ -35,11 +35,11 @@ function DocumentsPdf({ name, fields, step, isSignature }) {
       if (setIsSaving) setIsSaving(false);
     }
   };
-  useEffect(() => {
-    if (formData?.[step?.title]?.article_of_incorporation_urls)
-      setUrls(formData?.[step?.title]?.article_of_incorporation_urls?.split(',') || []);
-    else setUrls([]);
-  }, [form.article_of_incorporation_urls, formData, step?.title]);
+  // useEffect(() => {
+  //   if (formData?.[step?.title]?.article_of_incorporation_urls)
+  //     setUrls(formData?.[step?.title]?.article_of_incorporation_urls?.split(',') || []);
+  //   else setUrls([]);
+  // }, [form.article_of_incorporation_urls, formData, step?.title]);
 
   return (
     <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
@@ -90,7 +90,7 @@ function DocumentsPdf({ name, fields, step, isSignature }) {
           }
         })}
       </div>
-      {urls?.length > 0 && (
+      {/* {urls?.length > 0 && (
         <div className="mt-6">
           <h3 className="text-lg font-semibold text-gray-800">Uploaded URLs Preview</h3>
           <div className="mt-4 grid gap-3">
@@ -112,7 +112,7 @@ function DocumentsPdf({ name, fields, step, isSignature }) {
             ))}
           </div>
         </div>
-      )}
+      )} */}
       <div className="mt-4">
         {isSignature && (
           <SignatureBox

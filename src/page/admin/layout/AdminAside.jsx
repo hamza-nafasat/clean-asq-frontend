@@ -64,7 +64,7 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
       )}
 
       <div
-        className={`bg-header fixed top-0 left-0 z-40 h-full rounded-md ${isNavOpen ? 'p-4' : 'p-8'} transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-[110%]'} lg:static lg:flex lg:translate-x-0 lg:flex-col lg:justify-between ${isNavOpen ? 'w-[250px]' : 'w-5'} `}
+        className={`bg-backgroundColor fixed top-0 left-0 z-40 h-full rounded-md ${isNavOpen ? 'p-4' : 'p-8'} transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-[110%]'} lg:static lg:flex lg:translate-x-0 lg:flex-col lg:justify-between ${isNavOpen ? 'w-[250px]' : 'w-5'} shadow-lg`}
       >
         {/* Toggle Button (desktop only) */}
         <div className="absolute top-[6%] right-[-11px] z-10 hidden cursor-pointer lg:block" onClick={handleNavOpen}>

@@ -1119,16 +1119,19 @@ export default function SingleApplication() {
                 </div>
                 <div className="flex w-full flex-col">
                   <div className="my-4 flex w-full justify-between gap-2">
-                    {idMissionSection?.signDisplayText && (
+                    {idMissionSection?.signDisplayFormattedText && (
                       <div className="flex items-end gap-3">
                         <div
                           // className="flex flex-1 items-end gap-3"
                           className="w-full"
                           dangerouslySetInnerHTML={{
-                            __html: String(idMissionSection?.signDisplayText || '').replace(/<a(\s+.*?)?>/g, match => {
-                              if (match.includes('target=')) return match; // avoid duplicates
-                              return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
-                            }),
+                            __html: String(idMissionSection?.signDisplayFormattedText || '').replace(
+                              /<a(\s+.*?)?>/g,
+                              match => {
+                                if (match.includes('target=')) return match; // avoid duplicates
+                                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                              }
+                            ),
                           }}
                         />
                       </div>
@@ -1184,9 +1187,9 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
   const [signatureData, setSignatureData] = useState({
     isSignature: section?.isSignature || false,
     isSignDisplayText: section?.isSignDisplayText || false,
-    signFormatedDisplayText: section?.signDisplayText || '',
-    signDisplayText: '',
-    formatingAiInstruction: '',
+    signDisplayText: section?.signDisplayText || '',
+    signFormatedDisplayText: section?.signDisplayFormattedText || '',
+    formatingAiInstruction: section?.signDisplayFormattingTextInstructions || '',
   });
 
   const handleUpdateSectionForSignature = async () => {
@@ -1196,7 +1199,9 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
         data: {
           isSignature: signatureData.isSignature,
           isSignDisplayText: signatureData.isSignDisplayText,
-          signDisplayText: signatureData.signFormatedDisplayText,
+          signDisplayText: signatureData.signDisplayText,
+          signDisplayFormattedText: signatureData.signFormatedDisplayText,
+          signDisplayFormattingTextInstructions: signatureData.formatingAiInstruction,
         },
       }).unwrap();
       if (res.success) {

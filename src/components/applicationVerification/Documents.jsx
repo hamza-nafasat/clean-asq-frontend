@@ -333,7 +333,7 @@ function Documents({
           }
         })}
       </div>
-      {urls?.length > 0 && (
+      {/* {urls?.length > 0 && (
         <div className="mt-6">
           <h3 className="text-lg font-semibold text-gray-800">Uploaded URLs Preview</h3>
           <div className="mt-4 grid gap-3">
@@ -355,7 +355,7 @@ function Documents({
             ))}
           </div>
         </div>
-      )}
+      )} */}
       <div className="mt-4">
         {isSignature && (
           <SignatureBox

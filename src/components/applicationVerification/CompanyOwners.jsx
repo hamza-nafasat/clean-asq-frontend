@@ -456,6 +456,15 @@ function CompanyOwners({
                               required
                               onChange={e => handleChangeOnOtherOwnersData(e, index)}
                             />
+                            <TextField
+                              name="phone"
+                              label="Phone Number"
+                              formatting={'3,3,4'}
+                              type="text"
+                              value={phone}
+                              onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                              className={'max-w-[30%] min-w-[400px]'}
+                            />
                           </div>
                           <div className="flex w-full gap-4">
                             <RadioInputType
@@ -501,15 +510,6 @@ function CompanyOwners({
                           {have_detail == 'yes' && (
                             <div className="flex w-full flex-col gap-4">
                               <div className="flex flex-wrap gap-4">
-                                <TextField
-                                  name="phone"
-                                  label="Phone Number"
-                                  formatting={'3,3,4'}
-                                  type="text"
-                                  value={phone}
-                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'max-w-[30%] min-w-[400px]'}
-                                />
                                 <TextField
                                   name="ssn"
                                   label="Social Security Number"
