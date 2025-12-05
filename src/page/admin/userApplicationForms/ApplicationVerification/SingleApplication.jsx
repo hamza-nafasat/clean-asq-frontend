@@ -111,7 +111,7 @@ export default function SingleApplication() {
     }
   };
 
-  // functions for autocomplete ÷÷
+  // functions for autocomplete
   // ===========================
 
   const onLoad = autocompleteInstance => {
