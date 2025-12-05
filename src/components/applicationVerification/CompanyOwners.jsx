@@ -289,11 +289,14 @@ function CompanyOwners({
     if ((additionOwnersGet25OrMore && form.additional_owner?.length) || applicantIsAlsoPrimaryOperator) {
       isOperatorExist = true;
     }
+    const idMissionField = formData?.idMission?.roleFillingForCompany;
+    if (idMissionField == 'primaryOperatorAndController' || idMissionField == 'both') {
+      isOperatorExist = true;
+    }
     if (!isOperatorExist) setSubmitButtonText('At least one primary operator required');
-
-    // console.log('allfields isoperator exist isemailvalidated', allFilled, isOperatorExist, isEmailVAlidated);
+    // console.log('allied operator exist isemailvalidated', allFilled, isOperatorExist, isEmailVAlidated);
     setIsAllRequiredFieldsFilled(allFilled && isOperatorExist && isEmailVAlidated && isSignatureDone);
-  }, [form, isCreator, isSignature, requiredNames]);
+  }, [form, formData?.idMission?.roleFillingForCompany, isCreator, isSignature, requiredNames]);
 
   return (
     <div className="h-full w-full overflow-auto">
