@@ -15,6 +15,7 @@ const Preview = ({
   linkColor,
   textColor,
   frameColor,
+  headerAlignment,
 }) => {
   const formattedText = companyName.toLowerCase().replace(/\s+/g, '-');
   const dispatch = useDispatch();
@@ -38,14 +39,18 @@ const Preview = ({
   return (
     <div className="mt-6 rounded-xl border border-[#F0F0F0] p-3 shadow-sm md:p-6">
       <h2 className="text-textPrimary text-[18px] font-medium">Preview</h2>
-      <div className="mt-5 rounded-md border p-3 md:p-6">
-        <div className="flex h-[100px] max-h-[100px] w-[250px] max-w-[250px] items-start!">
-          <img
-            src={typeof selectedLogo === 'string' ? selectedLogo : selectedLogo}
-            alt="logo"
-            referrerPolicy="no-referrer"
-            className="flex h-full max-w-full object-contain object-center"
-          />
+      <div className={`mt-5 rounded-md border p-3 md:p-6`}>
+        <div
+          className={`${headerAlignment == 'right' ? 'justify-end!' : headerAlignment == 'center' ? 'justify-center!' : 'justify-start'} flex`}
+        >
+          <div className={`flex h-[100px] max-h-[100px] w-[250px] max-w-[250px]`}>
+            <img
+              src={typeof selectedLogo === 'string' ? selectedLogo : selectedLogo}
+              alt="logo"
+              referrerPolicy="no-referrer"
+              className="flex h-full max-w-full object-contain object-center"
+            />
+          </div>
         </div>
         <p
           className="text-textPrimary mb-2 text-[22px] font-medium"

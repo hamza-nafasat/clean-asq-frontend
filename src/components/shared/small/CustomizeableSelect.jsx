@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 
-const CsutomizableSelect = ({
+const CustomizableSelect = ({
   options,
   defaultText = 'Select',
   onSelect,
@@ -75,12 +75,12 @@ const CsutomizableSelect = ({
       {label && <label className="mb-2 block text-sm font-medium text-[#11111199]">{label}</label>}
       <button
         type="button"
-        className="flex items-center justify-between gap-[5px] rounded-[10px] border-[1px] border-[#54545499] px-[20px] py-[12px] text-sm text-[#54545499] shadow-sm md:text-base"
+        className="flex items-center justify-between gap-[5px] rounded-[10px] border border-[#54545499] px-5 py-3 text-sm text-[#54545499] shadow-sm md:text-base"
         onClick={() => setIsOpen(!isOpen)}
         style={{ width: width || '100%' }}
       >
         <span
-          className={`text-sm font-[500] ${
+          className={`text-sm font-medium ${
             selected && (multi ? selected.length : true) ? 'text-[#414141]' : 'text-[#9CA3AF]'
           }`}
         >
@@ -94,7 +94,7 @@ const CsutomizableSelect = ({
       {/* ✅ Dropdown list */}
       {isOpen && (
         <ul
-          className="absolute z-10 mt-1 max-h-60 cursor-pointer overflow-auto rounded-[6px] border-[1px] border-[#54545433] bg-white shadow-md"
+          className="absolute z-10 mt-1 max-h-60 cursor-pointer overflow-auto rounded-[6px] border border-[#54545433] bg-white shadow-md"
           style={{ width: width || '100%' }}
         >
           {options?.map(option => {
@@ -119,4 +119,4 @@ const CsutomizableSelect = ({
   );
 };
 
-export default CsutomizableSelect;
+export default CustomizableSelect;

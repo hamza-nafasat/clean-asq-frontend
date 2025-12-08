@@ -1,6 +1,6 @@
 import DropdownCheckbox from '@/components/shared/DropdownCheckbox';
 import Button from '@/components/shared/small/Button';
-import CsutomizableSelect from '@/components/shared/small/CustomizeableSelect';
+import CustomizableSelect from '@/components/shared/small/CustomizeableSelect';
 import TextField from '@/components/shared/small/TextField';
 import { useCreateFormStrategyMutation } from '@/redux/apis/formApis';
 import React, { useState } from 'react';

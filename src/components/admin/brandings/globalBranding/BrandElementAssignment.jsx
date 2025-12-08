@@ -1,7 +1,7 @@
+import CustomizableSelect from '@/components/shared/small/CustomizeableSelect';
+import html2canvas from 'html2canvas-pro';
 import { useCallback, useEffect, useState } from 'react';
 import FontPicker from './FontPicker';
-import html2canvas from 'html2canvas-pro';
-import TextField from '@/components/shared/small/TextField';
 
 export const ColorInput = ({ label, color, setColor, setImage, image }) => {
   const [colorPicker, setColorPicker] = useState('');
@@ -253,12 +253,18 @@ const BrandElementAssignment = ({
             Reset
           </button>
         </div>
+
         <div className="flex">
-          <TextField
-            label="Header Alignment (left, center, right)"
-            value={headerAlignment}
-            onChange={e => setHeaderAlignment(e.target.value)}
-            placeholder="e.g 'left', 'center', 'right'"
+          <CustomizableSelect
+            initialValue={headerAlignment}
+            options={[
+              { option: 'Left', value: 'left' },
+              { option: 'Center', value: 'center' },
+              { option: 'Right', value: 'right' },
+            ]}
+            label={'Header Alignment'}
+            onSelect={value => setHeaderAlignment(value)}
+            defaultText="Choose Alignment"
           />
         </div>
       </div>

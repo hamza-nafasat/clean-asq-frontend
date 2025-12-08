@@ -32,7 +32,7 @@ const emailHeaderTemplate = `
           
           <!-- Logo -->
           <tr>
-            <td align="center" style="padding: 40px 20px 20px 20px;">
+            <td align={{headerAlignment}} style="padding: 40px 20px 20px 20px;">
               <img 
                 src="{{logo}}" 
                 alt="{{companyName}}"
@@ -507,7 +507,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       headerDescription,
       footerHeading,
       footerDescription,
-
+      headerAlignment,
       logo: selectedLogo,
     };
     setEmailHeader(compileHeader(context));
@@ -528,6 +528,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
     emailHeaderColor,
     emailFooterColor,
     emailBodyColor,
+    headerAlignment,
   ]);
 
   return (
@@ -592,6 +593,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
           buttonTextSecondary={buttonTextSecondary}
           textColor={textColor}
           frameColor={frameColor}
+          headerAlignment={headerAlignment}
         />
         <div className="border-primary my-6 border-t-2"></div>
         <div className="mt-6 rounded-xl border border-[#F0F0F0] p-3 shadow-sm md:p-6">
