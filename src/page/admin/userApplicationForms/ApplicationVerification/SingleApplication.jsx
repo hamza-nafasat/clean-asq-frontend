@@ -84,6 +84,7 @@ export default function SingleApplication() {
     country: '',
     roleFillingForCompany: '',
     address2: 'None',
+    data: null,
     signature: { secureUrl: '', publicId: '', resourceType: '' },
   });
 
@@ -550,6 +551,7 @@ export default function SingleApplication() {
         state: formDataOfIdMission?.ParsedAddressProvince || '',
         city: formDataOfIdMission?.ParsedAddressMunicipality || '',
         address2: address2,
+        data: formDataOfIdMission,
       });
       setIdMissionVerified(true);
     });
@@ -599,6 +601,7 @@ export default function SingleApplication() {
         state: formDataOfIdMission?.ParsedAddressProvince || '',
         city: formDataOfIdMission?.ParsedAddressMunicipality || '',
         address2: address2,
+        data: formDataOfIdMission,
       });
       unwrapResult(action);
       setIsIdMissionProcessing(false);
@@ -647,6 +650,8 @@ export default function SingleApplication() {
         state: formDataOfIdMission?.ParsedAddressProvince || '',
         city: formDataOfIdMission?.ParsedAddressMunicipality || '',
         address2: address2,
+
+        data: formDataOfIdMission,
       });
       unwrapResult(action);
       toast.error("you id didn't approved please try again");
