@@ -1,12 +1,94 @@
-# React + Vite
+# Apply Super Quick – Frontend (React.js)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the frontend of the Apply Super Quick project built with **React.js**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## System Requirements
 
-## Expanding the ESLint configuration
+This project requires the following tools to be installed on your system:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Node.js
+- npm
+- Git
+
+You can verify installation by running:
+
+```bash
+node -v
+npm -v
+git --version
+```
+
+---
+
+## Clone Repository
+
+Clone the project using:
+
+```bash
+git clone git@github.com:hamza-nafasat/apply-super-quick-frontend.git
+cd apply-super-quick-frontend
+```
+
+---
+
+## Environment Setup
+
+Create a `.env` file:
+
+```bash
+touch .env
+```
+
+Add the following variables:
+
+```env
+VITE_SERVER_URL=""
+VITE_CLOUDINARY_CLIENT_KEY=""
+VITE_CLOUDINARY_CLIENT_NAME=""
+VITE_RECAPTCHA_SITE_KEY=""
+VITE_RECAPTCHA_SITE_SECRET=""
+```
+
+---
+
+## Install Dependencies
+
+Run the following command to install packages:
+
+```bash
+npm install
+```
+
+---
+
+## Run Project
+
+Start the development server using:
+
+```bash
+npm run dev
+```
+
+If `npm run dev` does not work, use:
+
+```bash
+npm start
+```
+
+Open your browser and go to:
+
+```
+http://localhost:3000
+```
+
+---
+
+## Build for Production
+
+To create a production build, run:
+
+```bash
+npm run build
+```
