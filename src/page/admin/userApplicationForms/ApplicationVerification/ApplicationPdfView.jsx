@@ -108,7 +108,7 @@ const ApplicationPdfView = () => {
               return <DocumentsPdf key={index} {...commonProps} />;
             case 'custom_section':
               return <CustomSectionPdf key={index} {...commonProps} />;
-            case 'aggrement_blk':
+            case 'agreement_blk':
               return <AggrementBlockPdf key={index} {...commonProps} />;
             default:
               return null;

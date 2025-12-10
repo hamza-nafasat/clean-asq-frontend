@@ -343,14 +343,14 @@ export default function ApplicationsCard() {
               <div className="absolute top-3 right-3 cursor-pointer sm:top-4 sm:right-4">{/* <CiMenuKebab /> */}</div>
               <div className="flex items-start gap-2 md:gap-4">
                 {/* <CardIcon /> */}
-                {/* <div className="min-w-0 flex-1">
+                <div className="mt-4 min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <h2 className="text-base leading-tight font-bold wrap-break-word text-gray-700 sm:text-lg md:text-2xl">
                       {form?.name}
                     </h2>
                   </div>
-                  <div className="mt-1 truncate text-xs text-gray-500 sm:text-sm">Created from CSV import</div>
-                </div> */}
+                  {/* <div className="mt-1 truncate text-xs text-gray-500 sm:text-sm">Created from CSV import</div> */}
+                </div>
               </div>
               {/* <div className="mt-3 space-y-1 text-sm text-gray-700 md:mt-3 md:text-base">
                 <div className="flex items-center gap-1 md:gap-2">
@@ -363,7 +363,7 @@ export default function ApplicationsCard() {
                 </div>
               </div> */}
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
-                <span className="text-gray-500">Applicants: {form?.sections?.length}</span>
+                {/* <span className="text-gray-500">Applicants: {form?.sections?.length}</span> */}
                 <span className="text-gray-500">
                   Created:{' '}
                   {new Date(form?.createdAt).toLocaleDateString('en-US', {

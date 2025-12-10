@@ -153,7 +153,7 @@ export default function ApplicationForm() {
         } else if (step.title === 'custom_section') {
           data.push(<CustomSection {...commonProps} />);
           stepNames.push(step.name);
-        } else if (step.title === 'aggrement_blk') {
+        } else if (step.title === 'agreement_blk') {
           data.push(<AggrementBlock {...commonProps} />);
           stepNames.push(step.name);
         }

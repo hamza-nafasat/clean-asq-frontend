@@ -22,11 +22,9 @@ function AdminHeader({ setSidebarOpen }) {
   const profileRef = useRef(null);
   const { logo, headerAlignment } = useBranding();
   const [loadingTime, setLoadingTime] = useState(500);
-  console.log('headerAlignment', headerAlignment);
 
   const profileOpenHandler = () => setIsProfileOpen(prev => !prev);
   const isGuest = !user?._id || user?.role?.name == 'guest';
-  // const { headerAlignment } = useBranding();
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoadingTime(0);
@@ -38,7 +36,7 @@ function AdminHeader({ setSidebarOpen }) {
   return (
     <div className="bg-header flex min-h-20 items-center justify-between rounded-md p-2 shadow">
       {/* Hamburger Icon (mobile only) */}
-      <div className="flex items-center gap-2">
+      <div className="flex w-full items-center gap-2">
         <button className="rounded-md p-2 hover:bg-gray-100 lg:hidden" onClick={() => setSidebarOpen(true)}>
           <HiMenu size={24} className="text-gray-800" />
         </button>
@@ -47,19 +45,21 @@ function AdminHeader({ setSidebarOpen }) {
             Welcome {user?.firstName} {user?.lastName}
           </h1>
         ) : (
-          <div className="my-4 flex items-center gap-8">
+          <div
+            className={`my-4 flex w-full items-center gap-8 ${headerAlignment == 'left' ? 'justify-start' : headerAlignment == 'center' ? 'justify-center' : headerAlignment == 'right' ? 'justify-end' : ''}`}
+          >
             <img
               src={logo || logoApply}
               alt="Logo"
-              className={`object-contain ${'h-[100px] max-h-[200px] w-auto'} }`}
+              className={`object-contain ${'h-[100px] max-h-[200px] w-auto max-w-[300px]'} }`}
               referrerPolicy="no-referrer"
             />
             {user ? <Button label={'Submission & Draft'} onClick={() => navigate('/submission')} /> : null}
           </div>
         )}
       </div>
-      <div className="flex items-center gap-4 rounded-bl-[20px] bg-white px-6 py-2">
-        {user ? (
+      {user ? (
+        <div className="flex items-center gap-4 rounded-bl-[20px] bg-white px-6 py-2">
           <div className="relative flex items-center gap-2">
             <div className="hidden items-center gap-2 md:flex">
               <img
@@ -90,16 +90,16 @@ function AdminHeader({ setSidebarOpen }) {
               <Profile />
             </div>
           </div>
-        ) : (
-          !isGuest && (
-            // <Button onClick={() => navigate('/login')} className="bg-primary cursor-pointer text-white">
-            //   Login
-            //   <LogInIcon />
-            // </Button>
-            <Button onClick={() => navigate('/login')} rightIcon={LogInIcon} />
-          )
-        )}
-      </div>
+        </div>
+      ) : (
+        !isGuest && (
+          // <Button onClick={() => navigate('/login')} className="bg-primary cursor-pointer text-white">
+          //   Login
+          //   <LogInIcon />
+          // </Button>
+          <Button onClick={() => navigate('/login')} rightIcon={LogInIcon} />
+        )
+      )}
     </div>
   );
 }

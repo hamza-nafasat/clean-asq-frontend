@@ -130,31 +130,31 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
     setTypedSignature('');
   };
 
-  const undo = () => {
-    if (historyPos.current <= 0) return;
-    historyPos.current -= 1;
-    const url = historyRef.current[historyPos.current];
-    const img = new Image();
-    img.onload = () => {
-      const rect = canvasRef.current.getBoundingClientRect();
-      ctxRef.current.clearRect(0, 0, rect.width, rect.height);
-      ctxRef.current.drawImage(img, 0, 0, rect.width, rect.height);
-    };
-    img.src = url;
-  };
+  // const undo = () => {
+  //   if (historyPos.current <= 0) return;
+  //   historyPos.current -= 1;
+  //   const url = historyRef.current[historyPos.current];
+  //   const img = new Image();
+  //   img.onload = () => {
+  //     const rect = canvasRef.current.getBoundingClientRect();
+  //     ctxRef.current.clearRect(0, 0, rect.width, rect.height);
+  //     ctxRef.current.drawImage(img, 0, 0, rect.width, rect.height);
+  //   };
+  //   img.src = url;
+  // };
 
-  const redo = () => {
-    if (historyPos.current >= historyRef.current.length - 1) return;
-    historyPos.current += 1;
-    const url = historyRef.current[historyPos.current];
-    const img = new Image();
-    img.onload = () => {
-      const rect = canvasRef.current.getBoundingClientRect();
-      ctxRef.current.clearRect(0, 0, rect.width, rect.height);
-      ctxRef.current.drawImage(img, 0, 0, rect.width, rect.height);
-    };
-    img.src = url;
-  };
+  // const redo = () => {
+  //   if (historyPos.current >= historyRef.current.length - 1) return;
+  //   historyPos.current += 1;
+  //   const url = historyRef.current[historyPos.current];
+  //   const img = new Image();
+  //   img.onload = () => {
+  //     const rect = canvasRef.current.getBoundingClientRect();
+  //     ctxRef.current.clearRect(0, 0, rect.width, rect.height);
+  //     ctxRef.current.drawImage(img, 0, 0, rect.width, rect.height);
+  //   };
+  //   img.src = url;
+  // };
 
   const handleSave = async () => {
     try {
@@ -270,12 +270,12 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
           <button type="button" onClick={handleClear} className={`${buttonClasses} border`}>
             Clear
           </button>
-          <button type="button" onClick={undo} className={`${buttonClasses} border`}>
+          {/* <button type="button" onClick={undo} className={`${buttonClasses} border`}>
             Undo
           </button>
           <button type="button" onClick={redo} className={`${buttonClasses} border`}>
             Redo
-          </button>
+          </button> */}
           <button
             type="button"
             onClick={handleSave}
