@@ -84,8 +84,8 @@ export default function SingleApplication() {
     country: '',
     roleFillingForCompany: '',
     address2: 'None',
-    data: null,
     signature: { secureUrl: '', publicId: '', resourceType: '' },
+    data: null,
   });
 
   const autocompleteRef = useRef(null);
@@ -672,8 +672,10 @@ export default function SingleApplication() {
   useEffect(() => {
     const allFilled = Object.keys(idMissionVerifiedData).every(name => {
       const val = idMissionVerifiedData[name];
-      console.log('val is ', val);
-      if (val == null) return false;
+      if (val == null) {
+        if (name == 'data') return true;
+        return false;
+      }
       if (typeof val === 'string') return val.trim() !== '';
       if (Array.isArray(val))
         return (
