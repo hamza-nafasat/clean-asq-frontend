@@ -10,7 +10,7 @@ function Footer() {
       {/* Left side */}
       <div className="text-textPrimary">
         © 2025
-        <span className="px-2">{name || 'Apply Super Quick'}</span>
+        <span className="text-textPrimary px-2">{name || 'Apply Super Quick'}</span>
         All rights reserved
       </div>
 

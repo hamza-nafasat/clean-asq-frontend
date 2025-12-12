@@ -90,7 +90,7 @@ const emailFooterTemplate = `
           <tr>
             <td align="center" style="padding: 0 20px 40px 20px;">
               <p style="margin: 0; font-size: 12px; color: {{emailTextColor}};">
-                © 2025 <strong style="color: {{emailHeadingColor}};">{{companyName}}</strong>. All rights reserved.
+                © 2025 {{companyName}} All rights reserved.
               </p>
             </td>
           </tr>
@@ -127,8 +127,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [headerDescription, setHeaderDescription] = useState('Automated Email — Please Do Not Reply');
   const [footerHeading, setFooterHeading] = useState('Thank You');
   const [footerDescription, setFooterDescription] = useState('Thank We appreciate your business and support.');
-  const [emailPrimaryColor, setEmailPrimaryColor] = useState('#ffffff');
-  const [emailSecondaryColor, setEmailSecondaryColor] = useState('#d9d9d9');
   const [emailHeadingColor, setEmailHeadingColor] = useState('#1a1a1a');
   const [emailTextColor, setEmailTextColor] = useState('#666666');
   const [emailHeaderColor, setEmailHeaderColor] = useState('#1a1a1a');
@@ -161,8 +159,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [createBranding, { isLoading }] = useCreateBrandingMutation();
   const [updateBranding, { isLoading: isUpdateLoading }] = useUpdateSingleBrandingMutation();
   const { data: singleBrandingData } = useGetSingleBrandingQuery(brandingId || '');
-  // console.log('extraLogos', extraLogos);
-  // console.log('singleBranding.colors.buttonText)', singleBrandingData?.data.colors.buttonText);
 
   const extractBranding = async () => {
     if (!websiteUrl) toast.error('Please enter a valid website URL');
@@ -182,9 +178,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
         setFrameColor(data?.colors?.frame);
         setButtonTextPrimary(data?.colors?.buttonTextPrimary);
         setButtonTextSecondary(data?.colors?.buttonTextSecondary);
-        setHeaderAlignment(data?.headerAlignment || 'left');
-        setHeaderBackground(data?.headerBackground || '#ffffff');
-        setFooterBackground(data?.footerBackground || '#ffffff');
+        setHeaderBackground(data?.colors?.headerBackground);
+        setFooterBackground(data?.colors?.footerBackground);
+        setHeaderAlignment(data?.headerAlignment);
         if (Array.isArray(data?.color_palette?.fromLogo) && Array.isArray(data?.color_palette?.fromSite)) {
           setColorPalette([...data.color_palette.fromLogo, ...data.color_palette.fromSite]);
         }
@@ -221,8 +217,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !headerDescription ||
       !footerHeading ||
       !footerDescription ||
-      !emailPrimaryColor ||
-      !emailSecondaryColor ||
       !emailHeadingColor ||
       !emailTextColor ||
       !emailHeaderColor ||
@@ -266,8 +260,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append('headerDescription', headerDescription);
     formData.append('footerHeading', footerHeading);
     formData.append('footerDescription', footerDescription);
-    formData.append('emailPrimaryColor', emailPrimaryColor);
-    formData.append('emailSecondaryColor', emailSecondaryColor);
     formData.append('emailHeadingColor', emailHeadingColor);
     formData.append('emailTextColor', emailTextColor);
     formData.append('emailHeaderColor', emailHeaderColor);
@@ -316,8 +308,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !headerDescription ||
       !footerHeading ||
       !footerDescription ||
-      !emailPrimaryColor ||
-      !emailSecondaryColor ||
       !emailHeadingColor ||
       !emailTextColor ||
       !emailHeaderColor ||
@@ -359,8 +349,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append('headerDescription', headerDescription);
     formData.append('footerHeading', footerHeading);
     formData.append('footerDescription', footerDescription);
-    formData.append('emailPrimaryColor', emailPrimaryColor);
-    formData.append('emailSecondaryColor', emailSecondaryColor);
     formData.append('emailHeadingColor', emailHeadingColor);
     formData.append('emailTextColor', emailTextColor);
     formData.append('emailHeaderColor', emailHeaderColor);
@@ -403,8 +391,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
             setHeaderDescription(userBranding.headerDescription);
             setFooterHeading(userBranding.footerHeading);
             setFooterDescription(userBranding.footerDescription);
-            setEmailPrimaryColor(userBranding.emailPrimaryColor);
-            setEmailSecondaryColor(userBranding.emailSecondaryColor);
             setEmailHeadingColor(userBranding.emailHeadingColor);
             setEmailTextColor(userBranding.emailTextColor);
           }
@@ -471,8 +457,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setHeaderDescription(singleBranding.headerDescription);
       setFooterHeading(singleBranding.footerHeading);
       setFooterDescription(singleBranding.footerDescription);
-      setEmailPrimaryColor(singleBranding.emailPrimaryColor);
-      setEmailSecondaryColor(singleBranding.emailSecondaryColor);
       setEmailHeadingColor(singleBranding.emailHeadingColor);
       setEmailTextColor(singleBranding.emailTextColor);
       setEmailBodyColor(singleBranding.emailBodyColor);
@@ -495,8 +479,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
 
   useEffect(() => {
     const context = {
-      emailPrimaryColor,
-      emailSecondaryColor,
       emailTextColor,
       emailHeadingColor,
       emailHeaderColor,
@@ -514,8 +496,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
     setEmailFooter(compileFooter(context));
   }, [
     companyName,
-    emailPrimaryColor,
-    emailSecondaryColor,
     emailTextColor,
     emailHeadingColor,
     selectedLogo,
@@ -596,89 +576,91 @@ const GlobalBrandingPage = ({ brandingId }) => {
           headerAlignment={headerAlignment}
         />
         <div className="border-primary my-6 border-t-2"></div>
+
         <div className="mt-6 rounded-xl border border-[#F0F0F0] p-3 shadow-sm md:p-6">
           <EmailTemplatePreview
             emailHeader={emailHeader}
             emailFooter={emailFooter}
-            emailPrimary={emailPrimaryColor}
             emailBodyColor={emailBodyColor}
+            emailText={emailTextColor}
           />
-          <div className="flex py-4">
+        </div>
+        <article className="flex flex-col gap-2">
+          <section className="my-6 flex w-full flex-col gap-2">
+            <h3 className="border-b-2 text-lg font-semibold text-gray-800">Email Header</h3>
             <ColorInput
               image={image}
               setImage={setImage}
-              label={'Email Primary'}
-              color={emailPrimaryColor}
-              setColor={setEmailPrimaryColor}
-            />
-            <ColorInput
-              image={image}
-              setImage={setImage}
-              label={'Email Secondary'}
-              color={emailSecondaryColor}
-              setColor={setEmailSecondaryColor}
-            />
-            <ColorInput
-              image={image}
-              setImage={setImage}
-              label={'Email Text'}
-              color={emailTextColor}
-              setColor={setEmailTextColor}
-            />
-            <ColorInput
-              image={image}
-              setImage={setImage}
-              label={'Email Heading'}
-              color={emailHeadingColor}
-              setColor={setEmailHeadingColor}
-            />
-            <ColorInput
-              image={image}
-              setImage={setImage}
-              label={'Email Header Background'}
+              label={'Background Color'}
               color={emailHeaderColor}
               setColor={setEmailHeaderColor}
             />
+            <div className="flex flex-col gap-2">
+              <TextField
+                type="textarea"
+                label={'Heading'}
+                value={headerHeading}
+                onChange={e => setHeaderHeading(e.target.value)}
+              />
+              <TextField
+                type="textarea"
+                label={'Description'}
+                value={headerDescription}
+                onChange={e => setHeaderDescription(e.target.value)}
+              />
+            </div>
+          </section>
+          <section className="border-b-2b my-6 flex w-full flex-col gap-2">
+            <h3 className="border-b-2 text-lg font-semibold text-gray-800">Email</h3>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <ColorInput
+                image={image}
+                setImage={setImage}
+                label={'Headings Color'}
+                color={emailHeadingColor}
+                setColor={setEmailHeadingColor}
+              />
+              <ColorInput
+                image={image}
+                setImage={setImage}
+                label={'Text'}
+                color={emailTextColor}
+                setColor={setEmailTextColor}
+              />
+              <ColorInput
+                image={image}
+                setImage={setImage}
+                label={'Body Background'}
+                color={emailBodyColor}
+                setColor={setEmailBodyColor}
+              />
+            </div>
+          </section>
+          <section className="my-6 flex w-full flex-col gap-2">
+            <h3 className="border-b-2 text-lg font-semibold text-gray-800">Footer</h3>
             <ColorInput
               image={image}
               setImage={setImage}
-              label={'Email Footer Background'}
+              label={'Background'}
               color={emailFooterColor}
               setColor={setEmailFooterColor}
             />
-            <ColorInput
-              image={image}
-              setImage={setImage}
-              label={'Email Body Background'}
-              color={emailBodyColor}
-              setColor={setEmailBodyColor}
-            />
-          </div>
-          <div className="flex flex-col gap-4 py-4">
-            <TextField
-              label={'Header Heading'}
-              value={headerHeading}
-              onChange={e => setHeaderHeading(e.target.value)}
-            />
-            <TextField
-              type="textarea"
-              label={'Footer Heading'}
-              value={footerHeading}
-              onChange={e => setFooterHeading(e.target.value)}
-            />
-            <TextField
-              label={'Header Description'}
-              value={headerDescription}
-              onChange={e => setHeaderDescription(e.target.value)}
-            />
-            <TextField
-              type="textarea"
-              label={'Footer Description'}
-              value={footerDescription}
-              onChange={e => setFooterDescription(e.target.value)}
-            />
-          </div>
-        </div>
+            <div className="flex flex-col gap-2">
+              <TextField
+                type="textarea"
+                label={'Footer Heading'}
+                value={footerHeading}
+                onChange={e => setFooterHeading(e.target.value)}
+              />
+              <TextField
+                type="textarea"
+                label={'Footer Description'}
+                value={footerDescription}
+                onChange={e => setFooterDescription(e.target.value)}
+              />
+            </div>
+          </section>
+        </article>
 
         <div className="mt-6 mb-4 flex justify-end space-x-2 md:space-x-4">
           <div className="flex gap-2 md:gap-6">

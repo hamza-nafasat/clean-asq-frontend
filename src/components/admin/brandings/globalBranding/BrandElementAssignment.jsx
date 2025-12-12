@@ -1,12 +1,18 @@
+import Button from '@/components/shared/small/Button';
 import CustomizableSelect from '@/components/shared/small/CustomizeableSelect';
 import html2canvas from 'html2canvas-pro';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import FontPicker from './FontPicker';
+import { LoaderIcon } from 'lucide-react';
 
 export const ColorInput = ({ label, color, setColor, setImage, image }) => {
+  const colorPickerDiv = useRef(null);
+  const [ssLoading, setSSLoading] = useState(false);
+  const [showSSButton, setShowSSButton] = useState(false);
   const [colorPicker, setColorPicker] = useState('');
   const handleChange = useCallback(
     async e => {
+      setSSLoading(true);
       const newColor = e.target.value;
       setColorPicker(newColor);
       console.log(`[ColorInput] 🎨 Color changed to:`, newColor);
@@ -67,21 +73,32 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
           console.error(`[ColorInput] ❌ Error capturing screenshot:`, error);
         } finally {
           element.style.filter = previousFilter;
+          if (colorPicker) setColor(colorPicker);
+
+          setShowSSButton(false);
+          setSSLoading(false);
         }
       }, 1000);
     },
-    [setColorPicker, setImage]
+    [colorPicker, setColor, setImage]
   );
 
+  const openHandleChange = async () => {
+    if (image) return;
+    await handleChange({ target: { value: colorPicker } });
+  };
+
   useEffect(() => {
-    if (!colorPicker) return;
-    setColor(colorPicker);
-    const timeout = setTimeout(() => {
-      if (image) return;
-      handleChange({ target: { value: colorPicker } });
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, [colorPicker, setColor, handleChange]);
+    const handleClickOutside = event => {
+      if (colorPickerDiv.current && !colorPickerDiv.current.contains(event.target)) {
+        setShowSSButton(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="relative flex flex-col space-y-1">
@@ -89,14 +106,30 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
         {label}
       </label>
 
-      <div className="flex items-center space-x-2">
+      <div ref={colorPickerDiv} className="flex items-center space-x-2">
         <input
           type="color"
           className="size-14 cursor-pointer appearance-none rounded-lg border-none outline-none focus:ring-0"
           value={color}
-          onChange={e => setColorPicker(e.target.value)}
+          onFocus={() => setShowSSButton(true)}
+          onChange={e => {
+            const newColor = e.target.value;
+            setColorPicker(newColor);
+            setColor(newColor);
+          }}
         />
-
+        {showSSButton && (
+          <div className="flex">
+            <Button
+              variant="primary"
+              onClick={openHandleChange}
+              label={'Show Colors'}
+              disabled={ssLoading}
+              cnRight={'animate-spin'}
+              rightIcon={ssLoading ? LoaderIcon : null}
+            />
+          </div>
+        )}
         <div className="flex h-12 w-28 items-center justify-center rounded-md border px-4 py-2 text-center text-sm shadow-sm">
           {color}
         </div>
@@ -141,73 +174,119 @@ const BrandElementAssignment = ({
     <div className="mt-6">
       <h2 className="mb-4 text-xl font-semibold text-gray-800">Assign Brand Element</h2>
 
-      <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <ColorInput
-          setImage={setImage}
-          image={image}
-          label="Primary Color (Buttons, Headers)"
-          color={primaryColor}
-          setColor={setPrimaryColor}
-        />
-        <ColorInput
-          setImage={setImage}
-          image={image}
-          label="Secondary Color (Alternative Buttons)"
-          color={secondaryColor}
-          setColor={setSecondaryColor}
-        />
-        <ColorInput setImage={setImage} image={image} label="Text Color" color={textColor} setColor={setTextColor} />
-        <ColorInput setImage={setImage} image={image} label="Link Color" color={linkColor} setColor={setLinkColor} />
-        <ColorInput
-          setImage={setImage}
-          image={image}
-          label="Accent Color"
-          color={accentColor}
-          setColor={setAccentColor}
-        />
-        <ColorInput
-          setImage={setImage}
-          image={image}
-          label="Background Color"
-          color={backgroundColor}
-          setColor={setBackgroundColor}
-        />
-        <ColorInput
-          setImage={setImage}
-          image={image}
-          label="Frame Color (Input Fields, Borders)"
-          color={frameColor}
-          setColor={setFrameColor}
-        />
-        <ColorInput
-          setImage={setImage}
-          image={image}
-          label="Primary Button text"
-          color={buttonTextPrimary}
-          setColor={setButtonTextPrimary}
-        />
-        <ColorInput
-          setImage={setImage}
-          image={image}
-          label="Secondary Button text"
-          color={buttonTextSecondary}
-          setColor={setButtonTextSecondary}
-        />
-        <ColorInput
-          setImage={setImage}
-          image={image}
-          label="Header Background"
-          color={headerBackground}
-          setColor={setHeaderBackground}
-        />
-        <ColorInput
-          setImage={setImage}
-          image={image}
-          label="Footer Background"
-          color={footerBackground}
-          setColor={setFooterBackground}
-        />
-      </div>
+      <section className="my-6 flex w-full flex-col gap-2">
+        <h3 className="border-b-2 text-lg font-semibold text-gray-800">Header</h3>
+        <div className="flex w-full flex-wrap justify-between">
+          <ColorInput
+            className="min-w-[400px]"
+            setImage={setImage}
+            image={image}
+            label="Background"
+            color={headerBackground}
+            setColor={setHeaderBackground}
+          />
+          <div className="flex max-w-[50%] flex-1">
+            <CustomizableSelect
+              initialValue={headerAlignment}
+              options={[
+                { option: 'Left', value: 'left' },
+                { option: 'Center', value: 'center' },
+                { option: 'Right', value: 'right' },
+              ]}
+              label={'Logo Alignment'}
+              onSelect={value => setHeaderAlignment(value)}
+              defaultText="Choose Alignment"
+            />
+          </div>
+        </div>
+      </section>
+      <section className="my-6 flex w-full flex-col gap-2">
+        <h3 className="border-b-2 text-lg font-semibold text-gray-800">Application Form</h3>
+
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <ColorInput
+            setImage={setImage}
+            image={image}
+            label="Primary Color (Buttons, Headers)"
+            color={primaryColor}
+            setColor={setPrimaryColor}
+          />
+          <ColorInput
+            setImage={setImage}
+            image={image}
+            label="Secondary Color (Alternative Buttons)"
+            color={secondaryColor}
+            setColor={setSecondaryColor}
+          />
+          <ColorInput setImage={setImage} image={image} label="Text Color" color={textColor} setColor={setTextColor} />
+          <ColorInput setImage={setImage} image={image} label="Link Color" color={linkColor} setColor={setLinkColor} />
+          <ColorInput
+            setImage={setImage}
+            image={image}
+            label="Accent Color"
+            color={accentColor}
+            setColor={setAccentColor}
+          />
+          <ColorInput
+            setImage={setImage}
+            image={image}
+            label="Background Color"
+            color={backgroundColor}
+            setColor={setBackgroundColor}
+          />
+          <ColorInput
+            setImage={setImage}
+            image={image}
+            label="Frame Color (Input Fields, Borders)"
+            color={frameColor}
+            setColor={setFrameColor}
+          />
+          <ColorInput
+            setImage={setImage}
+            image={image}
+            label="Primary Button text"
+            color={buttonTextPrimary}
+            setColor={setButtonTextPrimary}
+          />
+          <ColorInput
+            setImage={setImage}
+            image={image}
+            label="Secondary Button text"
+            color={buttonTextSecondary}
+            setColor={setButtonTextSecondary}
+          />
+        </div>
+        <div className="flex flex-col space-y-1">
+          <label htmlFor="primary-font" className="text-sm font-medium text-gray-700">
+            Primary Font
+          </label>
+
+          <div className="mt-3 flex items-center space-x-2">
+            <span className="rounded bg-gray-100 px-4 py-3 text-lg font-semibold">Aa</span>
+            <FontPicker value={fontFamily.toLowerCase()} onChange={value => setFontFamily(value)} />
+            <button
+              type="button"
+              className="rounded-sm border px-4 py-[13px] text-sm text-gray-700 shadow-sm"
+              onClick={() => setFontFamily('Inter')}
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+      </section>
+      <section className="my-6 flex w-full flex-col gap-2">
+        <h3 className="border-b-2 text-lg font-semibold text-gray-800">Footer</h3>
+        <div className="flex w-full flex-wrap justify-between">
+          <ColorInput
+            setImage={setImage}
+            image={image}
+            label="Background"
+            color={footerBackground}
+            setColor={setFooterBackground}
+          />
+        </div>
+      </section>
+
       {image && (
         <div className="fixed top-1/2 right-0 z-50 max-h-[95vh] -translate-y-1/2">
           {/* ❌ Close Button */}
@@ -236,38 +315,6 @@ const BrandElementAssignment = ({
           />
         </div>
       )}
-
-      <div className="flex flex-col space-y-1">
-        <label htmlFor="primary-font" className="text-sm font-medium text-gray-700">
-          Primary Font
-        </label>
-
-        <div className="mt-3 flex items-center space-x-2">
-          <span className="rounded bg-gray-100 px-4 py-3 text-lg font-semibold">Aa</span>
-          <FontPicker value={fontFamily.toLowerCase()} onChange={value => setFontFamily(value)} />
-          <button
-            type="button"
-            className="rounded-sm border px-4 py-[13px] text-sm text-gray-700 shadow-sm"
-            onClick={() => setFontFamily('Inter')}
-          >
-            Reset
-          </button>
-        </div>
-
-        <div className="flex">
-          <CustomizableSelect
-            initialValue={headerAlignment}
-            options={[
-              { option: 'Left', value: 'left' },
-              { option: 'Center', value: 'center' },
-              { option: 'Right', value: 'right' },
-            ]}
-            label={'Header Alignment'}
-            onSelect={value => setHeaderAlignment(value)}
-            defaultText="Choose Alignment"
-          />
-        </div>
-      </div>
     </div>
   );
 };
