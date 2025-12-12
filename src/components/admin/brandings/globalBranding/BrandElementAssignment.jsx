@@ -175,7 +175,7 @@ const BrandElementAssignment = ({
       <h2 className="mb-4 text-xl font-semibold text-gray-800">Assign Brand Element</h2>
 
       <section className="my-6 flex w-full flex-col gap-2">
-        <h3 className="border-b-2 text-lg font-semibold text-gray-800">Header</h3>
+        <h3 className="border-b-2 text-lg font-semibold text-gray-800">Application Header</h3>
         <div className="flex w-full flex-wrap justify-between">
           <ColorInput
             className="min-w-[400px]"
@@ -275,7 +275,7 @@ const BrandElementAssignment = ({
         </div>
       </section>
       <section className="my-6 flex w-full flex-col gap-2">
-        <h3 className="border-b-2 text-lg font-semibold text-gray-800">Footer</h3>
+        <h3 className="border-b-2 text-lg font-semibold text-gray-800">Application Footer</h3>
         <div className="flex w-full flex-wrap justify-between">
           <ColorInput
             setImage={setImage}
