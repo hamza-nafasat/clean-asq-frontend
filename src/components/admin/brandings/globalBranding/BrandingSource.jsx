@@ -22,32 +22,50 @@ const BrandingSource = ({
   handleExtraLogoUpload,
   extractColorsFromLogosHandler,
 }) => {
-  const [selectedFile, setSelectedFile] = useState(null);
   const [websiteImage, setWebsiteImage] = useState(null);
   const [showPasteMenu, setShowPasteMenu] = useState(false);
   const [pasteTarget, setPasteTarget] = useState(null);
   const [selectedLogoIndex, setSelectedLogoIndex] = useState(null);
+  const [hoveredLogoIndex, setHoveredLogoIndex] = useState(null);
 
   // Update selected logo index when selectedLogo or logos change
   useEffect(() => {
     if (selectedLogo && logos?.length > 0) {
       const index = logos.findIndex(logo => (typeof logo === 'string' ? logo : logo?.url) === selectedLogo);
       if (index !== -1) {
-        setSelectedLogoIndex(index);
+        const logoObj = logos[index];
+        const isPreview = typeof logoObj === 'object' && logoObj?.preview === true;
+        if (!isPreview) {
+          setSelectedLogoIndex(index);
+        }
       } else if (logos.length > 0) {
-        // If selectedLogo doesn't match any logo, select the first one
-        const firstLogo = typeof logos[0] === 'string' ? logos[0] : logos[0]?.url;
-        if (firstLogo) {
-          setSelectedLogoIndex(0);
-          setSelectedLogo(firstLogo);
+        // If selectedLogo doesn't match any logo, select the first non-preview one
+        const firstNonPreviewLogo = logos.find(logo => {
+          const isPreview = typeof logo === 'object' && logo?.preview === true;
+          return !isPreview;
+        });
+        if (firstNonPreviewLogo) {
+          const logoUrl = typeof firstNonPreviewLogo === 'string' ? firstNonPreviewLogo : firstNonPreviewLogo?.url;
+          const index = logos.indexOf(firstNonPreviewLogo);
+          if (logoUrl) {
+            setSelectedLogoIndex(index);
+            setSelectedLogo(logoUrl);
+          }
         }
       }
     } else if (logos?.length > 0 && selectedLogoIndex === null) {
-      // If no logo is selected, select the first one
-      const firstLogo = typeof logos[0] === 'string' ? logos[0] : logos[0]?.url;
-      if (firstLogo) {
-        setSelectedLogoIndex(0);
-        setSelectedLogo(firstLogo);
+      // If no logo is selected, select the first non-preview one
+      const firstNonPreviewLogo = logos.find(logo => {
+        const isPreview = typeof logo === 'object' && logo?.preview === true;
+        return !isPreview;
+      });
+      if (firstNonPreviewLogo) {
+        const logoUrl = typeof firstNonPreviewLogo === 'string' ? firstNonPreviewLogo : firstNonPreviewLogo?.url;
+        const index = logos.indexOf(firstNonPreviewLogo);
+        if (logoUrl) {
+          setSelectedLogoIndex(index);
+          setSelectedLogo(logoUrl);
+        }
       }
     }
   }, [logos, selectedLogo, selectedLogoIndex, setSelectedLogo]);
@@ -57,8 +75,12 @@ const BrandingSource = ({
     if (defaultSelectedLogo && logos?.length > 0 && !selectedLogo) {
       const index = logos.findIndex(logo => (typeof logo === 'string' ? logo : logo?.url) === defaultSelectedLogo);
       if (index !== -1) {
-        setSelectedLogoIndex(index);
-        setSelectedLogo(defaultSelectedLogo);
+        const logoObj = logos[index];
+        const isPreview = typeof logoObj === 'object' && logoObj?.preview === true;
+        if (!isPreview) {
+          setSelectedLogoIndex(index);
+          setSelectedLogo(defaultSelectedLogo);
+        }
       }
     }
   }, [defaultSelectedLogo, logos, selectedLogo, setSelectedLogo]);
@@ -113,7 +135,6 @@ const BrandingSource = ({
         toast.error('Please upload an image file');
         return;
       }
-      setSelectedFile(file);
       const url = URL.createObjectURL(file);
       setWebsiteImage(url);
     }
@@ -134,8 +155,18 @@ const BrandingSource = ({
   };
 
   const handleLogoSelect = (idx, logo) => {
+    // Check if logo is a preview (pasted/uploaded but not saved)
+    const logoObj = typeof logo === 'string' ? logos[idx] : logo;
+    const isPreview = typeof logoObj === 'object' && logoObj?.preview === true;
+
+    if (isPreview) {
+      // Don't show toast, tooltip already explains this
+      return;
+    }
+
+    const logoUrl = typeof logo === 'string' ? logo : logo?.url || logo;
     setSelectedLogoIndex(idx);
-    setSelectedLogo(logo);
+    setSelectedLogo(logoUrl);
     console.log('logo', logo);
   };
 
@@ -277,13 +308,31 @@ const BrandingSource = ({
           <div className="flex w-full flex-wrap items-center gap-2 overflow-auto p-2">
             {logos?.length > 0 ? (
               logos?.map((logo, idx) => {
+                const isPreview = typeof logo === 'object' && logo?.preview === true;
+                const logoUrl = typeof logo === 'string' ? logo : logo?.url;
                 return (
                   <div
                     key={idx}
-                    onClick={() => handleLogoSelect(idx, logo?.url)}
-                    className={`relative flex h-[130px] w-[200px] cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 transition-all duration-200 ${selectedLogoIndex === idx ? 'ring-opacity-50 border-green-500 ring-2 ring-green-500' : 'border-gray-200 hover:border-gray-300'}`}
+                    onClick={() => handleLogoSelect(idx, logoUrl)}
+                    onMouseEnter={() => setHoveredLogoIndex(idx)}
+                    onMouseLeave={() => setHoveredLogoIndex(null)}
+                    className={`relative flex h-[130px] w-[200px] flex-col items-center justify-center gap-2 rounded-md border-2 transition-all duration-200 ${
+                      isPreview ? 'cursor-not-allowed opacity-50 grayscale' : 'cursor-pointer'
+                    } ${
+                      isPreview
+                        ? 'border-gray-300'
+                        : selectedLogoIndex === idx
+                          ? 'ring-opacity-50 border-green-500 ring-2 ring-green-500'
+                          : 'border-gray-200 hover:border-gray-300'
+                    }`}
                   >
-                    {selectedLogoIndex === idx && (
+                    {/* Tooltip for preview logos */}
+                    {isPreview && hoveredLogoIndex === idx && (
+                      <div className="absolute -top-16 z-999 rounded-md bg-gray-950! px-3 py-2 text-sm font-semibold text-white shadow-lg before:absolute before:top-full before:left-1/2 before:-translate-x-1/2 before:border-4 before:border-transparent before:border-t-gray-950">
+                        You'll need to update branding before you'll be able to select this logo.
+                      </div>
+                    )}
+                    {selectedLogoIndex === idx && !isPreview && (
                       <div className="absolute top-0 left-0 rounded-bl-md px-2 py-1 text-xs font-medium text-green-500">
                         Selected
                       </div>
@@ -300,13 +349,16 @@ const BrandingSource = ({
                       <FiX size={18} className="text-buttonTextPrimary hover:text-buttonTextSecondary" />
                     </button>
 
-                    <div className="flex h-[100px] w-[80%] cursor-pointer flex-col items-center justify-center">
+                    <div
+                      className={`flex h-[100px] w-[80%] flex-col items-center justify-center ${
+                        isPreview ? 'cursor-not-allowed' : 'cursor-pointer'
+                      }`}
+                    >
                       <img
                         src={typeof logo === 'string' ? logo : logo?.url}
                         alt={`Logo ${idx + 1}`}
-                        className={`h-[calc(100%-30px)] w-[96px] cursor-pointer object-contain ${logo?.invert ? 'rounded-sm bg-gray-700' : ''}`}
+                        className={`h-[calc(100%-30px)] w-[96px] object-contain ${logo?.invert ? 'rounded-sm bg-gray-700' : ''}`}
                         referrerPolicy="no-referrer"
-                        // onClick={() => handleLogoSelect(idx)}
                       />
                       <div>logo</div>
                     </div>
