@@ -23,6 +23,8 @@ function AdminHeader({ setSidebarOpen }) {
   const { logo, headerAlignment } = useBranding();
   const [loadingTime, setLoadingTime] = useState(500);
 
+  console.log('lsldfjkasl', headerAlignment);
+
   const profileOpenHandler = () => setIsProfileOpen(prev => !prev);
   const isGuest = !user?._id || user?.role?.name == 'guest';
   useEffect(() => {
@@ -35,6 +37,44 @@ function AdminHeader({ setSidebarOpen }) {
   if (isGuest && loadingTime) return <CustomLoading />;
   return (
     <div className="bg-header flex min-h-20 items-center justify-between rounded-md p-2 shadow">
+      {/* only for guest  */}
+      {user && isGuest && headerAlignment == 'right' && (
+        <div className="flex w-full items-center gap-2">
+          <div className="flex h-full items-center rounded-br-[20px] bg-white px-6 py-2">
+            <div className="relative flex items-center gap-2">
+              <div className="hidden items-center gap-2 md:flex">
+                <img
+                  src={`https://placehold.co/600x400/white/18bc9c?text=${user?.firstName?.[0]}${user?.lastName?.[0]}`}
+                  alt="User avatar"
+                  className="h-9 w-9 rounded-full border border-gray-700 object-cover"
+                />
+                <div>
+                  <h6 className="text-sm font-semibold text-gray-800">
+                    {user?.firstName} {user?.lastName}
+                  </h6>
+                  <p className="text-xs text-gray-600">{user?.email}</p>
+                </div>
+              </div>
+
+              <div
+                onClick={profileOpenHandler}
+                ref={profileRef}
+                className={`cursor-pointer transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`}
+              >
+                <HiChevronDown size={20} />
+              </div>
+
+              {/* Dropdown */}
+              <div
+                className={`custom-scroll absolute top-[45px] right-0 z-10 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? 'opacity-100' : 'invisible opacity-0'}`}
+              >
+                <Profile />
+              </div>
+            </div>
+          </div>
+          <Button label={'Submission & Draft'} onClick={() => navigate('/submission')} />
+        </div>
+      )}
       {/* Hamburger Icon (mobile only) */}
       <div className="flex w-full items-center gap-2">
         <button className="rounded-md p-2 hover:bg-gray-100 lg:hidden" onClick={() => setSidebarOpen(true)}>
@@ -54,16 +94,18 @@ function AdminHeader({ setSidebarOpen }) {
               className={`object-contain ${'h-[100px] max-h-[200px] w-auto max-w-[300px]'} }`}
               referrerPolicy="no-referrer"
             />
-            {user ? <Button label={'Submission & Draft'} onClick={() => navigate('/submission')} /> : null}
+            {(user && !isGuest) || (isGuest && headerAlignment !== 'right') ? (
+              <Button label={'Submission & Draft'} onClick={() => navigate('/submission')} />
+            ) : null}
           </div>
         )}
       </div>
-      {user ? (
+      {((user && !isGuest) || (isGuest && headerAlignment !== 'right')) && (
         <div className="flex items-center gap-4 rounded-bl-[20px] bg-white px-6 py-2">
           <div className="relative flex items-center gap-2">
             <div className="hidden items-center gap-2 md:flex">
               <img
-                src="https://placehold.co/600x400/white/18bc9c?text=AZ"
+                src={`https://placehold.co/600x400/white/18bc9c?text=${user?.firstName?.[0]}${user?.lastName?.[0]}`}
                 alt="User avatar"
                 className="h-9 w-9 rounded-full border border-gray-700 object-cover"
               />
@@ -91,14 +133,6 @@ function AdminHeader({ setSidebarOpen }) {
             </div>
           </div>
         </div>
-      ) : (
-        !isGuest && (
-          // <Button onClick={() => navigate('/login')} className="bg-primary cursor-pointer text-white">
-          //   Login
-          //   <LogInIcon />
-          // </Button>
-          <Button onClick={() => navigate('/login')} rightIcon={LogInIcon} />
-        )
       )}
     </div>
   );
