@@ -328,7 +328,7 @@ const BrandingSource = ({
                   >
                     {/* Tooltip for preview logos */}
                     {isPreview && hoveredLogoIndex === idx && (
-                      <div className="absolute -top-16 z-999 rounded-md bg-gray-950! px-3 py-2 text-sm font-semibold text-white shadow-lg before:absolute before:top-full before:left-1/2 before:-translate-x-1/2 before:border-4 before:border-transparent before:border-t-gray-950">
+                      <div className="absolute bottom-0 z-999 rounded-t-md bg-gray-950! px-3 py-2 text-sm font-semibold text-white shadow-lg before:absolute before:top-full before:left-1/2 before:-translate-x-1/2 before:border-4 before:border-transparent before:border-t-gray-950">
                         You'll need to update branding before you'll be able to select this logo.
                       </div>
                     )}
