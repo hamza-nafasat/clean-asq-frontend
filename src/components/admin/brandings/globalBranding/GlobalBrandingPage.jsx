@@ -598,19 +598,19 @@ const GlobalBrandingPage = ({ brandingId }) => {
             <div className="flex flex-col gap-2">
               <TextField
                 type="textarea"
-                label={'Heading'}
+                label={'Header Headline Tex'}
                 value={headerHeading}
                 onChange={e => setHeaderHeading(e.target.value)}
               />
               <TextField
                 type="textarea"
-                label={'Description'}
+                label={'Content'}
                 value={headerDescription}
                 onChange={e => setHeaderDescription(e.target.value)}
               />
             </div>
           </section>
-          <section className="border-b-2b my-6 flex w-full flex-col gap-2">
+          <section className="border-b-2b my-6 flex w-[70%] flex-col gap-2">
             <h3 className="border-b-2 text-lg font-semibold text-gray-800">Email Body</h3>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               <ColorInput
@@ -648,13 +648,13 @@ const GlobalBrandingPage = ({ brandingId }) => {
             <div className="flex flex-col gap-2">
               <TextField
                 type="textarea"
-                label={'Footer Heading'}
+                label={'Footer Headline Text'}
                 value={footerHeading}
                 onChange={e => setFooterHeading(e.target.value)}
               />
               <TextField
                 type="textarea"
-                label={'Footer Description'}
+                label={'Content'}
                 value={footerDescription}
                 onChange={e => setFooterDescription(e.target.value)}
               />

@@ -85,7 +85,6 @@ export default function SingleApplication() {
     roleFillingForCompany: '',
     address2: 'None',
     signature: { secureUrl: '', publicId: '', resourceType: '' },
-    data: null,
   });
 
   const autocompleteRef = useRef(null);
@@ -327,7 +326,7 @@ export default function SingleApplication() {
     [formData, formId, saveFormInDraft]
   );
 
-  const getSavedFormDataAndSaveInredux = useCallback(async () => {
+  const getSavedFormDataAndSaveInRedux = useCallback(async () => {
     try {
       const res = await getSavedFormData({ formId: formId }).unwrap();
       if (res.success) {
@@ -434,7 +433,7 @@ export default function SingleApplication() {
             else dispatch(userNotExist());
           })
           .catch(() => dispatch(userNotExist()));
-        await getSavedFormDataAndSaveInredux();
+        await getSavedFormDataAndSaveInRedux();
       }
     } catch (error) {
       console.log('Error sending OTP:', error);
@@ -442,7 +441,7 @@ export default function SingleApplication() {
     } finally {
       setLoadingForValidatingOtp(false);
     }
-  }, [dispatch, email, getSavedFormDataAndSaveInredux, getUserProfile, otp, verifyEmail]);
+  }, [dispatch, email, getSavedFormDataAndSaveInRedux, getUserProfile, otp, verifyEmail]);
 
   const getQrLinkOnEmailVerified = useCallback(() => {
     if (emailVerified && formData && formData?.idMission) {
@@ -672,10 +671,7 @@ export default function SingleApplication() {
   useEffect(() => {
     const allFilled = Object.keys(idMissionVerifiedData).every(name => {
       const val = idMissionVerifiedData[name];
-      if (val == null) {
-        if (name == 'data') return true;
-        return false;
-      }
+      if (val == null) return false;
       if (typeof val === 'string') return val.trim() !== '';
       if (Array.isArray(val))
         return (

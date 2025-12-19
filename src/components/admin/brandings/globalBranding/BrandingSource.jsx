@@ -65,7 +65,6 @@ const BrandingSource = ({
   const fileInputRef = useRef(null);
   const pasteMenuRef = useRef(null);
   const logoFileInputRef = useRef(null);
-  console.log('selectedLogoIndex', selectedLogoIndex);
 
   useEffect(() => {
     const handlePaste = e => {
@@ -82,10 +81,8 @@ const BrandingSource = ({
             const blob = items[i].getAsFile();
             if (blob) {
               const fileUrl = URL.createObjectURL(blob);
-
               // add temporary preview
               setLogos(prev => [...prev, { url: fileUrl, type: 'img', preview: true, invert: false }]);
-
               // Upload it properly
               handleExtraLogoUpload(blob);
             }
@@ -103,7 +100,7 @@ const BrandingSource = ({
     return () => {
       window.removeEventListener('paste', handlePaste);
     };
-  }, [pasteTarget, setLogos]);
+  }, [handleExtraLogoUpload, pasteTarget, setLogos]);
 
   const handleUrlChange = e => {
     setWebsiteUrl(e.target.value);
@@ -113,13 +110,12 @@ const BrandingSource = ({
     const file = e.target.files[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
-        alert('Please upload an image file');
+        toast.error('Please upload an image file');
         return;
       }
       setSelectedFile(file);
       const url = URL.createObjectURL(file);
       setWebsiteImage(url);
-      console.log('File selected:', file.name);
     }
   };
 
@@ -177,7 +173,7 @@ const BrandingSource = ({
         </div> */}
       </div>
       <div className="mt-6 flex items-end space-x-4">
-        <div className="flex-grow">
+        <div className="grow">
           <TextField
             type="url"
             id="website-url"
@@ -194,7 +190,7 @@ const BrandingSource = ({
           icon={IoColorPaletteOutline}
           loading={isFetchLoading}
           disabled={isFetchLoading}
-          className="!h-12.5"
+          className="h-12.5!"
         />
       </div>
       <div className="mt-3 mb-4 flex items-center justify-between gap-5">
