@@ -672,20 +672,14 @@ export default function SingleApplication() {
   useEffect(() => {
     const allFilled = Object.keys(idMissionVerifiedData).every(name => {
       const val = idMissionVerifiedData[name];
+      console.log('val', val);
       if (val == null) return false;
       if (typeof val === 'string') return val.trim() !== '';
-      if (Array.isArray(val))
-        return (
-          val.length > 0 &&
-          val.every(item =>
-            typeof item === 'object'
-              ? Object.values(item).every(v => v?.toString().trim() !== '')
-              : item?.toString().trim() !== ''
-          )
-        );
       if (typeof val === 'object') return Object.values(val).every(v => v?.toString().trim() !== '');
+      console.log('true');
       return true;
     });
+    console.log('allFilled', allFilled);
     setIsAllRequiredFieldsFilled(allFilled);
   }, [idMissionVerifiedData]);
 
