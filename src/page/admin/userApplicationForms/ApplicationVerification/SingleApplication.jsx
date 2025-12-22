@@ -83,7 +83,6 @@ export default function SingleApplication() {
     zipCode: '',
     country: '',
     roleFillingForCompany: '',
-    address2: 'None',
     signature: { secureUrl: '', publicId: '', resourceType: '' },
     data: 'null',
   });
@@ -355,7 +354,6 @@ export default function SingleApplication() {
           companyTitle: formDataOfIdMission?.companyTitle || '',
           state: formDataOfIdMission?.state || '',
           city: formDataOfIdMission?.city || '',
-          address2: formDataOfIdMission?.address2 || 'None',
           signature: formDataOfIdMission?.signature || '',
         });
         if (formDataOfIdMission?.name && savedData?.company_lookup_data) {
@@ -463,7 +461,6 @@ export default function SingleApplication() {
         companyTitle: formDataOfIdMission?.companyTitle || '',
         state: formDataOfIdMission?.state || '',
         city: formDataOfIdMission?.city || '',
-        address2: formDataOfIdMission?.address2 || 'None',
         signature: formDataOfIdMission?.signature || '',
         roleFillingForCompany: formDataOfIdMission?.roleFillingForCompany || '',
       });
@@ -523,11 +520,6 @@ export default function SingleApplication() {
       // console.log('You are verified successfully', data);
       setIsIdMissionProcessing(false);
       const formDataOfIdMission = data?.Form_Data;
-      let address2 = formDataOfIdMission?.Address2 || '';
-      let address = formDataOfIdMission?.Address || '';
-      if (address.includes(address2)) {
-        address2 = 'None';
-      }
 
       setIdMissionVerifiedData({
         name: (formDataOfIdMission?.Name || '').concat(' ', formDataOfIdMission?.Last_Name || ''),
@@ -550,7 +542,6 @@ export default function SingleApplication() {
         companyTitle: '',
         state: formDataOfIdMission?.ParsedAddressProvince || '',
         city: formDataOfIdMission?.ParsedAddressMunicipality || '',
-        address2: address2,
         data: formDataOfIdMission || 'null',
       });
       setIdMissionVerified(true);
@@ -575,11 +566,6 @@ export default function SingleApplication() {
       // console.log('You are verified successfully', data);
       setIsIdMissionProcessing(false);
       const formDataOfIdMission = data?.Form_Data;
-      let address2 = formDataOfIdMission?.Address2 || '';
-      let address = formDataOfIdMission?.Address || '';
-      if (address.includes(address2)) {
-        address2 = 'None';
-      }
 
       setIdMissionVerifiedData({
         name: (formDataOfIdMission?.name || '')?.concat(' ', formDataOfIdMission?.Last_Name || ''),
@@ -600,7 +586,6 @@ export default function SingleApplication() {
         companyTitle: '',
         state: formDataOfIdMission?.ParsedAddressProvince || '',
         city: formDataOfIdMission?.ParsedAddressMunicipality || '',
-        address2: address2,
         data: formDataOfIdMission || 'null',
       });
       unwrapResult(action);
@@ -624,11 +609,6 @@ export default function SingleApplication() {
 
       setIsIdMissionProcessing(false);
       const formDataOfIdMission = data?.Form_Data;
-      let address2 = formDataOfIdMission?.Address2 || '';
-      let address = formDataOfIdMission?.Address || '';
-      if (address.includes(address2)) {
-        address2 = 'None';
-      }
 
       setIdMissionVerifiedData({
         name: (formDataOfIdMission?.name || '')?.concat(' ', formDataOfIdMission?.Last_Name || ''),
@@ -649,8 +629,6 @@ export default function SingleApplication() {
         companyTitle: '',
         state: formDataOfIdMission?.ParsedAddressProvince || '',
         city: formDataOfIdMission?.ParsedAddressMunicipality || '',
-        address2: address2,
-
         data: formDataOfIdMission || 'null',
       });
       unwrapResult(action);
