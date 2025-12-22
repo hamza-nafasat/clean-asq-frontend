@@ -75,7 +75,7 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
 
         {/* Logo + Nav */}
         <div className="py-4">
-          <div className={`mb-5 flex w-full items-center xl:mb-12 ${justifyClass}`}>
+          <div className={`mb-5 flex w-full items-center justify-center xl:mb-12`}>
             {' '}
             <Link to="/application-forms" className="flex min-w-10 items-center justify-center">
               <img
