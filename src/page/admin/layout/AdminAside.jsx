@@ -15,9 +15,8 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
   const { user } = useSelector(state => state.auth);
   const [isNavOpen, setIsNavOpen] = useState(true);
   const location = useLocation();
-  const { logo, headerAlignment } = useBranding();
+  const { logo } = useBranding();
   const [isLight, setIsLight] = useState(false);
-  console.log('isNavOpenisNavOpen', isNavOpen);
 
   useEffect(() => {
     if (logo) {
@@ -26,14 +25,6 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
   }, [logo]);
 
   const handleNavOpen = () => setIsNavOpen(!isNavOpen);
-
-  const justifyClass = !isNavOpen
-    ? 'justify-center'
-    : headerAlignment === 'left'
-      ? 'justify-start'
-      : headerAlignment === 'center'
-        ? 'justify-center'
-        : 'justify-end';
 
   const pages = [
     { title: 'Application forms', link: '/application-forms', icon: <Applications /> },

@@ -1,7 +1,6 @@
 // import { Button } from '@/components/ui/button';
 import { useLogoutMutation } from '@/redux/apis/authApis';
 import { userNotExist } from '@/redux/slices/authSlice';
-import { LogInIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { HiChevronDown } from 'react-icons/hi';
 import { IoChevronForwardOutline, IoLogOutOutline } from 'react-icons/io5';
@@ -9,8 +8,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom'; // or 'next/link' if using Next.js
 import { toast } from 'react-toastify';
 import logoApply from '../../../assets/images/logo.png';
+import { Applications } from '@/assets/svgs/icon';
 
-import Button from '@/components/shared/small/Button';
 import CustomLoading from '@/components/shared/small/CustomLoading';
 import { useBranding } from '@/hooks/BrandingContext';
 import { HiMenu } from 'react-icons/hi';
@@ -23,8 +22,6 @@ function AdminHeader({ setSidebarOpen }) {
   const { logo, headerAlignment } = useBranding();
   const [loadingTime, setLoadingTime] = useState(500);
 
-  console.log('lsldfjkasl', headerAlignment);
-
   const profileOpenHandler = () => setIsProfileOpen(prev => !prev);
   const isGuest = !user?._id || user?.role?.name == 'guest';
   useEffect(() => {
@@ -34,6 +31,13 @@ function AdminHeader({ setSidebarOpen }) {
     return () => clearTimeout(timer);
   }, [loadingTime]);
 
+  const handleLogoClick = () => {
+    if (isGuest) {
+      navigate('/submission');
+    } else {
+      navigate('/');
+    }
+  };
   if (isGuest && loadingTime) return <CustomLoading />;
   return (
     <div className="bg-header flex min-h-20 items-center justify-between rounded-md p-2 shadow">
@@ -68,11 +72,10 @@ function AdminHeader({ setSidebarOpen }) {
               <div
                 className={`custom-scroll absolute top-[45px] right-0 z-10 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? 'opacity-100' : 'invisible opacity-0'}`}
               >
-                <Profile />
+                <Profile isGuest={isGuest} setIsProfileOpen={setIsProfileOpen} />
               </div>
             </div>
           </div>
-          <Button label={'Submission & Draft'} onClick={() => navigate('/submission')} />
         </div>
       )}
       {/* Hamburger Icon (mobile only) */}
@@ -89,14 +92,12 @@ function AdminHeader({ setSidebarOpen }) {
             className={`my-4 flex w-full items-center gap-8 ${headerAlignment == 'left' ? 'justify-start' : headerAlignment == 'center' ? 'justify-center' : headerAlignment == 'right' ? 'justify-end' : ''}`}
           >
             <img
+              onClick={handleLogoClick}
               src={logo || logoApply}
               alt="Logo"
-              className={`object-contain ${'h-[100px] max-h-[200px] w-auto max-w-[300px]'} }`}
+              className={`object-contain ${'h-[100px] max-h-[200px] w-auto max-w-[300px]'} } cursor-pointer!`}
               referrerPolicy="no-referrer"
             />
-            {(user && !isGuest) || (isGuest && headerAlignment !== 'right') ? (
-              <Button label={'Submission & Draft'} onClick={() => navigate('/submission')} />
-            ) : null}
           </div>
         )}
       </div>
@@ -129,7 +130,7 @@ function AdminHeader({ setSidebarOpen }) {
             <div
               className={`custom-scroll absolute top-[45px] right-0 z-10 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? 'opacity-100' : 'invisible opacity-0'}`}
             >
-              <Profile />
+              <Profile isGuest={isGuest} setIsProfileOpen={setIsProfileOpen} />
             </div>
           </div>
         </div>
@@ -140,7 +141,7 @@ function AdminHeader({ setSidebarOpen }) {
 
 export default AdminHeader;
 
-const Profile = () => {
+const Profile = ({ isGuest, setIsProfileOpen }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [logout, { isLoading }] = useLogoutMutation();
@@ -151,8 +152,9 @@ const Profile = () => {
       if (res.success) {
         await dispatch(userNotExist());
         toast.success(res.message);
-        return navigate('/login');
+        if (!isGuest) return navigate('/login');
       }
+      setIsProfileOpen(false);
     } catch (error) {
       console.log('error while logging out', error);
       toast.error(error?.data?.message || 'Error while logging out');
@@ -160,13 +162,26 @@ const Profile = () => {
   };
   return (
     <div className="w-full">
-      <Link
-        to="/profile"
-        className="flex items-center justify-between gap-4 rounded-t-md border-b bg-white px-2 py-2 hover:bg-[#b6feef]"
-      >
-        <h6 className="text-textPrimary text-xs font-medium">My Profile</h6>
-        <IoChevronForwardOutline fontSize={18} className="text-primary" />
-      </Link>
+      {isGuest ? (
+        <Link
+          onClick={() => setIsProfileOpen(false)}
+          to="/submission"
+          className="flex items-center justify-between gap-4 rounded-t-md border-b bg-white px-2 py-2 hover:bg-[#b6feef]"
+        >
+          <h6 className="text-textPrimary text-xs font-medium">My Applications</h6>
+          <Applications fontSize={18} className="text-primary" />
+        </Link>
+      ) : (
+        <Link
+          onClick={() => setIsProfileOpen(false)}
+          to="/profile"
+          className="flex items-center justify-between gap-4 rounded-t-md border-b bg-white px-2 py-2 hover:bg-[#b6feef]"
+        >
+          <h6 className="text-textPrimary text-xs font-medium">My Profile</h6>
+          <IoChevronForwardOutline fontSize={18} className="text-primary" />
+        </Link>
+      )}
+
       <div
         onClick={logoutHandler}
         className={`flex cursor-pointer items-center justify-between gap-4 rounded-b-md bg-white px-2 py-2 hover:bg-[#b6feef] ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
