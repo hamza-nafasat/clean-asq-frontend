@@ -19,7 +19,7 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
 
       setTimeout(async () => {
         const selector =
-          '#root > div:nth-child(2) > section > section > div.w-full.flex-1.items-center.justify-center > main > div > div:nth-child(1) > div';
+          '#root > div:nth-child(2) > section > section > div.w-full.flex-1.items-center.justify-center > main > div > div:nth-child(1) > div > div > #screen-shot';
 
         console.log(`[ColorInput] 🔍 Trying to capture element:`, selector);
         const element = document.querySelector(selector);
@@ -288,7 +288,7 @@ const BrandElementAssignment = ({
       </section>
 
       {image && (
-        <div className="fixed top-1/2 right-0 z-50 max-h-[95vh] -translate-y-1/2">
+        <div className="fixed top-4 right-0 z-50 max-h-[95vh] bg-white p-4 shadow-2xl">
           {/* ❌ Close Button */}
           <button
             onClick={() => {

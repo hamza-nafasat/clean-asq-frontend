@@ -516,20 +516,22 @@ const GlobalBrandingPage = ({ brandingId }) => {
       <h1 className="mt-12 mb-6 text-lg font-semibold text-gray-500 md:text-2xl">Global Branding</h1>
       <TextField label={'Company Name'} value={companyName} onChange={e => setCompanyName(e.target.value)} />
       <div className="mt-12">
-        <BrandingSource
-          websiteUrl={websiteUrl}
-          setWebsiteUrl={setWebsiteUrl}
-          logos={logos}
-          setLogos={setLogos}
-          isFetchLoading={isFetchLoading}
-          extractBranding={extractBranding}
-          setSelectedLogo={setSelectedLogo}
-          selectedLogo={selectedLogo}
-          defaultSelectedLogo={brandingId ? selectedLogo : null}
-          handleExtraLogoUpload={logo => setExtraLogos([...extraLogos, logo])}
-          extractColorsFromLogosHandler={extractColorsFromLogosHandler}
-        />
-        <ColorPalette colorPalette={colorPalette} />
+        <div className="bg-white" id="screen-shot">
+          <BrandingSource
+            websiteUrl={websiteUrl}
+            setWebsiteUrl={setWebsiteUrl}
+            logos={logos}
+            setLogos={setLogos}
+            isFetchLoading={isFetchLoading}
+            extractBranding={extractBranding}
+            setSelectedLogo={setSelectedLogo}
+            selectedLogo={selectedLogo}
+            defaultSelectedLogo={brandingId ? selectedLogo : null}
+            handleExtraLogoUpload={logo => setExtraLogos([...extraLogos, logo])}
+            extractColorsFromLogosHandler={extractColorsFromLogosHandler}
+          />
+          <ColorPalette colorPalette={colorPalette} />
+        </div>
         <BrandElementAssignment
           image={image}
           setImage={setImage}
