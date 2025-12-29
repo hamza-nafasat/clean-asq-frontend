@@ -1,3 +1,4 @@
+import { useBranding } from '@/hooks/BrandingContext';
 import { useAddBrandingInFormMutation, useGetAllBrandingsQuery } from '@/redux/apis/brandingApis';
 import {
   useCreateFormMutation,
@@ -8,7 +9,6 @@ import {
 import { MoreVertical } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { CiSearch } from 'react-icons/ci';
-import { FaCheck } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import FileUploader from '../applicationVerification/Documents/FileUploader';
@@ -18,7 +18,6 @@ import Modal from '../shared/small/Modal';
 import TextField from '../shared/small/TextField';
 import ApplyBranding from './brandings/globalBranding/ApplyBranding';
 import { LocationModalComponent } from './varification/LocationStatusModal';
-import { useBranding } from '@/hooks/BrandingContext';
 
 export default function ApplicationsCard() {
   const navigate = useNavigate();
@@ -163,7 +162,7 @@ export default function ApplicationsCard() {
         />
       )}
       {openFormUpdate && (
-        <Modal onClose={() => setOpenFormUpdate(false)} title="Set Location">
+        <Modal onClose={() => setOpenFormUpdate(false)} title="Update Form">
           <FormConfigurationModal form={selectedForm} refetch={refetch} setModal={setOpenFormUpdate} />
         </Modal>
       )}
@@ -402,12 +401,13 @@ export default function ApplicationsCard() {
 
 export const FormConfigurationModal = ({ form, refetch, setModal }) => {
   const [redirectUrl, setRedirectUrl] = useState(form?.redirectUrl || '');
+  const [headerText, setHeaderText] = useState(form?.headerText || '');
+  const [footerText, setFooterText] = useState(form?.footerText || '');
   const [updateForm] = useUpdateFormMutation();
 
   const handleFormLocationUpdate = async () => {
-    if (!redirectUrl) return toast.error('Please select a form');
     try {
-      const res = await updateForm({ _id: form?._id, data: { redirectUrl } }).unwrap();
+      const res = await updateForm({ _id: form?._id, data: { redirectUrl, headerText, footerText } }).unwrap();
       if (res?.success) {
         await refetch();
         toast?.success(res?.message || 'Form updated successfully');
@@ -423,7 +423,7 @@ export const FormConfigurationModal = ({ form, refetch, setModal }) => {
     <div className="flex items-center justify-center p-4">
       <div className="flex w-full max-w-2xl flex-col gap-6">
         {/* Heading */}
-        <h3 className="text-center text-lg font-semibold text-gray-800">Configure Location Settings</h3>
+        <h3 className="text-center text-lg font-semibold text-gray-800">Form Configuration</h3>
 
         {/* Title Input */}
 
@@ -435,6 +435,26 @@ export const FormConfigurationModal = ({ form, refetch, setModal }) => {
             placeholder="Enter redirect URL"
             value={redirectUrl}
             onChange={e => setRedirectUrl(e.target.value)}
+            name="redirect-url"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <TextField
+            label="Header Text"
+            id="header-text"
+            placeholder="Enter header text"
+            value={headerText}
+            onChange={e => setHeaderText(e.target.value)}
+            name="redirect-url"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <TextField
+            label="Footer Text"
+            id="footer-text"
+            placeholder="Enter footer text"
+            value={footerText}
+            onChange={e => setFooterText(e.target.value)}
             name="redirect-url"
           />
         </div>
