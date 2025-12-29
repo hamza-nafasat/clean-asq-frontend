@@ -61,7 +61,6 @@ function App() {
   const getUserAndSetBranding = useCallback(async () => {
     try {
       const res = await getUserProfile().unwrap();
-      console.log('res', res);
       if (res?.success) {
         dispatch(userExist(res?.data));
         const formBranding = res?.data?.branding;
@@ -140,6 +139,8 @@ function App() {
     }
     checkClientVpn();
   }, []);
+
+  const isGuest = user?.role?.name === 'guest';
   if (loading || isLoading) return <CustomLoading />;
   return (
     <>
@@ -161,13 +162,15 @@ function App() {
             <Route path="submission" element={<DraftSubmission />} />
           </Route>
           {/* non authentic routes */}
-          <Route element={<ProtectedRoute user={!user} redirect="/application-forms" />}>
+          <Route element={<ProtectedRoute user={!user} redirect={isGuest ? '/submission' : '/application-forms'} />}>
             <Route path="/login" element={<Login />} />
             <Route path="/otp" element={<Otp />} />
           </Route>
 
           {/* authentic routes */}
-          <Route element={<ProtectedRoute user={user} redirect="/login" />}>
+          <Route
+            element={<ProtectedRoute user={!isGuest && user} redirect={isGuest && user ? '/submission' : '/login'} />}
+          >
             {/* Admin */}
             <Route path="/" element={<AdminDashboard />}>
               <Route index element={<Navigate to="application-forms" replace />} />

@@ -423,7 +423,7 @@ export default function SingleApplication() {
     try {
       if (!email || !otp) return toast.error('Please enter your email and otp');
       setLoadingForValidatingOtp(true);
-      const res = await verifyEmail({ email, otp }).unwrap();
+      const res = await verifyEmail({ email, otp, formId }).unwrap();
       if (res.success) {
         await dispatch(updateEmailVerified(true));
         await getUserProfile()
@@ -440,7 +440,7 @@ export default function SingleApplication() {
     } finally {
       setLoadingForValidatingOtp(false);
     }
-  }, [dispatch, email, getSavedFormDataAndSaveInRedux, getUserProfile, otp, verifyEmail]);
+  }, [dispatch, email, formId, getSavedFormDataAndSaveInRedux, getUserProfile, otp, verifyEmail]);
 
   const getQrLinkOnEmailVerified = useCallback(() => {
     if (emailVerified && formData && formData?.idMission) {

@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from 'react';
 import { BsGlobe2 } from 'react-icons/bs';
 import { FiUpload, FiX } from 'react-icons/fi';
 import { GrImage } from 'react-icons/gr';
-import { HiOutlineSparkles } from 'react-icons/hi2';
 import { IoColorPaletteOutline } from 'react-icons/io5';
 import { toast } from 'react-toastify';
 
@@ -293,6 +292,196 @@ const BrandingSource = ({
               icon={FiUpload}
               onClick={() => logoFileInputRef.current && logoFileInputRef.current.click()}
             />
+          </div>
+        </div>
+        <div className="mt-8 w-full items-center justify-center overflow-auto">
+          <input
+            type="file"
+            ref={logoFileInputRef}
+            onChange={handleLogoFileUpload}
+            accept="image/*"
+            multiple
+            className="hidden"
+          />
+          {/* logo section here is all logo logos are multipal and select able mean logs is select able  */}
+          <div className="flex w-full flex-wrap items-center gap-2 overflow-auto p-2">
+            {logos?.length > 0 ? (
+              logos?.map((logo, idx) => {
+                const isPreview = typeof logo === 'object' && logo?.preview === true;
+                const logoUrl = typeof logo === 'string' ? logo : logo?.url;
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => handleLogoSelect(idx, logoUrl)}
+                    onMouseEnter={() => setHoveredLogoIndex(idx)}
+                    onMouseLeave={() => setHoveredLogoIndex(null)}
+                    className={`relative flex h-[130px] w-[200px] flex-col items-center justify-center gap-2 rounded-md border-2 transition-all duration-200 ${
+                      isPreview ? 'cursor-not-allowed opacity-50 grayscale' : 'cursor-pointer'
+                    } ${
+                      isPreview
+                        ? 'border-gray-300'
+                        : selectedLogoIndex === idx
+                          ? 'ring-opacity-50 border-green-500 ring-2 ring-green-500'
+                          : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    {/* Tooltip for preview logos */}
+                    {isPreview && hoveredLogoIndex === idx && (
+                      <div className="absolute bottom-0 z-999 rounded-t-md bg-gray-950! px-3 py-2 text-sm font-semibold text-white shadow-lg before:absolute before:top-full before:left-1/2 before:-translate-x-1/2 before:border-4 before:border-transparent before:border-t-gray-950">
+                        You'll need to update branding before you'll be able to select this logo.
+                      </div>
+                    )}
+                    {selectedLogoIndex === idx && !isPreview && (
+                      <div className="absolute top-0 left-0 rounded-bl-md px-2 py-1 text-xs font-medium text-green-500">
+                        Selected
+                      </div>
+                    )}
+                    {/* Close icon */}
+                    <button
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleRemoveLogo(idx);
+                      }}
+                      className="bg-primary absolute top-1 right-1 z-10 cursor-pointer rounded-full p-1 text-gray-500 transition-transform duration-200 hover:scale-110 hover:text-red-500"
+                    >
+                      <FiX size={18} className="text-buttonTextPrimary hover:text-buttonTextSecondary" />
+                    </button>
+
+                    <div
+                      className={`flex h-[100px] w-[80%] flex-col items-center justify-center ${
+                        isPreview ? 'cursor-not-allowed' : 'cursor-pointer'
+                      }`}
+                    >
+                      <img
+                        src={typeof logo === 'string' ? logo : logo?.url}
+                        alt={`Logo ${idx + 1}`}
+                        className={`h-[calc(100%-30px)] w-[96px] object-contain ${logo?.invert ? 'rounded-sm bg-gray-700' : ''}`}
+                        referrerPolicy="no-referrer"
+                      />
+                      <div>logo</div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <span className="text-gray-400">No logos uploaded or pasted.</span>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="border-primary my-6 border-t-2"></div>
+    </div>
+  );
+};
+
+export const SelectLogoForEmail = ({ logos, selectedLogo, setSelectedLogo, setLogos, defaultSelectedLogo = null }) => {
+  const [selectedLogoIndex, setSelectedLogoIndex] = useState(null);
+  const [hoveredLogoIndex, setHoveredLogoIndex] = useState(null);
+
+  // Update selected logo index when selectedLogo or logos change
+  useEffect(() => {
+    if (selectedLogo && logos?.length > 0) {
+      const index = logos.findIndex(logo => (typeof logo === 'string' ? logo : logo?.url) === selectedLogo);
+      if (index !== -1) {
+        const logoObj = logos[index];
+        const isPreview = typeof logoObj === 'object' && logoObj?.preview === true;
+        if (!isPreview) {
+          setSelectedLogoIndex(index);
+        }
+      } else if (logos.length > 0) {
+        // If selectedLogo doesn't match any logo, select the first non-preview one
+        const firstNonPreviewLogo = logos.find(logo => {
+          const isPreview = typeof logo === 'object' && logo?.preview === true;
+          return !isPreview;
+        });
+        if (firstNonPreviewLogo) {
+          const logoUrl = typeof firstNonPreviewLogo === 'string' ? firstNonPreviewLogo : firstNonPreviewLogo?.url;
+          const index = logos.indexOf(firstNonPreviewLogo);
+          if (logoUrl) {
+            setSelectedLogoIndex(index);
+            setSelectedLogo(logoUrl);
+          }
+        }
+      }
+    } else if (logos?.length > 0 && selectedLogoIndex === null) {
+      // If no logo is selected, select the first non-preview one
+      const firstNonPreviewLogo = logos.find(logo => {
+        const isPreview = typeof logo === 'object' && logo?.preview === true;
+        return !isPreview;
+      });
+      if (firstNonPreviewLogo) {
+        const logoUrl = typeof firstNonPreviewLogo === 'string' ? firstNonPreviewLogo : firstNonPreviewLogo?.url;
+        const index = logos.indexOf(firstNonPreviewLogo);
+        if (logoUrl) {
+          setSelectedLogoIndex(index);
+          setSelectedLogo(logoUrl);
+        }
+      }
+    }
+  }, [logos, selectedLogo, selectedLogoIndex, setSelectedLogo]);
+
+  // Handle initial load with default selected logo
+  useEffect(() => {
+    if (defaultSelectedLogo && logos?.length > 0 && !selectedLogo) {
+      const index = logos.findIndex(logo => (typeof logo === 'string' ? logo : logo?.url) === defaultSelectedLogo);
+      if (index !== -1) {
+        const logoObj = logos[index];
+        const isPreview = typeof logoObj === 'object' && logoObj?.preview === true;
+        if (!isPreview) {
+          setSelectedLogoIndex(index);
+          setSelectedLogo(defaultSelectedLogo);
+        }
+      }
+    }
+  }, [defaultSelectedLogo, logos, selectedLogo, setSelectedLogo]);
+  const logoFileInputRef = useRef(null);
+
+  const handleLogoSelect = (idx, logo) => {
+    // Check if logo is a preview (pasted/uploaded but not saved)
+    const logoObj = typeof logo === 'string' ? logos[idx] : logo;
+    const isPreview = typeof logoObj === 'object' && logoObj?.preview === true;
+
+    if (isPreview) {
+      // Don't show toast, tooltip already explains this
+      return;
+    }
+
+    const logoUrl = typeof logo === 'string' ? logo : logo?.url || logo;
+    setSelectedLogoIndex(idx);
+    setSelectedLogo(logoUrl);
+    console.log('logo', logo);
+  };
+
+  const handleLogoFileUpload = async e => {
+    const files = Array.from(e.target.files);
+    const newLogos = files
+      .filter(file => file.type.startsWith('image/'))
+      .map(file => ({
+        file,
+        preview: URL.createObjectURL(file),
+      }));
+
+    const detect = await detectLogo(newLogos[0]?.preview);
+
+    setLogos(prev => [...prev, { url: newLogos[0]?.preview, type: 'img', preview: true, invert: detect }]);
+  };
+
+  const handleRemoveLogo = idx => {
+    setLogos(prev => prev.filter((_, i) => i !== idx));
+    if (selectedLogoIndex === idx) setSelectedLogoIndex(null);
+    else if (selectedLogoIndex > idx) setSelectedLogoIndex(selectedLogoIndex - 1);
+  };
+
+  return (
+    <div className="mb-6">
+      <div className="border-primary my-6 border-t-2"></div>
+      {/* Placeholder for Available Logos and Upload Logo */}
+      <div className="flex flex-col items-center justify-between space-x-2">
+        <div className="flex w-full items-center justify-between">
+          <div className="flex items-center justify-between gap-4 space-x-2">
+            <GrImage className="text-primary size-5" />
+            Select Logo for Email
           </div>
         </div>
         <div className="mt-8 w-full items-center justify-center overflow-auto">

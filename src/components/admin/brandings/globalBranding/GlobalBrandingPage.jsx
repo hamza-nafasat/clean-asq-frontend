@@ -13,10 +13,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import BrandElementAssignment, { ColorInput } from './BrandElementAssignment';
-import BrandingSource from './BrandingSource';
+import BrandingSource, { SelectLogoForEmail } from './BrandingSource';
 import ColorPalette from './ColorPalette';
 import Preview, { EmailTemplatePreview } from './Preview';
 import Handlebars from 'handlebars';
+import { FiX } from 'react-icons/fi';
 
 const emailHeaderTemplate = `
 <!DOCTYPE html>
@@ -132,6 +133,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [emailHeaderColor, setEmailHeaderColor] = useState('#1a1a1a');
   const [emailFooterColor, setEmailFooterColor] = useState('#1a1a1a');
   const [emailBodyColor, setEmailBodyColor] = useState('#1a1a1a');
+  const [selectedEmailLogo, setSelectedEmailLogo] = useState();
 
   const compileHeader = Handlebars.compile(emailHeaderTemplate);
   const compileFooter = Handlebars.compile(emailFooterTemplate);
@@ -250,6 +252,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append('colorPalette', JSON.stringify(colorPalette));
     formData.append('colors', JSON.stringify(colors));
     formData.append('logos', JSON.stringify(finalLogos));
+
     extraLogos.forEach(file => {
       formData.append(`files`, file);
     });
@@ -265,6 +268,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append('emailHeaderColor', emailHeaderColor);
     formData.append('emailFooterColor', emailFooterColor);
     formData.append('emailBodyColor', emailBodyColor);
+    if (selectedEmailLogo) {
+      formData.append('selectedEmailLogo', selectedEmailLogo);
+    }
 
     console.log(extraLogos);
     try {
@@ -354,6 +360,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append('emailHeaderColor', emailHeaderColor);
     formData.append('emailFooterColor', emailFooterColor);
     formData.append('emailBodyColor', emailBodyColor);
+    if (selectedEmailLogo) {
+      formData.append('selectedEmailLogo', selectedEmailLogo);
+    }
 
     extraLogos.forEach(file => {
       formData.append(`files`, file);
@@ -474,6 +483,16 @@ const GlobalBrandingPage = ({ brandingId }) => {
           setSelectedLogo(firstLogo);
         }
       }
+      if (singleBranding.selectedEmailLogo) {
+        setSelectedEmailLogo(singleBranding.selectedEmailLogo);
+      } else if (singleBranding.logos?.length > 0) {
+        // Default to the first logo if no logo is selected
+        const firstLogo =
+          typeof singleBranding.logos[0] === 'string' ? singleBranding.logos[0] : singleBranding.logos[0]?.url;
+        if (firstLogo) {
+          setSelectedEmailLogo(firstLogo);
+        }
+      }
     }
   }, [brandingId, singleBrandingData]);
 
@@ -490,7 +509,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       footerHeading,
       footerDescription,
       headerAlignment,
-      logo: selectedLogo,
+      logo: selectedEmailLogo || selectedLogo,
     };
     setEmailHeader(compileHeader(context));
     setEmailFooter(compileFooter(context));
@@ -509,6 +528,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
     emailFooterColor,
     emailBodyColor,
     headerAlignment,
+    selectedEmailLogo,
   ]);
 
   return (
@@ -610,6 +630,14 @@ const GlobalBrandingPage = ({ brandingId }) => {
                 value={headerDescription}
                 onChange={e => setHeaderDescription(e.target.value)}
               />
+              <SelectLogoForEmail
+                logos={logos}
+                setLogos={setLogos}
+                setSelectedLogo={setSelectedEmailLogo}
+                selectedLogo={selectedEmailLogo}
+                defaultSelectedLogo={brandingId ? selectedEmailLogo : null}
+              />
+              {/* logos selectable here  */}
             </div>
           </section>
           <section className="border-b-2b my-6 flex w-[70%] flex-col gap-2">

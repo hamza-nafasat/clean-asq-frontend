@@ -152,7 +152,7 @@ const Profile = ({ isGuest, setIsProfileOpen }) => {
       if (res.success) {
         await dispatch(userNotExist());
         toast.success(res.message);
-        if (!isGuest) return navigate('/login');
+        return navigate('/login');
       }
       setIsProfileOpen(false);
     } catch (error) {
