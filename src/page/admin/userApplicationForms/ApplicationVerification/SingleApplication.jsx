@@ -19,7 +19,12 @@ import {
 } from '@/redux/apis/formApis';
 import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
 import { userExist, userNotExist } from '@/redux/slices/authSlice';
-import { addSavedFormData, updateEmailVerified, updateFormState } from '@/redux/slices/formSlice';
+import {
+  addSavedFormData,
+  updateEmailVerified,
+  updateFormHeaderAndFooter,
+  updateFormState,
+} from '@/redux/slices/formSlice';
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
 import { collectClientDetails } from '@/utils/userDetails';
 import { Autocomplete } from '@react-google-maps/api';
@@ -472,6 +477,21 @@ export default function SingleApplication() {
       getQrAndWebLink().finally(() => setGetQrAndWebLinkLoading(false));
     }
   }, [emailVerified, formData, getQrAndWebLink, qrCode, user?.email, webLink]);
+
+  // add footer and header text in state
+  useEffect(() => {
+    if (form?.data?.footerText || form?.data?.headerText) {
+      dispatch(
+        updateFormHeaderAndFooter({
+          headerText: form?.data?.headerText || '',
+          footerText: form?.data?.footerText || 'All rights reserved',
+        })
+      );
+    }
+    return () => {
+      dispatch(updateFormHeaderAndFooter({ headerText: '', footerText: 'All rights reserved' }));
+    };
+  }, [dispatch, form?.data?.footerText, form?.data?.headerText]);
 
   // get qr and session id
   useEffect(() => {

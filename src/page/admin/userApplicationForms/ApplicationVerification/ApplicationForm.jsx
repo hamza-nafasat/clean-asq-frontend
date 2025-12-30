@@ -11,7 +11,7 @@ import {
   useSaveFormInDraftMutation,
   useSubmitFormMutation,
 } from '@/redux/apis/formApis';
-import { addSavedFormData, updateFormState } from '@/redux/slices/formSlice';
+import { addSavedFormData, updateFormHeaderAndFooter, updateFormState } from '@/redux/slices/formSlice';
 import { unwrapResult } from '@reduxjs/toolkit';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -97,8 +97,8 @@ export default function ApplicationForm() {
     [form?.data?._id, formData, saveFormInDraft]
   );
 
-  // get saved data if exist
   useEffect(() => {
+    // get saved data if exist
     if (form?.data?.sections && form?.data?.sections?.length > 0) {
       getSavedFormData({ formId: form?.data?._id })
         .then(res => {
@@ -108,6 +108,18 @@ export default function ApplicationForm() {
         })
         .finally(() => setIsSavedApiRun(true));
     }
+    // add footer and header text in state
+    if (form?.data?.footerText || form?.data?.headerText) {
+      dispatch(
+        updateFormHeaderAndFooter({
+          headerText: form?.data?.headerText || '',
+          footerText: form?.data?.footerText || 'All rights reserved',
+        })
+      );
+    }
+    return () => {
+      dispatch(updateFormHeaderAndFooter({ headerText: '', footerText: 'All rights reserved' }));
+    };
   }, [dispatch, form, getSavedFormData]);
 
   useEffect(() => {

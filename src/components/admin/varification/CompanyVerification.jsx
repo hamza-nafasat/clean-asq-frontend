@@ -14,7 +14,7 @@ import {
   useUpdateFormMutation,
 } from '@/redux/apis/formApis';
 import { addLookupData } from '@/redux/slices/companySlice';
-import { updateFormState } from '@/redux/slices/formSlice';
+import { updateFormHeaderAndFooter, updateFormState } from '@/redux/slices/formSlice';
 import DOMPurify from 'dompurify';
 import { useCallback, useEffect, useState } from 'react';
 import DataTable from 'react-data-table-component';
@@ -55,7 +55,19 @@ function CompanyVerification({ formId }) {
     if (user && formBackendData) {
       setIsCreator(user?._id && user?._id === formBackendData?.data?.owner && user?.role !== 'guest');
     }
-  }, [formBackendData, user]);
+    // add footer and header text in state
+    if (formBackendData?.data?.footerText || formBackendData?.data?.headerText) {
+      dispatch(
+        updateFormHeaderAndFooter({
+          headerText: formBackendData?.data?.headerText || '',
+          footerText: formBackendData?.data?.footerText || 'All rights reserved',
+        })
+      );
+    }
+    return () => {
+      dispatch(updateFormHeaderAndFooter({ headerText: '', footerText: 'All rights reserved' }));
+    };
+  }, [dispatch, formBackendData, user]);
 
   const handleSubmit = async () => {
     try {
