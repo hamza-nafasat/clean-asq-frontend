@@ -110,10 +110,10 @@ const GuestHeader = ({
                     />
 
                     <div>
-                      <h6 className="text-sm font-semibold text-gray-800">
+                      <h6 className="text-header-text text-sm font-semibold">
                         {user?.firstName} {user?.lastName}
                       </h6>
-                      <p className="text-xs text-gray-600">{user?.email}</p>
+                      <p className="text-header-text text-xs">{user?.email}</p>
                     </div>
                   </div>
 
@@ -136,7 +136,7 @@ const GuestHeader = ({
             </div>
           )}
           {/* center side  */}
-          {formHeaderText && <h6 className="text-xl font-semibold text-gray-800">{formHeaderText}</h6>}
+          {formHeaderText && <h6 className="text-header-text text-xl font-semibold">{formHeaderText}</h6>}
 
           {/* right side  */}
           {headerAlignment == 'left' ? (
@@ -262,7 +262,7 @@ const UserHeader = ({
         <button className="rounded-md p-2 hover:bg-gray-100 lg:hidden" onClick={() => setSidebarOpen(true)}>
           <HiMenu size={24} className="text-gray-800" />
         </button>
-        <h1 className="text-lg font-semibold text-gray-800">
+        <h1 className="text-header-text text-lg font-semibold">
           Welcome {user?.firstName} {user?.lastName}
         </h1>
       </div>
@@ -277,10 +277,10 @@ const UserHeader = ({
               />
 
               <div>
-                <h6 className="text-sm font-semibold text-gray-800">
+                <h6 className="text-header-text text-sm font-semibold">
                   {user?.firstName} {user?.lastName}
                 </h6>
-                <p className="text-xs text-gray-600">{user?.email}</p>
+                <p className="text-header-text text-xs">{user?.email}</p>
               </div>
             </div>
 

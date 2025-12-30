@@ -22,6 +22,8 @@ const useApplyBranding = ({ formId }) => {
     setHeaderAlignment,
     setHeaderBackground,
     setFooterBackground,
+    setHeaderText,
+    setFooterText,
   } = useBranding();
 
   const { data: form, isLoading } = useGetSingleFormQueryQuery({ _id: formId }, { skip: !formId });
@@ -44,6 +46,8 @@ const useApplyBranding = ({ formId }) => {
         setHeaderBackground(formBranding?.colors?.headerBackground);
         setFooterBackground(formBranding?.colors?.footerBackground);
         setHeaderAlignment(formBranding?.headerAlignment);
+        setHeaderText(formBranding?.colors?.headerText);
+        setFooterText(formBranding?.colors?.footerText);
       }
       if (formBranding?.logos) setLogo(formBranding?.selectedLogo);
       if (formBranding?.fontFamily) setFontFamily(formBranding?.fontFamily);
@@ -64,6 +68,8 @@ const useApplyBranding = ({ formId }) => {
       setHeaderBackground,
       setFooterBackground,
       setHeaderAlignment,
+      setHeaderText,
+      setFooterText,
     ]
   );
 

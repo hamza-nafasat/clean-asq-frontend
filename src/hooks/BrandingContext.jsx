@@ -18,6 +18,8 @@ const DEFAULT_COLORS = {
   buttonTextSecondary: '#bfff00',
   footerBackground: '#998069',
   headerBackground: '#f3e1d0',
+  headerText: '#000000',
+  footerText: '#000000',
 };
 
 export const BrandingProvider = ({ children }) => {
@@ -36,7 +38,8 @@ export const BrandingProvider = ({ children }) => {
   const [headerBackground, setHeaderBackground] = useState(DEFAULT_COLORS.headerBackgroundColor);
   const [footerBackground, setFooterBackground] = useState(DEFAULT_COLORS.footerBackgroundColor);
   const [headerAlignment, setHeaderAlignment] = useState('left');
-
+  const [headerText, setHeaderText] = useState(DEFAULT_COLORS.headerText);
+  const [footerText, setFooterText] = useState(DEFAULT_COLORS.footerText);
   // Load saved branding from localStorage on mount
   useEffect(() => {
     const savedBranding = JSON.parse(localStorage.getItem('brandingData'));
@@ -55,6 +58,8 @@ export const BrandingProvider = ({ children }) => {
       setHeaderBackground(savedBranding.headerBackgroundColor || DEFAULT_COLORS.headerBackgroundColor);
       setFooterBackground(savedBranding.footerBackgroundColor || DEFAULT_COLORS.footerBackgroundColor);
       setHeaderAlignment(savedBranding.headerAlignment || 'left');
+      setHeaderText(savedBranding.headerText || DEFAULT_COLORS.headerText);
+      setFooterText(savedBranding.footerText || DEFAULT_COLORS.footerText);
     }
   }, []);
 
@@ -74,6 +79,8 @@ export const BrandingProvider = ({ children }) => {
       name,
       headerBackground,
       footerBackground,
+      headerText,
+      footerText,
     };
     localStorage.setItem('brandingData', JSON.stringify(brandingData));
 
@@ -96,6 +103,8 @@ export const BrandingProvider = ({ children }) => {
     document.documentElement.style.setProperty('--color-button-text-secondary', buttonTextSecondary);
     document.documentElement.style.setProperty('--color-header', headerBackground);
     document.documentElement.style.setProperty('--color-footer', footerBackground);
+    document.documentElement.style.setProperty('--color-header-text', headerText);
+    document.documentElement.style.setProperty('--color-footer-text', footerText);
 
     // Apply font family globally using CSS variables
     document.documentElement.style.setProperty('--font-primary', `var(--font-${fontFamily?.toLowerCase()})`);
@@ -113,6 +122,8 @@ export const BrandingProvider = ({ children }) => {
     buttonTextSecondary,
     headerBackground,
     footerBackground,
+    headerText,
+    footerText,
   ]);
 
   const value = {
@@ -146,6 +157,10 @@ export const BrandingProvider = ({ children }) => {
     setFooterBackground,
     headerAlignment,
     setHeaderAlignment,
+    headerText,
+    setHeaderText,
+    footerText,
+    setFooterText,
   };
 
   return <BrandingContext.Provider value={value}>{children}</BrandingContext.Provider>;

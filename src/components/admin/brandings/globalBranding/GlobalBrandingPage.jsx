@@ -111,7 +111,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [linkColor, setLinkColor] = useState('');
   const [backgroundColor, setBackgroundColor] = useState('');
   const [headerBackground, setHeaderBackground] = useState('#000000');
+  const [headerText, setHeaderText] = useState('');
   const [footerBackground, setFooterBackground] = useState('#000000');
+  const [footerText, setFooterText] = useState('');
   const [frameColor, setFrameColor] = useState('');
   const [fontFamily, setFontFamily] = useState('');
   const [companyName, setCompanyName] = useState('');
@@ -153,6 +155,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
     setHeaderAlignment: setHeaderAlignmentGlobal,
     setHeaderBackground: setHeaderBackgroundGlobal,
     setFooterBackground: setFooterBackgroundGlobal,
+    setHeaderText: setHeaderTextGlobal,
+    setFooterText: setFooterTextGlobal,
   } = useBranding();
 
   const [extractColorsFromLogos] = useExtractColorsFromLogosMutation();
@@ -212,6 +216,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !headerAlignment ||
       !headerBackground ||
       !footerBackground ||
+      !headerText ||
+      !footerText ||
       // email
       !emailHeader ||
       !emailFooter ||
@@ -239,6 +245,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       buttonTextSecondary: buttonTextSecondary,
       headerBackground: headerBackground,
       footerBackground: footerBackground,
+      headerText: headerText,
+      footerText: footerText,
     };
 
     let finalLogos = logos.filter(logo => !logo.preview);
@@ -307,6 +315,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !headerAlignment ||
       !headerBackground ||
       !footerBackground ||
+      !headerText ||
+      !footerText ||
       // email
       !emailHeader ||
       !emailFooter ||
@@ -334,6 +344,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       buttonTextSecondary: buttonTextSecondary,
       headerBackground: headerBackground,
       footerBackground: footerBackground,
+      headerText: headerText,
+      footerText: footerText,
     };
 
     let finalLogos = logos.filter(logo => !logo.preview);
@@ -392,6 +404,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
 
             setHeaderBackgroundGlobal(userBranding.colors.headerBackground);
             setFooterBackgroundGlobal(userBranding.colors.footerBackground);
+
+            setHeaderTextGlobal(userBranding.colors.headerText);
+            setFooterTextGlobal(userBranding.colors.footerText);
 
             // email
             setEmailHeader(userBranding.emailHeader);
@@ -456,6 +471,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setHeaderAlignment(singleBranding.headerAlignment);
       setHeaderBackground(singleBranding.colors.headerBackground);
       setFooterBackground(singleBranding.colors.footerBackground);
+      setHeaderText(singleBranding.colors.headerText);
+      setFooterText(singleBranding.colors.footerText);
       setFontFamily(singleBranding.fontFamily);
       setFontFamily(singleBranding.fontFamily);
       setButtonTextPrimary(singleBranding.colors.buttonTextPrimary);
@@ -577,8 +594,12 @@ const GlobalBrandingPage = ({ brandingId }) => {
           setButtonTextSecondary={setButtonTextSecondary}
           headerBackground={headerBackground}
           setHeaderBackground={setHeaderBackground}
+          headerText={headerText}
+          setHeaderText={setHeaderText}
           footerBackground={footerBackground}
           setFooterBackground={setFooterBackground}
+          footerText={footerText}
+          setFooterText={setFooterText}
           headerAlignment={headerAlignment}
           setHeaderAlignment={setHeaderAlignment}
         />

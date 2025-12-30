@@ -72,7 +72,7 @@ function Draft({ forms }) {
                 {/* <CardIcon /> */}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <h2 className="text-base leading-tight font-bold break-words text-gray-700 sm:text-lg md:text-2xl">
+                    <h2 className="text-base leading-tight font-bold wrap-break-word text-gray-700 sm:text-lg md:text-2xl">
                       {form?.name}
                     </h2>
                   </div>

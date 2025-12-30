@@ -139,6 +139,10 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
 };
 
 const BrandElementAssignment = ({
+  headerText,
+  setHeaderText,
+  footerText,
+  setFooterText,
   primaryColor,
   setPrimaryColor,
   secondaryColor,
@@ -184,6 +188,14 @@ const BrandElementAssignment = ({
             label="Background"
             color={headerBackground}
             setColor={setHeaderBackground}
+          />
+          <ColorInput
+            className="min-w-[400px]"
+            setImage={setImage}
+            image={image}
+            label="Text"
+            color={headerText}
+            setColor={setHeaderText}
           />
           <div className="flex max-w-[50%] flex-1">
             <CustomizableSelect
@@ -276,7 +288,7 @@ const BrandElementAssignment = ({
       </section>
       <section className="my-6 flex w-full flex-col gap-2">
         <h3 className="border-b-2 text-lg font-semibold text-gray-800">Application Footer</h3>
-        <div className="flex w-full flex-wrap justify-between">
+        <div className="flex max-w-[50%] flex-wrap justify-between">
           <ColorInput
             setImage={setImage}
             image={image}
@@ -284,6 +296,7 @@ const BrandElementAssignment = ({
             color={footerBackground}
             setColor={setFooterBackground}
           />
+          <ColorInput setImage={setImage} image={image} label="Text" color={footerText} setColor={setFooterText} />
         </div>
       </section>
 
