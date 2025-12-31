@@ -26,6 +26,7 @@ import {
   updateFormState,
 } from '@/redux/slices/formSlice';
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
+import makeCompleteName from '@/utils/idMissionMapingUtils';
 import { collectClientDetails } from '@/utils/userDetails';
 import { Autocomplete } from '@react-google-maps/api';
 import { unwrapResult } from '@reduxjs/toolkit';
@@ -542,7 +543,14 @@ export default function SingleApplication() {
       const formDataOfIdMission = data?.Form_Data;
 
       setIdMissionVerifiedData({
-        name: (formDataOfIdMission?.Name || '').concat(' ', formDataOfIdMission?.Last_Name || ''),
+        name: makeCompleteName(
+          formDataOfIdMission?.First_Name,
+          formDataOfIdMission?.Middle_Name,
+          formDataOfIdMission?.Last_Name,
+          formDataOfIdMission?.FullName,
+          formDataOfIdMission?.Name
+        ),
+
         email: formDataOfIdMission?.Email || user?.email || '',
         idNumber: formDataOfIdMission?.ID_Number || '',
         idIssuer: formDataOfIdMission?.ID_State
@@ -588,7 +596,13 @@ export default function SingleApplication() {
       const formDataOfIdMission = data?.Form_Data;
 
       setIdMissionVerifiedData({
-        name: (formDataOfIdMission?.name || '')?.concat(' ', formDataOfIdMission?.Last_Name || ''),
+        name: makeCompleteName(
+          formDataOfIdMission?.First_Name,
+          formDataOfIdMission?.Middle_Name,
+          formDataOfIdMission?.Last_Name,
+          formDataOfIdMission?.FullName,
+          formDataOfIdMission?.Name
+        ),
         email: formDataOfIdMission?.Email || user?.email || '',
         idNumber: formDataOfIdMission?.ID_Number || '',
         idIssuer: formDataOfIdMission?.ID_State
@@ -631,7 +645,13 @@ export default function SingleApplication() {
       const formDataOfIdMission = data?.Form_Data;
 
       setIdMissionVerifiedData({
-        name: (formDataOfIdMission?.name || '')?.concat(' ', formDataOfIdMission?.Last_Name || ''),
+        name: makeCompleteName(
+          formDataOfIdMission?.First_Name,
+          formDataOfIdMission?.Middle_Name,
+          formDataOfIdMission?.Last_Name,
+          formDataOfIdMission?.FullName,
+          formDataOfIdMission?.Name
+        ),
         email: formDataOfIdMission?.Email || user?.email || '',
         idNumber: formDataOfIdMission?.ID_Number || '',
         idIssuer: formDataOfIdMission?.ID_State
