@@ -230,7 +230,7 @@ const BrandingSource = ({
         <div>
           <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
           <div className="relative flex gap-4">
-            <Button onClick={triggerFileInput} icon={FiUpload} label={'Upload Website Image'} />
+            <Button onClick={triggerFileInput} icon={FiUpload} label={'Upload Image'} />
             <div className="relative">
               <Button onClick={handlePasteMenu} icon={FiUpload} label={'Paste as'} />
               {showPasteMenu && (

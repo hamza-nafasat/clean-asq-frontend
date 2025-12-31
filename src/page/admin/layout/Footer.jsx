@@ -12,8 +12,10 @@ function Footer() {
       <div className="text-footer-text">
         © {new Date().getFullYear()}
         <span className="text-footer-text px-2">{name || 'Apply Super Quick'}</span>
-        {formFooterText ? formFooterText : 'All rights reserved'}
+        {!formFooterText && 'All rights reserved'}
       </div>
+
+      {formFooterText && <div className="text-footer-text max-w-4xl text-xl font-semibold">{formFooterText}</div>}
 
       {/* Right side (links) */}
       <div className="flex flex-wrap justify-center gap-4 md:gap-2">

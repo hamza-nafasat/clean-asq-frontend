@@ -29,7 +29,7 @@ const columns = [
   { name: 'Result', grow: 2, wrap: true, selector: row => row.result },
 ];
 
-function CompanyVerification({ formId }) {
+function CompanyVerification({ formId, brandingName }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector(state => state?.auth);
@@ -72,7 +72,7 @@ function CompanyVerification({ formId }) {
   const handleSubmit = async () => {
     try {
       if (form?.noWebsite) {
-        return navigate(`/application-form/${formId}`);
+        return navigate(`/application-form/${brandingName}/${formId}`);
       } else {
         if (!form?.name || !form?.url) return toast.error('Please fill all fields');
         setLoading(true);
@@ -84,7 +84,7 @@ function CompanyVerification({ formId }) {
           toast.success('Company verified successfully');
           setLoading(false);
           companyLookup();
-          return navigate(`/application-form/${formId}`);
+          return navigate(`/application-form/${brandingName}/${formId}`);
         } else {
           toast.error('Company verification failed, please try again');
         }
@@ -184,6 +184,7 @@ function CompanyVerification({ formId }) {
             locationData={locationData}
             formId={formId}
             navigate={navigate}
+            brandingName={formBackendData?.branding?.name}
           />
         )}
         <div className="border-frameColor w-full rounded-md border p-4">
@@ -294,7 +295,7 @@ function CompanyVerification({ formId }) {
         {isCreator && (
           <Button
             onClick={() => {
-              return navigate(`/application-form/${formId}`);
+              return navigate(`/application-form/${brandingName}/${formId}`);
             }}
             label={'Skip'}
           />

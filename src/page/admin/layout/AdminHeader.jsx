@@ -83,7 +83,7 @@ const GuestHeader = ({
   logo,
 }) => {
   return (
-    <div className="bg-header flex min-h-20 items-center justify-between rounded-md p-2 shadow">
+    <div className="bg-header flex min-h-20 items-center justify-between gap-8 rounded-md p-2 shadow">
       {/* when not header target center  */}
       {headerAlignment !== 'center' ? (
         <>
@@ -136,7 +136,7 @@ const GuestHeader = ({
             </div>
           )}
           {/* center side  */}
-          {formHeaderText && <h6 className="text-header-text text-xl font-semibold">{formHeaderText}</h6>}
+          {formHeaderText && <h6 className="text-header-text max-w-3xl text-2xl font-semibold">{formHeaderText}</h6>}
 
           {/* right side  */}
           {headerAlignment == 'left' ? (
@@ -193,7 +193,7 @@ const GuestHeader = ({
           {/* left side  */}
           <div className={`flex w-[300px] items-center gap-4 rounded-bl-[20px] px-6 py-2`}></div>
           {/* center side  */}
-          <div className={`my-4 flex flex-col items-center`}>
+          <div className={`my-4 flex max-w-3xl flex-col items-center`}>
             <img
               onClick={handleLogoClick}
               src={logo || logoApply}

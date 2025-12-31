@@ -15,7 +15,7 @@ function Draft({ forms }) {
   const [getSavedFormData] = useGetSavedFormMutation();
   const [removeSavedForm] = useRemoveSavedFormMutation();
 
-  const getSavedData = async formId => {
+  const getSavedData = async (formId, brandingName) => {
     try {
       if (!emailVerified) dispatch(updateEmailVerified(true));
       const res = await getSavedFormData({ formId: formId }).unwrap();
@@ -27,7 +27,7 @@ function Draft({ forms }) {
           console.log('saved data is ,', savedData);
           return navigate(`/verification?formid=${formId}`);
         } else {
-          return navigate(`/application-form/${formId}`);
+          return navigate(`/application-form/${brandingName}/${formId}`);
         }
       } else {
         return navigate(`/verification?formid=${formId}`);
@@ -38,10 +38,10 @@ function Draft({ forms }) {
     }
   };
 
-  const startOverHandler = async formId => {
+  const startOverHandler = async (formId, brandingName) => {
     try {
       const res = await removeSavedForm({ formId: formId }).unwrap();
-      if (res.success) await getSavedData(formId);
+      if (res.success) await getSavedData(formId, brandingName);
     } catch (error) {
       console.log('error while getting saved data', error);
       return navigate(`/verification?formid=${formId}`);
@@ -103,7 +103,7 @@ function Draft({ forms }) {
               <div className="mt-3 flex w-full flex-col items-start justify-end gap-3 md:mt-6 md:flex-row md:gap-4">
                 <Button
                   label="Start Over"
-                  onClick={() => startOverHandler(form?._id)}
+                  onClick={() => startOverHandler(form?._id, form?.branding?.name)}
                   style={{
                     backgroundColor: colors?.primary,
                     borderColor: colors?.primary,
@@ -119,7 +119,7 @@ function Draft({ forms }) {
                 />
                 <Button
                   label="Resume"
-                  onClick={() => getSavedData(form?._id)}
+                  onClick={() => getSavedData(form?._id, form?.branding?.name)}
                   style={{
                     backgroundColor: colors?.primary,
                     borderColor: colors?.primary,

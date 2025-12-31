@@ -32,7 +32,7 @@ function Submission({ forms }) {
     }
   };
 
-  const getSavedData = async formId => {
+  const getSavedData = async (formId, brandingName) => {
     try {
       if (!emailVerified) dispatch(updateEmailVerified(true));
       const res = await getSavedFormData({ formId: formId }).unwrap();
@@ -44,7 +44,7 @@ function Submission({ forms }) {
           console.log('saved data is ,', savedData);
           return navigate(`/verification?formid=${formId}`);
         } else {
-          return navigate(`/application-form/${formId}`);
+          return navigate(`/application-form/${brandingName}/${formId}`);
         }
       } else {
         return navigate(`/verification?formid=${formId}`);
@@ -109,7 +109,7 @@ function Submission({ forms }) {
               <div className="mt-3 flex h-full w-full flex-col items-start justify-between gap-3 md:mt-6 md:flex-row md:gap-4">
                 <Button
                   label="Start Application"
-                  onClick={() => getSavedData(form?._id)}
+                  onClick={() => getSavedData(form?._id, form?.branding?.name)}
                   className="self-end"
                   style={{
                     backgroundColor: colors?.primary,
@@ -149,7 +149,7 @@ function Submission({ forms }) {
           );
         })
       ) : (
-        <div className="items-cetner col-span-full flex justify-center">No submissions found</div>
+        <div className="col-span-full flex items-center justify-center">No submissions found</div>
       )}
     </div>
   );

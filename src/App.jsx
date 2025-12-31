@@ -160,7 +160,7 @@ function App() {
           <Route path="singleform/pdf-view/:pdfId/:userId" element={<ApplicationPdfView />} />
           {/* public routes */}
           <Route path="/" element={<AdminDashboard />}>
-            <Route path="application-form/:formId" element={<SingleApplication />} />
+            <Route path="application-form/:brandingName/:formId" element={<SingleApplication />} />
             <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
             <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
             <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />

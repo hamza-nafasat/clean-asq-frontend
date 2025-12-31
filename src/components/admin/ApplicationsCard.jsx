@@ -375,7 +375,7 @@ export default function ApplicationsCard() {
               <div className="mt-3 flex h-full w-full flex-col items-start justify-between gap-3 md:mt-6 md:flex-row md:gap-4">
                 <Button
                   label="Start Application"
-                  onClick={() => navigate(`/application-form/${form?._id}`)}
+                  onClick={() => navigate(`/application-form/${form?.branding?.name}/${form?._id}`)}
                   className="self-end"
                   style={{
                     backgroundColor: colors?.primary,

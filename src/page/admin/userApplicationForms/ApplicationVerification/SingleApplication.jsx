@@ -342,7 +342,7 @@ export default function SingleApplication() {
         unwrapResult(action);
         if (!savedData?.company_lookup_data) {
           console.log('saved data is ,', savedData);
-          return navigate(`/verification?formid=${formId}`);
+          return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
         }
         setIdMissionVerifiedData({
           name: formDataOfIdMission?.name || '',
@@ -369,12 +369,12 @@ export default function SingleApplication() {
       }
     } catch (error) {
       if (error?.data?.message === 'Form Not Saved in draft') {
-        return navigate(`/verification?formid=${formId}`);
+        return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
       }
       console.log('error while getting saved form data', error);
       // toast.error(error?.data?.message || 'Error while getting saved form data');
     }
-  }, [dispatch, formId, getSavedFormData, navigate, user?.email]);
+  }, [dispatch, form?.data?.branding?.name, formId, getSavedFormData, navigate, user?.email]);
 
   const submitIdMissionData = useCallback(
     async e => {
@@ -871,7 +871,7 @@ export default function SingleApplication() {
                     <Button
                       onClick={() => {
                         dispatch(updateEmailVerified(true));
-                        navigate(`/verification?formid=${formId}`);
+                        navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
                       }}
                       className="w-full max-w-[650px]"
                       variant="secondary"

@@ -3,9 +3,7 @@ import CustomLoading from '@/components/shared/small/CustomLoading';
 import { useGetMyAllDraftsAndSubmittionsQuery } from '@/redux/apis/formApis';
 
 function DraftSubmission() {
-  // const { user } = useSelector(state => state.auth);
   const { data, isLoading } = useGetMyAllDraftsAndSubmittionsQuery();
-  // if (!user?._id) return Navigate(`/application-form/${formId}`);
   if (isLoading) return <CustomLoading />;
   return (
     <div>

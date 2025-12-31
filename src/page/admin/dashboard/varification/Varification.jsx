@@ -9,12 +9,13 @@ function Verification() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const formId = searchParams.get('formid') || searchParams.get('formId');
+  const brandingName = searchParams.get('brandingName');
   const { isApplied } = useApplyBranding({ formId });
   if (!isApplied) return <CustomLoading />;
-  if (!user?._id) return navigate(`/application-form/${formId}`);
+  if (!user?._id) return navigate(`/application-form/${brandingName}/${formId}`);
   return (
     <div>
-      <CompanyVerification formId={formId} />
+      <CompanyVerification formId={formId} brandingName={brandingName} />
     </div>
   );
 }
