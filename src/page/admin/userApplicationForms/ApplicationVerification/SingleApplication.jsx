@@ -481,10 +481,10 @@ export default function SingleApplication() {
 
   // add footer and header text in state
   useEffect(() => {
-    if (form?.data?.footerText || form?.data?.headerText) {
+    if (form?.data?.footerText || form?.data?.headerText || form?.data?.name) {
       dispatch(
         updateFormHeaderAndFooter({
-          headerText: form?.data?.headerText || '',
+          headerText: form?.data?.headerText || form?.data?.name || '',
           footerText: form?.data?.footerText || 'All rights reserved',
         })
       );
@@ -492,7 +492,7 @@ export default function SingleApplication() {
     return () => {
       dispatch(updateFormHeaderAndFooter({ headerText: '', footerText: 'All rights reserved' }));
     };
-  }, [dispatch, form?.data?.footerText, form?.data?.headerText]);
+  }, [dispatch, form?.data?.footerText, form?.data?.headerText, form?.data?.name]);
 
   // get qr and session id
   useEffect(() => {

@@ -56,10 +56,10 @@ function CompanyVerification({ formId, brandingName }) {
       setIsCreator(user?._id && user?._id === formBackendData?.data?.owner && user?.role !== 'guest');
     }
     // add footer and header text in state
-    if (formBackendData?.data?.footerText || formBackendData?.data?.headerText) {
+    if (formBackendData?.data?.footerText || formBackendData?.data?.headerText || formBackendData?.data?.name) {
       dispatch(
         updateFormHeaderAndFooter({
-          headerText: formBackendData?.data?.headerText || '',
+          headerText: formBackendData?.data?.headerText || formBackendData?.data?.name || '',
           footerText: formBackendData?.data?.footerText || 'All rights reserved',
         })
       );

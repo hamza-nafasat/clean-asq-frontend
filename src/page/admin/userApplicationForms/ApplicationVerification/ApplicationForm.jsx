@@ -109,10 +109,10 @@ export default function ApplicationForm() {
         .finally(() => setIsSavedApiRun(true));
     }
     // add footer and header text in state
-    if (form?.data?.footerText || form?.data?.headerText) {
+    if (form?.data?.footerText || form?.data?.headerText || form?.data?.name) {
       dispatch(
         updateFormHeaderAndFooter({
-          headerText: form?.data?.headerText || '',
+          headerText: form?.data?.headerText || form?.data?.name || '',
           footerText: form?.data?.footerText || 'All rights reserved',
         })
       );
@@ -127,49 +127,51 @@ export default function ApplicationForm() {
       const companyInformationStep = form?.data?.sections.find(step => step.title === 'company_information_blk');
       const data = [];
       const stepNames = [];
-      form?.data?.sections?.forEach(step => {
-        const sectionDataFromRedux = formData?.[step?.title];
-        const commonProps = {
-          _id: step._id,
-          name: step.name,
-          title: step.title,
-          fields: step?.fields ?? [],
-          blocks: step?.blocks ?? [],
-          isSignature: step?.isSignature,
-          reduxData: sectionDataFromRedux,
-          currentStep,
-          totalSteps: form?.data?.sections?.length,
-          handleNext,
-          handlePrevious,
-          handleSubmit,
-          formLoading,
-          formRefetch,
-          saveInProgress,
-          step,
-        };
-        if (step.title === 'company_information_blk') {
-          data.push(<CompanyInformation {...commonProps} />);
-          stepNames.push(step.name);
-        } else if (step.title === 'beneficial_blk') {
-          data.push(<CompanyOwners {...commonProps} />);
-          stepNames.push(step.name);
-        } else if (step.title === 'bank_account_info_blk') {
-          data.push(<BankInfo {...commonProps} />);
-          stepNames.push(step.name);
-        } else if (step.title === 'avg_transactions_blk') {
-          data.push(<ProcessingInfo {...commonProps} />);
-          stepNames.push(step.name);
-        } else if (step.title === 'incorporation_article_blk') {
-          data.push(<Documents {...commonProps} companyInformationStep={companyInformationStep} />);
-          stepNames.push(step.name);
-        } else if (step.title === 'custom_section') {
-          data.push(<CustomSection {...commonProps} />);
-          stepNames.push(step.name);
-        } else if (step.title === 'agreement_blk') {
-          data.push(<AggrementBlock {...commonProps} />);
-          stepNames.push(step.name);
-        }
-      });
+      form?.data?.sections
+        ?.filter(step => !step?.isHidden)
+        ?.forEach(step => {
+          const sectionDataFromRedux = formData?.[step?.title];
+          const commonProps = {
+            _id: step._id,
+            name: step.name,
+            title: step.title,
+            fields: step?.fields ?? [],
+            blocks: step?.blocks ?? [],
+            isSignature: step?.isSignature,
+            reduxData: sectionDataFromRedux,
+            currentStep,
+            totalSteps: form?.data?.sections?.filter(step => !step?.isHidden)?.length,
+            handleNext,
+            handlePrevious,
+            handleSubmit,
+            formLoading,
+            formRefetch,
+            saveInProgress,
+            step,
+          };
+          if (step.title === 'company_information_blk') {
+            data.push(<CompanyInformation {...commonProps} />);
+            stepNames.push(step.name);
+          } else if (step.title === 'beneficial_blk') {
+            data.push(<CompanyOwners {...commonProps} />);
+            stepNames.push(step.name);
+          } else if (step.title === 'bank_account_info_blk') {
+            data.push(<BankInfo {...commonProps} />);
+            stepNames.push(step.name);
+          } else if (step.title === 'avg_transactions_blk') {
+            data.push(<ProcessingInfo {...commonProps} />);
+            stepNames.push(step.name);
+          } else if (step.title === 'incorporation_article_blk') {
+            data.push(<Documents {...commonProps} companyInformationStep={companyInformationStep} />);
+            stepNames.push(step.name);
+          } else if (step.title === 'custom_section') {
+            data.push(<CustomSection {...commonProps} />);
+            stepNames.push(step.name);
+          } else if (step.title === 'agreement_blk') {
+            data.push(<AggrementBlock {...commonProps} />);
+            stepNames.push(step.name);
+          }
+        });
       setStepsComps(data);
       setSectionNames(stepNames);
     }

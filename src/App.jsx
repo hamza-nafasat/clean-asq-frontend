@@ -29,6 +29,7 @@ import CompanyInformation from './page/admin/userApplicationForms/CompanyInforma
 import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
 import { detectVPN } from './utils/vpnDetection';
+import FormHiddenSection from './page/admin/userApplicationForms/Hidden/HIdden';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -161,6 +162,7 @@ function App() {
           {/* public routes */}
           <Route path="/" element={<AdminDashboard />}>
             <Route path="application-form/:brandingName/:formId" element={<SingleApplication />} />
+            <Route path="hidden/:formId/:sectionName" element={<FormHiddenSection />} />
             <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
             <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
             <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
