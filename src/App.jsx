@@ -162,7 +162,7 @@ function App() {
           {/* public routes */}
           <Route path="/" element={<AdminDashboard />}>
             <Route path="application-form/:brandingName/:formId" element={<SingleApplication />} />
-            <Route path="hidden/:formId/:sectionName" element={<FormHiddenSection />} />
+            <Route path="hidden/:formId/:sectionKey" element={<FormHiddenSection />} />
             <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
             <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
             <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
