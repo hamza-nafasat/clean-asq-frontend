@@ -58,6 +58,16 @@ const formApis = createApi({
       providesTags: ['Form'],
     }),
 
+    // get single form with access token
+    // ---------------
+    getSingleFormWithAccessToken: builder.query({
+      query: ({ formId, accessToken, sectionKey }) => ({
+        url: `single-with-access/${formId}/${accessToken}/${sectionKey}`,
+        method: 'GET',
+      }),
+      providesTags: ['Form'],
+    }),
+
     // DELETE single form
     // ---------------
     deleteSingleForm: builder.mutation({
@@ -386,6 +396,7 @@ export const {
   useUpdateFormLocationMutation,
   useGetMyAllFormsQuery,
   useGetSingleFormMutation,
+  useGetSingleFormWithAccessTokenQuery,
   useGetSingleFormQueryQuery,
   useDeleteSingleFormMutation,
   useSubmitFormMutation,

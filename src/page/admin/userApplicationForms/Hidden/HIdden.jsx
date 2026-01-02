@@ -1,8 +1,8 @@
 import { FIELD_TYPES } from '@/data/constants';
-import { useGetSingleFormQueryQuery } from '@/redux/apis/formApis';
+import { useGetSingleFormQueryQuery, useGetSingleFormWithAccessTokenQuery } from '@/redux/apis/formApis';
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import {
   CheckboxInputType,
   MultiCheckboxInputType,
@@ -19,9 +19,13 @@ import { EditSectionDisplayTextFromatingModal } from '@/components/shared/small/
 function FormHiddenSection() {
   const params = useParams();
   const formId = params.formId;
+  const accessToken = useSearchParams()?.[0]?.get('accessToken');
   const sectionKey = params.sectionKey?.toLowerCase();
   const { user } = useSelector(state => state.auth);
-  const { data: formData, refetch: formRefetch } = useGetSingleFormQueryQuery({ _id: formId }, { skip: !formId });
+  const { data: formData, refetch: formRefetch } = useGetSingleFormWithAccessTokenQuery(
+    { formId, accessToken, sectionKey },
+    { skip: !formId || !accessToken }
+  );
   const [customizeModal, setCustomizeModal] = useState(false);
   const [form, setForm] = useState({});
   const [section, setSection] = useState({});
