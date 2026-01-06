@@ -1,8 +1,6 @@
-import { FIELD_TYPES } from '@/data/constants';
-import { useGetSingleFormQueryQuery, useGetSingleFormWithAccessTokenQuery } from '@/redux/apis/formApis';
-import { useEffect, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useParams, useSearchParams } from 'react-router-dom';
+import CustomizationFieldsModal from '@/components/applicationVerification/companyInfo/CustomizationFieldsModal.jsx';
+import Button from '@/components/shared/small/Button.jsx';
+import CustomLoading from '@/components/shared/small/CustomLoading';
 import {
   CheckboxInputType,
   MultiCheckboxInputType,
@@ -11,20 +9,28 @@ import {
   RangeInputType,
   SelectInputType,
 } from '@/components/shared/small/DynamicField.jsx';
-import Modal from '@/components/shared/small/Modal.jsx';
-import Button from '@/components/shared/small/Button.jsx';
-import CustomizationFieldsModal from '@/components/applicationVerification/companyInfo/CustomizationFieldsModal.jsx';
 import { EditSectionDisplayTextFromatingModal } from '@/components/shared/small/EditSectionDisplayTextFromatingModal.jsx';
+import Modal from '@/components/shared/small/Modal.jsx';
+import { FIELD_TYPES } from '@/data/constants';
+import { useGetSpecialAccessOfSectionQuery } from '@/redux/apis/formApis';
+import { useEffect, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 function FormHiddenSection() {
   const params = useParams();
   const formId = params.formId;
-  const accessToken = useSearchParams()?.[0]?.get('accessToken');
+  const accessToken = useSearchParams()?.[0]?.get('token');
   const sectionKey = params.sectionKey?.toLowerCase();
+  const [isLoading, setIsLoading] = useState(false);
   const { user } = useSelector(state => state.auth);
-  const { data: formData, refetch: formRefetch } = useGetSingleFormWithAccessTokenQuery(
-    { formId, accessToken, sectionKey },
-    { skip: !formId || !accessToken }
+  const {
+    data: formData,
+    refetch: formRefetch,
+    isLoading: isLoadingFormData,
+  } = useGetSpecialAccessOfSectionQuery(
+    { formId, token: accessToken, sectionKey },
+    { skip: !formId || !accessToken || !sectionKey }
   );
   const [customizeModal, setCustomizeModal] = useState(false);
   const [form, setForm] = useState({});
@@ -35,13 +41,17 @@ function FormHiddenSection() {
   const isCreator = user?._id && user?._id === formData?.data?.owner && user?.role !== 'guest';
 
   useEffect(() => {
+    setIsLoading(true);
     if (formData?.data?.sections) {
       const section = formData?.data?.sections?.find(
         section => section?.key?.toLowerCase() === sectionKey?.toLowerCase() && section?.isHidden
       );
       if (section) setSection(section);
     }
+    setIsLoading(false);
   }, [formData?.data?.sections, sectionKey]);
+
+  if (isLoading || isLoadingFormData) return <CustomLoading />;
 
   return (
     <div className="mt-14 h-full overflow-auto">

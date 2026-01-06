@@ -4,6 +4,9 @@ import {
   useCreateFormMutation,
   useDeleteSingleFormMutation,
   useGetMyAllFormsQuery,
+  useGetSingleFormQueryQuery,
+  useGetSubmittedFormUsersQuery,
+  useGiveSpecialAccessToUserMutation,
   useUpdateFormMutation,
 } from '@/redux/apis/formApis';
 import { MoreVertical } from 'lucide-react';
@@ -18,6 +21,8 @@ import Modal from '../shared/small/Modal';
 import TextField from '../shared/small/TextField';
 import ApplyBranding from './brandings/globalBranding/ApplyBranding';
 import { LocationModalComponent } from './varification/LocationStatusModal';
+import CustomizableSelect from '../shared/small/CustomizeableSelect';
+import CustomLoading from '../shared/small/CustomLoading';
 
 export default function ApplicationsCard() {
   const navigate = useNavigate();
@@ -34,6 +39,7 @@ export default function ApplicationsCard() {
   const [createForm, { isLoading }] = useCreateFormMutation();
   const [openModal, setOpenModal] = useState(false);
   const [openFormUpdate, setOpenFormUpdate] = useState(false);
+  const [openSpecialAccess, setOpenSpecialAccess] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [selectedForm, setSelectedForm] = useState(null);
   const [selectedBranding, setSelectedBranding] = useState(null);
@@ -164,6 +170,11 @@ export default function ApplicationsCard() {
       {openFormUpdate && (
         <Modal onClose={() => setOpenFormUpdate(false)} title="Update Form">
           <FormConfigurationModal form={selectedForm} refetch={refetch} setModal={setOpenFormUpdate} />
+        </Modal>
+      )}
+      {openSpecialAccess && (
+        <Modal onClose={() => setOpenSpecialAccess(false)} title="Special Access">
+          <SpecialAccessModal formId={selectedForm?._id} refetch={refetch} setModal={setOpenSpecialAccess} />
         </Modal>
       )}
       {locationModal && (
@@ -300,6 +311,16 @@ export default function ApplicationsCard() {
                           }}
                         >
                           Update Form
+                        </button>
+                        <button
+                          className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                          onClick={() => {
+                            setSelectedId(form?._id);
+                            setSelectedForm(form);
+                            setOpenSpecialAccess(true);
+                          }}
+                        >
+                          Special Access
                         </button>
                         <button
                           className="block w-full px-4 py-2 text-left hover:bg-gray-100"
@@ -465,6 +486,105 @@ export const FormConfigurationModal = ({ form, refetch, setModal }) => {
         <div className="flex w-full justify-end gap-2">
           <Button label="Cancel" variant="secondary" onClick={() => setModal(false)} />
           <Button label="Save" variant="primary" onClick={handleFormLocationUpdate} />
+        </div>
+      </div>
+    </div>
+  );
+};
+export const SpecialAccessModal = ({ formId, setModal }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const { data: submittedFormUsers } = useGetSubmittedFormUsersQuery({ formId: formId });
+  const [giveSpecialAccessToUser, { isLoading: isGivingSpecialAccess }] = useGiveSpecialAccessToUserMutation();
+  const { data: formData } = useGetSingleFormQueryQuery({ _id: formId });
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [specialSections, setSpecialSections] = useState([]);
+
+  const [form, setForm] = useState({
+    userId: '',
+    sectionKey: '',
+  });
+
+  const giveSpecialAccessToUserHandler = async () => {
+    try {
+      if (!form?.userId || !form?.sectionKey) return toast.error('Please select a user and section');
+      if (!formId) return toast.error('Form ID is required');
+      const res = await giveSpecialAccessToUser({
+        formId: formId,
+        userId: form?.userId,
+        sectionKey: form?.sectionKey,
+      }).unwrap();
+      if (res?.success) {
+        toast?.success(res?.message || 'Special access sent successfully');
+        setModal(false);
+        setSelectedUsers([]);
+        setSpecialSections([]);
+        setForm({ userId: '', sectionKey: '' });
+      }
+    } catch (error) {
+      console.error('Error giving special access to user:', error);
+      toast.error(error?.data?.message || 'Failed to give special access to user');
+    }
+  };
+
+  useEffect(() => {
+    setIsLoading(true);
+    if (formData?.data?.sections?.length > 0) {
+      const specialSections = formData?.data?.sections?.filter(section => section?.isHidden);
+      const formatedSpecialSections = specialSections?.map(section => ({
+        option: section?.name,
+        value: section?.key,
+      }));
+      setSpecialSections(formatedSpecialSections);
+    }
+    if (submittedFormUsers?.data?.length > 0) {
+      const users = [];
+      submittedFormUsers?.data?.forEach(submitForm => {
+        users.push({
+          option: `${submitForm?.user?.firstName} ${submitForm?.user?.middleName ? ' ' : ''} ${submitForm?.user?.lastName}`,
+          value: submitForm?.user?._id,
+        });
+      });
+      setSelectedUsers(users);
+    }
+    setIsLoading(false);
+  }, [formData?.data?.sections, submittedFormUsers?.data]);
+
+  if (isLoading) {
+    return <CustomLoading />;
+  }
+  return (
+    <div className="flex items-center justify-center p-4">
+      <div className="flex w-full max-w-2xl flex-col gap-6">
+        {/* Heading */}
+        <h3 className="text-center text-lg font-semibold text-gray-800">Give Special Access to Users</h3>
+
+        <div className="flex flex-col gap-2">
+          <CustomizableSelect
+            options={selectedUsers}
+            onSelect={value => setForm(prev => ({ ...prev, userId: value }))}
+            label={'Select User'}
+            defaultText="Select User"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <CustomizableSelect
+            options={specialSections}
+            onSelect={value => setForm(prev => ({ ...prev, sectionKey: value }))}
+            label={'Select Section'}
+            defaultText="Select Section"
+          />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex w-full justify-end gap-2">
+          <Button label="Cancel" variant="secondary" onClick={() => setModal(false)} />
+          <Button
+            disabled={isGivingSpecialAccess}
+            label="Send Access"
+            variant="primary"
+            className={`${isGivingSpecialAccess ? 'cursor-not-allowed opacity-50' : ''}`}
+            onClick={giveSpecialAccessToUserHandler}
+          />
         </div>
       </div>
     </div>

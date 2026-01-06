@@ -58,16 +58,6 @@ const formApis = createApi({
       providesTags: ['Form'],
     }),
 
-    // get single form with access token
-    // ---------------
-    getSingleFormWithAccessToken: builder.query({
-      query: ({ formId, accessToken, sectionKey }) => ({
-        url: `single-with-access/${formId}/${accessToken}/${sectionKey}`,
-        method: 'GET',
-      }),
-      providesTags: ['Form'],
-    }),
-
     // DELETE single form
     // ---------------
     deleteSingleForm: builder.mutation({
@@ -87,6 +77,32 @@ const formApis = createApi({
         body: data,
       }),
       invalidatesTags: ['Form', 'SubmitForm'],
+    }),
+
+    // get submitted form users
+    // ---------------
+    getSubmittedFormUsers: builder.query({
+      query: ({ formId }) => ({
+        url: `/submitted-users/${formId}`,
+        method: 'GET',
+      }),
+    }),
+    // give special access to user
+    // ---------------
+    giveSpecialAccessToUser: builder.mutation({
+      query: ({ formId, userId, sectionKey }) => ({
+        url: `/special-access-of-section/${formId}`,
+        method: 'POST',
+        body: { userId, sectionKey },
+      }),
+    }),
+    // get special access of section
+    // ---------------
+    getSpecialAccessOfSection: builder.query({
+      query: ({ formId, token, sectionKey }) => ({
+        url: `/special-access-of-section/${formId}?token=${token}&sectionKey=${sectionKey}`,
+        method: 'GET',
+      }),
     }),
 
     // save form in draft
@@ -396,10 +412,12 @@ export const {
   useUpdateFormLocationMutation,
   useGetMyAllFormsQuery,
   useGetSingleFormMutation,
-  useGetSingleFormWithAccessTokenQuery,
   useGetSingleFormQueryQuery,
   useDeleteSingleFormMutation,
   useSubmitFormMutation,
+  useGetSubmittedFormUsersQuery,
+  useGiveSpecialAccessToUserMutation,
+  useGetSpecialAccessOfSectionQuery,
   useSaveFormInDraftMutation,
   useGeneratePdfFormMutation,
   useGetSavedFormMutation,
