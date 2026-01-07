@@ -29,11 +29,11 @@ const emailHeaderTemplate = `
 <body style="margin: 0; padding: 0; font-family: Arial, sans-serif;">
 
         
-        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{emailHeaderColor}};  border-top-left-radius: 8px; border-top-right-radius: 8px;">
+        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{emailHeaderColor}}; color: {{emailHeaderTextColor}}; border-top-left-radius: 8px; border-top-right-radius: 8px;">
           
           <!-- Logo -->
           <tr>
-            <td align={{headerAlignment}} style="padding: 40px 20px 20px 20px;">
+            <td align={{headerAlignment}} style="padding: 40px 20px 20px 20px; color: {{emailHeaderTextColor}};">
               <img 
                 src="{{logo}}" 
                 alt="{{companyName}}"
@@ -44,8 +44,8 @@ const emailHeaderTemplate = `
 
           <!-- Company Name -->
           <tr>
-            <td align="center" style="padding: 20px 20px;">
-              <h1 style="margin: 0; font-size: 28px; font-weight: bold; color: {{emailHeadingColor}};">
+            <td align="center" style="padding: 20px 20px; color: {{emailHeaderTextColor}};">
+              <h1 style="margin: 0; font-size: 28px; font-weight: bold;">
                 {{headerHeading}}
               </h1>
             </td>
@@ -53,8 +53,8 @@ const emailHeaderTemplate = `
 
           <!-- Subtitle -->
           <tr>
-            <td align="center" style="padding: 0 20px 40px 20px;">
-              <p style="margin: 0; font-size: 13px; color: {{emailTextColor}};">
+            <td align="center" style="padding: 0 20px 40px 20px; color: {{emailHeaderTextColor}};">
+              <p style="margin: 0; font-size: 13px;">
                 {{headerDescription}}
               </p>
             </td>
@@ -73,15 +73,15 @@ const emailFooterTemplate = `
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, sans-serif;">
-        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{emailFooterColor}}; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: {{emailFooterColor}}; color: {{emailFooterTextColor}}; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
           
           <!-- Content -->
           <tr>
-            <td align="center" style="padding: 40px 20px;">
-              <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: bold; color: {{emailHeadingColor}};">
+            <td align="center" style="padding: 40px 20px; color: {{emailFooterTextColor}};">
+              <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: bold;">
                 {{footerHeading}}
               </h2>
-              <p style="margin: 0; font-size: 14px; color: {{emailTextColor}}; line-height: 1.6;">
+              <p style="margin: 0; font-size: 14px; color: {{emailFooterTextColor}}; line-height: 1.6;">
                 {{footerDescription}}
               </p>
             </td>
@@ -89,8 +89,8 @@ const emailFooterTemplate = `
 
           <!-- Copyright -->
           <tr>
-            <td align="center" style="padding: 0 20px 40px 20px;">
-              <p style="margin: 0; font-size: 12px; color: {{emailTextColor}};">
+            <td align="center" style="padding: 0 20px 40px 20px; color: {{emailFooterTextColor}};">
+              <p style="margin: 0; font-size: 12px; color: {{emailFooterTextColor}};">
                 © 2025 {{companyName}} All rights reserved.
               </p>
             </td>
@@ -133,7 +133,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [emailHeadingColor, setEmailHeadingColor] = useState('#1a1a1a');
   const [emailTextColor, setEmailTextColor] = useState('#666666');
   const [emailHeaderColor, setEmailHeaderColor] = useState('#1a1a1a');
+  const [emailHeaderTextColor, setEmailHeaderTextColor] = useState('#1a1a1a');
   const [emailFooterColor, setEmailFooterColor] = useState('#1a1a1a');
+  const [emailFooterTextColor, setEmailFooterTextColor] = useState('#1a1a1a');
   const [emailBodyColor, setEmailBodyColor] = useState('#1a1a1a');
   const [selectedEmailLogo, setSelectedEmailLogo] = useState();
 
@@ -229,7 +231,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !emailTextColor ||
       !emailHeaderColor ||
       !emailFooterColor ||
-      !emailBodyColor
+      !emailBodyColor ||
+      !emailHeaderTextColor ||
+      !emailFooterTextColor
     ) {
       return toast.error('Please fill all fields before creating branding');
     }
@@ -276,6 +280,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append('emailHeaderColor', emailHeaderColor);
     formData.append('emailFooterColor', emailFooterColor);
     formData.append('emailBodyColor', emailBodyColor);
+    formData.append('emailHeaderTextColor', emailHeaderTextColor);
+    formData.append('emailFooterTextColor', emailFooterTextColor);
     if (selectedEmailLogo) {
       formData.append('selectedEmailLogo', selectedEmailLogo);
     }
@@ -328,7 +334,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !emailTextColor ||
       !emailHeaderColor ||
       !emailFooterColor ||
-      !emailBodyColor
+      !emailBodyColor ||
+      !emailHeaderTextColor ||
+      !emailFooterTextColor
     ) {
       return toast.error('Please fill all fields before creating branding');
     }
@@ -372,6 +380,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append('emailHeaderColor', emailHeaderColor);
     formData.append('emailFooterColor', emailFooterColor);
     formData.append('emailBodyColor', emailBodyColor);
+    formData.append('emailHeaderTextColor', emailHeaderTextColor);
+    formData.append('emailFooterTextColor', emailFooterTextColor);
     if (selectedEmailLogo) {
       formData.append('selectedEmailLogo', selectedEmailLogo);
     }
@@ -407,16 +417,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
 
             setHeaderTextGlobal(userBranding.colors.headerText);
             setFooterTextGlobal(userBranding.colors.footerText);
-
-            // email
-            setEmailHeader(userBranding.emailHeader);
-            setEmailFooter(userBranding.emailFooter);
-            setHeaderHeading(userBranding.headerHeading);
-            setHeaderDescription(userBranding.headerDescription);
-            setFooterHeading(userBranding.footerHeading);
-            setFooterDescription(userBranding.footerDescription);
-            setEmailHeadingColor(userBranding.emailHeadingColor);
-            setEmailTextColor(userBranding.emailTextColor);
           }
         }
 
@@ -488,7 +488,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setEmailBodyColor(singleBranding.emailBodyColor);
       setEmailHeaderColor(singleBranding.emailHeaderColor);
       setEmailFooterColor(singleBranding.emailFooterColor);
-
+      setEmailHeaderTextColor(singleBranding.emailHeaderTextColor);
+      setEmailFooterTextColor(singleBranding.emailFooterTextColor);
       // Set the selected logo from the API response if available
       if (singleBranding.selectedLogo) {
         setSelectedLogo(singleBranding.selectedLogo);
@@ -526,6 +527,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       footerHeading,
       footerDescription,
       headerAlignment,
+      emailHeaderTextColor,
+      emailFooterTextColor,
       logo: selectedEmailLogo || selectedLogo,
     };
     setEmailHeader(compileHeader(context));
@@ -546,6 +549,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
     emailBodyColor,
     headerAlignment,
     selectedEmailLogo,
+    emailHeaderTextColor,
+    emailFooterTextColor,
   ]);
 
   return (
@@ -631,13 +636,23 @@ const GlobalBrandingPage = ({ brandingId }) => {
         <article className="flex flex-col gap-2">
           <section className="my-6 flex w-full flex-col gap-2">
             <h3 className="border-b-2 text-lg font-semibold text-gray-800">Email Header</h3>
-            <ColorInput
-              image={image}
-              setImage={setImage}
-              label={'Background Color'}
-              color={emailHeaderColor}
-              setColor={setEmailHeaderColor}
-            />
+
+            <div className="flex max-w-[50%] items-center justify-between gap-4">
+              <ColorInput
+                image={image}
+                setImage={setImage}
+                label={'Background Color'}
+                color={emailHeaderColor}
+                setColor={setEmailHeaderColor}
+              />
+              <ColorInput
+                image={image}
+                setImage={setImage}
+                label={'Text Color'}
+                color={emailHeaderTextColor}
+                setColor={setEmailHeaderTextColor}
+              />
+            </div>
             <div className="flex flex-col gap-2">
               <TextField
                 type="textarea"
@@ -664,13 +679,13 @@ const GlobalBrandingPage = ({ brandingId }) => {
           <section className="border-b-2b my-6 flex w-[70%] flex-col gap-2">
             <h3 className="border-b-2 text-lg font-semibold text-gray-800">Email Body</h3>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <ColorInput
+              {/* <ColorInput
                 image={image}
                 setImage={setImage}
                 label={'Headings Color'}
                 color={emailHeadingColor}
                 setColor={setEmailHeadingColor}
-              />
+              /> */}
               <ColorInput
                 image={image}
                 setImage={setImage}
@@ -689,13 +704,22 @@ const GlobalBrandingPage = ({ brandingId }) => {
           </section>
           <section className="my-6 flex w-full flex-col gap-2">
             <h3 className="border-b-2 text-lg font-semibold text-gray-800">Email Footer</h3>
-            <ColorInput
-              image={image}
-              setImage={setImage}
-              label={'Background'}
-              color={emailFooterColor}
-              setColor={setEmailFooterColor}
-            />
+            <div className="flex max-w-[50%] items-center justify-between gap-4">
+              <ColorInput
+                image={image}
+                setImage={setImage}
+                label={'Background Color'}
+                color={emailFooterColor}
+                setColor={setEmailFooterColor}
+              />
+              <ColorInput
+                image={image}
+                setImage={setImage}
+                label={'Text Color'}
+                color={emailFooterTextColor}
+                setColor={setEmailFooterTextColor}
+              />
+            </div>
             <div className="flex flex-col gap-2">
               <TextField
                 type="textarea"
