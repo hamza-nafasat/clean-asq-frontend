@@ -12,12 +12,14 @@ import {
 import { EditSectionDisplayTextFromatingModal } from '@/components/shared/small/EditSectionDisplayTextFromatingModal.jsx';
 import Modal from '@/components/shared/small/Modal.jsx';
 import { FIELD_TYPES } from '@/data/constants';
-import { useGetSpecialAccessOfSectionQuery } from '@/redux/apis/formApis';
-import { useEffect, useRef, useState } from 'react';
+import { useGetSpecialAccessOfSectionQuery, useSubmitSpecialAccessFormMutation } from '@/redux/apis/formApis';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 function FormHiddenSection() {
+  const navigate = useNavigate();
   const params = useParams();
   const formId = params.formId;
   const accessToken = useSearchParams()?.[0]?.get('token');
@@ -37,8 +39,23 @@ function FormHiddenSection() {
   const [section, setSection] = useState({});
   const containerRef = useRef(null);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
+  const [submitSpecialAccessForm, { isLoading: isSubmittingSpecialAccessForm }] = useSubmitSpecialAccessFormMutation();
 
   const isCreator = user?._id && user?._id === formData?.data?.owner && user?.role !== 'guest';
+
+  const handleSubmitSpecialAccessForm = useCallback(async () => {
+    try {
+      if (!accessToken || !sectionKey || !formId) return toast.error('Please provide all the required fields');
+      const res = await submitSpecialAccessForm({ formId, token: accessToken, sectionKey, formData: form }).unwrap();
+      if (res.success) {
+        toast.success(res.message);
+        navigate('/');
+      }
+    } catch (error) {
+      console.log('error submitting special access form', error);
+      toast.error(error?.data?.message || 'Error while submitting special access form');
+    }
+  }, [accessToken, sectionKey, formId, submitSpecialAccessForm, form, navigate]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -147,7 +164,12 @@ function FormHiddenSection() {
 
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
-        <Button className={`'pinter-events-none opacity-50'} cursor-not-allowed`} label={'Submit'} />
+        <Button
+          className={`${isSubmittingSpecialAccessForm ? 'pinter-events-none opacity-50' : ''} cursor-not-allowed`}
+          disabled={isSubmittingSpecialAccessForm}
+          onClick={handleSubmitSpecialAccessForm}
+          label={'Submit'}
+        />
       </div>
       {customizeModal && (
         <Modal onClose={() => setCustomizeModal(false)}>

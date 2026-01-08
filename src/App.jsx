@@ -175,13 +175,14 @@ function App() {
             <Route path="/otp" element={<Otp />} />
           </Route>
 
-          {/* authentic routes */}
+          {/* authentic routes admin only */}
           <Route
             element={<ProtectedRoute user={!isGuest && user} redirect={isGuest && user ? '/submission' : '/login'} />}
           >
             {/* Admin */}
             <Route path="/" element={<AdminDashboard />}>
               <Route index element={<Navigate to="application-forms" replace />} />
+              {/* HIDDEN FORM SECTION */}
               <Route path="all-roles" element={<AllRoles />} />
               <Route path="all-users" element={<AdminAllUsers />} />
               <Route path="application-forms" element={<ApplicationForms />} />

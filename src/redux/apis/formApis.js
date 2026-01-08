@@ -104,6 +104,16 @@ const formApis = createApi({
         method: 'GET',
       }),
     }),
+    // get special access of section
+    // ---------------
+    submitSpecialAccessForm: builder.mutation({
+      query: ({ formId, token, sectionKey, formData }) => ({
+        url: `/special-access-of-section/${formId}`,
+        method: 'PUT',
+        body: { sectionKey, formData, token },
+      }),
+      invalidatesTags: ['Form'],
+    }),
 
     // save form in draft
     // ---------------
@@ -418,6 +428,7 @@ export const {
   useGetSubmittedFormUsersQuery,
   useGiveSpecialAccessToUserMutation,
   useGetSpecialAccessOfSectionQuery,
+  useSubmitSpecialAccessFormMutation,
   useSaveFormInDraftMutation,
   useGeneratePdfFormMutation,
   useGetSavedFormMutation,
