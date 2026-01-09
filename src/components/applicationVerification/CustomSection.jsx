@@ -18,6 +18,7 @@ import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 
 function CustomSection({
+  sectionKey,
   fields,
   name,
   currentStep,
@@ -27,7 +28,6 @@ function CustomSection({
   handleSubmit,
   formRefetch,
   _id,
-  title,
   saveInProgress,
   step,
   reduxData,
@@ -126,7 +126,7 @@ function CustomSection({
         <div className="flex gap-2"></div>
       </div>
       <div className="flex justify-end gap-2">
-        <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save my progress'} />
+        <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={'Save my progress'} />
         {isCreator && (
           <>
             <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
@@ -228,14 +228,14 @@ function CustomSection({
             <Button
               disabled={!isAllRequiredFieldsFilled}
               label={!isAllRequiredFieldsFilled ? 'Some required fields are missing' : 'Next'}
-              onClick={() => handleNext({ data: form, name: title, setLoadingNext })}
+              onClick={() => handleNext({ data: form, name: sectionKey, setLoadingNext })}
             />
           ) : (
             <Button
               disabled={!isAllRequiredFieldsFilled || loadingNext}
               className={`${!isAllRequiredFieldsFilled || loadingNext ? 'pointer-events-none cursor-not-allowed opacity-20' : 'opacity-100'}`}
               label={!isAllRequiredFieldsFilled ? 'Some required fields are missing' : 'Submit'}
-              onClick={() => handleSubmit({ data: form, name: title, setLoadingNext })}
+              onClick={() => handleSubmit({ data: form, name: sectionKey, setLoadingNext })}
             />
           )}
         </div>

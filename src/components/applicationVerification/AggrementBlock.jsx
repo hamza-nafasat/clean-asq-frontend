@@ -11,6 +11,7 @@ import Modal from '../shared/small/Modal';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 
 function AggrementBlock({
+  sectionKey,
   fields,
   name,
   currentStep,
@@ -20,7 +21,6 @@ function AggrementBlock({
   handleSubmit,
   formRefetch,
   _id,
-  title,
   saveInProgress,
   step,
   isSignature,
@@ -48,10 +48,10 @@ function AggrementBlock({
         const res = await uploadImageOnCloudinary(file);
         if (!res.publicId || !res.secureUrl || !res.resourceType)
           return toast.error('File Not Uploaded Please Try Again');
-        const action = await dispatch(updateFormState({ data: { signature: res }, name: title }));
+        const action = await dispatch(updateFormState({ data: { signature: res }, name: sectionKey }));
         unwrapResult(action);
         setForm(prev => ({ ...prev, signature: res }));
-        await saveInProgress({ data: { signature: res }, name: title });
+        await saveInProgress({ data: { signature: res }, name: sectionKey });
         toast.success('Signature uploaded successfully');
       }
     } catch (error) {
@@ -120,7 +120,7 @@ function AggrementBlock({
         <div className="flex gap-2"></div>
       </div>
       <div className="flex justify-end gap-2">
-        <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save my progress'} />
+        <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={'Save my progress'} />
         {isCreator && (
           <>
             <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
@@ -222,14 +222,14 @@ function AggrementBlock({
             <Button
               disabled={loadingNext}
               label={'Next'}
-              onClick={() => handleNext({ data: form, name: title, setLoadingNext })}
+              onClick={() => handleNext({ data: form, name: sectionKey, setLoadingNext })}
             />
           ) : (
             <Button
               disabled={!isAllRequiredFieldsFilled || loadingNext}
               className={`${!isAllRequiredFieldsFilled || loadingNext ? 'pointer-events-none cursor-not-allowed opacity-20' : 'opacity-100'}`}
               label={!isAllRequiredFieldsFilled ? 'Some required fields are missing' : 'Submit'}
-              onClick={() => handleSubmit({ data: form, name: title, setLoadingNext })}
+              onClick={() => handleSubmit({ data: form, name: sectionKey, setLoadingNext })}
             />
           )}
         </div>

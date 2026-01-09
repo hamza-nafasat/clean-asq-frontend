@@ -18,6 +18,7 @@ import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/clou
 import { toast } from 'react-toastify';
 
 function ProcessingInfo({
+  sectionKey,
   name,
   handleNext,
   handlePrevious,
@@ -29,7 +30,6 @@ function ProcessingInfo({
   reduxData,
   formRefetch,
   _id,
-  title,
   saveInProgress,
   step,
   isSignature,
@@ -150,7 +150,7 @@ function ProcessingInfo({
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
         <div className="flex gap-2">
-          <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save my progress'} />
+          <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={'Save my progress'} />
           {isCreator && (
             <>
               <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
@@ -251,14 +251,14 @@ function ProcessingInfo({
               className={`${(!isAllRequiredFieldsFilled || loadingNext) && 'pointer-events-none cursor-not-allowed opacity-20'}`}
               disabled={!isAllRequiredFieldsFilled || loadingNext}
               label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
-              onClick={() => handleNext({ data: form, name: title, setLoadingNext })}
+              onClick={() => handleNext({ data: form, name: sectionKey, setLoadingNext })}
             />
           ) : (
             <Button
               disabled={formLoading || loadingNext}
               className={`${formLoading || loadingNext ? 'pinter-events-none cursor-not-allowed opacity-20' : ''}`}
               label={isAllRequiredFieldsFilled ? 'submit' : 'Some Required Fields are Missing'}
-              onClick={() => handleSubmit({ data: form, name: title, setLoadingNext })}
+              onClick={() => handleSubmit({ data: form, name: sectionKey, setLoadingNext })}
             />
           )}
         </div>

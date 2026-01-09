@@ -46,6 +46,9 @@ export default function ApplicationForm() {
   }, [currentStep]);
   const handleNext = useCallback(
     async ({ data, name, setLoadingNext }) => {
+      console.log('name', name);
+      console.log('data', data);
+
       try {
         setLoadingNext(true);
         if (data && name) {
@@ -124,60 +127,63 @@ export default function ApplicationForm() {
 
   useEffect(() => {
     if (form?.data?.sections && form?.data?.sections?.length > 0 && isSavedApiRun) {
-      const companyInformationStep = form?.data?.sections.find(step => step.title === 'company_information_blk');
+      const companyInformationStep = form?.data?.sections.find(step => step.key === 'company_information');
       const data = [];
       const stepNames = [];
-      form?.data?.sections
-        ?.filter(step => !step?.isHidden)
-        ?.forEach(step => {
-          const sectionDataFromRedux = formData?.[step?.title];
-          const commonProps = {
-            _id: step._id,
-            name: step.name,
-            title: step.title,
-            fields: step?.fields ?? [],
-            blocks: step?.blocks ?? [],
-            isSignature: step?.isSignature,
-            reduxData: sectionDataFromRedux,
-            currentStep,
-            totalSteps: form?.data?.sections?.filter(step => !step?.isHidden)?.length,
-            handleNext,
-            handlePrevious,
-            handleSubmit,
-            formLoading,
-            formRefetch,
-            saveInProgress,
-            step,
-          };
-          if (step.title === 'company_information_blk') {
-            data.push(<CompanyInformation {...commonProps} />);
-            stepNames.push(step.name);
-          } else if (step.title === 'beneficial_blk') {
-            data.push(<CompanyOwners {...commonProps} />);
-            stepNames.push(step.name);
-          } else if (step.title === 'bank_account_info_blk') {
-            data.push(<BankInfo {...commonProps} />);
-            stepNames.push(step.name);
-          } else if (step.title === 'avg_transactions_blk') {
-            data.push(<ProcessingInfo {...commonProps} />);
-            stepNames.push(step.name);
-          } else if (step.title === 'incorporation_article_blk') {
-            data.push(<Documents {...commonProps} companyInformationStep={companyInformationStep} />);
-            stepNames.push(step.name);
-          } else if (step.title === 'custom_section') {
-            data.push(<CustomSection {...commonProps} />);
-            stepNames.push(step.name);
-          } else if (step.title === 'agreement_blk') {
-            data.push(<AggrementBlock {...commonProps} />);
-            stepNames.push(step.name);
-          }
-        });
+      const isOwner = user?._id && user?._id === form?.data?.owner;
+      const visibleSections = isOwner ? form?.data?.sections : form?.data?.sections?.filter(step => !step?.isHidden);
+      visibleSections.forEach(step => {
+        console.log('steppppppppp', step);
+        const sectionDataFromRedux = formData?.[step?.key];
+        const commonProps = {
+          _id: step._id,
+          sectionKey: step.key || 'hello',
+          name: step.name,
+          title: step.title,
+          fields: step?.fields ?? [],
+          blocks: step?.blocks ?? [],
+          isSignature: step?.isSignature,
+          reduxData: sectionDataFromRedux,
+          currentStep,
+          totalSteps: visibleSections?.length,
+          handleNext,
+          handlePrevious,
+          handleSubmit,
+          formLoading,
+          formRefetch,
+          saveInProgress,
+          step,
+        };
+        if (step.title === 'company_information_blk') {
+          data.push(<CompanyInformation {...commonProps} />);
+          stepNames.push(step.name);
+        } else if (step.title === 'beneficial_blk') {
+          data.push(<CompanyOwners {...commonProps} />);
+          stepNames.push(step.name);
+        } else if (step.title === 'bank_account_info_blk') {
+          data.push(<BankInfo {...commonProps} />);
+          stepNames.push(step.name);
+        } else if (step.title === 'avg_transactions_blk') {
+          data.push(<ProcessingInfo {...commonProps} />);
+          stepNames.push(step.name);
+        } else if (step.title === 'incorporation_article_blk') {
+          data.push(<Documents {...commonProps} companyInformationStep={companyInformationStep} />);
+          stepNames.push(step.name);
+        } else if (step.title === 'custom_section') {
+          data.push(<CustomSection {...commonProps} />);
+          stepNames.push(step.name);
+        } else if (step.title === 'agreement_blk') {
+          data.push(<AggrementBlock {...commonProps} />);
+          stepNames.push(step.name);
+        }
+      });
       setStepsComps(data);
       setSectionNames(stepNames);
     }
   }, [
     currentStep,
     fileData,
+    form?.data?.owner,
     form?.data?.sections,
     formData,
     formLoading,
@@ -187,6 +193,7 @@ export default function ApplicationForm() {
     handleSubmit,
     isSavedApiRun,
     saveInProgress,
+    user?._id,
   ]);
   if (!isApplied || !form?.data?._id) return <CustomLoading />;
   if (!user?._id) return navigate(`/application-form/${form?.data?.branding?.name}/${formId}`);

@@ -51,6 +51,7 @@ const ownerPercentageField = {
 };
 
 function CompanyOwners({
+  sectionKey,
   _id,
   formRefetch,
   name,
@@ -63,7 +64,6 @@ function CompanyOwners({
   reduxData,
   fields,
   blocks,
-  title,
   saveInProgress,
   step,
   isSignature,
@@ -319,7 +319,7 @@ function CompanyOwners({
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
         <div className="flex gap-2">
-          <Button onClick={() => saveInProgress({ data: form, name: title })} label={'Save my progress'} />
+          <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={'Save my progress'} />
           {isCreator && (
             <>
               <Button onClick={() => setCustomizeModal(true)} label={'Customize'} />
@@ -601,7 +601,7 @@ function CompanyOwners({
           {currentStep > 0 && <Button variant="secondary" label="Previous" onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
             <Button
-              onClick={() => handleNext({ data: form, name: title, setLoadingNext })}
+              onClick={() => handleNext({ data: form, name: sectionKey, setLoadingNext })}
               className={`${(!isAllRequiredFieldsFilled || loadingNext) && 'pointer-events-none cursor-not-allowed opacity-50'}`}
               disabled={!isAllRequiredFieldsFilled}
               label={isAllRequiredFieldsFilled ? 'Next' : submitButtonText}
@@ -611,7 +611,7 @@ function CompanyOwners({
               disabled={formLoading || loadingNext}
               className={formLoading || loadingNext ? 'pointer-events-none cursor-not-allowed opacity-50' : ''}
               label="Submit"
-              onClick={() => handleSubmit({ data: form, name: title, setLoadingNext })}
+              onClick={() => handleSubmit({ data: form, name: sectionKey, setLoadingNext })}
             />
           )}
         </div>

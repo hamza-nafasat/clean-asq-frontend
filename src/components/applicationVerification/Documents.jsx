@@ -13,6 +13,7 @@ import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
 import FileUploader from './Documents/FileUploader';
 
 function Documents({
+  sectionKey,
   _id,
   name,
   currentStep,
@@ -23,7 +24,6 @@ function Documents({
   formLoading,
   fields,
   reduxData,
-  title,
   formRefetch,
   step,
   isSignature,
@@ -111,9 +111,9 @@ function Documents({
         }
         const result = await uploadImageOnCloudinary(file);
         if (!result.publicId || !result.secureUrl) return toast.error('File Not Uploaded Please Try Again');
-        handleNext({ data: { ...form, [fileFieldName]: result }, name: title, setLoadingNext });
+        handleNext({ data: { ...form, [fileFieldName]: result }, name: sectionKey, setLoadingNext });
       } else {
-        handleNext({ data: { ...form }, name: title, setLoadingNext });
+        handleNext({ data: { ...form }, name: sectionKey, setLoadingNext });
       }
     } catch (error) {
       console.log('error while uploading image', error);
@@ -137,9 +137,9 @@ function Documents({
       }
       const result = await uploadImageOnCloudinary(file);
       if (!result.publicId || !result.secureUrl) return toast.error('File Not Uploaded Please Try Again');
-      handleSubmit({ data: { ...form, [fileFieldName]: result }, name: title, setLoadingNext });
+      handleSubmit({ data: { ...form, [fileFieldName]: result }, name: sectionKey, setLoadingNext });
     } else {
-      handleSubmit({ data: { ...form }, name: title, setLoadingNext });
+      handleSubmit({ data: { ...form }, name: sectionKey, setLoadingNext });
     }
   };
 
@@ -189,7 +189,7 @@ function Documents({
           : { publicId: '', secureUrl: '', resourceType: '' },
       }));
     }
-  }, [fields, isSignature, name, reduxData, title]);
+  }, [fields, isSignature, name, reduxData, sectionKey]);
 
   useEffect(() => {
     if (form?.article_of_incorporation_urls) setUrls(form?.article_of_incorporation_urls?.split(',') || []);
@@ -292,7 +292,7 @@ function Documents({
                   <Modal onClose={() => setOpenAiHelpModal(false)}>
                     <AiHelpModal
                       aiPrompt={field?.aiPrompt}
-                      aiResponse={title === 'incorporation_article_blk' ? aiResponse : field?.aiResponse}
+                      aiResponse={sectionKey === 'article_of_incorporation' ? aiResponse : field?.aiResponse}
                       setOpenAiHelpModal={setOpenAiHelpModal}
                     />
                   </Modal>

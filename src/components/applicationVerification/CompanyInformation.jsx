@@ -21,6 +21,7 @@ import Modal from '../shared/small/Modal.jsx';
 import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal.jsx';
 
 function CompanyInformation({
+  sectionKey,
   formRefetch,
   _id,
   name,
@@ -32,11 +33,11 @@ function CompanyInformation({
   reduxData,
   formLoading,
   fields,
-  title,
   saveInProgress,
   step,
   isSignature,
 }) {
+  console.log('sectionKey', sectionKey);
   const prevRef = useRef(null);
   const containerRef = useRef(null);
   const { user } = useSelector(state => state.auth);
@@ -306,7 +307,7 @@ function CompanyInformation({
 
         <div className="flex gap-2">
           <Button
-            onClick={() => saveInProgress({ data: { ...form, naics: naicsToMccDetails }, name: title })}
+            onClick={() => saveInProgress({ data: { ...form, naics: naicsToMccDetails }, name: sectionKey })}
             label={'Save my progress'}
           />
           {isCreator && (
@@ -457,14 +458,18 @@ function CompanyInformation({
               className={`${(!isAllRequiredFieldsFilled || loadingNext) && 'pointer-events-none cursor-not-allowed opacity-50'}`}
               disabled={!isAllRequiredFieldsFilled || loadingNext}
               label={isAllRequiredFieldsFilled || loadingNext ? 'Next' : 'Some Required Fields are Missing'}
-              onClick={() => handleNext({ data: { ...form, naics: naicsToMccDetails }, name: title, setLoadingNext })}
+              onClick={() =>
+                handleNext({ data: { ...form, naics: naicsToMccDetails }, name: sectionKey, setLoadingNext })
+              }
             />
           ) : (
             <Button
               disabled={formLoading || loadingNext}
               className={`${(formLoading || loadingNext) && 'pinter-events-none cursor-not-allowed opacity-50'}`}
               label={'Submit'}
-              onClick={() => handleSubmit({ data: { ...form, naics: naicsToMccDetails }, name: title, setLoadingNext })}
+              onClick={() =>
+                handleSubmit({ data: { ...form, naics: naicsToMccDetails }, name: sectionKey, setLoadingNext })
+              }
             />
           )}
         </div>
