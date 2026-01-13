@@ -30,6 +30,7 @@ function FormHiddenSection() {
     data: formData,
     refetch: formRefetch,
     isLoading: isLoadingFormData,
+    error: formError,
   } = useGetSpecialAccessOfSectionQuery(
     { formId, token: accessToken, sectionKey },
     { skip: !formId || !accessToken || !sectionKey }
@@ -50,6 +51,8 @@ function FormHiddenSection() {
       if (res.success) {
         toast.success(res.message);
         navigate('/');
+      } else {
+        toast.error(res.message || 'Error while submitting special access form');
       }
     } catch (error) {
       console.log('error submitting special access form', error);
@@ -67,6 +70,10 @@ function FormHiddenSection() {
     }
     setIsLoading(false);
   }, [formData?.data?.sections, sectionKey]);
+  // showing error message if form error is not null
+  useEffect(() => {
+    if (formError) toast.error(formError?.data?.message || 'Error while fetching form data');
+  }, [formError]);
 
   if (isLoading || isLoadingFormData) return <CustomLoading />;
 
@@ -96,7 +103,8 @@ function FormHiddenSection() {
           <div
             className="w-full"
             ref={containerRef}
-            dangerouslySetInnerHTML={{
+            dangerouslySetIn
+            nerHTML={{
               __html: String(section?.ai_formatting).replace(/<a(\s+.*?)?>/g, match => {
                 if (match.includes('target=')) return match;
                 return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
