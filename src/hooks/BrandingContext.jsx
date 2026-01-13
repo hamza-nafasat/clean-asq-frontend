@@ -13,6 +13,7 @@ const DEFAULT_COLORS = {
   headerBackgroundColor: '#f9f9f9',
   footerBackgroundColor: '#f9f9f9',
   frameColor: '#db1313',
+  highlightingColor: '#000000',
   fontFamily: 'Inter',
   buttonTextPrimary: '#bfff00',
   buttonTextSecondary: '#bfff00',
@@ -32,6 +33,7 @@ export const BrandingProvider = ({ children }) => {
   const [linkColor, setLinkColor] = useState(DEFAULT_COLORS.linkColor);
   const [backgroundColor, setBackgroundColor] = useState(DEFAULT_COLORS.backgroundColor);
   const [frameColor, setFrameColor] = useState(DEFAULT_COLORS.frameColor);
+  const [highlightingColor, setHighlightingColor] = useState(DEFAULT_COLORS.highlightingColor);
   const [fontFamily, setFontFamily] = useState(DEFAULT_COLORS.fontFamily);
   const [buttonTextPrimary, setButtonTextPrimary] = useState(DEFAULT_COLORS.buttonTextPrimary);
   const [buttonTextSecondary, setButtonTextSecondary] = useState(DEFAULT_COLORS.buttonTextSecondary);
@@ -52,6 +54,7 @@ export const BrandingProvider = ({ children }) => {
       setLinkColor(savedBranding.linkColor || DEFAULT_COLORS.linkColor);
       setBackgroundColor(savedBranding.backgroundColor || DEFAULT_COLORS.backgroundColor);
       setFrameColor(savedBranding.frameColor || DEFAULT_COLORS.frameColor);
+      setHighlightingColor(savedBranding.highlightingColor || DEFAULT_COLORS.highlightingColor);
       setFontFamily(savedBranding.fontFamily || DEFAULT_COLORS.fontFamily);
       setButtonTextPrimary(savedBranding.buttonTextPrimary || DEFAULT_COLORS.buttonTextPrimary);
       setButtonTextSecondary(savedBranding.buttonTextSecondary || DEFAULT_COLORS.buttonTextSecondary);
@@ -73,6 +76,7 @@ export const BrandingProvider = ({ children }) => {
       linkColor,
       backgroundColor,
       frameColor,
+      highlightingColor,
       fontFamily,
       buttonTextPrimary,
       buttonTextSecondary,
@@ -99,6 +103,8 @@ export const BrandingProvider = ({ children }) => {
     document.documentElement.style.setProperty('--backgroundColor', backgroundColor);
     document.documentElement.style.setProperty('--color-frame', frameColor);
     document.documentElement.style.setProperty('--frameColor', frameColor);
+    document.documentElement.style.setProperty('--color-highlighting', highlightingColor);
+    document.documentElement.style.setProperty('--highlightingColor', highlightingColor);
     document.documentElement.style.setProperty('--color-button-text-primary', buttonTextPrimary);
     document.documentElement.style.setProperty('--color-button-text-secondary', buttonTextSecondary);
     document.documentElement.style.setProperty('--color-header', headerBackground);
@@ -117,6 +123,7 @@ export const BrandingProvider = ({ children }) => {
     linkColor,
     backgroundColor,
     frameColor,
+    highlightingColor,
     fontFamily,
     buttonTextPrimary,
     buttonTextSecondary,
@@ -145,6 +152,8 @@ export const BrandingProvider = ({ children }) => {
     setBackgroundColor,
     frameColor,
     setFrameColor,
+    highlightingColor,
+    setHighlightingColor,
     fontFamily,
     setFontFamily,
     buttonTextPrimary,

@@ -139,6 +139,8 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
 };
 
 const BrandElementAssignment = ({
+  highlightingColor,
+  setHighlightingColor,
   headerText,
   setHeaderText,
   footerText,
@@ -252,6 +254,14 @@ const BrandElementAssignment = ({
             label="Frame Color (Input Fields, Borders)"
             color={frameColor}
             setColor={setFrameColor}
+          />
+
+          <ColorInput
+            setImage={setImage}
+            image={image}
+            label="Highlighting Color"
+            color={highlightingColor}
+            setColor={setHighlightingColor}
           />
           <ColorInput
             setImage={setImage}

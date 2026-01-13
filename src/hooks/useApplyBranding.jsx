@@ -24,6 +24,7 @@ const useApplyBranding = ({ formId }) => {
     setFooterBackground,
     setHeaderText,
     setFooterText,
+    setHighlightingColor,
   } = useBranding();
 
   const { data: form, isLoading } = useGetSingleFormQueryQuery({ _id: formId }, { skip: !formId });
@@ -41,6 +42,7 @@ const useApplyBranding = ({ formId }) => {
         setLinkColor(formBranding?.colors?.link);
         setBackgroundColor(formBranding?.colors?.background);
         setFrameColor(formBranding?.colors?.frame);
+        setHighlightingColor(formBranding?.colors?.highlighting);
         setButtonTextPrimary(formBranding?.colors?.buttonTextPrimary);
         setButtonTextSecondary(formBranding?.colors?.buttonTextSecondary);
         setHeaderBackground(formBranding?.colors?.headerBackground);
@@ -63,6 +65,7 @@ const useApplyBranding = ({ formId }) => {
       setLinkColor,
       setBackgroundColor,
       setFrameColor,
+      setHighlightingColor,
       setButtonTextPrimary,
       setButtonTextSecondary,
       setHeaderBackground,

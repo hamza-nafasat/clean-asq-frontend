@@ -115,6 +115,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [footerBackground, setFooterBackground] = useState('#000000');
   const [footerText, setFooterText] = useState('#000000');
   const [frameColor, setFrameColor] = useState('#000000');
+  const [highlightingColor, setHighlightingColor] = useState('#000000');
   const [fontFamily, setFontFamily] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [headerAlignment, setHeaderAlignment] = useState('center');
@@ -150,6 +151,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
     setLinkColor: setGlobalLinkColor,
     setBackgroundColor: setGlobalBackgroundColor,
     setFrameColor: setGlobalFrameColor,
+    setHighlightingColor: setGlobalHighlightingColor,
     setFontFamily: setGlobalFontFamily,
     setLogo: setGlobalLogo,
     setButtonTextPrimary: setButtonTextPrimaryGlobal,
@@ -213,6 +215,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !linkColor ||
       !backgroundColor ||
       !frameColor ||
+      !highlightingColor ||
       !buttonTextPrimary ||
       !buttonTextSecondary ||
       !headerAlignment ||
@@ -245,6 +248,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       text: textColor,
       background: backgroundColor,
       frame: frameColor,
+      highlighting: highlightingColor,
       buttonTextPrimary: buttonTextPrimary,
       buttonTextSecondary: buttonTextSecondary,
       headerBackground: headerBackground,
@@ -316,6 +320,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !linkColor ||
       !backgroundColor ||
       !frameColor ||
+      !highlightingColor ||
       !buttonTextPrimary ||
       !buttonTextSecondary ||
       !headerAlignment ||
@@ -348,6 +353,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       text: textColor,
       background: backgroundColor,
       frame: frameColor,
+      highlighting: highlightingColor,
       buttonTextPrimary: buttonTextPrimary,
       buttonTextSecondary: buttonTextSecondary,
       headerBackground: headerBackground,
@@ -406,6 +412,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
             setGlobalLinkColor(userBranding.colors.link);
             setGlobalBackgroundColor(userBranding.colors.background);
             setGlobalFrameColor(userBranding.colors.frame);
+            setGlobalHighlightingColor(userBranding.colors.highlighting);
             setGlobalFontFamily(userBranding.fontFamily);
             setGlobalLogo(userBranding?.selectedLogo);
             setButtonTextPrimaryGlobal(userBranding.colors.buttonTextPrimary);
@@ -468,6 +475,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setLinkColor(singleBranding.colors.link);
       setBackgroundColor(singleBranding.colors.background);
       setFrameColor(singleBranding.colors.frame);
+      setHighlightingColor(singleBranding.colors.highlighting);
       setHeaderAlignment(singleBranding.headerAlignment);
       setHeaderBackground(singleBranding.colors.headerBackground);
       setFooterBackground(singleBranding.colors.footerBackground);
@@ -591,6 +599,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
           setBackgroundColor={setBackgroundColor}
           frameColor={frameColor}
           setFrameColor={setFrameColor}
+          highlightingColor={highlightingColor}
+          setHighlightingColor={setHighlightingColor}
           fontFamily={fontFamily}
           setFontFamily={setFontFamily}
           buttonTextPrimary={buttonTextPrimary}

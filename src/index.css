@@ -69,6 +69,7 @@
   --linkColor: #1025e3;
   --backgroundColor: #f9f9f9;
   --frameColor: #db1313;
+  --highlightingColor: #e08127;
   --buttonTextPrimary: #bfff00;
   --buttonTextSecondary: #e08127;
   --headerColor: #f3e1d0;
@@ -84,6 +85,7 @@
   --color-link: var(--linkColor);
   --color-background: var(--backgroundColor);
   --color-frame: var(--frameColor);
+  --color-highlighting: var(--highlightingColor);
   --color-button-text-primary: var(--buttonTextPrimary);
   --color-button-text-secondary: var(--buttonTextSecondary);
   --color-header: var(--headerColor);
@@ -555,6 +557,12 @@ body {
 
 .text-header-text {
   color: var(--color-header-text);
+}
+.text-highlighting {
+  color: var(--color-highlighting);
+}
+.bg-highlighting {
+  background-color: var(--color-highlighting);
 }
 .bg-footer {
   background-color: var(--color-footer);
