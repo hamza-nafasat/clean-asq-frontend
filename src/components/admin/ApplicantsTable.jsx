@@ -1,5 +1,5 @@
 import { APPLICANT_STATUS } from '@/data/constants';
-import { Eye, MoreVertical, Pencil, Trash } from 'lucide-react';
+import { ArrowRight, Eye, MoreVertical, Pencil, Trash } from 'lucide-react';
 import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DataTable from 'react-data-table-component';
@@ -66,7 +66,15 @@ const APPLICANT_TABLE_COLUMNS = [
   },
 ];
 
-const ApplicantsTable = ({ applicants, isLoading, onView, filters, onFilterChange }) => {
+const ApplicantsTable = ({
+  applicants,
+  isLoading,
+  onView,
+  filters,
+  onFilterChange,
+  setOpenSpecialAccess,
+  setSelectedIdForSpecialAccessModal,
+}) => {
   const [actionMenu, setActionMenu] = React.useState(null);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [editModalData, setEditModalData] = useState(null);
@@ -203,8 +211,18 @@ const ApplicantsTable = ({ applicants, isLoading, onView, filters, onFilterChang
           setDeleteConfirmation(row?._id);
         },
       },
+      {
+        name: 'Forward a form',
+        icon: <ArrowRight size={16} className="mr-2" />,
+        onClick: row => {
+          console.log('row is ', row);
+          setOpenSpecialAccess(true);
+          setSelectedIdForSpecialAccessModal(row?.form?._id);
+          setActionMenu(null);
+        },
+      },
     ],
-    [onView]
+    [onView, setOpenSpecialAccess, setSelectedIdForSpecialAccessModal]
   );
 
   const columns = useMemo(
@@ -303,7 +321,7 @@ const ApplicantsTable = ({ applicants, isLoading, onView, filters, onFilterChang
           </div>
         </div>
       </div>
-      <div className="mt-5 w-full overflow-x-auto lg:!w-[calc(100vw-350px)] xl:w-full">
+      <div className="mt-5 w-full overflow-x-auto lg:w-[calc(100vw-350px)]! xl:w-full">
         <DataTable
           columns={columns}
           data={filteredApplicants}
