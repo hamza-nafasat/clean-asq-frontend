@@ -56,6 +56,7 @@ const TextField = ({
   onChange,
   name,
   value,
+  required = false,
   ...rest
 }) => {
   const [showMasked, setShowMasked] = useState(isMasked);
@@ -133,7 +134,7 @@ const TextField = ({
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
             className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
               leftIcon ? 'pl-10' : ''
-            } ${rightIcon ? 'pr-10' : ''} ${!value ? 'border-accent bg-highlighting border-2' : 'border-frameColor'}`}
+            } ${rightIcon ? 'pr-10' : ''} ${!value && required ? 'border-accent bg-highlighting border-2' : 'border-frameColor'}`}
           />
 
           {rightIcon && (
@@ -185,7 +186,7 @@ const TextField = ({
 
             onChange?.({ target: { name, value: val } });
           }}
-          className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''} ${!value ? 'border-accent bg-highlighting border-2' : 'border-frameColor'}`}
+          className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''} ${!value && required ? 'border-accent bg-highlighting border-2' : 'border-frameColor'}`}
         />
 
         {/* Suggestions */}
