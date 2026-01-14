@@ -410,7 +410,7 @@ function CompanyInformation({
                 placeholder="Type NAICS code or description..."
                 type="text"
                 value={naicsToMccDetails.NAICS}
-                className="border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
+                className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${!naicsToMccDetails.NAICS ? 'bg-highlighting border-accent! border-2' : ''}`}
                 onChange={handleNaicsInputChange}
                 onFocus={() => (naicsToMccDetails.NAICS ? setShowSuggestions(true) : setShowSuggestions(false))}
               />
@@ -538,7 +538,7 @@ const NAICSModal = ({ naicsApiData, setNaicsApiData, setNaicsToMccDetails, setSh
                 readOnly
                 value={`${match?.naics}, ${match?.naicsDescription}`}
                 title={`${match?.naics}, ${match?.naicsDescription}`}
-                className="border-frameColor h-[45px] w-full cursor-pointer rounded-lg bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
+                className={`border-frameColor h-[45px] w-full cursor-pointer rounded-lg bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
               />
             </button>
           ))}

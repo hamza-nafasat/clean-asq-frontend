@@ -24,8 +24,16 @@ const emailTypes = [
     value: 'otp_email_template',
   },
   {
-    label: 'Beneficial Owners Email Template',
-    value: 'beneficial_owners_email_template',
+    label: 'Old Beneficial Owners Email Template',
+    value: 'old_beneficial_owners_email_template',
+  },
+  {
+    label: 'New Beneficial Owners Email Template',
+    value: 'new_beneficial_owners_email_template',
+  },
+  {
+    label: 'Form Forwarded Email Template',
+    value: 'form_forwarded_email_template',
   },
 ];
 
@@ -85,7 +93,7 @@ function Email() {
 
   const templates = emailTemplates?.data;
 
-  const sedationKeywords = ['link', 'otp'];
+  const sedationKeywords = ['link', 'otp', 'email', 'password', 'frontEndUrl'];
 
   <ReactQuill
     className={`h-[200px] border ${!editData.body ? 'border-accent' : 'border-frameColor'}`}

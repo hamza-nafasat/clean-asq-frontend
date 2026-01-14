@@ -229,7 +229,7 @@ const SelectInputType = ({ field, className, form, setForm }) => {
             name={name}
             value={displayValue}
             required={required}
-            className="border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${!displayValue && required ? 'bg-highlighting' : ''}`}
             onChange={selectHandler}
           >
             {/* Show placeholder if value is not in options */}
@@ -464,6 +464,13 @@ const RangeInputType = ({ field, className, form, setForm }) => {
   } = field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
 
+  const isEmpty = value => {
+    if (value === undefined || value === null) return true;
+    if (typeof value === 'string') return value.trim() === '';
+    if (Array.isArray(value)) return value.length === 0;
+    return false;
+  };
+
   const onRangeChange = e => {
     const targetVAlue = String(e.target.value);
     if (targetVAlue > maxValue || targetVAlue < minValue) return;
@@ -499,14 +506,18 @@ const RangeInputType = ({ field, className, form, setForm }) => {
         <input
           value={Number(form[name]) || 0}
           type="range"
-          className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
+          className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} `}
           onChange={onRangeChange}
         />
         <div className="flex w-full gap-2">
           <input
             type="number"
             value={Number(form[name]) || 0}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+              (required && isEmpty(form[name])) || form[name] === 0
+                ? 'border-accent bg-highlighting border-2'
+                : 'border-frameColor border'
+            }`}
             onChange={onRangeChange}
           />
           {aiHelp && (
@@ -711,8 +722,10 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                     readOnly={showMasked}
                     autoComplete="off"
                     className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
-                      required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
-                    }`}
+                      required && isEmpty(form[name])
+                        ? 'border-accent bg-highlighting border-2'
+                        : 'border-frameColor border'
+                    } `}
                     {...(isConfirmField
                       ? {
                           onPaste: e => e.preventDefault(),
@@ -744,8 +757,10 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                           }))
                         }
                         className={`relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
-                          required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
-                        }`}
+                          required && isEmpty(form[name])
+                            ? 'border-accent bg-highlighting border-2'
+                            : 'border-frameColor border'
+                        } `}
                       />
                     </Autocomplete>
                   ) : (
@@ -797,8 +812,10 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                       readOnly={showMasked}
                       autoComplete="off"
                       className={`relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
-                        required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
-                      }`}
+                        required && isEmpty(form[name])
+                          ? 'border-accent bg-highlighting border-2'
+                          : 'border-frameColor border'
+                      } `}
                       {...(isConfirmField
                         ? {
                             onPaste: e => e.preventDefault(),
