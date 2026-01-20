@@ -208,7 +208,8 @@ function CompanyOwners({
           date_of_birth: '',
           driver_license_issuer: '',
           driver_license_issuer_state: '',
-          driver_licence_number: '',
+          driver_license_number: '',
+          IsCompleted:false,
         };
         initialForm[field.name] = reduxData?.[field.name] ?? [initialState];
       } else {
@@ -415,7 +416,7 @@ function CompanyOwners({
                       percentage,
                       date_of_birth,
                       driver_license_issuer_state,
-                      driver_licence_number,
+                      driver_license_number,
                     },
                     index
                   ) => {
@@ -552,9 +553,9 @@ function CompanyOwners({
                                   className={'max-w-[30%] min-w-[400px]'}
                                 />
                                 <TextField
-                                  name="driver_licence_number"
+                                  name="driver_license_number"
                                   label="Driver’s License Number"
-                                  value={driver_licence_number}
+                                  value={driver_license_number}
                                   onChange={e => handleChangeOnOtherOwnersData(e, index)}
                                   className={'max-w-[30%] min-w-[400px]'}
                                 />

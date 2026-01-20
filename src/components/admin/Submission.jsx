@@ -1,15 +1,23 @@
 import { useBranding } from '@/hooks/BrandingContext';
-import { FaCheck } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
-import Button from '../shared/small/Button';
-import { useDispatch, useSelector } from 'react-redux';
+import { useGeneratePdfFormMutation, useGetSavedFormMutation, useGetSingleFormQueryQuery, useGetSubmittedFormUsersQuery, useGiveSpecialAccessToUserMutation } from '@/redux/apis/formApis';
 import { addSavedFormData, updateEmailVerified } from '@/redux/slices/formSlice';
 import { unwrapResult } from '@reduxjs/toolkit';
-import { useGeneratePdfFormMutation, useGetSavedFormMutation } from '@/redux/apis/formApis';
+import { useEffect, useState } from 'react';
 import { CgSpinner } from 'react-icons/cg';
+import { CiMenuKebab } from 'react-icons/ci';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import Button from '../shared/small/Button';
+import Modal from '../shared/small/Modal';
+import { toast } from 'react-toastify';
+import CustomizableSelect from '../shared/small/CustomizeableSelect';
 
 function Submission({ forms }) {
   const dispatch = useDispatch();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [selectedForm, setSelectedForm] = useState(null);
+  const [allBeneficials, setAllBeneficials] = useState([]);
+
   const { emailVerified } = useSelector(state => state.form);
   const navigate = useNavigate();
   const { logo } = useBranding();
@@ -54,16 +62,58 @@ function Submission({ forms }) {
       return navigate(`/verification?formid=${formId}`);
     }
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isMenuOpen && !event.target.closest('.menu-container')) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [isMenuOpen]);
   return (
+   <>
+   {selectedForm && (
+    <Modal title="Forward Beneficial" onClose={() => setSelectedForm(null)}>
+      <SpecialAccessModal allBeneficials={allBeneficials} formId={selectedForm} setModal={setSelectedForm} />
+    </Modal>
+   )}
     <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
       {forms?.length > 0 ? (
         forms?.map((form, index) => {
           const colors = form?.branding?.colors;
+          const totalBeneficialOwners=form?.submitData?.beneficial_information?.additional_owner;
+          const filledBeneficialOwners=totalBeneficialOwners?.filter((item) => item?.IsCompleted);
           return (
             <div
               key={index}
               className="relative flex min-w-0 flex-col rounded-xl border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
             >
+              {/* add three dot in right corner  */}
+              <div className="absolute top-3 right-3 cursor-pointer sm:top-4 sm:right-4 menu-container" onClick={() => setIsMenuOpen(!isMenuOpen)}>{<CiMenuKebab /> }</div>
+
+              {isMenuOpen && (
+                <div className="absolute top-10 right-0 w-50 rounded border space-y-2 bg-white shadow-lg p-2">
+
+                  <Button label="Forward Beneficial" variant='icon' className='text-sm w-full p-2' onClick={() => {
+                    setSelectedForm(form?._id)
+                    const beneficialMailsAndNames=totalBeneficialOwners?.map((item) => ({value: item?.email, option: `${item?.name}`}));
+                    setAllBeneficials(beneficialMailsAndNames);
+                  }} />
+                  {/* <Button
+                  label="Download PDF"
+                  icon={isLoading && CgSpinner}
+                  variant='icon'
+                  disabled={isLoading}
+                  onClick={() => handleDownload(form?._id, user?._id)}
+                  className={`text-sm w-full p-2 ${isLoading ? 'cursor-not-allowed opacity-30 ' : ''}`}
+                /> */}
+                </div>
+              )}
+              
               <img
                 src={form?.branding?.selectedLogo || logo}
                 width={100}
@@ -72,29 +122,9 @@ function Submission({ forms }) {
                 referrerPolicy="no-referrer"
               />
 
-              {/* Menu icon */}
-              <div className="absolute top-3 right-3 cursor-pointer sm:top-4 sm:right-4">{/* <CiMenuKebab /> */}</div>
-              <div className="flex items-start gap-2 md:gap-4">
-                {/* <CardIcon /> */}
-                {/* <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <h2 className="text-base leading-tight font-bold break-words text-gray-700 sm:text-lg md:text-2xl">
-                      {form?.name}
-                    </h2>
-                  </div>
-                  <div className="mt-1 truncate text-xs text-gray-500 sm:text-sm">Created from CSV import</div>
-                </div> */}
-              </div>
-              {/* <div className="mt-3 space-y-1 text-sm text-gray-700 md:mt-3 md:text-base">
-                <div className="flex items-center gap-1 md:gap-2">
-                  <FaCheck className="text-primary" />
-                  <span>{form?.sections?.length} form sections</span>
-                </div>{' '}
-                <div className="flex items-center gap-1 md:gap-2">
-                  <FaCheck className="text-primary" />
-                  <span>AI-assisted completion available</span>
-                </div>
-              </div> */}
+   
+             
+              
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
                 <span className="text-gray-500">Applicants: {form?.sections?.length}</span>
                 <span className="text-gray-500">
@@ -106,9 +136,16 @@ function Submission({ forms }) {
                   })}
                 </span>
               </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
+                <span className="text-gray-500">Total Beneficial owners: {totalBeneficialOwners?.length}</span>
+                <span className="text-gray-500">
+                  Filled Beneficial owners:{' '}
+                  {filledBeneficialOwners?.length}
+                </span>
+              </div>
               <div className="mt-3 flex h-full w-full flex-col items-start justify-between gap-3 md:mt-6 md:flex-row md:gap-4">
                 <Button
-                  label="Start Application"
+                  label="Update Submission"
                   onClick={() => getSavedData(form?._id, form?.branding?.name)}
                   className="self-end"
                   style={{
@@ -151,8 +188,98 @@ function Submission({ forms }) {
       ) : (
         <div className="col-span-full flex items-center justify-center">No submissions found</div>
       )}
-    </div>
+    </div></>
   );
 }
 
 export default Submission;
+
+
+
+export const SpecialAccessModal = ({ allBeneficials, formId, setModal }) => {
+  console.log('allBeneficials', allBeneficials);
+  const [isLoading, setIsLoading] = useState(false);
+  const { data: submittedFormUsers } = useGetSubmittedFormUsersQuery({ formId: formId });
+  const [giveSpecialAccessToUser, { isLoading: isGivingSpecialAccess }] = useGiveSpecialAccessToUserMutation();
+  const { data: formData } = useGetSingleFormQueryQuery({ _id: formId });
+  const [specialSections, setSpecialSections] = useState([]);
+
+  const [form, setForm] = useState({
+    email: '',
+    sectionKey: '',
+  });
+
+  const giveSpecialAccessToUserHandler = async () => {
+    try {
+      if (!form?.userId || !form?.sectionKey) return toast.error('Please select a user and section');
+      if (!formId) return toast.error('Form ID is required');
+      const res = await giveSpecialAccessToUser({
+        formId: formId,
+        userId: form?.userId,
+        sectionKey: form?.sectionKey,
+      }).unwrap();
+      if (res?.success) {
+        toast?.success(res?.message || 'Special access sent successfully');
+        setModal(false);
+        setSpecialSections([]);
+        setForm({ userId: '', sectionKey: '' });
+      }
+    } catch (error) {
+      console.error('Error giving special access to user:', error);
+      toast.error(error?.data?.message || 'Failed to give special access to user');
+    }
+  };
+
+  useEffect(() => {
+    setIsLoading(true);
+    if (formData?.data?.sections?.length > 0) {
+      const beneficialSection = formData?.data?.sections?.find(section => section?.isHidden&&section?.key=='beneficial_owners');
+        setSpecialSections([{
+          option: beneficialSection?.name,
+          value: beneficialSection?.key,
+        }]);
+    }
+    setIsLoading(false);
+  }, [formData?.data?.sections, submittedFormUsers?.data]);
+
+  if (isLoading) {
+    return <CustomLoading />;
+  }
+  return (
+    <div className="flex items-center justify-center p-4">
+      <div className="flex w-full max-w-2xl flex-col gap-6">
+        {/* Heading */}
+        <h3 className="text-center text-lg font-semibold text-gray-800">Give Special Access to Users</h3>
+
+        <div className="flex flex-col gap-2">
+          <CustomizableSelect
+            options={allBeneficials}
+            onSelect={value => setForm(prev => ({ ...prev, email: value }))}
+            label={'Select User'}
+            defaultText="Select User"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <CustomizableSelect
+            options={specialSections}
+            onSelect={value => setForm(prev => ({ ...prev, sectionKey: value }))}
+            label={'Select Section'}
+            defaultText="Select Section"
+          />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex w-full justify-end gap-2">
+          <Button label="Cancel" variant="secondary" onClick={() => setModal(false)} />
+          <Button
+            disabled={isGivingSpecialAccess}
+            label="Send Access"
+            variant="primary"
+            className={`${isGivingSpecialAccess ? 'cursor-not-allowed opacity-50' : ''}`}
+            onClick={giveSpecialAccessToUserHandler}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};

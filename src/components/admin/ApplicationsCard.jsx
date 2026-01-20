@@ -35,7 +35,7 @@ export default function ApplicationsCard() {
   const [createForm, { isLoading }] = useCreateFormMutation();
   const [openModal, setOpenModal] = useState(false);
   const [openFormUpdate, setOpenFormUpdate] = useState(false);
-  const [openSpecialAccess, setOpenSpecialAccess] = useState(false);
+  // const [openSpecialAccess, setOpenSpecialAccess] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [selectedForm, setSelectedForm] = useState(null);
   const [selectedBranding, setSelectedBranding] = useState(null);
