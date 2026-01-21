@@ -96,6 +96,16 @@ const formApis = createApi({
         body: { userId, sectionKey },
       }),
     }),
+    // give special access to user
+    // ---------------
+    applicantGiveSpecialAccessToBeneficialOwner: builder.mutation({
+      query: ({ formId, email }) => ({
+        url: `/applicant-give-special-access-to-beneficial-owner/${formId}`,
+        method: 'POST',
+        body: { email },
+      }),
+      invalidatesTags: ['Form'],  
+    }),
     // get special access of section
     // ---------------
     getSpecialAccessOfSection: builder.query({
@@ -173,7 +183,7 @@ const formApis = createApi({
         url: '/draft-and-submitions',
         method: 'GET',
       }),
-      providesTags: [{ type: 'Form', id: 'LIST' }],
+      providesTags: ['Form'],
     }),
 
     // update form section
@@ -236,7 +246,7 @@ const formApis = createApi({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
+      invalidatesTags: ['Strategy'],
     }),
     // create search strategy default
     // ---------------
@@ -246,7 +256,7 @@ const formApis = createApi({
         method: 'POST',
         body: {},
       }),
-      invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
+      invalidatesTags: ['Strategy'],
     }),
     // get all search strategies
     // ---------------
@@ -255,7 +265,7 @@ const formApis = createApi({
         url: '/search-strategy/all',
         method: 'GET',
       }),
-      providesTags: [{ type: 'Strategy', id: 'LIST' }],
+      providesTags: ['Strategy'],
     }),
     // update search strategy
     // ---------------
@@ -265,7 +275,7 @@ const formApis = createApi({
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
+      invalidatesTags: ['Strategy'],
     }),
     // delete search strategy
     // ---------------
@@ -274,7 +284,7 @@ const formApis = createApi({
         url: `/search-strategy/single/${SearchStrategyId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
+        invalidatesTags: ['Strategy'],
     }),
     // create prompt
     // ---------------
@@ -284,7 +294,7 @@ const formApis = createApi({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: [{ type: 'Prompt', id: 'LIST' }],
+      invalidatesTags: ['Prompts'],
     }),
     // update prompt
     // ---------------
@@ -317,7 +327,7 @@ const formApis = createApi({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
+      invalidatesTags: ['Strategy'],
     }),
     // get all form strategies
     // ---------------
@@ -326,7 +336,7 @@ const formApis = createApi({
         url: '/form-strategy/all',
         method: 'GET',
       }),
-      providesTags: [{ type: 'Strategy', id: 'LIST' }],
+      providesTags: ['Strategy'],
     }),
     // update form strategy
     // ---------------
@@ -336,7 +346,7 @@ const formApis = createApi({
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
+      invalidatesTags: ['Strategy'],
     }),
     // delete form strategy
     // ---------------
@@ -345,7 +355,7 @@ const formApis = createApi({
         url: `/form-strategy/single/${FormStrategyId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [{ type: 'Strategy', id: 'LIST' }],
+      invalidatesTags: ['Strategy'],
     }),
 
     // getBankLookup: builder.query({
@@ -427,6 +437,7 @@ export const {
   useSubmitFormMutation,
   useGetSubmittedFormUsersQuery,
   useGiveSpecialAccessToUserMutation,
+  useApplicantGiveSpecialAccessToBeneficialOwnerMutation,
   useGetSpecialAccessOfSectionQuery,
   useSubmitSpecialAccessFormMutation,
   useSaveFormInDraftMutation,

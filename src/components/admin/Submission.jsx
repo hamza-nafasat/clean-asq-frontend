@@ -1,5 +1,5 @@
 import { useBranding } from '@/hooks/BrandingContext';
-import { useGeneratePdfFormMutation, useGetSavedFormMutation, useGetSingleFormQueryQuery, useGetSubmittedFormUsersQuery, useGiveSpecialAccessToUserMutation } from '@/redux/apis/formApis';
+import { useApplicantGiveSpecialAccessToBeneficialOwnerMutation, useGeneratePdfFormMutation, useGetSavedFormMutation } from '@/redux/apis/formApis';
 import { addSavedFormData, updateEmailVerified } from '@/redux/slices/formSlice';
 import { unwrapResult } from '@reduxjs/toolkit';
 import { useEffect, useState } from 'react';
@@ -7,10 +7,11 @@ import { CgSpinner } from 'react-icons/cg';
 import { CiMenuKebab } from 'react-icons/ci';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import Button from '../shared/small/Button';
-import Modal from '../shared/small/Modal';
 import { toast } from 'react-toastify';
+import Button from '../shared/small/Button';
 import CustomizableSelect from '../shared/small/CustomizeableSelect';
+import Modal from '../shared/small/Modal';
+import TextField from '../shared/small/TextField';
 
 function Submission({ forms }) {
   const dispatch = useDispatch();
@@ -196,33 +197,24 @@ export default Submission;
 
 
 
-export const SpecialAccessModal = ({ allBeneficials, formId, setModal }) => {
-  console.log('allBeneficials', allBeneficials);
-  const [isLoading, setIsLoading] = useState(false);
-  const { data: submittedFormUsers } = useGetSubmittedFormUsersQuery({ formId: formId });
-  const [giveSpecialAccessToUser, { isLoading: isGivingSpecialAccess }] = useGiveSpecialAccessToUserMutation();
-  const { data: formData } = useGetSingleFormQueryQuery({ _id: formId });
-  const [specialSections, setSpecialSections] = useState([]);
-
+const SpecialAccessModal = ({ allBeneficials, formId, setModal }) => {
+  const [giveSpecialAccessToUser, { isLoading: isGivingSpecialAccess }] = useApplicantGiveSpecialAccessToBeneficialOwnerMutation();
   const [form, setForm] = useState({
     email: '',
-    sectionKey: '',
   });
 
   const giveSpecialAccessToUserHandler = async () => {
     try {
-      if (!form?.userId || !form?.sectionKey) return toast.error('Please select a user and section');
+      if (!form?.email) return toast.error('selection or email is required');
       if (!formId) return toast.error('Form ID is required');
       const res = await giveSpecialAccessToUser({
         formId: formId,
-        userId: form?.userId,
-        sectionKey: form?.sectionKey,
+        email: form?.email,
       }).unwrap();
       if (res?.success) {
         toast?.success(res?.message || 'Special access sent successfully');
+        setForm({ email: ''});
         setModal(false);
-        setSpecialSections([]);
-        setForm({ userId: '', sectionKey: '' });
       }
     } catch (error) {
       console.error('Error giving special access to user:', error);
@@ -230,43 +222,35 @@ export const SpecialAccessModal = ({ allBeneficials, formId, setModal }) => {
     }
   };
 
-  useEffect(() => {
-    setIsLoading(true);
-    if (formData?.data?.sections?.length > 0) {
-      const beneficialSection = formData?.data?.sections?.find(section => section?.isHidden&&section?.key=='beneficial_owners');
-        setSpecialSections([{
-          option: beneficialSection?.name,
-          value: beneficialSection?.key,
-        }]);
-    }
-    setIsLoading(false);
-  }, [formData?.data?.sections, submittedFormUsers?.data]);
+ 
 
-  if (isLoading) {
-    return <CustomLoading />;
-  }
+
   return (
     <div className="flex items-center justify-center p-4">
       <div className="flex w-full max-w-2xl flex-col gap-6">
         {/* Heading */}
-        <h3 className="text-center text-lg font-semibold text-gray-800">Give Special Access to Users</h3>
+        <h3 className="text-center text-lg font-semibold text-gray-800">Give Special Access to Beneficial Owners</h3>
 
         <div className="flex flex-col gap-2">
           <CustomizableSelect
             options={allBeneficials}
             onSelect={value => setForm(prev => ({ ...prev, email: value }))}
             label={'Select User'}
-            defaultText="Select User"
+            defaultText="Select Beneficial Owner"
           />
         </div>
+
+
         <div className="flex flex-col gap-2">
-          <CustomizableSelect
-            options={specialSections}
-            onSelect={value => setForm(prev => ({ ...prev, sectionKey: value }))}
-            label={'Select Section'}
-            defaultText="Select Section"
-          />
+        <span className='text-sm text-gray-500'>or type email manually</span>
+        <TextField
+          name='email'
+          placeholder='Enter email'
+          value={form?.email}
+          onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
+        />
         </div>
+        
 
         {/* Action Buttons */}
         <div className="flex w-full justify-end gap-2">
