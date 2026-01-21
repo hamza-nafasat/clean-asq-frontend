@@ -17,6 +17,7 @@ function Submission({ forms }) {
   const dispatch = useDispatch();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedForm, setSelectedForm] = useState(null);
+  const [openSpecialAccessModal, setOpenSpecialAccessModal] = useState(false);
   const [allBeneficials, setAllBeneficials] = useState([]);
 
   const { emailVerified } = useSelector(state => state.form);
@@ -76,35 +77,38 @@ function Submission({ forms }) {
     };
   }, [isMenuOpen]);
   return (
-   <>
-   {selectedForm && (
-    <Modal title="Forward Beneficial" onClose={() => setSelectedForm(null)}>
-      <SpecialAccessModal allBeneficials={allBeneficials} formId={selectedForm} setModal={setSelectedForm} />
-    </Modal>
-   )}
-    <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-      {forms?.length > 0 ? (
-        forms?.map((form, index) => {
-          const colors = form?.branding?.colors;
-          const totalBeneficialOwners=form?.submitData?.beneficial_information?.additional_owner;
-          const filledBeneficialOwners=totalBeneficialOwners?.filter((item) => item?.IsCompleted);
-          return (
-            <div
-              key={index}
-              className="relative flex min-w-0 flex-col rounded-xl border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
-            >
-              {/* add three dot in right corner  */}
-              <div className="absolute top-3 right-3 cursor-pointer sm:top-4 sm:right-4 menu-container" onClick={() => setIsMenuOpen(!isMenuOpen)}>{<CiMenuKebab /> }</div>
+    <>
+      {openSpecialAccessModal && (
+        <Modal title="Forward Beneficial" onClose={() => setOpenSpecialAccessModal(false)}>
+          <SpecialAccessModal allBeneficials={allBeneficials} formId={selectedForm} setModal={setOpenSpecialAccessModal} />
+        </Modal>
+      )}
+      <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+        {forms?.length > 0 ? (
+          forms?.map((form, index) => {
+            const colors = form?.branding?.colors;
+            const totalBeneficialOwners = form?.submitData?.beneficial_information?.additional_owner;
+            const filledBeneficialOwners = totalBeneficialOwners?.filter((item) => item?.IsCompleted);
+            return (
+              <div
+                key={index}
+                className="relative flex min-w-0 flex-col rounded-xl border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
+              >
+                {/* add three dot in right corner  */}
+                <div className="absolute top-3 right-3 cursor-pointer sm:top-4 sm:right-4 menu-container" onClick={() => {
+                  setIsMenuOpen(!isMenuOpen)
+                  setSelectedForm(form?._id)
+                }}>{<CiMenuKebab />}</div>
 
-              {isMenuOpen && (
-                <div className="absolute top-10 right-0 w-50 rounded border space-y-2 bg-white shadow-lg p-2">
+                {isMenuOpen && selectedForm === form?._id && (
+                  <div className="absolute top-10 right-0 w-50 rounded border space-y-2 bg-white shadow-lg p-2">
 
-                  <Button label="Forward Beneficial" variant='icon' className='text-sm w-full p-2' onClick={() => {
-                    setSelectedForm(form?._id)
-                    const beneficialMailsAndNames=totalBeneficialOwners?.map((item) => ({value: item?.email, option: `${item?.name}`}));
-                    setAllBeneficials(beneficialMailsAndNames);
-                  }} />
-                  {/* <Button
+                    <Button label="Forward Beneficial" variant='icon' className='text-sm w-full p-2' onClick={() => {
+                      setOpenSpecialAccessModal(true)
+                      const beneficialMailsAndNames = totalBeneficialOwners?.map((item) => ({ value: item?.email, option: `${item?.name}` }));
+                      setAllBeneficials(beneficialMailsAndNames);
+                    }} />
+                    {/* <Button
                   label="Download PDF"
                   icon={isLoading && CgSpinner}
                   variant='icon'
@@ -112,84 +116,84 @@ function Submission({ forms }) {
                   onClick={() => handleDownload(form?._id, user?._id)}
                   className={`text-sm w-full p-2 ${isLoading ? 'cursor-not-allowed opacity-30 ' : ''}`}
                 /> */}
-                </div>
-              )}
-              
-              <img
-                src={form?.branding?.selectedLogo || logo}
-                width={100}
-                height={100}
-                alt="logo"
-                referrerPolicy="no-referrer"
-              />
+                  </div>
+                )}
 
-   
-             
-              
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
-                <span className="text-gray-500">Applicants: {form?.sections?.length}</span>
-                <span className="text-gray-500">
-                  Created:{' '}
-                  {new Date(form?.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </span>
-              </div>
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
-                <span className="text-gray-500">Total Beneficial owners: {totalBeneficialOwners?.length}</span>
-                <span className="text-gray-500">
-                  Filled Beneficial owners:{' '}
-                  {filledBeneficialOwners?.length}
-                </span>
-              </div>
-              <div className="mt-3 flex h-full w-full flex-col items-start justify-between gap-3 md:mt-6 md:flex-row md:gap-4">
-                <Button
-                  label="Update Submission"
-                  onClick={() => getSavedData(form?._id, form?.branding?.name)}
-                  className="self-end"
-                  style={{
-                    backgroundColor: colors?.primary,
-                    borderColor: colors?.primary,
-                    color: colors?.buttonTextPrimary,
-                    transition: 'all 0.3s ease',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.opacity = '0.6';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.opacity = '1';
-                  }}
+                <img
+                  src={form?.branding?.selectedLogo || logo}
+                  width={100}
+                  height={100}
+                  alt="logo"
+                  referrerPolicy="no-referrer"
                 />
-                <Button
-                  label="Download PDF"
-                  icon={isLoading && CgSpinner}
-                  cnLeft={`animate-spin h-5 w-5`}
-                  disabled={isLoading}
-                  onClick={() => handleDownload(form?._id, user?._id)}
-                  className={`${isLoading ? 'cursor-not-allowed opacity-30' : ''}`}
-                  style={{
-                    backgroundColor: colors?.primary,
-                    borderColor: colors?.primary,
-                    color: colors?.buttonTextPrimary,
-                    transition: 'all 0.3s ease',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.opacity = '0.6';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.opacity = '1';
-                  }}
-                />
+
+
+
+
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
+                  <span className="text-gray-500">Applicants: {form?.sections?.length}</span>
+                  <span className="text-gray-500">
+                    Created:{' '}
+                    {new Date(form?.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
+                  <span className="text-gray-500">Total Beneficial owners: {totalBeneficialOwners?.length}</span>
+                  <span className="text-gray-500">
+                    Filled Beneficial owners:{' '}
+                    {filledBeneficialOwners?.length}
+                  </span>
+                </div>
+                <div className="mt-3 flex h-full w-full flex-col items-start justify-between gap-3 md:mt-6 md:flex-row md:gap-4">
+                  <Button
+                    label="Update Submission"
+                    onClick={() => getSavedData(form?._id, form?.branding?.name)}
+                    className="self-end"
+                    style={{
+                      backgroundColor: colors?.primary,
+                      borderColor: colors?.primary,
+                      color: colors?.buttonTextPrimary,
+                      transition: 'all 0.3s ease',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.opacity = '0.6';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.opacity = '1';
+                    }}
+                  />
+                  <Button
+                    label="Download PDF"
+                    icon={isLoading && CgSpinner}
+                    cnLeft={`animate-spin h-5 w-5`}
+                    disabled={isLoading}
+                    onClick={() => handleDownload(form?._id, user?._id)}
+                    className={`${isLoading ? 'cursor-not-allowed opacity-30' : ''}`}
+                    style={{
+                      backgroundColor: colors?.primary,
+                      borderColor: colors?.primary,
+                      color: colors?.buttonTextPrimary,
+                      transition: 'all 0.3s ease',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.opacity = '0.6';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.opacity = '1';
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          );
-        })
-      ) : (
-        <div className="col-span-full flex items-center justify-center">No submissions found</div>
-      )}
-    </div></>
+            );
+          })
+        ) : (
+          <div className="col-span-full flex items-center justify-center">No submissions found</div>
+        )}
+      </div></>
   );
 }
 
@@ -213,7 +217,7 @@ const SpecialAccessModal = ({ allBeneficials, formId, setModal }) => {
       }).unwrap();
       if (res?.success) {
         toast?.success(res?.message || 'Special access sent successfully');
-        setForm({ email: ''});
+        setForm({ email: '' });
         setModal(false);
       }
     } catch (error) {
@@ -222,7 +226,7 @@ const SpecialAccessModal = ({ allBeneficials, formId, setModal }) => {
     }
   };
 
- 
+
 
 
   return (
@@ -242,15 +246,15 @@ const SpecialAccessModal = ({ allBeneficials, formId, setModal }) => {
 
 
         <div className="flex flex-col gap-2">
-        <span className='text-sm text-gray-500'>or type email manually</span>
-        <TextField
-          name='email'
-          placeholder='Enter email'
-          value={form?.email}
-          onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
-        />
+          <span className='text-sm text-gray-500'>or type email manually</span>
+          <TextField
+            name='email'
+            placeholder='Enter email'
+            value={form?.email}
+            onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
+          />
         </div>
-        
+
 
         {/* Action Buttons */}
         <div className="flex w-full justify-end gap-2">

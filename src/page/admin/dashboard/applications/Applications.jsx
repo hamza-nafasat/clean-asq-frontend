@@ -1,7 +1,7 @@
 import ApplicantsTable from '@/components/admin/ApplicantsTable';
-import Modal from '@/components/shared/Modal';
 import Button from '@/components/shared/small/Button';
 import CustomizableSelect from '@/components/shared/small/CustomizeableSelect';
+import Modal from '@/components/shared/small/Modal';
 import {
   useGetAllSubmitFormsQuery,
   useGetSingleFormQueryQuery,
@@ -168,7 +168,7 @@ export const SpecialAccessModal = ({ formId, setModal }) => {
   useEffect(() => {
     setIsLoading(true);
     if (formData?.data?.sections?.length > 0) {
-      const specialSections = formData?.data?.sections?.filter(section => section?.isHidden);
+      const specialSections = formData?.data?.sections?.filter(section => section?.isHidden && section?.key !== 'beneficial_owner');
       const formatedSpecialSections = specialSections?.map(section => ({
         option: section?.name,
         value: section?.key,
