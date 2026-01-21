@@ -3,6 +3,7 @@ import Button from '@/components/shared/small/Button.jsx';
 import CustomLoading from '@/components/shared/small/CustomLoading';
 import {
   CheckboxInputType,
+  FileInputType,
   MultiCheckboxInputType,
   OtherInputType,
   RadioInputType,
@@ -12,6 +13,7 @@ import {
 import { EditSectionDisplayTextFromatingModal } from '@/components/shared/small/EditSectionDisplayTextFromatingModal.jsx';
 import Modal from '@/components/shared/small/Modal.jsx';
 import { FIELD_TYPES } from '@/data/constants';
+import { uploadFilesAndReplace } from '@/lib/utils';
 import { useGetSpecialAccessOfSectionQuery, useSubmitSpecialAccessFormMutation } from '@/redux/apis/formApis';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -47,7 +49,8 @@ function FormHiddenSection() {
   const handleSubmitSpecialAccessForm = useCallback(async () => {
     try {
       if (!accessToken || !sectionKey || !formId) return toast.error('Please provide all the required fields');
-      const res = await submitSpecialAccessForm({ formId, token: accessToken, sectionKey, formData: form }).unwrap();
+      const updatedFormData = await uploadFilesAndReplace(form);
+      const res = await submitSpecialAccessForm({ formId, token: accessToken, sectionKey, formData: updatedFormData }).unwrap();
       if (res.success) {
         toast.success(res.message);
         navigate('/');
@@ -127,6 +130,13 @@ function FormHiddenSection() {
             return (
               <div key={index} className="mt-4">
                 <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={''} />
+              </div>
+            );
+          }
+          if (field.type === FIELD_TYPES.FILE) {
+            return (
+              <div key={index} className="mt-4">
+                <FileInputType field={field} form={form} setForm={setForm} className={''} />
               </div>
             );
           }

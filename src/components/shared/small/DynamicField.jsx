@@ -429,20 +429,20 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
       <div className="flex w-full gap-2 px-6">
         {form?.[name] && conditional_fields?.length
           ? conditional_fields?.map((f, index) => {
-              const fieldName = `${name}/${f?.name}`;
-              return (
-                <div className="flex w-full flex-col gap-2" key={index}>
-                  <TextField
-                    value={form?.[fieldName]}
-                    type={f?.type}
-                    label={f?.label}
-                    name={fieldName}
-                    required={f?.required}
-                    onChange={e => setForm({ ...form, [e.target.name]: e.target.value })}
-                  />
-                </div>
-              );
-            })
+            const fieldName = `${name}/${f?.name}`;
+            return (
+              <div className="flex w-full flex-col gap-2" key={index}>
+                <TextField
+                  value={form?.[fieldName]}
+                  type={f?.type}
+                  label={f?.label}
+                  name={fieldName}
+                  required={f?.required}
+                  onChange={e => setForm({ ...form, [e.target.name]: e.target.value })}
+                />
+              </div>
+            );
+          })
           : null}
       </div>
     </div>
@@ -513,11 +513,10 @@ const RangeInputType = ({ field, className, form, setForm }) => {
           <input
             type="number"
             value={Number(form[name]) || 0}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
-              (required && isEmpty(form[name])) || form[name] === 0
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${(required && isEmpty(form[name])) || form[name] === 0
                 ? 'border-accent bg-highlighting border-2'
                 : 'border-frameColor border'
-            }`}
+              }`}
             onChange={onRangeChange}
           />
           {aiHelp && (
@@ -721,17 +720,16 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                     onBlur={() => setShowMasked(true)}
                     readOnly={showMasked}
                     autoComplete="off"
-                    className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
-                      required && isEmpty(form[name])
+                    className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${required && isEmpty(form[name])
                         ? 'border-accent bg-highlighting border-2'
                         : 'border-frameColor border'
-                    } `}
+                      } `}
                     {...(isConfirmField
                       ? {
-                          onPaste: e => e.preventDefault(),
-                          onCopy: e => e.preventDefault(),
-                          onCut: e => e.preventDefault(),
-                        }
+                        onPaste: e => e.preventDefault(),
+                        onCopy: e => e.preventDefault(),
+                        onCut: e => e.preventDefault(),
+                      }
                       : {})}
                   />
                 </div>
@@ -756,11 +754,10 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                             [name]: type === 'date' ? normalizeDate(e.target.value) : e.target.value,
                           }))
                         }
-                        className={`relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
-                          required && isEmpty(form[name])
+                        className={`relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${required && isEmpty(form[name])
                             ? 'border-accent bg-highlighting border-2'
                             : 'border-frameColor border'
-                        } `}
+                          } `}
                       />
                     </Autocomplete>
                   ) : (
@@ -811,17 +808,16 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                       }}
                       readOnly={showMasked}
                       autoComplete="off"
-                      className={`relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
-                        required && isEmpty(form[name])
+                      className={`relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${required && isEmpty(form[name])
                           ? 'border-accent bg-highlighting border-2'
                           : 'border-frameColor border'
-                      } `}
+                        } `}
                       {...(isConfirmField
                         ? {
-                            onPaste: e => e.preventDefault(),
-                            onCopy: e => e.preventDefault(),
-                            onCut: e => e.preventDefault(),
-                          }
+                          onPaste: e => e.preventDefault(),
+                          onCopy: e => e.preventDefault(),
+                          onCut: e => e.preventDefault(),
+                        }
                         : {})}
                     />
                   )}
@@ -884,6 +880,88 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
   );
 };
 
+const FileInputType = ({ field, className, form, setForm }) => {
+  const {
+    label,
+    name,
+    required,
+    aiHelp,
+    aiPrompt,
+    aiResponse,
+    isDisplayText,
+    ai_formatting,
+  } = field;
+  const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
+
+  const isEmpty = value => {
+    if (value === undefined || value === null) return true;
+    if (typeof value === 'string') return value.trim() === '';
+    if (Array.isArray(value)) return value.length === 0;
+    return false;
+  };
+
+  const fileHandler = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setForm(prev => ({
+      ...prev,
+      [name]: { file }
+    }));
+  };
+
+  return (
+    <div className={`flex w-full flex-col items-start ${className}`}>
+      {openAiHelpModal && (
+        <Modal onClose={() => setOpenAiHelpModal(false)}>
+          <AiHelpModal
+            aiPrompt={aiPrompt}
+            aiResponse={aiResponse}
+            setOpenAiHelpModal={setOpenAiHelpModal}
+          />
+        </Modal>
+      )}
+      {label && (
+        <h4 className="text-textPrimary text-base font-medium lg:text-lg">
+          {label}:{required ? '*' : ''}
+        </h4>
+      )}
+      {ai_formatting && isDisplayText && (
+        <div className="flex h-full w-full flex-col gap-4">
+          <div
+            dangerouslySetInnerHTML={{
+              __html: String(ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
+                if (match.includes('target=')) return match;
+                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              }),
+            }}
+          />
+        </div>
+      )}
+      <div className="flex w-full gap-2 mt-2">
+        <input
+          type="file"
+          name={name}
+          onChange={fileHandler}
+          className={`relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${required && isEmpty(form[name])
+              ? 'border-accent bg-highlighting border-2'
+              : 'border-frameColor border'
+            } ${className}`}
+        />
+        {aiHelp && (
+          <div className="flex items-center">
+            <Button
+              label="Help"
+              className="max-h-fit! text-nowrap"
+              onClick={() => setOpenAiHelpModal(true)}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const AiHelpModal = ({ aiResponse }) => {
   const [updateAiPrompt, setUpdateAiPrompt] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
@@ -933,9 +1011,8 @@ const AiHelpModal = ({ aiResponse }) => {
           {chatHistory?.map((msg, index) => (
             <div
               key={index}
-              className={`rounded-lg p-3 ${
-                msg.role === 'user' ? 'self-end bg-blue-100 text-gray-800' : 'self-start bg-gray-100 text-gray-700'
-              }`}
+              className={`rounded-lg p-3 ${msg.role === 'user' ? 'self-end bg-blue-100 text-gray-800' : 'self-start bg-gray-100 text-gray-700'
+                }`}
             >
               <div
                 dangerouslySetInnerHTML={{
@@ -973,5 +1050,6 @@ export {
   RadioInputType,
   RangeInputType,
   SelectInputType,
+  FileInputType,
 };
 export default DynamicField;

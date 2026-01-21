@@ -12,6 +12,7 @@ import Button from '../shared/small/Button';
 import CustomLoading from '../shared/small/CustomLoading';
 import {
   CheckboxInputType,
+  FileInputType,
   MultiCheckboxInputType,
   OtherInputType,
   RadioInputType,
@@ -209,7 +210,7 @@ function CompanyOwners({
           driver_license_issuer: '',
           driver_license_issuer_state: '',
           driver_license_number: '',
-          IsCompleted:false,
+          IsCompleted: false,
         };
         initialForm[field.name] = reduxData?.[field.name] ?? [initialState];
       } else {
@@ -358,6 +359,13 @@ function CompanyOwners({
                 return (
                   <div key={index} className="mt-4">
                     <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={''} />
+                  </div>
+                );
+              }
+              if (field.type === FIELD_TYPES.FILE) {
+                return (
+                  <div key={index} className="mt-4">
+                    <FileInputType field={field} form={form} setForm={setForm} className={''} />
                   </div>
                 );
               }

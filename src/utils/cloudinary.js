@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 
 const uploadImageOnCloudinary = async file => {
   try {
+    console.log('file', file);
     if (!file) return toast.error('Please select a file');
     const isCSV = file.type === 'text/csv' || file.name.endsWith('.csv');
     const resourceType = isCSV ? 'raw' : 'image';
@@ -29,6 +30,7 @@ const uploadImageOnCloudinary = async file => {
     const data = await res.json();
     if (!data?.secure_url || !data?.public_id || !data?.resource_type)
       return toast.error('Something went wrong while uploading image');
+    console.log('data', data);
     return { secureUrl: data?.secure_url, publicId: data?.public_id, resourceType: data?.resource_type };
   } catch (error) {
     console.log('error while uploading image', error);

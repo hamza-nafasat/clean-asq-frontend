@@ -10,6 +10,7 @@ import SignatureBox from '../shared/SignatureBox.jsx';
 import Button from '../shared/small/Button.jsx';
 import {
   CheckboxInputType,
+  FileInputType,
   MultiCheckboxInputType,
   OtherInputType,
   RadioInputType,
@@ -361,6 +362,13 @@ function CompanyInformation({
             return (
               <div key={index} className="mt-4">
                 <RangeInputType field={field} form={form} setForm={setForm} className={''} />
+              </div>
+            );
+          }
+          if (field.type === FIELD_TYPES.FILE) {
+            return (
+              <div key={index} className="mt-4">
+                <FileInputType field={field} form={form} setForm={setForm} className={''} />
               </div>
             );
           }

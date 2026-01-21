@@ -7,6 +7,7 @@ import SignatureBox from '../shared/SignatureBox';
 import Button from '../shared/small/Button';
 import {
   CheckboxInputType,
+  FileInputType,
   MultiCheckboxInputType,
   OtherInputType,
   RadioInputType,
@@ -167,6 +168,13 @@ function CustomSection({
             return (
               <div key={index} className="mt-4">
                 <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={''} />
+              </div>
+            );
+          }
+          if (field.type === FIELD_TYPES.FILE) {
+            return (
+              <div key={index} className="mt-4">
+                <FileInputType field={field} form={form} setForm={setForm} className={''} />
               </div>
             );
           }

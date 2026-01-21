@@ -13,6 +13,7 @@ export const FIELD_TYPES = {
   PASSWORD: 'password',
   TEXTAREA: 'textarea',
   RANGE: 'range',
+  FILE: 'file',
   RADIO: 'radio',
   SELECT: 'select',
   CHECKBOX: 'checkbox',

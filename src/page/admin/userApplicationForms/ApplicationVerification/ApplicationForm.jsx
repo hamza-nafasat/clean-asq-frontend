@@ -1,3 +1,4 @@
+import AggrementBlock from '@/components/applicationVerification/AggrementBlock';
 import BankInfo from '@/components/applicationVerification/BankInfo';
 import CompanyInformation from '@/components/applicationVerification/CompanyInformation';
 import CompanyOwners from '@/components/applicationVerification/CompanyOwners';
@@ -5,12 +6,14 @@ import CustomSection from '@/components/applicationVerification/CustomSection';
 import Documents from '@/components/applicationVerification/Documents';
 import ProcessingInfo from '@/components/applicationVerification/ProcessingInfo';
 import CustomLoading from '@/components/shared/small/CustomLoading';
+import useApplyBranding from '@/hooks/useApplyBranding';
 import {
   useGetSavedFormMutation,
   useGetSingleFormQueryQuery,
   useSaveFormInDraftMutation,
   useSubmitFormMutation,
 } from '@/redux/apis/formApis';
+import { setIdMissionData } from '@/redux/slices/authSlice';
 import { addSavedFormData, updateFormHeaderAndFooter, updateFormState } from '@/redux/slices/formSlice';
 import { unwrapResult } from '@reduxjs/toolkit';
 import { useCallback, useEffect, useState } from 'react';
@@ -18,9 +21,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Stepper from '../../../../components/Stepper/Stepper';
-import { setIdMissionData } from '@/redux/slices/authSlice';
-import AggrementBlock from '@/components/applicationVerification/AggrementBlock';
-import useApplyBranding from '@/hooks/useApplyBranding';
+import { uploadFilesAndReplace } from '@/lib/utils';
 
 export default function ApplicationForm() {
   const { user } = useSelector(state => state.auth);
@@ -28,7 +29,7 @@ export default function ApplicationForm() {
   const params = useParams();
   const formId = params.formId;
   const dispatch = useDispatch();
-  const { formData, fileData } = useSelector(state => state?.form);
+  const { formData } = useSelector(state => state?.form);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [sectionNames, setSectionNames] = useState([]);
@@ -46,23 +47,28 @@ export default function ApplicationForm() {
   }, [currentStep]);
   const handleNext = useCallback(
     async ({ data, name, setLoadingNext }) => {
-      console.log('name', name);
-      console.log('data', data);
-
       try {
         setLoadingNext(true);
         if (data && name) {
-          const formDataInRedux = { ...formData, [name]: data };
-          const res = await saveFormInDraft({ formId: form?.data?._id, formData: formDataInRedux }).unwrap();
+          const updatedData = await uploadFilesAndReplace(data);
+          // Update Redux state
+          const res = await saveFormInDraft({
+            formId: form?.data?._id,
+            formData: { ...formData, [name]: updatedData },
+          }).unwrap();
+
           if (res.success) {
-            const action = await dispatch(updateFormState({ data, name }));
+            const action = await dispatch(updateFormState({ data: updatedData, name }));
             unwrapResult(action);
           }
         }
-        if (currentStep < form?.data?.sections?.length - 1) {
-          setCurrentStep(currentStep + 1);
-        }
+      } catch (error) {
+        console.log('error while handling next', error);
+        toast.error(error?.data?.message || 'Error while handling next');
       } finally {
+        // Move to next step
+        if (currentStep < form?.data?.sections?.length - 1)
+          setCurrentStep(currentStep + 1);
         setLoadingNext(false);
       }
     },
@@ -72,10 +78,15 @@ export default function ApplicationForm() {
     async ({ data, name, setLoadingNext }) => {
       try {
         setLoadingNext(true);
-        const res = await formSubmit({ formId: form?.data?._id, formData: { ...formData, [name]: data } }).unwrap();
-        if (res.success) {
-          toast.success(res.message);
-          navigate('/submited-successfully/' + form?.data?._id);
+
+        if (data && name) {
+          const updatedData = await uploadFilesAndReplace(data);
+          // Save form draft (non-file data only)
+          const res = await formSubmit({ formId: form?.data?._id, formData: { ...formData, [name]: updatedData } }).unwrap();
+          if (res.success) {
+            toast.success(res.message);
+            navigate('/submited-successfully/' + form?.data?._id);
+          }
         }
       } catch (error) {
         console.log('error submitting form', error);
@@ -89,9 +100,11 @@ export default function ApplicationForm() {
   const saveInProgress = useCallback(
     async ({ data, name }) => {
       try {
-        const formDataInRedux = { ...formData, [name]: data };
-        const res = await saveFormInDraft({ formId: form?.data?._id, formData: formDataInRedux }).unwrap();
-        if (res.success) toast.success(res.message);
+        if (data && name) {
+          const updatedData = await uploadFilesAndReplace(data);
+          const res = await saveFormInDraft({ formId: form?.data?._id, formData: { ...formData, [name]: updatedData } }).unwrap();
+          if (res.success) toast.success(res.message);
+        }
       } catch (error) {
         console.log('error while saving form in draft', error);
         toast.error(error?.data?.message || 'Error while saving form in draft');
@@ -133,7 +146,6 @@ export default function ApplicationForm() {
       const isOwner = user?._id && user?._id === form?.data?.owner;
       const visibleSections = isOwner ? form?.data?.sections : form?.data?.sections?.filter(step => !step?.isHidden);
       visibleSections.forEach(step => {
-        console.log('steppppppppp', step);
         const sectionDataFromRedux = formData?.[step?.key];
         const commonProps = {
           _id: step._id,
@@ -181,9 +193,7 @@ export default function ApplicationForm() {
       setSectionNames(stepNames);
     }
   }, [
-    currentStep,
-    fileData,
-    form?.data?.owner,
+    currentStep, form?.data?.owner,
     form?.data?.sections,
     formData,
     formLoading,
