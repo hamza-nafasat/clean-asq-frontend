@@ -109,11 +109,10 @@ function Email() {
     {sedationKeywords?.map((keyword, idx) => (
       <span
         key={idx}
-        className={`cursor-pointer rounded-md border px-2 py-1 ${
-          editData.body.toLowerCase().includes(keyword.toLowerCase())
-            ? 'border-green-400 bg-green-100'
-            : 'border-gray-300 bg-gray-100'
-        }`}
+        className={`cursor-pointer rounded-md border px-2 py-1 ${editData.body.toLowerCase().includes(keyword.toLowerCase())
+          ? 'border-green-400 bg-green-100'
+          : 'border-gray-300 bg-gray-100'
+          }`}
       >
         {keyword}
       </span>
@@ -130,9 +129,9 @@ function Email() {
     try {
       const res = isEdit
         ? await updateEmailTemplate({
-            id: viewModalData?._id,
-            ...editData,
-          }).unwrap()
+          id: viewModalData?._id,
+          ...editData,
+        }).unwrap()
         : await createEmailTemplate(editData).unwrap();
 
       if (res?.success) {
@@ -267,11 +266,10 @@ function Email() {
                     <span
                       key={idx}
                       onClick={() => setEditData(prev => ({ ...prev, body: `${prev.body} {{${keyword}}}` }))}
-                      className={`cursor-pointer rounded-md border px-2 py-1 ${
-                        editData.body.toLowerCase().includes(keyword.toLowerCase())
-                          ? 'border-green-400 bg-green-100'
-                          : 'border-gray-300 bg-gray-100'
-                      }`}
+                      className={`cursor-pointer rounded-md border px-2 py-1 ${editData.body.toLowerCase().includes(keyword.toLowerCase())
+                        ? 'border-green-400 bg-green-100'
+                        : 'border-gray-300 bg-gray-100'
+                        }`}
                     >
                       {keyword}
                     </span>
@@ -386,7 +384,7 @@ const ModalForAttachForms = React.memo(({ setIsAttachFormModalOpen, selectedTemp
       {isLoadingUnAttachedForms ? (
         <CustomLoading />
       ) : (
-        <div className="p-4">
+        <div className="p-4 min-h-[30vh]">
           <h2 className="mb-4 text-lg font-semibold">Attach To Forms</h2>
 
           <div className="mb-4">

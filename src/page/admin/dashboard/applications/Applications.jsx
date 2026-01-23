@@ -61,7 +61,7 @@ function Applications() {
   return (
     <>
       {openSpecialAccess && (
-        <Modal onClose={() => setOpenSpecialAccess(false)} title="Special Access">
+        <Modal onClose={() => setOpenSpecialAccess(false)}>
           <SpecialAccessModal formId={selectedIdForSpecialAccessModal} setModal={setOpenSpecialAccess} />
         </Modal>
       )}
@@ -153,15 +153,15 @@ export const SpecialAccessModal = ({ formId, setModal }) => {
         sectionKey: form?.sectionKey,
       }).unwrap();
       if (res?.success) {
-        toast?.success(res?.message || 'Special access sent successfully');
+        toast?.success(res?.message || 'Form forwarded successfully');
         setModal(false);
         setSelectedUsers([]);
         setSpecialSections([]);
         setForm({ userId: '', sectionKey: '' });
       }
     } catch (error) {
-      console.error('Error giving special access to user:', error);
-      toast.error(error?.data?.message || 'Failed to give special access to user');
+      console.error('Error forwarding a form to user:', error);
+      toast.error(error?.data?.message || 'Failed to forward a form to user');
     }
   };
 
@@ -195,7 +195,7 @@ export const SpecialAccessModal = ({ formId, setModal }) => {
     <div className="flex items-center justify-center p-4">
       <div className="flex w-full max-w-2xl flex-col gap-6">
         {/* Heading */}
-        <h3 className="text-center text-lg font-semibold text-gray-800">Give Special Access to Users</h3>
+        <h3 className="text-center text-lg font-semibold text-gray-800">  Forward a form to Beneficial Owners</h3>
 
         <div className="flex flex-col gap-2">
           <CustomizableSelect

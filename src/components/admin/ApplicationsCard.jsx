@@ -168,11 +168,6 @@ export default function ApplicationsCard() {
           <FormConfigurationModal form={selectedForm} refetch={refetch} setModal={setOpenFormUpdate} />
         </Modal>
       )}
-      {/* {openSpecialAccess && (
-        <Modal onClose={() => setOpenSpecialAccess(false)} title="Special Access">
-          <SpecialAccessModal formId={selectedForm?._id} refetch={refetch} setModal={setOpenSpecialAccess} />
-        </Modal>
-      )} */}
 
       {locationModal && (
         <Modal onClose={() => setLocationModal(false)} title="Set Location">
@@ -309,16 +304,6 @@ export default function ApplicationsCard() {
                         >
                           Update Form
                         </button>
-                        {/* <button
-                          className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-                          onClick={() => {
-                            setSelectedId(form?._id);
-                            setSelectedForm(form);
-                            setOpenSpecialAccess(true);
-                          }}
-                        >
-                          Special Access
-                        </button> */}
                         <button
                           className="block w-full px-4 py-2 text-left hover:bg-gray-100"
                           onClick={() => {

@@ -250,7 +250,7 @@ function BankInfo({
                       className="flex-1"
                     />
                     <Button
-                      label={isLoading ? 'Entering...' : 'Enter'}
+                      label={isLoading ? 'Looking Up...' : 'Look Up'}
                       className="mt-8"
                       onClick={async () => {
                         if (form[field?.name]) {
