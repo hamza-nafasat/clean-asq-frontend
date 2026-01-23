@@ -4,11 +4,17 @@ import DOMPurify from 'dompurify';
 import { useCallback, useRef, useState } from 'react';
 import { IoEyeOffSharp } from 'react-icons/io5';
 import { RxEyeOpen } from 'react-icons/rx';
+import { PiFileArrowUpFill } from 'react-icons/pi';
+import { CgSoftwareUpload } from 'react-icons/cg';
 import { toast } from 'react-toastify';
 import Button from './Button';
 import Modal from './Modal';
 import TextField from './TextField';
 import { Autocomplete } from '@react-google-maps/api';
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml',];
+const ALLOWED_TEXT_EXTENSIONS = ['.csv', '.txt', '.rtf'];
+const FORBIDDEN_EXTENSIONS = ['.doc', '.docx', '.xls', '.xlsx'];
 
 const DynamicField = ({ cn, field, className = '', form, placeholder, value, setForm, ...rest }) => {
   const { type, label, id, options, name, required } = field;
@@ -514,8 +520,8 @@ const RangeInputType = ({ field, className, form, setForm }) => {
             type="number"
             value={Number(form[name]) || 0}
             className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${(required && isEmpty(form[name])) || form[name] === 0
-                ? 'border-accent bg-highlighting border-2'
-                : 'border-frameColor border'
+              ? 'border-accent bg-highlighting border-2'
+              : 'border-frameColor border'
               }`}
             onChange={onRangeChange}
           />
@@ -721,8 +727,8 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                     readOnly={showMasked}
                     autoComplete="off"
                     className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${required && isEmpty(form[name])
-                        ? 'border-accent bg-highlighting border-2'
-                        : 'border-frameColor border'
+                      ? 'border-accent bg-highlighting border-2'
+                      : 'border-frameColor border'
                       } `}
                     {...(isConfirmField
                       ? {
@@ -755,8 +761,8 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                           }))
                         }
                         className={`relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${required && isEmpty(form[name])
-                            ? 'border-accent bg-highlighting border-2'
-                            : 'border-frameColor border'
+                          ? 'border-accent bg-highlighting border-2'
+                          : 'border-frameColor border'
                           } `}
                       />
                     </Autocomplete>
@@ -809,8 +815,8 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                       readOnly={showMasked}
                       autoComplete="off"
                       className={`relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${required && isEmpty(form[name])
-                          ? 'border-accent bg-highlighting border-2'
-                          : 'border-frameColor border'
+                        ? 'border-accent bg-highlighting border-2'
+                        : 'border-frameColor border'
                         } `}
                       {...(isConfirmField
                         ? {
@@ -892,6 +898,9 @@ const FileInputType = ({ field, className, form, setForm }) => {
     ai_formatting,
   } = field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
+  const [fileName, setFileName] = useState('');
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const inputRef = useRef(null);
 
   const isEmpty = value => {
     if (value === undefined || value === null) return true;
@@ -900,15 +909,60 @@ const FileInputType = ({ field, className, form, setForm }) => {
     return false;
   };
 
-  const fileHandler = e => {
-    const file = e.target.files[0];
+  const fileHandler = file => {
     if (!file) return;
 
+    const fileNameLower = file.name.toLowerCase();
+    const mimeType = file.type;
+
+    // ---- hard reject forbidden formats ----
+    if (FORBIDDEN_EXTENSIONS.some(ext => fileNameLower.endsWith(ext))) {
+      toast.error('DOC and Excel files are not allowed');
+      if (inputRef.current) inputRef.current.value = '';
+      return;
+    }
+
+    const isImage = ALLOWED_IMAGE_TYPES.includes(mimeType);
+    const isPdf =
+      mimeType === 'application/pdf' || fileNameLower.endsWith('.pdf');
+    const isText =
+      mimeType.startsWith('text/') ||
+      ALLOWED_TEXT_EXTENSIONS.some(ext => fileNameLower.endsWith(ext));
+
+    if (!isImage && !isPdf && !isText) {
+      toast.error('Unsupported file type');
+      if (inputRef.current) inputRef.current.value = '';
+      return;
+    }
+
+    setFileName(file.name);
     setForm(prev => ({
       ...prev,
-      [name]: { file }
+      [name]: { file },
     }));
+
+    // Set preview for images
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onloadend = () => setPreviewUrl(reader.result);
+      reader.readAsDataURL(file);
+    } else {
+      setPreviewUrl(null);
+    }
   };
+
+  const handleFileChange = e => {
+    const file = e.target.files?.[0];
+    if (file) fileHandler(file);
+  };
+
+  const handleDrop = e => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) fileHandler(file);
+  };
+
+  const handleDragOver = e => e.preventDefault();
 
   return (
     <div className={`flex w-full flex-col items-start ${className}`}>
@@ -922,12 +976,12 @@ const FileInputType = ({ field, className, form, setForm }) => {
         </Modal>
       )}
       {label && (
-        <h4 className="text-textPrimary text-base font-medium lg:text-lg">
+        <label className="mb-2 block text-sm text-[#666666] lg:text-base">
           {label}:{required ? '*' : ''}
-        </h4>
+        </label>
       )}
       {ai_formatting && isDisplayText && (
-        <div className="flex h-full w-full flex-col gap-4">
+        <div className="flex h-full w-full flex-col gap-4 mb-2">
           <div
             dangerouslySetInnerHTML={{
               __html: String(ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
@@ -939,15 +993,42 @@ const FileInputType = ({ field, className, form, setForm }) => {
         </div>
       )}
       <div className="flex w-full gap-2 mt-2">
-        <input
-          type="file"
-          name={name}
-          onChange={fileHandler}
-          className={`relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${required && isEmpty(form[name])
-              ? 'border-accent bg-highlighting border-2'
-              : 'border-frameColor border'
-            } ${className}`}
-        />
+        <div className="w-full">
+          <div
+            className={`relative mt-2 flex h-[283px] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-10 text-gray-500 transition hover:border-[#5570F1] hover:bg-blue-50 ${required && isEmpty(form[name])
+              ? 'border-accent bg-highlighting'
+              : 'border-gray-300'
+              }`}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onClick={() => inputRef.current?.click()}
+          >
+            <PiFileArrowUpFill className="text-textPrimary text-8xl" />
+            <h4 className="text-textPrimary text-base font-medium">Click to upload or drag and drop a file</h4>
+            <h5 className="text-textPrimary">pdf, jpg, png, csv, txt, rtf up to 10MB</h5>
+            <Button
+              label={'Select file'}
+              className="text-textPrimary! border-gray-300! bg-white! hover:bg-gray-500!"
+              rightIcon={CgSoftwareUpload}
+            />
+            <input
+              ref={inputRef}
+              type="file"
+              name={name}
+              accept="image/*,application/pdf,text/csv,text/plain,application/rtf"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
+
+          {fileName && (
+            <div className="mt-2 text-sm text-gray-700">Selected: {fileName}</div>
+          )}
+
+          {previewUrl && (
+            <img src={previewUrl} alt="Preview" className="mt-3 max-h-40 rounded border" />
+          )}
+        </div>
         {aiHelp && (
           <div className="flex items-center">
             <Button

@@ -361,6 +361,8 @@ export default function SingleApplication() {
           state: formDataOfIdMission?.state || '',
           city: formDataOfIdMission?.city || '',
           signature: formDataOfIdMission?.signature || '',
+          createdAt: formDataOfIdMission?.createdAt || new Date().toISOString(),
+          updatedAt: formDataOfIdMission?.updatedAt || new Date().toISOString(),
         });
         if (formDataOfIdMission?.name && savedData?.company_lookup_data) {
           setIdMissionVerified(true);
@@ -469,6 +471,8 @@ export default function SingleApplication() {
         city: formDataOfIdMission?.city || '',
         signature: formDataOfIdMission?.signature || '',
         roleFillingForCompany: formDataOfIdMission?.roleFillingForCompany || '',
+        createdAt: formDataOfIdMission?.createdAt || new Date().toISOString(),
+        updatedAt: formDataOfIdMission?.updatedAt || new Date().toISOString(),
       });
       setIdMissionVerified(true);
       setOpenRedirectModal(true);
@@ -571,6 +575,8 @@ export default function SingleApplication() {
         state: formDataOfIdMission?.ParsedAddressProvince || '',
         city: formDataOfIdMission?.ParsedAddressMunicipality || '',
         data: formDataOfIdMission || 'null',
+        createdAt: idMissionVerifiedData?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
       setIdMissionVerified(true);
     });
@@ -621,6 +627,8 @@ export default function SingleApplication() {
         state: formDataOfIdMission?.ParsedAddressProvince || '',
         city: formDataOfIdMission?.ParsedAddressMunicipality || '',
         data: formDataOfIdMission || 'null',
+        createdAt: idMissionVerifiedData?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
       unwrapResult(action);
       setIsIdMissionProcessing(false);
@@ -670,6 +678,8 @@ export default function SingleApplication() {
         state: formDataOfIdMission?.ParsedAddressProvince || '',
         city: formDataOfIdMission?.ParsedAddressMunicipality || '',
         data: formDataOfIdMission || 'null',
+        createdAt: idMissionVerifiedData?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
       unwrapResult(action);
       toast.error("you id didn't approved please try again");
@@ -684,7 +694,7 @@ export default function SingleApplication() {
       socket.off('idMission_failed');
       socket.off('idMission_other');
     };
-  }, [dispatch, formId, formatData, getUserProfile, idMissionVerified, updateMyProfile, user?._id, user?.email]);
+  }, [dispatch, formId, formatData, getUserProfile, idMissionVerified, idMissionVerifiedData?.createdAt, updateMyProfile, user?._id, user?.email]);
 
   // check validations
   useEffect(() => {

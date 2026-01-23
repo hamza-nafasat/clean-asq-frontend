@@ -51,6 +51,16 @@ export default function ApplicationForm() {
         setLoadingNext(true);
         if (data && name) {
           const updatedData = await uploadFilesAndReplace(data);
+          // check if not createdAt and updatedAt fields in data then add them 
+          const oldData = formData?.[name];
+          updatedData.updatedAt = new Date().toISOString();
+          if (!updatedData.createdAt && !oldData?.createdAt) {
+            updatedData.createdAt = new Date().toISOString();
+          } else if (oldData?.createdAt) {
+            updatedData.createdAt = oldData?.createdAt;
+          } else {
+            updatedData.createdAt = new Date().toISOString();
+          }
           // Update Redux state
           const res = await saveFormInDraft({
             formId: form?.data?._id,
@@ -81,6 +91,16 @@ export default function ApplicationForm() {
 
         if (data && name) {
           const updatedData = await uploadFilesAndReplace(data);
+          // check if not createdAt and updatedAt fields in data then add them 
+          const oldData = formData?.[name];
+          updatedData.updatedAt = new Date().toISOString();
+          if (!updatedData.createdAt && !oldData?.createdAt) {
+            updatedData.createdAt = new Date().toISOString();
+          } else if (oldData?.createdAt) {
+            updatedData.createdAt = oldData?.createdAt;
+          } else {
+            updatedData.createdAt = new Date().toISOString();
+          }
           // Save form draft (non-file data only)
           const res = await formSubmit({ formId: form?.data?._id, formData: { ...formData, [name]: updatedData } }).unwrap();
           if (res.success) {
@@ -102,6 +122,16 @@ export default function ApplicationForm() {
       try {
         if (data && name) {
           const updatedData = await uploadFilesAndReplace(data);
+          // check if not createdAt and updatedAt fields in data then add them 
+          const oldData = formData?.[name];
+          updatedData.updatedAt = new Date().toISOString();
+          if (!updatedData.createdAt && !oldData?.createdAt) {
+            updatedData.createdAt = new Date().toISOString();
+          } else if (oldData?.createdAt) {
+            updatedData.createdAt = oldData?.createdAt;
+          } else {
+            updatedData.createdAt = new Date().toISOString();
+          }
           const res = await saveFormInDraft({ formId: form?.data?._id, formData: { ...formData, [name]: updatedData } }).unwrap();
           if (res.success) toast.success(res.message);
         }

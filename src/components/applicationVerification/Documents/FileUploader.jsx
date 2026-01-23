@@ -3,7 +3,7 @@ import { PiFileArrowUpFill } from 'react-icons/pi';
 import { CgSoftwareUpload } from 'react-icons/cg';
 import Button from '@/components/shared/small/Button';
 
-const FileUploader = ({ label = '', accept = '.pdf,image/*,.csv', onFileSelect = () => {} }) => {
+const FileUploader = ({ label = '', accept = '.pdf,image/*,.csv', onFileSelect = () => { } }) => {
   const [fileName, setFileName] = useState('');
   const [previewUrl, setPreviewUrl] = useState(null);
   const inputRef = useRef(null);
@@ -54,7 +54,7 @@ const FileUploader = ({ label = '', accept = '.pdf,image/*,.csv', onFileSelect =
         <h5 className="text-textPrimary">.pdf, .doc, .docx, .jpg, .png, .csv up to 10MB</h5>
         <Button
           label={'Select file'}
-          className="!text-textPrimary !border-gray-300 !bg-white hover:!bg-gray-500"
+          className="text-textPrimary! border-gray-300! bg-white! hover:bg-gray-500!"
           rightIcon={CgSoftwareUpload}
         />
         <input ref={inputRef} type="file" accept={accept} onChange={handleFileChange} className="hidden" />

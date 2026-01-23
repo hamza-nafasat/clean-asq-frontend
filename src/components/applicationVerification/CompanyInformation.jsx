@@ -38,7 +38,6 @@ function CompanyInformation({
   step,
   isSignature,
 }) {
-  console.log('sectionKey', sectionKey);
   const prevRef = useRef(null);
   const containerRef = useRef(null);
   const { user } = useSelector(state => state.auth);
