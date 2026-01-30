@@ -10,6 +10,11 @@ const columns = () => [
     selector: row => row?.updatedBy?.name,
     sortable: true,
   },
+  {
+    name: 'Email',
+    selector: row => row?.updatedBy?.email,
+    sortable: true,
+  },
 
   {
     name: 'Action',
@@ -19,12 +24,12 @@ const columns = () => [
 
   {
     name: 'Created At',
-    selector: row => new Date(row?.createdAt || "").toLocaleDateString(),
+    selector: row => new Date(row?.createdAt || "").toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
     sortable: true,
   },
   {
     name: 'Updated At',
-    selector: row => new Date(row?.createdAt || '').toLocaleDateString(),
+    selector: row => new Date(row?.updatedAt || "").toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
     sortable: true,
   },
 
@@ -39,13 +44,15 @@ const History = ({ data }) => {
 
   useEffect(() => {
     if (data?.submitData) {
-      setSubmitData(Object.entries(data?.submitData).map(([key, value]) => {
-        console.log('value is in history ', key);
+      const gatedSubmitData = Object.entries(data?.submitData).map(([key, value]) => {
+        if (key === 'company_lookup_data') return null;
         const updatedValue = {
           ...value, originalSectionKey: key,
         }
         return updatedValue;
-      }));
+      });
+
+      setSubmitData(gatedSubmitData?.filter(item => item !== null));
     }
   }, [data]);
 
