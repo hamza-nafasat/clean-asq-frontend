@@ -61,6 +61,12 @@ export default function ApplicationForm() {
           } else {
             updatedData.createdAt = new Date().toISOString();
           }
+          const updatedBy = {
+            _id: user?._id,
+            email: user?.email,
+            name: user?.firstName + " " + user?.lastName,
+          }
+          updatedData.updatedBy = updatedBy;
           // Update Redux state
           const res = await saveFormInDraft({
             formId: form?.data?._id,
@@ -82,7 +88,7 @@ export default function ApplicationForm() {
         setLoadingNext(false);
       }
     },
-    [currentStep, dispatch, form?.data?._id, form?.data?.sections?.length, formData, saveFormInDraft]
+    [currentStep, dispatch, form?.data?._id, form?.data?.sections?.length, formData, saveFormInDraft, user]
   );
   const handleSubmit = useCallback(
     async ({ data, name, setLoadingNext }) => {
@@ -101,6 +107,12 @@ export default function ApplicationForm() {
           } else {
             updatedData.createdAt = new Date().toISOString();
           }
+          const updatedBy = {
+            _id: user?._id,
+            email: user?.email,
+            name: user?.firstName + " " + user?.lastName,
+          }
+          updatedData.updatedBy = updatedBy;
           // Save form draft (non-file data only)
           const res = await formSubmit({ formId: form?.data?._id, formData: { ...formData, [name]: updatedData } }).unwrap();
           if (res.success) {
@@ -115,7 +127,7 @@ export default function ApplicationForm() {
         setLoadingNext(false);
       }
     },
-    [form?.data?._id, formData, formSubmit, navigate]
+    [form?.data?._id, formData, formSubmit, navigate, user]
   );
   const saveInProgress = useCallback(
     async ({ data, name }) => {
@@ -132,6 +144,12 @@ export default function ApplicationForm() {
           } else {
             updatedData.createdAt = new Date().toISOString();
           }
+          const updatedBy = {
+            _id: user?._id,
+            email: user?.email,
+            name: user?.firstName + " " + user?.lastName,
+          }
+          updatedData.updatedBy = updatedBy;
           const res = await saveFormInDraft({ formId: form?.data?._id, formData: { ...formData, [name]: updatedData } }).unwrap();
           if (res.success) toast.success(res.message);
         }
@@ -140,7 +158,7 @@ export default function ApplicationForm() {
         toast.error(error?.data?.message || 'Error while saving form in draft');
       }
     },
-    [form?.data?._id, formData, saveFormInDraft]
+    [form?.data?._id, formData, saveFormInDraft, user]
   );
 
   useEffect(() => {

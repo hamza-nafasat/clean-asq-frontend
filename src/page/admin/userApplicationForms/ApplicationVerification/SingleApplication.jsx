@@ -317,7 +317,15 @@ export default function SingleApplication() {
       try {
         if (!formId) return toast.error('From id not provided');
         const { data: userDetailsData } = await collectClientDetails();
-        const formDataInRedux = { ...formData, [name]: data, ['metadata']: userDetailsData };
+        const formDataInRedux = {
+          ...formData, [name]: data,
+          ['metadata']: {
+            ...userDetailsData,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            updatedBy: { _id: user?._id, email: user?.email, name: user?.firstName + " " + user?.lastName }
+          },
+        };
         // console.log('save in progress', formDataInRedux);
         const res = await saveFormInDraft({
           formId: formId,
@@ -329,7 +337,7 @@ export default function SingleApplication() {
         toast.error(error?.data?.message || 'Error while saving form in draft');
       }
     },
-    [formData, formId, saveFormInDraft]
+    [formData, formId, saveFormInDraft, user?._id, user?.email, user?.firstName, user?.lastName]
   );
 
   const getSavedFormDataAndSaveInRedux = useCallback(async () => {
@@ -389,7 +397,12 @@ export default function SingleApplication() {
         }
         const action = await dispatch(updateFormState({ data: idMissionVerifiedData, name: 'idMission' }));
         unwrapResult(action);
-        await saveInProgress({ data: idMissionVerifiedData, name: 'idMission' });
+        await saveInProgress({
+          data: {
+            ...idMissionVerifiedData,
+            updatedBy: { _id: user?._id, email: user?.email, name: user?.firstName + " " + user?.lastName }
+          }, name: 'idMission'
+        });
         return navigate(`/singleform/stepper/${formId}`);
       } catch (error) {
         console.log('error while saving form in draft', error);
@@ -397,7 +410,7 @@ export default function SingleApplication() {
         setSubmiting(false);
       }
     },
-    [dispatch, formId, idMissionVerifiedData, navigate, saveInProgress]
+    [dispatch, formId, idMissionVerifiedData, navigate, saveInProgress, user?._id, user?.email, user?.firstName, user?.lastName]
   );
 
   const getQrAndWebLink = useCallback(async () => {

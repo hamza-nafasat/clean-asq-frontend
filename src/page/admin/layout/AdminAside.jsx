@@ -37,7 +37,7 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
     { title: 'Strategies', link: '/strategies', icon: <PiStrategyBold /> },
     {
       title: 'Pdf View',
-      link: `singleform/pdf-view/69204e77ea277be77a9152b7/${user?._id}`,
+      link: `singleform/pdf-view/696f5c44bb3b82a0641facec/${user?._id}`,
       icon: <RiHistoryLine size={20} />,
     },
     {
@@ -73,11 +73,10 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
                 src={logo || logoApply}
                 alt="logo"
                 referrerPolicy="no-referrer"
-                className={`object-contain ${
-                  isNavOpen
+                className={`object-contain ${isNavOpen
                     ? 'h-[50px] max-w-40' // full logo when open
                     : 'h-10 w-10'
-                } // compact logo when closed ${isLight ? 'rounded-sm bg-gray-700' : ''} `}
+                  } // compact logo when closed ${isLight ? 'rounded-sm bg-gray-700' : ''} `}
               />
             </Link>
           </div>

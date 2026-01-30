@@ -22,6 +22,18 @@ import logoApply from '../../../../assets/images/logo.png';
 const ApplicationPdfView = () => {
   const { pdfId, userId } = useParams();
   useApplyBranding({ formId: pdfId });
+
+  return (
+    <>
+      <ApplicationPdfViewCommonProps userId={userId} pdfId={pdfId} isPdf={true} />
+    </>
+  );
+};
+
+export default ApplicationPdfView;
+
+
+export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false }) => {
   const { logo } = useBranding();
   const { formData } = useSelector(state => state.form);
   const dispatch = useDispatch();
@@ -53,7 +65,7 @@ const ApplicationPdfView = () => {
   if (!form || getSavedFormDataLoading || formLoading) return;
   return (
     <>
-      <div className="flex h-16 items-center justify-between rounded-md border-b bg-white px-6 shadow">
+      {isPdf && <div className="flex h-16 items-center justify-between rounded-md border-b bg-white px-6 shadow">
         {/* Hamburger Icon (mobile only) */}
         <div className="my-4 flex items-center gap-8">
           <img
@@ -77,11 +89,11 @@ const ApplicationPdfView = () => {
             })}
           </h3>
         </div>
-      </div>
+      </div>}
       <div className="h-full w-full space-y-12 overflow-visible bg-white px-6 py-8">
         <IdMissionDataPdf formId={pdfId} />
         {form?.data?.sections?.map((section, index) => {
-          const sectionDataFromRedux = formData?.[section?.title];
+          const sectionDataFromRedux = formData?.[section?.key];
           const commonProps = {
             _id: section._id,
             name: section.name,
@@ -118,5 +130,3 @@ const ApplicationPdfView = () => {
     </>
   );
 };
-
-export default ApplicationPdfView;

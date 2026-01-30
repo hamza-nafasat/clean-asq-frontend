@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import SignatureBox from '../../shared/SignatureBox';
 import {
   CheckboxInputType,
+  FileInputType,
   MultiCheckboxInputType,
   OtherInputType,
   RadioInputType,
@@ -91,6 +92,20 @@ function CustomSectionPdf({ fields, name, step, reduxData, isSignature }) {
             return (
               <div key={index} className="mt-4">
                 <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={''} />
+              </div>
+            );
+          }
+          if (field.type === FIELD_TYPES.FILE) {
+            return (
+              <div key={index} className="mt-4">
+                <FileInputType field={field} form={form} setForm={setForm} className={''} />
+              </div>
+            );
+          }
+          if (field.type === FIELD_TYPES.FILE) {
+            return (
+              <div key={index} className="mt-4">
+                <FileInputType field={field} form={form} setForm={setForm} className={''} />
               </div>
             );
           }

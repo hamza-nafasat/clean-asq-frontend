@@ -26,7 +26,6 @@ function Applications() {
 
   const { data, isLoading: isLoadingForm } = useGetAllSubmitFormsQuery();
 
-  console.log('data is ', data);
 
   const handleViewApplicant = useCallback(
     id => {
@@ -168,7 +167,7 @@ export const SpecialAccessModal = ({ formId, setModal }) => {
   useEffect(() => {
     setIsLoading(true);
     if (formData?.data?.sections?.length > 0) {
-      const specialSections = formData?.data?.sections?.filter(section => section?.isHidden && section?.key !== 'beneficial_owner');
+      const specialSections = formData?.data?.sections?.filter(section => section?.isHidden && section?.key !== 'beneficial_owners');
       const formatedSpecialSections = specialSections?.map(section => ({
         option: section?.name,
         value: section?.key,

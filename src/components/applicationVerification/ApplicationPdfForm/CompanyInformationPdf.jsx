@@ -11,6 +11,7 @@ import SignatureBox from '../../shared/SignatureBox';
 import Button from '../../shared/small/Button';
 import {
   CheckboxInputType,
+  FileInputType,
   MultiCheckboxInputType,
   OtherInputType,
   RadioInputType,
@@ -27,6 +28,7 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
   const { formData } = useSelector(state => state?.form);
   const [customizeModal, setCustomizeModal] = useState(false);
   const [form, setForm] = useState({});
+  console.log('i am from company information pdf', form);
   const [naicsToMccDetails, setNaicsToMccDetails] = useState({
     NAICS: reduxData?.naics?.NAICS || '',
     NAICS_Description: reduxData?.naics?.NAICS_Description || '',
@@ -175,6 +177,7 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
           initialForm[field.name] = reduxData?.[field?.name] || formatedData || '';
         } else {
           initialForm[field.name] = reduxData?.[field?.name] || fieldValueFromLookupData || '';
+
         }
       });
       setForm(initialForm);
@@ -258,6 +261,13 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
                   setForm={setForm}
                   className={''}
                 />
+              </div>
+            );
+          }
+          if (field.type === FIELD_TYPES.FILE) {
+            return (
+              <div key={index} className="mt-4">
+                <FileInputType field={field} form={form} setForm={setForm} className={''} />
               </div>
             );
           }

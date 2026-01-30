@@ -8,6 +8,8 @@ import { toast } from 'react-toastify';
 import Button from '@/components/shared/small/Button';
 import Modal from '@/components/shared/Modal';
 import TextField from '@/components/shared/small/TextField';
+import { CgSoftwareDownload, CgSoftwareUpload } from 'react-icons/cg';
+import { PiFileArrowUpFill } from 'react-icons/pi';
 
 const DynamicField = ({ cn, field, className = '', form, placeholder, value, setForm, ...rest }) => {
   const { type, label, id, options, name, required } = field;
@@ -387,20 +389,20 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
       <div className="flex w-full gap-2 px-6">
         {form?.[name] && conditional_fields?.length
           ? conditional_fields?.map((f, index) => {
-              const fieldName = `${name}/${f?.name}`;
-              return (
-                <div className="flex w-full flex-col gap-2" key={index}>
-                  <TextField
-                    value={form?.[fieldName]}
-                    type={f?.type}
-                    label={f?.label}
-                    name={fieldName}
-                    required={f?.required}
-                    onChange={e => setForm({ ...form, [e.target.name]: e.target.value })}
-                  />
-                </div>
-              );
-            })
+            const fieldName = `${name}/${f?.name}`;
+            return (
+              <div className="flex w-full flex-col gap-2" key={index}>
+                <TextField
+                  value={form?.[fieldName]}
+                  type={f?.type}
+                  label={f?.label}
+                  name={fieldName}
+                  required={f?.required}
+                  onChange={e => setForm({ ...form, [e.target.name]: e.target.value })}
+                />
+              </div>
+            );
+          })
           : null}
       </div>
     </div>
@@ -467,6 +469,116 @@ const RangeInputType = ({ field, className, form, setForm }) => {
             onChange={onRangeChange}
           />
         </div>
+      </div>
+    </div>
+  );
+};
+
+const FileInputType = ({ field, className, form }) => {
+  const {
+    label,
+    name,
+    required,
+    aiHelp,
+    aiPrompt,
+    aiResponse,
+    isDisplayText,
+    ai_formatting,
+  } = field;
+  const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
+  const [fileName] = useState('');
+
+
+  if (!form?.[name]?.secureUrl || !form?.[name]?.resourceType) {
+    return null;
+  }
+
+
+  return (
+    <div className={`flex w-full flex-col items-start ${className}`}>
+      {openAiHelpModal && (
+        <Modal onClose={() => setOpenAiHelpModal(false)}>
+          <AiHelpModal
+            aiPrompt={aiPrompt}
+            aiResponse={aiResponse}
+            setOpenAiHelpModal={setOpenAiHelpModal}
+          />
+        </Modal>
+      )}
+      {label && (
+        <label className="mb-2 block text-sm text-[#666666] lg:text-base">
+          {label}:{required ? '*' : ''}
+        </label>
+      )}
+      {ai_formatting && isDisplayText && (
+        <div className="flex h-full w-full flex-col gap-4 mb-2">
+          <div
+            dangerouslySetInnerHTML={{
+              __html: String(ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
+                if (match.includes('target=')) return match;
+                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              }),
+            }}
+          />
+        </div>
+      )}
+      <div className="flex w-full gap-2 mt-2">
+        <div className="w-full">
+          {/* <div
+            className={`relative mt-2 flex h-[283px] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-10 text-gray-500 transition hover:border-[#5570F1] hover:bg-blue-50 ${required && isEmpty(form[name])
+              ? 'border-accent bg-highlighting'
+              : 'border-gray-300'
+              }`}
+            onDrop={() => { }}
+            onDragOver={handleDragOver}
+            onClick={() => () => { }}
+          >
+            <PiFileArrowUpFill className="text-textPrimary text-8xl" />
+            <h4 className="text-textPrimary text-base font-medium">Click to upload or drag and drop a file</h4>
+            <h5 className="text-textPrimary">pdf, jpg, png, csv, txt, rtf up to 10MB</h5>
+            <Button
+              label={'Select file'}
+              className="text-textPrimary! border-gray-300! bg-white! hover:bg-gray-500!"
+              rightIcon={CgSoftwareUpload}
+            />
+            <input
+              ref={inputRef}
+              type="file"
+              name={name}
+              accept="image/*,application/pdf,text/csv,text/plain,application/rtf"
+              onChange={() => { }}
+              className="hidden"
+            />
+          </div> */}
+
+          {fileName && (
+            <div className="mt-2 text-sm text-gray-700">Selected: {fileName}</div>
+          )}
+
+          {form?.[name]?.secureUrl && form?.[name]?.resourceType === 'raw' && (
+            <Button
+              label="Download"
+              className="text-textPrimary! border-gray-300! bg-white! hover:bg-gray-500!"
+              rightIcon={CgSoftwareDownload}
+              onClick={() => {
+                window.open(form?.[name]?.secureUrl, '_blank');
+              }}
+            />
+          )}
+          {form?.[name]?.secureUrl && form?.[name]?.resourceType === 'image' && (
+            <img src={form?.[name]?.secureUrl} alt="Preview" className="mt-3 max-h-40 rounded border" />
+          )}
+
+        </div>
+        {aiHelp && (
+          <div className="flex items-center">
+            <Button
+              label="Help"
+              className="max-h-fit! text-nowrap"
+              onClick={() => setOpenAiHelpModal(true)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -594,15 +706,14 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                     onBlur={() => setShowMasked(true)}
                     readOnly={showMasked}
                     autoComplete="off"
-                    className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
-                      required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
-                    }`}
+                    className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
+                      }`}
                     {...(isConfirmField
                       ? {
-                          onPaste: e => e.preventDefault(),
-                          onCopy: e => e.preventDefault(),
-                          onCut: e => e.preventDefault(),
-                        }
+                        onPaste: e => e.preventDefault(),
+                        onCopy: e => e.preventDefault(),
+                        onCut: e => e.preventDefault(),
+                      }
                       : {})}
                   />
                 </div>
@@ -628,15 +739,14 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                     }}
                     readOnly={showMasked}
                     autoComplete="off"
-                    className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
-                      required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
-                    }`}
+                    className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
+                      }`}
                     {...(isConfirmField
                       ? {
-                          onPaste: e => e.preventDefault(),
-                          onCopy: e => e.preventDefault(),
-                          onCut: e => e.preventDefault(),
-                        }
+                        onPaste: e => e.preventDefault(),
+                        onCopy: e => e.preventDefault(),
+                        onCut: e => e.preventDefault(),
+                      }
                       : {})}
                   />
 
@@ -707,9 +817,8 @@ const AiHelpModal = ({ aiResponse }) => {
           {chatHistory?.map((msg, index) => (
             <div
               key={index}
-              className={`rounded-lg p-3 ${
-                msg.role === 'user' ? 'self-end bg-blue-100 text-gray-800' : 'self-start bg-gray-100 text-gray-700'
-              }`}
+              className={`rounded-lg p-3 ${msg.role === 'user' ? 'self-end bg-blue-100 text-gray-800' : 'self-start bg-gray-100 text-gray-700'
+                }`}
             >
               <div
                 dangerouslySetInnerHTML={{
@@ -746,5 +855,6 @@ export {
   OtherInputType,
   RadioInputType,
   RangeInputType,
+  FileInputType,
   SelectInputType,
 };

@@ -221,7 +221,7 @@ function CompanyVerification({ formId, brandingName }) {
               value={form.name}
               onChange={
                 verifyCompanyLoading || lookupCompanyLoading
-                  ? () => {}
+                  ? () => { }
                   : e => setForm({ ...form, name: e.target.value })
               }
             />
@@ -230,7 +230,7 @@ function CompanyVerification({ formId, brandingName }) {
               className="w-full rounded px-2 text-sm"
               value={form.url}
               onChange={
-                verifyCompanyLoading || lookupCompanyLoading ? () => {} : e => setForm({ ...form, url: e.target.value })
+                verifyCompanyLoading || lookupCompanyLoading ? () => { } : e => setForm({ ...form, url: e.target.value })
               }
             />
             <Checkbox

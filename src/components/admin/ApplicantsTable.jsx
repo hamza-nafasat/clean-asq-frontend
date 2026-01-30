@@ -1,15 +1,16 @@
 import { APPLICANT_STATUS } from '@/data/constants';
-import { ArrowRight, Eye, MoreVertical, Pencil, Trash } from 'lucide-react';
+import { useDeleteSingleSubmitFormMutation } from '@/redux/apis/formApis';
+import { ArrowRight, Eye, MoreVertical, Pencil, Trash, UserIcon } from 'lucide-react';
 import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DataTable from 'react-data-table-component';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import ConfirmationModal from '../shared/ConfirmationModal';
 import Modal from '../shared/Modal';
 import TextField from '../shared/small/TextField';
 import { ThreeDotEditViewDelete } from '../shared/ThreeDotViewEditDelete';
 import ApplicantSearch from './ApplicantSearch';
-import { useDeleteSingleSubmitFormMutation } from '@/redux/apis/formApis';
-import { toast } from 'react-toastify';
-import ConfirmationModal from '../shared/ConfirmationModal';
 // Table columns configuration
 const APPLICANT_TABLE_COLUMNS = [
   {
@@ -54,11 +55,9 @@ const APPLICANT_TABLE_COLUMNS = [
     // width: '200px'
     cell: row => (
       <span
-        className={`w-[100px] rounded-sm px-[10px] py-[3px] text-center font-bold capitalize ${
-          row.status === APPLICANT_STATUS.APPROVED ? 'bg-[#34C7591A] text-[#34C759]' : ''
-        } ${row.status === APPLICANT_STATUS.REJECTED ? 'bg-[#FF3B301A] text-[#FF3B30]' : ''} ${
-          row.status === APPLICANT_STATUS.PENDING ? 'bg-yellow-100 text-yellow-800' : ''
-        } ${row.status === APPLICANT_STATUS.REVIEWING ? 'bg-blue-100 text-blue-500' : ''}`}
+        className={`w-[100px] rounded-sm px-[10px] py-[3px] text-center font-bold capitalize ${row.status === APPLICANT_STATUS.APPROVED ? 'bg-[#34C7591A] text-[#34C759]' : ''
+          } ${row.status === APPLICANT_STATUS.REJECTED ? 'bg-[#FF3B301A] text-[#FF3B30]' : ''} ${row.status === APPLICANT_STATUS.PENDING ? 'bg-yellow-100 text-yellow-800' : ''
+          } ${row.status === APPLICANT_STATUS.REVIEWING ? 'bg-blue-100 text-blue-500' : ''}`}
       >
         {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
       </span>
@@ -75,6 +74,7 @@ const ApplicantsTable = ({
   setOpenSpecialAccess,
   setSelectedIdForSpecialAccessModal,
 }) => {
+  const navigate = useNavigate();
   const [actionMenu, setActionMenu] = React.useState(null);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [editModalData, setEditModalData] = useState(null);
@@ -140,9 +140,8 @@ const ApplicantsTable = ({
             name={field}
             value={value}
             onChange={onChange}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
-              error ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${error ? 'border-red-500' : 'border-gray-300'
+              }`}
           >
             <option value="">Select {labelText}</option>
             {options.map(option => (
@@ -221,8 +220,16 @@ const ApplicantsTable = ({
           setActionMenu(null);
         },
       },
+      {
+        name: 'On Boarding',
+        icon: <UserIcon size={16} className="mr-2" />,
+        onClick: row => {
+          navigate(`/on-boarding/${row?._id}`);
+          setActionMenu(null);
+        },
+      },
     ],
-    [onView, setOpenSpecialAccess, setSelectedIdForSpecialAccessModal]
+    [navigate, onView, setOpenSpecialAccess, setSelectedIdForSpecialAccessModal]
   );
 
   const columns = useMemo(

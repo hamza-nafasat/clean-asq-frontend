@@ -30,6 +30,7 @@ import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
 import { userExist, userNotExist } from './redux/slices/authSlice';
 import { detectVPN } from './utils/vpnDetection';
 import FormHiddenSection from './page/admin/userApplicationForms/Hidden/HIdden';
+import OnBoarding from './page/admin/dashboard/on-boarding/OnBoarding';
 
 const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
 const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
@@ -187,6 +188,7 @@ function App() {
               <Route path="all-users" element={<AdminAllUsers />} />
               <Route path="application-forms" element={<ApplicationForms />} />
               <Route path="applications" element={<Applications />} />
+              <Route path="on-boarding/:applicantId" element={<OnBoarding />} />
               <Route path="branding" element={<Brandings />} />
               <Route path="branding/create" element={<CreateBranding />} />
               <Route path="branding/single/:brandingId" element={<CreateBranding />} />
