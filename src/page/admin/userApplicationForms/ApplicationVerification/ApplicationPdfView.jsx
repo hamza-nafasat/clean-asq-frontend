@@ -33,7 +33,7 @@ const ApplicationPdfView = () => {
 export default ApplicationPdfView;
 
 
-export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false }) => {
+export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, className = '' }) => {
   const { logo } = useBranding();
   const { formData } = useSelector(state => state.form);
   const dispatch = useDispatch();
@@ -90,7 +90,7 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false }) 
           </h3>
         </div>
       </div>}
-      <div className="h-full w-full space-y-12 overflow-visible bg-white px-6 py-8">
+      <div className={`h-full w-full space-y-12 overflow-visible bg-white px-6 py-8 ${className}`}>
         <IdMissionDataPdf formId={pdfId} />
         {form?.data?.sections?.map((section, index) => {
           const sectionDataFromRedux = formData?.[section?.key];
