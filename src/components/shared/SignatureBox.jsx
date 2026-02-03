@@ -56,6 +56,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
   };
 
   const startDraw = e => {
+    if (isPdf) return;
     if (mode !== 'draw') return;
     drawing.current = true;
     lastPoint.current = pointerPos(e);
@@ -67,6 +68,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
   };
 
   const draw = e => {
+    if (isPdf) return;
     if (!drawing.current) return;
     const ctx = ctxRef.current;
     const p = pointerPos(e);

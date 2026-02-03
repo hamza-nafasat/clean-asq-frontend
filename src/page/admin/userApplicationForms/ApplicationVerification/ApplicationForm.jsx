@@ -72,8 +72,9 @@ export default function ApplicationForm() {
           const updatedBy = {
             _id: user?._id,
             email: user?.email,
-            name: user?.firstName + ' ' + user?.lastName,
-          };
+            name: user?.firstName + " " + user?.lastName,
+            role: user?.role?.name,
+          }
           updatedData.updatedBy = updatedBy;
           // Update Redux state
           const res = await saveFormInDraft({
@@ -125,8 +126,9 @@ export default function ApplicationForm() {
           const updatedBy = {
             _id: user?._id,
             email: user?.email,
-            name: user?.firstName + ' ' + user?.lastName,
-          };
+            name: user?.firstName + " " + user?.lastName,
+            role: user?.role?.name,
+          }
           updatedData.updatedBy = updatedBy;
           // Save form draft (non-file data only)
           const res = await formSubmit({
@@ -165,8 +167,9 @@ export default function ApplicationForm() {
           const updatedBy = {
             _id: user?._id,
             email: user?.email,
-            name: user?.firstName + ' ' + user?.lastName,
-          };
+            name: user?.firstName + " " + user?.lastName,
+            role: user?.role?.name,
+          }
           updatedData.updatedBy = updatedBy;
           const res = await saveFormInDraft({
             formId: form?.data?._id,

@@ -93,6 +93,10 @@ function Applications() {
             isLoading={isLoading}
           >
             <div className="space-y-4">
+              <div className="flex flex-col gap-2">
+                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <p className="mt-1">{selectedApplicant?.user?.firstName + ' ' + selectedApplicant?.user?.lastName}</p>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Name</label>
                 <p className="mt-1">{selectedApplicant?.user?.firstName + ' ' + selectedApplicant?.user?.lastName}</p>

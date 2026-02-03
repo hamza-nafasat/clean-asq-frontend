@@ -346,11 +346,7 @@ export default function SingleApplication() {
             ...userDetailsData,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            updatedBy: {
-              _id: user?._id,
-              email: user?.email,
-              name: user?.firstName + ' ' + user?.lastName,
-            },
+            updatedBy: { _id: user?._id, email: user?.email, name: user?.firstName + " " + user?.lastName, role: user?.role?.name }
           },
         };
         // console.log('save in progress', formDataInRedux);
@@ -364,7 +360,7 @@ export default function SingleApplication() {
         toast.error(error?.data?.message || 'Error while saving form in draft');
       }
     },
-    [formData, formId, saveFormInDraft, user?._id, user?.email, user?.firstName, user?.lastName]
+    [formData, formId, saveFormInDraft, user?._id, user?.email, user?.firstName, user?.lastName, user?.role?.name]
   );
 
   const getSavedFormDataAndSaveInRedux = useCallback(async () => {
@@ -436,13 +432,8 @@ export default function SingleApplication() {
         await saveInProgress({
           data: {
             ...idMissionVerifiedData,
-            updatedBy: {
-              _id: user?._id,
-              email: user?.email,
-              name: user?.firstName + ' ' + user?.lastName,
-            },
-          },
-          name: 'idMission',
+            updatedBy: { _id: user?._id, email: user?.email, name: user?.firstName + " " + user?.lastName, role: user?.role?.name }
+          }, name: 'idMission'
         });
         return navigate(`/singleform/stepper/${formId}`);
       } catch (error) {
@@ -451,17 +442,7 @@ export default function SingleApplication() {
         setSubmiting(false);
       }
     },
-    [
-      dispatch,
-      formId,
-      idMissionVerifiedData,
-      navigate,
-      saveInProgress,
-      user?._id,
-      user?.email,
-      user?.firstName,
-      user?.lastName,
-    ]
+    [dispatch, formId, idMissionVerifiedData, navigate, saveInProgress, user?._id, user?.email, user?.firstName, user?.lastName, user?.role?.name]
   );
 
   const getQrAndWebLink = useCallback(async () => {
@@ -690,7 +671,7 @@ export default function SingleApplication() {
           : '',
         streetAddress:
           formDataOfIdMission?.ParsedAddressStreetNumber +
-            formDataOfIdMission?.ParsedAddressStreetName || '',
+          formDataOfIdMission?.ParsedAddressStreetName || '',
         phoneNumber: formDataOfIdMission?.PhoneNumber || '',
         zipCode: formDataOfIdMission?.ParsedAddressPostalCode || '',
         dateOfBirth: formDataOfIdMission?.Date_of_Birth
@@ -748,7 +729,7 @@ export default function SingleApplication() {
           : '',
         streetAddress:
           formDataOfIdMission?.ParsedAddressStreetNumber +
-            formDataOfIdMission?.ParsedAddressStreetName || '',
+          formDataOfIdMission?.ParsedAddressStreetName || '',
         phoneNumber: formDataOfIdMission?.PhoneNumber || '',
         zipCode: formDataOfIdMission?.ParsedAddressPostalCode || '',
         dateOfBirth: formDataOfIdMission?.Date_of_Birth

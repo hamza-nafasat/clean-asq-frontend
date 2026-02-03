@@ -215,6 +215,7 @@ const SelectInputType = ({ field, className, form, setForm }) => {
         <div className="flex w-full gap-2">
           <select
             name={name}
+            disabled={true}
             required={required}
             className="border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
             onChange={selectHandler}
@@ -272,6 +273,7 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
               {option?.label}
             </label>
             <input
+              disabled={true}
               id={option?.label}
               type={'checkbox'}
               value={option?.value}
@@ -321,6 +323,8 @@ const RadioInputType = ({ field, className, form, setForm, onChange }) => {
           {options?.map((option, index) => (
             <div key={index} className="flex items-center gap-2 p-2 text-start">
               <input
+                disabled={true}
+                aria-disabled={true}
                 name={name}
                 type={'radio'}
                 id={option.value + index + name}
@@ -370,6 +374,8 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 p-4">
             <input
+              disabled={true}
+              aria-disabled={true}
               type={'checkbox'}
               name={name}
               required={required}
@@ -456,6 +462,8 @@ const RangeInputType = ({ field, className, form, setForm }) => {
       <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
         <div className="mb-2 w-full text-center text-sm font-semibold text-gray-700">{Number(form[name]) || 0} %</div>
         <input
+          disabled={true}
+          aria-disabled={true}
           value={Number(form[name]) || 0}
           type="range"
           className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
@@ -463,6 +471,8 @@ const RangeInputType = ({ field, className, form, setForm }) => {
         />
         <div className="flex w-full gap-2">
           <input
+            disabled={true}
+            aria-disabled={true}
             type="number"
             value={Number(form[name]) || 0}
             className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
@@ -557,6 +567,8 @@ const FileInputType = ({ field, className, form }) => {
 
           {form?.[name]?.secureUrl && form?.[name]?.resourceType === 'raw' && (
             <Button
+              disabled={true}
+              aria-disabled={true}
               label="Download"
               className="text-textPrimary! border-gray-300! bg-white! hover:bg-gray-500!"
               rightIcon={CgSoftwareDownload}
@@ -722,6 +734,8 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                   <input
                     ref={inputRef}
                     name={name}
+                    disabled={true}
+                    aria-disabled={true}
                     placeholder={placeholder}
                     type={isMasked && type !== 'date' ? 'text' : type}
                     value={getDisplayValue(type, form?.[name])}

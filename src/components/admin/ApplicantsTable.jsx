@@ -15,9 +15,9 @@ import ApplicantSearch from './ApplicantSearch';
 const APPLICANT_TABLE_COLUMNS = [
   {
     name: 'ID',
-    selector: row => row?._id,
+    selector: row => row?._id?.slice(0, 3),
     sortable: true,
-    width: '200px',
+    width: '100px',
   },
   {
     name: 'Name',
@@ -41,7 +41,7 @@ const APPLICANT_TABLE_COLUMNS = [
     name: 'Client Type',
     selector: row => row?.user?.role?.name,
     sortable: true,
-    width: '200px',
+    width: '160px',
     cell: row => (
       <span className="text-accent w-[130px] rounded-sm bg-gray-100 px-[10px] py-[3px] text-center text-xs font-bold capitalize">
         {row?.user?.role?.name}
@@ -52,13 +52,13 @@ const APPLICANT_TABLE_COLUMNS = [
     name: 'Submitted Date',
     selector: row => new Date(row.createdAt)?.toLocaleDateString(),
     sortable: true,
-    width: '200px',
+    width: '150px',
   },
   {
     name: 'Status',
     selector: row => row?.status,
     sortable: true,
-    // width: '200px'
+    width: '150px',
     cell: row => (
       <span
         className={`w-[100px] rounded-sm px-[10px] py-[3px] text-center font-bold capitalize ${row.status === APPLICANT_STATUS.APPROVED ? 'bg-[#34C7591A] text-[#34C759]' : ''
@@ -292,7 +292,7 @@ const ApplicantsTable = ({
     <div>
       <ApplicantSearch onSearch={handleSearch} clients={uniqueClients} />
 
-      <div className="mt-14 mb-4 grid grid-cols-12 gap-4">
+      <div className="mt-14 mb-4   grid grid-cols-12 gap-4">
         <div className="col-span-12 md:col-span-4">
           <TextField
             label={'Search by Name'}
@@ -334,7 +334,7 @@ const ApplicantsTable = ({
           </div>
         </div>
       </div>
-      <div className="mt-5 w-full overflow-x-auto lg:w-[calc(100vw-350px)]! xl:w-full">
+      <div className="mt-5 w-full  overflow-x-auto lg:w-[calc(100vw-350px)]! xl:w-full">
         <DataTable
           columns={columns}
           data={filteredApplicants}
@@ -343,6 +343,7 @@ const ApplicantsTable = ({
           noDataComponent="No applicants found"
           fixedHeader
           persistTableHead
+          responsive
         />
       </div>
 
