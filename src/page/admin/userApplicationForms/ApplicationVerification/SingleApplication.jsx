@@ -8,7 +8,10 @@ import Modal from '@/components/shared/small/Modal';
 import TextField from '@/components/shared/small/TextField';
 import useApplyBranding from '@/hooks/useApplyBranding';
 import { socket } from '@/main';
-import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from '@/redux/apis/authApis';
+import {
+  useGetMyProfileFirstTimeMutation,
+  useUpdateMyProfileMutation,
+} from '@/redux/apis/authApis';
 import {
   useFormateTextInMarkDownMutation,
   useGetSavedFormMutation,
@@ -17,7 +20,11 @@ import {
   useUpdateFormMutation,
   useUpdateFormSectionMutation,
 } from '@/redux/apis/formApis';
-import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
+import {
+  useGetIdMissionSessionMutation,
+  useSendOtpMutation,
+  useVerifyEmailMutation,
+} from '@/redux/apis/idMissionApis';
 import { userExist, userNotExist } from '@/redux/slices/authSlice';
 import {
   addSavedFormData,
@@ -41,8 +48,8 @@ export default function SingleApplication() {
   const params = useParams();
   const formId = params.formId;
   const dispatch = useDispatch();
-  const { user } = useSelector(state => state.auth);
-  const { emailVerified } = useSelector(state => state.form);
+  const { user } = useSelector((state) => state.auth);
+  const { emailVerified } = useSelector((state) => state.form);
   const [webLink, setWebLink] = useState(null);
   const [qrCode, setQrCode] = useState('');
   const [otp, setOtp] = useState('');
@@ -59,9 +66,13 @@ export default function SingleApplication() {
   const [sendOtp, { isLoading: otpLoading }] = useSendOtpMutation();
   const [verifyEmail, { isLoading: emailLoading }] = useVerifyEmailMutation();
   const [updateMyProfile] = useUpdateMyProfileMutation();
-  const { data: form, refetch: formRefetch, isLoading: isFormLoading } = useGetSingleFormQueryQuery({ _id: formId });
+  const {
+    data: form,
+    refetch: formRefetch,
+    isLoading: isFormLoading,
+  } = useGetSingleFormQueryQuery({ _id: formId });
   const [getSavedFormData] = useGetSavedFormMutation();
-  const { formData } = useSelector(state => state?.form);
+  const { formData } = useSelector((state) => state?.form);
   const [saveFormInDraft] = useSaveFormInDraftMutation();
   const [openRedirectModal, setOpenRedirectModal] = useState(false);
   const { isApplied, isApplying } = useApplyBranding({ formId: formId });
@@ -95,11 +106,16 @@ export default function SingleApplication() {
 
   const autocompleteRef = useRef(null);
 
-  const idMissionSection = form?.data?.sections?.find(sec => sec?.title?.toLowerCase() == 'id_verification_blk');
+  const idMissionSection = form?.data?.sections?.find(
+    (sec) => sec?.title?.toLowerCase() == 'id_verification_blk'
+  );
   const handleSignature = async (file, setIsSaving) => {
     try {
       if (!file) return toast.error('Please add signature');
-      if (idMissionVerifiedData?.signature?.publicId || idMissionVerifiedData?.signature?.secureUrl) {
+      if (
+        idMissionVerifiedData?.signature?.publicId ||
+        idMissionVerifiedData?.signature?.secureUrl
+      ) {
         await deleteImageFromCloudinary(
           idMissionVerifiedData?.signature?.publicId,
           idMissionVerifiedData?.signature?.resourceType
@@ -107,7 +123,10 @@ export default function SingleApplication() {
       }
       const { secureUrl, publicId, resourceType } = await uploadImageOnCloudinary(file);
       if (!secureUrl || !publicId) return toast.error('Something went wrong while uploading image');
-      setIdMissionVerifiedData(prev => ({ ...prev, signature: { secureUrl, publicId, resourceType } }));
+      setIdMissionVerifiedData((prev) => ({
+        ...prev,
+        signature: { secureUrl, publicId, resourceType },
+      }));
       toast.success('Signature uploaded successfully');
     } catch (error) {
       console.log('error while uploading image', error);
@@ -120,7 +139,7 @@ export default function SingleApplication() {
   // functions for autocomplete
   // ===========================
 
-  const onLoad = autocompleteInstance => {
+  const onLoad = (autocompleteInstance) => {
     autocompleteRef.current = autocompleteInstance;
   };
 
@@ -142,34 +161,34 @@ export default function SingleApplication() {
 
     handlePlace(place);
 
-    const hasPostal = (place.address_components || []).some(c => c.types.includes('postal_code'));
+    const hasPostal = (place.address_components || []).some((c) => c.types.includes('postal_code'));
 
     if (!hasPostal && place.geometry?.location) {
       reverseGeocode(place.geometry.location.lat(), place.geometry.location.lng());
     }
   };
 
-  const handlePlace = place => {
+  const handlePlace = (place) => {
     const components = place.address_components || [];
     const geometry = place.geometry;
     const parsed = parseComponents(components, geometry);
 
-    setIdMissionVerifiedData(prev => ({ ...prev, ...parsed }));
+    setIdMissionVerifiedData((prev) => ({ ...prev, ...parsed }));
   };
 
-  const handleGeocodeResults = results => {
+  const handleGeocodeResults = (results) => {
     const parsed = parseComponentsFromResults(results);
-    setIdMissionVerifiedData(prev => ({ ...prev, ...parsed }));
+    setIdMissionVerifiedData((prev) => ({ ...prev, ...parsed }));
   };
 
   const parseComponents = (components = [], geometry) => {
-    const find = types => {
+    const find = (types) => {
       const t = Array.isArray(types) ? types : [types];
-      return components.find(c => t.some(x => c.types.includes(x)));
+      return components.find((c) => t.some((x) => c.types.includes(x)));
     };
 
-    const getLong = types => find(types)?.long_name || '';
-    const getShort = types => find(types)?.short_name || '';
+    const getLong = (types) => find(types)?.long_name || '';
+    const getShort = (types) => find(types)?.short_name || '';
 
     const streetNumber = getLong('street_number');
     const route = getLong('route');
@@ -193,7 +212,10 @@ export default function SingleApplication() {
 
     const country = getLong('country');
 
-    const streetAddress = [premise, streetNumber, route, subpremise].filter(Boolean).join(' ').trim();
+    const streetAddress = [premise, streetNumber, route, subpremise]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
 
     return {
       streetAddress: streetAddress,
@@ -206,7 +228,7 @@ export default function SingleApplication() {
     };
   };
 
-  const parseComponentsFromResults = results => {
+  const parseComponentsFromResults = (results) => {
     let city = '';
     let state = '';
     let postal = '';
@@ -218,9 +240,9 @@ export default function SingleApplication() {
     for (const result of results) {
       const comps = result.address_components || [];
 
-      const find = types => {
+      const find = (types) => {
         const t = Array.isArray(types) ? types : [types];
-        return comps.find(c => t.some(x => c.types.includes(x)));
+        return comps.find((c) => t.some((x) => c.types.includes(x)));
       };
 
       if (!city) {
@@ -291,7 +313,7 @@ export default function SingleApplication() {
 
       const parsed = parseComponentsFromResults(results);
 
-      setIdMissionVerifiedData(prev => ({
+      setIdMissionVerifiedData((prev) => ({
         ...prev,
         streetAddress: prev.streetAddress || parsed.streetAddress,
         city: prev.city || parsed.city,
@@ -307,7 +329,7 @@ export default function SingleApplication() {
   // other functions
   // ==============
 
-  const formatData = useCallback(date => {
+  const formatData = useCallback((date) => {
     const [d, m, y] = date.split('/');
     return `${y}-${m}-${d}`;
   }, []);
@@ -318,12 +340,17 @@ export default function SingleApplication() {
         if (!formId) return toast.error('From id not provided');
         const { data: userDetailsData } = await collectClientDetails();
         const formDataInRedux = {
-          ...formData, [name]: data,
+          ...formData,
+          [name]: data,
           ['metadata']: {
             ...userDetailsData,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            updatedBy: { _id: user?._id, email: user?.email, name: user?.firstName + " " + user?.lastName }
+            updatedBy: {
+              _id: user?._id,
+              email: user?.email,
+              name: user?.firstName + ' ' + user?.lastName,
+            },
           },
         };
         // console.log('save in progress', formDataInRedux);
@@ -350,7 +377,9 @@ export default function SingleApplication() {
         unwrapResult(action);
         if (!savedData?.company_lookup_data) {
           console.log('saved data is ,', savedData);
-          return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
+          return navigate(
+            `/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`
+          );
         }
         setIdMissionVerifiedData({
           name: formDataOfIdMission?.name || '',
@@ -379,7 +408,9 @@ export default function SingleApplication() {
       }
     } catch (error) {
       if (error?.data?.message === 'Form Not Saved in draft') {
-        return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
+        return navigate(
+          `/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`
+        );
       }
       console.log('error while getting saved form data', error);
       // toast.error(error?.data?.message || 'Error while getting saved form data');
@@ -387,21 +418,31 @@ export default function SingleApplication() {
   }, [dispatch, form?.data?.branding?.name, formId, getSavedFormData, navigate, user?.email]);
 
   const submitIdMissionData = useCallback(
-    async e => {
+    async (e) => {
       setOpenRedirectModal(false);
       e.preventDefault();
       setSubmiting(true);
       try {
-        if (!idMissionVerifiedData?.signature?.publicId && !idMissionVerifiedData?.signature?.secureUrl) {
+        if (
+          !idMissionVerifiedData?.signature?.publicId &&
+          !idMissionVerifiedData?.signature?.secureUrl
+        ) {
           return toast.error('Please do and save the signature');
         }
-        const action = await dispatch(updateFormState({ data: idMissionVerifiedData, name: 'idMission' }));
+        const action = await dispatch(
+          updateFormState({ data: idMissionVerifiedData, name: 'idMission' })
+        );
         unwrapResult(action);
         await saveInProgress({
           data: {
             ...idMissionVerifiedData,
-            updatedBy: { _id: user?._id, email: user?.email, name: user?.firstName + " " + user?.lastName }
-          }, name: 'idMission'
+            updatedBy: {
+              _id: user?._id,
+              email: user?.email,
+              name: user?.firstName + ' ' + user?.lastName,
+            },
+          },
+          name: 'idMission',
         });
         return navigate(`/singleform/stepper/${formId}`);
       } catch (error) {
@@ -410,7 +451,17 @@ export default function SingleApplication() {
         setSubmiting(false);
       }
     },
-    [dispatch, formId, idMissionVerifiedData, navigate, saveInProgress, user?._id, user?.email, user?.firstName, user?.lastName]
+    [
+      dispatch,
+      formId,
+      idMissionVerifiedData,
+      navigate,
+      saveInProgress,
+      user?._id,
+      user?.email,
+      user?.firstName,
+      user?.lastName,
+    ]
   );
 
   const getQrAndWebLink = useCallback(async () => {
@@ -448,7 +499,7 @@ export default function SingleApplication() {
       if (res.success) {
         await dispatch(updateEmailVerified(true));
         await getUserProfile()
-          .then(res => {
+          .then((res) => {
             if (res?.data?.success) dispatch(userExist(res.data.data));
             else dispatch(userNotExist());
           })
@@ -521,7 +572,7 @@ export default function SingleApplication() {
   // get user when he logged in
   useEffect(() => {
     getUserProfile()
-      .then(res => {
+      .then((res) => {
         if (res?.data?.success) dispatch(userExist(res.data.data));
         else dispatch(userNotExist());
       })
@@ -532,12 +583,12 @@ export default function SingleApplication() {
   useEffect(() => {
     // Setup listener ONCE when component mounts
     // start id mission
-    socket.on('idMission_processing_started', data => {
+    socket.on('idMission_processing_started', (data) => {
       console.log('you start id mission verification', data);
       setIsIdMissionProcessing(true);
     });
     // id mission verified success fully
-    socket.on('idMission_verified', async data => {
+    socket.on('idMission_verified', async (data) => {
       console.log('verified id mission data is', data);
       if (user?._id && data?.Form_Data?.FullName) {
         const res = await updateMyProfile({
@@ -548,7 +599,7 @@ export default function SingleApplication() {
         if (!res.success) return toast.error(res.message);
         else {
           await getUserProfile()
-            .then(res => {
+            .then((res) => {
               if (res?.data?.success) dispatch(userExist(res.data.data));
             })
             .catch(() => dispatch(userNotExist()));
@@ -574,16 +625,22 @@ export default function SingleApplication() {
           ? formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country
           : formDataOfIdMission?.Issuing_Country || '',
         idType: formDataOfIdMission?.DocumentType || '',
-        idExpiryDate: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : '',
+        idExpiryDate: formDataOfIdMission?.Expiration_Date
+          ? formatData(formDataOfIdMission?.Expiration_Date)
+          : '',
         streetAddress:
           (formDataOfIdMission?.ParsedAddressStreetNumber || '') +
           ' ' +
           (formDataOfIdMission?.ParsedAddressStreetName || ''),
         phoneNumber: formDataOfIdMission?.PhoneNumber || '',
         zipCode: formDataOfIdMission?.ParsedAddressPostalCode || '',
-        dateOfBirth: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : '',
+        dateOfBirth: formDataOfIdMission?.Date_of_Birth
+          ? formatData(formDataOfIdMission?.Date_of_Birth)
+          : '',
         country: formDataOfIdMission?.Issuing_Country || '',
-        issueDate: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : '',
+        issueDate: formDataOfIdMission?.Issue_Date
+          ? formatData(formDataOfIdMission?.Issue_Date)
+          : '',
         companyTitle: '',
         state: formDataOfIdMission?.ParsedAddressProvince || '',
         city: formDataOfIdMission?.ParsedAddressMunicipality || '',
@@ -594,7 +651,7 @@ export default function SingleApplication() {
       setIdMissionVerified(true);
     });
     // id mission failed
-    socket.on('idMission_failed', async data => {
+    socket.on('idMission_failed', async (data) => {
       console.log('failed id mission data is', data);
 
       // console.log('you start id mission failed', data);
@@ -628,14 +685,21 @@ export default function SingleApplication() {
           ? formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country
           : formDataOfIdMission?.Issuing_Country || '',
         idType: formDataOfIdMission?.DocumentType || '',
-        idExpiryDate: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : '',
+        idExpiryDate: formDataOfIdMission?.Expiration_Date
+          ? formatData(formDataOfIdMission?.Expiration_Date)
+          : '',
         streetAddress:
-          formDataOfIdMission?.ParsedAddressStreetNumber + formDataOfIdMission?.ParsedAddressStreetName || '',
+          formDataOfIdMission?.ParsedAddressStreetNumber +
+            formDataOfIdMission?.ParsedAddressStreetName || '',
         phoneNumber: formDataOfIdMission?.PhoneNumber || '',
         zipCode: formDataOfIdMission?.ParsedAddressPostalCode || '',
-        dateOfBirth: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : '',
+        dateOfBirth: formDataOfIdMission?.Date_of_Birth
+          ? formatData(formDataOfIdMission?.Date_of_Birth)
+          : '',
         country: formDataOfIdMission?.Issuing_Country || '',
-        issueDate: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : '',
+        issueDate: formDataOfIdMission?.Issue_Date
+          ? formatData(formDataOfIdMission?.Issue_Date)
+          : '',
         companyTitle: '',
         state: formDataOfIdMission?.ParsedAddressProvince || '',
         city: formDataOfIdMission?.ParsedAddressMunicipality || '',
@@ -647,7 +711,7 @@ export default function SingleApplication() {
       setIsIdMissionProcessing(false);
       setIdMissionVerified(true);
     });
-    socket.on('idMission_other', async data => {
+    socket.on('idMission_other', async (data) => {
       console.log('other id mission data is', data);
 
       console.log('Id Mission Data ', data);
@@ -679,14 +743,21 @@ export default function SingleApplication() {
           ? formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country
           : formDataOfIdMission?.Issuing_Country || '',
         idType: formDataOfIdMission?.DocumentType || '',
-        idExpiryDate: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : '',
+        idExpiryDate: formDataOfIdMission?.Expiration_Date
+          ? formatData(formDataOfIdMission?.Expiration_Date)
+          : '',
         streetAddress:
-          formDataOfIdMission?.ParsedAddressStreetNumber + formDataOfIdMission?.ParsedAddressStreetName || '',
+          formDataOfIdMission?.ParsedAddressStreetNumber +
+            formDataOfIdMission?.ParsedAddressStreetName || '',
         phoneNumber: formDataOfIdMission?.PhoneNumber || '',
         zipCode: formDataOfIdMission?.ParsedAddressPostalCode || '',
-        dateOfBirth: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : '',
+        dateOfBirth: formDataOfIdMission?.Date_of_Birth
+          ? formatData(formDataOfIdMission?.Date_of_Birth)
+          : '',
         country: formDataOfIdMission?.Issuing_Country || '',
-        issueDate: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : '',
+        issueDate: formDataOfIdMission?.Issue_Date
+          ? formatData(formDataOfIdMission?.Issue_Date)
+          : '',
         companyTitle: '',
         state: formDataOfIdMission?.ParsedAddressProvince || '',
         city: formDataOfIdMission?.ParsedAddressMunicipality || '',
@@ -707,15 +778,26 @@ export default function SingleApplication() {
       socket.off('idMission_failed');
       socket.off('idMission_other');
     };
-  }, [dispatch, formId, formatData, getUserProfile, idMissionVerified, idMissionVerifiedData?.createdAt, updateMyProfile, user?._id, user?.email]);
+  }, [
+    dispatch,
+    formId,
+    formatData,
+    getUserProfile,
+    idMissionVerified,
+    idMissionVerifiedData?.createdAt,
+    updateMyProfile,
+    user?._id,
+    user?.email,
+  ]);
 
   // check validations
   useEffect(() => {
-    const allFilled = Object.keys(idMissionVerifiedData).every(name => {
+    const allFilled = Object.keys(idMissionVerifiedData).every((name) => {
       const val = idMissionVerifiedData[name];
       if (val == null) return false;
       if (typeof val === 'string') return val.trim() !== '';
-      if (typeof val === 'object' && name !== 'data') return Object.values(val).every(v => v?.toString().trim() !== '');
+      if (typeof val === 'object' && name !== 'data')
+        return Object.values(val).every((v) => v?.toString().trim() !== '');
       return true;
     });
     console.log('allFilled', allFilled);
@@ -723,7 +805,8 @@ export default function SingleApplication() {
   }, [idMissionVerifiedData]);
 
   const isCreator = user?._id && user?._id == form?.data?.owner && user?.role !== 'guest';
-  if (!isApplied || loadingForValidatingOtp || isFormLoading || isApplying) return <CustomLoading />;
+  if (!isApplied || loadingForValidatingOtp || isFormLoading || isApplying)
+    return <CustomLoading />;
 
   return submiting ? (
     <div className="flex h-full flex-col items-center justify-center space-y-6 rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-900">
@@ -744,7 +827,10 @@ export default function SingleApplication() {
         </Modal>
       )}
       {showIdMissionDataModal && (
-        <Modal isOpen={customizeIdMissionTextModal} onClose={() => setShowIdMissionDataModal(false)}>
+        <Modal
+          isOpen={customizeIdMissionTextModal}
+          onClose={() => setShowIdMissionDataModal(false)}
+        >
           <IdMissionDataModal
             formRefetch={formRefetch}
             setOpenIdMissionDataDisplayTextModal={setShowIdMissionDataModal}
@@ -780,8 +866,14 @@ export default function SingleApplication() {
         </Modal>
       )}
       {customizeIdMissionTextModal && idMissionSection && (
-        <Modal isOpen={customizeIdMissionTextModal} onClose={() => setCustomizeIdMissionTextModal(false)}>
-          <EditSectionDisplayTextFromatingModal step={idMissionSection} setModal={setCustomizeIdMissionTextModal} />
+        <Modal
+          isOpen={customizeIdMissionTextModal}
+          onClose={() => setCustomizeIdMissionTextModal(false)}
+        >
+          <EditSectionDisplayTextFromatingModal
+            step={idMissionSection}
+            setModal={setCustomizeIdMissionTextModal}
+          />
         </Modal>
       )}
       {openRedirectModal ? (
@@ -798,7 +890,12 @@ export default function SingleApplication() {
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               </div>
 
@@ -807,8 +904,8 @@ export default function SingleApplication() {
 
               {/* Description */}
               <p className="mt-2 max-w-sm text-gray-600">
-                You’ve already finished the ID Mission verification. Would you like to edit your details, or move to the
-                next step?
+                You’ve already finished the ID Mission verification. Would you like to edit your
+                details, or move to the next step?
               </p>
 
               {/* Buttons */}
@@ -839,21 +936,33 @@ export default function SingleApplication() {
           {!idMissionVerified ? ( // TODO add not
             !emailVerified ? (
               <>
-                <div className="flex flex-col items-center gap-3 max-w-[calc(100vw-20)]">
+                <div className="flex flex-col items-center gap-3 w-full">
                   {isCreator && (
                     <div className="flex w-full items-center justify-end">
-                      <Button label="Edit OTP Display Text" onClick={() => setOpenOtpDisplayTextModal(true)} />
+                      <Button
+                        label="Edit OTP Display Text"
+                        onClick={() => setOpenOtpDisplayTextModal(true)}
+                      />
                     </div>
                   )}
                   {form?.data?.otpDisplayFormatedText && (
-                    <div className="flex max-w-full w-full gap-3">
+                    <div className="flex w-full justify-center">
                       <div
-                        className="w-full"
+                        className="w-full p-4 lg:px-20"
                         dangerouslySetInnerHTML={{
-                          __html: String(form?.data?.otpDisplayFormatedText || '').replace(/<a(\s+.*?)?>/g, match => {
-                            if (match.includes('target=')) return match; // avoid duplicates
-                            return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
-                          }),
+                          __html: String(form?.data?.otpDisplayFormatedText || '')
+                            // kill vw padding
+                            .replace(/padding:\s*0\s*[\d.]+vw;?/g, 'padding: 0;')
+                            // kill vw width
+                            .replace(/width:\s*[\d.]+vw;?/g, 'width: 100%;')
+                            // safety for links
+                            .replace(/<a(\s+.*?)?>/g, (match) => {
+                              if (match.includes('target=')) return match;
+                              return match.replace(
+                                '<a',
+                                '<a target="_blank" rel="noopener noreferrer"'
+                              );
+                            }),
                         }}
                       />
                     </div>
@@ -863,7 +972,7 @@ export default function SingleApplication() {
                       type="email"
                       placeholder="Enter your email"
                       value={email}
-                      onChange={e => setEmail(e.target.value)}
+                      onChange={(e) => setEmail(e.target.value)}
                       className="max-w-[500px]"
                     />
                     <Button
@@ -879,7 +988,7 @@ export default function SingleApplication() {
                         type="text"
                         placeholder="Enter your Code"
                         value={otp}
-                        onChange={e => setOtp(e.target.value)}
+                        onChange={(e) => setOtp(e.target.value)}
                         className="max-w-[500px]"
                       />
                       <Button
@@ -894,7 +1003,9 @@ export default function SingleApplication() {
                     <Button
                       onClick={() => {
                         dispatch(updateEmailVerified(true));
-                        navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
+                        navigate(
+                          `/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`
+                        );
                       }}
                       className="w-full max-w-[650px]"
                       variant="secondary"
@@ -909,7 +1020,10 @@ export default function SingleApplication() {
               <div className="flex flex-col items-center gap-3">
                 {isCreator && (
                   <div className="flex w-full items-center justify-end p-4">
-                    <Button onClick={() => setCustomizeIdMissionTextModal(true)} label={'Customize Text'} />
+                    <Button
+                      onClick={() => setCustomizeIdMissionTextModal(true)}
+                      label={'Customize Text'}
+                    />
                   </div>
                 )}
                 {qrCode && webLink && (
@@ -921,19 +1035,33 @@ export default function SingleApplication() {
                         <div
                           className="w-full"
                           dangerouslySetInnerHTML={{
-                            __html: String(idMissionSection?.ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
-                              if (match.includes('target=')) return match; // avoid duplicates
-                              return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
-                            }),
+                            __html: String(idMissionSection?.ai_formatting || '').replace(
+                              /<a(\s+.*?)?>/g,
+                              (match) => {
+                                if (match.includes('target=')) return match; // avoid duplicates
+                                return match.replace(
+                                  '<a',
+                                  '<a target="_blank" rel="noopener noreferrer"'
+                                );
+                              }
+                            ),
                           }}
                         />
                       </div>
                     )}
                     <div className="mt-4 flex w-full flex-col items-center gap-4">
-                      <img className="h-[230px] w-[230px]" src={`data:image/jpeg;base64,${qrCode}`} alt="qr code " />
+                      <img
+                        className="h-[230px] w-[230px]"
+                        src={`data:image/jpeg;base64,${qrCode}`}
+                        alt="qr code "
+                      />
                     </div>
                     <div className="mt-4 flex w-full flex-col items-center gap-4">
-                      <Button className="w-full max-w-[230px]" label={'Refresh QR Code'} onClick={getQrAndWebLink} />
+                      <Button
+                        className="w-full max-w-[230px]"
+                        label={'Refresh QR Code'}
+                        onClick={getQrAndWebLink}
+                      />
                     </div>
                     {/* <div className="mt-4 flex w-full flex-col items-center gap-4">
                       <Button
@@ -969,9 +1097,12 @@ export default function SingleApplication() {
                       dangerouslySetInnerHTML={{
                         __html: String(form?.data?.idMissionDataDisplayFormatedText || '').replace(
                           /<a(\s+.*?)?>/g,
-                          match => {
+                          (match) => {
                             if (match.includes('target=')) return match; // avoid duplicates
-                            return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                            return match.replace(
+                              '<a',
+                              '<a target="_blank" rel="noopener noreferrer"'
+                            );
                           }
                         ),
                       }}
@@ -994,7 +1125,9 @@ export default function SingleApplication() {
               </div>
               <form className="flex flex-wrap gap-4">
                 <TextField
-                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, name: e.target.value })}
+                  onChange={(e) =>
+                    setIdMissionVerifiedData({ ...idMissionVerifiedData, name: e.target.value })
+                  }
                   required
                   value={idMissionVerifiedData?.name}
                   label="Name:*"
@@ -1002,7 +1135,9 @@ export default function SingleApplication() {
                 />
                 <TextField
                   value={idMissionVerifiedData?.email}
-                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, email: e.target.value })}
+                  onChange={(e) =>
+                    setIdMissionVerifiedData({ ...idMissionVerifiedData, email: e.target.value })
+                  }
                   label="Email Address:*"
                   required
                   className={'max-w-[400px]!'}
@@ -1010,7 +1145,12 @@ export default function SingleApplication() {
                 <TextField
                   type="date"
                   value={idMissionVerifiedData?.dateOfBirth}
-                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, dateOfBirth: e.target.value })}
+                  onChange={(e) =>
+                    setIdMissionVerifiedData({
+                      ...idMissionVerifiedData,
+                      dateOfBirth: e.target.value,
+                    })
+                  }
                   label="Date of Birth:*"
                   required
                   className={'max-w-[400px]!'}
@@ -1018,7 +1158,9 @@ export default function SingleApplication() {
                 <TextField
                   type="text"
                   value={idMissionVerifiedData?.idType}
-                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, idType: e.target.value })}
+                  onChange={(e) =>
+                    setIdMissionVerifiedData({ ...idMissionVerifiedData, idType: e.target.value })
+                  }
                   label="Id Type:*"
                   required
                   className={'max-w-[400px]!'}
@@ -1026,7 +1168,9 @@ export default function SingleApplication() {
                 <TextField
                   type="text"
                   value={idMissionVerifiedData?.idIssuer}
-                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, idIssuer: e.target.value })}
+                  onChange={(e) =>
+                    setIdMissionVerifiedData({ ...idMissionVerifiedData, idIssuer: e.target.value })
+                  }
                   label="Id Issuer:*"
                   required
                   className={'max-w-[400px]!'}
@@ -1034,7 +1178,12 @@ export default function SingleApplication() {
                 <TextField
                   type="text"
                   value={idMissionVerifiedData?.idExpiryDate}
-                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, idExpiryDate: e.target.value })}
+                  onChange={(e) =>
+                    setIdMissionVerifiedData({
+                      ...idMissionVerifiedData,
+                      idExpiryDate: e.target.value,
+                    })
+                  }
                   label="Id Expiry Date:*"
                   required
                   className={'max-w-[400px]!'}
@@ -1042,14 +1191,21 @@ export default function SingleApplication() {
                 <TextField
                   type="text"
                   value={idMissionVerifiedData?.issueDate}
-                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, issueDate: e.target.value })}
+                  onChange={(e) =>
+                    setIdMissionVerifiedData({
+                      ...idMissionVerifiedData,
+                      issueDate: e.target.value,
+                    })
+                  }
                   label="Issue Date:*"
                   required
                   className={'max-w-[400px]!'}
                 />{' '}
                 <TextField
                   required
-                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, idNumber: e.target.value })}
+                  onChange={(e) =>
+                    setIdMissionVerifiedData({ ...idMissionVerifiedData, idNumber: e.target.value })
+                  }
                   value={idMissionVerifiedData?.idNumber}
                   label="Id Number:*"
                   className={'max-w-[400px]!'}
@@ -1067,8 +1223,11 @@ export default function SingleApplication() {
                     type="text"
                     required
                     value={idMissionVerifiedData?.streetAddress}
-                    onChange={e =>
-                      setIdMissionVerifiedData({ ...idMissionVerifiedData, streetAddress: e.target.value })
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        streetAddress: e.target.value,
+                      })
                     }
                     label="Street Address:*"
                     className={'max-w-[400px]!'}
@@ -1078,7 +1237,9 @@ export default function SingleApplication() {
                   type="text"
                   required
                   value={idMissionVerifiedData?.city}
-                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, city: e.target.value })}
+                  onChange={(e) =>
+                    setIdMissionVerifiedData({ ...idMissionVerifiedData, city: e.target.value })
+                  }
                   label="City:*"
                   className={'max-w-[400px]!'}
                 />
@@ -1086,7 +1247,9 @@ export default function SingleApplication() {
                   type="text"
                   required
                   value={idMissionVerifiedData?.zipCode}
-                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, zipCode: e.target.value })}
+                  onChange={(e) =>
+                    setIdMissionVerifiedData({ ...idMissionVerifiedData, zipCode: e.target.value })
+                  }
                   label="Zip Code:*"
                   className={'max-w-[400px]!'}
                 />
@@ -1094,7 +1257,9 @@ export default function SingleApplication() {
                   type="text"
                   required
                   value={idMissionVerifiedData?.state}
-                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, state: e.target.value })}
+                  onChange={(e) =>
+                    setIdMissionVerifiedData({ ...idMissionVerifiedData, state: e.target.value })
+                  }
                   label="State:*"
                   className={'max-w-[400px]!'}
                 />
@@ -1102,20 +1267,32 @@ export default function SingleApplication() {
                   type="text"
                   required
                   value={idMissionVerifiedData?.country}
-                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, country: e.target.value })}
+                  onChange={(e) =>
+                    setIdMissionVerifiedData({ ...idMissionVerifiedData, country: e.target.value })
+                  }
                   label="Country:*"
                   className={'max-w-[400px]!'}
                 />
                 <TextField
                   value={idMissionVerifiedData?.companyTitle}
-                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, companyTitle: e.target.value })}
+                  onChange={(e) =>
+                    setIdMissionVerifiedData({
+                      ...idMissionVerifiedData,
+                      companyTitle: e.target.value,
+                    })
+                  }
                   label="Company Title:*"
                   required
                   className={'max-w-[400px]!'}
                 />
                 <TextField
                   value={idMissionVerifiedData?.phoneNumber}
-                  onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, phoneNumber: e.target.value })}
+                  onChange={(e) =>
+                    setIdMissionVerifiedData({
+                      ...idMissionVerifiedData,
+                      phoneNumber: e.target.value,
+                    })
+                  }
                   formatting="3,3,4"
                   label="Phone Number:*"
                   required
@@ -1127,7 +1304,8 @@ export default function SingleApplication() {
                   <RadioInputType
                     className={'w-full'}
                     field={{
-                      label: 'What is the role you are filling for the company as you complete this application? ',
+                      label:
+                        'What is the role you are filling for the company as you complete this application? ',
                       options: [
                         {
                           label:
@@ -1148,8 +1326,11 @@ export default function SingleApplication() {
                       required: true,
                     }}
                     form={{ roleFillingForCompany: idMissionVerifiedData?.roleFillingForCompany }}
-                    onChange={e =>
-                      setIdMissionVerifiedData({ ...idMissionVerifiedData, roleFillingForCompany: e.target?.value })
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        roleFillingForCompany: e.target?.value,
+                      })
                     }
                     setForm={setIdMissionVerifiedData}
                   />
@@ -1162,13 +1343,15 @@ export default function SingleApplication() {
                           // className="flex flex-1 items-end gap-3"
                           className="w-full"
                           dangerouslySetInnerHTML={{
-                            __html: String(idMissionSection?.signDisplayFormattedText || '').replace(
-                              /<a(\s+.*?)?>/g,
-                              match => {
-                                if (match.includes('target=')) return match; // avoid duplicates
-                                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
-                              }
-                            ),
+                            __html: String(
+                              idMissionSection?.signDisplayFormattedText || ''
+                            ).replace(/<a(\s+.*?)?>/g, (match) => {
+                              if (match.includes('target=')) return match; // avoid duplicates
+                              return match.replace(
+                                '<a',
+                                '<a target="_blank" rel="noopener noreferrer"'
+                              );
+                            }),
                           }}
                         />
                       </div>
@@ -1176,8 +1359,14 @@ export default function SingleApplication() {
                     <div className="flex items-center justify-end gap-2">
                       {isCreator && (
                         <div className="flex items-center gap-2">
-                          <Button label="Enable Help" onClick={() => setShowSignatureHelpModal(true)} />
-                          <Button label="Customize Signature" onClick={() => setShowSignatureModal(true)} />
+                          <Button
+                            label="Enable Help"
+                            onClick={() => setShowSignatureHelpModal(true)}
+                          />
+                          <Button
+                            label="Customize Signature"
+                            onClick={() => setShowSignatureModal(true)}
+                          />
                         </div>
                       )}
                       {idMissionSection?.signAiResponse && (
@@ -1205,7 +1394,9 @@ export default function SingleApplication() {
                 )}
                 <Button
                   disabled={!isAllRequiredFieldsFilled || submiting}
-                  label={!isAllRequiredFieldsFilled ? 'Some fields are missing' : 'Continue to next'}
+                  label={
+                    !isAllRequiredFieldsFilled ? 'Some fields are missing' : 'Continue to next'
+                  }
                   onClick={submitIdMissionData}
                   className="mt-4"
                 />
@@ -1263,7 +1454,7 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
       }).unwrap();
       if (res.success) {
         let html = DOMPurify.sanitize(res.data);
-        setSignatureData(prev => ({ ...prev, signFormatedDisplayText: html }));
+        setSignatureData((prev) => ({ ...prev, signFormatedDisplayText: html }));
       }
     } catch (err) {
       console.error(err);
@@ -1280,27 +1471,41 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
           label="Display Text"
           value={signatureData?.signDisplayText}
           name="displayText"
-          onChange={e => setSignatureData(prev => ({ ...prev, signDisplayText: e.target.value }))}
+          onChange={(e) =>
+            setSignatureData((prev) => ({ ...prev, signDisplayText: e.target.value }))
+          }
         />
-        <label htmlFor="formattingInstructionForAi">Enter formatting instruction for AI and click on generate</label>
+        <label htmlFor="formattingInstructionForAi">
+          Enter formatting instruction for AI and click on generate
+        </label>
         <textarea
           id="formattingInstructionForAi"
           rows={2}
           value={signatureData?.formatingAiInstruction}
-          onChange={e => setSignatureData(prev => ({ ...prev, formatingAiInstruction: e.target.value }))}
+          onChange={(e) =>
+            setSignatureData((prev) => ({ ...prev, formatingAiInstruction: e.target.value }))
+          }
           className="w-full rounded-md border border-gray-300 p-2 outline-none"
         />
         <div className="flex justify-end">
-          <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Format Text'} />
+          <Button
+            onClick={formateTextWithAi}
+            disabled={isFormating}
+            className="mt-8"
+            label={'Format Text'}
+          />
         </div>
         {signatureData?.signFormatedDisplayText && (
           <div
             className="w-full"
             dangerouslySetInnerHTML={{
-              __html: String(signatureData?.signFormatedDisplayText || '').replace(/<a(\s+.*?)?>/g, match => {
-                if (match.includes('target=')) return match; // avoid duplicates
-                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
-              }),
+              __html: String(signatureData?.signFormatedDisplayText || '').replace(
+                /<a(\s+.*?)?>/g,
+                (match) => {
+                  if (match.includes('target=')) return match; // avoid duplicates
+                  return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                }
+              ),
             }}
           />
         )}
@@ -1313,7 +1518,11 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
           variant="secondary"
           label={'Cancel'}
         />
-        <Button onClick={handleUpdateSectionForSignature} disabled={isUpdatingSection} label={'Save'} />
+        <Button
+          onClick={handleUpdateSectionForSignature}
+          disabled={isUpdatingSection}
+          label={'Save'}
+        />
       </div>
     </div>
   );
@@ -1358,7 +1567,7 @@ const SignatureHelpCustomization = ({ section, formRefetch, setShowSignatureHelp
       }).unwrap();
       if (res.success) {
         let html = DOMPurify.sanitize(res.data);
-        setSignatureData(prev => ({ ...prev, signAiResponse: html }));
+        setSignatureData((prev) => ({ ...prev, signAiResponse: html }));
       }
     } catch (err) {
       console.error(err);
@@ -1375,20 +1584,28 @@ const SignatureHelpCustomization = ({ section, formRefetch, setShowSignatureHelp
           type="textarea"
           value={signatureData?.signAiPrompt}
           name="aiPrompt"
-          onChange={e => setSignatureData(prev => ({ ...prev, signAiPrompt: e.target.value }))}
+          onChange={(e) => setSignatureData((prev) => ({ ...prev, signAiPrompt: e.target.value }))}
         />
 
         <div className="flex justify-end">
-          <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Get Response'} />
+          <Button
+            onClick={formateTextWithAi}
+            disabled={isFormating}
+            className="mt-8"
+            label={'Get Response'}
+          />
         </div>
         {signatureData?.signAiResponse && (
           <div
             className="w-full"
             dangerouslySetInnerHTML={{
-              __html: String(signatureData?.signAiResponse || '').replace(/<a(\s+.*?)?>/g, match => {
-                if (match.includes('target=')) return match; // avoid duplicates
-                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
-              }),
+              __html: String(signatureData?.signAiResponse || '').replace(
+                /<a(\s+.*?)?>/g,
+                (match) => {
+                  if (match.includes('target=')) return match; // avoid duplicates
+                  return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                }
+              ),
             }}
           />
         )}
@@ -1401,7 +1618,11 @@ const SignatureHelpCustomization = ({ section, formRefetch, setShowSignatureHelp
           disabled={isUpdatingSection}
           label={'Cancel'}
         />
-        <Button onClick={handleUpdateSectionForSignature} disabled={isUpdatingSection} label={'Save'} />
+        <Button
+          onClick={handleUpdateSectionForSignature}
+          disabled={isUpdatingSection}
+          label={'Save'}
+        />
       </div>
     </div>
   );
@@ -1447,13 +1668,17 @@ const OtpDisplayText = ({ form, formRefetch, setOpenOtpDisplayTextModal }) => {
       }).unwrap();
       if (res.success) {
         let html = DOMPurify.sanitize(res.data);
-        setDisplayData(prev => ({ ...prev, otpDisplayFormatedText: html }));
+        setDisplayData((prev) => ({ ...prev, otpDisplayFormatedText: html }));
       }
     } catch (err) {
       console.error(err);
       toast.error(err?.data?.message || 'Failed to format text');
     }
-  }, [displayData.otpDisplayText, displayData?.otpDisplayFormatingInstructions, formateTextInMarkDown]);
+  }, [
+    displayData.otpDisplayText,
+    displayData?.otpDisplayFormatingInstructions,
+    formateTextInMarkDown,
+  ]);
 
   return (
     <div className="flex flex-col gap-2 border-2 p-2 pb-4">
@@ -1464,27 +1689,39 @@ const OtpDisplayText = ({ form, formRefetch, setOpenOtpDisplayTextModal }) => {
           label="Display Text"
           value={displayData?.otpDisplayText}
           name="displayText"
-          onChange={e => setDisplayData(prev => ({ ...prev, otpDisplayText: e.target.value }))}
+          onChange={(e) => setDisplayData((prev) => ({ ...prev, otpDisplayText: e.target.value }))}
         />
-        <label htmlFor="formattingInstructionForAi">Enter formatting instruction for AI and click on generate</label>
+        <label htmlFor="formattingInstructionForAi">
+          Enter formatting instruction for AI and click on generate
+        </label>
         <textarea
           id="formattingInstructionForAi"
           rows={2}
           value={displayData?.otpDisplayFormatingInstructions}
-          onChange={e => setDisplayData(prev => ({ ...prev, otpDisplayFormatingInstructions: e.target.value }))}
+          onChange={(e) =>
+            setDisplayData((prev) => ({ ...prev, otpDisplayFormatingInstructions: e.target.value }))
+          }
           className="w-full rounded-md border border-gray-300 p-2 outline-none"
         />
         <div className="flex justify-end">
-          <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Format Text'} />
+          <Button
+            onClick={formateTextWithAi}
+            disabled={isFormating}
+            className="mt-8"
+            label={'Format Text'}
+          />
         </div>
         {displayData?.otpDisplayFormatedText && (
           <div
             className="w-full text-center"
             dangerouslySetInnerHTML={{
-              __html: String(displayData?.otpDisplayFormatedText || '').replace(/<a(\s+.*?)?>/g, match => {
-                if (match.includes('target=')) return match; // avoid duplicates
-                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
-              }),
+              __html: String(displayData?.otpDisplayFormatedText || '').replace(
+                /<a(\s+.*?)?>/g,
+                (match) => {
+                  if (match.includes('target=')) return match; // avoid duplicates
+                  return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                }
+              ),
             }}
           />
         )}
@@ -1497,7 +1734,11 @@ const OtpDisplayText = ({ form, formRefetch, setOpenOtpDisplayTextModal }) => {
           variant="secondary"
           label={' Cancel'}
         />
-        <Button onClick={handleUpdateSectionForSignature} disabled={isUpdatingSection} label={'Save'} />
+        <Button
+          onClick={handleUpdateSectionForSignature}
+          disabled={isUpdatingSection}
+          label={'Save'}
+        />
       </div>
     </div>
   );
@@ -1508,7 +1749,8 @@ const IdMissionDataModal = ({ form, formRefetch, setOpenIdMissionDataDisplayText
   const [formateTextInMarkDown, { isLoading: isFormating }] = useFormateTextInMarkDownMutation();
   const [displayData, setDisplayData] = useState({
     idMissionDataDisplayText: form?.idMissionDataDisplayText || '',
-    idMissionDataDisplayFormatingInstructions: form?.idMissionDataDisplayFormatingInstructions || '',
+    idMissionDataDisplayFormatingInstructions:
+      form?.idMissionDataDisplayFormatingInstructions || '',
     idMissionDataDisplayFormatedText: form?.idMissionDataDisplayFormatedText || '',
   });
 
@@ -1519,7 +1761,8 @@ const IdMissionDataModal = ({ form, formRefetch, setOpenIdMissionDataDisplayText
         _id: form?._id,
         data: {
           idMissionDataDisplayText: displayData.idMissionDataDisplayText,
-          idMissionDataDisplayFormatingInstructions: displayData.idMissionDataDisplayFormatingInstructions,
+          idMissionDataDisplayFormatingInstructions:
+            displayData.idMissionDataDisplayFormatingInstructions,
           idMissionDataDisplayFormatedText: displayData.idMissionDataDisplayFormatedText,
         },
       }).unwrap();
@@ -1534,7 +1777,10 @@ const IdMissionDataModal = ({ form, formRefetch, setOpenIdMissionDataDisplayText
   };
 
   const formateTextWithAi = useCallback(async () => {
-    if (!displayData?.idMissionDataDisplayText || !displayData?.idMissionDataDisplayFormatingInstructions) {
+    if (
+      !displayData?.idMissionDataDisplayText ||
+      !displayData?.idMissionDataDisplayFormatingInstructions
+    ) {
       toast.error('Please enter formatting instruction and text to format');
       return;
     }
@@ -1545,7 +1791,7 @@ const IdMissionDataModal = ({ form, formRefetch, setOpenIdMissionDataDisplayText
       }).unwrap();
       if (res.success) {
         let html = DOMPurify.sanitize(res.data);
-        setDisplayData(prev => ({ ...prev, idMissionDataDisplayFormatedText: html }));
+        setDisplayData((prev) => ({ ...prev, idMissionDataDisplayFormatedText: html }));
       }
     } catch (err) {
       console.error(err);
@@ -1566,29 +1812,44 @@ const IdMissionDataModal = ({ form, formRefetch, setOpenIdMissionDataDisplayText
           label="Display Text"
           value={displayData?.idMissionDataDisplayText}
           name="displayText"
-          onChange={e => setDisplayData(prev => ({ ...prev, idMissionDataDisplayText: e.target.value }))}
+          onChange={(e) =>
+            setDisplayData((prev) => ({ ...prev, idMissionDataDisplayText: e.target.value }))
+          }
         />
-        <label htmlFor="formattingInstructionForAi">Enter formatting instruction for AI and click on generate</label>
+        <label htmlFor="formattingInstructionForAi">
+          Enter formatting instruction for AI and click on generate
+        </label>
         <textarea
           id="formattingInstructionForAi"
           rows={2}
           value={displayData?.idMissionDataDisplayFormatingInstructions}
-          onChange={e =>
-            setDisplayData(prev => ({ ...prev, idMissionDataDisplayFormatingInstructions: e.target.value }))
+          onChange={(e) =>
+            setDisplayData((prev) => ({
+              ...prev,
+              idMissionDataDisplayFormatingInstructions: e.target.value,
+            }))
           }
           className="w-full rounded-md border border-gray-300 p-2 outline-none"
         />
         <div className="flex justify-end">
-          <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={'Format Text'} />
+          <Button
+            onClick={formateTextWithAi}
+            disabled={isFormating}
+            className="mt-8"
+            label={'Format Text'}
+          />
         </div>
         {displayData?.idMissionDataDisplayFormatedText && (
           <div
             className="w-full"
             dangerouslySetInnerHTML={{
-              __html: String(displayData?.idMissionDataDisplayFormatedText || '').replace(/<a(\s+.*?)?>/g, match => {
-                if (match.includes('target=')) return match; // avoid duplicates
-                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
-              }),
+              __html: String(displayData?.idMissionDataDisplayFormatedText || '').replace(
+                /<a(\s+.*?)?>/g,
+                (match) => {
+                  if (match.includes('target=')) return match; // avoid duplicates
+                  return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                }
+              ),
             }}
           />
         )}
@@ -1601,7 +1862,11 @@ const IdMissionDataModal = ({ form, formRefetch, setOpenIdMissionDataDisplayText
           variant="secondary"
           label={' Cancel'}
         />
-        <Button onClick={handleUpdateSectionForSignature} disabled={isUpdatingSection} label={'Save'} />
+        <Button
+          onClick={handleUpdateSectionForSignature}
+          disabled={isUpdatingSection}
+          label={'Save'}
+        />
       </div>
     </div>
   );

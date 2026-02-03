@@ -19,15 +19,22 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
   // Update visible steps when current step or window width changes
   useEffect(() => {
     if (windowWidth >= 1440) {
-      // Show all steps on screens 1440px and above
-      setVisibleStepRange({ start: 0, end: totalSteps });
+      const maxSteps = 14;
+
+      setVisibleStepRange({
+        start: 0,
+        end: Math.min(totalSteps, maxSteps),
+      });
     } else {
       const stepsPerScreen = Math.max(3, Math.floor(windowWidth / 200));
+
       let start = Math.max(0, currentStep - Math.floor(stepsPerScreen / 2));
       let end = Math.min(totalSteps, start + stepsPerScreen);
-      // Adjust start/end if near boundaries
+
+      // Adjust boundaries
       if (end === totalSteps) start = Math.max(0, end - stepsPerScreen);
       if (start === 0) end = Math.min(totalSteps, start + stepsPerScreen);
+
       setVisibleStepRange({ start, end });
     }
   }, [currentStep, totalSteps, windowWidth]);
@@ -76,7 +83,7 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
                 {/* Step Label */}
                 <div className="mt-2">
                   <div
-                    className={`text-center text-xs font-medium whitespace-nowrap transition-colors duration-200 ${actualIndex === currentStep ? 'text-primary' : 'text-gray-400'} `}
+                    className={`text-center text-xs font-medium xl:max-w-[40px] xl:truncate transition-colors duration-200 ${actualIndex === currentStep ? 'text-primary' : 'text-gray-400'} `}
                   >
                     {step}
                   </div>

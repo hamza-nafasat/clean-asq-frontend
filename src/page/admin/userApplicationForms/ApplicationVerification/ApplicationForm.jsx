@@ -14,7 +14,11 @@ import {
   useSubmitFormMutation,
 } from '@/redux/apis/formApis';
 import { setIdMissionData } from '@/redux/slices/authSlice';
-import { addSavedFormData, updateFormHeaderAndFooter, updateFormState } from '@/redux/slices/formSlice';
+import {
+  addSavedFormData,
+  updateFormHeaderAndFooter,
+  updateFormState,
+} from '@/redux/slices/formSlice';
 import { unwrapResult } from '@reduxjs/toolkit';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -24,19 +28,23 @@ import Stepper from '../../../../components/Stepper/Stepper';
 import { uploadFilesAndReplace } from '@/lib/utils';
 
 export default function ApplicationForm() {
-  const { user } = useSelector(state => state.auth);
+  const { user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const params = useParams();
   const formId = params.formId;
   const dispatch = useDispatch();
-  const { formData } = useSelector(state => state?.form);
+  const { formData } = useSelector((state) => state?.form);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [sectionNames, setSectionNames] = useState([]);
   const [stepsComps, setStepsComps] = useState([]);
   const [isSavedApiRun, setIsSavedApiRun] = useState(false);
 
-  const { data: form, isLoading: formLoading, refetch: formRefetch } = useGetSingleFormQueryQuery({ _id: formId });
+  const {
+    data: form,
+    isLoading: formLoading,
+    refetch: formRefetch,
+  } = useGetSingleFormQueryQuery({ _id: formId });
   const [formSubmit] = useSubmitFormMutation();
   const [getSavedFormData] = useGetSavedFormMutation();
   const [saveFormInDraft] = useSaveFormInDraftMutation();
@@ -51,7 +59,7 @@ export default function ApplicationForm() {
         setLoadingNext(true);
         if (data && name) {
           const updatedData = await uploadFilesAndReplace(data);
-          // check if not createdAt and updatedAt fields in data then add them 
+          // check if not createdAt and updatedAt fields in data then add them
           const oldData = formData?.[name];
           updatedData.updatedAt = new Date().toISOString();
           if (!updatedData.createdAt && !oldData?.createdAt) {
@@ -64,8 +72,8 @@ export default function ApplicationForm() {
           const updatedBy = {
             _id: user?._id,
             email: user?.email,
-            name: user?.firstName + " " + user?.lastName,
-          }
+            name: user?.firstName + ' ' + user?.lastName,
+          };
           updatedData.updatedBy = updatedBy;
           // Update Redux state
           const res = await saveFormInDraft({
@@ -83,12 +91,19 @@ export default function ApplicationForm() {
         toast.error(error?.data?.message || 'Error while handling next');
       } finally {
         // Move to next step
-        if (currentStep < form?.data?.sections?.length - 1)
-          setCurrentStep(currentStep + 1);
+        if (currentStep < form?.data?.sections?.length - 1) setCurrentStep(currentStep + 1);
         setLoadingNext(false);
       }
     },
-    [currentStep, dispatch, form?.data?._id, form?.data?.sections?.length, formData, saveFormInDraft, user]
+    [
+      currentStep,
+      dispatch,
+      form?.data?._id,
+      form?.data?.sections?.length,
+      formData,
+      saveFormInDraft,
+      user,
+    ]
   );
   const handleSubmit = useCallback(
     async ({ data, name, setLoadingNext }) => {
@@ -97,7 +112,7 @@ export default function ApplicationForm() {
 
         if (data && name) {
           const updatedData = await uploadFilesAndReplace(data);
-          // check if not createdAt and updatedAt fields in data then add them 
+          // check if not createdAt and updatedAt fields in data then add them
           const oldData = formData?.[name];
           updatedData.updatedAt = new Date().toISOString();
           if (!updatedData.createdAt && !oldData?.createdAt) {
@@ -110,11 +125,14 @@ export default function ApplicationForm() {
           const updatedBy = {
             _id: user?._id,
             email: user?.email,
-            name: user?.firstName + " " + user?.lastName,
-          }
+            name: user?.firstName + ' ' + user?.lastName,
+          };
           updatedData.updatedBy = updatedBy;
           // Save form draft (non-file data only)
-          const res = await formSubmit({ formId: form?.data?._id, formData: { ...formData, [name]: updatedData } }).unwrap();
+          const res = await formSubmit({
+            formId: form?.data?._id,
+            formData: { ...formData, [name]: updatedData },
+          }).unwrap();
           if (res.success) {
             toast.success(res.message);
             navigate('/submited-successfully/' + form?.data?._id);
@@ -134,7 +152,7 @@ export default function ApplicationForm() {
       try {
         if (data && name) {
           const updatedData = await uploadFilesAndReplace(data);
-          // check if not createdAt and updatedAt fields in data then add them 
+          // check if not createdAt and updatedAt fields in data then add them
           const oldData = formData?.[name];
           updatedData.updatedAt = new Date().toISOString();
           if (!updatedData.createdAt && !oldData?.createdAt) {
@@ -147,10 +165,13 @@ export default function ApplicationForm() {
           const updatedBy = {
             _id: user?._id,
             email: user?.email,
-            name: user?.firstName + " " + user?.lastName,
-          }
+            name: user?.firstName + ' ' + user?.lastName,
+          };
           updatedData.updatedBy = updatedBy;
-          const res = await saveFormInDraft({ formId: form?.data?._id, formData: { ...formData, [name]: updatedData } }).unwrap();
+          const res = await saveFormInDraft({
+            formId: form?.data?._id,
+            formData: { ...formData, [name]: updatedData },
+          }).unwrap();
           if (res.success) toast.success(res.message);
         }
       } catch (error) {
@@ -165,7 +186,7 @@ export default function ApplicationForm() {
     // get saved data if exist
     if (form?.data?.sections && form?.data?.sections?.length > 0) {
       getSavedFormData({ formId: form?.data?._id })
-        .then(res => {
+        .then((res) => {
           const data = res?.data?.data?.savedData;
           dispatch(setIdMissionData(data?.idMission));
           if (data) dispatch(addSavedFormData(data));
@@ -188,12 +209,16 @@ export default function ApplicationForm() {
 
   useEffect(() => {
     if (form?.data?.sections && form?.data?.sections?.length > 0 && isSavedApiRun) {
-      const companyInformationStep = form?.data?.sections.find(step => step.key === 'company_information');
+      const companyInformationStep = form?.data?.sections.find(
+        (step) => step.key === 'company_information'
+      );
       const data = [];
       const stepNames = [];
       const isOwner = user?._id && user?._id === form?.data?.owner;
-      const visibleSections = isOwner ? form?.data?.sections : form?.data?.sections?.filter(step => !step?.isHidden);
-      visibleSections.forEach(step => {
+      const visibleSections = isOwner
+        ? form?.data?.sections
+        : form?.data?.sections?.filter((step) => !step?.isHidden);
+      visibleSections.forEach((step) => {
         const sectionDataFromRedux = formData?.[step?.key];
         const commonProps = {
           _id: step._id,
@@ -241,7 +266,8 @@ export default function ApplicationForm() {
       setSectionNames(stepNames);
     }
   }, [
-    currentStep, form?.data?.owner,
+    currentStep,
+    form?.data?.owner,
     form?.data?.sections,
     formData,
     formLoading,
@@ -257,7 +283,12 @@ export default function ApplicationForm() {
   if (!user?._id) return navigate(`/application-form/${form?.data?.branding?.name}/${formId}`);
   return (
     <div className="bg-backgroundColor h-full w-full overflow-hidden rounded-[10px] px-6 py-6">
-      <Stepper steps={sectionNames} currentStep={currentStep} visibleSteps={0} emptyRequiredFields={[]}>
+      <Stepper
+        steps={sectionNames}
+        currentStep={currentStep}
+        visibleSteps={0}
+        emptyRequiredFields={[]}
+      >
         {stepsComps[currentStep]}
       </Stepper>
     </div>
