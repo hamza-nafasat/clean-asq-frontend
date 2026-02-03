@@ -23,13 +23,13 @@ const APPLICANT_TABLE_COLUMNS = [
     name: 'Name',
     selector: row => `${row?.user?.firstName} ${row?.user?.lastName}`,
     sortable: true,
-    width: '200px',
+    width: '170px',
   },
   {
     name: 'Application',
     selector: row => row?.form?.name || 'N/A',
     sortable: true,
-    width: '200px',
+    width: '180px',
   },
   {
     name: 'Email',
@@ -41,7 +41,7 @@ const APPLICANT_TABLE_COLUMNS = [
     name: 'Client Type',
     selector: row => row?.user?.role?.name,
     sortable: true,
-    width: '160px',
+    width: '140px',
     cell: row => (
       <span className="text-accent w-[130px] rounded-sm bg-gray-100 px-[10px] py-[3px] text-center text-xs font-bold capitalize">
         {row?.user?.role?.name}
@@ -50,9 +50,9 @@ const APPLICANT_TABLE_COLUMNS = [
   },
   {
     name: 'Submitted Date',
-    selector: row => new Date(row.createdAt)?.toLocaleDateString(),
+    selector: row => new Date(row?.updatedAt || "").toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
     sortable: true,
-    width: '150px',
+    width: '200px',
   },
   {
     name: 'Status',

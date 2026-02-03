@@ -11,27 +11,32 @@ const columns = () => [
   //   sortable: true,
   // },
   {
+    name: 'Date/Time',
+    selector: row => new Date(row?.updatedAt || "").toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    sortable: true,
+  },
+  {
     name: 'User',
     selector: row => `${row?.updatedBy?.role} ${row?.updatedBy?.email}`,
     sortable: true,
   },
 
   {
-    name: 'Action',
+    name: 'Section',
     selector: row => row?.originalSectionKey,
     sortable: true,
   },
-
-  // {
-  //   name: 'Created At',
-  //   selector: row => new Date(row?.createdAt || "").toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-  //   sortable: true,
-  // },
   {
-    name: 'Updated At',
-    selector: row => new Date(row?.updatedAt || "").toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    name: 'Action/Status',
+    selector: () => "Completed",
     sortable: true,
   },
+  {
+    name: 'Comment/Details',
+    selector: () => "",
+    sortable: true,
+  },
+
 
 
 ];
