@@ -93,7 +93,7 @@ function Email() {
 
   const templates = emailTemplates?.data;
 
-  const sedationKeywords = ['link', 'otp', 'email', 'password', 'frontEndUrl'];
+  const sedationKeywords = ['link', 'otp', 'email', 'password', 'frontEndUrl', 'recipientName', 'applicationCompanyName', 'brandCompanyName'];
 
   <ReactQuill
     className={`h-[200px] border ${!editData.body ? 'border-accent' : 'border-frameColor'}`}

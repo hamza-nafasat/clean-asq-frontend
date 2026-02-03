@@ -111,7 +111,7 @@ const GuestHeader = ({
 
                     <div>
                       <h6 className="text-header-text text-sm font-semibold">
-                        {user?.firstName} {user?.lastName}
+                        {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''} {user?.lastName}
                       </h6>
                       <p className="text-header-text text-xs">{user?.email}</p>
                     </div>
@@ -152,7 +152,7 @@ const GuestHeader = ({
 
                     <div>
                       <h6 className="text-sm font-semibold text-gray-800">
-                        {user?.firstName} {user?.lastName}
+                        {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''} {user?.lastName}
                       </h6>
                       <p className="text-xs text-gray-600">{user?.email}</p>
                     </div>
@@ -217,7 +217,7 @@ const GuestHeader = ({
 
                   <div>
                     <h6 className="text-sm font-semibold text-gray-800">
-                      {user?.firstName} {user?.lastName}
+                      {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''} {user?.lastName}
                     </h6>
                     <p className="text-xs text-gray-600">{user?.email}</p>
                   </div>
@@ -278,7 +278,7 @@ const UserHeader = ({
 
               <div>
                 <h6 className="text-header-text text-sm font-semibold">
-                  {user?.firstName} {user?.lastName}
+                  {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''} {user?.lastName}
                 </h6>
                 <p className="text-header-text text-xs">{user?.email}</p>
               </div>

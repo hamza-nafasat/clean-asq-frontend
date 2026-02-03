@@ -14,6 +14,12 @@ import ApplicantSearch from './ApplicantSearch';
 // Table columns configuration
 const APPLICANT_TABLE_COLUMNS = [
   {
+    name: 'ID',
+    selector: row => row?._id,
+    sortable: true,
+    width: '200px',
+  },
+  {
     name: 'Name',
     selector: row => `${row?.user?.firstName} ${row?.user?.lastName}`,
     sortable: true,

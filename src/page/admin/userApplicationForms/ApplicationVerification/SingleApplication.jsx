@@ -839,14 +839,14 @@ export default function SingleApplication() {
           {!idMissionVerified ? ( // TODO add not
             !emailVerified ? (
               <>
-                <div className="flex flex-col items-center gap-3">
+                <div className="flex flex-col items-center gap-3 max-w-[calc(100vw-20)]">
                   {isCreator && (
                     <div className="flex w-full items-center justify-end">
                       <Button label="Edit OTP Display Text" onClick={() => setOpenOtpDisplayTextModal(true)} />
                     </div>
                   )}
                   {form?.data?.otpDisplayFormatedText && (
-                    <div className="flex w-full gap-3">
+                    <div className="flex max-w-full w-full gap-3">
                       <div
                         className="w-full"
                         dangerouslySetInnerHTML={{
