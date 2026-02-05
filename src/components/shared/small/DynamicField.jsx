@@ -322,7 +322,7 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
   );
 };
 
-const RadioInputType = ({ field, className, form, setForm, onChange }) => {
+const RadioInputType = ({ field, className, form, setForm, onChange, disabled = false }) => {
   const { label, options, name, required, aiHelp, aiPrompt, aiResponse, isDisplayText, ai_formatting } = field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const radioHandler = option => setForm({ ...form, [name]: option.value });
@@ -361,12 +361,13 @@ const RadioInputType = ({ field, className, form, setForm, onChange }) => {
           {options?.map((option, index) => (
             <div key={index} className="flex items-center gap-2 p-2 text-start">
               <input
+                disabled={disabled}
                 name={name}
                 type={'radio'}
                 id={option.value + index + name}
                 value={option.value}
                 checked={form[name] === option.value}
-                className="text-textPrimary accent-primary size-5"
+                className={`text-textPrimary accent-primary size-5 ${disabled ? 'opacity-70 cursor-not-allowed' : ''}`}
                 required={required}
                 onChange={onChange ? onChange : () => radioHandler(option)}
               />

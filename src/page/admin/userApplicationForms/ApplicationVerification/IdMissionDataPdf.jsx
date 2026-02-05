@@ -29,6 +29,7 @@ const IdMissionDataPdf = ({ formId }) => {
   const { formData } = useSelector(state => state.form);
   const { data: form } = useGetSingleFormQueryQuery({ _id: formId }, { skip: !formId });
   const idMissionSection = form?.data?.sections?.find(sec => sec?.title?.toLowerCase() == 'id_verification_blk');
+  const { isDisabledAllFields } = useSelector(state => state.form);
 
   useEffect(() => {
     if (formData?.idMission) {
@@ -52,6 +53,8 @@ const IdMissionDataPdf = ({ formId }) => {
         address2: formDataOfIdMission?.address2 || 'None',
         signature: formDataOfIdMission?.signature || '',
         roleFillingForCompany: formDataOfIdMission?.roleFillingForCompany || '',
+        createdAt: formDataOfIdMission?.createdAt || new Date().toISOString(),
+        updatedAt: formDataOfIdMission?.updatedAt || new Date().toISOString(),
       });
     }
   }, [formData?.idMission, idMissionSection]);
@@ -77,62 +80,78 @@ const IdMissionDataPdf = ({ formId }) => {
       )}
       <form className="flex flex-wrap justify-center gap-4">
         <TextField
-          onChange={() => {}}
+          onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, name: e.target.value })}
           required
+          disabled={isDisabledAllFields}
           value={idMissionVerifiedData?.name}
           label="Name:*"
-          className={'max-w-[400px]!'}
+          name="name"
+          className={`max-w-[400px]!`}
         />
         <TextField
+          disabled={isDisabledAllFields}
           value={idMissionVerifiedData?.email}
-          onChange={() => {}}
+          onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, email: e.target.value })}
           label="Email Address:*"
           required
+          name="email"
           className={'max-w-[400px]!'}
         />
         <TextField
           type="date"
+          disabled={isDisabledAllFields}
           value={idMissionVerifiedData?.dateOfBirth}
-          onChange={() => {}}
+          onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, dateOfBirth: e.target.value })}
           label="Date of Birth:*"
           required
+          name="dateOfBirth"
           className={'max-w-[400px]!'}
         />
         <TextField
           type="text"
+          disabled={isDisabledAllFields}
           value={idMissionVerifiedData?.idType}
-          onChange={() => {}}
+          name="idType"
+          onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, idType: e.target.value })}
           label="Id Type:*"
           required
           className={'max-w-[400px]!'}
         />{' '}
         <TextField
           type="text"
+          disabled={isDisabledAllFields}
           value={idMissionVerifiedData?.idIssuer}
-          onChange={() => {}}
+          name="idIssuer"
+          onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, idIssuer: e.target.value })}
           label="Id Issuer:*"
           required
           className={'max-w-[400px]!'}
         />{' '}
         <TextField
           type="text"
+          disabled={isDisabledAllFields}
           value={idMissionVerifiedData?.idExpiryDate}
-          onChange={() => {}}
+          name="idExpiryDate"
+          onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, idExpiryDate: e.target.value })}
           label="Id Expiry Date:*"
           required
           className={'max-w-[400px]!'}
         />{' '}
         <TextField
           type="text"
+          disabled={isDisabledAllFields}
           value={idMissionVerifiedData?.issueDate}
-          onChange={() => {}}
+          name="issueDate"
+          onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, issueDate: e.target.value })}
           label="Issue Date:*"
           required
           className={'max-w-[400px]!'}
         />{' '}
         <TextField
+          disabled={isDisabledAllFields}
           required
-          onChange={() => {}}
+          name="idNumber"
+          onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, idNumber: e.target.value })}
           value={idMissionVerifiedData?.idNumber}
           label="Id Number:*"
           className={'max-w-[400px]!'}
@@ -144,8 +163,10 @@ const IdMissionDataPdf = ({ formId }) => {
           <TextField
             type="text"
             required
+            disabled={isDisabledAllFields}
             value={idMissionVerifiedData?.streetAddress}
-            onChange={() => {}}
+            name="streetAddress"
+            onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, streetAddress: e.target.value })}
             label="Street Address:*"
             className={'max-w-[400px]!'}
           />
@@ -153,53 +174,67 @@ const IdMissionDataPdf = ({ formId }) => {
         <TextField
           type="text"
           required
+          disabled={isDisabledAllFields}
           value={idMissionVerifiedData?.city}
-          onChange={() => {}}
+          name="city"
+          onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, city: e.target.value })}
           label="City:*"
           className={'max-w-[400px]!'}
         />
         <TextField
           type="text"
           required
+          disabled={isDisabledAllFields}
           value={idMissionVerifiedData?.zipCode}
-          onChange={() => {}}
+          name="zipCode"
+          onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, zipCode: e.target.value })}
           label="Zip Code:*"
           className={'max-w-[400px]!'}
         />
         <TextField
           type="text"
           required
+          disabled={isDisabledAllFields}
           value={idMissionVerifiedData?.state}
-          onChange={() => {}}
+          name="state"
+          onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, state: e.target.value })}
           label="State:*"
           className={'max-w-[400px]!'}
         />
         <TextField
           type="text"
           required
+          disabled={isDisabledAllFields}
           value={idMissionVerifiedData?.country}
-          onChange={() => {}}
+          name="country"
+          onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, country: e.target.value })}
           label="Country:*"
           className={'max-w-[400px]!'}
         />
         <TextField
+          disabled={isDisabledAllFields}
           value={idMissionVerifiedData?.companyTitle}
-          onChange={() => {}}
+          name="companyTitle"
+          onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, companyTitle: e.target.value })}
           label="Company Title:*"
           required
           className={'max-w-[400px]!'}
         />
         <TextField
+          disabled={isDisabledAllFields}
           value={idMissionVerifiedData?.phoneNumber}
-          onChange={() => {}}
+          name="phoneNumber"
+          onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, phoneNumber: e.target.value })}
           label="Phone Number:*"
           required
-          type="tel"
+          type="text"
+          formatting="3,3,4"
           className={'max-w-[400px]!'}
         />
         <div className="flex w-full border bg-white p-4">
           <RadioInputType
-            className={'w-full'}
+            disabled={isDisabledAllFields}
+            className={`w-full`}
             field={{
               label: 'What is the role you are filling for the company as you complete this application? ',
               options: [
@@ -222,7 +257,7 @@ const IdMissionDataPdf = ({ formId }) => {
               required: true,
             }}
             form={{ roleFillingForCompany: idMissionVerifiedData?.roleFillingForCompany }}
-            onChange={() => {}}
+            onChange={e => setIdMissionVerifiedData({ ...idMissionVerifiedData, roleFillingForCompany: e.target.value })}
             setForm={setIdMissionVerifiedData}
           />
         </div>
@@ -241,10 +276,11 @@ const IdMissionDataPdf = ({ formId }) => {
             )}
           </div>
           <SignatureBox
+            disabled={isDisabledAllFields}
             isPdf={true}
             oldSignatureUrl={idMissionVerifiedData?.signature?.secureUrl}
             className={'min-w-full'}
-            onSave={() => {}}
+            onSave={() => { }}
           />
         </div>
       </form>

@@ -1,15 +1,15 @@
+import Modal from '@/components/shared/Modal';
+import Button from '@/components/shared/small/Button';
+import TextField from '@/components/shared/small/TextField';
 import { useBranding } from '@/hooks/BrandingContext';
 import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
 import DOMPurify from 'dompurify';
 import { useRef, useState } from 'react';
+import { CgSoftwareDownload } from 'react-icons/cg';
 import { IoEyeOffSharp } from 'react-icons/io5';
 import { RxEyeOpen } from 'react-icons/rx';
+import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import Button from '@/components/shared/small/Button';
-import Modal from '@/components/shared/Modal';
-import TextField from '@/components/shared/small/TextField';
-import { CgSoftwareDownload, CgSoftwareUpload } from 'react-icons/cg';
-import { PiFileArrowUpFill } from 'react-icons/pi';
 
 const DynamicField = ({ cn, field, className = '', form, placeholder, value, setForm, ...rest }) => {
   const { type, label, id, options, name, required } = field;
@@ -185,6 +185,7 @@ export default DynamicField;
 const SelectInputType = ({ field, className, form, setForm }) => {
   const { label, options, name, required, placeholder, aiPrompt, aiResponse, isDisplayText, ai_formatting } = field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
+  const { isDisabledAllFields } = useSelector(state => state.form);
   const selectHandler = e => setForm({ ...form, [name]: e.target.value });
   return (
     <>
@@ -215,9 +216,9 @@ const SelectInputType = ({ field, className, form, setForm }) => {
         <div className="flex w-full gap-2">
           <select
             name={name}
-            disabled={true}
+            disabled={isDisabledAllFields}
             required={required}
-            className="border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${isDisabledAllFields ? 'opacity-70 cursor-not-allowed' : ''}`}
             onChange={selectHandler}
           >
             <option value="">{placeholder ?? 'Choose an option'}</option>
@@ -236,6 +237,7 @@ const SelectInputType = ({ field, className, form, setForm }) => {
 const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
   const { label, options, name, required, aiPrompt, aiResponse, isDisplayText, ai_formatting } = field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
+  const { isDisabledAllFields } = useSelector(state => state.form);
   const multiCheckBoxHandler = e => {
     if (form[name]?.includes(e.target.value)) {
       setForm({ ...form, [name]: form[name].filter(item => item !== e.target.value) });
@@ -273,12 +275,12 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
               {option?.label}
             </label>
             <input
-              disabled={true}
+              disabled={isDisabledAllFields}
               id={option?.label}
               type={'checkbox'}
               value={option?.value}
               checked={form[name]?.includes(option?.value)}
-              className="text-primary accent-primary focus:ring-primary border-frameColor h-4 w-4 rounded"
+              className={`text-primary accent-primary focus:ring-primary border-frameColor h-4 w-4 rounded ${isDisabledAllFields ? 'opacity-70 cursor-not-allowed' : ''}`}
               required={required}
               onChange={multiCheckBoxHandler}
             />
@@ -292,6 +294,7 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
 const RadioInputType = ({ field, className, form, setForm, onChange }) => {
   const { label, options, name, required, aiPrompt, aiResponse, isDisplayText, ai_formatting } = field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
+  const { isDisabledAllFields } = useSelector(state => state.form);
   const radioHandler = option => setForm({ ...form, [name]: option.value });
   return (
     <div className={`flex w-full flex-col items-start ${className}`}>
@@ -323,14 +326,14 @@ const RadioInputType = ({ field, className, form, setForm, onChange }) => {
           {options?.map((option, index) => (
             <div key={index} className="flex items-center gap-2 p-2 text-start">
               <input
-                disabled={true}
+                disabled={isDisabledAllFields}
                 aria-disabled={true}
                 name={name}
                 type={'radio'}
                 id={option.value + index + name}
                 value={option.value}
                 checked={form[name] === option.value}
-                className="text-textPrimary accent-primary size-5"
+                className={`text-textPrimary accent-primary size-5 ${isDisabledAllFields ? 'opacity-70 cursor-not-allowed' : ''}`}
                 required={required}
                 onChange={onChange ? onChange : () => radioHandler(option)}
               />
@@ -348,7 +351,7 @@ const RadioInputType = ({ field, className, form, setForm, onChange }) => {
 const CheckboxInputType = ({ field, className, form, setForm }) => {
   const { label, name, required, aiPrompt, aiResponse, isDisplayText, ai_formatting, conditional_fields } = field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
-
+  const { isDisabledAllFields } = useSelector(state => state.form);
   const singleCheckBoxHandler = e => setForm({ ...form, [name]: e.target.checked });
   return (
     <div className="flex flex-col gap-2">
@@ -374,14 +377,14 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 p-4">
             <input
-              disabled={true}
-              aria-disabled={true}
+              disabled={isDisabledAllFields}
+              aria-disabled={isDisabledAllFields}
               type={'checkbox'}
               name={name}
               required={required}
               value={form[name]}
               checked={form[name]}
-              className="text-primary accent-primary focus:ring-primary border-frameColor h-4 w-4 rounded"
+              className={`text-primary accent-primary focus:ring-primary border-frameColor h-4 w-4 rounded ${isDisabledAllFields ? 'opacity-70 cursor-not-allowed' : ''}`}
               onChange={singleCheckBoxHandler}
             />
             {label && (
@@ -399,6 +402,7 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
             return (
               <div className="flex w-full flex-col gap-2" key={index}>
                 <TextField
+                  disabled={isDisabledAllFields}
                   value={form?.[fieldName]}
                   type={f?.type}
                   label={f?.label}
@@ -428,7 +432,7 @@ const RangeInputType = ({ field, className, form, setForm }) => {
     ai_formatting,
   } = field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
-
+  const { isDisabledAllFields } = useSelector(state => state.form);
   const onRangeChange = e => {
     const targetVAlue = String(e.target.value);
     if (targetVAlue > maxValue || targetVAlue < minValue) return;
@@ -462,20 +466,20 @@ const RangeInputType = ({ field, className, form, setForm }) => {
       <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
         <div className="mb-2 w-full text-center text-sm font-semibold text-gray-700">{Number(form[name]) || 0} %</div>
         <input
-          disabled={true}
-          aria-disabled={true}
+          disabled={isDisabledAllFields}
+          aria-disabled={isDisabledAllFields}
           value={Number(form[name]) || 0}
           type="range"
-          className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
+          className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${isDisabledAllFields ? 'opacity-70 cursor-not-allowed' : ''}`}
           onChange={onRangeChange}
         />
         <div className="flex w-full gap-2">
           <input
-            disabled={true}
-            aria-disabled={true}
+            disabled={isDisabledAllFields}
+            aria-disabled={isDisabledAllFields}
             type="number"
             value={Number(form[name]) || 0}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${isDisabledAllFields ? 'opacity-70 cursor-not-allowed' : ''}`}
             onChange={onRangeChange}
           />
         </div>
@@ -497,6 +501,7 @@ const FileInputType = ({ field, className, form }) => {
   } = field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const [fileName] = useState('');
+  const { isDisabledAllFields } = useSelector(state => state.form);
 
 
   if (!form?.[name]?.secureUrl || !form?.[name]?.resourceType) {
@@ -567,10 +572,10 @@ const FileInputType = ({ field, className, form }) => {
 
           {form?.[name]?.secureUrl && form?.[name]?.resourceType === 'raw' && (
             <Button
-              disabled={true}
-              aria-disabled={true}
+              disabled={isDisabledAllFields}
+              aria-disabled={isDisabledAllFields}
               label="Download"
-              className="text-textPrimary! border-gray-300! bg-white! hover:bg-gray-500!"
+              className={`text-textPrimary! border-gray-300! bg-white! hover:bg-gray-500! ${isDisabledAllFields ? 'opacity-70 cursor-not-allowed' : ''}`}
               rightIcon={CgSoftwareDownload}
               onClick={() => {
                 window.open(form?.[name]?.secureUrl, '_blank');
@@ -597,6 +602,7 @@ const FileInputType = ({ field, className, form }) => {
 };
 
 const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => {
+  const { isDisabledAllFields } = useSelector(state => state.form);
   const isEmpty = value => {
     if (value === undefined || value === null) return true;
     if (typeof value === 'string') return value.trim() === '';
@@ -705,6 +711,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                 <div className="relative">
                   <textarea
                     ref={inputRef}
+                    disabled={isDisabledAllFields}
                     name={name}
                     placeholder={placeholder}
                     value={getDisplayValue(type, form?.[name])}
@@ -719,7 +726,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                     readOnly={showMasked}
                     autoComplete="off"
                     className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
-                      }`}
+                      } ${isDisabledAllFields ? 'opacity-70 cursor-not-allowed' : ''}`}
                     {...(isConfirmField
                       ? {
                         onPaste: e => e.preventDefault(),
@@ -734,8 +741,8 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                   <input
                     ref={inputRef}
                     name={name}
-                    disabled={true}
-                    aria-disabled={true}
+                    disabled={isDisabledAllFields}
+                    aria-disabled={isDisabledAllFields}
                     placeholder={placeholder}
                     type={isMasked && type !== 'date' ? 'text' : type}
                     value={getDisplayValue(type, form?.[name])}
@@ -754,7 +761,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField }) => 
                     readOnly={showMasked}
                     autoComplete="off"
                     className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${required && isEmpty(form[name]) ? 'border-accent border-2' : 'border-frameColor border'
-                      }`}
+                      } ${isDisabledAllFields ? 'opacity-70 cursor-not-allowed' : ''}`}
                     {...(isConfirmField
                       ? {
                         onPaste: e => e.preventDefault(),
@@ -864,11 +871,9 @@ const AiHelpModal = ({ aiResponse }) => {
 
 export {
   AiHelpModal,
-  CheckboxInputType,
-  MultiCheckboxInputType,
+  CheckboxInputType, FileInputType, MultiCheckboxInputType,
   OtherInputType,
   RadioInputType,
-  RangeInputType,
-  FileInputType,
-  SelectInputType,
+  RangeInputType, SelectInputType
 };
+

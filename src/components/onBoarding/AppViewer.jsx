@@ -7,7 +7,7 @@ const AppViewer = ({ data }) => {
 
   return (
     <div className="flex w-full">
-      <ApplicationPdfViewCommonProps userId={userId} pdfId={pdfId} className="rounded-lg!" />
+      <ApplicationPdfViewCommonProps userId={userId} pdfId={pdfId} className="rounded-lg!" isEditAble={true} />
     </div>
   )
 }

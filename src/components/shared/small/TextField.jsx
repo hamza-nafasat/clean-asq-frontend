@@ -55,6 +55,7 @@ const TextField = ({
   suggestions,
   onChange,
   name,
+  disabled = false,
   value,
   required = false,
   ...rest
@@ -69,18 +70,18 @@ const TextField = ({
 
   const filteredSuggestions = Array.isArray(suggestions)
     ? suggestions
-        .filter(s => {
-          if (inputVal === '*') return true;
-          return s.toLowerCase().includes(inputVal);
-        })
-        .sort((a, b) => {
-          if (inputVal === '*') return a.localeCompare(b);
-          const aStarts = a.toLowerCase().startsWith(inputVal);
-          const bStarts = b.toLowerCase().startsWith(inputVal);
-          if (aStarts && !bStarts) return -1;
-          if (!aStarts && bStarts) return 1;
-          return a.localeCompare(b);
-        })
+      .filter(s => {
+        if (inputVal === '*') return true;
+        return s.toLowerCase().includes(inputVal);
+      })
+      .sort((a, b) => {
+        if (inputVal === '*') return a.localeCompare(b);
+        const aStarts = a.toLowerCase().startsWith(inputVal);
+        const bStarts = b.toLowerCase().startsWith(inputVal);
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        return a.localeCompare(b);
+      })
     : [];
 
   const formatDate = dateStr => {
@@ -128,13 +129,13 @@ const TextField = ({
               onChange?.({ target: { name, value: val } });
             }}
             name={name}
+            disabled={disabled}
             value={type === 'date' ? formatDate(value) : value}
             autoComplete="off"
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-            className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
-              leftIcon ? 'pl-10' : ''
-            } ${rightIcon ? 'pr-10' : ''} ${!value && required ? 'border-accent bg-highlighting border-2' : 'border-frameColor'}`}
+            className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''
+              } ${rightIcon ? 'pr-10' : ''} ${!value && required ? 'border-accent bg-highlighting border-2' : 'border-frameColor'} ${disabled ? 'opacity-70 cursor-not-allowed' : ''}`}
           />
 
           {rightIcon && (
@@ -165,6 +166,7 @@ const TextField = ({
         <input
           {...rest}
           name={name}
+          disabled={disabled}
           autoComplete="off"
           type={showMasked ? 'password' : type}
           value={type === 'date' ? formatDate(value) : getDisplayValue(value)}
@@ -186,7 +188,7 @@ const TextField = ({
 
             onChange?.({ target: { name, value: val } });
           }}
-          className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''} ${!value && required ? 'border-accent bg-highlighting border-2' : 'border-frameColor'}`}
+          className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''} ${!value && required ? 'border-accent bg-highlighting border-2' : 'border-frameColor'} ${disabled ? 'opacity-70 cursor-not-allowed' : ''} `}
         />
 
         {/* Suggestions */}

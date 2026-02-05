@@ -12,12 +12,13 @@ import CompanyOwnersPdf from '@/components/applicationVerification/ApplicationPd
 import CustomSectionPdf from '@/components/applicationVerification/ApplicationPdfForm/CustomSectionPdf';
 import DocumentsPdf from '@/components/applicationVerification/ApplicationPdfForm/DocumentsPdf';
 import ProcessingInfoPdf from '@/components/applicationVerification/ApplicationPdfForm/ProcessingInfoPdf';
+import Button from '@/components/shared/small/Button';
+import { useBranding } from '@/hooks/BrandingContext';
 import useApplyBranding from '@/hooks/useApplyBranding';
 import { useGetSavedFormByUserIdMutation, useGetSingleFormQueryQuery } from '@/redux/apis/formApis';
-import { addSavedFormData } from '@/redux/slices/formSlice';
-import IdMissionDataPdf from './IdMissionDataPdf';
-import { useBranding } from '@/hooks/BrandingContext';
+import { addSavedFormData, updateIsDisabledAllFields } from '@/redux/slices/formSlice';
 import logoApply from '../../../../assets/images/logo.png';
+import IdMissionDataPdf from './IdMissionDataPdf';
 
 const ApplicationPdfView = () => {
   const { pdfId, userId } = useParams();
@@ -33,9 +34,10 @@ const ApplicationPdfView = () => {
 export default ApplicationPdfView;
 
 
-export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, className = '' }) => {
+export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, className = '', isEditAble = false }) => {
   const { logo } = useBranding();
   const { formData } = useSelector(state => state.form);
+  const { isDisabledAllFields } = useSelector(state => state.form);
   const dispatch = useDispatch();
   // Queries & Mutations
   const {
@@ -91,6 +93,12 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
         </div>
       </div>}
       <div className={`h-full w-full space-y-12 overflow-visible bg-white px-6 py-8 ${className}`}>
+        {isEditAble && isDisabledAllFields && <div className="flex justify-end">
+          <Button label="Edit" variant="secondary" onClick={() => dispatch(updateIsDisabledAllFields(false))} />
+        </div>}
+        {isEditAble && !isDisabledAllFields && <div className="flex justify-end">
+          <Button label="Save" onClick={() => dispatch(updateIsDisabledAllFields(true))} />
+        </div>}
         <IdMissionDataPdf formId={pdfId} />
         {form?.data?.sections?.map((section, index) => {
           const sectionDataFromRedux = formData?.[section?.key];

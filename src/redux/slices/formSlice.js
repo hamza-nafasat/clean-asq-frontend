@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const formSlice = createSlice({
   name: 'form',
-  initialState: { formData: {}, emailVerified: false, formHeaderText: '', formFooterText: '' },
+  initialState: { formData: {}, emailVerified: false, formHeaderText: '', formFooterText: '', isDisabledAllFields: true },
   reducers: {
     updateFormState: (state, action) => {
       const objKey = action.payload.name;
@@ -19,9 +19,12 @@ const formSlice = createSlice({
       state.formHeaderText = action.payload.headerText;
       state.formFooterText = action.payload.footerText;
     },
+    updateIsDisabledAllFields: (state, action) => {
+      state.isDisabledAllFields = action.payload;
+    },
   },
 });
 
-export const { updateFormState, updateEmailVerified, addSavedFormData, updateFormHeaderAndFooter } = formSlice.actions;
+export const { updateFormState, updateEmailVerified, addSavedFormData, updateFormHeaderAndFooter, updateIsDisabledAllFields } = formSlice.actions;
 
 export default formSlice;

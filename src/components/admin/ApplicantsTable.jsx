@@ -194,18 +194,10 @@ const ApplicantsTable = ({
   const ButtonsForThreeDot = useMemo(
     () => [
       {
-        name: 'View',
+        name: 'View Pdf',
         icon: <Eye size={16} className="mr-2" />,
         onClick: row => {
           onView(row.id);
-          setActionMenu(null);
-        },
-      },
-      {
-        name: 'Edit',
-        icon: <Pencil size={16} className="mr-2" />,
-        onClick: row => {
-          setEditModalData({ ...row });
           setActionMenu(null);
         },
       },
