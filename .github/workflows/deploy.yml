@@ -1,17 +1,45 @@
-name: Remote Deploy Frontend
+name: Frontend CI/CD Deploy
 
 on:
   push:
     branches: [main]
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      # 1. Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run remote deploy script
+      # 2. Setup Node
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 3. Install deps
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Build project (ON GITHUB, NOT VPS)
+      - name: Build project
+        run: npm run build
+
+      # 5. Upload dist to VPS (FAST)
+      - name: Copy dist to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "dist/*"
+          target: "/var/www/apply-super-quick-frontend"
+
+      # 6. Reload nginx only
+      - name: Reload nginx
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -19,15 +47,4 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            set -e
-            cd /root/apply-super-quick/frontend
-            git fetch --all
-            git reset --hard origin/main
-            npm ci
-            npm run build
-            # Copy output to web root
-            sudo rm -rf /var/www/apply-super-quick-frontend
-            sudo mkdir -p /var/www/apply-super-quick-frontend
-            sudo cp -r dist/* /var/www/apply-super-quick-frontend/
-            # Optional reload nginx
             sudo systemctl reload nginx
