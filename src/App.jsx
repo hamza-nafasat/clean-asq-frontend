@@ -1,47 +1,47 @@
-import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Navigate, Route, Routes } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { SubmissionSuccessPage } from './components/LoadingWithTimerAfterSubmission';
-import ProtectedRoute from './components/ProtectedRoute';
-import CustomLoading from './components/shared/small/CustomLoading';
-import { useBranding } from './hooks/BrandingContext';
-import getEnv from './lib/env';
-import { socket } from './main';
-import AdminDashboard from './page/admin/dashboard';
-import AdminAllUsers from './page/admin/dashboard/admin-dashboard/AdminAllUsers';
-import ApplicationForms from './page/admin/dashboard/applicationForms/ApplicationForms';
-import Applications from './page/admin/dashboard/applications/Applications';
-import DraftSubmission from './page/admin/dashboard/draftSubmission/DraftSubmission';
-import Email from './page/admin/dashboard/email/Email';
-import FormStrategies from './page/admin/dashboard/formStrategies/FormStrategies';
-import AllRoles from './page/admin/dashboard/role/AllRoles';
-import Strategies from './page/admin/dashboard/strategies/Strategies';
-import Verification from './page/admin/dashboard/varification/Varification';
-import VerificationTest from './page/admin/dashboard/varification/VerficationTest';
-import UserApplicationForms from './page/admin/userApplicationForms';
-import AdditionalOwnersForm from './page/admin/userApplicationForms/ApplicationVerification/AdditionalOwnersForm';
-import ApplicationForm from './page/admin/userApplicationForms/ApplicationVerification/ApplicationForm';
-import ApplicationPdfView from './page/admin/userApplicationForms/ApplicationVerification/ApplicationPdfView';
-import SingleApplication from './page/admin/userApplicationForms/ApplicationVerification/SingleApplication';
-import CompanyInformation from './page/admin/userApplicationForms/CompanyInformation/CompanyInformation';
-import { useGetMyProfileFirstTimeMutation } from './redux/apis/authApis';
-import { userExist, userNotExist } from './redux/slices/authSlice';
-import { detectVPN } from './utils/vpnDetection';
-import FormHiddenSection from './page/admin/userApplicationForms/Hidden/HIdden';
-import OnBoarding from './page/admin/dashboard/on-boarding/OnBoarding';
+import { Suspense, lazy, useCallback, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { SubmissionSuccessPage } from "./components/LoadingWithTimerAfterSubmission";
+import ProtectedRoute from "./components/ProtectedRoute";
+import CustomLoading from "./components/shared/small/CustomLoading";
+import { useBranding } from "./hooks/BrandingContext";
+import getEnv from "./lib/env";
+import { socket } from "./main";
+import AdminDashboard from "./page/admin/dashboard";
+import AdminAllUsers from "./page/admin/dashboard/admin-dashboard/AdminAllUsers";
+import ApplicationForms from "./page/admin/dashboard/applicationForms/ApplicationForms";
+import Applications from "./page/admin/dashboard/applications/Applications";
+import DraftSubmission from "./page/admin/dashboard/draftSubmission/DraftSubmission";
+import Email from "./page/admin/dashboard/email/Email";
+import FormStrategies from "./page/admin/dashboard/formStrategies/FormStrategies";
+import AllRoles from "./page/admin/dashboard/role/AllRoles";
+import Strategies from "./page/admin/dashboard/strategies/Strategies";
+import Verification from "./page/admin/dashboard/varification/Varification";
+import VerificationTest from "./page/admin/dashboard/varification/VerficationTest";
+import UserApplicationForms from "./page/admin/userApplicationForms";
+import AdditionalOwnersForm from "./page/admin/userApplicationForms/ApplicationVerification/AdditionalOwnersForm";
+import ApplicationForm from "./page/admin/userApplicationForms/ApplicationVerification/ApplicationForm";
+import ApplicationPdfView from "./page/admin/userApplicationForms/ApplicationVerification/ApplicationPdfView";
+import SingleApplication from "./page/admin/userApplicationForms/ApplicationVerification/SingleApplication";
+import CompanyInformation from "./page/admin/userApplicationForms/CompanyInformation/CompanyInformation";
+import { useGetMyProfileFirstTimeMutation } from "./redux/apis/authApis";
+import { userExist, userNotExist } from "./redux/slices/authSlice";
+import { detectVPN } from "./utils/vpnDetection";
+import FormHiddenSection from "./page/admin/userApplicationForms/Hidden/HIdden";
+import OnBoarding from "./page/admin/dashboard/underwriting/Underwriting";
 
-const Brandings = lazy(() => import('./page/admin/dashboard/brandings/Brandings'));
-const CreateBranding = lazy(() => import('./page/admin/dashboard/brandings/CreateBranding'));
-const Login = lazy(() => import('./page/auth/Login'));
-const Otp = lazy(() => import('./page/auth/Otp'));
+const Brandings = lazy(() => import("./page/admin/dashboard/brandings/Brandings"));
+const CreateBranding = lazy(() => import("./page/admin/dashboard/brandings/CreateBranding"));
+const Login = lazy(() => import("./page/auth/Login"));
+const Otp = lazy(() => import("./page/auth/Otp"));
 
 function App() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [getUserProfile, { isLoading }] = useGetMyProfileFirstTimeMutation();
-  const { user } = useSelector(state => state.auth);
+  const { user } = useSelector((state) => state.auth);
   const {
     setName,
     setPrimaryColor,
@@ -91,7 +91,7 @@ function App() {
         dispatch(userNotExist());
       }
     } catch (err) {
-      console.log('error in app.jsx', err);
+      console.log("error in app.jsx", err);
       dispatch(userNotExist());
     } finally {
       setLoading(false);
@@ -126,29 +126,29 @@ function App() {
     const userId = user?._id;
     if (!userId) return;
     const register = () => {
-      socket.emit('register_user', userId);
+      socket.emit("register_user", userId);
       console.log(`📌 User registered: ${userId} -> ${socket.id}`);
     };
     if (socket.connected) register();
-    else socket.on('connect', register);
-    return () => socket.off('connect', register);
+    else socket.on("connect", register);
+    return () => socket.off("connect", register);
   }, [user?._id]);
 
   useEffect(() => {
     async function checkClientVpn() {
       const vpnData = await detectVPN();
-      const resp = await fetch(`${getEnv('SERVER_URL')}/api/form/vpn-check`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const resp = await fetch(`${getEnv("SERVER_URL")}/api/form/vpn-check`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ vpnData }),
       });
       const result = await resp.json();
-      console.log('VPN result:', result);
+      console.log("VPN result:", result);
     }
     checkClientVpn();
   }, []);
 
-  const isGuest = user?.role?.name === 'guest';
+  const isGuest = user?.role?.name === "guest";
   if (loading || isLoading) return <CustomLoading />;
   return (
     <>
@@ -171,14 +171,14 @@ function App() {
             <Route path="submission" element={<DraftSubmission />} />
           </Route>
           {/* non authentic routes */}
-          <Route element={<ProtectedRoute user={!user} redirect={isGuest ? '/submission' : '/application-forms'} />}>
+          <Route element={<ProtectedRoute user={!user} redirect={isGuest ? "/submission" : "/application-forms"} />}>
             <Route path="/login" element={<Login />} />
             <Route path="/otp" element={<Otp />} />
           </Route>
 
           {/* authentic routes admin only */}
           <Route
-            element={<ProtectedRoute user={!isGuest && user} redirect={isGuest && user ? '/submission' : '/login'} />}
+            element={<ProtectedRoute user={!isGuest && user} redirect={isGuest && user ? "/submission" : "/login"} />}
           >
             {/* Admin */}
             <Route path="/" element={<AdminDashboard />}>
