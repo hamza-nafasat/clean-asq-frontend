@@ -80,9 +80,8 @@ const CustomizableSelect = ({
         style={{ width: width || '100%' }}
       >
         <span
-          className={`text-sm font-medium ${
-            selected && (multi ? selected.length : true) ? 'text-[#414141]' : 'text-[#9CA3AF]'
-          }`}
+          className={`text-sm font-medium ${selected && (multi ? selected.length : true) ? 'text-[#414141]' : 'text-[#9CA3AF]'
+            }`}
         >
           {getSelectedText()}
         </span>
@@ -103,9 +102,8 @@ const CustomizableSelect = ({
             return (
               <li
                 key={option.value}
-                className={`flex items-center gap-2 border-b border-gray-100 px-3 py-2 text-sm hover:bg-[#00000005] ${
-                  isChecked ? 'bg-[#e5f0ff]' : ''
-                }`}
+                className={`flex items-center gap-2 border-b border-gray-100 px-3 py-2 text-sm hover:bg-[#00000005] ${isChecked ? 'bg-[#e5f0ff]' : ''
+                  }`}
                 onClick={() => toggleOption(option)}
               >
                 {multi && <input type="checkbox" readOnly checked={isChecked} className="accent-blue-500" />}

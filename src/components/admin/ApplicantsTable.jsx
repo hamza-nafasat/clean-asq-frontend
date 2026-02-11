@@ -69,11 +69,9 @@ const APPLICANT_TABLE_COLUMNS = [
     width: "150px",
     cell: (row) => (
       <span
-        className={`w-[100px] rounded-sm px-2.5 py-[3px] text-center font-bold capitalize ${
-          row.status === APPLICANT_STATUS.APPROVED ? "bg-[#34C7591A] text-[#34C759]" : ""
-        } ${row.status === APPLICANT_STATUS.REJECTED ? "bg-[#FF3B301A] text-[#FF3B30]" : ""} ${
-          row.status === APPLICANT_STATUS.PENDING ? "bg-yellow-100 text-yellow-800" : ""
-        } ${row.status === APPLICANT_STATUS.REVIEWING ? "bg-blue-100 text-blue-500" : ""}`}
+        className={`w-[100px] rounded-sm px-2.5 py-[3px] text-center font-bold capitalize ${row.status === APPLICANT_STATUS.APPROVED ? "bg-[#34C7591A] text-[#34C759]" : ""
+          } ${row.status === APPLICANT_STATUS.REJECTED ? "bg-[#FF3B301A] text-[#FF3B30]" : ""} ${row.status === APPLICANT_STATUS.PENDING ? "bg-yellow-100 text-yellow-800" : ""
+          } ${row.status === APPLICANT_STATUS.REVIEWING ? "bg-blue-100 text-blue-500" : ""}`}
       >
         {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
       </span>
@@ -89,6 +87,7 @@ const ApplicantsTable = ({
   onFilterChange,
   setOpenSpecialAccess,
   setSelectedIdForSpecialAccessModal,
+  setSelectedFormId
 }) => {
   const navigate = useNavigate();
   const [actionMenu, setActionMenu] = React.useState(null);
@@ -156,9 +155,8 @@ const ApplicantsTable = ({
             name={field}
             value={value}
             onChange={onChange}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
-              error ? "border-red-500" : "border-gray-300"
-            }`}
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${error ? "border-red-500" : "border-gray-300"
+              }`}
           >
             <option value="">Select {labelText}</option>
             {options.map((option) => (
@@ -225,7 +223,8 @@ const ApplicantsTable = ({
         onClick: (row) => {
           console.log("row is ", row);
           setOpenSpecialAccess(true);
-          setSelectedIdForSpecialAccessModal(row?.form?._id);
+          setSelectedIdForSpecialAccessModal(row?._id);
+          setSelectedFormId(row?.form?._id);
           setActionMenu(null);
         },
       },
@@ -238,7 +237,7 @@ const ApplicantsTable = ({
         },
       },
     ],
-    [navigate, onView, setOpenSpecialAccess, setSelectedIdForSpecialAccessModal]
+    [navigate, onView, setOpenSpecialAccess, setSelectedIdForSpecialAccessModal, setSelectedFormId]
   );
 
   const columns = useMemo(

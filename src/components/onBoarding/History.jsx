@@ -1,70 +1,57 @@
 import { getTableStyles } from '@/data/data';
 import { useBranding } from '@/hooks/BrandingContext';
-import React, { useEffect, useState } from 'react'
+import { useGetFormHistoryQuery } from '@/redux/apis/formApis';
 import DataTable from 'react-data-table-component';
 
 
 const columns = () => [
-  // {
-  //   name: 'User',
-  //   selector: row => row?.updatedBy?.name,
-  //   sortable: true,
-  // },
   {
     name: 'Date/Time',
     selector: row => new Date(row?.updatedAt || "").toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
     sortable: true,
+    width: '200px',
   },
   {
     name: 'User',
-    selector: row => `${row?.updatedBy?.role} ${row?.updatedBy?.email}`,
+    selector: row => `${row?.role} ${row?.email}`,
     sortable: true,
+    width: '300px',
   },
 
   {
     name: 'Section',
-    selector: row => row?.originalSectionKey,
+    selector: row => row?.sectionKey,
     sortable: true,
+    width: '200px',
   },
   {
     name: 'Action/Status',
-    selector: () => "Completed",
+    selector: (row) => row?.status,
     sortable: true,
+    width: '200px',
   },
   {
     name: 'Comment/Details',
-    selector: () => "",
+    selector: row => row?.comment,
     sortable: true,
+    wrap: true,
   },
 
 
 
 ];
 
-const History = ({ data }) => {
-  const [submitData, setSubmitData] = useState([]);
+const History = ({ submittedFormId }) => {
+  const { data: historyData } = useGetFormHistoryQuery({ formSubmittedId: submittedFormId }, { skip: !submittedFormId });
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
 
-
-  useEffect(() => {
-    if (data?.submitData) {
-      const gatedSubmitData = Object.entries(data?.submitData).map(([key, value]) => {
-        if (key === 'company_lookup_data') return null;
-        const updatedValue = {
-          ...value, originalSectionKey: key,
-        }
-        return updatedValue;
-      });
-
-      setSubmitData(gatedSubmitData?.filter(item => item !== null));
-    }
-  }, [data]);
+  console.log(historyData);
 
   return (
     <div>
       <DataTable
-        data={submitData || []}
+        data={historyData?.data?.history || []}
         columns={columns()}
         customStyles={tableStyles}
         pagination

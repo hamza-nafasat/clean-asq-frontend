@@ -22,7 +22,7 @@ function OnBoarding() {
             <Button label="App viewer" variant={activeTab === 'appViewer' ? 'primary' : 'secondary'} onClick={() => setActiveTab('appViewer')} />
           </div>
         </div>
-        {activeTab === 'history' && <History data={data?.data} />}
+        {activeTab === 'history' && <History submittedFormId={applicantId} />}
         {activeTab === 'verification' && < VerificationAndAlerts data={data?.data} />}
         {activeTab === 'appViewer' && <AppViewer data={data?.data} />}
       </div>

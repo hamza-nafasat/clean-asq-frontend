@@ -87,7 +87,7 @@ function Submission({ forms }) {
         {forms?.length > 0 ? (
           forms?.map((form, index) => {
             const colors = form?.branding?.colors;
-            const totalBeneficialOwners = form?.submitData?.beneficial_information?.additional_owner;
+            const totalBeneficialOwners = form?.submitData?.beneficial_information?.additional_owner?.filter((item) => item?.email);
             const filledBeneficialOwners = totalBeneficialOwners?.filter((item) => item?.IsCompleted);
             return (
               <div
@@ -108,14 +108,6 @@ function Submission({ forms }) {
                       const beneficialMailsAndNames = totalBeneficialOwners?.map((item) => ({ value: item?.email, option: `${item?.name}` }));
                       setAllBeneficials(beneficialMailsAndNames);
                     }} />
-                    {/* <Button
-                  label="Download PDF"
-                  icon={isLoading && CgSpinner}
-                  variant='icon'
-                  disabled={isLoading}
-                  onClick={() => handleDownload(form?._id, user?._id)}
-                  className={`text-sm w-full p-2 ${isLoading ? 'cursor-not-allowed opacity-30 ' : ''}`}
-                /> */}
                   </div>
                 )}
 
@@ -131,7 +123,8 @@ function Submission({ forms }) {
 
 
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
-                  <span className="text-gray-500">Applicants: {form?.sections?.length}</span>
+                  <span className="text-gray-500">Application Name: {form?.name}</span>
+                  <span className="text-gray-500">Sections: {form?.sections?.length}</span>
                   <span className="text-gray-500">
                     Created:{' '}
                     {new Date(form?.createdAt).toLocaleDateString('en-US', {

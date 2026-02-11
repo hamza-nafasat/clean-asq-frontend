@@ -6,7 +6,7 @@ const formApis = createApi({
   reducerPath: 'formApi',
   baseQuery: fetchBaseQuery({ baseUrl: `${getEnv('SERVER_URL')}/api/form`, credentials: 'include' }),
 
-  tagTypes: ['Form', 'Strategy', 'Prompts', 'FormStrategy', 'SubmitForm'],
+  tagTypes: ['Form', 'Strategy', 'Prompts', 'FormStrategy', 'SubmitForm', 'History'],
   endpoints: builder => ({
     // create new form
     // ---------------
@@ -90,11 +90,12 @@ const formApis = createApi({
     // give special access to user
     // ---------------
     giveSpecialAccessToUser: builder.mutation({
-      query: ({ formId, userId, sectionKey }) => ({
-        url: `/special-access-of-section/${formId}`,
+      query: ({ formId, submittedFormId, email, sectionKey }) => ({
+        url: `/special-access-of-section/${formId}?submittedFormId=${submittedFormId}`,
         method: 'POST',
-        body: { userId, sectionKey },
+        body: { email, sectionKey },
       }),
+      invalidatesTags: ['History'],
     }),
     // give special access to user
     // ---------------
@@ -104,7 +105,7 @@ const formApis = createApi({
         method: 'POST',
         body: { email },
       }),
-      invalidatesTags: ['Form'],  
+      invalidatesTags: ['History', 'SubmitForm'],
     }),
     // get special access of section
     // ---------------
@@ -122,7 +123,7 @@ const formApis = createApi({
         method: 'PUT',
         body: { sectionKey, formData, token },
       }),
-      invalidatesTags: ['Form'],
+      invalidatesTags: ['History'],
     }),
 
     // save form in draft
@@ -154,6 +155,16 @@ const formApis = createApi({
         method: 'GET',
       }),
       invalidatesTags: ['SubmitForm'],
+    }),
+
+    // get form history 
+    // ---------------
+    getFormHistory: builder.query({
+      query: ({ formSubmittedId }) => ({
+        url: `/get-history/${formSubmittedId}`,
+        method: 'GET',
+      }),
+      providesTags: ['History'],
     }),
 
     // get saved form by userId
@@ -284,7 +295,7 @@ const formApis = createApi({
         url: `/search-strategy/single/${SearchStrategyId}`,
         method: 'DELETE',
       }),
-        invalidatesTags: ['Strategy'],
+      invalidatesTags: ['Strategy'],
     }),
     // create prompt
     // ---------------
@@ -441,6 +452,7 @@ export const {
   useGetSpecialAccessOfSectionQuery,
   useSubmitSpecialAccessFormMutation,
   useSaveFormInDraftMutation,
+  useGetFormHistoryQuery,
   useGeneratePdfFormMutation,
   useGetSavedFormMutation,
   useGetSavedFormByUserIdMutation,

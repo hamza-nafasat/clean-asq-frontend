@@ -2,6 +2,7 @@ import ApplicantsTable from '@/components/admin/ApplicantsTable';
 import Button from '@/components/shared/small/Button';
 import CustomizableSelect from '@/components/shared/small/CustomizeableSelect';
 import Modal from '@/components/shared/small/Modal';
+import TextField from '@/components/shared/small/TextField';
 import {
   useGetAllSubmitFormsQuery,
   useGetSingleFormQueryQuery,
@@ -19,6 +20,7 @@ function Applications() {
   const [isLoading, setIsLoading] = useState(false);
   const [openSpecialAccess, setOpenSpecialAccess] = useState(false);
   const [selectedIdForSpecialAccessModal, setSelectedIdForSpecialAccessModal] = useState(null);
+  const [selectedFormId, setSelectedFormId] = useState(null);
   const [filters, setFilters] = useState({
     dateRange: { start: '', end: '' },
     status: '',
@@ -61,7 +63,7 @@ function Applications() {
     <>
       {openSpecialAccess && (
         <Modal onClose={() => setOpenSpecialAccess(false)}>
-          <SpecialAccessModal formId={selectedIdForSpecialAccessModal} setModal={setOpenSpecialAccess} />
+          <SpecialAccessModal formId={selectedFormId} submittedFormId={selectedIdForSpecialAccessModal} setModal={setOpenSpecialAccess} />
         </Modal>
       )}
 
@@ -71,6 +73,7 @@ function Applications() {
 
           <ApplicantsTable
             setSelectedIdForSpecialAccessModal={setSelectedIdForSpecialAccessModal}
+            setSelectedFormId={setSelectedFormId}
             setOpenSpecialAccess={setOpenSpecialAccess}
             applicants={applicants}
             isLoading={isLoading}
@@ -133,7 +136,7 @@ export default Applications;
 
 // - List of applicants, include filters (date range, filter by client, status), Table fields (Name, Application, Email, Date Created, Status, Action (view, delete)).
 
-export const SpecialAccessModal = ({ formId, setModal }) => {
+export const SpecialAccessModal = ({ formId, setModal, submittedFormId }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { data: submittedFormUsers } = useGetSubmittedFormUsersQuery({ formId: formId });
   const [giveSpecialAccessToUser, { isLoading: isGivingSpecialAccess }] = useGiveSpecialAccessToUserMutation();
@@ -142,17 +145,18 @@ export const SpecialAccessModal = ({ formId, setModal }) => {
   const [specialSections, setSpecialSections] = useState([]);
 
   const [form, setForm] = useState({
-    userId: '',
+    email: '',
     sectionKey: '',
   });
 
   const giveSpecialAccessToUserHandler = async () => {
     try {
-      if (!form?.userId || !form?.sectionKey) return toast.error('Please select a user and section');
-      if (!formId) return toast.error('Form ID is required');
+      if (!form?.email || !form?.sectionKey) return toast.error('Please select a user and section');
+      if (!submittedFormId) return toast.error('Form ID is required');
       const res = await giveSpecialAccessToUser({
         formId: formId,
-        userId: form?.userId,
+        submittedFormId: submittedFormId,
+        email: form?.email,
         sectionKey: form?.sectionKey,
       }).unwrap();
       if (res?.success) {
@@ -183,7 +187,7 @@ export const SpecialAccessModal = ({ formId, setModal }) => {
       submittedFormUsers?.data?.forEach(submitForm => {
         users.push({
           option: `${submitForm?.user?.firstName} ${submitForm?.user?.middleName ? ' ' : ''} ${submitForm?.user?.lastName}`,
-          value: submitForm?.user?._id,
+          value: submitForm?.user?.email,
         });
       });
       setSelectedUsers(users);
@@ -203,11 +207,20 @@ export const SpecialAccessModal = ({ formId, setModal }) => {
         <div className="flex flex-col gap-2">
           <CustomizableSelect
             options={selectedUsers}
-            onSelect={value => setForm(prev => ({ ...prev, userId: value }))}
+            value={form?.email}
+            onSelect={value => setForm(prev => ({ ...prev, email: value }))}
             label={'Select User'}
             defaultText="Select User"
           />
+          <span className='text-sm text-gray-500'>or type email manually</span>
+          <TextField
+            name='email'
+            placeholder='Enter email'
+            value={form?.email}
+            onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
+          />
         </div>
+
         <div className="flex flex-col gap-2">
           <CustomizableSelect
             options={specialSections}
