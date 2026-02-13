@@ -1,16 +1,20 @@
 import Button from "@/components/shared/small/Button";
 import { useGetSingleSubmitFormQueryQuery } from "@/redux/apis/formApis";
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { History } from "@/components/onBoarding/History";
 import { VerificationAndAlerts } from "@/components/onBoarding/VerificationAndAlerts";
 import { AppViewer } from "@/components/onBoarding/AppViewer";
+import checkPermission, { webPermissions } from "@/utils/checkPermission";
+import { useSelector } from "react-redux";
 
 function OnBoarding() {
+  const user = useSelector((state) => state.auth.user);
   const { applicantId } = useParams();
   const [activeTab, setActiveTab] = useState('history');
   const { data } = useGetSingleSubmitFormQueryQuery({ _id: applicantId }, { skip: !applicantId });
-
+  const hasUnderwritingPermission = checkPermission(user, webPermissions.underwriting);
+  if (!hasUnderwritingPermission) return <Navigate to="/application-forms" />;
   return (
     <>
       <div className="bg-backgroundColor rounded-t-md p-4">

@@ -18,6 +18,9 @@ import Button from '../shared/small/Button';
 import Checkbox from '../shared/small/Checkbox';
 import TextField from '../shared/small/TextField';
 import { ThreeDotEditViewDelete } from '../shared/ThreeDotViewEditDelete';
+import { userExist, userNotExist } from '@/redux/slices/authSlice';
+import { useDispatch } from 'react-redux';
+import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
 
 // Define role status
 const ROLE_STATUS = {
@@ -36,7 +39,9 @@ function AllUserRoles() {
   const { data: roles } = useGetAllRolesQuery();
   const [deleteRole] = useDeleteSingleRoleMutation();
   const [editRole] = useUpdateSingleRoleMutation();
+  const [getUserProfile,] = useGetMyProfileFirstTimeMutation();
 
+  const dispatch = useDispatch()
   const [createRole] = useCreateRoleMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editModalData, setEditModalData] = useState(null);
@@ -49,6 +54,22 @@ function AllUserRoles() {
   const actionMenuRefs = useRef(new Map());
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
+
+
+  const getUserAndSetBranding = useCallback(async () => {
+    try {
+      const res = await getUserProfile().unwrap();
+      if (res?.success) {
+        dispatch(userExist(res?.data));
+      } else {
+        dispatch(userNotExist());
+      }
+    } catch (err) {
+      console.log("error in app.jsx", err);
+      dispatch(userNotExist());
+    }
+  }, [getUserProfile, dispatch]);
+
 
   const ButtonsForThreeDot = [
     {
@@ -158,6 +179,7 @@ function AllUserRoles() {
       if (res?.success) {
         toast.success(res.message);
         setEditModalData(null);
+        await getUserAndSetBranding();
       } else {
         toast.error(res?.message || 'Failed to update role');
       }
@@ -283,9 +305,8 @@ function AllUserRoles() {
             name={field}
             value={value}
             onChange={onChange}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base${
-              error ? 'border-red-500' : 'border-frameColor'
-            }`}
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base${error ? 'border-red-500' : 'border-frameColor'
+              }`}
           >
             {options.map(option => (
               <option key={option.value} value={option.value}>

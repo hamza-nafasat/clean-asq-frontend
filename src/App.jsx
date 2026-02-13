@@ -188,7 +188,7 @@ function App() {
               <Route path="all-users" element={<AdminAllUsers />} />
               <Route path="application-forms" element={<ApplicationForms />} />
               <Route path="applications" element={<Applications />} />
-              <Route path="on-boarding/:applicantId" element={<OnBoarding />} />
+              <Route path="underwriting/:applicantId" element={<OnBoarding />} />
               <Route path="branding" element={<Brandings />} />
               <Route path="branding/create" element={<CreateBranding />} />
               <Route path="branding/single/:brandingId" element={<CreateBranding />} />

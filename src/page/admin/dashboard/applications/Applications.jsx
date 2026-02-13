@@ -144,6 +144,7 @@ export const SpecialAccessModal = ({ formId, setModal, submittedFormId }) => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [specialSections, setSpecialSections] = useState([]);
 
+
   const [form, setForm] = useState({
     email: '',
     sectionKey: '',
@@ -194,6 +195,10 @@ export const SpecialAccessModal = ({ formId, setModal, submittedFormId }) => {
     }
     setIsLoading(false);
   }, [formData?.data?.sections, submittedFormUsers?.data]);
+
+
+
+
 
   if (isLoading) {
     return <CustomLoading />;

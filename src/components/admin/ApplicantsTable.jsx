@@ -11,6 +11,8 @@ import Modal from "../shared/Modal";
 import TextField from "../shared/small/TextField";
 import { ThreeDotEditViewDelete } from "../shared/ThreeDotViewEditDelete";
 import ApplicantSearch from "./ApplicantSearch";
+import { useSelector } from "react-redux";
+import checkPermission, { webPermissions } from "@/utils/checkPermission";
 // Table columns configuration
 const APPLICANT_TABLE_COLUMNS = [
   {
@@ -97,6 +99,9 @@ const ApplicantsTable = ({
   const [deleteSubmitForm, { isLoading: isLoadingDelete }] = useDeleteSingleSubmitFormMutation();
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const actionMenuRefs = useRef(new Map());
+
+  const { user } = useSelector((state) => state.auth);
+  const hasUnderwritingPermission = checkPermission(user, webPermissions.underwriting);
   // Get unique clients for quick filters
   const uniqueClients = useMemo(() => {
     return [...new Set(applicants.map((applicant) => applicant?.user?.role?.name))];
@@ -228,16 +233,23 @@ const ApplicantsTable = ({
           setActionMenu(null);
         },
       },
-      {
+      ...(hasUnderwritingPermission ? [{
         name: "Underwriting",
         icon: <UserIcon size={16} className="mr-2" />,
         onClick: (row) => {
-          navigate(`/on-boarding/${row?._id}`);
+          navigate(`/underwriting/${row?._id}`);
           setActionMenu(null);
         },
-      },
+      }] : []),
+
+
+
+
+
+
+
     ],
-    [navigate, onView, setOpenSpecialAccess, setSelectedIdForSpecialAccessModal, setSelectedFormId]
+    [hasUnderwritingPermission, onView, setOpenSpecialAccess, setSelectedIdForSpecialAccessModal, setSelectedFormId, navigate]
   );
 
   const columns = useMemo(
