@@ -7,7 +7,6 @@ import { SubmissionSuccessPage } from "./components/LoadingWithTimerAfterSubmiss
 import ProtectedRoute from "./components/ProtectedRoute";
 import CustomLoading from "./components/shared/small/CustomLoading";
 import { useBranding } from "./hooks/BrandingContext";
-import getEnv from "./lib/env";
 import { socket } from "./main";
 import AdminDashboard from "./page/admin/dashboard";
 import AdminAllUsers from "./page/admin/dashboard/admin-dashboard/AdminAllUsers";
@@ -18,6 +17,7 @@ import Email from "./page/admin/dashboard/email/Email";
 import FormStrategies from "./page/admin/dashboard/formStrategies/FormStrategies";
 import AllRoles from "./page/admin/dashboard/role/AllRoles";
 import Strategies from "./page/admin/dashboard/strategies/Strategies";
+import OnBoarding from "./page/admin/dashboard/underwriting/Underwriting";
 import Verification from "./page/admin/dashboard/varification/Varification";
 import VerificationTest from "./page/admin/dashboard/varification/VerficationTest";
 import UserApplicationForms from "./page/admin/userApplicationForms";
@@ -26,11 +26,10 @@ import ApplicationForm from "./page/admin/userApplicationForms/ApplicationVerifi
 import ApplicationPdfView from "./page/admin/userApplicationForms/ApplicationVerification/ApplicationPdfView";
 import SingleApplication from "./page/admin/userApplicationForms/ApplicationVerification/SingleApplication";
 import CompanyInformation from "./page/admin/userApplicationForms/CompanyInformation/CompanyInformation";
+import FormHiddenSection from "./page/admin/userApplicationForms/Hidden/HIdden";
 import { useGetMyProfileFirstTimeMutation } from "./redux/apis/authApis";
 import { userExist, userNotExist } from "./redux/slices/authSlice";
 import { detectVPN } from "./utils/vpnDetection";
-import FormHiddenSection from "./page/admin/userApplicationForms/Hidden/HIdden";
-import OnBoarding from "./page/admin/dashboard/underwriting/Underwriting";
 
 const Brandings = lazy(() => import("./page/admin/dashboard/brandings/Brandings"));
 const CreateBranding = lazy(() => import("./page/admin/dashboard/brandings/CreateBranding"));
@@ -135,17 +134,19 @@ function App() {
   }, [user?._id]);
 
   useEffect(() => {
-    async function checkClientVpn() {
-      const vpnData = await detectVPN();
-      const resp = await fetch(`${getEnv("SERVER_URL")}/api/form/vpn-check`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vpnData }),
-      });
-      const result = await resp.json();
-      console.log("VPN result:", result);
-    }
-    checkClientVpn();
+    // async function checkClientVpn() {
+
+    // const vpnData = await detectVPN();
+    // const resp = await fetch(`${getEnv("SERVER_URL")}/api/form/vpn-check`, {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({ vpnData }),
+    // });
+    // const result = await resp.json();
+    // console.log("VPN result:", result);
+    // }
+    // checkClientVpn();
+    detectVPN();
   }, []);
 
   const isGuest = user?.role?.name === "guest";
@@ -193,7 +194,6 @@ function App() {
               <Route path="branding/create" element={<CreateBranding />} />
               <Route path="branding/single/:brandingId" element={<CreateBranding />} />
               <Route path="strategies-key" element={<FormStrategies />} />
-              {/* <Route path="extraction-context" element={<ExtractionContext />} /> */}
               <Route path="verification-test" element={<VerificationTest />} />
               <Route path="strategies" element={<Strategies />} />
               <Route path="email" element={<Email />} />

@@ -44,21 +44,20 @@ const ownerPercentageField = {
   type: 'range',
 };
 
-function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }) {
+function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, formInnerData, setFormInnerData, sectionKey }) {
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const { formData } = useSelector(state => state?.form);
   const [ownersFromLookup, setOwnersFromLookup] = useState([]);
   const [filteredOwners, setFilteredOwners] = useState([]);
   const [otherOwnersStateName, setOtherOwnersStateName] = useState('');
   const [formFields, setFormFields] = useState([]);
-  const [form, setForm] = useState({});
 
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
       if (!file) return toast.error('Please select a file');
 
       if (file) {
-        const oldSign = form?.['signature'];
+        const oldSign = formInnerData?.[sectionKey]?.['signature'];
         if (oldSign?.publicId) {
           const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
           if (!result) return toast.error('File Not Deleted Please Try Again');
@@ -67,7 +66,8 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }
         if (!res.publicId || !res.secureUrl || !res.resourceType) {
           return toast.error('File Not Uploaded Please Try Again');
         }
-        setForm(prev => ({ ...prev, signature: res }));
+        // setForm(prev => ({ ...prev, signature: res }));
+        setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], signature: res } }));
         toast.success('Signature uploaded successfully');
       }
     } catch (error) {
@@ -85,12 +85,13 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }
         setFilteredOwners([]);
       }
     }
-    const updatedOwners = [...(form[otherOwnersStateName] || [])];
+    const updatedOwners = [...(formInnerData?.[sectionKey]?.[otherOwnersStateName] || [])];
     updatedOwners[index] = {
       ...updatedOwners[index],
       [e.target.name]: e.target.value,
     };
-    setForm(prev => ({ ...prev, [otherOwnersStateName]: updatedOwners }));
+    // setForm(prev => ({ ...prev, [otherOwnersStateName]: updatedOwners }));
+    setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], [otherOwnersStateName]: updatedOwners } }));
     if (isFilter) setFilteredOwners([]);
   };
 
@@ -100,18 +101,18 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }
     let baseFields = [...fields];
     if (idMissionField == 'primaryOperatorAndController' || idMissionField == 'both') {
       baseFields = [ssnField, areUAnOwnerField, ...baseFields];
-      if (form?.rolling_owner_is_also_owner == 'yes') {
+      if (formInnerData?.[sectionKey]?.rolling_owner_is_also_owner == 'yes') {
         //  add percentage field after ssn and areUAnOwnerField
         baseFields = [ssnField, areUAnOwnerField, ownerPercentageField, ...fields];
       }
     } else if (idMissionField == 'primaryContact') {
       baseFields = [areUAnOwnerField, ...baseFields];
-      if (form?.rolling_owner_is_also_owner == 'yes') {
+      if (formInnerData?.[sectionKey]?.rolling_owner_is_also_owner == 'yes') {
         baseFields = [areUAnOwnerField, ssnField, ownerPercentageField, ...fields];
       }
     }
     setFormFields(baseFields);
-  }, [blocks, fields, form, formData?.idMission]);
+  }, [blocks, fields, formInnerData, formData?.idMission, sectionKey]);
 
   // add owners for suggestions
   useEffect(() => {
@@ -159,7 +160,7 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }
           date_of_birth: '',
           driver_license_issuer: '',
           driver_license_issuer_state: '',
-          driver_licence_number: '',
+          driver_license_number: '',
         };
         initialForm[field.name] = reduxData?.[field.name] ?? [initialState];
       } else {
@@ -178,19 +179,24 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }
     }
 
     // 2) Figure out what to add…
-    const toAdd = Object.fromEntries(Object.entries(initialForm).filter(([key]) => !(key in form)));
+    const toAdd = Object.fromEntries(Object.entries(initialForm).filter(([key]) => !(key in formInnerData[sectionKey])));
     // 3) …and what to remove
-    const toRemoveKeys = Object.keys(form).filter(key => !(key in initialForm));
+    const toRemoveKeys = Object.keys(formInnerData?.[sectionKey]).filter(key => !(key in initialForm));
     // 4) If there’s nothing to do, bail out
     if (Object.keys(toAdd).length === 0 && toRemoveKeys.length === 0) return;
     // 5) Apply both additions and deletions in one go
-    setForm(prev => {
-      // Start with everything that *should* stay
-      const cleaned = Object.fromEntries(Object.entries(prev).filter(([key]) => !toRemoveKeys.includes(key)));
-      // Then merge in any brand-new keys
-      return { ...cleaned, ...toAdd };
+    // setForm(prev => {
+    //   // Start with everything that *should* stay
+    //   const cleaned = Object.fromEntries(Object.entries(prev).filter(([key]) => !toRemoveKeys.includes(key)));
+    //   // Then merge in any brand-new keys
+    //   return { ...cleaned, ...toAdd };
+    // });
+    setFormInnerData(prev => {
+      const sectionPrevData = prev?.[sectionKey];
+      const cleaned = Object.fromEntries(Object.entries(sectionPrevData).filter(([key]) => !toRemoveKeys.includes(key)));
+      return { ...prev, [sectionKey]: { ...cleaned, ...toAdd } };
     });
-  }, [form, formFields, isSignature, otherOwnersStateName, reduxData]);
+  }, [formFields, formInnerData, isSignature, otherOwnersStateName, reduxData, sectionKey, setFormInnerData]);
 
   // create fields for this section and also for customization
   useEffect(() => {
@@ -227,35 +233,35 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }
               if (field.type === FIELD_TYPES.SELECT) {
                 return (
                   <div key={index} className="mt-4">
-                    <SelectInputType field={field} form={form} setForm={setForm} className={''} />
+                    <SelectInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
                 return (
                   <div key={index} className="mt-4">
-                    <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={''} />
+                    <MultiCheckboxInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.RADIO) {
                 return (
                   <div key={index} className="mt-4">
-                    <RadioInputType field={field} form={form} setForm={setForm} className={''} />
+                    <RadioInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.FILE) {
                 return (
                   <div key={index} className="mt-4">
-                    <FileInputType field={field} form={form} setForm={setForm} className={''} />
+                    <FileInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.RANGE) {
                 return (
                   <div key={index} className="mt-4">
-                    <RangeInputType field={field} form={form} setForm={setForm} className={''} />
+                    <RangeInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
                   </div>
                 );
               }
@@ -265,8 +271,9 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }
                     <CheckboxInputType
                       field={field}
                       placeholder={field.placeholder}
-                      form={form}
-                      setForm={setForm}
+                      form={formInnerData?.[sectionKey]}
+                      setForm={setFormInnerData}
+                      sectionKey={sectionKey}
                       className={''}
                     />
                   </div>
@@ -277,16 +284,17 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }
                   <OtherInputType
                     field={field}
                     placeholder={field.placeholder}
-                    form={form}
-                    setForm={setForm}
+                    form={formInnerData?.[sectionKey]}
+                    setForm={setFormInnerData}
+                    sectionKey={sectionKey}
                     className={''}
                   />
                 </div>
               );
             })}
-            {form?.additional_owners_own_25_percent_or_more == 'yes' ? (
+            {formInnerData?.[sectionKey]?.additional_owners_own_25_percent_or_more == 'yes' ? (
               <div className="flex flex-col gap-3">
-                {form?.[otherOwnersStateName]?.map(
+                {formInnerData?.[sectionKey]?.[otherOwnersStateName]?.map(
                   (
                     {
                       name,
@@ -300,7 +308,7 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }
                       percentage,
                       date_of_birth,
                       driver_license_issuer_state,
-                      driver_licence_number,
+                      driver_license_number,
                     },
                     index
                   ) => {
@@ -392,7 +400,8 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }
                                 <TextField
                                   name="phone"
                                   label="Phone Number"
-                                  type="number"
+                                  type="text"
+                                  formatting="3,3,4"
                                   value={phone}
                                   onChange={e => handleChangeOnOtherOwnersData(e, index)}
                                   className={'max-w-[30%] min-w-[400px]'}
@@ -400,6 +409,7 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }
                                 <TextField
                                   name="ssn"
                                   label="Social Security Number"
+                                  formatting="3,2,4"
                                   value={ssn}
                                   isMasked={true}
                                   onChange={e => handleChangeOnOtherOwnersData(e, index)}
@@ -435,9 +445,9 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }
                                   className={'max-w-[30%] min-w-[400px]'}
                                 />
                                 <TextField
-                                  name="driver_licence_number"
+                                  name="driver_license_number"
                                   label="Driver’s License Number"
-                                  value={driver_licence_number}
+                                  value={driver_license_number}
                                   onChange={e => handleChangeOnOtherOwnersData(e, index)}
                                   className={'max-w-[30%] min-w-[400px]'}
                                 />
@@ -458,7 +468,7 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature }
                   onSave={signatureUploadHandler}
                   step={step}
                   isPdf={true}
-                  oldSignatureUrl={form?.signature?.secureUrl || ''}
+                  oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.secureUrl || ''}
                 />
               )}
             </div>

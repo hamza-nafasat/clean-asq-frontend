@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
@@ -15,10 +15,12 @@ import ProcessingInfoPdf from '@/components/applicationVerification/ApplicationP
 import Button from '@/components/shared/small/Button';
 import { useBranding } from '@/hooks/BrandingContext';
 import useApplyBranding from '@/hooks/useApplyBranding';
-import { useGetSavedFormByUserIdMutation, useGetSingleFormQueryQuery } from '@/redux/apis/formApis';
+import { useGetSavedFormByUserIdMutation, useGetSingleFormQueryQuery, useUpdateSubmittedFormMutation } from '@/redux/apis/formApis';
 import { addSavedFormData, updateIsDisabledAllFields } from '@/redux/slices/formSlice';
 import logoApply from '../../../../assets/images/logo.png';
 import IdMissionDataPdf from './IdMissionDataPdf';
+import { toast } from 'react-toastify';
+import { CgSpinner } from 'react-icons/cg';
 
 const ApplicationPdfView = () => {
   const { pdfId, userId } = useParams();
@@ -31,14 +33,17 @@ const ApplicationPdfView = () => {
   );
 };
 
-export default ApplicationPdfView;
 
 
 export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, className = '', isEditAble = false }) => {
+  const dispatch = useDispatch();
   const { logo } = useBranding();
   const { formData } = useSelector(state => state.form);
   const { isDisabledAllFields } = useSelector(state => state.form);
-  const dispatch = useDispatch();
+  const [submittedFormId, setSubmittedFormId] = useState(null);
+  const [formInnerData, setFormInnerData] = useState({});
+  const [isFormInnerDataComingFromRedux, setIsFormInnerDataComingFromRedux] = useState(false);
+  const [updateSubmittedForm, { isLoading: isUpdatingSubmittedForm }] = useUpdateSubmittedFormMutation();
   // Queries & Mutations
   const {
     data: form,
@@ -46,6 +51,18 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
     refetch: formRefetch,
   } = useGetSingleFormQueryQuery({ _id: pdfId }, { skip: !pdfId });
   const [getSavedFormData, { isLoading: getSavedFormDataLoading }] = useGetSavedFormByUserIdMutation();
+
+  const updateSubmittedFormData = async () => {
+    try {
+      const res = await updateSubmittedForm({ submittedFormId: submittedFormId, formData: formInnerData }).unwrap();
+      if (res.success) {
+        dispatch(updateIsDisabledAllFields(true))
+        toast.success(res.message);
+      }
+    } catch (error) {
+      console.log('Error updating submitted form data', error);
+    }
+  }
 
   useEffect(() => {
     if (userId) {
@@ -55,6 +72,7 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
           const res = await getSavedFormData({ formId: pdfId, userId: userId }).unwrap();
           if (res.success) {
             dispatch(addSavedFormData(res?.data?.submitData));
+            setSubmittedFormId(res?.data?._id);
           }
         } catch (error) {
           console.log('Error fetching saved form data', error);
@@ -62,9 +80,22 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
       };
       fetchSavedFormData();
     }
-  }, [dispatch, pdfId, getSavedFormData, userId]);
+  }, [dispatch, getSavedFormData, pdfId, userId]);
 
-  if (!form || getSavedFormDataLoading || formLoading) return;
+  useEffect(() => {
+    if (formData && Object.keys(formData).length > 0) {
+      setIsFormInnerDataComingFromRedux(true);
+      setFormInnerData(formData);
+      setIsFormInnerDataComingFromRedux(false);
+    }
+    return () => {
+      dispatch(updateIsDisabledAllFields(true));
+      setIsFormInnerDataComingFromRedux(false);
+      setFormInnerData({});
+    }
+  }, [dispatch, formData]);
+
+  if (!form || isFormInnerDataComingFromRedux || getSavedFormDataLoading || formLoading) return;
   return (
     <>
       {isPdf && <div className="flex h-16 items-center justify-between rounded-md border-b bg-white px-6 shadow">
@@ -97,14 +128,19 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
           <Button label="Edit" variant="secondary" onClick={() => dispatch(updateIsDisabledAllFields(false))} />
         </div>}
         {isEditAble && !isDisabledAllFields && <div className="flex justify-end">
-          <Button label="Save" onClick={() => dispatch(updateIsDisabledAllFields(true))} />
+          <Button disabled={isUpdatingSubmittedForm} rightIcon={isUpdatingSubmittedForm && CgSpinner} cnRight={isUpdatingSubmittedForm ? 'animate-spin h-5 w-5' : ''} label="Save" onClick={updateSubmittedFormData} />
         </div>}
-        <IdMissionDataPdf formId={pdfId} />
+        <IdMissionDataPdf formId={pdfId} sectionKey="idMission" formInnerData={formInnerData} setFormInnerData={setFormInnerData} />
         {form?.data?.sections?.map((section, index) => {
           const sectionDataFromRedux = formData?.[section?.key];
+
+
           const commonProps = {
             _id: section._id,
             name: section.name,
+            sectionKey: section?.key,
+            formInnerData: formInnerData,
+            setFormInnerData: setFormInnerData,
             title: section.title,
             fields: section?.fields ?? [],
             blocks: section?.blocks ?? [],
@@ -138,3 +174,4 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
     </>
   );
 };
+export default ApplicationPdfView;

@@ -23,12 +23,10 @@ import Modal from "../../shared/small/Modal.jsx";
 // import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal.jsx';
 import CustomizationFieldsModal from "../companyInfo/CustomizationFieldsModal";
 
-function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step, isSignature }) {
+function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step, isSignature, formInnerData, sectionKey, setFormInnerData }) {
   const prevRef = useRef(null);
   const { formData } = useSelector((state) => state?.form);
   const [customizeModal, setCustomizeModal] = useState(false);
-  const [form, setForm] = useState({});
-  console.log("i am from company information pdf", form);
   const [naicsToMccDetails, setNaicsToMccDetails] = useState({
     NAICS: reduxData?.naics?.NAICS || "",
     NAICS_Description: reduxData?.naics?.NAICS_Description || "",
@@ -48,7 +46,7 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
     try {
       if (!file) return toast.error("Please select a file");
       if (file) {
-        const oldSign = form?.["signature"];
+        const oldSign = formInnerData?.[sectionKey]?.["signature"];
         if (oldSign?.publicId) {
           const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
           if (!result) return toast.error("File Not Deleted Please Try Again");
@@ -57,7 +55,8 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
         if (!res.publicId || !res.secureUrl || !res.resourceType) {
           return toast.error("File Not Uploaded Please Try Again");
         }
-        setForm((prev) => ({ ...prev, signature: res }));
+        // setForm((prev) => ({ ...prev, signature: res }));
+        setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], signature: res } }));
         toast.success("Signature uploaded successfully");
       }
     } catch (error) {
@@ -157,43 +156,38 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
     };
   }, []);
 
-  useEffect(() => {
-    if (fields && fields.length > 0) {
-      const lookupData = formData?.company_lookup_data;
-      const initialForm = {};
-      let isDateField = false;
-      fields.forEach((field) => {
-        let fieldValueFromLookupData = lookupData?.find((item) => {
-          const fieldName = field?.name?.trim()?.toLowerCase();
-          const itemName = item?.name?.trim()?.toLowerCase();
-          if (itemName == fieldName && itemName?.includes("date")) isDateField = true;
-          return fieldName === itemName;
-        })?.result;
-        if (isDateField) {
-          let formatedData = fieldValueFromLookupData
-            ? new Date(fieldValueFromLookupData)?.toISOString()?.split("T")?.[0]
-            : "";
-          isDateField = false;
-          initialForm[field.name] = reduxData?.[field?.name] || formatedData || "";
-        } else {
-          initialForm[field.name] = reduxData?.[field?.name] || fieldValueFromLookupData || "";
-        }
-      });
-      setForm(initialForm);
-    }
-    if (isSignature) {
-      const isSignatureExistingData = {};
-      if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
-      if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
-      if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
-      setForm((prev) => ({
-        ...prev,
-        ["signature"]: isSignatureExistingData?.publicId
-          ? isSignatureExistingData
-          : { publicId: "", secureUrl: "", resourceType: "" },
-      }));
-    }
-  }, [fields, formData?.company_lookup_data, isSignature, reduxData]);
+  // useEffect(() => {
+  //   if (fields && fields.length > 0) {
+  //     const lookupData = formData?.company_lookup_data;
+  //     const initialForm = {};
+  //     let isDateField = false;
+  //     fields.forEach((field) => {
+  //       let fieldValueFromLookupData = lookupData?.find((item) => {
+  //         const fieldName = field?.name?.trim()?.toLowerCase();
+  //         const itemName = item?.name?.trim()?.toLowerCase();
+  //         if (itemName == fieldName && itemName?.includes("date")) isDateField = true;
+  //         return fieldName === itemName;
+  //       })?.result;
+  //       if (isDateField) {
+  //         let formatedData = fieldValueFromLookupData
+  //           ? new Date(fieldValueFromLookupData)?.toISOString()?.split("T")?.[0]
+  //           : "";
+  //         isDateField = false;
+  //         initialForm[field.name] = reduxData?.[field?.name] || formatedData || "";
+  //       } else {
+  //         initialForm[field.name] = reduxData?.[field?.name] || fieldValueFromLookupData || "";
+  //       }
+  //     });
+  //     setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], ...initialForm } }));
+  //   }
+  //   if (isSignature) {
+  //     const isSignatureExistingData = {};
+  //     if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
+  //     if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
+  //     if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
+  //     setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], signature: isSignatureExistingData?.publicId ? isSignatureExistingData : { publicId: "", secureUrl: "", resourceType: "" } } }));
+  //   }
+  // }, [fields, formData?.company_lookup_data, isSignature, reduxData, sectionKey, setFormInnerData]);
 
   return (
     <div className="mt-14 h-full overflow-auto">
@@ -225,28 +219,28 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
           if (field.type === FIELD_TYPES.SELECT) {
             return (
               <div key={index} className="mt-4">
-                <SelectInputType field={field} form={form} setForm={setForm} className={""} />
+                <SelectInputType field={field} sectionKey={sectionKey} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} className={""} />
               </div>
             );
           }
           if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
             return (
               <div key={index} className="mt-4">
-                <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={""} />
+                <MultiCheckboxInputType field={field} sectionKey={sectionKey} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} className={""} />
               </div>
             );
           }
           if (field.type === FIELD_TYPES.RADIO) {
             return (
               <div key={index} className="mt-4 flex flex-col gap-2">
-                <RadioInputType field={field} form={form} setForm={setForm} className={""} />
+                <RadioInputType field={field} sectionKey={sectionKey} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} className={""} />
               </div>
             );
           }
           if (field.type === FIELD_TYPES.RANGE) {
             return (
               <div key={index} className="mt-4">
-                <RangeInputType field={field} form={form} setForm={setForm} className={""} />
+                <RangeInputType field={field} sectionKey={sectionKey} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} className={""} />
               </div>
             );
           }
@@ -256,8 +250,9 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
                 <CheckboxInputType
                   field={field}
                   placeholder={field.placeholder}
-                  form={form}
-                  setForm={setForm}
+                  sectionKey={sectionKey}
+                  form={formInnerData?.[sectionKey]}
+                  setForm={setFormInnerData}
                   className={""}
                 />
               </div>
@@ -266,17 +261,18 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
           if (field.type === FIELD_TYPES.FILE) {
             return (
               <div key={index} className="mt-4">
-                <FileInputType field={field} form={form} setForm={setForm} className={""} />
+                <FileInputType field={field} sectionKey={sectionKey} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} className={""} />
               </div>
             );
           }
           return (
             <div key={index} className="mt-4">
               <OtherInputType
+                sectionKey={sectionKey}
                 field={field}
                 placeholder={field.placeholder}
-                form={form}
-                setForm={setForm}
+                form={formInnerData?.[sectionKey]}
+                setForm={setFormInnerData}
                 className={""}
               />
             </div>
@@ -329,7 +325,7 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
                 isPdf={true}
                 onSave={signatureUploadHandler}
                 step={step}
-                oldSignatureUrl={form?.signature?.secureUrl || ""}
+                oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.secureUrl || ""}
               />
             )}
           </div>

@@ -79,6 +79,16 @@ const formApis = createApi({
       invalidatesTags: ['Form', 'SubmitForm'],
     }),
 
+    // update submitted form
+    // ---------------
+    updateSubmittedForm: builder.mutation({
+      query: ({ submittedFormId, formData }) => ({
+        url: '/submit',
+        method: 'PUT',
+        body: { submittedFormId, formData },
+      }),
+    }),
+
     // get submitted form users
     // ---------------
     getSubmittedFormUsers: builder.query({
@@ -446,6 +456,7 @@ export const {
   useGetSingleFormQueryQuery,
   useDeleteSingleFormMutation,
   useSubmitFormMutation,
+  useUpdateSubmittedFormMutation,
   useGetSubmittedFormUsersQuery,
   useGiveSpecialAccessToUserMutation,
   useApplicantGiveSpecialAccessToBeneficialOwnerMutation,

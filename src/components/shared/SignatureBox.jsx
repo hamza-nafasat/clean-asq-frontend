@@ -3,8 +3,10 @@ import Button from './small/Button';
 import { AiHelpModal } from './small/DynamicField';
 import Modal from './small/Modal';
 import { useBranding } from '@/hooks/BrandingContext';
+import { useSelector } from 'react-redux';
 
 export default function SignatureBox({ onSave, step, oldSignatureUrl, className = '', isPdf = false }) {
+  const { isDisabledAllFields } = useSelector(state => state.form);
   const { textColor, fontFamily } = useBranding();
   const [mode, setMode] = useState('draw');
   const [typedSignature, setTypedSignature] = useState('');
@@ -56,7 +58,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
   };
 
   const startDraw = e => {
-    if (isPdf) return;
+    if (isPdf && isDisabledAllFields) return;
     if (mode !== 'draw') return;
     drawing.current = true;
     lastPoint.current = pointerPos(e);
@@ -68,7 +70,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
   };
 
   const draw = e => {
-    if (isPdf) return;
+    if (isPdf && isDisabledAllFields) return;
     if (!drawing.current) return;
     const ctx = ctxRef.current;
     const p = pointerPos(e);
@@ -80,6 +82,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
   };
 
   const endDraw = e => {
+    if (isPdf && isDisabledAllFields) return;
     if (!drawing.current) return;
     drawing.current = false;
     try {
@@ -192,7 +195,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
     'cursor-pointer rounded px-4 py-2 text-sm font-medium transition-transform duration-200 hover:scale-105 active:scale-95';
 
   return (
-    <div className={` ${!isPdf && 'bg-backgroundColor'} w-full rounded-2xl p-6 shadow-xl ${className}`}>
+    <div className={` ${!isPdf || !isDisabledAllFields && 'bg-backgroundColor'} w-full rounded-2xl p-6 shadow-xl ${className}`}>
       {openAiHelpModal && (
         <Modal onClose={() => setOpenAiHelpModal(false)}>
           <AiHelpModal
@@ -224,7 +227,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       </div>
 
       {/* Mode Switch */}
-      {!isPdf && (
+      {!isPdf || !isDisabledAllFields && (
         <div className="mt-4 flex gap-3">
           <button
             type="button"
@@ -267,7 +270,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       </div>
 
       {/* Controls */}
-      {!isPdf && (
+      {!isPdf || !isDisabledAllFields && (
         <div className="mt-4 flex flex-wrap gap-2">
           <button type="button" onClick={handleClear} className={`${buttonClasses} border`}>
             Clear

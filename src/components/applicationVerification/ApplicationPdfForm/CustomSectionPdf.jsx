@@ -1,6 +1,5 @@
 import { FIELD_TYPES } from '@/data/constants';
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
-import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import SignatureBox from '../../shared/SignatureBox';
 import {
@@ -13,14 +12,13 @@ import {
   SelectInputType,
 } from './shared/DynamicFieldForPdf';
 
-function CustomSectionPdf({ fields, name, step, reduxData, isSignature }) {
-  const [form, setForm] = useState({});
+function CustomSectionPdf({ fields, name, step, isSignature, formInnerData, setFormInnerData, sectionKey }) {
 
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
       if (!file) return toast.error('Please select a file');
       if (file) {
-        const oldSign = form?.['signature'];
+        const oldSign = formInnerData?.[sectionKey]?.['signature'];
         if (oldSign?.publicId) {
           const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
           if (!result) return toast.error('File Not Deleted Please Try Again');
@@ -29,7 +27,7 @@ function CustomSectionPdf({ fields, name, step, reduxData, isSignature }) {
         if (!res.publicId || !res.secureUrl || !res.resourceType) {
           return toast.error('File Not Uploaded Please Try Again');
         }
-        setForm(prev => ({ ...prev, signature: res }));
+        setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], signature: res } }));
         toast.success('Signature uploaded successfully');
       }
     } catch (error) {
@@ -39,27 +37,22 @@ function CustomSectionPdf({ fields, name, step, reduxData, isSignature }) {
     }
   };
 
-  useEffect(() => {
-    const formFields = {};
-    if (fields?.length) {
-      fields?.forEach(field => {
-        formFields[field?.name] = reduxData?.[field?.name] || '';
-      });
-      setForm(formFields);
-    }
-    if (isSignature) {
-      const isSignatureExistingData = {};
-      if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
-      if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
-      if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
-      setForm(prev => ({
-        ...prev,
-        ['signature']: isSignatureExistingData?.publicId
-          ? isSignatureExistingData
-          : { publicId: '', secureUrl: '', resourceType: '' },
-      }));
-    }
-  }, [fields, isSignature, reduxData]);
+  // useEffect(() => {
+  //   const formFields = {};
+  //   if (fields?.length) {
+  //     fields?.forEach(field => {
+  //       formFields[field?.name] = reduxData?.[field?.name] || '';
+  //     });
+  //     setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], ...formFields } }));
+  //   }
+  //   if (isSignature) {
+  //     const isSignatureExistingData = {};
+  //     if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
+  //     if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
+  //     if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
+  //     setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], signature: isSignatureExistingData?.publicId ? isSignatureExistingData : { publicId: '', secureUrl: '', resourceType: '' } } }));
+  //   }
+  // }, [fields, isSignature, reduxData, sectionKey, setFormInnerData]);
 
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
@@ -84,42 +77,42 @@ function CustomSectionPdf({ fields, name, step, reduxData, isSignature }) {
           if (field.type === FIELD_TYPES.SELECT) {
             return (
               <div key={index} className="mt-4">
-                <SelectInputType field={field} form={form} setForm={setForm} className={''} />
+                <SelectInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
               </div>
             );
           }
           if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
             return (
               <div key={index} className="mt-4">
-                <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={''} />
+                <MultiCheckboxInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
               </div>
             );
           }
           if (field.type === FIELD_TYPES.FILE) {
             return (
               <div key={index} className="mt-4">
-                <FileInputType field={field} form={form} setForm={setForm} className={''} />
+                <FileInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
               </div>
             );
           }
           if (field.type === FIELD_TYPES.FILE) {
             return (
               <div key={index} className="mt-4">
-                <FileInputType field={field} form={form} setForm={setForm} className={''} />
+                <FileInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
               </div>
             );
           }
           if (field.type === FIELD_TYPES.RADIO) {
             return (
               <div key={index} className="mt-4">
-                <RadioInputType field={field} form={form} setForm={setForm} className={''} />
+                <RadioInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
               </div>
             );
           }
           if (field.type === FIELD_TYPES.RANGE) {
             return (
               <div key={index} className="mt-4">
-                <RangeInputType field={field} form={form} setForm={setForm} className={''} />
+                <RangeInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
               </div>
             );
           }
@@ -129,8 +122,9 @@ function CustomSectionPdf({ fields, name, step, reduxData, isSignature }) {
                 <CheckboxInputType
                   field={field}
                   placeholder={field.placeholder}
-                  form={form}
-                  setForm={setForm}
+                  form={formInnerData?.[sectionKey]}
+                  setForm={setFormInnerData}
+                  sectionKey={sectionKey}
                   className={''}
                 />
               </div>
@@ -141,8 +135,9 @@ function CustomSectionPdf({ fields, name, step, reduxData, isSignature }) {
               <OtherInputType
                 field={field}
                 placeholder={field.placeholder}
-                form={form}
-                setForm={setForm}
+                form={formInnerData?.[sectionKey]}
+                setForm={setFormInnerData}
+                sectionKey={sectionKey}
                 className={''}
               />
             </div>
@@ -155,7 +150,7 @@ function CustomSectionPdf({ fields, name, step, reduxData, isSignature }) {
             step={step}
             isPdf={true}
             onSave={signatureUploadHandler}
-            oldSignatureUrl={form?.signature?.secureUrl || ''}
+            oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.secureUrl || ''}
           />
         )}
       </div>
