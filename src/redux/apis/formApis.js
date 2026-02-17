@@ -1,6 +1,5 @@
 import getEnv from '@/lib/env';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { BsEmojiNeutral } from 'react-icons/bs';
 
 const formApis = createApi({
   reducerPath: 'formApi',
@@ -87,6 +86,7 @@ const formApis = createApi({
         method: 'PUT',
         body: { submittedFormId, formData },
       }),
+      invalidatesTags: ['SubmitForm', 'History'],
     }),
 
     // get submitted form users

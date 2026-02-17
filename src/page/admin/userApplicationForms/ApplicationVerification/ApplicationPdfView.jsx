@@ -15,7 +15,7 @@ import ProcessingInfoPdf from '@/components/applicationVerification/ApplicationP
 import Button from '@/components/shared/small/Button';
 import { useBranding } from '@/hooks/BrandingContext';
 import useApplyBranding from '@/hooks/useApplyBranding';
-import { useGetSavedFormByUserIdMutation, useGetSingleFormQueryQuery, useUpdateSubmittedFormMutation } from '@/redux/apis/formApis';
+import { useGeneratePdfFormMutation, useGetSavedFormByUserIdMutation, useGetSingleFormQueryQuery, useUpdateSubmittedFormMutation } from '@/redux/apis/formApis';
 import { addSavedFormData, updateIsDisabledAllFields } from '@/redux/slices/formSlice';
 import logoApply from '../../../../assets/images/logo.png';
 import IdMissionDataPdf from './IdMissionDataPdf';
@@ -25,7 +25,6 @@ import { CgSpinner } from 'react-icons/cg';
 const ApplicationPdfView = () => {
   const { pdfId, userId } = useParams();
   useApplyBranding({ formId: pdfId });
-
   return (
     <>
       <ApplicationPdfViewCommonProps userId={userId} pdfId={pdfId} isPdf={true} />
@@ -33,9 +32,7 @@ const ApplicationPdfView = () => {
   );
 };
 
-
-
-export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, className = '', isEditAble = false }) => {
+export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, className = '', isEditAble = false, isDownloadAble = false }) => {
   const dispatch = useDispatch();
   const { logo } = useBranding();
   const { formData } = useSelector(state => state.form);
@@ -51,6 +48,7 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
     refetch: formRefetch,
   } = useGetSingleFormQueryQuery({ _id: pdfId }, { skip: !pdfId });
   const [getSavedFormData, { isLoading: getSavedFormDataLoading }] = useGetSavedFormByUserIdMutation();
+  const [generatePdfForm, { isLoading: isGeneratingPdf }] = useGeneratePdfFormMutation();
 
   const updateSubmittedFormData = async () => {
     try {
@@ -63,6 +61,21 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
       console.log('Error updating submitted form data', error);
     }
   }
+
+  const handleDownload = async (formId, userId) => {
+    try {
+      const blob = await generatePdfForm({ _id: formId, userId }).unwrap();
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `form-${formId}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.log('PDF download failed', err);
+    }
+  };
 
   useEffect(() => {
     if (userId) {
@@ -83,7 +96,7 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
   }, [dispatch, getSavedFormData, pdfId, userId]);
 
   useEffect(() => {
-    if (formData && Object.keys(formData).length > 0) {
+    if (formData) {
       setIsFormInnerDataComingFromRedux(true);
       setFormInnerData(formData);
       setIsFormInnerDataComingFromRedux(false);
@@ -91,7 +104,6 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
     return () => {
       dispatch(updateIsDisabledAllFields(true));
       setIsFormInnerDataComingFromRedux(false);
-      setFormInnerData({});
     }
   }, [dispatch, formData]);
 
@@ -122,6 +134,9 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
             })}
           </h3>
         </div>
+      </div>}
+      {isDownloadAble && <div className="flex justify-end">
+        <Button label="Download" variant="secondary" onClick={() => handleDownload(pdfId, userId)} disabled={isGeneratingPdf} rightIcon={isGeneratingPdf && CgSpinner} cnRight={isGeneratingPdf ? 'animate-spin h-5 w-5' : ''} />
       </div>}
       <div className={`h-full w-full space-y-12 overflow-visible bg-white px-6 py-8 ${className}`}>
         {isEditAble && isDisabledAllFields && <div className="flex justify-end">
@@ -174,4 +189,5 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
     </>
   );
 };
+
 export default ApplicationPdfView;

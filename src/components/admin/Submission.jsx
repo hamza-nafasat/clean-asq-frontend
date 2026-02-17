@@ -118,10 +118,6 @@ function Submission({ forms }) {
                   alt="logo"
                   referrerPolicy="no-referrer"
                 />
-
-
-
-
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
                   <span className="text-gray-500">Application Name: {form?.name}</span>
                   <span className="text-gray-500">Sections: {form?.sections?.length}</span>

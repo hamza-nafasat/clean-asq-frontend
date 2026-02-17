@@ -211,7 +211,7 @@ const ApplicantsTable = ({
         name: "View Pdf",
         icon: <Eye size={16} className="mr-2" />,
         onClick: (row) => {
-          onView(row.id);
+          onView(row);
           setActionMenu(null);
         },
       },
@@ -226,7 +226,6 @@ const ApplicantsTable = ({
         name: "Forward a form",
         icon: <ArrowRight size={16} className="mr-2" />,
         onClick: (row) => {
-          console.log("row is ", row);
           setOpenSpecialAccess(true);
           setSelectedIdForSpecialAccessModal(row?._id);
           setSelectedFormId(row?.form?._id);

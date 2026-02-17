@@ -11,33 +11,31 @@ import {
 } from '@/redux/apis/formApis';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { ApplicationPdfViewCommonProps } from '../../userApplicationForms/ApplicationVerification/ApplicationPdfView';
 // import Modal from '@/components/admin/shared/Modal';
 
 function Applications() {
+  const { data, isLoading: isLoadingForm } = useGetAllSubmitFormsQuery();
+
+
   const [applicants, setApplicants] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [openSpecialAccess, setOpenSpecialAccess] = useState(false);
   const [selectedIdForSpecialAccessModal, setSelectedIdForSpecialAccessModal] = useState(null);
   const [selectedFormId, setSelectedFormId] = useState(null);
+  const [pdfData, setPdfData] = useState(null);
   const [filters, setFilters] = useState({
     dateRange: { start: '', end: '' },
     status: '',
   });
-
-  const { data, isLoading: isLoadingForm } = useGetAllSubmitFormsQuery();
-
-
   const handleViewApplicant = useCallback(
-    id => {
-      const applicant = applicants.find(app => app.id === id);
-      setSelectedApplicant(applicant);
+    row => {
+      setPdfData(row);
       setIsModalOpen(true);
     },
-    [applicants]
+    []
   );
-
   const handleDeleteApplicant = useCallback(async id => {
     setIsLoading(true);
     try {
@@ -85,46 +83,16 @@ function Applications() {
         </div>
 
         {/* View Applicant Modal */}
-        {isModalOpen && selectedApplicant && (
+        {isModalOpen && (pdfData?.form?._id || pdfData?.form) && (
           <Modal
-            title="Applicant Details"
+            width={'min-w-[80vw] max-w-2xl'}
             onClose={() => {
               setIsModalOpen(false);
-              setSelectedApplicant(null);
+              setPdfData(null);
             }}
-            onSave={() => setIsModalOpen(false)}
             isLoading={isLoading}
           >
-            <div className="space-y-4">
-              <div className="flex flex-col gap-2">
-                <label className="block text-sm font-medium text-gray-700">Name</label>
-                <p className="mt-1">{selectedApplicant?.user?.firstName + ' ' + selectedApplicant?.user?.lastName}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
-                <p className="mt-1">{selectedApplicant?.user?.firstName + ' ' + selectedApplicant?.user?.lastName}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Application</label>
-                <p className="mt-1">{selectedApplicant?.form?.name}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
-                <p className="mt-1">{selectedApplicant?.user?.email}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Client Type</label>
-                <p className="mt-1">{selectedApplicant?.user?.role?.name}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Date Created</label>
-                <p className="mt-1">{new Date(selectedApplicant?.createdAt)?.toLocaleDateString()}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Status</label>
-                <p className="mt-1">{selectedApplicant?.status}</p>
-              </div>
-            </div>
+            <ApplicationPdfViewCommonProps userId={pdfData?.user?._id || pdfData?.user} pdfId={pdfData?.form?._id || pdfData?.form} className="rounded-lg!" isPdf={true} isDownloadAble={true} />
           </Modal>
         )}
       </div>
