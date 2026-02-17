@@ -21,6 +21,7 @@ import logoApply from '../../../../assets/images/logo.png';
 import IdMissionDataPdf from './IdMissionDataPdf';
 import { toast } from 'react-toastify';
 import { CgSpinner } from 'react-icons/cg';
+import { uploadFilesAndReplace } from '@/lib/utils';
 
 const ApplicationPdfView = () => {
   const { pdfId, userId } = useParams();
@@ -40,7 +41,7 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
   const [submittedFormId, setSubmittedFormId] = useState(null);
   const [formInnerData, setFormInnerData] = useState({});
   const [isFormInnerDataComingFromRedux, setIsFormInnerDataComingFromRedux] = useState(false);
-  const [updateSubmittedForm, { isLoading: isUpdatingSubmittedForm }] = useUpdateSubmittedFormMutation();
+  const [updateSubmittedForm,] = useUpdateSubmittedFormMutation();
   // Queries & Mutations
   const {
     data: form,
@@ -49,16 +50,25 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
   } = useGetSingleFormQueryQuery({ _id: pdfId }, { skip: !pdfId });
   const [getSavedFormData, { isLoading: getSavedFormDataLoading }] = useGetSavedFormByUserIdMutation();
   const [generatePdfForm, { isLoading: isGeneratingPdf }] = useGeneratePdfFormMutation();
+  const [isUpdatingSubmittedForm, setIsUpdatingSubmittedForm] = useState(false);
 
   const updateSubmittedFormData = async () => {
+    setIsUpdatingSubmittedForm(true);
     try {
-      const res = await updateSubmittedForm({ submittedFormId: submittedFormId, formData: formInnerData }).unwrap();
+      const formInnerDataKeys = Object.keys(formInnerData);
+      const updatedFormData = {};
+      for (const key of formInnerDataKeys) {
+        updatedFormData[key] = await uploadFilesAndReplace(formInnerData[key]);
+      }
+      const res = await updateSubmittedForm({ submittedFormId: submittedFormId, formData: updatedFormData }).unwrap();
       if (res.success) {
         dispatch(updateIsDisabledAllFields(true))
         toast.success(res.message);
       }
     } catch (error) {
       console.log('Error updating submitted form data', error);
+    } finally {
+      setIsUpdatingSubmittedForm(false);
     }
   }
 
@@ -135,15 +145,16 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
           </h3>
         </div>
       </div>}
-      {isDownloadAble && <div className="flex justify-end">
-        <Button label="Download" variant="secondary" onClick={() => handleDownload(pdfId, userId)} disabled={isGeneratingPdf} rightIcon={isGeneratingPdf && CgSpinner} cnRight={isGeneratingPdf ? 'animate-spin h-5 w-5' : ''} />
-      </div>}
+
       <div className={`h-full w-full space-y-12 overflow-visible bg-white px-6 py-8 ${className}`}>
         {isEditAble && isDisabledAllFields && <div className="flex justify-end">
           <Button label="Edit" variant="secondary" onClick={() => dispatch(updateIsDisabledAllFields(false))} />
         </div>}
         {isEditAble && !isDisabledAllFields && <div className="flex justify-end">
           <Button disabled={isUpdatingSubmittedForm} rightIcon={isUpdatingSubmittedForm && CgSpinner} cnRight={isUpdatingSubmittedForm ? 'animate-spin h-5 w-5' : ''} label="Save" onClick={updateSubmittedFormData} />
+        </div>}
+        {isDownloadAble && <div className="flex justify-end">
+          <Button label="Download Pdf" variant="secondary" onClick={() => handleDownload(pdfId, userId)} disabled={isGeneratingPdf} rightIcon={isGeneratingPdf && CgSpinner} cnRight={isGeneratingPdf ? 'animate-spin h-5 w-5' : ''} />
         </div>}
         <IdMissionDataPdf formId={pdfId} sectionKey="idMission" formInnerData={formInnerData} setFormInnerData={setFormInnerData} />
         {form?.data?.sections?.map((section, index) => {

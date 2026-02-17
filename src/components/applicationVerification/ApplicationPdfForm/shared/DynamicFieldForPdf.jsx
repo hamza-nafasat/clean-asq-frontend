@@ -5,11 +5,16 @@ import { useBranding } from '@/hooks/BrandingContext';
 import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
 import DOMPurify from 'dompurify';
 import { useRef, useState } from 'react';
-import { CgSoftwareDownload } from 'react-icons/cg';
+import { CgSoftwareUpload } from 'react-icons/cg';
 import { IoEyeOffSharp } from 'react-icons/io5';
+import { PiFileArrowUpFill } from 'react-icons/pi';
 import { RxEyeOpen } from 'react-icons/rx';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml',];
+const ALLOWED_TEXT_EXTENSIONS = ['.csv', '.txt', '.rtf'];
+const FORBIDDEN_EXTENSIONS = ['.doc', '.docx', '.xls', '.xlsx'];
 
 const DynamicField = ({ cn, field, className = '', form, placeholder, value, setForm, ...rest }) => {
   const { type, label, id, options, name, required } = field;
@@ -489,7 +494,8 @@ const RangeInputType = ({ field, className, form, setForm, sectionKey }) => {
   );
 };
 
-const FileInputType = ({ field, className, form, }) => {
+
+const FileInputType = ({ field, className, form, setForm, sectionKey }) => {
   const {
     label,
     name,
@@ -500,15 +506,63 @@ const FileInputType = ({ field, className, form, }) => {
     isDisplayText,
     ai_formatting,
   } = field;
-  const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
-  const [fileName] = useState('');
   const { isDisabledAllFields } = useSelector(state => state.form);
+  const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
+  const [fileName, setFileName] = useState('');
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const inputRef = useRef(null);
 
+  const fileHandler = file => {
+    if (!file) return;
 
-  if (!form?.[name]?.secureUrl || !form?.[name]?.resourceType) {
-    return null;
-  }
+    const fileNameLower = file.name.toLowerCase();
+    const mimeType = file.type;
 
+    // ---- hard reject forbidden formats ----
+    if (FORBIDDEN_EXTENSIONS.some(ext => fileNameLower.endsWith(ext))) {
+      toast.error('DOC and Excel files are not allowed');
+      if (inputRef.current) inputRef.current.value = '';
+      return;
+    }
+
+    const isImage = ALLOWED_IMAGE_TYPES.includes(mimeType);
+    const isPdf =
+      mimeType === 'application/pdf' || fileNameLower.endsWith('.pdf');
+    const isText =
+      mimeType.startsWith('text/') ||
+      ALLOWED_TEXT_EXTENSIONS.some(ext => fileNameLower.endsWith(ext));
+
+    if (!isImage && !isPdf && !isText) {
+      toast.error('Unsupported file type');
+      if (inputRef.current) inputRef.current.value = '';
+      return;
+    }
+
+    setFileName(file.name);
+    setForm(prev => ({ ...prev, [sectionKey]: { ...prev[sectionKey], [name]: { file } } }));
+
+    // Set preview for images
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onloadend = () => setPreviewUrl(reader.result);
+      reader.readAsDataURL(file);
+    } else {
+      setPreviewUrl(null);
+    }
+  };
+
+  const handleFileChange = e => {
+    const file = e.target.files?.[0];
+    if (file) fileHandler(file);
+  };
+
+  const handleDrop = e => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) fileHandler(file);
+  };
+
+  const handleDragOver = e => e.preventDefault();
 
   return (
     <div className={`flex w-full flex-col items-start ${className}`}>
@@ -540,53 +594,45 @@ const FileInputType = ({ field, className, form, }) => {
       )}
       <div className="flex w-full gap-2 mt-2">
         <div className="w-full">
-          {/* <div
-            className={`relative mt-2 flex h-[283px] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-10 text-gray-500 transition hover:border-[#5570F1] hover:bg-blue-50 ${required && isEmpty(form[name])
-              ? 'border-accent bg-highlighting'
-              : 'border-gray-300'
-              }`}
-            onDrop={() => { }}
+          <div
+            className={`relative mt-2 flex h-[283px] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-10 text-gray-500 transition hover:border-[#5570F1] hover:bg-blue-50 ${isDisabledAllFields ? 'opacity-70 cursor-not-allowed!' : ''}`}
+            onDrop={handleDrop}
             onDragOver={handleDragOver}
-            onClick={() => () => { }}
+            onClick={isDisabledAllFields ? undefined : () => inputRef.current?.click()}
           >
             <PiFileArrowUpFill className="text-textPrimary text-8xl" />
             <h4 className="text-textPrimary text-base font-medium">Click to upload or drag and drop a file</h4>
             <h5 className="text-textPrimary">pdf, jpg, png, csv, txt, rtf up to 10MB</h5>
             <Button
               label={'Select file'}
-              className="text-textPrimary! border-gray-300! bg-white! hover:bg-gray-500!"
+              className={`text-textPrimary! border-gray-300! bg-white! hover:bg-gray-500! ${isDisabledAllFields ? 'opacity-70 cursor-not-allowed!' : ''}`}
               rightIcon={CgSoftwareUpload}
+              disabled={isDisabledAllFields}
             />
             <input
               ref={inputRef}
               type="file"
               name={name}
+              disabled={isDisabledAllFields}
               accept="image/*,application/pdf,text/csv,text/plain,application/rtf"
-              onChange={() => { }}
+              onChange={handleFileChange}
               className="hidden"
             />
-          </div> */}
+          </div>
 
           {fileName && (
             <div className="mt-2 text-sm text-gray-700">Selected: {fileName}</div>
           )}
 
-          {form?.[name]?.secureUrl && form?.[name]?.resourceType === 'raw' && (
-            <Button
-              disabled={isDisabledAllFields}
-              aria-disabled={isDisabledAllFields}
-              label="Download"
-              className={`text-textPrimary! border-gray-300! bg-white! hover:bg-gray-500! ${isDisabledAllFields ? 'opacity-70 cursor-not-allowed' : ''}`}
-              rightIcon={CgSoftwareDownload}
-              onClick={() => {
-                window.open(form?.[name]?.secureUrl, '_blank');
-              }}
-            />
+          {previewUrl && (
+            <img src={previewUrl} alt="Preview" className="mt-3 max-h-40 rounded border" />
           )}
-          {form?.[name]?.secureUrl && form?.[name]?.resourceType === 'image' && (
+          {form?.[name]?.secureUrl && form?.[name]?.resourceType == 'raw' && (
+            <Button label="Download" variant="secondary" onClick={() => window.open(form?.[name]?.secureUrl, '_blank')} />
+          )}
+          {form?.[name]?.secureUrl && form?.[name]?.resourceType !== 'raw' && (
             <img src={form?.[name]?.secureUrl} alt="Preview" className="mt-3 max-h-40 rounded border" />
           )}
-
         </div>
         {aiHelp && (
           <div className="flex items-center">
