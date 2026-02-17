@@ -6,7 +6,7 @@ const AppViewer = ({ data }) => {
   const pdfId = data?.form?._id;
 
   return (
-    <div className="flex w-full">
+    <div className="flex w-full min-h-screen justify-center items-center">
       <ApplicationPdfViewCommonProps userId={userId} pdfId={pdfId} className="rounded-lg!" isEditAble={true} />
     </div>
   )

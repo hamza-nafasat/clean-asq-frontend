@@ -22,14 +22,13 @@ import IdMissionDataPdf from './IdMissionDataPdf';
 import { toast } from 'react-toastify';
 import { CgSpinner } from 'react-icons/cg';
 import { uploadFilesAndReplace } from '@/lib/utils';
+import CustomLoading from '@/components/shared/small/CustomLoading';
 
 const ApplicationPdfView = () => {
   const { pdfId, userId } = useParams();
   useApplyBranding({ formId: pdfId });
   return (
-    <>
-      <ApplicationPdfViewCommonProps userId={userId} pdfId={pdfId} isPdf={true} />
-    </>
+    <ApplicationPdfViewCommonProps userId={userId} pdfId={pdfId} isPdf={true} />
   );
 };
 
@@ -117,7 +116,7 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
     }
   }, [dispatch, formData]);
 
-  if (!form || isFormInnerDataComingFromRedux || getSavedFormDataLoading || formLoading) return;
+  if (!form || isFormInnerDataComingFromRedux || getSavedFormDataLoading || formLoading) return <CustomLoading />;
   return (
     <>
       {isPdf && <div className="flex h-16 items-center justify-between rounded-md border-b bg-white px-6 shadow">
