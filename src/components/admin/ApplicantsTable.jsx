@@ -20,6 +20,11 @@ const APPLICANT_TABLE_COLUMNS = [
     selector: (row) => row?._id?.slice(0, 3),
     sortable: true,
     width: "100px",
+    cell: (row) => (
+      <span title={row?._id} className="cursor-pointer">
+        {row?._id?.slice(0, 3)}
+      </span>
+    ),
   },
   {
     name: "Name",
@@ -71,9 +76,11 @@ const APPLICANT_TABLE_COLUMNS = [
     width: "150px",
     cell: (row) => (
       <span
-        className={`w-[100px] rounded-sm px-2.5 py-[3px] text-center font-bold capitalize ${row.status === APPLICANT_STATUS.APPROVED ? "bg-[#34C7591A] text-[#34C759]" : ""
-          } ${row.status === APPLICANT_STATUS.REJECTED ? "bg-[#FF3B301A] text-[#FF3B30]" : ""} ${row.status === APPLICANT_STATUS.PENDING ? "bg-yellow-100 text-yellow-800" : ""
-          } ${row.status === APPLICANT_STATUS.REVIEWING ? "bg-blue-100 text-blue-500" : ""}`}
+        className={`w-[100px] rounded-sm px-2.5 py-[3px] text-center font-bold capitalize ${
+          row.status === APPLICANT_STATUS.APPROVED ? "bg-[#34C7591A] text-[#34C759]" : ""
+        } ${row.status === APPLICANT_STATUS.REJECTED ? "bg-[#FF3B301A] text-[#FF3B30]" : ""} ${
+          row.status === APPLICANT_STATUS.PENDING ? "bg-yellow-100 text-yellow-800" : ""
+        } ${row.status === APPLICANT_STATUS.REVIEWING ? "bg-blue-100 text-blue-500" : ""}`}
       >
         {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
       </span>
@@ -89,7 +96,7 @@ const ApplicantsTable = ({
   onFilterChange,
   setOpenSpecialAccess,
   setSelectedIdForSpecialAccessModal,
-  setSelectedFormId
+  setSelectedFormId,
 }) => {
   const navigate = useNavigate();
   const [actionMenu, setActionMenu] = React.useState(null);
@@ -160,8 +167,9 @@ const ApplicantsTable = ({
             name={field}
             value={value}
             onChange={onChange}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${error ? "border-red-500" : "border-gray-300"
-              }`}
+            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
+              error ? "border-red-500" : "border-gray-300"
+            }`}
           >
             <option value="">Select {labelText}</option>
             {options.map((option) => (
@@ -232,23 +240,27 @@ const ApplicantsTable = ({
           setActionMenu(null);
         },
       },
-      ...(hasUnderwritingPermission ? [{
-        name: "Underwriting",
-        icon: <UserIcon size={16} className="mr-2" />,
-        onClick: (row) => {
-          navigate(`/underwriting/${row?._id}`);
-          setActionMenu(null);
-        },
-      }] : []),
-
-
-
-
-
-
-
+      ...(hasUnderwritingPermission
+        ? [
+            {
+              name: "Underwriting",
+              icon: <UserIcon size={16} className="mr-2" />,
+              onClick: (row) => {
+                navigate(`/underwriting/${row?._id}`);
+                setActionMenu(null);
+              },
+            },
+          ]
+        : []),
     ],
-    [hasUnderwritingPermission, onView, setOpenSpecialAccess, setSelectedIdForSpecialAccessModal, setSelectedFormId, navigate]
+    [
+      hasUnderwritingPermission,
+      onView,
+      setOpenSpecialAccess,
+      setSelectedIdForSpecialAccessModal,
+      setSelectedFormId,
+      navigate,
+    ],
   );
 
   const columns = useMemo(
@@ -277,14 +289,14 @@ const ApplicantsTable = ({
         },
       },
     ],
-    [ButtonsForThreeDot, actionMenu]
+    [ButtonsForThreeDot, actionMenu],
   );
 
   // Handle click outside for action menu
   useEffect(() => {
     const handleClickOutside = (event) => {
       const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
-        (ref) => !ref.current?.contains(event.target)
+        (ref) => !ref.current?.contains(event.target),
       );
 
       if (clickedOutsideAllMenus) {
@@ -376,21 +388,21 @@ const ApplicantsTable = ({
             editModalData.name,
             (e) => setEditModalData((prev) => ({ ...prev, name: e.target.value })),
             "text",
-            formErrors.name
+            formErrors.name,
           )}
           {renderFormField(
             "email",
             editModalData.email,
             (e) => setEditModalData((prev) => ({ ...prev, email: e.target.value })),
             "email",
-            formErrors.email
+            formErrors.email,
           )}
           {renderFormField(
             "application",
             editModalData.application,
             (e) => setEditModalData((prev) => ({ ...prev, application: e.target.value })),
             "text",
-            formErrors.application
+            formErrors.application,
           )}
           {renderFormField(
             "status",
@@ -401,7 +413,7 @@ const ApplicantsTable = ({
             Object.values(APPLICANT_STATUS).map((status) => ({
               value: status,
               label: status.charAt(0).toUpperCase() + status.slice(1),
-            }))
+            })),
           )}
           {/* {renderFormField(
             'clientType',
@@ -441,7 +453,7 @@ ApplicantsTable.propTypes = {
       dateCreated: PropTypes.string.isRequired,
       status: PropTypes.string.isRequired,
       // clientType: PropTypes.oneOf(Object.values(CLIENT_TYPES)).isRequired,
-    })
+    }),
   ).isRequired,
   isLoading: PropTypes.bool,
   onView: PropTypes.func.isRequired,

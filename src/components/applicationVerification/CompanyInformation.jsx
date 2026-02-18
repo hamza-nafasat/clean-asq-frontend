@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CgSpinner } from "react-icons/cg";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { naicsToMcc } from "../../public/NAICStoMCC.js";
+import { naicsToMcc } from "../../../public/NAICStoMCC.js";
 import SignatureBox from "../shared/SignatureBox.jsx";
 import Button from "../shared/small/Button.jsx";
 import {
