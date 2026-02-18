@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CgSpinner } from "react-icons/cg";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { naicsToMcc } from "../../../public/NAICStoMCC.js";
+import { naicsToMcc } from "../../public/NAICStoMCC.js";
 import SignatureBox from "../shared/SignatureBox.jsx";
 import Button from "../shared/small/Button.jsx";
 import {
@@ -124,7 +124,8 @@ function CompanyInformation({
       // Then find descriptions containing the value (case insensitive)
       const containsInDescription = naicsToMcc.filter(
         (item) =>
-          !item["NAICS Code"].startsWith(value) && item["NAICS Description"].toLowerCase().includes(value.toLowerCase())
+          !item["NAICS Code"].startsWith(value) &&
+          item["NAICS Description"].toLowerCase().includes(value.toLowerCase()),
       );
 
       // Combine both, with exact matches first, then description matches
@@ -255,7 +256,7 @@ function CompanyInformation({
           val.every((item) =>
             typeof item === "object"
               ? Object.values(item).every((v) => v?.toString().trim() !== "")
-              : item?.toString().trim() !== ""
+              : item?.toString().trim() !== "",
           )
         );
       return true;
