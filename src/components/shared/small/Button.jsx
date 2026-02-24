@@ -1,15 +1,15 @@
-import React from 'react';
+import React from "react";
 
 const Button = ({
   label,
   onClick,
-  className = '',
-  type = 'button',
+  className = "",
+  type = "button",
   icon: LeftIcon,
   rightIcon: RightIcon,
   cnLeft,
   cnRight,
-  variant = 'primary',
+  variant = "primary",
   loading = false,
   disabled = false,
   style = {},
@@ -32,14 +32,14 @@ const Button = ({
     `,
   };
 
-  const disabledClasses = disabled || loading ? 'opacity-50 cursor-not-allowed' : '';
+  const disabledClasses = disabled || loading ? "opacity-50 cursor-not-allowed" : "";
 
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={` ${baseClasses} ${variantClasses[variant] || ''} ${disabledClasses} ${className} `}
+      className={` ${baseClasses} ${variantClasses[variant] || ""} ${disabledClasses} ${className} `}
       style={style}
       {...props}
     >

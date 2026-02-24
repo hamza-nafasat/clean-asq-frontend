@@ -1,16 +1,16 @@
-import Button from '@/components/shared/small/Button';
-import { useBranding } from '@/hooks/BrandingContext';
-import { useGetMyProfileFirstTimeMutation, useLoginMutation } from '@/redux/apis/authApis';
-import { userExist, userNotExist } from '@/redux/slices/authSlice';
-import { useCallback, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { toast } from 'react-toastify';
-import TextField from '../../components/shared/small/TextField';
+import Button from "@/components/shared/small/Button";
+import { useBranding } from "@/hooks/BrandingContext";
+import { useGetMyProfileFirstTimeMutation, useLoginMutation } from "@/redux/apis/authApis";
+import { userExist, userNotExist } from "@/redux/slices/authSlice";
+import { useCallback, useState } from "react";
+import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
+import TextField from "../../components/shared/small/TextField";
 
 const Login = () => {
   const dispatch = useDispatch();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [login, { isLoading }] = useLoginMutation();
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const {
@@ -26,17 +26,22 @@ const Login = () => {
     setLogo,
     setButtonTextPrimary,
     setButtonTextSecondary,
+    setHeaderBackground,
+    setFooterBackground,
+    setHeaderAlignment,
+    setHeaderText,
+    setFooterText,
   } = useBranding();
 
   const getUserAndSetBranding = useCallback(async () => {
     try {
       const res = await getUserProfile().unwrap();
-      console.log('res', res);
+      console.log("res", res);
       if (res?.success) {
         dispatch(userExist(res?.data));
         const formBranding = res?.data?.branding;
-        console.log('form branding is ', formBranding);
-        console.log('returned branding is applied');
+        console.log("form branding is ", formBranding);
+        console.log("returned branding is applied");
         if (formBranding?.colors) {
           setName(formBranding.name);
           setPrimaryColor(formBranding.colors.primary);
@@ -50,32 +55,42 @@ const Login = () => {
           setLogo(formBranding.selectedLogo);
           setButtonTextPrimary(formBranding.colors.buttonTextPrimary);
           setButtonTextSecondary(formBranding.colors.buttonTextSecondary);
+          setHeaderBackground(formBranding.colors.headerBackground);
+          setFooterBackground(formBranding.colors.footerBackground);
+          setHeaderAlignment(formBranding.headerAlignment);
+          setHeaderText(formBranding.colors.headerText);
+          setFooterText(formBranding.colors.footerText);
         }
       } else {
         dispatch(userNotExist());
       }
     } catch (err) {
-      console.log('error in app.jsx', err);
+      console.log("error in app.jsx", err);
       dispatch(userNotExist());
     }
   }, [
-    setName,
-    dispatch,
     getUserProfile,
-    setAccentColor,
-    setBackgroundColor,
-    setButtonTextPrimary,
-    setButtonTextSecondary,
-    setFontFamily,
-    setFrameColor,
-    setLinkColor,
-    setLogo,
+    dispatch,
+    setName,
     setPrimaryColor,
     setSecondaryColor,
+    setAccentColor,
     setTextColor,
+    setLinkColor,
+    setBackgroundColor,
+    setFrameColor,
+    setFontFamily,
+    setLogo,
+    setButtonTextPrimary,
+    setButtonTextSecondary,
+    setHeaderBackground,
+    setFooterBackground,
+    setHeaderAlignment,
+    setHeaderText,
+    setFooterText,
   ]);
 
-  const loginHandler = async e => {
+  const loginHandler = async (e) => {
     e.preventDefault();
 
     try {
@@ -84,8 +99,8 @@ const Login = () => {
         await getUserAndSetBranding();
       }
     } catch (error) {
-      console.log('error while logging in', error);
-      toast.error(error?.data?.message || 'Error while login');
+      console.log("error while logging in", error);
+      toast.error(error?.data?.message || "Error while login");
     }
   };
 
@@ -107,10 +122,15 @@ const Login = () => {
 
         <form className="space-y-6" action="#" method="POST">
           <div>
-            <TextField type="email" label="Email address" value={email} onChange={e => setEmail(e.target.value)} />
+            <TextField type="email" label="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div>
-            <TextField type="password" label="Password" value={password} onChange={e => setPassword(e.target.value)} />
+            <TextField
+              type="password"
+              label="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
 
           <Button
