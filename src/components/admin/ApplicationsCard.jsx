@@ -1,35 +1,35 @@
-import { useBranding } from '@/hooks/BrandingContext';
-import { useAddBrandingInFormMutation, useGetAllBrandingsQuery } from '@/redux/apis/brandingApis';
+import { useBranding } from "@/hooks/BrandingContext";
+import { useAddBrandingInFormMutation, useGetAllBrandingsQuery } from "@/redux/apis/brandingApis";
 import {
   useCreateFormMutation,
   useDeleteSingleFormMutation,
   useGetMyAllFormsQuery,
   useUpdateFormMutation,
-} from '@/redux/apis/formApis';
-import { MoreVertical } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { CiSearch } from 'react-icons/ci';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import FileUploader from '../applicationVerification/Documents/FileUploader';
-import ConfirmationModal from '../shared/ConfirmationModal';
-import Button from '../shared/small/Button';
-import Modal from '../shared/small/Modal';
-import TextField from '../shared/small/TextField';
-import ApplyBranding from './brandings/globalBranding/ApplyBranding';
-import { LocationModalComponent } from './varification/LocationStatusModal';
-import { SpecialAccessModal } from '@/page/admin/dashboard/applications/Applications';
+} from "@/redux/apis/formApis";
+import { MoreVertical } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CiSearch } from "react-icons/ci";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import FileUploader from "../applicationVerification/Documents/FileUploader";
+import ConfirmationModal from "../shared/ConfirmationModal";
+import Button from "../shared/small/Button";
+import Modal from "../shared/small/Modal";
+import TextField from "../shared/small/TextField";
+import ApplyBranding from "./brandings/globalBranding/ApplyBranding";
+import { LocationModalComponent } from "./varification/LocationStatusModal";
+import { SpecialAccessModal } from "@/page/admin/dashboard/applications/Applications";
 
 export default function ApplicationsCard() {
   const navigate = useNavigate();
   const buttonRef = useRef(null);
   const menuButtonRef = useRef(null);
   const [actionMenu, setActionMenu] = useState(null);
-  const [clientQuery, setClientQuery] = useState('');
-  const [nameQuery, setNameQuery] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [searchMode, setSearchMode] = useState('client');
+  const [clientQuery, setClientQuery] = useState("");
+  const [nameQuery, setNameQuery] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [searchMode, setSearchMode] = useState("client");
   const [creteFormModal, setCreateFormModal] = useState(false);
   const [file, setFile] = useState(null);
   const [createForm, { isLoading }] = useCreateFormMutation();
@@ -46,49 +46,50 @@ export default function ApplicationsCard() {
   const [locationModal, setLocationModal] = useState(false);
   const { logo } = useBranding();
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
+  const [openCreateAlertModal, setOpenCreateAlertModal] = useState(false);
   const [formLocationData, setFormLocationData] = useState({
-    title: '',
-    subtitle: '',
-    message: '',
-    status: '',
-    formatedText: '',
-    formatingTextInstructions: '',
+    title: "",
+    subtitle: "",
+    message: "",
+    status: "",
+    formatedText: "",
+    formatingTextInstructions: "",
   });
   const [deleteForm] = useDeleteSingleFormMutation();
 
   const createFormWithCsvHandler = async () => {
-    console.log('file', file);
-    if (!file) return toast.error('Please select a file');
+    console.log("file", file);
+    if (!file) return toast.error("Please select a file");
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
       const res = await createForm(formData).unwrap();
       if (res.success) toast.success(res.message);
     } catch (error) {
-      console.error('Error creating form:', error);
-      toast.error(error?.data?.message || 'Failed to create form');
+      console.error("Error creating form:", error);
+      toast.error(error?.data?.message || "Failed to create form");
     } finally {
       setCreateFormModal(false);
     }
   };
 
   const onConfirmApply = async () => {
-    if (!selectedBranding) toast.error('Branding ID is missing');
-    if (!selectedId && !onHome) toast.error('Form ID is required if onHome is not provided');
+    if (!selectedBranding) toast.error("Branding ID is missing");
+    if (!selectedId && !onHome) toast.error("Form ID is required if onHome is not provided");
     try {
       const res = await addFromBranding({
         brandingId: selectedBranding,
         formId: selectedId,
-        onHome: onHome ? 'yes' : 'no',
+        onHome: onHome ? "yes" : "no",
       }).unwrap();
-      console.log('res', res);
+      console.log("res", res);
       if (res?.success) {
         await refetch();
-        toast?.success(res?.message || 'Branding applied successfully');
+        toast?.success(res?.message || "Branding applied successfully");
       }
     } catch (error) {
-      console.error('Error applying branding:', error);
-      toast.error(error?.data?.message || 'Failed to apply branding');
+      console.error("Error applying branding:", error);
+      toast.error(error?.data?.message || "Failed to apply branding");
     } finally {
       setOpenModal(false);
       setSelectedId(null);
@@ -99,7 +100,7 @@ export default function ApplicationsCard() {
   };
 
   useEffect(() => {
-    const handleClickOutside = event => {
+    const handleClickOutside = (event) => {
       if (
         buttonRef.current &&
         !buttonRef.current.contains(event.target) &&
@@ -110,8 +111,8 @@ export default function ApplicationsCard() {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
   const handleDeleteForm = async () => {
     try {
@@ -119,11 +120,11 @@ export default function ApplicationsCard() {
       const res = await deleteForm({ _id: deleteConfirmation }).unwrap();
       if (res?.success) {
         await refetch();
-        toast?.success(res?.message || 'Form deleted successfully');
+        toast?.success(res?.message || "Form deleted successfully");
       }
     } catch (error) {
-      console.error('Error deleting form:', error);
-      toast.error(error?.data?.message || 'Failed to delete form');
+      console.error("Error deleting form:", error);
+      toast.error(error?.data?.message || "Failed to delete form");
     } finally {
       setDeleteConfirmation(null);
     }
@@ -160,7 +161,7 @@ export default function ApplicationsCard() {
           cancelButtonText="cancel"
           onConfirm={onConfirmApply}
           onClose={() => setOpenModal(false)}
-          title={'Apply Branding'}
+          title={"Apply Branding"}
         />
       )}
       {openFormUpdate && (
@@ -179,18 +180,24 @@ export default function ApplicationsCard() {
           />
         </Modal>
       )}
+      {/* modal for create alert */}
+      {openCreateAlertModal && (
+        <Modal onClose={() => setOpenCreateAlertModal(false)} title="Create Alert">
+          <CreateAlertModal formId={openCreateAlertModal} refetch={refetch} setModal={setOpenCreateAlertModal} />
+        </Modal>
+      )}
       {/* Header Section */}
       {creteFormModal && (
         <Modal onClose={() => setCreateFormModal(false)} title="">
           <FileUploader
             label="Upload Image / PDF / CSV"
             accept=".pdf,image/*,.csv"
-            onFileSelect={file => setFile(file)}
+            onFileSelect={(file) => setFile(file)}
           />
           <div className="my-2 flex items-center justify-end">
             <Button
-              className={`${(!file || isLoading) && 'pointer-events-none cursor-not-allowed opacity-50'}`}
-              label={'Create '}
+              className={`${(!file || isLoading) && "pointer-events-none cursor-not-allowed opacity-50"}`}
+              label={"Create "}
               onClick={createFormWithCsvHandler}
             />
           </div>
@@ -208,7 +215,7 @@ export default function ApplicationsCard() {
         <div className="mt-10 flex gap-6 md:mt-0">
           {/* <Button label={'Help'} variant="secondary" /> */}
           <Button
-            label={'Create Form'}
+            label={"Create Form"}
             onClick={() => {
               setCreateFormModal(true);
               setFile(null);
@@ -224,25 +231,25 @@ export default function ApplicationsCard() {
 
         <div className="w-full rounded-lg">
           <TextField
-            label={'Advance search'}
+            label={"Advance search"}
             type="text"
             className="bg-backgroundColor border-none text-sm outline-none"
-            placeholder={searchMode === 'client' ? 'Search From' : 'Search Name'}
-            value={searchMode === 'client' ? clientQuery : nameQuery}
-            onChange={e => (searchMode === 'client' ? setClientQuery(e.target.value) : setNameQuery(e.target.value))}
+            placeholder={searchMode === "client" ? "Search From" : "Search Name"}
+            value={searchMode === "client" ? clientQuery : nameQuery}
+            onChange={(e) => (searchMode === "client" ? setClientQuery(e.target.value) : setNameQuery(e.target.value))}
             leftIcon={<CiSearch />}
             rightIcon={
               <div className="flex gap-x-2">
                 <Button
-                  className={`border-none! ${searchMode === 'client' ? 'bg-primary! text-white!' : 'bg-gray-200! text-gray-600!'}`}
-                  onClick={() => setSearchMode('client')}
-                  label={'BY CLIENT#'}
+                  className={`border-none! ${searchMode === "client" ? "bg-primary! text-white!" : "bg-gray-200! text-gray-600!"}`}
+                  onClick={() => setSearchMode("client")}
+                  label={"BY CLIENT#"}
                 />
 
                 <Button
-                  className={`border-none! ${searchMode === 'name' ? 'bg-primary! text-white!' : 'bg-gray-200! text-gray-600!'}`}
-                  onClick={() => setSearchMode('name')}
-                  label={'BY NAME#'}
+                  className={`border-none! ${searchMode === "name" ? "bg-primary! text-white!" : "bg-gray-200! text-gray-600!"}`}
+                  onClick={() => setSearchMode("name")}
+                  label={"BY NAME#"}
                 />
               </div>
             }
@@ -251,14 +258,14 @@ export default function ApplicationsCard() {
         {/* Date Pickers */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
           <div className="col-span-6 md:col-span-5 xl:col-span-5">
-            <TextField label={'From'} type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+            <TextField label={"From"} type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
           </div>
           <div className="col-span-6 md:col-span-4 xl:col-span-4">
-            <TextField label={'To'} type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+            <TextField label={"To"} type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
           </div>
           {/* Search Button */}
           <div className="col-span-6 flex items-end justify-end md:col-span-3 xl:col-span-3">
-            <Button icon={CiSearch} label={'Search'} className="mt-0 h-12.5! md:mt-8 md:w-full!" />
+            <Button icon={CiSearch} label={"Search"} className="mt-0 h-12.5! md:mt-8 md:w-full!" />
           </div>
         </div>
       </div>
@@ -295,7 +302,7 @@ export default function ApplicationsCard() {
                     {actionMenu === form?._id && (
                       <div ref={buttonRef} className="absolute right-0 mt-2 w-40 rounded border bg-white shadow-lg">
                         <button
-                          className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                          className="block w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer"
                           onClick={() => {
                             setSelectedId(form?._id);
                             setSelectedForm(form);
@@ -305,7 +312,7 @@ export default function ApplicationsCard() {
                           Update Form
                         </button>
                         <button
-                          className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                          className="block w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer"
                           onClick={() => {
                             setSelectedId(form?._id);
                             setOpenModal(true);
@@ -325,13 +332,19 @@ export default function ApplicationsCard() {
                               formatingTextInstructions: form?.formateTextInstructions,
                             });
                           }}
-                          className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                          className="block w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer"
                         >
                           Set Location
                         </button>
                         <button
+                          onClick={() => setOpenCreateAlertModal(form?._id)}
+                          className="block w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer"
+                        >
+                          Add alerts
+                        </button>
+                        <button
                           onClick={() => setDeleteConfirmation(form?._id)}
-                          className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
+                          className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100 cursor-pointer"
                         >
                           Delete Form
                         </button>
@@ -367,11 +380,11 @@ export default function ApplicationsCard() {
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
                 {/* <span className="text-gray-500">Applicants: {form?.sections?.length}</span> */}
                 <span className="text-gray-500">
-                  Created:{' '}
-                  {new Date(form?.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
+                  Created:{" "}
+                  {new Date(form?.createdAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
                   })}
                 </span>
               </div>
@@ -384,13 +397,13 @@ export default function ApplicationsCard() {
                     backgroundColor: colors?.primary,
                     borderColor: colors?.primary,
                     color: colors?.buttonTextPrimary,
-                    transition: 'all 0.3s ease',
+                    transition: "all 0.3s ease",
                   }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.opacity = '0.6';
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = "0.6";
                   }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.opacity = '1';
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = "1";
                   }}
                 />
               </div>
@@ -403,9 +416,9 @@ export default function ApplicationsCard() {
 }
 
 export const FormConfigurationModal = ({ form, refetch, setModal }) => {
-  const [redirectUrl, setRedirectUrl] = useState(form?.redirectUrl || '');
-  const [headerText, setHeaderText] = useState(form?.headerText || '');
-  const [footerText, setFooterText] = useState(form?.footerText || '');
+  const [redirectUrl, setRedirectUrl] = useState(form?.redirectUrl || "");
+  const [headerText, setHeaderText] = useState(form?.headerText || "");
+  const [footerText, setFooterText] = useState(form?.footerText || "");
   const [updateForm] = useUpdateFormMutation();
 
   const handleFormLocationUpdate = async () => {
@@ -413,12 +426,12 @@ export const FormConfigurationModal = ({ form, refetch, setModal }) => {
       const res = await updateForm({ _id: form?._id, data: { redirectUrl, headerText, footerText } }).unwrap();
       if (res?.success) {
         await refetch();
-        toast?.success(res?.message || 'Form updated successfully');
+        toast?.success(res?.message || "Form updated successfully");
         setModal(false);
       }
     } catch (error) {
-      console.error('Error updating form:', error);
-      toast.error(error?.data?.message || 'Failed to update form');
+      console.error("Error updating form:", error);
+      toast.error(error?.data?.message || "Failed to update form");
     }
   };
 
@@ -437,7 +450,7 @@ export const FormConfigurationModal = ({ form, refetch, setModal }) => {
             id="redirect-url"
             placeholder="Enter redirect URL"
             value={redirectUrl}
-            onChange={e => setRedirectUrl(e.target.value)}
+            onChange={(e) => setRedirectUrl(e.target.value)}
             name="redirect-url"
           />
         </div>
@@ -447,7 +460,7 @@ export const FormConfigurationModal = ({ form, refetch, setModal }) => {
             id="header-text"
             placeholder="Enter header text"
             value={headerText}
-            onChange={e => setHeaderText(e.target.value)}
+            onChange={(e) => setHeaderText(e.target.value)}
             name="redirect-url"
           />
         </div>
@@ -457,7 +470,7 @@ export const FormConfigurationModal = ({ form, refetch, setModal }) => {
             id="footer-text"
             placeholder="Enter footer text"
             value={footerText}
-            onChange={e => setFooterText(e.target.value)}
+            onChange={(e) => setFooterText(e.target.value)}
             name="redirect-url"
           />
         </div>
@@ -468,6 +481,33 @@ export const FormConfigurationModal = ({ form, refetch, setModal }) => {
         <div className="flex w-full justify-end gap-2">
           <Button label="Cancel" variant="secondary" onClick={() => setModal(false)} />
           <Button label="Save" variant="primary" onClick={handleFormLocationUpdate} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CreateAlertModal = ({ formId, refetch, setModal }) => {
+  const [prompt, setPrompt] = useState("");
+  return (
+    <div className="flex items-center justify-center p-4">
+      <div className="flex w-full max-w-2xl flex-col gap-6">
+        <h3 className="text-center text-lg font-semibold text-gray-800">Create Alert</h3>
+        <div className="flex flex-col gap-2">
+          <TextField
+            label="Prompt"
+            id="prompt"
+            rows={5}
+            cols={30}
+            type="textarea"
+            placeholder="Enter prompt for rule creation"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+          />
+        </div>
+        <div className="flex w-full justify-end gap-2">
+          <Button label="Cancel" variant="secondary" onClick={() => setModal(false)} />
+          <Button label="Save" variant="primary" onClick={() => {}} />
         </div>
       </div>
     </div>

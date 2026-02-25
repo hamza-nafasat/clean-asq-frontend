@@ -1,27 +1,27 @@
-import { useState } from 'react';
-import { IoEyeOffSharp } from 'react-icons/io5';
-import { RxEyeOpen } from 'react-icons/rx';
+import { useState } from "react";
+import { IoEyeOffSharp } from "react-icons/io5";
+import { RxEyeOpen } from "react-icons/rx";
 
 // ----------------------
 // FORMAT UTILITIES
 // ----------------------
 
-const formatSSN = raw => {
-  const numeric = raw.replace(/\D/g, '').slice(0, 9);
-  let out = '';
+const formatSSN = (raw) => {
+  const numeric = raw.replace(/\D/g, "").slice(0, 9);
+  let out = "";
 
   if (numeric.length > 0) out += numeric.slice(0, 3);
-  if (numeric.length > 3) out += '-' + numeric.slice(3, 5);
-  if (numeric.length > 5) out += '-' + numeric.slice(5);
+  if (numeric.length > 3) out += "-" + numeric.slice(3, 5);
+  if (numeric.length > 5) out += "-" + numeric.slice(5);
 
   return out;
 };
 
-const formatPhone = (raw, formatting = '3,3,4') => {
-  let clean = raw.replace(/^\+1/, '').replace(/\D/g, '').slice(0, 10);
+const formatPhone = (raw, formatting = "3,3,4") => {
+  let clean = raw.replace(/^\+1/, "").replace(/\D/g, "").slice(0, 10);
 
-  const parts = formatting.split(',').map(n => parseInt(n, 10));
-  let formatted = '';
+  const parts = formatting.split(",").map((n) => parseInt(n, 10));
+  let formatted = "";
   let start = 0;
 
   parts.forEach((len, i) => {
@@ -30,10 +30,10 @@ const formatPhone = (raw, formatting = '3,3,4') => {
     formatted += part;
     start += len;
 
-    if (i < parts.length - 1 && start < clean.length) formatted += '-';
+    if (i < parts.length - 1 && start < clean.length) formatted += "-";
   });
 
-  return '+1 ' + formatted;
+  return "+1 " + formatted;
 };
 
 // -------------------------
@@ -44,7 +44,7 @@ const TextField = ({
   isPdf = false,
   cn,
   label,
-  type = 'text',
+  type = "text",
   leftIcon,
   cnLeft,
   rightIcon,
@@ -59,40 +59,43 @@ const TextField = ({
   disabled = false,
   value,
   required = false,
+  rows,
+  cols,
+  placeholder,
   ...rest
 }) => {
   const [showMasked, setShowMasked] = useState(isMasked);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const inputVal = String(value ?? '').toLowerCase();
+  const inputVal = String(value ?? "").toLowerCase();
 
-  const isPhone = name?.toLowerCase().includes('phone');
-  const isSSN = name?.toLowerCase().includes('ssn');
+  const isPhone = name?.toLowerCase().includes("phone");
+  const isSSN = name?.toLowerCase().includes("ssn");
 
   const filteredSuggestions = Array.isArray(suggestions)
     ? suggestions
-      .filter(s => {
-        if (inputVal === '*') return true;
-        return s.toLowerCase().includes(inputVal);
-      })
-      .sort((a, b) => {
-        if (inputVal === '*') return a.localeCompare(b);
-        const aStarts = a.toLowerCase().startsWith(inputVal);
-        const bStarts = b.toLowerCase().startsWith(inputVal);
-        if (aStarts && !bStarts) return -1;
-        if (!aStarts && bStarts) return 1;
-        return a.localeCompare(b);
-      })
+        .filter((s) => {
+          if (inputVal === "*") return true;
+          return s.toLowerCase().includes(inputVal);
+        })
+        .sort((a, b) => {
+          if (inputVal === "*") return a.localeCompare(b);
+          const aStarts = a.toLowerCase().startsWith(inputVal);
+          const bStarts = b.toLowerCase().startsWith(inputVal);
+          if (aStarts && !bStarts) return -1;
+          if (!aStarts && bStarts) return 1;
+          return a.localeCompare(b);
+        })
     : [];
 
-  const formatDate = dateStr => {
-    if (!dateStr) return '';
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
     const [year, month, day] = dateStr.split(/[-/]/);
     return `${year}-${month}-${day}`;
   };
 
-  const normalizeDate = dateStr => {
-    if (!dateStr) return '';
+  const normalizeDate = (dateStr) => {
+    if (!dateStr) return "";
     const [year, month, day] = dateStr.split(/[-\s/]/);
     return `${year}-${month}-${day}`;
   };
@@ -100,12 +103,12 @@ const TextField = ({
   // -----------------------------
   // DISPLAY VALUE FORMATTING
   // -----------------------------
-  const getDisplayValue = value => {
-    if (!value) return isPhone ? '+1 ' : '';
+  const getDisplayValue = (value) => {
+    if (!value) return isPhone ? "+1 " : "";
 
-    if (isPhone) return formatPhone(String(value), formatting || '3,3,4');
+    if (isPhone) return formatPhone(String(value), formatting || "3,3,4");
 
-    if (isSSN && formatting === '3,2,4') return formatSSN(String(value));
+    if (isSSN && formatting === "3,2,4") return formatSSN(String(value));
 
     return value;
   };
@@ -113,30 +116,34 @@ const TextField = ({
   // -----------------------------
   // TEXTAREA MODE
   // -----------------------------
-  if (type === 'textarea')
+  if (type === "textarea")
     return (
       <div className={`input-box flex w-full flex-col items-start ${className}`}>
         {label && <h4 className="text-textPrimary text-base font-medium lg:text-lg">{label}</h4>}
 
-        <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
+        <div className={`relative w-full ${label ? "mt-2" : ""}`}>
           {leftIcon && (
             <span className={`absolute top-1/2 left-3 -translate-y-1/2 text-gray-500 ${cnLeft}`}>{leftIcon}</span>
           )}
 
           <textarea
             {...rest}
-            onChange={e => {
-              const val = type === 'date' ? normalizeDate(e.target.value) : e.target.value;
+            onChange={(e) => {
+              const val = type === "date" ? normalizeDate(e.target.value) : e.target.value;
               onChange?.({ target: { name, value: val } });
             }}
+            rows={rows}
+            cols={cols}
+            placeholder={placeholder}
             name={name}
             disabled={disabled}
-            value={type === 'date' ? formatDate(value) : value}
+            value={type === "date" ? formatDate(value) : value}
             autoComplete="off"
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-            className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''
-              } ${rightIcon ? 'pr-10' : ''} ${!value && required && !isPdf ? 'border-accent bg-highlighting border-2' : 'border-frameColor'} ${disabled ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
+              leftIcon ? "pl-10" : ""
+            } ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
           />
 
           {rightIcon && (
@@ -159,7 +166,7 @@ const TextField = ({
     <div className={`input-box flex w-full flex-col items-start ${className}`}>
       {label && <h4 className="text-textPrimary text-base font-medium lg:text-lg">{label}</h4>}
 
-      <div className={`relative w-full ${label ? 'mt-2' : ''}`}>
+      <div className={`relative w-full ${label ? "mt-2" : ""}`}>
         {leftIcon && (
           <span className={`absolute top-1/2 left-3 -translate-y-1/2 text-gray-500 ${cnLeft}`}>{leftIcon}</span>
         )}
@@ -168,28 +175,29 @@ const TextField = ({
           {...rest}
           name={name}
           disabled={disabled}
+          placeholder={placeholder}
           autoComplete="off"
-          type={showMasked ? 'password' : type}
-          value={type === 'date' ? formatDate(value) : getDisplayValue(value)}
+          type={showMasked ? "password" : type}
+          value={type === "date" ? formatDate(value) : getDisplayValue(value)}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-          onChange={e => {
-            let val = type === 'date' ? normalizeDate(e.target.value) : e.target.value;
+          onChange={(e) => {
+            let val = type === "date" ? normalizeDate(e.target.value) : e.target.value;
 
             // PHONE HANDLING
             if (isPhone) {
-              val = val.replace(/[^\d+]/g, '');
-              if (!val.startsWith('+1')) val = '+1 ' + val.replace(/^\+/, '').replace(/^1/, '');
+              val = val.replace(/[^\d+]/g, "");
+              if (!val.startsWith("+1")) val = "+1 " + val.replace(/^\+/, "").replace(/^1/, "");
             }
 
             // SSN HANDLING
-            if (isSSN && formatting === '3,2,4') {
-              val = val.replace(/\D/g, '').slice(0, 9);
+            if (isSSN && formatting === "3,2,4") {
+              val = val.replace(/\D/g, "").slice(0, 9);
             }
 
             onChange?.({ target: { name, value: val } });
           }}
-          className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''} ${!value && required && !isPdf ? 'border-accent bg-highlighting border-2' : 'border-frameColor'} ${disabled ? 'opacity-70 cursor-not-allowed' : ''} `}
+          className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? "pl-10" : ""} ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""} `}
         />
 
         {/* Suggestions */}

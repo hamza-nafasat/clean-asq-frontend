@@ -1,15 +1,15 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import Button from './small/Button';
-import { AiHelpModal } from './small/DynamicField';
-import Modal from './small/Modal';
-import { useBranding } from '@/hooks/BrandingContext';
-import { useSelector } from 'react-redux';
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import Button from "./small/Button";
+import { AiHelpModal } from "./small/DynamicField";
+import Modal from "./small/Modal";
+import { useBranding } from "@/hooks/BrandingContext";
+import { useSelector } from "react-redux";
 
-export default function SignatureBox({ onSave, step, oldSignatureUrl, className = '', isPdf = false }) {
-  const { isDisabledAllFields } = useSelector(state => state.form);
+export default function SignatureBox({ onSave, step, oldSignatureUrl, className = "", isPdf = false }) {
+  const { isDisabledAllFields } = useSelector((state) => state.form);
   const { textColor, fontFamily } = useBranding();
-  const [mode, setMode] = useState('draw');
-  const [typedSignature, setTypedSignature] = useState('');
+  const [mode, setMode] = useState("draw");
+  const [typedSignature, setTypedSignature] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
 
@@ -32,11 +32,11 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
     canvas.style.width = `${rect.width}px`;
     canvas.style.height = `${rect.height}px`;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(ratio, ratio);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
     ctx.lineWidth = 3;
     ctx.strokeStyle = textColor;
     ctxRef.current = ctx;
@@ -44,7 +44,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
     // Draw old preview if available
     if (oldSignatureUrl) {
       const img = new Image();
-      img.crossOrigin = 'anonymous'; // must come before src
+      img.crossOrigin = "anonymous"; // must come before src
       img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
       img.src = oldSignatureUrl;
     } else {
@@ -52,24 +52,24 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
     }
   }, [textColor, oldSignatureUrl]);
   // ---------- Draw Handlers ----------
-  const pointerPos = e => {
+  const pointerPos = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   };
 
-  const startDraw = e => {
+  const startDraw = (e) => {
     if (isPdf && isDisabledAllFields) return;
-    if (mode !== 'draw') return;
+    if (mode !== "draw") return;
     drawing.current = true;
     lastPoint.current = pointerPos(e);
     try {
       canvasRef.current.setPointerCapture(e.pointerId);
     } catch {
-      console.log('Failed to set pointer capture');
+      console.log("Failed to set pointer capture");
     }
   };
 
-  const draw = e => {
+  const draw = (e) => {
     if (isPdf && isDisabledAllFields) return;
     if (!drawing.current) return;
     const ctx = ctxRef.current;
@@ -81,14 +81,14 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
     lastPoint.current = p;
   };
 
-  const endDraw = e => {
+  const endDraw = (e) => {
     if (isPdf && isDisabledAllFields) return;
     if (!drawing.current) return;
     drawing.current = false;
     try {
       canvasRef.current.releasePointerCapture(e.pointerId);
     } catch {
-      console.log('Failed to release pointer capture');
+      console.log("Failed to release pointer capture");
     }
     historyRef.current = historyRef.current.slice(0, historyPos.current + 1);
     historyRef.current?.push(canvasRef?.current?.toDataURL());
@@ -97,29 +97,29 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
 
   // ---------- Helpers ----------
   const exportCanvas = useCallback(() => {
-    return canvasRef.current?.toDataURL('image/png') || null;
+    return canvasRef.current?.toDataURL("image/png") || null;
   }, []);
 
   const generateSignatureData = useCallback(() => {
-    if (mode === 'type') {
+    if (mode === "type") {
       if (!typedSignature.trim()) return null;
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = 1600;
       canvas.height = 400;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       ctx.font = '200px "Dancing Script", cursive';
       ctx.fillStyle = textColor;
-      ctx.textBaseline = 'middle';
+      ctx.textBaseline = "middle";
       const text = typedSignature;
       const x = (canvas.width - ctx.measureText(text).width) / 2;
       ctx.fillText(text, x, canvas.height / 2);
-      return canvas.toDataURL('image/png');
+      return canvas.toDataURL("image/png");
     }
     return exportCanvas();
   }, [mode, typedSignature, textColor, exportCanvas]);
 
   const dataURLtoFile = (dataUrl, filename) => {
-    const arr = dataUrl.split(',');
+    const arr = dataUrl.split(",");
     const mime = arr[0].match(/:(.*?);/)[1];
     const bstr = atob(arr[1]);
     let n = bstr.length;
@@ -132,7 +132,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
   const handleClear = () => {
     const rect = canvasRef.current.getBoundingClientRect();
     ctxRef.current.clearRect(0, 0, rect.width, rect.height);
-    setTypedSignature('');
+    setTypedSignature("");
   };
 
   // const undo = () => {
@@ -166,20 +166,20 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       setIsSaving(true);
       const dataUrl = generateSignatureData();
       if (dataUrl) {
-        const file = dataURLtoFile(dataUrl, 'signature.png');
+        const file = dataURLtoFile(dataUrl, "signature.png");
         await onSave?.(file, setIsSaving);
-        setMode('draw');
+        setMode("draw");
       }
     } catch (err) {
-      console.error('Error is Handle save signature box', err);
+      console.error("Error is Handle save signature box", err);
       setIsSaving(false);
     }
   };
 
   useEffect(() => {
     setupCanvas();
-    window.addEventListener('resize', setupCanvas);
-    return () => window.removeEventListener('resize', setupCanvas);
+    window.addEventListener("resize", setupCanvas);
+    return () => window.removeEventListener("resize", setupCanvas);
   }, [setupCanvas, mode]);
 
   // ---------- Update stroke style ----------
@@ -192,10 +192,12 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
 
   // ---------- UI ----------
   const buttonClasses =
-    'cursor-pointer rounded px-4 py-2 text-sm font-medium transition-transform duration-200 hover:scale-105 active:scale-95';
+    "cursor-pointer rounded px-4 py-2 text-sm font-medium transition-transform duration-200 hover:scale-105 active:scale-95";
 
   return (
-    <div className={` ${!isPdf || !isDisabledAllFields && 'bg-backgroundColor'} w-full rounded-2xl p-6 shadow-xl ${className}`}>
+    <div
+      className={` ${!isPdf || (!isDisabledAllFields && "bg-backgroundColor")} w-full rounded-2xl p-6 shadow-xl ${className}`}
+    >
       {openAiHelpModal && (
         <Modal onClose={() => setOpenAiHelpModal(false)}>
           <AiHelpModal
@@ -211,9 +213,9 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
             <div
               className="w-full"
               dangerouslySetInnerHTML={{
-                __html: String(step?.signFormatedDisplayText || '').replace(/<a(\s+.*?)?>/g, match => {
-                  if (match.includes('target=')) return match; // avoid duplicates
-                  return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                __html: String(step?.signFormatedDisplayText || "").replace(/<a(\s+.*?)?>/g, (match) => {
+                  if (match.includes("target=")) return match; // avoid duplicates
+                  return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
                 }),
               }}
             />
@@ -227,19 +229,19 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       </div>
 
       {/* Mode Switch */}
-      {!isPdf || !isDisabledAllFields && (
+      {!(isPdf && isDisabledAllFields) && (
         <div className="mt-4 flex gap-3">
           <button
             type="button"
-            onClick={() => setMode('draw')}
-            className={`${buttonClasses} flex-1 ${mode === 'draw' ? 'bg-primary text-buttonTextPrimary' : 'bg-secondary text-buttonTextSecondary'}`}
+            onClick={() => setMode("draw")}
+            className={`${buttonClasses} flex-1 ${mode === "draw" ? "bg-primary text-buttonTextPrimary" : "bg-secondary text-buttonTextSecondary"}`}
           >
             ✍️ Draw
           </button>
           <button
             type="button"
-            onClick={() => setMode('type')}
-            className={`${buttonClasses} flex-1 ${mode === 'type' ? 'bg-primary text-buttonTextPrimary' : 'bg-secondary text-buttonTextSecondary'}`}
+            onClick={() => setMode("type")}
+            className={`${buttonClasses} flex-1 ${mode === "type" ? "bg-primary text-buttonTextPrimary" : "bg-secondary text-buttonTextSecondary"}`}
           >
             ⌨️ Type
           </button>
@@ -248,7 +250,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
 
       {/* Drawing / Typing Area */}
       <div className="mt-4 h-56 rounded-md border bg-gray-50">
-        {mode === 'draw' ? (
+        {mode === "draw" ? (
           <canvas
             ref={canvasRef}
             onPointerDown={startDraw}
@@ -256,7 +258,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
             onPointerUp={endDraw}
             onPointerCancel={endDraw}
             className="h-full w-full touch-none rounded-md"
-            style={{ touchAction: 'none' }}
+            style={{ touchAction: "none" }}
           />
         ) : (
           <input
@@ -264,13 +266,13 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
             style={{ fontFamily: fontFamily }}
             placeholder="Type your signature"
             value={typedSignature}
-            onChange={e => setTypedSignature(e.target.value)}
+            onChange={(e) => setTypedSignature(e.target.value)}
           />
         )}
       </div>
 
       {/* Controls */}
-      {!isPdf || !isDisabledAllFields && (
+      {!(isPdf && isDisabledAllFields) && (
         <div className="mt-4 flex flex-wrap gap-2">
           <button type="button" onClick={handleClear} className={`${buttonClasses} border`}>
             Clear
@@ -284,9 +286,9 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
           <button
             type="button"
             onClick={handleSave}
-            className={`${buttonClasses} bg-primary text-buttonTextPrimary ml-auto ${isSaving ? 'pointer-events-none opacity-30' : ''}`}
+            className={`${buttonClasses} bg-primary text-buttonTextPrimary ml-auto ${isSaving ? "pointer-events-none opacity-30" : ""}`}
           >
-            {isSaving ? 'Saving...' : 'Save Signature'}
+            {isSaving ? "Saving..." : "Save Signature"}
           </button>
         </div>
       )}
