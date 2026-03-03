@@ -1,9 +1,9 @@
-import { FIELD_TYPES } from '@/data/constants';
-import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
-import { CheckCircle, XCircle } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'react-toastify';
-import SignatureBox from '../../shared/SignatureBox';
+import { FIELD_TYPES } from "@/data/constants";
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
+import { CheckCircle, XCircle } from "lucide-react";
+import { useState } from "react";
+import { toast } from "react-toastify";
+import SignatureBox from "../../shared/SignatureBox";
 import {
   CheckboxInputType,
   FileInputType,
@@ -12,32 +12,35 @@ import {
   RadioInputType,
   RangeInputType,
   SelectInputType,
-} from './shared/DynamicFieldForPdf';
+} from "./shared/DynamicFieldForPdf";
 
 function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormInnerData, sectionKey }) {
   const [error] = useState(null);
 
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
-      if (!file) return toast.error('Please select a file');
+      if (!file) return toast.error("Please select a file");
 
       if (file) {
         // const oldSign = form?.['signature'];
-        const oldSign = formInnerData?.[sectionKey]?.['signature'];
+        const oldSign = formInnerData?.[sectionKey]?.["signature"]?.value;
         if (oldSign?.publicId) {
           const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
-          if (!result) return toast.error('File Not Deleted Please Try Again');
+          if (!result) return toast.error("File Not Deleted Please Try Again");
         }
         const res = await uploadImageOnCloudinary(file);
         if (!res.publicId || !res.secureUrl || !res.resourceType) {
-          return toast.error('File Not Uploaded Please Try Again');
+          return toast.error("File Not Uploaded Please Try Again");
         }
         // setForm(prev => ({ ...prev, signature: res }));
-        setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], signature: res } }));
-        toast.success('Signature uploaded successfully');
+        setFormInnerData((prev) => ({
+          ...prev,
+          [sectionKey]: { ...prev?.[sectionKey], signature: { name: "signature", value: res } },
+        }));
+        toast.success("Signature uploaded successfully");
       }
     } catch (error) {
-      console.log('error while uploading signature', error);
+      console.log("error while uploading signature", error);
     } finally {
       if (setIsSaving) setIsSaving(false);
     }
@@ -82,7 +85,7 @@ function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormIn
 
       {fields?.length > 0 &&
         fields.map((field, index) => {
-          if (field.name === 'bank_routing_number') {
+          if (field.name === "bank_routing_number") {
             return (
               <div key={index}>
                 <div className="mt-4 flex items-center gap-2">
@@ -100,8 +103,10 @@ function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormIn
             );
           }
 
-          if (field.name === 'confirm_bank_account_number') {
-            const isMatch = formInnerData?.[sectionKey]?.bank_account_number && formInnerData?.[sectionKey]?.[field.name] === formInnerData?.[sectionKey]?.bank_account_number;
+          if (field.name === "confirm_bank_account_number") {
+            const isMatch =
+              formInnerData?.[sectionKey]?.bank_account_number &&
+              formInnerData?.[sectionKey]?.[field.name] === formInnerData?.[sectionKey]?.bank_account_number;
             return (
               <div key={index} className="relative mt-4">
                 <OtherInputType
@@ -129,7 +134,7 @@ function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormIn
             );
           }
 
-          if (field.name === 'bank_account_holder_name') {
+          if (field.name === "bank_account_holder_name") {
             return (
               <div key={index} className="relative mt-4">
                 <OtherInputType
@@ -147,35 +152,65 @@ function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormIn
           if (field.type === FIELD_TYPES.SELECT) {
             return (
               <div key={index} className="mt-4">
-                <SelectInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
+                <SelectInputType
+                  field={field}
+                  form={formInnerData?.[sectionKey]}
+                  setForm={setFormInnerData}
+                  sectionKey={sectionKey}
+                  className={""}
+                />
               </div>
             );
           }
           if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
             return (
               <div key={index} className="mt-4">
-                <MultiCheckboxInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
+                <MultiCheckboxInputType
+                  field={field}
+                  form={formInnerData?.[sectionKey]}
+                  setForm={setFormInnerData}
+                  sectionKey={sectionKey}
+                  className={""}
+                />
               </div>
             );
           }
           if (field.type === FIELD_TYPES.RADIO) {
             return (
               <div key={index} className="mt-4">
-                <RadioInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
+                <RadioInputType
+                  field={field}
+                  form={formInnerData?.[sectionKey]}
+                  setForm={setFormInnerData}
+                  sectionKey={sectionKey}
+                  className={""}
+                />
               </div>
             );
           }
           if (field.type === FIELD_TYPES.FILE) {
             return (
               <div key={index} className="mt-4">
-                <FileInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
+                <FileInputType
+                  field={field}
+                  form={formInnerData?.[sectionKey]}
+                  setForm={setFormInnerData}
+                  sectionKey={sectionKey}
+                  className={""}
+                />
               </div>
             );
           }
           if (field.type === FIELD_TYPES.RANGE) {
             return (
               <div key={index} className="mt-4">
-                <RangeInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
+                <RangeInputType
+                  field={field}
+                  form={formInnerData?.[sectionKey]}
+                  setForm={setFormInnerData}
+                  sectionKey={sectionKey}
+                  className={""}
+                />
               </div>
             );
           }
@@ -188,7 +223,7 @@ function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormIn
                   form={formInnerData?.[sectionKey]}
                   setForm={setFormInnerData}
                   sectionKey={sectionKey}
-                  className={''}
+                  className={""}
                 />
               </div>
             );
@@ -201,7 +236,7 @@ function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormIn
                 form={formInnerData?.[sectionKey]}
                 setForm={setFormInnerData}
                 sectionKey={sectionKey}
-                className={''}
+                className={""}
               />
             </div>
           );
@@ -213,7 +248,7 @@ function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormIn
             step={step}
             isPdf={true}
             onSave={signatureUploadHandler}
-            oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.secureUrl || ''}
+            oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.value?.secureUrl || ""}
           />
         )}
       </div>

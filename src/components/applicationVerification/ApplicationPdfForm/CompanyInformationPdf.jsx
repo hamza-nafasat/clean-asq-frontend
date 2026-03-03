@@ -23,7 +23,18 @@ import Modal from "../../shared/small/Modal.jsx";
 // import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal.jsx';
 import CustomizationFieldsModal from "../companyInfo/CustomizationFieldsModal";
 
-function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step, isSignature, formInnerData, sectionKey, setFormInnerData }) {
+function CompanyInformationPdf({
+  formRefetch,
+  _id,
+  name,
+  reduxData,
+  fields,
+  step,
+  isSignature,
+  formInnerData,
+  sectionKey,
+  setFormInnerData,
+}) {
   const prevRef = useRef(null);
   const { formData } = useSelector((state) => state?.form);
   const [customizeModal, setCustomizeModal] = useState(false);
@@ -46,7 +57,7 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
     try {
       if (!file) return toast.error("Please select a file");
       if (file) {
-        const oldSign = formInnerData?.[sectionKey]?.["signature"];
+        const oldSign = formInnerData?.[sectionKey]?.["signature"]?.value;
         if (oldSign?.publicId) {
           const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
           if (!result) return toast.error("File Not Deleted Please Try Again");
@@ -56,7 +67,10 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
           return toast.error("File Not Uploaded Please Try Again");
         }
         // setForm((prev) => ({ ...prev, signature: res }));
-        setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], signature: res } }));
+        setFormInnerData((prev) => ({
+          ...prev,
+          [sectionKey]: { ...prev?.[sectionKey], signature: { name: "signature", value: res } },
+        }));
         toast.success("Signature uploaded successfully");
       }
     } catch (error) {
@@ -84,7 +98,8 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
       // Then find descriptions containing the value (case insensitive)
       const containsInDescription = naicsToMcc.filter(
         (item) =>
-          !item["NAICS Code"].startsWith(value) && item["NAICS Description"].toLowerCase().includes(value.toLowerCase())
+          !item["NAICS Code"].startsWith(value) &&
+          item["NAICS Description"].toLowerCase().includes(value.toLowerCase()),
       );
 
       // Combine both, with exact matches first, then description matches
@@ -219,28 +234,52 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
           if (field.type === FIELD_TYPES.SELECT) {
             return (
               <div key={index} className="mt-4">
-                <SelectInputType field={field} sectionKey={sectionKey} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} className={""} />
+                <SelectInputType
+                  field={field}
+                  sectionKey={sectionKey}
+                  form={formInnerData?.[sectionKey]}
+                  setForm={setFormInnerData}
+                  className={""}
+                />
               </div>
             );
           }
           if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
             return (
               <div key={index} className="mt-4">
-                <MultiCheckboxInputType field={field} sectionKey={sectionKey} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} className={""} />
+                <MultiCheckboxInputType
+                  field={field}
+                  sectionKey={sectionKey}
+                  form={formInnerData?.[sectionKey]}
+                  setForm={setFormInnerData}
+                  className={""}
+                />
               </div>
             );
           }
           if (field.type === FIELD_TYPES.RADIO) {
             return (
               <div key={index} className="mt-4 flex flex-col gap-2">
-                <RadioInputType field={field} sectionKey={sectionKey} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} className={""} />
+                <RadioInputType
+                  field={field}
+                  sectionKey={sectionKey}
+                  form={formInnerData?.[sectionKey]}
+                  setForm={setFormInnerData}
+                  className={""}
+                />
               </div>
             );
           }
           if (field.type === FIELD_TYPES.RANGE) {
             return (
               <div key={index} className="mt-4">
-                <RangeInputType field={field} sectionKey={sectionKey} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} className={""} />
+                <RangeInputType
+                  field={field}
+                  sectionKey={sectionKey}
+                  form={formInnerData?.[sectionKey]}
+                  setForm={setFormInnerData}
+                  className={""}
+                />
               </div>
             );
           }
@@ -261,7 +300,13 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
           if (field.type === FIELD_TYPES.FILE) {
             return (
               <div key={index} className="mt-4">
-                <FileInputType field={field} sectionKey={sectionKey} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} className={""} />
+                <FileInputType
+                  field={field}
+                  sectionKey={sectionKey}
+                  form={formInnerData?.[sectionKey]}
+                  setForm={setFormInnerData}
+                  className={""}
+                />
               </div>
             );
           }
@@ -325,7 +370,7 @@ function CompanyInformationPdf({ formRefetch, _id, name, reduxData, fields, step
                 isPdf={true}
                 onSave={signatureUploadHandler}
                 step={step}
-                oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.secureUrl || ""}
+                oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.value?.secureUrl || ""}
               />
             )}
           </div>

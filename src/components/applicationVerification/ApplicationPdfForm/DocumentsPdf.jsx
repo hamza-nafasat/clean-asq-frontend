@@ -1,36 +1,39 @@
-import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
-import SignatureBox from '../../shared/SignatureBox';
-import Button from '../../shared/small/Button';
-import { OtherInputType } from './shared/DynamicFieldForPdf';
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import SignatureBox from "../../shared/SignatureBox";
+import Button from "../../shared/small/Button";
+import { OtherInputType } from "./shared/DynamicFieldForPdf";
 
 function DocumentsPdf({ name, fields, step, isSignature, formInnerData, setFormInnerData, sectionKey }) {
-  const { formData } = useSelector(state => state.form);
+  const { formData } = useSelector((state) => state.form);
   const [showRequiredDocs, setShowRequiredDocs] = useState(true);
   // const [urls, setUrls] = useState([]);
 
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
-      if (!file) return toast.error('Please select a file');
+      if (!file) return toast.error("Please select a file");
 
       if (file) {
-        const oldSign = formInnerData?.[sectionKey]?.['signature'];
+        const oldSign = formInnerData?.[sectionKey]?.["signature"]?.value;
         if (oldSign?.publicId) {
           const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
-          if (!result) return toast.error('File Not Deleted Please Try Again');
+          if (!result) return toast.error("File Not Deleted Please Try Again");
         }
         const res = await uploadImageOnCloudinary(file);
         if (!res.publicId || !res.secureUrl || !res.resourceType) {
-          return toast.error('File Not Uploaded Please Try Again');
+          return toast.error("File Not Uploaded Please Try Again");
         }
         // setForm(prev => ({ ...prev, signature: res }));
-        setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], signature: res } }));
-        toast.success('Signature uploaded successfully');
+        setFormInnerData((prev) => ({
+          ...prev,
+          [sectionKey]: { ...prev?.[sectionKey], signature: { name: "signature", value: res } },
+        }));
+        toast.success("Signature uploaded successfully");
       }
     } catch (error) {
-      console.log('error while uploading signature', error);
+      console.log("error while uploading signature", error);
     } finally {
       if (setIsSaving) setIsSaving(false);
     }
@@ -64,7 +67,7 @@ function DocumentsPdf({ name, fields, step, isSignature, formInnerData, setFormI
       </div>
       <div className="mt-6 w-full">
         {fields?.map((field, index) => {
-          if (field.type === 'file') {
+          if (field.type === "file") {
             return (
               <div className="flex w-full flex-col gap-4 p-6" key={index}>
                 {formData?.[step?.title]?.[`${field?.name}`]?.secureUrl && (
@@ -84,7 +87,7 @@ function DocumentsPdf({ name, fields, step, isSignature, formInnerData, setFormI
                   form={formInnerData?.[sectionKey]}
                   setForm={setFormInnerData}
                   sectionKey={sectionKey}
-                  className={''}
+                  className={""}
                 />
               </div>
             );
@@ -120,7 +123,7 @@ function DocumentsPdf({ name, fields, step, isSignature, formInnerData, setFormI
             step={step}
             isPdf={true}
             onSave={signatureUploadHandler}
-            oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.secureUrl || ''}
+            oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.value?.secureUrl || ""}
           />
         )}
       </div>

@@ -463,12 +463,14 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
               return (
                 <div className="flex w-full flex-col gap-2" key={index}>
                   <TextField
-                    value={form?.[fieldName]}
+                    value={form?.[fieldName]?.value}
                     type={f?.type}
                     label={f?.label}
                     name={fieldName}
                     required={f?.required}
-                    onChange={(e) => setForm({ ...form, [e.target.name]: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, [e.target.name]: { name: e.target.name, value: e.target.value } })
+                    }
                   />
                 </div>
               );
@@ -1193,7 +1195,7 @@ export const SimpleRadioInputType = ({ field, className, form, setForm, onChange
                 checked={form[name] === option.value}
                 className={`text-textPrimary accent-primary size-5 ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
                 required={required}
-                onChange={onChange ? onChange : () => radioHandler(option)}
+                onChange={onChange ? (e) => onChange(e) : () => radioHandler(option)}
               />
               <label htmlFor={option.value + index + name} className="text-textPrimary text-base">
                 {option?.label}

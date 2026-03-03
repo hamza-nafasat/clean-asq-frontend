@@ -88,6 +88,8 @@ function CompanyOwners({
   const [submitButtonText, setSubmitButtonText] = useState("Some Required Fields are Missing");
   const [ownerSuggesstionsModal, setOwnerSuggesstionsModal] = useState(false);
 
+  console.log("form", form);
+
   const requiredNames = useMemo(
     () => formFields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
     [formFields],
@@ -165,17 +167,17 @@ function CompanyOwners({
 
   useEffect(() => {
     const idMissionData = formData?.idMission;
-    const idMissionField = idMissionData?.roleFillingForCompany;
+    const idMissionField = idMissionData?.roleFillingForCompany?.value;
     let baseFields = [...fields];
     if (idMissionField == "primaryOperatorAndController" || idMissionField == "both") {
       baseFields = [ssnField, areUAnOwnerField, ...baseFields];
-      if (form?.rolling_owner_is_also_owner == "yes") {
+      if (form?.rolling_owner_is_also_owner?.value == "yes") {
         //  add percentage field after ssn and areUAnOwnerField
         baseFields = [ssnField, areUAnOwnerField, ownerPercentageField, ...fields];
       }
     } else if (idMissionField == "primaryContact") {
       baseFields = [areUAnOwnerField, ...baseFields];
-      if (form?.rolling_owner_is_also_owner == "yes") {
+      if (form?.rolling_owner_is_also_owner?.value == "yes") {
         baseFields = [areUAnOwnerField, ssnField, ownerPercentageField, ...fields];
       }
     }

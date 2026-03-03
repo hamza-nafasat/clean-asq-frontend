@@ -1,10 +1,10 @@
-import TextField from '@/components/shared/small/TextField';
-import { FIELD_TYPES } from '@/data/constants';
-import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
-import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
-import SignatureBox from '../../shared/SignatureBox';
+import TextField from "@/components/shared/small/TextField";
+import { FIELD_TYPES } from "@/data/constants";
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import SignatureBox from "../../shared/SignatureBox";
 import {
   CheckboxInputType,
   FileInputType,
@@ -13,101 +13,126 @@ import {
   RadioInputType,
   RangeInputType,
   SelectInputType,
-} from './shared/DynamicFieldForPdf';
-import { EditSectionDisplayTextFromatingModal } from '../../shared/small/EditSectionDisplayTextFromatingModal';
-import Modal from '../../shared/small/Modal';
+} from "./shared/DynamicFieldForPdf";
+import { EditSectionDisplayTextFromatingModal } from "../../shared/small/EditSectionDisplayTextFromatingModal";
+import Modal from "../../shared/small/Modal";
+import { SimpleRadioInputType } from "@/components/shared/small/DynamicField";
 
 const ssnField = {
-  label: 'What is your Social Security Number?',
-  name: 'rolling_owner_ssn',
+  label: "What is your Social Security Number?",
+  name: "rolling_owner_ssn",
+  uniqueId: "rolling_owner_ssn",
   required: true,
   aiHelp: false,
   isMasked: true,
-  type: 'text',
+  type: "text",
 };
 const areUAnOwnerField = {
-  label: 'Are you a company owner holding 25% or more of the company?',
-  name: 'rolling_owner_is_also_owner',
+  label: "Are you a company owner holding 25% or more of the company?",
+  name: "rolling_owner_is_also_owner",
+  uniqueId: "rolling_owner_is_also_owner",
   required: true,
   aiHelp: false,
-  type: 'radio',
+  type: "radio",
   options: [
-    { label: 'Yes', value: 'yes' },
-    { label: 'No', value: 'no' },
+    { label: "Yes", value: "yes" },
+    { label: "No", value: "no" },
   ],
 };
 const ownerPercentageField = {
-  label: 'What is you percentage of ownership?',
-  name: 'rolling_owner_percentage',
+  label: "What is you percentage of ownership?",
+  name: "rolling_owner_percentage",
+  uniqueId: "rolling_owner_percentage",
   required: true,
   aiHelp: false,
-  type: 'range',
+  type: "range",
 };
 
-function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, formInnerData, setFormInnerData, sectionKey }) {
+function CompanyOwnersPdf({
+  name,
+  reduxData,
+  fields,
+  blocks,
+  step,
+  isSignature,
+  formInnerData,
+  setFormInnerData,
+  sectionKey,
+}) {
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
-  const { formData } = useSelector(state => state?.form);
+  const { formData } = useSelector((state) => state?.form);
   const [ownersFromLookup, setOwnersFromLookup] = useState([]);
   const [filteredOwners, setFilteredOwners] = useState([]);
-  const [otherOwnersStateName, setOtherOwnersStateName] = useState('');
+  const [otherOwnersStateName, setOtherOwnersStateName] = useState("");
+  const [otherOwnersStateUniqueId, setOtherOwnersStateUniqueId] = useState("");
   const [formFields, setFormFields] = useState([]);
 
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
-      if (!file) return toast.error('Please select a file');
+      if (!file) return toast.error("Please select a file");
 
       if (file) {
-        const oldSign = formInnerData?.[sectionKey]?.['signature'];
+        const oldSign = formInnerData?.[sectionKey]?.["signature"]?.value;
         if (oldSign?.publicId) {
           const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
-          if (!result) return toast.error('File Not Deleted Please Try Again');
+          if (!result) return toast.error("File Not Deleted Please Try Again");
         }
         const res = await uploadImageOnCloudinary(file);
         if (!res.publicId || !res.secureUrl || !res.resourceType) {
-          return toast.error('File Not Uploaded Please Try Again');
+          return toast.error("File Not Uploaded Please Try Again");
         }
         // setForm(prev => ({ ...prev, signature: res }));
-        setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], signature: res } }));
-        toast.success('Signature uploaded successfully');
+        setFormInnerData((prev) => ({
+          ...prev,
+          [sectionKey]: { ...prev?.[sectionKey], signature: { name: "signature", value: res } },
+        }));
+        toast.success("Signature uploaded successfully");
       }
     } catch (error) {
-      console.log('error while uploading signature', error);
+      console.log("error while uploading signature", error);
     } finally {
       if (setIsSaving) setIsSaving(false);
     }
   };
 
   const handleChangeOnOtherOwnersData = (e, index, isFilter = false) => {
-    if (e.target.name == 'name') {
+    if (e.target.name == "name") {
       if (e.target.value) {
-        setFilteredOwners(ownersFromLookup.filter(owner => owner.toLowerCase().includes(e.target.value.toLowerCase())));
+        setFilteredOwners(
+          ownersFromLookup.filter((owner) => owner.toLowerCase().includes(e.target.value.toLowerCase())),
+        );
       } else {
         setFilteredOwners([]);
       }
     }
-    const updatedOwners = [...(formInnerData?.[sectionKey]?.[otherOwnersStateName] || [])];
+    const updatedOwners = [...(formInnerData?.[sectionKey]?.[otherOwnersStateUniqueId]?.value || [])];
     updatedOwners[index] = {
       ...updatedOwners[index],
       [e.target.name]: e.target.value,
     };
-    // setForm(prev => ({ ...prev, [otherOwnersStateName]: updatedOwners }));
-    setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], [otherOwnersStateName]: updatedOwners } }));
+    setFormInnerData((prev) => ({
+      ...prev,
+      [sectionKey]: {
+        ...prev?.[sectionKey],
+        [otherOwnersStateUniqueId]: { name: otherOwnersStateName, value: updatedOwners },
+      },
+    }));
     if (isFilter) setFilteredOwners([]);
   };
 
   useEffect(() => {
     const idMissionData = formData?.idMission;
-    const idMissionField = idMissionData?.roleFillingForCompany;
+    const idMissionField = idMissionData?.roleFillingForCompany?.value;
     let baseFields = [...fields];
-    if (idMissionField == 'primaryOperatorAndController' || idMissionField == 'both') {
+    if (idMissionField == "primaryOperatorAndController" || idMissionField == "both") {
       baseFields = [ssnField, areUAnOwnerField, ...baseFields];
-      if (formInnerData?.[sectionKey]?.rolling_owner_is_also_owner == 'yes') {
+      if (formInnerData?.[sectionKey]?.rolling_owner_is_also_owner?.value == "yes") {
         //  add percentage field after ssn and areUAnOwnerField
         baseFields = [ssnField, areUAnOwnerField, ownerPercentageField, ...fields];
       }
-    } else if (idMissionField == 'primaryContact') {
+    } else if (idMissionField == "primaryContact") {
       baseFields = [areUAnOwnerField, ...baseFields];
-      if (formInnerData?.[sectionKey]?.rolling_owner_is_also_owner == 'yes') {
+      if (formInnerData?.[sectionKey]?.rolling_owner_is_also_owner?.value == "yes") {
         baseFields = [areUAnOwnerField, ssnField, ownerPercentageField, ...fields];
       }
     }
@@ -118,15 +143,15 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, 
   useEffect(() => {
     if (formData) {
       const lookupData = formData?.company_lookup_data;
-      const searchField = step?.ownerSuggesstions || ['founders'];
+      const searchField = step?.ownerSuggesstions || ["founders"];
       const founders = [];
-      searchField.forEach(field => {
-        let data = lookupData?.find(item => item?.name == field)?.result;
-        if (Array.isArray(data) && typeof data === 'object') {
+      searchField.forEach((field) => {
+        let data = lookupData?.find((item) => item?.name == field)?.result;
+        if (Array.isArray(data) && typeof data === "object") {
           founders.push(...data);
-        } else if (typeof data === 'string') {
+        } else if (typeof data === "string") {
           founders.push(data);
-        } else if (typeof data === 'number') {
+        } else if (typeof data === "number") {
           founders.push(data);
         }
       });
@@ -144,44 +169,58 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, 
     if (!formFields?.length) return;
     // 1) Build the “canonical” shape for this form
     const initialForm = {};
-    formFields.forEach(field => {
-      if (field.type === 'block' && field.name === 'additional_owner' && !otherOwnersStateName) {
+    formFields.forEach((field) => {
+      if (
+        field.type === "block" &&
+        field.name === "additional_owner" &&
+        !otherOwnersStateName &&
+        !otherOwnersStateUniqueId
+      ) {
         setOtherOwnersStateName(field.name);
+        setOtherOwnersStateUniqueId(field.uniqueId);
         const initialState = {
-          name: '',
-          email: '',
-          role: '',
-          job_title: '',
-          have_detail: '',
-          phone: '',
-          ssn: '',
-          address: '',
-          percentage: '',
-          date_of_birth: '',
-          driver_license_issuer: '',
-          driver_license_issuer_state: '',
-          driver_license_number: '',
+          name: "",
+          email: "",
+          role: "",
+          job_title: "",
+          have_detail: "",
+          phone: "",
+          ssn: "",
+          address: "",
+          percentage: "",
+          date_of_birth: "",
+          driver_license_issuer: "",
+          driver_license_issuer_state: "",
+          driver_license_number: "",
         };
-        initialForm[field.name] = reduxData?.[field.name] ?? [initialState];
+        initialForm[field.uniqueId] = reduxData?.[field.uniqueId] ?? [initialState];
       } else {
-        initialForm[field.name] = reduxData?.[field.name] ?? '';
+        initialForm[field.uniqueId] = reduxData?.[field.uniqueId] ?? "";
         // setOtherOwnersStateName('');
       }
     });
     if (isSignature) {
       const isSignatureExistingData = {};
-      if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
-      if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
-      if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
-      initialForm.signature = isSignatureExistingData?.publicId
-        ? isSignatureExistingData
-        : { publicId: '', secureUrl: '', resourceType: '' };
+      if (reduxData?.signature?.value?.publicId)
+        isSignatureExistingData.publicId = reduxData?.signature?.value?.publicId;
+      if (reduxData?.signature?.value?.secureUrl)
+        isSignatureExistingData.secureUrl = reduxData?.signature?.value?.secureUrl;
+      if (reduxData?.signature?.value?.resourceType)
+        isSignatureExistingData.resourceType = reduxData?.signature?.value?.resourceType;
+      initialForm.signature = {
+        name: "signature",
+        value: isSignatureExistingData?.publicId
+          ? isSignatureExistingData
+          : { publicId: "", secureUrl: "", resourceType: "" },
+      };
     }
 
     // 2) Figure out what to add…
-    const toAdd = Object.fromEntries(Object.entries(initialForm).filter(([key]) => !(key in formInnerData[sectionKey])));
+    const toAdd = Object.fromEntries(
+      Object.entries(initialForm).filter(([key]) => !(key in formInnerData[sectionKey])),
+    );
     // 3) …and what to remove
-    const toRemoveKeys = Object.keys(formInnerData?.[sectionKey]).filter(key => !(key in initialForm));
+    const toRemoveKeys = Object.keys(formInnerData?.[sectionKey]).filter((key) => !(key in initialForm));
     // 4) If there’s nothing to do, bail out
     if (Object.keys(toAdd).length === 0 && toRemoveKeys.length === 0) return;
     // 5) Apply both additions and deletions in one go
@@ -191,12 +230,23 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, 
     //   // Then merge in any brand-new keys
     //   return { ...cleaned, ...toAdd };
     // });
-    setFormInnerData(prev => {
+    setFormInnerData((prev) => {
       const sectionPrevData = prev?.[sectionKey];
-      const cleaned = Object.fromEntries(Object.entries(sectionPrevData).filter(([key]) => !toRemoveKeys.includes(key)));
+      const cleaned = Object.fromEntries(
+        Object.entries(sectionPrevData).filter(([key]) => !toRemoveKeys.includes(key)),
+      );
       return { ...prev, [sectionKey]: { ...cleaned, ...toAdd } };
     });
-  }, [formFields, formInnerData, isSignature, otherOwnersStateName, reduxData, sectionKey, setFormInnerData]);
+  }, [
+    formFields,
+    formInnerData,
+    isSignature,
+    otherOwnersStateName,
+    otherOwnersStateUniqueId,
+    reduxData,
+    sectionKey,
+    setFormInnerData,
+  ]);
 
   // create fields for this section and also for customization
   useEffect(() => {
@@ -229,39 +279,69 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, 
         <div className="h-full overflow-auto pb-3">
           <div className="rounded-xl border border-[#F0F0F0] p-4">
             {formFields?.map((field, index) => {
-              if (field.name === 'main_owner_own_25_percent_or_more' || field.type === 'block') return null;
+              if (field.name === "main_owner_own_25_percent_or_more" || field.type === "block") return null;
               if (field.type === FIELD_TYPES.SELECT) {
                 return (
                   <div key={index} className="mt-4">
-                    <SelectInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
+                    <SelectInputType
+                      field={field}
+                      form={formInnerData?.[sectionKey]}
+                      setForm={setFormInnerData}
+                      sectionKey={sectionKey}
+                      className={""}
+                    />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
                 return (
                   <div key={index} className="mt-4">
-                    <MultiCheckboxInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
+                    <MultiCheckboxInputType
+                      field={field}
+                      form={formInnerData?.[sectionKey]}
+                      setForm={setFormInnerData}
+                      sectionKey={sectionKey}
+                      className={""}
+                    />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.RADIO) {
                 return (
                   <div key={index} className="mt-4">
-                    <RadioInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
+                    <RadioInputType
+                      field={field}
+                      form={formInnerData?.[sectionKey]}
+                      setForm={setFormInnerData}
+                      sectionKey={sectionKey}
+                      className={""}
+                    />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.FILE) {
                 return (
                   <div key={index} className="mt-4">
-                    <FileInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
+                    <FileInputType
+                      field={field}
+                      form={formInnerData?.[sectionKey]}
+                      setForm={setFormInnerData}
+                      sectionKey={sectionKey}
+                      className={""}
+                    />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.RANGE) {
                 return (
                   <div key={index} className="mt-4">
-                    <RangeInputType field={field} form={formInnerData?.[sectionKey]} setForm={setFormInnerData} sectionKey={sectionKey} className={''} />
+                    <RangeInputType
+                      field={field}
+                      form={formInnerData?.[sectionKey]}
+                      setForm={setFormInnerData}
+                      sectionKey={sectionKey}
+                      className={""}
+                    />
                   </div>
                 );
               }
@@ -274,7 +354,7 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, 
                       form={formInnerData?.[sectionKey]}
                       setForm={setFormInnerData}
                       sectionKey={sectionKey}
-                      className={''}
+                      className={""}
                     />
                   </div>
                 );
@@ -287,14 +367,22 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, 
                     form={formInnerData?.[sectionKey]}
                     setForm={setFormInnerData}
                     sectionKey={sectionKey}
-                    className={''}
+                    className={""}
                   />
                 </div>
               );
             })}
-            {formInnerData?.[sectionKey]?.additional_owners_own_25_percent_or_more == 'yes' ? (
+            {/* {formInnerData?.[sectionKey]?.additional_owners_own_25_percent_or_more == "yes" ? ( */}
+
+            {formInnerData?.[sectionKey]?.[
+              Object.keys(formInnerData?.[sectionKey])?.find(
+                (objKey) =>
+                  formInnerData?.[sectionKey][objKey]?.name?.toLowerCase() ===
+                  "additional_owners_own_25_percent_or_more",
+              )
+            ]?.value === "yes" ? (
               <div className="flex flex-col gap-3">
-                {formInnerData?.[sectionKey]?.[otherOwnersStateName]?.map(
+                {formInnerData?.[sectionKey]?.[otherOwnersStateUniqueId]?.value?.map(
                   (
                     {
                       name,
@@ -310,7 +398,7 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, 
                       driver_license_issuer_state,
                       driver_license_number,
                     },
-                    index
+                    index,
                   ) => {
                     return (
                       <div
@@ -323,7 +411,7 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, 
                               label="Owner or primary operator name"
                               name="name"
                               value={name}
-                              onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                              onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                             />
                             {filteredOwners?.length > 0 && (
                               <ul className="absolute top-20 mt-1 w-full max-w-[400px] rounded border bg-white shadow">
@@ -332,9 +420,9 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, 
                                     key={i}
                                     onClick={() =>
                                       handleChangeOnOtherOwnersData(
-                                        { target: { name: 'name', value: name } },
+                                        { target: { name: "name", value: name } },
                                         index,
-                                        true
+                                        true,
                                       )
                                     }
                                     className="cursor-pointer px-2 py-1 hover:bg-gray-200"
@@ -350,51 +438,51 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, 
                               type="email"
                               value={email}
                               required
-                              onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                              onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                             />
                           </div>
                           <div className="flex w-full gap-4">
-                            <RadioInputType
+                            <SimpleRadioInputType
                               field={{
-                                label: 'Role',
-                                name: 'role',
+                                label: "Role",
+                                name: "role",
                                 options: [
-                                  { label: 'Primary Operator', value: 'primary_operator' },
-                                  { label: 'Beneficial Owner', value: 'beneficial_owner' },
-                                  { label: 'both', value: 'both' },
+                                  { label: "Primary Operator", value: "primary_operator" },
+                                  { label: "Beneficial Owner", value: "beneficial_owner" },
+                                  { label: "both", value: "both" },
                                 ],
                                 required: true,
                               }}
                               form={{ role }}
-                              onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                              onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                             />
-                            <RadioInputType
+                            <SimpleRadioInputType
                               field={{
-                                label: 'Do you have full information for this person?',
-                                name: 'have_detail',
+                                label: "Do you have full information for this person?",
+                                name: "have_detail",
                                 options: [
-                                  { label: 'No', value: 'no' },
-                                  { label: 'Yes', value: 'yes' },
+                                  { label: "No", value: "no" },
+                                  { label: "Yes", value: "yes" },
                                 ],
                                 required: true,
                               }}
                               form={{ have_detail }}
-                              onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                              onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                             />
                           </div>
 
-                          {(role === 'primary_operator' || role === 'both') && (
+                          {(role === "primary_operator" || role === "both") && (
                             <div className="flex w-full gap-4">
                               <TextField
                                 name="job_title"
                                 label="Job Title"
                                 value={job_title}
-                                onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                                onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                               />
                             </div>
                           )}
 
-                          {have_detail == 'yes' && (
+                          {have_detail == "yes" && (
                             <div className="flex w-full flex-col gap-4">
                               <div className="flex flex-wrap gap-4">
                                 <TextField
@@ -403,8 +491,8 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, 
                                   type="text"
                                   formatting="3,3,4"
                                   value={phone}
-                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'max-w-[30%] min-w-[400px]'}
+                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                  className={"max-w-[30%] min-w-[400px]"}
                                 />
                                 <TextField
                                   name="ssn"
@@ -412,44 +500,44 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, 
                                   formatting="3,2,4"
                                   value={ssn}
                                   isMasked={true}
-                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'max-w-[30%] min-w-[400px]'}
+                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                  className={"max-w-[30%] min-w-[400px]"}
                                 />
                                 <TextField
                                   name="address"
                                   label="Address"
                                   value={address}
-                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'max-w-[30%] min-w-[400px]'}
+                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                  className={"max-w-[30%] min-w-[400px]"}
                                 />
                                 <TextField
                                   name="percentage"
                                   label="Ownership Percentage"
                                   value={percentage}
-                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'max-w-[30%] min-w-[400px]'}
+                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                  className={"max-w-[30%] min-w-[400px]"}
                                 />
                                 <TextField
                                   name="date_of_birth"
                                   label="Date of Birth"
                                   value={date_of_birth}
-                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'max-w-[30%] min-w-[400px]'}
+                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                  className={"max-w-[30%] min-w-[400px]"}
                                 />
 
                                 <TextField
                                   name="driver_license_issuer_state"
                                   label="driver’s license issuer (state)"
                                   value={driver_license_issuer_state}
-                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'max-w-[30%] min-w-[400px]'}
+                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                  className={"max-w-[30%] min-w-[400px]"}
                                 />
                                 <TextField
                                   name="driver_license_number"
                                   label="Driver’s License Number"
                                   value={driver_license_number}
-                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'max-w-[30%] min-w-[400px]'}
+                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                  className={"max-w-[30%] min-w-[400px]"}
                                 />
                               </div>
                             </div>
@@ -457,7 +545,7 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, 
                         </div>
                       </div>
                     );
-                  }
+                  },
                 )}
               </div>
             ) : null}
@@ -468,7 +556,7 @@ function CompanyOwnersPdf({ name, reduxData, fields, blocks, step, isSignature, 
                   onSave={signatureUploadHandler}
                   step={step}
                   isPdf={true}
-                  oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.secureUrl || ''}
+                  oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.value?.secureUrl || ""}
                 />
               )}
             </div>

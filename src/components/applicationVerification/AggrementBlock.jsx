@@ -51,10 +51,12 @@ function AggrementBlock({
         const res = await uploadImageOnCloudinary(file);
         if (!res.publicId || !res.secureUrl || !res.resourceType)
           return toast.error("File Not Uploaded Please Try Again");
-        const action = await dispatch(updateFormState({ data: { signature: res }, name: sectionKey }));
+        const action = await dispatch(
+          updateFormState({ data: { signature: { name: "signature", value: res } }, name: sectionKey }),
+        );
         unwrapResult(action);
-        setForm((prev) => ({ ...prev, signature: { value: res } }));
-        await saveInProgress({ data: { signature: res }, name: sectionKey });
+        setForm((prev) => ({ ...prev, signature: { name: "signature", value: res } }));
+        await saveInProgress({ data: { signature: { name: "signature", value: res } }, name: sectionKey });
         toast.success("Signature uploaded successfully");
       }
     } catch (error) {

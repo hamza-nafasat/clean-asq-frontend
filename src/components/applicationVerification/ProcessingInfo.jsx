@@ -83,7 +83,7 @@ function ProcessingInfo({
         if (field?.conditional_fields?.length > 0) {
           field?.conditional_fields?.forEach((cf) => {
             const fieldName = `${field.uniqueId}/${cf?.name}`;
-            initialForm[fieldName] = reduxData ? reduxData[fieldName] || "" : "";
+            initialForm[fieldName] = reduxData ? reduxData[fieldName]?.value || "" : "";
           });
         }
       });

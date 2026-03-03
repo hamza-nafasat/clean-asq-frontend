@@ -1,33 +1,47 @@
-import { updateFormState } from '@/redux/slices/formSlice';
-import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
-import { unwrapResult } from '@reduxjs/toolkit';
-import { useDispatch } from 'react-redux';
-import { toast } from 'react-toastify';
-import SignatureBox from '../../shared/SignatureBox';
+import { updateFormState } from "@/redux/slices/formSlice";
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
+import { unwrapResult } from "@reduxjs/toolkit";
+import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
+import SignatureBox from "../../shared/SignatureBox";
 
-function AggrementBlockPdf({ name, title, saveInProgress, step, isSignature, formInnerData, setFormInnerData, sectionKey }) {
+function AggrementBlockPdf({
+  name,
+  title,
+  saveInProgress,
+  step,
+  isSignature,
+  formInnerData,
+  setFormInnerData,
+  sectionKey,
+}) {
   const dispatch = useDispatch();
 
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
-      if (!file) return toast.error('Please select a file');
+      if (!file) return toast.error("Please select a file");
       if (file) {
-        const oldSign = formInnerData?.[sectionKey]?.['signature'];
+        const oldSign = formInnerData?.[sectionKey]?.["signature"]?.value;
         if (oldSign?.publicId) {
           const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
-          if (!result) return toast.error('File Not Deleted Please Try Again');
+          if (!result) return toast.error("File Not Deleted Please Try Again");
         }
         const res = await uploadImageOnCloudinary(file);
         if (!res.publicId || !res.secureUrl || !res.resourceType)
-          return toast.error('File Not Uploaded Please Try Again');
-        const action = await dispatch(updateFormState({ data: { signature: res }, name: title }));
+          return toast.error("File Not Uploaded Please Try Again");
+        const action = await dispatch(
+          updateFormState({ data: { signature: { name: "signature", value: res } }, name: title }),
+        );
         unwrapResult(action);
-        setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], signature: res } }));
-        await saveInProgress({ data: { signature: res }, name: title });
-        toast.success('Signature uploaded successfully');
+        setFormInnerData((prev) => ({
+          ...prev,
+          [sectionKey]: { ...prev?.[sectionKey], signature: { name: "signature", value: res } },
+        }));
+        await saveInProgress({ data: { signature: { name: "signature", value: res } }, name: title });
+        toast.success("Signature uploaded successfully");
       }
     } catch (error) {
-      console.log('error while uploading signature', error);
+      console.log("error while uploading signature", error);
     } finally {
       if (setIsSaving) setIsSaving(false);
     }
@@ -67,9 +81,9 @@ function AggrementBlockPdf({ name, title, saveInProgress, step, isSignature, for
           <div
             className="mt-2 w-full"
             dangerouslySetInnerHTML={{
-              __html: String(step?.ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
-                if (match.includes('target=')) return match; // avoid duplicates
-                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              __html: String(step?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
+                if (match.includes("target=")) return match; // avoid duplicates
+                return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
               }),
             }}
           />
@@ -81,7 +95,7 @@ function AggrementBlockPdf({ name, title, saveInProgress, step, isSignature, for
           <SignatureBox
             step={step}
             onSave={signatureUploadHandler}
-            oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.secureUrl || ''}
+            oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.value?.secureUrl || ""}
             isPdf={true}
           />
         )}
