@@ -1,15 +1,15 @@
-import TextField from '@/components/shared/small/TextField';
-import { FIELD_TYPES } from '@/data/constants';
-import { useGetAllSearchStrategiesQuery, useUpdateFormSectionMutation } from '@/redux/apis/formApis';
-import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
-import { X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { GoPlus } from 'react-icons/go';
-import { useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
-import SignatureBox from '../shared/SignatureBox';
-import Button from '../shared/small/Button';
-import CustomLoading from '../shared/small/CustomLoading';
+import TextField from "@/components/shared/small/TextField";
+import { FIELD_TYPES } from "@/data/constants";
+import { useGetAllSearchStrategiesQuery, useUpdateFormSectionMutation } from "@/redux/apis/formApis";
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
+import { X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { GoPlus } from "react-icons/go";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import SignatureBox from "../shared/SignatureBox";
+import Button from "../shared/small/Button";
+import CustomLoading from "../shared/small/CustomLoading";
 import {
   CheckboxInputType,
   FileInputType,
@@ -18,37 +18,41 @@ import {
   RadioInputType,
   RangeInputType,
   SelectInputType,
-} from '../shared/small/DynamicField';
-import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
-import Modal from '../shared/small/Modal';
-import CustomizationOwnerFieldsModal from './companyInfo/CustomizationOwnerFieldsModal';
+  SimpleRadioInputType,
+} from "../shared/small/DynamicField";
+import { EditSectionDisplayTextFromatingModal } from "../shared/small/EditSectionDisplayTextFromatingModal";
+import Modal from "../shared/small/Modal";
+import CustomizationOwnerFieldsModal from "./companyInfo/CustomizationOwnerFieldsModal";
 
 const ssnField = {
-  label: 'What is your Social Security Number?',
-  name: 'rolling_owner_ssn',
+  label: "What is your Social Security Number?",
+  name: "rolling_owner_ssn",
+  uniqueId: "rolling_owner_ssn",
   required: true,
   aiHelp: false,
-  formatting: '3,2,4',
+  formatting: "3,2,4",
   isMasked: true,
-  type: 'text',
+  type: "text",
 };
 const areUAnOwnerField = {
-  label: 'Are you a company owner holding 25% or more of the company?',
-  name: 'rolling_owner_is_also_owner',
+  label: "Are you a company owner holding 25% or more of the company?",
+  name: "rolling_owner_is_also_owner",
+  uniqueId: "rolling_owner_is_also_owner",
   required: true,
   aiHelp: false,
-  type: 'radio',
+  type: "radio",
   options: [
-    { label: 'Yes', value: 'yes' },
-    { label: 'No', value: 'no' },
+    { label: "Yes", value: "yes" },
+    { label: "No", value: "no" },
   ],
 };
 const ownerPercentageField = {
-  label: 'What is you percentage of ownership?',
-  name: 'rolling_owner_percentage',
+  label: "What is you percentage of ownership?",
+  name: "rolling_owner_percentage",
+  uniqueId: "rolling_owner_percentage",
   required: true,
   aiHelp: false,
-  type: 'range',
+  type: "range",
 };
 
 function CompanyOwners({
@@ -69,78 +73,93 @@ function CompanyOwners({
   step,
   isSignature,
 }) {
-  const { user } = useSelector(state => state.auth);
+  const { user } = useSelector((state) => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
-  const { formData } = useSelector(state => state?.form);
+  const { formData } = useSelector((state) => state?.form);
   const [ownersFromLookup, setOwnersFromLookup] = useState([]);
   const [filteredOwners, setFilteredOwners] = useState([]);
   const [loadingNext, setLoadingNext] = useState(false);
-  const [otherOwnersStateName, setOtherOwnersStateName] = useState('');
+  const [otherOwnersStateUniqueId, setOtherOwnersStateUniqueId] = useState("");
+  const [otherOwnersStateName, setOtherOwnersStateName] = useState("");
   const [customizeModal, setCustomizeModal] = useState(false);
   const [formFields, setFormFields] = useState([]);
   const [form, setForm] = useState({});
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
-  const [submitButtonText, setSubmitButtonText] = useState('Some Required Fields are Missing');
+  const [submitButtonText, setSubmitButtonText] = useState("Some Required Fields are Missing");
   const [ownerSuggesstionsModal, setOwnerSuggesstionsModal] = useState(false);
 
-  const requiredNames = useMemo(() => formFields.filter(f => f.required).map(f => f.name), [formFields]);
+  const requiredNames = useMemo(
+    () => formFields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
+    [formFields],
+  );
 
-  const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
-  const validateEmail = email => {
+  const isCreator = user?._id && user?._id === step?.owner && user?.role !== "guest";
+  const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(String(email).toLowerCase());
   };
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
-      if (!file) return toast.error('Please select a file');
+      if (!file) return toast.error("Please select a file");
 
       if (file) {
-        const oldSign = form?.['signature'];
+        const oldSign = form?.["signature"]?.value;
         if (oldSign?.publicId) {
           const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
-          if (!result) return toast.error('File Not Deleted Please Try Again');
+          if (!result) return toast.error("File Not Deleted Please Try Again");
         }
         const res = await uploadImageOnCloudinary(file);
         if (!res.publicId || !res.secureUrl || !res.resourceType) {
-          return toast.error('File Not Uploaded Please Try Again');
+          return toast.error("File Not Uploaded Please Try Again");
         }
-        setForm(prev => ({ ...prev, signature: res }));
-        toast.success('Signature uploaded successfully');
+        setForm((prev) => ({ ...prev, signature: { name: "signature", value: res } }));
+        toast.success("Signature uploaded successfully");
       }
     } catch (error) {
-      console.log('error while uploading signature', error);
+      console.log("error while uploading signature", error);
     } finally {
       if (setIsSaving) setIsSaving(false);
     }
   };
 
   const handleChangeOnOtherOwnersData = (e, index, isFilter = false) => {
-    if (e.target.name == 'name') {
+    if (e.target.name == "name") {
       if (e.target.value) {
-        setFilteredOwners(ownersFromLookup.filter(owner => owner.toLowerCase().includes(e.target.value.toLowerCase())));
+        setFilteredOwners(
+          ownersFromLookup.filter((owner) => owner.toLowerCase().includes(e.target.value.toLowerCase())),
+        );
       } else {
         setFilteredOwners([]);
       }
     }
-    const updatedOwners = [...(form[otherOwnersStateName] || [])];
+    const updatedOwners = [...(form[otherOwnersStateUniqueId]?.value || [])];
     updatedOwners[index] = {
       ...updatedOwners[index],
       [e.target.name]: e.target.value,
     };
-    setForm(prev => ({ ...prev, [otherOwnersStateName]: updatedOwners }));
+    setForm((prev) => ({
+      ...prev,
+      [otherOwnersStateUniqueId]: { name: otherOwnersStateName, value: updatedOwners },
+    }));
     if (isFilter) setFilteredOwners([]);
   };
 
-  const handleRemoveOtherOwnersData = index => {
-    const updatedOwners = [...(form[otherOwnersStateName] || [])];
+  const handleRemoveOtherOwnersData = (index) => {
+    const updatedOwners = [...(form[otherOwnersStateUniqueId]?.value || [])];
     updatedOwners.splice(index, 1);
-    setForm(prev => ({ ...prev, [otherOwnersStateName]: updatedOwners }));
+    setForm((prev) => ({
+      ...prev,
+      [otherOwnersStateUniqueId]: { name: otherOwnersStateName, value: updatedOwners },
+    }));
   };
 
   const handleAddOwner = () => {
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
-      [otherOwnersStateName]: [...(prev[otherOwnersStateName] || []), { name: '', email: '', ssn: '', percentage: '' }],
+      [otherOwnersStateUniqueId]: {
+        name: otherOwnersStateName,
+        value: [...(prev[otherOwnersStateUniqueId]?.value || []), { name: "", email: "", ssn: "", percentage: "" }],
+      },
     }));
   };
 
@@ -148,15 +167,15 @@ function CompanyOwners({
     const idMissionData = formData?.idMission;
     const idMissionField = idMissionData?.roleFillingForCompany;
     let baseFields = [...fields];
-    if (idMissionField == 'primaryOperatorAndController' || idMissionField == 'both') {
+    if (idMissionField == "primaryOperatorAndController" || idMissionField == "both") {
       baseFields = [ssnField, areUAnOwnerField, ...baseFields];
-      if (form?.rolling_owner_is_also_owner == 'yes') {
+      if (form?.rolling_owner_is_also_owner == "yes") {
         //  add percentage field after ssn and areUAnOwnerField
         baseFields = [ssnField, areUAnOwnerField, ownerPercentageField, ...fields];
       }
-    } else if (idMissionField == 'primaryContact') {
+    } else if (idMissionField == "primaryContact") {
       baseFields = [areUAnOwnerField, ...baseFields];
-      if (form?.rolling_owner_is_also_owner == 'yes') {
+      if (form?.rolling_owner_is_also_owner == "yes") {
         baseFields = [areUAnOwnerField, ssnField, ownerPercentageField, ...fields];
       }
     }
@@ -167,15 +186,15 @@ function CompanyOwners({
   useEffect(() => {
     if (formData) {
       const lookupData = formData?.company_lookup_data;
-      const searchField = step?.ownerSuggesstions || ['founders'];
+      const searchField = step?.ownerSuggesstions || ["founders"];
       const founders = [];
-      searchField.forEach(field => {
-        let data = lookupData?.find(item => item?.name == field)?.result;
-        if (Array.isArray(data) && typeof data === 'object') {
+      searchField.forEach((field) => {
+        let data = lookupData?.find((item) => item?.name == field)?.result;
+        if (Array.isArray(data) && typeof data === "object") {
           founders.push(...data);
-        } else if (typeof data === 'string') {
+        } else if (typeof data === "string") {
           founders.push(data);
-        } else if (typeof data === 'number') {
+        } else if (typeof data === "number") {
           founders.push(data);
         }
       });
@@ -193,55 +212,73 @@ function CompanyOwners({
     if (!formFields?.length) return;
     // 1) Build the “canonical” shape for this form
     const initialForm = {};
-    formFields.forEach(field => {
-      if (field.type === 'block' && field.name === 'additional_owner' && !otherOwnersStateName) {
-        setOtherOwnersStateName(field.name);
+    formFields.forEach((field) => {
+      if (
+        field.type === "block" &&
+        field.name === "additional_owner" &&
+        !otherOwnersStateUniqueId &&
+        !otherOwnersStateName
+      ) {
+        setOtherOwnersStateUniqueId(field?.uniqueId);
+        setOtherOwnersStateName(field?.name);
         const initialState = {
-          name: '',
-          email: '',
-          role: '',
-          job_title: '',
-          have_detail: '',
-          phone: '',
-          ssn: '',
-          address: '',
-          percentage: '',
-          date_of_birth: '',
-          driver_license_issuer: '',
-          driver_license_issuer_state: '',
-          driver_license_number: '',
+          name: "",
+          email: "",
+          role: "",
+          job_title: "",
+          have_detail: "",
+          phone: "",
+          ssn: "",
+          address: "",
+          percentage: "",
+          date_of_birth: "",
+          driver_license_issuer: "",
+          driver_license_issuer_state: "",
+          driver_license_number: "",
           IsCompleted: false,
         };
-        initialForm[field.name] = reduxData?.[field.name] ?? [initialState];
+        initialForm[field.uniqueId] = {
+          name: field.name,
+          value: reduxData?.[field?.uniqueId]?.value || [initialState],
+        };
       } else {
-        initialForm[field.name] = reduxData?.[field.name] ?? '';
+        initialForm[field.uniqueId] = {
+          name: field.name,
+          value: reduxData?.[field?.uniqueId]?.value || "",
+        };
         // setOtherOwnersStateName('');
       }
     });
     if (isSignature) {
       const isSignatureExistingData = {};
-      if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
-      if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
-      if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
-      initialForm.signature = isSignatureExistingData?.publicId
-        ? isSignatureExistingData
-        : { publicId: '', secureUrl: '', resourceType: '' };
+      if (reduxData?.signature?.value?.publicId)
+        isSignatureExistingData.publicId = reduxData?.signature?.value?.publicId;
+      if (reduxData?.signature?.value?.secureUrl)
+        isSignatureExistingData.secureUrl = reduxData?.signature?.value?.secureUrl;
+      if (reduxData?.signature?.value?.resourceType)
+        isSignatureExistingData.resourceType = reduxData?.signature?.value?.resourceType;
+      initialForm.signature = {
+        name: "signature",
+        value: isSignatureExistingData?.publicId
+          ? isSignatureExistingData
+          : { publicId: "", secureUrl: "", resourceType: "" },
+      };
     }
 
     // 2) Figure out what to add…
     const toAdd = Object.fromEntries(Object.entries(initialForm).filter(([key]) => !(key in form)));
     // 3) …and what to remove
-    const toRemoveKeys = Object.keys(form).filter(key => !(key in initialForm));
+    const toRemoveKeys = Object.keys(form).filter((key) => !(key in initialForm));
     // 4) If there’s nothing to do, bail out
     if (Object.keys(toAdd).length === 0 && toRemoveKeys.length === 0) return;
     // 5) Apply both additions and deletions in one go
-    setForm(prev => {
+    setForm((prev) => {
       // Start with everything that *should* stay
       const cleaned = Object.fromEntries(Object.entries(prev).filter(([key]) => !toRemoveKeys.includes(key)));
       // Then merge in any brand-new keys
       return { ...cleaned, ...toAdd };
     });
-  }, [form, formFields, isSignature, otherOwnersStateName, reduxData]);
+  }, [form, formFields, isSignature, otherOwnersStateUniqueId, otherOwnersStateName, reduxData]);
 
   // create fields for this section and also for customization
   useEffect(() => {
@@ -253,38 +290,39 @@ function CompanyOwners({
   useEffect(() => {
     if (isCreator) {
       setIsAllRequiredFieldsFilled(true);
-      setSubmitButtonText('Next');
+      setSubmitButtonText("Next");
       return;
     }
-    const additionOwnersGet25OrMore = form?.['additional_owners_own_25_percent_or_more'] == 'yes';
-    const applicantIsAlsoPrimaryOperator = form?.['rolling_owner_is_also_owner'] == 'yes';
+    const additionOwnersGet25OrMore = form?.["additional_owners_own_25_percent_or_more"] == "yes";
+    const applicantIsAlsoPrimaryOperator = form?.["rolling_owner_is_also_owner"] == "yes";
     // Check if all required fields are filled
-    const allFilled = requiredNames.every(name => {
-      const val = form[name];
+    const allFilled = requiredNames.every(({ uniqueId }) => {
+      const val = form[uniqueId]?.value;
       if (val == null) return false;
-      if (typeof val === 'string') return val.trim() !== '';
+      if (typeof val === "string") return val.trim() !== "";
       return true;
     });
 
     // check signature done
     let isSignatureDone = true;
     if (isSignature) {
-      let dataOfSign = form?.['signature'];
-      if (!dataOfSign?.publicId || !dataOfSign?.secureUrl || !dataOfSign?.resourceType) {
+      let dataOfSign = form?.["signature"]?.value;
+      if (!dataOfSign?.value?.publicId || !dataOfSign?.value?.secureUrl || !dataOfSign?.value?.resourceType) {
         isSignatureDone = false;
       }
     }
-    if (!allFilled || !isSignatureDone) setSubmitButtonText('Some Required Fields are Missing');
+    if (!allFilled || !isSignatureDone) setSubmitButtonText("Some Required Fields are Missing");
 
     // if additional owner field exist check email validation
     let isEmailVAlidated = true;
-    if (additionOwnersGet25OrMore && form?.additional_owner?.length) {
-      isEmailVAlidated =
-        Array.isArray(form?.additional_owner) &&
-        form?.additional_owner.some(
-          item => item?.email?.toString().trim() !== '' && validateEmail(item?.email?.toString().trim())
-        );
-    }
+    // ToDo fix this
+    // if (additionOwnersGet25OrMore && form?.additional_owner?.length) {
+    //   isEmailVAlidated =
+    //     Array.isArray(form?.additional_owner) &&
+    //     form?.additional_owner.some(
+    //       (item) => item?.email?.toString().trim() !== "" && validateEmail(item?.email?.toString().trim()),
+    //     );
+    // }
 
     // Logic for is one operator exist or not
     let isOperatorExist = false;
@@ -292,10 +330,10 @@ function CompanyOwners({
       isOperatorExist = true;
     }
     const idMissionField = formData?.idMission?.roleFillingForCompany;
-    if (idMissionField == 'primaryOperatorAndController' || idMissionField == 'both') {
+    if (idMissionField == "primaryOperatorAndController" || idMissionField == "both") {
       isOperatorExist = true;
     }
-    if (!isOperatorExist) setSubmitButtonText('At least one primary operator required');
+    if (!isOperatorExist) setSubmitButtonText("At least one primary operator required");
     // console.log('allied operator exist isemailvalidated', allFilled, isOperatorExist, isEmailVAlidated);
     setIsAllRequiredFieldsFilled(allFilled && isOperatorExist && isEmailVAlidated && isSignatureDone);
   }, [form, formData?.idMission?.roleFillingForCompany, isCreator, isSignature, requiredNames]);
@@ -321,12 +359,12 @@ function CompanyOwners({
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
         <div className="flex gap-2">
-          <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={'Save my progress'} />
+          <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={"Save my progress"} />
           {isCreator && (
             <>
-              <Button onClick={() => setCustomizeModal(true)} label={'Customize'} />
-              <Button onClick={() => setOwnerSuggesstionsModal(true)} label={'Owners Suggesstions'} />
-              <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
+              <Button onClick={() => setCustomizeModal(true)} label={"Customize"} />
+              <Button onClick={() => setOwnerSuggesstionsModal(true)} label={"Owners Suggesstions"} />
+              <Button onClick={() => setUpdateSectionFromatingModal(true)} label={"Update Display Text"} />
             </>
           )}
         </div>
@@ -335,9 +373,9 @@ function CompanyOwners({
         <div className="mb-4 flex w-full items-end justify-between gap-3">
           <div
             dangerouslySetInnerHTML={{
-              __html: String(step?.ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
-                if (match.includes('target=')) return match; // avoid duplicates
-                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              __html: String(step?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
+                if (match.includes("target=")) return match; // avoid duplicates
+                return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
               }),
             }}
           />
@@ -347,39 +385,39 @@ function CompanyOwners({
         <div className="h-full overflow-auto pb-3">
           <div className="rounded-xl border border-[#F0F0F0] p-4">
             {formFields?.map((field, index) => {
-              if (field.name === 'main_owner_own_25_percent_or_more' || field.type === 'block') return null;
+              if (field.name === "main_owner_own_25_percent_or_more" || field.type === "block") return null;
               if (field.type === FIELD_TYPES.SELECT) {
                 return (
                   <div key={index} className="mt-4">
-                    <SelectInputType field={field} form={form} setForm={setForm} className={''} />
+                    <SelectInputType field={field} form={form} setForm={setForm} className={""} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
                 return (
                   <div key={index} className="mt-4">
-                    <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={''} />
+                    <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={""} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.FILE) {
                 return (
                   <div key={index} className="mt-4">
-                    <FileInputType field={field} form={form} setForm={setForm} className={''} />
+                    <FileInputType field={field} form={form} setForm={setForm} className={""} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.RADIO) {
                 return (
                   <div key={index} className="mt-4">
-                    <RadioInputType field={field} form={form} setForm={setForm} className={''} />
+                    <RadioInputType field={field} form={form} setForm={setForm} className={""} />
                   </div>
                 );
               }
               if (field.type === FIELD_TYPES.RANGE) {
                 return (
                   <div key={index} className="mt-4">
-                    <RangeInputType field={field} form={form} setForm={setForm} className={''} />
+                    <RangeInputType field={field} form={form} setForm={setForm} className={""} />
                   </div>
                 );
               }
@@ -391,7 +429,7 @@ function CompanyOwners({
                       placeholder={field.placeholder}
                       form={form}
                       setForm={setForm}
-                      className={''}
+                      className={""}
                     />
                   </div>
                 );
@@ -403,14 +441,17 @@ function CompanyOwners({
                     placeholder={field.placeholder}
                     form={form}
                     setForm={setForm}
-                    className={''}
+                    className={""}
                   />
                 </div>
               );
             })}
-            {form?.additional_owners_own_25_percent_or_more == 'yes' ? (
+
+            {form?.[
+              Object.keys(form)?.find((objKey) => form[objKey]?.name === "additional_owners_own_25_percent_or_more")
+            ]?.value === "yes" ? (
               <div className="flex flex-col gap-3">
-                {form?.[otherOwnersStateName]?.map(
+                {form?.[otherOwnersStateUniqueId]?.value?.map(
                   (
                     {
                       name,
@@ -426,7 +467,7 @@ function CompanyOwners({
                       driver_license_issuer_state,
                       driver_license_number,
                     },
-                    index
+                    index,
                   ) => {
                     return (
                       <div
@@ -439,7 +480,7 @@ function CompanyOwners({
                               label="Owner or primary operator name"
                               name="name"
                               value={name}
-                              onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                              onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                             />
                             {filteredOwners?.length > 0 && (
                               <ul className="absolute top-20 mt-1 w-full max-w-[400px] rounded border bg-white shadow">
@@ -448,9 +489,9 @@ function CompanyOwners({
                                     key={i}
                                     onClick={() =>
                                       handleChangeOnOtherOwnersData(
-                                        { target: { name: 'name', value: name } },
+                                        { target: { name: "name", value: name } },
                                         index,
-                                        true
+                                        true,
                                       )
                                     }
                                     className="cursor-pointer px-2 py-1 hover:bg-gray-200"
@@ -466,60 +507,60 @@ function CompanyOwners({
                               type="email"
                               value={email}
                               required
-                              onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                              onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                             />
                             <TextField
                               name="phone"
                               label="Phone Number"
-                              formatting={'3,3,4'}
+                              formatting={"3,3,4"}
                               type="text"
                               value={phone}
-                              onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                              className={'max-w-[30%] min-w-[400px]'}
+                              onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                              className={"max-w-[30%] min-w-[400px]"}
                             />
                           </div>
                           <div className="flex w-full gap-4">
-                            <RadioInputType
+                            <SimpleRadioInputType
                               field={{
-                                label: 'Role',
-                                name: 'role',
+                                label: "Role",
+                                name: "role",
                                 options: [
-                                  { label: 'Primary Operator', value: 'primary_operator' },
-                                  { label: 'Beneficial Owner', value: 'beneficial_owner' },
-                                  { label: 'both', value: 'both' },
+                                  { label: "Primary Operator", value: "primary_operator" },
+                                  { label: "Beneficial Owner", value: "beneficial_owner" },
+                                  { label: "both", value: "both" },
                                 ],
                                 required: true,
                               }}
                               form={{ role }}
-                              onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                              onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                             />
-                            <RadioInputType
+                            <SimpleRadioInputType
                               field={{
-                                label: 'Do you have full information for this person?',
-                                name: 'have_detail',
+                                label: "Do you have full information for this person?",
+                                name: "have_detail",
                                 options: [
-                                  { label: 'No', value: 'no' },
-                                  { label: 'Yes', value: 'yes' },
+                                  { label: "No", value: "no" },
+                                  { label: "Yes", value: "yes" },
                                 ],
                                 required: true,
                               }}
                               form={{ have_detail }}
-                              onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                              onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                             />
                           </div>
 
-                          {(role === 'primary_operator' || role === 'both') && (
+                          {(role === "primary_operator" || role === "both") && (
                             <div className="flex w-full gap-4">
                               <TextField
                                 name="job_title"
                                 label="Job Title"
                                 value={job_title}
-                                onChange={e => handleChangeOnOtherOwnersData(e, index)}
+                                onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                               />
                             </div>
                           )}
 
-                          {have_detail == 'yes' && (
+                          {have_detail == "yes" && (
                             <div className="flex w-full flex-col gap-4">
                               <div className="flex flex-wrap gap-4">
                                 <TextField
@@ -528,44 +569,44 @@ function CompanyOwners({
                                   value={ssn}
                                   formatting="3,2,4"
                                   isMasked={true}
-                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'max-w-[30%] min-w-[400px]'}
+                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                  className={"max-w-[30%] min-w-[400px]"}
                                 />
                                 <TextField
                                   name="address"
                                   label="Address"
                                   value={address}
-                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'max-w-[30%] min-w-[400px]'}
+                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                  className={"max-w-[30%] min-w-[400px]"}
                                 />
                                 <TextField
                                   name="percentage"
                                   label="Ownership Percentage"
                                   value={percentage}
-                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'max-w-[30%] min-w-[400px]'}
+                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                  className={"max-w-[30%] min-w-[400px]"}
                                 />
                                 <TextField
                                   name="date_of_birth"
                                   label="Date of Birth"
                                   value={date_of_birth}
-                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'max-w-[30%] min-w-[400px]'}
+                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                  className={"max-w-[30%] min-w-[400px]"}
                                 />
 
                                 <TextField
                                   name="driver_license_issuer_state"
                                   label="driver’s license issuer (state)"
                                   value={driver_license_issuer_state}
-                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'max-w-[30%] min-w-[400px]'}
+                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                  className={"max-w-[30%] min-w-[400px]"}
                                 />
                                 <TextField
                                   name="driver_license_number"
                                   label="Driver’s License Number"
                                   value={driver_license_number}
-                                  onChange={e => handleChangeOnOtherOwnersData(e, index)}
-                                  className={'max-w-[30%] min-w-[400px]'}
+                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                  className={"max-w-[30%] min-w-[400px]"}
                                 />
                               </div>
                             </div>
@@ -579,7 +620,7 @@ function CompanyOwners({
                         </div>
                       </div>
                     );
-                  }
+                  },
                 )}
                 <div className="flex w-full justify-end">
                   <Button
@@ -597,7 +638,7 @@ function CompanyOwners({
                 <SignatureBox
                   onSave={signatureUploadHandler}
                   step={step}
-                  oldSignatureUrl={form?.signature?.secureUrl || ''}
+                  oldSignatureUrl={form?.signature?.value?.secureUrl || ""}
                 />
               )}
             </div>
@@ -611,14 +652,14 @@ function CompanyOwners({
           {currentStep < totalSteps - 1 ? (
             <Button
               onClick={() => handleNext({ data: form, name: sectionKey, setLoadingNext })}
-              className={`${(!isAllRequiredFieldsFilled || loadingNext) && 'pointer-events-none cursor-not-allowed opacity-50'}`}
+              className={`${(!isAllRequiredFieldsFilled || loadingNext) && "pointer-events-none cursor-not-allowed opacity-50"}`}
               disabled={!isAllRequiredFieldsFilled}
-              label={isAllRequiredFieldsFilled ? 'Next' : submitButtonText}
+              label={isAllRequiredFieldsFilled ? "Next" : submitButtonText}
             />
           ) : (
             <Button
               disabled={formLoading || loadingNext}
-              className={formLoading || loadingNext ? 'pointer-events-none cursor-not-allowed opacity-50' : ''}
+              className={formLoading || loadingNext ? "pointer-events-none cursor-not-allowed opacity-50" : ""}
               label="Submit"
               onClick={() => handleSubmit({ data: form, name: sectionKey, setLoadingNext })}
             />
@@ -629,7 +670,7 @@ function CompanyOwners({
         <Modal onClose={() => setCustomizeModal(false)}>
           <CustomizationOwnerFieldsModal
             sectionId={_id}
-            fields={fields?.filter(f => f.type !== 'block')}
+            fields={fields?.filter((f) => f.type !== "block")}
             blocks={blocks}
             formRefetch={formRefetch}
             section={step}
@@ -651,37 +692,37 @@ export const OwnerSuggesstionsModal = ({ selectedSuggesstions, setOwnerSuggessti
 
   const updateFormSectionHandler = async () => {
     try {
-      if (!prompt) return toast.error('Please enter display text and AI formatting');
+      if (!prompt) return toast.error("Please enter display text and AI formatting");
       const res = await updateFormSection({
         _id: sectionId,
         data: { ownerSuggesstions: selectedOwners },
       }).unwrap();
       if (res.success) {
-        toast.success('Section Updated Successfully');
+        toast.success("Section Updated Successfully");
         setOwnerSuggesstionsModal(false);
       }
     } catch (error) {
       console.error(error);
-      toast.error(error?.data?.message || 'Failed to update section');
+      toast.error(error?.data?.message || "Failed to update section");
     }
   };
 
-  const handleSelect = e => {
+  const handleSelect = (e) => {
     const value = e.target.value;
     if (value && !selectedOwners.includes(value)) {
-      setSelectedOwners(prev => [...prev, value]);
-      setSuggesstions(prev => prev.filter(o => o !== value));
+      setSelectedOwners((prev) => [...prev, value]);
+      setSuggesstions((prev) => prev.filter((o) => o !== value));
     }
   };
 
-  const removeOwner = owner => {
-    setSelectedOwners(prev => prev.filter(o => o !== owner));
-    setSuggesstions(prev => [...prev, owner]);
+  const removeOwner = (owner) => {
+    setSelectedOwners((prev) => prev.filter((o) => o !== owner));
+    setSuggesstions((prev) => [...prev, owner]);
   };
 
   useEffect(() => {
     if (data?.data && !suggesstions?.length) {
-      setSuggesstions(data?.data?.map(item => item?.searchObjectKey) || []);
+      setSuggesstions(data?.data?.map((item) => item?.searchObjectKey) || []);
     }
   }, [data, suggesstions?.length]);
 
@@ -700,7 +741,7 @@ export const OwnerSuggesstionsModal = ({ selectedSuggesstions, setOwnerSuggessti
           className="mt-2 w-full rounded-md border border-gray-300 p-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Choose Owner Keys to Suggest</option>
-          {suggesstions.map(owner => (
+          {suggesstions.map((owner) => (
             <option key={owner} value={owner}>
               {owner}
             </option>
@@ -710,7 +751,7 @@ export const OwnerSuggesstionsModal = ({ selectedSuggesstions, setOwnerSuggessti
 
       {/* Selected Owners */}
       <div className="flex flex-wrap gap-2">
-        {selectedOwners.map(owner => (
+        {selectedOwners.map((owner) => (
           <div key={owner} className="flex items-center gap-2 rounded-md bg-blue-100 px-3 py-1 text-sm text-blue-700">
             <span>{owner}</span>
             <button
@@ -726,9 +767,9 @@ export const OwnerSuggesstionsModal = ({ selectedSuggesstions, setOwnerSuggessti
 
       {/* Actions */}
       <div className="flex justify-end gap-3 pt-4">
-        <Button variant="secondary" onClick={() => setOwnerSuggesstionsModal(false)} label={'Cancel'} />
+        <Button variant="secondary" onClick={() => setOwnerSuggesstionsModal(false)} label={"Cancel"} />
         <Button
-          label={isUpdating ? 'Saving...' : 'Save'}
+          label={isUpdating ? "Saving..." : "Save"}
           onClick={updateFormSectionHandler}
           disabled={selectedOwners.length === 0}
         />

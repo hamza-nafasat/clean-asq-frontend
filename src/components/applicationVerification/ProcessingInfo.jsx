@@ -1,7 +1,7 @@
-import { FIELD_TYPES } from '@/data/constants';
-import { useEffect, useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
-import Button from '../shared/small/Button';
+import { FIELD_TYPES } from "@/data/constants";
+import { useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import Button from "../shared/small/Button";
 import {
   CheckboxInputType,
   FileInputType,
@@ -10,13 +10,13 @@ import {
   RadioInputType,
   RangeInputType,
   SelectInputType,
-} from '../shared/small/DynamicField';
-import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
-import Modal from '../shared/small/Modal';
-import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
-import SignatureBox from '../shared/SignatureBox';
-import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
-import { toast } from 'react-toastify';
+} from "../shared/small/DynamicField";
+import { EditSectionDisplayTextFromatingModal } from "../shared/small/EditSectionDisplayTextFromatingModal";
+import Modal from "../shared/small/Modal";
+import CustomizationFieldsModal from "./companyInfo/CustomizationFieldsModal";
+import SignatureBox from "../shared/SignatureBox";
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
+import { toast } from "react-toastify";
 
 function ProcessingInfo({
   sectionKey,
@@ -35,35 +35,38 @@ function ProcessingInfo({
   step,
   isSignature,
 }) {
-  const { user } = useSelector(state => state.auth);
+  const { user } = useSelector((state) => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const [form, setForm] = useState({});
   const [loadingNext, setLoadingNext] = useState(false);
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
-  const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
-  const allNames = useMemo(() => fields.map(f => f.name), [fields]);
+  const requiredNames = useMemo(
+    () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
+    [fields],
+  );
+  const allNames = useMemo(() => fields.map((f) => ({ name: f.name, uniqueId: f.uniqueId })), [fields]);
 
-  const isCreator = user?._id && user?._id === step?.owner && user?.role !== 'guest';
+  const isCreator = user?._id && user?._id === step?.owner && user?.role !== "guest";
 
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
-      if (!file) return toast.error('Please select a file');
+      if (!file) return toast.error("Please select a file");
       if (file) {
-        const oldSign = form?.['signature'];
+        const oldSign = form?.["signature"]?.value;
         if (oldSign?.publicId) {
           const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
-          if (!result) return toast.error('File Not Deleted Please Try Again');
+          if (!result) return toast.error("File Not Deleted Please Try Again");
         }
         const res = await uploadImageOnCloudinary(file);
         if (!res.publicId || !res.secureUrl || !res.resourceType) {
-          return toast.error('File Not Uploaded Please Try Again');
+          return toast.error("File Not Uploaded Please Try Again");
         }
-        setForm(prev => ({ ...prev, signature: res }));
-        toast.success('Signature uploaded successfully');
+        setForm((prev) => ({ ...prev, signature: { name: "signature", value: res } }));
+        toast.success("Signature uploaded successfully");
       }
     } catch (error) {
-      console.log('error while uploading signature', error);
+      console.log("error while uploading signature", error);
     } finally {
       if (setIsSaving) setIsSaving(false);
     }
@@ -72,12 +75,15 @@ function ProcessingInfo({
   useEffect(() => {
     if (fields && fields.length > 0) {
       const initialForm = {};
-      fields.forEach(field => {
-        initialForm[field.name] = reduxData ? reduxData[field.name] || '' : '';
+      fields.forEach((field) => {
+        initialForm[field.uniqueId] = {
+          name: field.name,
+          value: reduxData ? reduxData[field.uniqueId]?.value || "" : "",
+        };
         if (field?.conditional_fields?.length > 0) {
-          field?.conditional_fields?.forEach(cf => {
-            const fieldName = `${field.name}/${cf?.name}`;
-            initialForm[fieldName] = reduxData ? reduxData[fieldName] || '' : '';
+          field?.conditional_fields?.forEach((cf) => {
+            const fieldName = `${field.uniqueId}/${cf?.name}`;
+            initialForm[fieldName] = reduxData ? reduxData[fieldName] || "" : "";
           });
         }
       });
@@ -85,14 +91,20 @@ function ProcessingInfo({
     }
     if (isSignature) {
       const isSignatureExistingData = {};
-      if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
-      if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
-      if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
-      setForm(prev => ({
+      if (reduxData?.signature?.value?.publicId)
+        isSignatureExistingData.publicId = reduxData?.signature?.value?.publicId;
+      if (reduxData?.signature?.value?.secureUrl)
+        isSignatureExistingData.secureUrl = reduxData?.signature?.value?.secureUrl;
+      if (reduxData?.signature?.value?.resourceType)
+        isSignatureExistingData.resourceType = reduxData?.signature?.value?.resourceType;
+      setForm((prev) => ({
         ...prev,
-        ['signature']: isSignatureExistingData?.publicId
-          ? isSignatureExistingData
-          : { publicId: '', secureUrl: '', resourceType: '' },
+        ["signature"]: {
+          name: "signature",
+          value: isSignatureExistingData?.publicId
+            ? isSignatureExistingData
+            : { publicId: "", secureUrl: "", resourceType: "" },
+        },
       }));
     }
   }, [fields, isSignature, name, reduxData]);
@@ -105,41 +117,41 @@ function ProcessingInfo({
     }
     let allFilled = false;
     if (requiredNames.length > 0) {
-      allFilled = requiredNames.some(name => {
-        const val = form[name];
+      allFilled = requiredNames.some(({ uniqueId }) => {
+        const val = form[uniqueId]?.value;
         if (!val) return false;
         let allConditionalComplete = true;
-        const conditionalFieldsKeys = Object.keys(form).filter(key => key.includes(`${name}/`));
-        conditionalFieldsKeys.some(innerName => {
+        const conditionalFieldsKeys = Object.keys(form).filter((key) => key?.includes(`${uniqueId}/`));
+        conditionalFieldsKeys.some((innerName) => {
           const innerVal = form[innerName];
           if (!innerVal) allConditionalComplete = false;
         });
         if (!allConditionalComplete) return false;
         if (val == null) return false;
-        if (typeof val === 'string') return val.trim() !== '';
+        if (typeof val === "string") return val.trim() !== "";
         return true;
       });
     } else {
       // if any field is completed then allFilled will be true
-      allFilled = allNames.some(name => {
-        const val = form[name];
+      allFilled = allNames.some(({ uniqueId }) => {
+        const val = form[uniqueId]?.value;
         if (!val) return false;
         let allConditionalComplete = true;
-        const conditionalFieldsKeys = Object.keys(form).filter(key => key.includes(`${name}/`));
-        conditionalFieldsKeys.some(innerName => {
+        const conditionalFieldsKeys = Object.keys(form).filter((key) => key?.includes(`${uniqueId}/`));
+        conditionalFieldsKeys.some((innerName) => {
           const innerVal = form[innerName];
           if (!innerVal) allConditionalComplete = false;
         });
         if (!allConditionalComplete) return false;
         if (val == null) return false;
-        if (typeof val === 'string') return val.trim() !== '';
+        if (typeof val === "string") return val.trim() !== "";
         return true;
       });
     }
 
     let isSignatureDone = true;
     if (isSignature) {
-      let dataOfSign = form?.['signature'];
+      let dataOfSign = form?.["signature"];
       if (!dataOfSign?.publicId || !dataOfSign?.secureUrl || !dataOfSign?.resourceType) {
         isSignatureDone = false;
       }
@@ -151,11 +163,11 @@ function ProcessingInfo({
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
         <div className="flex gap-2">
-          <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={'Save my progress'} />
+          <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={"Save my progress"} />
           {isCreator && (
             <>
-              <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
-              <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
+              <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={"Customize"} />
+              <Button onClick={() => setUpdateSectionFromatingModal(true)} label={"Update Display Text"} />
             </>
           )}
         </div>
@@ -169,9 +181,9 @@ function ProcessingInfo({
         <div className="mb-4 flex w-full items-end justify-between gap-3">
           <div
             dangerouslySetInnerHTML={{
-              __html: String(step?.ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
-                if (match.includes('target=')) return match; // avoid duplicates
-                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              __html: String(step?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
+                if (match.includes("target=")) return match; // avoid duplicates
+                return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
               }),
             }}
           />
@@ -179,39 +191,38 @@ function ProcessingInfo({
       )}
       {/* <h5 className="text-textPrimary text-base">Provide average transactions</h5> */}
       {fields?.map((field, index) => {
-        if (field.name === 'main_owner_own_25_percent_or_more' || field.type === 'block') return null;
         if (field.type === FIELD_TYPES.SELECT) {
           return (
             <div key={index} className="mt-4">
-              <SelectInputType field={field} form={form} setForm={setForm} className={''} />
+              <SelectInputType field={field} form={form} setForm={setForm} className={""} />
             </div>
           );
         }
         if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
           return (
             <div key={index} className="mt-4">
-              <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={''} />
+              <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={""} />
             </div>
           );
         }
         if (field.type === FIELD_TYPES.RADIO) {
           return (
             <div key={index} className="mt-4">
-              <RadioInputType field={field} form={form} setForm={setForm} className={''} />
+              <RadioInputType field={field} form={form} setForm={setForm} className={""} />
             </div>
           );
         }
         if (field.type === FIELD_TYPES.FILE) {
           return (
             <div key={index} className="mt-4">
-              <FileInputType field={field} form={form} setForm={setForm} className={''} />
+              <FileInputType field={field} form={form} setForm={setForm} className={""} />
             </div>
           );
         }
         if (field.type === FIELD_TYPES.RANGE) {
           return (
             <div key={index} className="mt-4">
-              <RangeInputType field={field} form={form} setForm={setForm} className={''} />
+              <RangeInputType field={field} form={form} setForm={setForm} className={""} />
             </div>
           );
         }
@@ -223,7 +234,7 @@ function ProcessingInfo({
                 placeholder={field.placeholder}
                 form={form}
                 setForm={setForm}
-                className={''}
+                className={""}
               />
             </div>
           );
@@ -235,7 +246,7 @@ function ProcessingInfo({
               placeholder={field.placeholder}
               form={form}
               setForm={setForm}
-              className={''}
+              className={""}
             />
           </div>
         );
@@ -245,7 +256,7 @@ function ProcessingInfo({
           <SignatureBox
             step={step}
             onSave={signatureUploadHandler}
-            oldSignatureUrl={form?.signature?.secureUrl || ''}
+            oldSignatureUrl={form?.signature?.value?.secureUrl || ""}
           />
         )}
       </div>
@@ -253,19 +264,19 @@ function ProcessingInfo({
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
-          {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
+          {currentStep > 0 && <Button variant="secondary" label={"Previous"} onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
             <Button
-              className={`${(!isAllRequiredFieldsFilled || loadingNext) && 'pointer-events-none cursor-not-allowed opacity-20'}`}
+              className={`${(!isAllRequiredFieldsFilled || loadingNext) && "pointer-events-none cursor-not-allowed opacity-20"}`}
               disabled={!isAllRequiredFieldsFilled || loadingNext}
-              label={isAllRequiredFieldsFilled ? 'Next' : 'Some Required Fields are Missing'}
+              label={isAllRequiredFieldsFilled ? "Next" : "Some Required Fields are Missing"}
               onClick={() => handleNext({ data: form, name: sectionKey, setLoadingNext })}
             />
           ) : (
             <Button
               disabled={formLoading || loadingNext}
-              className={`${formLoading || loadingNext ? 'pinter-events-none cursor-not-allowed opacity-20' : ''}`}
-              label={isAllRequiredFieldsFilled ? 'submit' : 'Some Required Fields are Missing'}
+              className={`${formLoading || loadingNext ? "pinter-events-none cursor-not-allowed opacity-20" : ""}`}
+              label={isAllRequiredFieldsFilled ? "submit" : "Some Required Fields are Missing"}
               onClick={() => handleSubmit({ data: form, name: sectionKey, setLoadingNext })}
             />
           )}

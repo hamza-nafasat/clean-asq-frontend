@@ -69,7 +69,7 @@ function CompanyInformation({
     try {
       if (!file) return toast.error("Please select a file");
       if (file) {
-        const oldSign = form?.["signature"];
+        const oldSign = form?.["signature"]?.value || {};
         if (oldSign?.publicId) {
           const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
           if (!result) return toast.error("File Not Deleted Please Try Again");
@@ -78,7 +78,7 @@ function CompanyInformation({
         if (!res.publicId || !res.secureUrl || !res.resourceType) {
           return toast.error("File Not Uploaded Please Try Again");
         }
-        setForm((prev) => ({ ...prev, signature: res }));
+        setForm((prev) => ({ ...prev, signature: { name: "signature", value: res } }));
         toast.success("Signature uploaded successfully");
       }
     } catch (error) {
@@ -112,7 +112,7 @@ function CompanyInformation({
     setNaicsToMccDetails((prev) => ({
       ...prev,
       NAICS: value,
-      NAICS_Description: "", // Clear description when manually typing
+      NAICS_Description: "",
       MCC: "",
       MCC_Description: "",
     }));
@@ -217,24 +217,50 @@ function CompanyInformation({
             ? new Date(fieldValueFromLookupData)?.toISOString()?.split("T")?.[0]
             : "";
           isDateField = false;
-          console.log("asdfakjsljd;fkjasldf", fieldValueFromLookupData);
-          initialForm[field.name] = reduxData?.[field?.name] || formatedData || "";
+          // initialForm[field.name] = reduxData?.[field?.name] || formatedData || "";
+          initialForm[field.uniqueId] = {
+            name: field.name,
+            value: reduxData?.[field?.uniqueId]?.value || formatedData || "",
+          };
         } else {
-          initialForm[field.name] = reduxData?.[field?.name] || fieldValueFromLookupData || "";
+          // initialForm[field.name] = reduxData?.[field?.name] || fieldValueFromLookupData || "";
+          initialForm[field.uniqueId] = {
+            name: field.name,
+            value: reduxData?.[field?.uniqueId]?.value || fieldValueFromLookupData || "",
+          };
         }
       });
       setForm(initialForm);
     }
+    // if (isSignature) {
+    //   const isSignatureExistingData = {};
+    //   if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
+    //   if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
+    //   if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
+    //   setForm((prev) => ({
+    //     ...prev,
+    //     ["signature"]: isSignatureExistingData?.publicId
+    //       ? isSignatureExistingData
+    //       : { publicId: "", secureUrl: "", resourceType: "" },
+    //   }));
+    // }
+
     if (isSignature) {
       const isSignatureExistingData = {};
-      if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
-      if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
-      if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
+      if (reduxData?.signature?.value?.publicId)
+        isSignatureExistingData.publicId = reduxData?.signature?.value?.publicId;
+      if (reduxData?.signature?.value?.secureUrl)
+        isSignatureExistingData.secureUrl = reduxData?.signature?.value?.secureUrl;
+      if (reduxData?.signature?.value?.resourceType)
+        isSignatureExistingData.resourceType = reduxData?.signature?.value?.resourceType;
       setForm((prev) => ({
         ...prev,
-        ["signature"]: isSignatureExistingData?.publicId
-          ? isSignatureExistingData
-          : { publicId: "", secureUrl: "", resourceType: "" },
+        ["signature"]: {
+          name: "signature",
+          value: isSignatureExistingData?.publicId
+            ? isSignatureExistingData
+            : { publicId: "", secureUrl: "", resourceType: "" },
+        },
       }));
     }
   }, [fields, formData?.company_lookup_data, isSignature, reduxData]);
@@ -451,7 +477,7 @@ function CompanyInformation({
               <SignatureBox
                 onSave={signatureUploadHandler}
                 step={step}
-                oldSignatureUrl={form?.signature?.secureUrl || ""}
+                oldSignatureUrl={form?.signature?.value?.secureUrl || ""}
               />
             )}
           </div>

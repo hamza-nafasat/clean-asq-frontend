@@ -1,14 +1,14 @@
-import { updateFormState } from '@/redux/slices/formSlice';
-import { deleteImageFromCloudinary, uploadImageOnCloudinary } from '@/utils/cloudinary';
-import { unwrapResult } from '@reduxjs/toolkit';
-import { useEffect, useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
-import SignatureBox from '../shared/SignatureBox';
-import Button from '../shared/small/Button';
-import { EditSectionDisplayTextFromatingModal } from '../shared/small/EditSectionDisplayTextFromatingModal';
-import Modal from '../shared/small/Modal';
-import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal';
+import { updateFormState } from "@/redux/slices/formSlice";
+import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
+import { unwrapResult } from "@reduxjs/toolkit";
+import { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import SignatureBox from "../shared/SignatureBox";
+import Button from "../shared/small/Button";
+import { EditSectionDisplayTextFromatingModal } from "../shared/small/EditSectionDisplayTextFromatingModal";
+import Modal from "../shared/small/Modal";
+import CustomizationFieldsModal from "./companyInfo/CustomizationFieldsModal";
 
 function AggrementBlock({
   sectionKey,
@@ -27,35 +27,38 @@ function AggrementBlock({
   reduxData,
 }) {
   const dispatch = useDispatch();
-  const { user } = useSelector(state => state.auth);
+  const { user } = useSelector((state) => state.auth);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const [form, setForm] = useState({});
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [loadingNext, setLoadingNext] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
-  const requiredNames = useMemo(() => fields.filter(f => f.required).map(f => f.name), [fields]);
-  const isCreator = user?._id && user?._id == step?.owner && user?.role !== 'guest';
+  const requiredNames = useMemo(
+    () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
+    [fields],
+  );
+  const isCreator = user?._id && user?._id == step?.owner && user?.role !== "guest";
 
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
-      if (!file) return toast.error('Please select a file');
+      if (!file) return toast.error("Please select a file");
       if (file) {
-        const oldSign = form?.['signature'];
+        const oldSign = form?.["signature"]?.value;
         if (oldSign?.publicId) {
           const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
-          if (!result) return toast.error('File Not Deleted Please Try Again');
+          if (!result) return toast.error("File Not Deleted Please Try Again");
         }
         const res = await uploadImageOnCloudinary(file);
         if (!res.publicId || !res.secureUrl || !res.resourceType)
-          return toast.error('File Not Uploaded Please Try Again');
+          return toast.error("File Not Uploaded Please Try Again");
         const action = await dispatch(updateFormState({ data: { signature: res }, name: sectionKey }));
         unwrapResult(action);
-        setForm(prev => ({ ...prev, signature: res }));
+        setForm((prev) => ({ ...prev, signature: { value: res } }));
         await saveInProgress({ data: { signature: res }, name: sectionKey });
-        toast.success('Signature uploaded successfully');
+        toast.success("Signature uploaded successfully");
       }
     } catch (error) {
-      console.log('error while uploading signature', error);
+      console.log("error while uploading signature", error);
     } finally {
       if (setIsSaving) setIsSaving(false);
     }
@@ -64,21 +67,27 @@ function AggrementBlock({
   useEffect(() => {
     const formFields = {};
     if (fields?.length) {
-      fields?.forEach(field => {
-        formFields[field?.name] = reduxData?.[field?.name] || '';
+      fields?.forEach((field) => {
+        formFields[field?.name] = reduxData?.[field?.name] || "";
       });
       setForm(formFields);
     }
     if (isSignature) {
       const isSignatureExistingData = {};
-      if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
-      if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
-      if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
-      setForm(prev => ({
+      if (reduxData?.signature?.value?.publicId)
+        isSignatureExistingData.publicId = reduxData?.signature?.value?.publicId;
+      if (reduxData?.signature?.value?.secureUrl)
+        isSignatureExistingData.secureUrl = reduxData?.signature?.value?.secureUrl;
+      if (reduxData?.signature?.value?.resourceType)
+        isSignatureExistingData.resourceType = reduxData?.signature?.value?.resourceType;
+      setForm((prev) => ({
         ...prev,
-        ['signature']: isSignatureExistingData?.publicId
-          ? isSignatureExistingData
-          : { publicId: '', secureUrl: '', resourceType: '' },
+        ["signature"]: {
+          name: "signature",
+          value: isSignatureExistingData?.publicId
+            ? isSignatureExistingData
+            : { publicId: "", secureUrl: "", resourceType: "" },
+        },
       }));
     }
   }, [fields, isSignature, reduxData]);
@@ -88,25 +97,25 @@ function AggrementBlock({
       setIsAllRequiredFieldsFilled(true);
       return;
     }
-    const allFilled = requiredNames.every(name => {
-      const val = form[name];
+    const allFilled = requiredNames.every(({ uniqueId }) => {
+      const val = form[uniqueId]?.value;
       if (val == null) return false;
-      if (typeof val === 'string') return val.trim() !== '';
+      if (typeof val === "string") return val.trim() !== "";
       if (Array.isArray(val))
         return (
           val.length > 0 &&
-          val.every(item =>
-            typeof item === 'object'
-              ? Object.values(item).every(v => v?.toString().trim() !== '')
-              : item?.toString().trim() !== ''
+          val.every((item) =>
+            typeof item === "object"
+              ? Object.values(item).every((v) => v?.toString().trim() !== "")
+              : item?.toString().trim() !== "",
           )
         );
-      if (typeof val === 'object') return Object.values(val).every(v => v?.toString().trim() !== '');
+      if (typeof val === "object") return Object.values(val).every((v) => v?.toString().trim() !== "");
       return true;
     });
     let isSignatureDone = true;
     if (isSignature) {
-      let dataOfSign = form?.['signature'];
+      let dataOfSign = form?.["signature"]?.value || {};
       if (!dataOfSign?.publicId || !dataOfSign?.secureUrl || !dataOfSign?.resourceType) {
         isSignatureDone = false;
       }
@@ -120,11 +129,11 @@ function AggrementBlock({
         <div className="flex gap-2"></div>
       </div>
       <div className="flex justify-end gap-2">
-        <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={'Save my progress'} />
+        <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={"Save my progress"} />
         {isCreator && (
           <>
-            <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={'Customize'} />
-            <Button onClick={() => setUpdateSectionFromatingModal(true)} label={'Update Display Text'} />
+            <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={"Customize"} />
+            <Button onClick={() => setUpdateSectionFromatingModal(true)} label={"Update Display Text"} />
           </>
         )}
       </div>
@@ -139,9 +148,9 @@ function AggrementBlock({
           <div
             className="mt-2 w-full"
             dangerouslySetInnerHTML={{
-              __html: String(step?.ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
-                if (match.includes('target=')) return match; // avoid duplicates
-                return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+              __html: String(step?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
+                if (match.includes("target=")) return match; // avoid duplicates
+                return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
               }),
             }}
           />
@@ -209,7 +218,7 @@ function AggrementBlock({
           <SignatureBox
             step={step}
             onSave={signatureUploadHandler}
-            oldSignatureUrl={form?.signature?.secureUrl || ''}
+            oldSignatureUrl={form?.signature?.value?.secureUrl || ""}
           />
         )}
       </div>
@@ -217,18 +226,18 @@ function AggrementBlock({
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
-          {currentStep > 0 && <Button variant="secondary" label={'Previous'} onClick={handlePrevious} />}
+          {currentStep > 0 && <Button variant="secondary" label={"Previous"} onClick={handlePrevious} />}
           {currentStep < totalSteps - 2 ? (
             <Button
               disabled={loadingNext}
-              label={'Next'}
+              label={"Next"}
               onClick={() => handleNext({ data: form, name: sectionKey, setLoadingNext })}
             />
           ) : (
             <Button
               disabled={!isAllRequiredFieldsFilled || loadingNext}
-              className={`${!isAllRequiredFieldsFilled || loadingNext ? 'pointer-events-none cursor-not-allowed opacity-20' : 'opacity-100'}`}
-              label={!isAllRequiredFieldsFilled ? 'Some required fields are missing' : 'Submit'}
+              className={`${!isAllRequiredFieldsFilled || loadingNext ? "pointer-events-none cursor-not-allowed opacity-20" : "opacity-100"}`}
+              label={!isAllRequiredFieldsFilled ? "Some required fields are missing" : "Submit"}
               onClick={() => handleSubmit({ data: form, name: sectionKey, setLoadingNext })}
             />
           )}
