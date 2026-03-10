@@ -11,8 +11,8 @@ import { useSelector } from "react-redux";
 function OnBoarding() {
   const user = useSelector((state) => state.auth.user);
   const { applicantId } = useParams();
-  const [activeTab, setActiveTab] = useState('history');
-  const { data } = useGetSingleSubmitFormQueryQuery({ _id: applicantId }, { skip: !applicantId });
+  const [activeTab, setActiveTab] = useState("history");
+  const { data: submitFormData } = useGetSingleSubmitFormQueryQuery({ _id: applicantId }, { skip: !applicantId });
   const hasUnderwritingPermission = checkPermission(user, webPermissions.underwriting);
   if (!hasUnderwritingPermission) return <Navigate to="/application-forms" />;
   return (
@@ -21,14 +21,26 @@ function OnBoarding() {
         <div className="mb-4">
           {/* create thre tab history , profile, and settings */}
           <div className="flex space-x-4">
-            <Button label="History" variant={activeTab === 'history' ? 'primary' : 'secondary'} onClick={() => setActiveTab('history')} />
-            <Button label="Verification & Alerts" variant={activeTab === 'verification' ? 'primary' : 'secondary'} onClick={() => setActiveTab('verification')} />
-            <Button label="App viewer" variant={activeTab === 'appViewer' ? 'primary' : 'secondary'} onClick={() => setActiveTab('appViewer')} />
+            <Button
+              label="History"
+              variant={activeTab === "history" ? "primary" : "secondary"}
+              onClick={() => setActiveTab("history")}
+            />
+            <Button
+              label="Verification & Alerts"
+              variant={activeTab === "verification" ? "primary" : "secondary"}
+              onClick={() => setActiveTab("verification")}
+            />
+            <Button
+              label="App viewer"
+              variant={activeTab === "appViewer" ? "primary" : "secondary"}
+              onClick={() => setActiveTab("appViewer")}
+            />
           </div>
         </div>
-        {activeTab === 'history' && <History submittedFormId={applicantId} />}
-        {activeTab === 'verification' && < VerificationAndAlerts data={data?.data} />}
-        {activeTab === 'appViewer' && <AppViewer data={data?.data} />}
+        {activeTab === "history" && <History submittedFormId={applicantId} />}
+        {activeTab === "verification" && <VerificationAndAlerts submitFormData={submitFormData?.data} />}
+        {activeTab === "appViewer" && <AppViewer data={submitFormData?.data} />}
       </div>
     </>
   );

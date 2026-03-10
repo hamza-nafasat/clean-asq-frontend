@@ -1,118 +1,80 @@
 import { getTableStyles } from "@/data/data";
 import { useBranding } from "@/hooks/BrandingContext";
-import convertObjectToArray from "@/utils/convertObjectToArray";
-import { useEffect, useState } from "react";
+import { useApplyRulesOnFormQuery } from "@/redux/apis/formApis";
 import DataTable from "react-data-table-component";
 import Button from "../shared/small/Button";
-import Checkbox from "../shared/small/Checkbox";
 
-const columns = (setSubmitedData, activeTab) => [
+const columns = () => [
   {
-    name: "Key",
-    selector: (row) => row?.key,
+    name: "Alert Name",
+    selector: (row) => row?.ruleName,
+    sortable: true,
+  },
+  // {
+  //   name: "Alert Message",
+  //   selector: (row) => row?.message,
+  //   sortable: true,
+  //   wrap: true,
+  // },
+  {
+    name: "Field Value",
+    selector: (row) => row?.fieldValue,
     sortable: true,
   },
   {
-    name: "Value",
-    selector: (row) => (typeof row?.value === "string" ? row?.value : JSON.stringify(row?.value)),
+    name: "Rule Value",
+    selector: (row) => row?.ruleValue,
     sortable: true,
-    wrap: true,
   },
   {
-    name: "Verification value",
-    selector: (row) => "",
+    name: "Full Path",
+    selector: (row) => row?.fullPath,
     sortable: true,
-    wrap: true,
   },
   {
-    name: "Source",
-    selector: (row) => row?.source,
+    name: "Section",
+    selector: (row) => row?.section,
     sortable: true,
-    wrap: true,
   },
   {
-    name: "Result",
-    selector: (row) => {
-      const checkbox = (
-        <Checkbox
-          checked={row?.result}
-          onChange={(e) => {
-            setSubmitedData((prev) =>
-              prev.map((value) => {
-                if (value?.[0] === activeTab) {
-                  const findIndex = value.findIndex((item) => item?.key === row?.key);
-                  if (findIndex !== -1) {
-                    value[findIndex].result = e.target.checked;
-                  }
-                  return value;
-                } else {
-                  return value;
-                }
-              }),
-            );
-          }}
-        />
-      );
-      return checkbox;
-    },
+    name: "Operator",
+    selector: (row) => row?.operator,
+    sortable: true,
   },
   {
-    name: "Comment",
-    selector: (row) => row?.comment || "",
+    name: "Unique ID",
+    selector: (row) => row?.uniqueId,
+    sortable: true,
   },
 ];
 
-const VerificationAndAlerts = ({ data }) => {
+const VerificationAndAlerts = ({ submitFormData }) => {
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
-  const [submitedData, setSubmitedData] = useState(data?.submitData);
-  const [submitedDataKeys, setSubmitedDataKeys] = useState(Object.keys(submitedData));
-  const [activeTab, setActiveTab] = useState(null);
+  const { data: alertsData, refetch: refetchAlertsData } = useApplyRulesOnFormQuery(submitFormData?._id, {
+    skip: !submitFormData?._id,
+  });
 
-  useEffect(() => {
-    if (data?.submitData) {
-      const modifiedSubmittedData = Object.keys(data?.submitData).map((key) => {
-        const updatedData = convertObjectToArray(data?.submitData[key], key);
-        return updatedData;
-      });
-      setSubmitedData(modifiedSubmittedData);
-    }
-  }, [data?.submitData]);
+  console.log(alertsData);
+  console.log(submitFormData);
 
   return (
     <div className="flex w-full p-4 items-center justify-center gap-4 flex-col">
-      {/* button for verification section  */}
-      <div className="flex gap-4 justify-between flex-wrap">
-        {submitedDataKeys.map((key) => {
-          if (key !== "company_lookup_data") {
-            return (
-              <Button
-                key={key}
-                label={key}
-                variant={activeTab === key ? "primary" : "secondary"}
-                className={`text-sm min-w-[240px]`}
-                onClick={() => setActiveTab(key)}
-              />
-            );
-          }
-        })}
-        <div className="w-full h-px bg-gray-400 my-4" />
+      <div className="flex w-full justify-end">
+        <Button label="Apply Rules" variant="primary" onClick={() => refetchAlertsData(submitFormData?._id)} />
       </div>
-      {/* verification section  */}
-      {activeTab && (
-        <div className="w-full max-w-full ">
-          <DataTable
-            data={submitedData.find((value) => value?.[0] === activeTab)?.slice(1) || []}
-            columns={columns(setSubmitedData, activeTab)}
-            customStyles={tableStyles}
-            pagination
-            highlightOnHover
-            progressPending={false}
-            noDataComponent="No History found"
-            className="rounded-t-xl!"
-          />
-        </div>
-      )}
+      <div className="w-full max-w-full ">
+        <DataTable
+          data={alertsData?.data || []}
+          columns={columns()}
+          customStyles={tableStyles}
+          pagination
+          highlightOnHover
+          progressPending={false}
+          noDataComponent="No History found"
+          className="rounded-t-xl!"
+        />
+      </div>
     </div>
   );
 };

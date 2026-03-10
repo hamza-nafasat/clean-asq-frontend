@@ -1,92 +1,92 @@
-import getEnv from '@/lib/env';
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import getEnv from "@/lib/env";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 const formApis = createApi({
-  reducerPath: 'formApi',
-  baseQuery: fetchBaseQuery({ baseUrl: `${getEnv('SERVER_URL')}/api/form`, credentials: 'include' }),
+  reducerPath: "formApi",
+  baseQuery: fetchBaseQuery({ baseUrl: `${getEnv("SERVER_URL")}/api/form`, credentials: "include" }),
 
-  tagTypes: ['Form', 'Strategy', 'Prompts', 'FormStrategy', 'SubmitForm', 'History'],
-  endpoints: builder => ({
+  tagTypes: ["Form", "Strategy", "Prompts", "FormStrategy", "SubmitForm", "History"],
+  endpoints: (builder) => ({
     // create new form
     // ---------------
     createForm: builder.mutation({
-      query: data => ({
-        url: '/create',
-        method: 'POST',
+      query: (data) => ({
+        url: "/create",
+        method: "POST",
         body: data,
       }),
-      invalidatesTags: ['Form'],
+      invalidatesTags: ["Form"],
     }),
     // update  form
     // ---------------
     updateForm: builder.mutation({
       query: ({ data, _id }) => ({
         url: `/update/${_id}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
       }),
-      invalidatesTags: ['Form'],
+      invalidatesTags: ["Form"],
     }),
     // update  form location status
     // ---------------
     updateFormLocation: builder.mutation({
       query: ({ data, _id }) => ({
         url: `/update-form-location/${_id}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
       }),
-      invalidatesTags: ['Form'],
+      invalidatesTags: ["Form"],
     }),
     // get my all users
     // --------------
     getMyAllForms: builder.query({
       query: () => ({
-        url: '/my',
-        method: 'GET',
+        url: "/my",
+        method: "GET",
       }),
-      providesTags: ['Form'],
+      providesTags: ["Form"],
     }),
 
     // get single form
     // ---------------
     getSingleFormQuery: builder.query({
-      query: data => ({
+      query: (data) => ({
         url: `single/${data?._id}`,
-        method: 'GET',
+        method: "GET",
       }),
-      providesTags: ['Form'],
+      providesTags: ["Form"],
     }),
 
     // DELETE single form
     // ---------------
     deleteSingleForm: builder.mutation({
-      query: data => ({
+      query: (data) => ({
         url: `single/${data?._id}`,
-        method: 'Delete',
+        method: "Delete",
       }),
-      invalidatesTags: ['Form'],
+      invalidatesTags: ["Form"],
     }),
 
     // SUBMIT form
     // ---------------
     submitForm: builder.mutation({
-      query: data => ({
-        url: '/submit',
-        method: 'POST',
+      query: (data) => ({
+        url: "/submit",
+        method: "POST",
         body: data,
       }),
-      invalidatesTags: ['Form', 'SubmitForm'],
+      invalidatesTags: ["Form", "SubmitForm"],
     }),
 
     // update submitted form
     // ---------------
     updateSubmittedForm: builder.mutation({
       query: ({ submittedFormId, formData }) => ({
-        url: '/submit',
-        method: 'PUT',
+        url: "/submit",
+        method: "PUT",
         body: { submittedFormId, formData },
       }),
-      invalidatesTags: ['SubmitForm', 'History'],
+      invalidatesTags: ["SubmitForm", "History"],
     }),
 
     // get submitted form users
@@ -94,7 +94,7 @@ const formApis = createApi({
     getSubmittedFormUsers: builder.query({
       query: ({ formId }) => ({
         url: `/submitted-users/${formId}`,
-        method: 'GET',
+        method: "GET",
       }),
     }),
     // give special access to user
@@ -102,27 +102,27 @@ const formApis = createApi({
     giveSpecialAccessToUser: builder.mutation({
       query: ({ formId, submittedFormId, email, sectionKey }) => ({
         url: `/special-access-of-section/${formId}?submittedFormId=${submittedFormId}`,
-        method: 'POST',
+        method: "POST",
         body: { email, sectionKey },
       }),
-      invalidatesTags: ['History'],
+      invalidatesTags: ["History"],
     }),
     // give special access to user
     // ---------------
     applicantGiveSpecialAccessToBeneficialOwner: builder.mutation({
       query: ({ formId, email }) => ({
         url: `/applicant-give-special-access-to-beneficial-owner/${formId}`,
-        method: 'POST',
+        method: "POST",
         body: { email },
       }),
-      invalidatesTags: ['History', 'SubmitForm'],
+      invalidatesTags: ["History", "SubmitForm"],
     }),
     // get special access of section
     // ---------------
     getSpecialAccessOfSection: builder.query({
       query: ({ formId, token, sectionKey }) => ({
         url: `/special-access-of-section/${formId}?token=${token}&sectionKey=${sectionKey}`,
-        method: 'GET',
+        method: "GET",
       }),
     }),
     // get special access of section
@@ -130,21 +130,21 @@ const formApis = createApi({
     submitSpecialAccessForm: builder.mutation({
       query: ({ formId, token, sectionKey, formData }) => ({
         url: `/special-access-of-section/${formId}`,
-        method: 'PUT',
+        method: "PUT",
         body: { sectionKey, formData, token },
       }),
-      invalidatesTags: ['History'],
+      invalidatesTags: ["History"],
     }),
 
     // save form in draft
     // ---------------
     saveFormInDraft: builder.mutation({
-      query: data => ({
-        url: '/save-in-draft',
-        method: 'POST',
+      query: (data) => ({
+        url: "/save-in-draft",
+        method: "POST",
         body: data,
       }),
-      invalidatesTags: ['Form'],
+      invalidatesTags: ["Form"],
     }),
 
     // generate pdf form
@@ -152,8 +152,8 @@ const formApis = createApi({
     generatePdfForm: builder.mutation({
       query: ({ _id, userId }) => ({
         url: `/generate-pdf/${_id}/${userId}`,
-        method: 'GET',
-        responseHandler: response => response.blob(), // important
+        method: "GET",
+        responseHandler: (response) => response.blob(), // important
       }),
     }),
 
@@ -162,19 +162,19 @@ const formApis = createApi({
     getSavedForm: builder.mutation({
       query: ({ formId }) => ({
         url: `/get-saved/${formId}`,
-        method: 'GET',
+        method: "GET",
       }),
-      invalidatesTags: ['SubmitForm'],
+      invalidatesTags: ["SubmitForm"],
     }),
 
-    // get form history 
+    // get form history
     // ---------------
     getFormHistory: builder.query({
       query: ({ formSubmittedId }) => ({
         url: `/get-history/${formSubmittedId}`,
-        method: 'GET',
+        method: "GET",
       }),
-      providesTags: ['History'],
+      providesTags: ["History"],
     }),
 
     // get saved form by userId
@@ -182,9 +182,9 @@ const formApis = createApi({
     getSavedFormByUserId: builder.mutation({
       query: ({ formId, userId }) => ({
         url: `/get-submitted-form/${formId}/${userId}`,
-        method: 'GET',
+        method: "GET",
       }),
-      invalidatesTags: ['SubmitForm'],
+      invalidatesTags: ["SubmitForm"],
     }),
 
     // remove saved form
@@ -192,19 +192,19 @@ const formApis = createApi({
     removeSavedForm: builder.mutation({
       query: ({ formId }) => ({
         url: `/remove-saved/${formId}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: ['Form'],
+      invalidatesTags: ["Form"],
     }),
 
     // get all draft and submissions
     // ---------------
     getMyAllDraftsAndSubmittions: builder.query({
       query: () => ({
-        url: '/draft-and-submitions',
-        method: 'GET',
+        url: "/draft-and-submitions",
+        method: "GET",
       }),
-      providesTags: ['Form'],
+      providesTags: ["Form"],
     }),
 
     // update form section
@@ -212,28 +212,28 @@ const formApis = createApi({
     updateFormSection: builder.mutation({
       query: ({ data, _id }) => ({
         url: `/update-form-section/${_id}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
       }),
-      invalidatesTags: ['Form'],
+      invalidatesTags: ["Form"],
     }),
     // update form fields delete and create api
     // ---------------
     updateDeleteCreateFormFields: builder.mutation({
-      query: data => ({
-        url: '/update-delete-create-fields',
-        method: 'POST',
+      query: (data) => ({
+        url: "/update-delete-create-fields",
+        method: "POST",
         body: data,
       }),
-      invalidatesTags: ['Form'],
+      invalidatesTags: ["Form"],
     }),
 
     // formate display text
     // ---------------
     formateTextInMarkDown: builder.mutation({
-      query: data => ({
-        url: '/formate-display-text',
-        method: 'POST',
+      query: (data) => ({
+        url: "/formate-display-text",
+        method: "POST",
         body: data,
       }),
     }),
@@ -242,7 +242,7 @@ const formApis = createApi({
     getBeneficialOwnersData: builder.query({
       query: ({ email, submitId, userId }) => ({
         url: `/beneficial-owners?email=${email}&submitId=${submitId}&userId=${userId}`,
-        method: 'GET',
+        method: "GET",
       }),
     }),
     // update beneficial owners
@@ -250,7 +250,7 @@ const formApis = createApi({
     updateBeneficialOwners: builder.mutation({
       query: ({ submitId, userId, form }) => ({
         url: `/beneficial-owners?submitId=${submitId}&userId=${userId}`,
-        method: 'PUT',
+        method: "PUT",
         body: form,
       }),
     }),
@@ -263,78 +263,78 @@ const formApis = createApi({
     // ---------------
     createSearchStrategy: builder.mutation({
       query: ({ data }) => ({
-        url: '/search-strategy/create',
-        method: 'POST',
+        url: "/search-strategy/create",
+        method: "POST",
         body: data,
       }),
-      invalidatesTags: ['Strategy'],
+      invalidatesTags: ["Strategy"],
     }),
     // create search strategy default
     // ---------------
     createSearchStrategyDefault: builder.mutation({
       query: () => ({
-        url: '/search-strategy/create-default',
-        method: 'POST',
+        url: "/search-strategy/create-default",
+        method: "POST",
         body: {},
       }),
-      invalidatesTags: ['Strategy'],
+      invalidatesTags: ["Strategy"],
     }),
     // get all search strategies
     // ---------------
     getAllSearchStrategies: builder.query({
       query: () => ({
-        url: '/search-strategy/all',
-        method: 'GET',
+        url: "/search-strategy/all",
+        method: "GET",
       }),
-      providesTags: ['Strategy'],
+      providesTags: ["Strategy"],
     }),
     // update search strategy
     // ---------------
     updateSearchStrategy: builder.mutation({
       query: ({ SearchStrategyId, data }) => ({
         url: `/search-strategy/single/${SearchStrategyId}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
       }),
-      invalidatesTags: ['Strategy'],
+      invalidatesTags: ["Strategy"],
     }),
     // delete search strategy
     // ---------------
     deleteSearchStrategy: builder.mutation({
       query: ({ SearchStrategyId }) => ({
         url: `/search-strategy/single/${SearchStrategyId}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: ['Strategy'],
+      invalidatesTags: ["Strategy"],
     }),
     // create prompt
     // ---------------
     createPrompt: builder.mutation({
       query: ({ data }) => ({
-        url: '/create-prompt',
-        method: 'POST',
+        url: "/create-prompt",
+        method: "POST",
         body: data,
       }),
-      invalidatesTags: ['Prompts'],
+      invalidatesTags: ["Prompts"],
     }),
     // update prompt
     // ---------------
     updatePrompt: builder.mutation({
-      query: data => ({
+      query: (data) => ({
         url: `/prompt/single/update`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
       }),
-      invalidatesTags: ['Prompts'],
+      invalidatesTags: ["Prompts"],
     }),
     // get all prompts
     // ---------------
     getAllPrompts: builder.query({
       query: () => ({
-        url: '/get-my-prompts',
-        method: 'GET',
+        url: "/get-my-prompts",
+        method: "GET",
       }),
-      providesTags: ['Prompts'],
+      providesTags: ["Prompts"],
     }),
     //================================
     // form strategies apis
@@ -343,40 +343,40 @@ const formApis = createApi({
     // create form strategy
     // ---------------
     createFormStrategy: builder.mutation({
-      query: data => ({
-        url: '/form-strategy/create',
-        method: 'POST',
+      query: (data) => ({
+        url: "/form-strategy/create",
+        method: "POST",
         body: data,
       }),
-      invalidatesTags: ['Strategy'],
+      invalidatesTags: ["Strategy"],
     }),
     // get all form strategies
     // ---------------
     getAllFormStrategies: builder.query({
       query: () => ({
-        url: '/form-strategy/all',
-        method: 'GET',
+        url: "/form-strategy/all",
+        method: "GET",
       }),
-      providesTags: ['Strategy'],
+      providesTags: ["Strategy"],
     }),
     // update form strategy
     // ---------------
     updateFormStrategy: builder.mutation({
       query: ({ FormStrategyId, data }) => ({
         url: `/form-strategy/single/${FormStrategyId}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
       }),
-      invalidatesTags: ['Strategy'],
+      invalidatesTags: ["Strategy"],
     }),
     // delete form strategy
     // ---------------
     deleteFormStrategy: builder.mutation({
       query: ({ FormStrategyId }) => ({
         url: `/form-strategy/single/${FormStrategyId}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: ['Strategy'],
+      invalidatesTags: ["Strategy"],
     }),
 
     // getBankLookup: builder.query({
@@ -384,9 +384,9 @@ const formApis = createApi({
     // }),
 
     getBankLookup: builder.mutation({
-      query: data => ({
+      query: (data) => ({
         url: `/routing-lookup?searchTerm=${data}`,
-        method: 'GET',
+        method: "GET",
       }),
     }),
     //================================
@@ -394,30 +394,30 @@ const formApis = createApi({
     //================================
 
     companyVerification: builder.mutation({
-      query: data => ({
-        url: '/verify-company',
-        method: 'POST',
+      query: (data) => ({
+        url: "/verify-company",
+        method: "POST",
         body: data,
       }),
     }),
     companyLookup: builder.mutation({
-      query: data => ({
-        url: '/lookup-company',
-        method: 'POST',
+      query: (data) => ({
+        url: "/lookup-company",
+        method: "POST",
         body: data,
       }),
     }),
     findNaicAndMcc: builder.mutation({
-      query: data => ({
-        url: '/find-naics-to-mcc',
-        method: 'POST',
+      query: (data) => ({
+        url: "/find-naics-to-mcc",
+        method: "POST",
         body: data,
       }),
     }),
     detectVpn: builder.mutation({
-      query: data => ({
-        url: '/vpn-check',
-        method: 'POST',
+      query: (data) => ({
+        url: "/vpn-check",
+        method: "POST",
         body: data,
       }),
     }),
@@ -426,24 +426,40 @@ const formApis = createApi({
     // ============================
     getAllSubmitForms: builder.query({
       query: () => ({
-        url: '/all-submit',
-        method: 'GET',
+        url: "/all-submit",
+        method: "GET",
       }),
-      providesTags: ['SubmitForm'],
+      providesTags: ["SubmitForm"],
     }),
     getSingleSubmitFormQuery: builder.query({
-      query: data => ({
+      query: (data) => ({
         url: `single-submit/${data?._id}`,
-        method: 'GET',
+        method: "GET",
       }),
-      providesTags: ['SubmitForm'],
+      providesTags: ["SubmitForm"],
     }),
     deleteSingleSubmitForm: builder.mutation({
-      query: data => ({
+      query: (data) => ({
         url: `single-submit/${data?._id}`,
-        method: 'Delete',
+        method: "Delete",
       }),
-      invalidatesTags: ['SubmitForm'],
+      invalidatesTags: ["SubmitForm"],
+    }),
+
+    // form rules apis
+    // ============================
+    createFormRule: builder.mutation({
+      query: (data) => ({
+        url: "/create-form-rule",
+        method: "POST",
+        body: data,
+      }),
+    }),
+    applyRulesOnForm: builder.query({
+      query: (formSubmittedId) => ({
+        url: `/apply-rules-on-form/${formSubmittedId}`,
+        method: "GET",
+      }),
     }),
   }),
 });
@@ -494,5 +510,7 @@ export const {
   useGetAllSubmitFormsQuery,
   useGetSingleSubmitFormQueryQuery,
   useDeleteSingleSubmitFormMutation,
+  useCreateFormRuleMutation,
+  useApplyRulesOnFormQuery,
 } = formApis;
 export default formApis;
