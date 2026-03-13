@@ -2,7 +2,6 @@ import { useBranding } from "@/hooks/BrandingContext";
 import { useAddBrandingInFormMutation, useGetAllBrandingsQuery } from "@/redux/apis/brandingApis";
 import {
   useCreateFormMutation,
-  useCreateFormRuleMutation,
   useDeleteSingleFormMutation,
   useGetMyAllFormsQuery,
   useUpdateFormMutation,
@@ -19,8 +18,6 @@ import Modal from "../shared/small/Modal";
 import TextField from "../shared/small/TextField";
 import ApplyBranding from "./brandings/globalBranding/ApplyBranding";
 import { LocationModalComponent } from "./varification/LocationStatusModal";
-import { SpecialAccessModal } from "@/page/admin/dashboard/applications/Applications";
-import { FaSpinner } from "react-icons/fa";
 
 export default function ApplicationsCard() {
   const navigate = useNavigate();
@@ -48,7 +45,6 @@ export default function ApplicationsCard() {
   const [locationModal, setLocationModal] = useState(false);
   const { logo } = useBranding();
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
-  const [openCreateAlertModal, setOpenCreateAlertModal] = useState(false);
   const [formLocationData, setFormLocationData] = useState({
     title: "",
     subtitle: "",
@@ -183,11 +179,7 @@ export default function ApplicationsCard() {
         </Modal>
       )}
       {/* modal for create alert */}
-      {openCreateAlertModal && (
-        <Modal onClose={() => setOpenCreateAlertModal(false)} title="Create Alert">
-          <CreateAlertModal formId={openCreateAlertModal} refetch={refetch} setModal={setOpenCreateAlertModal} />
-        </Modal>
-      )}
+
       {/* Header Section */}
       {creteFormModal && (
         <Modal onClose={() => setCreateFormModal(false)} title="">
@@ -339,10 +331,10 @@ export default function ApplicationsCard() {
                           Set Location
                         </button>
                         <button
-                          onClick={() => setOpenCreateAlertModal(form?._id)}
+                          onClick={() => navigate(`/manage-rules/${form?._id}`)}
                           className="block w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer"
                         >
-                          Add alerts
+                          Manage Rules
                         </button>
                         <button
                           onClick={() => setDeleteConfirmation(form?._id)}
@@ -483,64 +475,6 @@ export const FormConfigurationModal = ({ form, refetch, setModal }) => {
         <div className="flex w-full justify-end gap-2">
           <Button label="Cancel" variant="secondary" onClick={() => setModal(false)} />
           <Button label="Save" variant="primary" onClick={handleFormLocationUpdate} />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const CreateAlertModal = ({ formId, refetch, setModal }) => {
-  const [prompt, setPrompt] = useState("");
-  const [ruleName, setRuleName] = useState("");
-  const [createRule, { isLoading: isCreatingRule }] = useCreateFormRuleMutation();
-
-  const createRuleHandler = async () => {
-    try {
-      if (!formId || !prompt || !ruleName) return toast.error("Please fill all the fields");
-      const res = await createRule({ formId, prompt, ruleName }).unwrap();
-      if (res?.success) {
-        await refetch();
-        toast?.success(res?.message || "Rule created successfully");
-        setModal(false);
-      }
-    } catch (error) {
-      console.error("Error creating rule:", error);
-      toast.error(error?.data?.message || "Failed to create rule");
-    }
-  };
-  return (
-    <div className="flex items-center justify-center p-4">
-      <div className="flex w-full max-w-2xl flex-col gap-6">
-        <h3 className="text-center text-lg font-semibold text-gray-800">Create Alert</h3>
-        <div className="flex flex-col gap-2">
-          <TextField
-            label="Rule Name"
-            id="rule-name"
-            placeholder="Enter rule name"
-            value={ruleName}
-            onChange={(e) => setRuleName(e.target.value)}
-          />
-          <TextField
-            label="Prompt"
-            id="prompt"
-            rows={5}
-            cols={30}
-            type="textarea"
-            placeholder="Enter prompt for rule creation"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-          />
-        </div>
-        <div className="flex w-full justify-end gap-2">
-          <Button label="Cancel" variant="secondary" onClick={() => setModal(false)} />
-          <Button
-            label="Create Rule"
-            variant="primary"
-            icon={isCreatingRule && FaSpinner}
-            cnLeft="mr-2 w-4 h-4"
-            onClick={createRuleHandler}
-            disabled={isCreatingRule}
-          />
         </div>
       </div>
     </div>

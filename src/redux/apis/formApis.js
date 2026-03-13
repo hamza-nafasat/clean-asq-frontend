@@ -5,7 +5,7 @@ const formApis = createApi({
   reducerPath: "formApi",
   baseQuery: fetchBaseQuery({ baseUrl: `${getEnv("SERVER_URL")}/api/form`, credentials: "include" }),
 
-  tagTypes: ["Form", "Strategy", "Prompts", "FormStrategy", "SubmitForm", "History"],
+  tagTypes: ["Form", "Strategy", "Prompts", "FormStrategy", "SubmitForm", "History", "FormRules"],
   endpoints: (builder) => ({
     // create new form
     // ---------------
@@ -454,12 +454,35 @@ const formApis = createApi({
         method: "POST",
         body: data,
       }),
+      invalidatesTags: ["FormRules"],
     }),
     applyRulesOnForm: builder.query({
       query: (formSubmittedId) => ({
         url: `/apply-rules-on-form/${formSubmittedId}`,
         method: "GET",
       }),
+    }),
+    getAllFormRules: builder.query({
+      query: ({ formId }) => ({
+        url: `/all-rules?formId=${formId}`,
+        method: "GET",
+      }),
+      providesTags: ["FormRules"],
+    }),
+    deleteSingleFormRule: builder.mutation({
+      query: ({ ruleId }) => ({
+        url: `/single/rule/${ruleId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["FormRules"],
+    }),
+    updateStatusSingleFormRule: builder.mutation({
+      query: ({ ruleId, isActive }) => ({
+        url: `/single/rule/${ruleId}`,
+        method: "PUT",
+        body: { isActive },
+      }),
+      invalidatesTags: ["FormRules"],
     }),
   }),
 });
@@ -510,7 +533,11 @@ export const {
   useGetAllSubmitFormsQuery,
   useGetSingleSubmitFormQueryQuery,
   useDeleteSingleSubmitFormMutation,
+  // form rules
   useCreateFormRuleMutation,
   useApplyRulesOnFormQuery,
+  useGetAllFormRulesQuery,
+  useDeleteSingleFormRuleMutation,
+  useUpdateStatusSingleFormRuleMutation,
 } = formApis;
 export default formApis;
