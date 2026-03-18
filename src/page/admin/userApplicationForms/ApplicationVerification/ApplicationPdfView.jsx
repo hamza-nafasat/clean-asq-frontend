@@ -17,7 +17,6 @@ import { useBranding } from '@/hooks/BrandingContext';
 import useApplyBranding from '@/hooks/useApplyBranding';
 import { useGeneratePdfFormMutation, useGetSavedFormByUserIdMutation, useGetSingleFormQueryQuery, useUpdateSubmittedFormMutation } from '@/redux/apis/formApis';
 import { addSavedFormData, updateIsDisabledAllFields } from '@/redux/slices/formSlice';
-import logoApply from '../../../../assets/images/logo.png';
 import IdMissionDataPdf from './IdMissionDataPdf';
 import { toast } from 'react-toastify';
 import { CgSpinner } from 'react-icons/cg';
@@ -123,7 +122,7 @@ export const ApplicationPdfViewCommonProps = ({ userId, pdfId, isPdf = false, cl
         {/* Hamburger Icon (mobile only) */}
         <div className="my-4 flex items-center gap-8">
           <img
-            src={logo || logoApply}
+                src={logo ||''}
             alt="Logo"
             className={`object-contain ${'h-[60px] w-[60px]'} }`}
             referrerPolicy="no-referrer"

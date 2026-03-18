@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { IoEyeOffSharp } from "react-icons/io5";
 import { RxEyeOpen } from "react-icons/rx";
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 // ----------------------
 // FORMAT UTILITIES
@@ -16,26 +18,6 @@ const formatSSN = (raw) => {
 
   return out;
 };
-
-const formatPhone = (raw, formatting = "3,3,4") => {
-  let clean = raw.replace(/^\+1/, "").replace(/\D/g, "").slice(0, 10);
-
-  const parts = formatting.split(",").map((n) => parseInt(n, 10));
-  let formatted = "";
-  let start = 0;
-
-  parts.forEach((len, i) => {
-    if (start >= clean.length) return;
-    const part = clean.slice(start, start + len);
-    formatted += part;
-    start += len;
-
-    if (i < parts.length - 1 && start < clean.length) formatted += "-";
-  });
-
-  return "+1 " + formatted;
-};
-
 // -------------------------
 // COMPONENT
 // -------------------------
@@ -73,19 +55,7 @@ const TextField = ({
   const isSSN = name?.toLowerCase().includes("ssn");
 
   const filteredSuggestions = Array.isArray(suggestions)
-    ? suggestions
-        .filter((s) => {
-          if (inputVal === "*") return true;
-          return s.toLowerCase().includes(inputVal);
-        })
-        .sort((a, b) => {
-          if (inputVal === "*") return a.localeCompare(b);
-          const aStarts = a.toLowerCase().startsWith(inputVal);
-          const bStarts = b.toLowerCase().startsWith(inputVal);
-          if (aStarts && !bStarts) return -1;
-          if (!aStarts && bStarts) return 1;
-          return a.localeCompare(b);
-        })
+    ? suggestions.filter((s) => s.toLowerCase().includes(inputVal))
     : [];
 
   const formatDate = (dateStr) => {
@@ -100,18 +70,15 @@ const TextField = ({
     return `${year}-${month}-${day}`;
   };
 
-  // -----------------------------
-  // DISPLAY VALUE FORMATTING
-  // -----------------------------
   const getDisplayValue = (value) => {
-    if (!value) return isPhone ? "+1 " : "";
-
-    if (isPhone) return formatPhone(String(value), formatting || "3,3,4");
+    if (!value) return "";
 
     if (isSSN && formatting === "3,2,4") return formatSSN(String(value));
 
     return value;
   };
+
+
 
   // -----------------------------
   // TEXTAREA MODE
@@ -171,6 +138,39 @@ const TextField = ({
           <span className={`absolute top-1/2 left-3 -translate-y-1/2 text-gray-500 ${cnLeft}`}>{leftIcon}</span>
         )}
 
+
+{isPhone ? (
+  <div className="relative">
+    <PhoneInput
+    numberInputProps={{style:{outline:'none'}}}
+international
+      defaultCountry="PK"
+      placeholder={placeholder || "Enter phone number"}
+      value={value || ""}
+      onChange={(val) => {
+        onChange?.({
+          target: {
+            name,
+            value: val || "", // E.164
+          },
+        });
+      }}
+      className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
+        leftIcon ? "pl-10" : ""
+      } ${rightIcon ? "pr-10" : ""} ${
+        required &&
+        (!value || !isValidPhoneNumber(value))
+          ? "border-red-500 border-2"
+          : "border-frameColor"
+      } ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
+    />
+
+    {/* Validation */}
+    {value && !isValidPhoneNumber(value) && (
+      <p className="mt-1 text-sm text-red-500">Invalid phone number</p>
+    )}
+  </div>
+) : (
         <input
           {...rest}
           name={name}
@@ -183,22 +183,14 @@ const TextField = ({
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           onChange={(e) => {
             let val = type === "date" ? normalizeDate(e.target.value) : e.target.value;
-
-            // PHONE HANDLING
-            if (isPhone) {
-              val = val.replace(/[^\d+]/g, "");
-              if (!val.startsWith("+1")) val = "+1 " + val.replace(/^\+/, "").replace(/^1/, "");
-            }
-
             // SSN HANDLING
             if (isSSN && formatting === "3,2,4") {
               val = val.replace(/\D/g, "").slice(0, 9);
             }
-
             onChange?.({ target: { name, value: val } });
           }}
           className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? "pl-10" : ""} ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""} `}
-        />
+        />)}
 
         {/* Suggestions */}
         {showSuggestions && filteredSuggestions.length > 0 && value?.length > 0 && (

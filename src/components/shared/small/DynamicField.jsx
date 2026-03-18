@@ -566,6 +566,9 @@ const RangeInputType = ({ field, className, form, setForm }) => {
   );
 };
 
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import "react-phone-number-input/style.css";
+
 const OtherInputType = ({ field, className, form, setForm, isConfirmField, suggestions = [] }) => {
   const isEmpty = (value) => {
     if (value === undefined || value === null) return true;
@@ -595,7 +598,8 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
   if (fieldSuggestions) fieldSuggestions = fieldSuggestions.split(",");
 
   // Auto formatting overrides
-  if (name.includes("ssn")) formatting = "3,2,4";
+  const isSSN = name.includes("ssn");
+  if (isSSN) formatting = "3,2,4";
   const isPhone = name.toLowerCase().includes("phone");
   if (isPhone) formatting = "3,3,4";
 
@@ -631,45 +635,13 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
   //      DISPLAY VALUE FIX
   // ==========================
   const getDisplayValue = (type, value) => {
-    if (!value) return isPhone ? "+1 " : "";
+    if (!value) return  "";
 
     if (showMasked && isMasked) return "*".repeat(value.toString().length);
 
     if (type === "date") return formatDate(value);
 
     const format = formatting?.split(",");
-
-    // --------------------------
-    //        PHONE FORMAT
-    // --------------------------
-    if (isPhone) {
-      let clean = String(value).replace(/\D/g, ""); // raw digits only
-
-      if (format && Array.isArray(format) && format.length > 0) {
-        let formatted = "";
-        let start = 0;
-
-        for (let i = 0; i < format.length; i++) {
-          const len = parseInt(format[i], 10);
-          if (start >= clean.length) break;
-
-          const part = clean.substr(start, len);
-          formatted += part;
-          start += len;
-
-          if (i < format.length - 1 && start < clean.length) {
-            formatted += "-";
-          }
-        }
-
-        if (start < clean.length) formatted += "-" + clean.substr(start);
-
-        return "+1 " + formatted;
-      }
-
-      return "+1 " + clean;
-    }
-
     // --------------------------
     //      NORMAL FORMATTING
     // --------------------------
@@ -803,37 +775,58 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                       />
                     </Autocomplete>
                   ) : (
+                    isPhone ? (
+                      <div>
+                        <PhoneInput
+                          international
+    numberInputProps={{style:{outline:'none'}}}
+
+                          defaultCountry="US"
+                          placeholder={placeholder || "Enter phone number"}
+                          value={form?.[uniqueId]?.value || ""}
+                          onChange={(value) =>
+                            setForm((prev) => ({
+                              ...prev,
+                              [uniqueId]: {
+                                name: name,
+                                value: value || "", // E.164
+                              },
+                            }))
+                          }
+                          className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+                            required &&
+                            (!form?.[uniqueId]?.value ||
+                              !isValidPhoneNumber(form?.[uniqueId]?.value))
+                              ? "border-red-500 border-2"
+                              : "border-frameColor border"
+                          }`}
+                        />
+                    
+                        {/* Validation */}
+                        {form?.[uniqueId]?.value &&
+                          !isValidPhoneNumber(form?.[uniqueId]?.value) && (
+                            <p className="mt-1 text-sm text-red-500">
+                              Invalid phone number
+                            </p>
+                          )}
+                      </div>
+                    ) : (
                     <input
                       ref={inputRef}
                       name={name}
                       placeholder={placeholder}
-                      type={isMasked && type !== "date" ? "text" : type}
+                      type={(isMasked||isSSN )&& type !== "date" ? "text" : type}
                       value={getDisplayValue(type, form?.[uniqueId]?.value)}
                       onChange={(e) => {
                         let val = e.target.value;
-
-                        // ==========================
-                        //      PHONE RAW DIGITS
-                        // ==========================
-                        if (isPhone) {
-                          let digits = e.target.value.replace(/\D/g, "");
-
-                          if (digits.startsWith("1")) digits = digits.slice(1);
-
-                          digits = limitByFormat(digits, "3,3,4"); // 10 digits total
-
-                          val = digits;
-                        }
-
                         // ==========================
                         //      SSN RAW DIGITS
                         // ==========================
-                        else if (name.includes("ssn")) {
-                          let digits = e.target.value.replace(/\D/g, "");
+                        if (isSSN) {
+                          let digits =(val).replace(/\D/g, "");
                           digits = limitByFormat(digits, "3,2,4"); // 9 digits total
                           val = digits;
                         }
-
                         setForm((prev) => ({
                           ...prev,
                           [uniqueId]: { name: name, value: type === "date" ? normalizeDate(val) : val },
@@ -863,7 +856,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                           }
                         : {})}
                     />
-                  )}
+                  ) )}
 
                   {showSuggestions && type === "text" && fieldSuggestions?.length > 0 && (
                     <div className="absolute top-full left-0 z-10 mt-1 max-h-40 w-full overflow-y-auto rounded-md border bg-white shadow-lg">
@@ -1085,9 +1078,21 @@ const AiHelpModal = ({ aiResponse }) => {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex items-center justify-center">
-        <img src={logo} alt="Logo" className="h-20 w-20" />
-      </div>
+    
+
+
+
+      <div className={`my-4 flex max-w-3xl flex-col items-center`}>
+            <img
+              src={logo ||''}
+              alt="Logo"
+              className={`object-contain ${'h-[100px] max-h-[200px] w-auto max-w-[300px]'} } cursor-pointer!`}
+              referrerPolicy="no-referrer"
+            />
+          </div>
+
+      
+      
       <div className="flex flex-col items-start gap-2 border-2 p-4">
         <div
           className=""

@@ -7,7 +7,6 @@ import { IoChevronForwardOutline, IoLogOutOutline } from 'react-icons/io5';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom'; // or 'next/link' if using Next.js
 import { toast } from 'react-toastify';
-import logoApply from '../../../assets/images/logo.png';
 import { Applications } from '@/assets/svgs/icon';
 
 import CustomLoading from '@/components/shared/small/CustomLoading';
@@ -92,7 +91,7 @@ const GuestHeader = ({
             <div className={`my-4 flex w-[300px] items-center`}>
               <img
                 onClick={handleLogoClick}
-                src={logo || logoApply}
+                src={logo ||''}
                 alt="Logo"
                 className={`object-contain ${'h-[100px] max-h-[200px] w-auto max-w-[300px]'} } cursor-pointer!`}
                 referrerPolicy="no-referrer"
@@ -179,7 +178,7 @@ const GuestHeader = ({
             <div className={`my-4 flex w-[300px] items-center`}>
               <img
                 onClick={handleLogoClick}
-                src={logo || logoApply}
+                src={logo ||''}
                 alt="Logo"
                 className={`object-contain ${'h-[100px] max-h-[200px] w-auto max-w-[300px]'} } cursor-pointer!`}
                 referrerPolicy="no-referrer"
@@ -196,7 +195,7 @@ const GuestHeader = ({
           <div className={`my-4 flex max-w-3xl flex-col items-center`}>
             <img
               onClick={handleLogoClick}
-              src={logo || logoApply}
+              src={logo ||''}
               alt="Logo"
               className={`object-contain ${'h-[100px] max-h-[200px] w-auto max-w-[300px]'} } cursor-pointer!`}
               referrerPolicy="no-referrer"

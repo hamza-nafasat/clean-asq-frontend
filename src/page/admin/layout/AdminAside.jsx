@@ -7,7 +7,6 @@ import { HiOutlineLightBulb } from 'react-icons/hi';
 import { PiStrategyBold } from 'react-icons/pi';
 import { RiHistoryLine } from 'react-icons/ri';
 import { Link, useLocation } from 'react-router-dom';
-import logoApply from '../../../assets/images/logo.png';
 import ArrowBackIcon from '../../../assets/svgs/ArrowBackIcon';
 import { useSelector } from 'react-redux';
 
@@ -70,7 +69,7 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
             {' '}
             <Link to="/application-forms" className="flex min-w-10 items-center justify-center">
               <img
-                src={logo || logoApply}
+                    src={logo ||''}
                 alt="logo"
                 referrerPolicy="no-referrer"
                 className={`object-contain ${isNavOpen
