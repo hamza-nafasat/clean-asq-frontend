@@ -78,8 +78,6 @@ const TextField = ({
     return value;
   };
 
-
-
   // -----------------------------
   // TEXTAREA MODE
   // -----------------------------
@@ -138,59 +136,54 @@ const TextField = ({
           <span className={`absolute top-1/2 left-3 -translate-y-1/2 text-gray-500 ${cnLeft}`}>{leftIcon}</span>
         )}
 
+        {isPhone ? (
+          <div className="relative">
+            <PhoneInput
+              numberInputProps={{ style: { outline: "none" } }}
+              international
+              defaultCountry="US"
+              placeholder={placeholder || "Enter phone number"}
+              value={value || ""}
+              onChange={(val) => {
+                onChange?.({
+                  target: {
+                    name,
+                    value: val || "", // E.164
+                  },
+                });
+              }}
+              className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
+                leftIcon ? "pl-10" : ""
+              } ${rightIcon ? "pr-10" : ""} ${
+                required && (!value || !isValidPhoneNumber(value)) ? "border-red-500 border-2" : "border-frameColor"
+              } ${!value && required && !isPdf ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
+            />
 
-{isPhone ? (
-  <div className="relative">
-    <PhoneInput
-    numberInputProps={{style:{outline:'none'}}}
-international
-      defaultCountry="PK"
-      placeholder={placeholder || "Enter phone number"}
-      value={value || ""}
-      onChange={(val) => {
-        onChange?.({
-          target: {
-            name,
-            value: val || "", // E.164
-          },
-        });
-      }}
-      className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
-        leftIcon ? "pl-10" : ""
-      } ${rightIcon ? "pr-10" : ""} ${
-        required &&
-        (!value || !isValidPhoneNumber(value))
-          ? "border-red-500 border-2"
-          : "border-frameColor"
-      } ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
-    />
-
-    {/* Validation */}
-    {value && !isValidPhoneNumber(value) && (
-      <p className="mt-1 text-sm text-red-500">Invalid phone number</p>
-    )}
-  </div>
-) : (
-        <input
-          {...rest}
-          name={name}
-          disabled={disabled}
-          placeholder={placeholder}
-          autoComplete="off"
-          type={showMasked ? "password" : type}
-          value={type === "date" ? formatDate(value) : getDisplayValue(value)}
-          onFocus={() => setShowSuggestions(true)}
-          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-          onChange={(e) => {
-            let val = type === "date" ? normalizeDate(e.target.value) : e.target.value;
-            // SSN HANDLING
-            if (isSSN && formatting === "3,2,4") {
-              val = val.replace(/\D/g, "").slice(0, 9);
-            }
-            onChange?.({ target: { name, value: val } });
-          }}
-          className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? "pl-10" : ""} ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""} `}
-        />)}
+            {/* Validation */}
+            {value && !isValidPhoneNumber(value) && <p className="mt-1 text-sm text-red-500">Invalid phone number</p>}
+          </div>
+        ) : (
+          <input
+            {...rest}
+            name={name}
+            disabled={disabled}
+            placeholder={placeholder}
+            autoComplete="off"
+            type={showMasked ? "password" : type}
+            value={type === "date" ? formatDate(value) : getDisplayValue(value)}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+            onChange={(e) => {
+              let val = type === "date" ? normalizeDate(e.target.value) : e.target.value;
+              // SSN HANDLING
+              if (isSSN && formatting === "3,2,4") {
+                val = val.replace(/\D/g, "").slice(0, 9);
+              }
+              onChange?.({ target: { name, value: val } });
+            }}
+            className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? "pl-10" : ""} ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""} `}
+          />
+        )}
 
         {/* Suggestions */}
         {showSuggestions && filteredSuggestions.length > 0 && value?.length > 0 && (
