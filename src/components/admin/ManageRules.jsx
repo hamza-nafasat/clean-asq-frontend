@@ -21,46 +21,53 @@ import { ThreeDotEditViewDelete } from "../shared/ThreeDotViewEditDelete";
 
 const manageRulesColumns = () => [
   {
+    name: "Rule Id",
+    sortable: true,
+    width: "100px",
+    cell: (row) => (
+      <span title={row?._id} className="text-textPrimary truncate text-sm">
+        {row?._id}
+      </span>
+    ),
+  },
+  {
     name: "Rule Name",
-    selector: (row) => row?.ruleName,
     sortable: true,
+    cell: (row) => <span className="text-textPrimary font-semibold capitalize">{row?.ruleName}</span>,
+    width: "200px",
   },
   {
-    name: "Rule Value",
-    selector: (row) => row?.value,
+    name: "Rule Prompt",
     sortable: true,
+    cell: (row) => (
+      <textarea
+        value={row?.rulePrompt}
+        readOnly
+        className="text-textPrimary border-frameColor w-full resize-none rounded-md border bg-[#FAFBFF] p-2 text-sm"
+        rows={2}
+      />
+    ),
+    grow: 2,
+    wrap: true,
   },
   {
-    name: "Full Path",
-    selector: (row) => <span title={row?.fullPath}>{row?.fullPath}</span>,
+    name: "Rule Priority",
     sortable: true,
-  },
-  {
-    name: "Section",
-    selector: (row) => row?.section,
-    sortable: true,
-  },
-  {
-    name: "Operator",
-    selector: (row) => row?.operator,
-    sortable: true,
-  },
-  {
-    name: "Operator",
-    selector: (row) => row?.operator,
-    sortable: true,
-  },
-  {
-    name: "Unique ID",
-    selector: (row) => row?.uniqueId,
-    sortable: true,
+    width: "150px",
+    cell: (row) => (
+      <span
+        className={`px-4 py-2 w-25 text-center rounded-sm font-semibold capitalize text-white ${row?.priority === 0 ? "bg-green-500!" : row?.priority === 1 ? "bg-yellow-500!" : "bg-red-500!"}`}
+      >
+        {row?.priority === 0 ? "Low" : row?.priority === 1 ? "Medium" : "High"}
+      </span>
+    ),
   },
   {
     name: "Status",
-    selector: (row) => (row?.isActive ? "Active" : "Inactive"),
+    width: "120px",
     sortable: true,
+    cell: (row) => <span className="font-semibold capitalize">{row?.isActive ? "Active" : "Inactive"}</span>,
   },
-  // 3 dots for delete or update the status
 ];
 
 const ManageRules = () => {
@@ -134,6 +141,7 @@ const ManageRules = () => {
       ...manageRulesColumns(),
       {
         name: "Action",
+        width: "100px",
         cell: (row) => {
           if (!actionMenuRefs.current.has(row?._id)) {
             actionMenuRefs.current.set(row?._id, React.createRef());
