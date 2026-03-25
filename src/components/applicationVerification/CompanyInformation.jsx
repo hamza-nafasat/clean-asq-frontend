@@ -61,7 +61,10 @@ function CompanyInformation({
   const [strategyKeys, setStrategyKeys] = useState([]);
   const { data: strategyKeysData } = useGetAllSearchStrategiesQuery();
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
-  const requiredNames = useMemo(() => fields.filter((f) => f.required).map((f) => f.name), [fields]);
+  const requiredNames = useMemo(
+    () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
+    [fields],
+  );
 
   const isCreator = user?._id && user?._id === step?.owner && user?.role !== "guest";
 
@@ -273,7 +276,8 @@ function CompanyInformation({
       return;
     }
     const allFilled = requiredNames.every((name) => {
-      const val = form[name];
+      const val = form[name.uniqueId]?.value;
+      console.log("name", name, "val", val);
       if (val == null) return false;
       if (typeof val === "string") return val.trim() !== "";
       if (Array.isArray(val))
@@ -287,12 +291,13 @@ function CompanyInformation({
         );
       return true;
     });
+
     // check naics filled
-    const isNaicsFilled = naicsToMccDetails.NAICS;
+    const isNaicsFilled = naicsToMccDetails.NAICS ? true : false;
     let isCompanyStockSymbol = true;
-    if (form?.["company_ownership_type"] == "public") {
+    if (form?.["company_ownership_type"]?.value == "public") {
       isCompanyStockSymbol = false;
-      if (form?.["stocksymbol"]) isCompanyStockSymbol = true;
+      if (form?.["stocksymbol"]?.value) isCompanyStockSymbol = true;
     }
     // check signature done
     let isSignatureDone = true;
@@ -303,6 +308,7 @@ function CompanyInformation({
       }
     }
 
+    console.log(allFilled, isNaicsFilled, isCompanyStockSymbol, isSignatureDone);
     const isAllRequiredFieldsFilled = allFilled && isNaicsFilled && isCompanyStockSymbol && isSignatureDone;
     setIsAllRequiredFieldsFilled(isAllRequiredFieldsFilled);
   }, [form, isCreator, isSignature, naicsToMccDetails.NAICS, requiredNames]);

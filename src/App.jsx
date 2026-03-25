@@ -25,7 +25,6 @@ import AdditionalOwnersForm from "./page/admin/userApplicationForms/ApplicationV
 import ApplicationForm from "./page/admin/userApplicationForms/ApplicationVerification/ApplicationForm";
 import ApplicationPdfView from "./page/admin/userApplicationForms/ApplicationVerification/ApplicationPdfView";
 import SingleApplication from "./page/admin/userApplicationForms/ApplicationVerification/SingleApplication";
-import CompanyInformation from "./page/admin/userApplicationForms/CompanyInformation/CompanyInformation";
 import FormHiddenSection from "./page/admin/userApplicationForms/Hidden/HIdden";
 import { useGetMyProfileFirstTimeMutation } from "./redux/apis/authApis";
 import { userExist, userNotExist } from "./redux/slices/authSlice";
@@ -204,7 +203,6 @@ function App() {
             {/*all User Forms or application layout  , with out sidebar */}
             <Route path="/user-application-forms" element={<UserApplicationForms />}>
               <Route index element={<Navigate to="application-verification" replace />} />
-              <Route path="company-information" element={<CompanyInformation />} />
             </Route>
           </Route>
 

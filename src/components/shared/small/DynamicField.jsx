@@ -11,6 +11,8 @@ import Button from "./Button";
 import Modal from "./Modal";
 import TextField from "./TextField";
 import { Autocomplete } from "@react-google-maps/api";
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
 const ALLOWED_TEXT_EXTENSIONS = [".csv", ".txt", ".rtf"];
@@ -334,7 +336,7 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
   );
 };
 
-const RadioInputType = ({ field, className, form, setForm, onChange, disabled = false }) => {
+const RadioInputType = ({ field, className, form, setForm, onChange, disabled = false, optionColumnCount = 3 }) => {
   const { label, options, name, uniqueId, required, aiHelp, aiPrompt, aiResponse, isDisplayText, ai_formatting } =
     field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
@@ -364,13 +366,13 @@ const RadioInputType = ({ field, className, form, setForm, onChange, disabled = 
           {label}:{required ? "*" : ""}
         </h4>
         {aiHelp && (
-          <div className="jsutify-end items-cente ml-auto flex">
+          <div className="justify-end items-center ml-auto flex">
             <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
           </div>
         )}
       </div>
       <div className="border-b-2 py-6">
-        <div className="grid grid-cols-3 gap-4 p-0">
+        <div className={`grid grid-cols-${optionColumnCount} gap-4 p-0`}>
           {options?.map((option, index) => (
             <div key={index} className="flex items-center gap-2 p-2 text-start">
               <input
@@ -380,7 +382,7 @@ const RadioInputType = ({ field, className, form, setForm, onChange, disabled = 
                 id={option.value + index + name}
                 value={option.value}
                 checked={form[uniqueId]?.value === option.value}
-                className={`text-textPrimary accent-primary size-5 ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
+                className={` h-5! w-5! text-textPrimary accent-primary ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
                 required={required}
                 onChange={onChange ? onChange : () => radioHandler(option)}
               />
@@ -565,9 +567,6 @@ const RangeInputType = ({ field, className, form, setForm }) => {
     </div>
   );
 };
-
-import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
-import "react-phone-number-input/style.css";
 
 const OtherInputType = ({ field, className, form, setForm, isConfirmField, suggestions = [] }) => {
   const isEmpty = (value) => {

@@ -51,13 +51,16 @@ function BankInfo({
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
   const [loadingNext, setLoadingNext] = useState(false);
-  const requiredNames = useMemo(() => fields.filter((f) => f.required).map((f) => f.name), [fields]);
   const [accMatch, setAccMatch] = useState(false);
   const [getBankLookup, { isLoading }] = useGetBankLookupMutation();
   const [error] = useState(null);
   const [bankModal, setBankModal] = useState(null);
   const [ownerSuggesstionsModal, setOwnerSuggesstionsModal] = useState(false);
 
+  const requiredNames = useMemo(
+    () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
+    [fields],
+  );
   const isCreator = user?._id && user?._id === step?.owner && user?.role !== "guest";
 
   // add owners for suggestions
@@ -166,8 +169,8 @@ function BankInfo({
       setIsAllRequiredFieldsFilled(true);
       return;
     }
-    const allFilled = requiredNames.every((name) => {
-      const val = form[name];
+    const allFilled = requiredNames.every(({ uniqueId }) => {
+      const val = form[uniqueId]?.value;
       if (val == null) return false;
       if (typeof val === "string") return val.trim() !== "";
       if (Array.isArray(val))

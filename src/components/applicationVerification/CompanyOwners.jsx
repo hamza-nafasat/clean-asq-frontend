@@ -96,10 +96,10 @@ function CompanyOwners({
   );
 
   const isCreator = user?._id && user?._id === step?.owner && user?.role !== "guest";
-  const validateEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(String(email).toLowerCase());
-  };
+  // const validateEmail = (email) => {
+  //   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //   return re.test(String(email).toLowerCase());
+  // };
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
       if (!file) return toast.error("Please select a file");
@@ -295,8 +295,18 @@ function CompanyOwners({
       setSubmitButtonText("Next");
       return;
     }
-    const additionOwnersGet25OrMore = form?.["additional_owners_own_25_percent_or_more"] == "yes";
-    const applicantIsAlsoPrimaryOperator = form?.["rolling_owner_is_also_owner"] == "yes";
+    const additionOwnersGet25OrMoreUniqueId = Object.keys(form).find((key) =>
+      key?.includes("additional_owners_own_25_percent_or_more"),
+    );
+    const additionOwnersGet25OrMore = additionOwnersGet25OrMoreUniqueId
+      ? form?.[additionOwnersGet25OrMoreUniqueId]?.value == "yes"
+      : false;
+    const applicantIsAlsoPrimaryOperatorUniqueId = Object.keys(form).find((key) =>
+      key?.includes("rolling_owner_is_also_owner"),
+    );
+    const applicantIsAlsoPrimaryOperator = applicantIsAlsoPrimaryOperatorUniqueId
+      ? form?.[applicantIsAlsoPrimaryOperatorUniqueId]?.value == "yes"
+      : false;
     // Check if all required fields are filled
     const allFilled = requiredNames.every(({ uniqueId }) => {
       const val = form[uniqueId]?.value;
@@ -332,7 +342,7 @@ function CompanyOwners({
       isOperatorExist = true;
     }
     const idMissionField = formData?.idMission?.roleFillingForCompany;
-    if (idMissionField == "primaryOperatorAndController" || idMissionField == "both") {
+    if (idMissionField == "primaryOperatorAndController" || idMissionField?.value == "both") {
       isOperatorExist = true;
     }
     if (!isOperatorExist) setSubmitButtonText("At least one primary operator required");

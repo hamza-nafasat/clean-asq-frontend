@@ -1298,14 +1298,14 @@ export default function SingleApplication() {
                 />
                 <div className="bg-backgroundColor flex w-full border p-4">
                   <RadioInputType
+                    optionColumnCount={1}
                     className={"w-full"}
                     field={{
                       label: "What is the role you are filling for the company as you complete this application? ",
                       options: [
                         {
-                          label:
-                            "A primary company operator/controller (C-level executive, owner or other person that holds significant control over company direction and decisions)",
-                          value: "primaryOperatorAndController",
+                          label: "Both a company operator and the primary contact",
+                          value: "both",
                         },
                         {
                           label:
@@ -1313,21 +1313,27 @@ export default function SingleApplication() {
                           value: "primaryContact",
                         },
                         {
-                          label: "Both a company operator and the primary contact",
-                          value: "both",
+                          label:
+                            "A primary company operator/controller (C-level executive, owner or other person that holds significant control over company direction and decisions)",
+                          value: "primaryOperatorAndController",
                         },
                       ],
                       name: "roleFillingForCompany",
+                      uniqueId: "roleFillingForCompany",
                       required: true,
                     }}
-                    form={{ roleFillingForCompany: idMissionVerifiedData?.roleFillingForCompany?.value || "" }}
+                    form={{
+                      roleFillingForCompany: {
+                        name: "roleFillingForCompany",
+                        value: idMissionVerifiedData?.roleFillingForCompany?.value || "",
+                      },
+                    }}
                     onChange={(e) =>
                       setIdMissionVerifiedData({
                         ...idMissionVerifiedData,
-                        roleFillingForCompany: { name: "roleFillingForCompany", value: e.target?.value },
+                        roleFillingForCompany: { name: "roleFillingForCompany", value: e?.target?.value },
                       })
                     }
-                    setForm={setIdMissionVerifiedData}
                   />
                 </div>
                 <div className="flex w-full flex-col">
