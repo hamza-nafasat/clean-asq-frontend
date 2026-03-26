@@ -4,6 +4,8 @@ import {
   useCreateFormRuleMutation,
   useDeleteSingleFormRuleMutation,
   useGetAllFormRulesQuery,
+  useGetFormRuleFromAiMutation,
+  useUpdateSingleFormRuleMutation,
   useUpdateStatusSingleFormRuleMutation,
 } from "@/redux/apis/formApis";
 import { MoreVertical, PencilIcon, ToggleRight, Trash } from "lucide-react";
@@ -33,7 +35,7 @@ const manageRulesColumns = () => [
   {
     name: "Rule Name",
     sortable: true,
-    cell: (row) => <span className="text-textPrimary font-semibold capitalize">{row?.ruleName}</span>,
+    cell: (row) => <span className="text-textPrimary font-semibold capitalize">{row?.name}</span>,
     width: "200px",
   },
   {
@@ -41,7 +43,7 @@ const manageRulesColumns = () => [
     sortable: true,
     cell: (row) => (
       <textarea
-        value={row?.rulePrompt}
+        value={row?.prompt}
         readOnly
         className="text-textPrimary border-frameColor w-full resize-none rounded-md border bg-[#FAFBFF] p-2 text-sm"
         rows={2}
@@ -78,6 +80,7 @@ const ManageRules = () => {
   const [selectedRow, setSelectedRow] = useState(null);
   const [deleteRuleConfirmation, setDeleteRuleConfirmation] = useState(null);
   const [updateStatusRuleConfirmation, setUpdateStatusRuleConfirmation] = useState(null);
+  const [updateRuleConfirmation, setUpdateRuleConfirmation] = useState(null);
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
 
@@ -121,6 +124,15 @@ const ManageRules = () => {
           setSelectedRow(row);
           setActionMenu(null);
           setUpdateStatusRuleConfirmation(true);
+        },
+      },
+      {
+        name: "Update Rule",
+        icon: <PencilIcon size={16} className="mr-2" />,
+        onClick: (row) => {
+          setSelectedRow(row);
+          setActionMenu(null);
+          setUpdateRuleConfirmation(true);
         },
       },
       {
@@ -171,6 +183,11 @@ const ManageRules = () => {
       {openCreateRuleModal && (
         <Modal onClose={() => setOpenCreateRuleModal(false)}>
           <CreateRuleModal formId={formId} setModal={setOpenCreateRuleModal} refetch={refetch} />
+        </Modal>
+      )}
+      {updateRuleConfirmation && (
+        <Modal onClose={() => setUpdateRuleConfirmation(false)}>
+          <UpdateRuleModal ruleData={selectedRow} setModal={setUpdateRuleConfirmation} refetch={refetch} />
         </Modal>
       )}
 
@@ -224,13 +241,20 @@ export default ManageRules;
 
 const CreateRuleModal = ({ formId, setModal, refetch }) => {
   const [prompt, setPrompt] = useState("");
-  const [ruleName, setRuleName] = useState("");
+  const [name, setName] = useState("");
+  const [handler, setHandler] = useState("");
+  const [formula, setFormula] = useState("");
+  const [example, setExample] = useState("");
+  const [explanation, setExplanation] = useState("");
   const [createRule, { isLoading: isCreatingRule }] = useCreateFormRuleMutation();
+  const [getFormRuleFromAi, { isLoading: isGettingFormRuleFromAi }] = useGetFormRuleFromAiMutation();
 
   const createRuleHandler = async () => {
     try {
-      if (!formId || !prompt || !ruleName) return toast.error("Please fill all the fields");
-      const res = await createRule({ formId, prompt, ruleName }).unwrap();
+      if (!formId || !prompt || !name || !handler || !formula || !example || !explanation)
+        return toast.error("Please fill all the fields");
+      const data = { formId, prompt, name, handler, formula, example, explanation };
+      const res = await createRule(data).unwrap();
       if (res?.success) {
         toast?.success(res?.message || "Rule created successfully");
         await refetch();
@@ -241,29 +265,81 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
       toast.error(error?.data?.message || "Failed to create rule");
     }
   };
+
+  const getFormRuleFromAiHandler = async () => {
+    try {
+      if (!formId || !prompt || !name) return toast.error("Please fill all the fields");
+      const res = await getFormRuleFromAi({ formId, prompt, name }).unwrap();
+      if (res?.success) {
+        setName(res?.data?.name);
+        setHandler(res?.data?.handler);
+        setFormula(res?.data?.formula);
+        setExample(res?.data?.example);
+        setExplanation(res?.data?.explanation);
+      }
+    } catch (error) {
+      console.error("Error getting form rule from ai:", error);
+      toast.error(error?.data?.message || "Failed to get form rule from ai");
+    }
+  };
   return (
     <div className="flex items-center justify-center p-4">
       <div className="flex w-full max-w-2xl flex-col gap-6">
-        <h3 className="text-center text-lg font-semibold text-gray-800">Create Rule</h3>
+        <h3 className="text-center text-2xl font-semibold text-gray-800">Create Rule</h3>
         <div className="flex flex-col gap-2">
           <TextField
             label="Rule Name"
             id="rule-name"
             placeholder="Enter rule name"
-            value={ruleName}
-            onChange={(e) => setRuleName(e.target.value)}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
-          <TextField
-            label="Prompt"
-            id="prompt"
-            rows={5}
-            cols={30}
-            type="textarea"
-            placeholder="Enter prompt for rule creation"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-          />
+          <div className="flex flex-col gap-2">
+            <TextField
+              label="Prompt"
+              id="prompt"
+              type="textarea"
+              placeholder="Enter prompt for rule creation"
+              value={prompt}
+              textAreaHeight="100px"
+              onChange={(e) => setPrompt(e.target.value)}
+            />
+            <Button
+              label="Get Rule from AI"
+              variant="primary"
+              icon={isGettingFormRuleFromAi && FaSpinner}
+              cnLeft="mr-2 w-4 h-4 animate-spin"
+              onClick={getFormRuleFromAiHandler}
+              disabled={isGettingFormRuleFromAi || !prompt || !name}
+            />
+          </div>
         </div>
+
+        {formula && example && (
+          <div className="flex flex-col gap-4 mt-4 border border-gray-200 rounded-xl p-4 bg-[#FAFBFF]">
+            <h4 className="text-lg font-semibold text-gray-800">Rule Preview</h4>
+            {explanation && (
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Explanation</p>
+                <div className="text-sm text-gray-800 bg-white border rounded-md p-3">{explanation}</div>
+              </div>
+            )}
+            <div>
+              <p className="text-sm font-medium text-gray-600 mb-1">Formula</p>
+              <div className="text-sm font-mono text-blue-600 bg-white border rounded-md p-3 wrap-break-word">
+                {formula}
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600 mb-1">Example Calculation</p>
+              <pre className="text-sm text-gray-800 bg-white border rounded-md p-3 whitespace-pre-wrap">{example}</pre>
+            </div>
+            <details className="mt-2">
+              <summary className="cursor-pointer text-sm text-gray-500">Show technical code</summary>
+              <pre className="text-xs bg-black text-green-400 p-3 rounded-md mt-2 overflow-x-auto">{handler}</pre>
+            </details>
+          </div>
+        )}
         <div className="flex w-full justify-end gap-2">
           <Button label="Cancel" variant="secondary" onClick={() => setModal(false)} />
           <Button
@@ -272,7 +348,127 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
             icon={isCreatingRule && FaSpinner}
             cnLeft="mr-2 w-4 h-4 animate-spin"
             onClick={createRuleHandler}
-            disabled={isCreatingRule}
+            disabled={isCreatingRule || !formId || !prompt || !name || !handler || !formula || !example || !explanation}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
+  const [prompt, setPrompt] = useState(ruleData?.prompt);
+  const [name, setName] = useState(ruleData?.name);
+  const [handler, setHandler] = useState(ruleData?.handler);
+  const [formula, setFormula] = useState(ruleData?.formula);
+  const [example, setExample] = useState(ruleData?.example);
+  const [explanation, setExplanation] = useState(ruleData?.explanation);
+  const [updateRule, { isLoading: isUpdatingRule }] = useUpdateSingleFormRuleMutation();
+  const [getFormRuleFromAi, { isLoading: isGettingFormRuleFromAi }] = useGetFormRuleFromAiMutation();
+
+  const updateRuleHandler = async () => {
+    try {
+      if (!ruleData?._id || !prompt || !name || !handler || !formula || !example || !explanation)
+        return toast.error("Please fill all the fields");
+
+      const data = { formId: ruleData?.formId, prompt, name, handler, formula, example, explanation };
+
+      const res = await updateRule({ data, ruleId: ruleData?._id }).unwrap();
+      if (res?.success) {
+        toast?.success(res?.message || "Rule updated successfully");
+        await refetch();
+        setModal(false);
+      }
+    } catch (error) {
+      console.error("Error updating rule:", error);
+      toast.error(error?.data?.message || "Failed to update rule");
+    }
+  };
+
+  const getFormRuleFromAiHandler = async () => {
+    try {
+      if (!ruleData?.formId || !prompt || !name) return toast.error("Please fill all the fields");
+      const res = await getFormRuleFromAi({ formId: ruleData?.formId, prompt, name }).unwrap();
+      if (res?.success) {
+        setName(res?.data?.name);
+        setHandler(res?.data?.handler);
+        setFormula(res?.data?.formula);
+        setExample(res?.data?.example);
+        setExplanation(res?.data?.explanation);
+      }
+    } catch (error) {
+      console.error("Error getting form rule from ai:", error);
+      toast.error(error?.data?.message || "Failed to get form rule from ai");
+    }
+  };
+  return (
+    <div className="flex items-center justify-center p-4">
+      <div className="flex w-full max-w-2xl flex-col gap-6">
+        <h3 className="text-center text-2xl font-semibold text-gray-800">Update Rule</h3>
+        <div className="flex flex-col gap-2">
+          <TextField
+            label="Rule Name"
+            id="rule-name"
+            placeholder="Enter rule name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <div className="flex flex-col gap-2">
+            <TextField
+              label="Prompt"
+              id="prompt"
+              type="textarea"
+              placeholder="Enter prompt for rule creation"
+              value={prompt}
+              textAreaHeight="100px"
+              onChange={(e) => setPrompt(e.target.value)}
+            />
+            <Button
+              label="Get Rule from AI"
+              variant="primary"
+              icon={isGettingFormRuleFromAi && FaSpinner}
+              cnLeft="mr-2 w-4 h-4 animate-spin"
+              onClick={getFormRuleFromAiHandler}
+              disabled={isGettingFormRuleFromAi || !prompt || !name}
+            />
+          </div>
+        </div>
+
+        {formula && example && (
+          <div className="flex flex-col gap-4 mt-4 border border-gray-200 rounded-xl p-4 bg-[#FAFBFF]">
+            <h4 className="text-lg font-semibold text-gray-800">Rule Preview</h4>
+            {explanation && (
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Explanation</p>
+                <div className="text-sm text-gray-800 bg-white border rounded-md p-3">{explanation}</div>
+              </div>
+            )}
+            <div>
+              <p className="text-sm font-medium text-gray-600 mb-1">Formula</p>
+              <div className="text-sm font-mono text-blue-600 bg-white border rounded-md p-3 wrap-break-word">
+                {formula}
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600 mb-1">Example Calculation</p>
+              <pre className="text-sm text-gray-800 bg-white border rounded-md p-3 whitespace-pre-wrap">{example}</pre>
+            </div>
+            <details className="mt-2">
+              <summary className="cursor-pointer text-sm text-gray-500">Show technical code</summary>
+              <pre className="text-xs bg-black text-green-400 p-3 rounded-md mt-2 overflow-x-auto">{handler}</pre>
+            </details>
+          </div>
+        )}
+        <div className="flex w-full justify-end gap-2">
+          <Button label="Cancel" variant="secondary" onClick={() => setModal(false)} />
+          <Button
+            label="Update Rule"
+            variant="primary"
+            icon={isUpdatingRule && FaSpinner}
+            cnLeft="mr-2 w-4 h-4 animate-spin"
+            onClick={updateRuleHandler}
+            disabled={
+              isUpdatingRule || !ruleData?._id || !prompt || !name || !handler || !formula || !example || !explanation
+            }
           />
         </div>
       </div>

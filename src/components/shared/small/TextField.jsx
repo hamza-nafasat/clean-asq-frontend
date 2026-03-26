@@ -43,6 +43,7 @@ const TextField = ({
   required = false,
   rows,
   cols,
+  textAreaHeight = "",
   placeholder,
   ...rest
 }) => {
@@ -106,7 +107,7 @@ const TextField = ({
             autoComplete="off"
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-            className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
+            className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${textAreaHeight && `h-[${textAreaHeight}]!`} ${
               leftIcon ? "pl-10" : ""
             } ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
           />

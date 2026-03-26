@@ -145,7 +145,9 @@ function BankInfo({
     if (fields && fields.length > 0) {
       const initialForm = {};
       fields.forEach((field) => {
-        initialForm[field?.uniqueId] = reduxData ? reduxData[field?.uniqueId] || "" : "";
+        initialForm[field?.uniqueId] = reduxData
+          ? reduxData[field?.uniqueId] || { name: field?.name, value: "" }
+          : { name: field?.name, value: "" };
       });
       setForm(initialForm);
     }
@@ -165,10 +167,10 @@ function BankInfo({
 
   // check all required fields filled
   useEffect(() => {
-    if (isCreator) {
-      setIsAllRequiredFieldsFilled(true);
-      return;
-    }
+    // if (isCreator) {
+    //   setIsAllRequiredFieldsFilled(true);
+    //   return;
+    // }
     const allFilled = requiredNames.every(({ uniqueId }) => {
       const val = form[uniqueId]?.value;
       if (val == null) return false;
@@ -441,6 +443,7 @@ function BankInfo({
                     onClick={() => {
                       setForm((prev) => {
                         const bankNameId = Object.keys(prev).find((key) => prev[key]?.name === "bank_name");
+                        console.log("bankNameId is", bankNameId);
                         return { ...prev, [bankNameId]: { name: "bank_name", value: bankModal.bankName } };
                       });
                       setBankModal(null);

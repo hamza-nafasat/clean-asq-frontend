@@ -32,7 +32,7 @@ const Button = ({
     `,
   };
 
-  const disabledClasses = disabled || loading ? "opacity-50 cursor-not-allowed" : "";
+  const disabledClasses = disabled || loading ? "opacity-40! pointer-events-none!" : "";
 
   return (
     <button

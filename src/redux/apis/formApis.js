@@ -476,13 +476,28 @@ const formApis = createApi({
       }),
       invalidatesTags: ["FormRules"],
     }),
+    updateSingleFormRule: builder.mutation({
+      query: ({ data, ruleId }) => ({
+        url: `/single/rule/${ruleId}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["FormRules"],
+    }),
     updateStatusSingleFormRule: builder.mutation({
       query: ({ ruleId, isActive }) => ({
-        url: `/single/rule/${ruleId}`,
+        url: `/single/rule-status/${ruleId}`,
         method: "PUT",
         body: { isActive },
       }),
       invalidatesTags: ["FormRules"],
+    }),
+    getFormRuleFromAi: builder.mutation({
+      query: (data) => ({
+        url: "/get-form-rule-from-ai",
+        method: "POST",
+        body: data,
+      }),
     }),
   }),
 });
@@ -538,6 +553,8 @@ export const {
   useApplyRulesOnFormQuery,
   useGetAllFormRulesQuery,
   useDeleteSingleFormRuleMutation,
+  useUpdateSingleFormRuleMutation,
   useUpdateStatusSingleFormRuleMutation,
+  useGetFormRuleFromAiMutation,
 } = formApis;
 export default formApis;
