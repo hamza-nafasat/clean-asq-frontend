@@ -188,7 +188,7 @@ const DynamicField = ({ cn, field, className = "", form, placeholder, value, set
   );
 };
 
-const SelectInputType = ({ field, className, form, setForm }) => {
+const SelectInputType = ({ field, className, form, setForm, onChange }) => {
   const {
     label,
     options,
@@ -249,7 +249,7 @@ const SelectInputType = ({ field, className, form, setForm }) => {
             value={displayValue}
             required={required}
             className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${!displayValue && required ? "bg-highlighting" : ""}`}
-            onChange={selectHandler}
+            onChange={onChange ? onChange : selectHandler}
           >
             {/* Show placeholder if value is not in options */}
             <option value="">{placeholder ?? "Choose an option"}</option>
