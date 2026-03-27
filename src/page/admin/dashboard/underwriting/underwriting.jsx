@@ -3,7 +3,7 @@ import { useGetSingleSubmitFormQueryQuery } from "@/redux/apis/formApis";
 import { useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import { History } from "@/components/onBoarding/History";
-import { VerificationAndAlerts } from "@/components/onBoarding/VerificationAndAlerts";
+import { ApplicationAnalysis } from "@/components/onBoarding/ApplicationAnalysis";
 import { AppViewer } from "@/components/onBoarding/AppViewer";
 import checkPermission, { webPermissions } from "@/utils/checkPermission";
 import { useSelector } from "react-redux";
@@ -27,9 +27,9 @@ function OnBoarding() {
               onClick={() => setActiveTab("history")}
             />
             <Button
-              label="Verification & Alerts"
-              variant={activeTab === "verification" ? "primary" : "secondary"}
-              onClick={() => setActiveTab("verification")}
+              label="Application Analysis"
+              variant={activeTab === "applicationAnalysis" ? "primary" : "secondary"}
+              onClick={() => setActiveTab("applicationAnalysis")}
             />
             <Button
               label="App viewer"
@@ -39,7 +39,7 @@ function OnBoarding() {
           </div>
         </div>
         {activeTab === "history" && <History submittedFormId={applicantId} />}
-        {activeTab === "verification" && <VerificationAndAlerts submitFormData={submitFormData?.data} />}
+        {activeTab === "applicationAnalysis" && <ApplicationAnalysis submitFormData={submitFormData?.data} />}
         {activeTab === "appViewer" && <AppViewer data={submitFormData?.data} />}
       </div>
     </>

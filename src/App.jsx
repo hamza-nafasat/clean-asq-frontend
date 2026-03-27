@@ -17,7 +17,7 @@ import Email from "./page/admin/dashboard/email/Email";
 import FormStrategies from "./page/admin/dashboard/formStrategies/FormStrategies";
 import AllRoles from "./page/admin/dashboard/role/AllRoles";
 import Strategies from "./page/admin/dashboard/strategies/Strategies";
-import OnBoarding from "./page/admin/dashboard/underwriting/Underwriting";
+import OnBoarding from "./page/admin/dashboard/underwriting/underwriting";
 import Verification from "./page/admin/dashboard/varification/Varification";
 import VerificationTest from "./page/admin/dashboard/varification/VerficationTest";
 import UserApplicationForms from "./page/admin/userApplicationForms";

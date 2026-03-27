@@ -54,7 +54,7 @@ const columns = () => [
   },
 ];
 
-const VerificationAndAlerts = ({ submitFormData }) => {
+const ApplicationAnalysis = ({ submitFormData }) => {
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   const [isApplyingRules, setIsApplyingRules] = useState(false);
@@ -124,4 +124,4 @@ const VerificationAndAlerts = ({ submitFormData }) => {
   );
 };
 
-export { VerificationAndAlerts };
+export { ApplicationAnalysis };
