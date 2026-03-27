@@ -4,12 +4,18 @@ import { useApplyRulesOnFormQuery } from "@/redux/apis/formApis";
 import DataTable from "react-data-table-component";
 import Button from "../shared/small/Button";
 import { CgSpinner } from "react-icons/cg";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { SelectInputType } from "../shared/small/DynamicField";
+
+const CATEGORY_OPTIONS = [
+  { label: "Alert", value: "alert" },
+  { label: "Display", value: "display" },
+];
 
 const columns = () => [
   {
     name: "Alert Name",
-    selector: (row) => <span className="text-textPrimary font-semibold capitalize">{row?.ruleName}</span>,
+    selector: (row) => <span className="text-textPrimary font-semibold capitalize">{row?.name}</span>,
     sortable: true,
     width: "200px",
   },
@@ -27,6 +33,12 @@ const columns = () => [
     ),
     grow: 2,
     wrap: true,
+  },
+  {
+    name: "Alert Category",
+    selector: (row) => row?.category,
+    sortable: true,
+    width: "150px",
   },
   {
     name: "Rule Priority",
@@ -50,6 +62,18 @@ const VerificationAndAlerts = ({ submitFormData }) => {
     skip: !submitFormData?._id,
   });
 
+  const [filters, setFilters] = useState({
+    category: "",
+  });
+
+  const filteredRules = useMemo(() => {
+    let data =
+      alertsData?.data
+        ?.map((item) => ({ ...item, priority: Number(item?.priority) }))
+        .sort((a, b) => b?.priority - a?.priority) || [];
+    return data.filter((item) => !filters.category || item.category === filters.category);
+  }, [alertsData?.data, filters.category]);
+
   const handleApplyRules = async () => {
     try {
       setIsApplyingRules(true);
@@ -63,7 +87,18 @@ const VerificationAndAlerts = ({ submitFormData }) => {
 
   return (
     <div className="flex w-full p-4 items-center justify-center gap-4 flex-col">
-      <div className="flex w-full justify-end">
+      <div className="flex w-full justify-end gap-2">
+        <div className="flex flex-col w-full md:w-50">
+          <SelectInputType
+            field={{
+              options: CATEGORY_OPTIONS,
+              uniqueId: "category",
+              placeholder: "Filter by category",
+            }}
+            onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+            form={{ category: { name: "category", value: filters.category } }}
+          />
+        </div>
         <Button
           label="Apply Rules"
           variant="primary"
@@ -75,11 +110,7 @@ const VerificationAndAlerts = ({ submitFormData }) => {
       </div>
       <div className="w-full max-w-full ">
         <DataTable
-          data={
-            alertsData?.data
-              ?.map((item) => ({ ...item, priority: Number(item?.priority) }))
-              .sort((a, b) => b?.priority - a?.priority) || []
-          }
+          data={filteredRules}
           columns={columns()}
           customStyles={tableStyles}
           pagination

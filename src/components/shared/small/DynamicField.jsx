@@ -252,7 +252,7 @@ const SelectInputType = ({ field, className, form, setForm, onChange }) => {
             onChange={onChange ? onChange : selectHandler}
           >
             {/* Show placeholder if value is not in options */}
-            <option value="">{placeholder ?? "Choose an option"}</option>
+            <option value="">{placeholder ?? "Select an option"}</option>
             {!isValueInOptions && displayValue && form[uniqueId]?.value && (
               <option className="hidden" value={form[uniqueId]?.value}>
                 {form[uniqueId]?.value}
