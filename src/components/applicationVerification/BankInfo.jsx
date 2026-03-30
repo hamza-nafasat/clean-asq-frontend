@@ -167,10 +167,10 @@ function BankInfo({
 
   // check all required fields filled
   useEffect(() => {
-    // if (isCreator) {
-    //   setIsAllRequiredFieldsFilled(true);
-    //   return;
-    // }
+    if (isCreator) {
+      setIsAllRequiredFieldsFilled(true);
+      return;
+    }
     const allFilled = requiredNames.every(({ uniqueId }) => {
       const val = form[uniqueId]?.value;
       if (val == null) return false;

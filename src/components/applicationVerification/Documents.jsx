@@ -82,18 +82,20 @@ function Documents({
   };
   // Generate the AI prompt
   const generateAiPrompt = useCallback(() => {
-    const companyInfoData = formData?.company_information_blk || {};
+    const companyInfoData = formData?.company_information || {};
     const prompt = step?.aiCustomizablePrompt || "";
     let newPrompt = prompt;
     prompt.split(" ").forEach((word) => {
       if (word.startsWith("[") && word.endsWith("]")) {
         const exactWord = word.slice(1, -1);
-        const wordValue = companyInfoData?.[exactWord];
+        const uniqueId = Object.keys(companyInfoData)?.find((key) => companyInfoData?.[key]?.name?.includes(exactWord));
+        const wordValue = companyInfoData?.[uniqueId]?.value;
         newPrompt = newPrompt.replace(word, (wordValue || word).toString());
       }
     });
+
     return newPrompt;
-  }, [formData?.company_information_blk, step?.aiCustomizablePrompt]);
+  }, [formData?.company_information, step?.aiCustomizablePrompt]);
   // handle next and submit functions
   const updateFileDataHandler = async () => {
     try {
@@ -432,7 +434,7 @@ export const AiPromptCustomizablePrompt = ({
   const [updateFormSection, { isLoading: isUpdating }] = useUpdateFormSectionMutation();
 
   const insertVariable = (variable) => {
-    setPrompt((prev) => prev + ` ${variable}`);
+    setPrompt((prev) => prev + ` ${variable} `);
   };
 
   const updateFormSectionHandler = async () => {
