@@ -32,12 +32,12 @@ const Button = ({
     `,
   };
 
-  const disabledClasses = disabled || loading ? "opacity-40! pointer-events-none!" : "";
+  const disabledClasses = disabled || loading ? "opacity-40! cursor-not-allowed!" : "";
 
   return (
     <button
       type={type}
-      onClick={onClick}
+      onClick={disabled || loading ? undefined : onClick}
       disabled={disabled || loading}
       className={` ${baseClasses} ${variantClasses[variant] || ""} ${disabledClasses} ${className} `}
       style={style}

@@ -1,23 +1,23 @@
-import Button from '@/components/shared/small/Button';
-import TextField from '@/components/shared/small/TextField';
-import { useBranding } from '@/hooks/BrandingContext';
-import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
+import Button from "@/components/shared/small/Button";
+import TextField from "@/components/shared/small/TextField";
+import { useBranding } from "@/hooks/BrandingContext";
+import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/authApis";
 import {
   useCreateBrandingMutation,
   useExtractColorsFromLogosMutation,
   useFetchBrandingMutation,
   useGetSingleBrandingQuery,
   useUpdateSingleBrandingMutation,
-} from '@/redux/apis/brandingApis';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import BrandElementAssignment, { ColorInput } from './BrandElementAssignment';
-import BrandingSource, { SelectLogoForEmail } from './BrandingSource';
-import ColorPalette from './ColorPalette';
-import Preview, { EmailTemplatePreview } from './Preview';
-import Handlebars from 'handlebars';
-import { FiX } from 'react-icons/fi';
+} from "@/redux/apis/brandingApis";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import BrandElementAssignment, { ColorInput } from "./BrandElementAssignment";
+import BrandingSource, { SelectLogoForEmail } from "./BrandingSource";
+import ColorPalette from "./ColorPalette";
+import Preview, { EmailTemplatePreview } from "./Preview";
+import Handlebars from "handlebars";
+import { FiX } from "react-icons/fi";
 
 const emailHeaderTemplate = `
 <!DOCTYPE html>
@@ -103,41 +103,41 @@ const emailFooterTemplate = `
 const GlobalBrandingPage = ({ brandingId }) => {
   const [image, setImage] = useState(null);
   const navigate = useNavigate();
-  const [websiteUrl, setWebsiteUrl] = useState('');
-  const [primaryColor, setPrimaryColor] = useState('#000000');
-  const [secondaryColor, setSecondaryColor] = useState('#000000');
-  const [accentColor, setAccentColor] = useState('#000000');
-  const [textColor, setTextColor] = useState('#000000');
-  const [linkColor, setLinkColor] = useState('#000000');
-  const [backgroundColor, setBackgroundColor] = useState('');
-  const [headerBackground, setHeaderBackground] = useState('#000000');
-  const [headerText, setHeaderText] = useState('#000000');
-  const [footerBackground, setFooterBackground] = useState('#000000');
-  const [footerText, setFooterText] = useState('#000000');
-  const [frameColor, setFrameColor] = useState('#000000');
-  const [highlightingColor, setHighlightingColor] = useState('#000000');
-  const [fontFamily, setFontFamily] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [headerAlignment, setHeaderAlignment] = useState('center');
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("#000000");
+  const [secondaryColor, setSecondaryColor] = useState("#000000");
+  const [accentColor, setAccentColor] = useState("#000000");
+  const [textColor, setTextColor] = useState("#000000");
+  const [linkColor, setLinkColor] = useState("#000000");
+  const [backgroundColor, setBackgroundColor] = useState("");
+  const [headerBackground, setHeaderBackground] = useState("#000000");
+  const [headerText, setHeaderText] = useState("#000000");
+  const [footerBackground, setFooterBackground] = useState("#000000");
+  const [footerText, setFooterText] = useState("#000000");
+  const [frameColor, setFrameColor] = useState("#000000");
+  const [highlightingColor, setHighlightingColor] = useState("#000000");
+  const [fontFamily, setFontFamily] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [headerAlignment, setHeaderAlignment] = useState("center");
   const [logos, setLogos] = useState([]);
   const [colorPalette, setColorPalette] = useState([]);
   const [selectedLogo, setSelectedLogo] = useState();
   const [extraLogos, setExtraLogos] = useState([]);
-  const [buttonTextPrimary, setButtonTextPrimary] = useState('#000000');
-  const [buttonTextSecondary, setButtonTextSecondary] = useState('#000000');
+  const [buttonTextPrimary, setButtonTextPrimary] = useState("#000000");
+  const [buttonTextSecondary, setButtonTextSecondary] = useState("#000000");
   const [emailHeader, setEmailHeader] = useState(emailHeaderTemplate);
   const [emailFooter, setEmailFooter] = useState(emailFooterTemplate);
-  const [headerHeading, setHeaderHeading] = useState('Email Header');
-  const [headerDescription, setHeaderDescription] = useState('Automated Email — Please Do Not Reply');
-  const [footerHeading, setFooterHeading] = useState('Thank You');
-  const [footerDescription, setFooterDescription] = useState('Thank We appreciate your business and support.');
-  const [emailHeadingColor, setEmailHeadingColor] = useState('#1a1a1a');
-  const [emailTextColor, setEmailTextColor] = useState('#666666');
-  const [emailHeaderColor, setEmailHeaderColor] = useState('#1a1a1a');
-  const [emailHeaderTextColor, setEmailHeaderTextColor] = useState('#1a1a1a');
-  const [emailFooterColor, setEmailFooterColor] = useState('#1a1a1a');
-  const [emailFooterTextColor, setEmailFooterTextColor] = useState('#1a1a1a');
-  const [emailBodyColor, setEmailBodyColor] = useState('#1a1a1a');
+  const [headerHeading, setHeaderHeading] = useState("Email Header");
+  const [headerDescription, setHeaderDescription] = useState("Automated Email — Please Do Not Reply");
+  const [footerHeading, setFooterHeading] = useState("Thank You");
+  const [footerDescription, setFooterDescription] = useState("Thank We appreciate your business and support.");
+  const [emailHeadingColor, setEmailHeadingColor] = useState("#1a1a1a");
+  const [emailTextColor, setEmailTextColor] = useState("#666666");
+  const [emailHeaderColor, setEmailHeaderColor] = useState("#1a1a1a");
+  const [emailHeaderTextColor, setEmailHeaderTextColor] = useState("#1a1a1a");
+  const [emailFooterColor, setEmailFooterColor] = useState("#1a1a1a");
+  const [emailFooterTextColor, setEmailFooterTextColor] = useState("#1a1a1a");
+  const [emailBodyColor, setEmailBodyColor] = useState("#1a1a1a");
   const [selectedEmailLogo, setSelectedEmailLogo] = useState();
 
   const compileHeader = Handlebars.compile(emailHeaderTemplate);
@@ -168,16 +168,16 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [fetchBranding, { isLoading: isFetchLoading }] = useFetchBrandingMutation();
   const [createBranding, { isLoading }] = useCreateBrandingMutation();
   const [updateBranding, { isLoading: isUpdateLoading }] = useUpdateSingleBrandingMutation();
-  const { data: singleBrandingData } = useGetSingleBrandingQuery(brandingId || '');
+  const { data: singleBrandingData } = useGetSingleBrandingQuery(brandingId || "");
 
   const extractBranding = async () => {
-    if (!websiteUrl) toast.error('Please enter a valid website URL');
+    if (!websiteUrl) toast.error("Please enter a valid website URL");
     try {
       const res = await fetchBranding({ url: websiteUrl }).unwrap();
       if (res.success) {
         const data = res.data;
         // setCompanyName(data?.name || '');
-        setFontFamily(data?.fontFamily || '');
+        setFontFamily(data?.fontFamily || "");
         setLogos(data?.logos || []);
         setPrimaryColor(data?.colors?.primary);
         setSecondaryColor(data?.colors?.secondary);
@@ -196,8 +196,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
         }
       }
     } catch (error) {
-      console.error('Error extracting branding:', error);
-      toast.error(error?.data?.message || 'Failed to extract branding. Please try again.');
+      console.error("Error extracting branding:", error);
+      toast.error(error?.data?.message || "Failed to extract branding. Please try again.");
     }
   };
 
@@ -208,7 +208,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !fontFamily ||
       !accentColor ||
       !colorPalette?.length ||
-      !logos?.length ||
       !primaryColor ||
       !secondaryColor ||
       !textColor ||
@@ -238,7 +237,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !emailHeaderTextColor ||
       !emailFooterTextColor
     ) {
-      return toast.error('Please fill all fields before creating branding');
+      return toast.error("Please fill all fields before creating branding");
     }
     const colors = {
       primary: primaryColor,
@@ -257,55 +256,55 @@ const GlobalBrandingPage = ({ brandingId }) => {
       footerText: footerText,
     };
 
-    let finalLogos = logos.filter(logo => !logo.preview);
+    let finalLogos = logos.filter((logo) => !logo.preview);
 
     const formData = new FormData();
-    formData.append('name', companyName);
-    formData.append('headerAlignment', headerAlignment);
-    formData.append('url', websiteUrl);
-    formData.append('fontFamily', fontFamily);
-    formData.append('selectedLogo', selectedLogo);
-    formData.append('colorPalette', JSON.stringify(colorPalette));
-    formData.append('colors', JSON.stringify(colors));
-    formData.append('logos', JSON.stringify(finalLogos));
+    formData.append("name", companyName);
+    formData.append("headerAlignment", headerAlignment);
+    formData.append("url", websiteUrl);
+    formData.append("fontFamily", fontFamily);
+    formData.append("selectedLogo", selectedLogo);
+    formData.append("colorPalette", JSON.stringify(colorPalette));
+    formData.append("colors", JSON.stringify(colors));
+    formData.append("logos", JSON.stringify(finalLogos));
 
-    extraLogos.forEach(file => {
+    extraLogos.forEach((file) => {
       formData.append(`files`, file);
     });
     // email
-    formData.append('emailHeader', emailHeader);
-    formData.append('emailFooter', emailFooter);
-    formData.append('headerHeading', headerHeading);
-    formData.append('headerDescription', headerDescription);
-    formData.append('footerHeading', footerHeading);
-    formData.append('footerDescription', footerDescription);
-    formData.append('emailHeadingColor', emailHeadingColor);
-    formData.append('emailTextColor', emailTextColor);
-    formData.append('emailHeaderColor', emailHeaderColor);
-    formData.append('emailFooterColor', emailFooterColor);
-    formData.append('emailBodyColor', emailBodyColor);
-    formData.append('emailHeaderTextColor', emailHeaderTextColor);
-    formData.append('emailFooterTextColor', emailFooterTextColor);
+    formData.append("emailHeader", emailHeader);
+    formData.append("emailFooter", emailFooter);
+    formData.append("headerHeading", headerHeading);
+    formData.append("headerDescription", headerDescription);
+    formData.append("footerHeading", footerHeading);
+    formData.append("footerDescription", footerDescription);
+    formData.append("emailHeadingColor", emailHeadingColor);
+    formData.append("emailTextColor", emailTextColor);
+    formData.append("emailHeaderColor", emailHeaderColor);
+    formData.append("emailFooterColor", emailFooterColor);
+    formData.append("emailBodyColor", emailBodyColor);
+    formData.append("emailHeaderTextColor", emailHeaderTextColor);
+    formData.append("emailFooterTextColor", emailFooterTextColor);
     if (selectedEmailLogo) {
-      formData.append('selectedEmailLogo', selectedEmailLogo);
+      formData.append("selectedEmailLogo", selectedEmailLogo);
     }
 
     console.log(extraLogos);
     try {
       const res = await createBranding(formData).unwrap();
       if (res?.success) {
-        toast.success(res?.message || 'Branding created successfully!');
-        navigate('/branding');
+        toast.success(res?.message || "Branding created successfully!");
+        navigate("/branding");
       } else {
-        toast.error('Failed to create branding. Please try again.');
+        toast.error("Failed to create branding. Please try again.");
       }
     } catch (error) {
-      console.error('Error creating branding:', error);
-      toast.error('Failed to create branding. Please try again.');
+      console.error("Error creating branding:", error);
+      toast.error("Failed to create branding. Please try again.");
     }
   };
 
-  const updateBrandingHandler = async brandingId => {
+  const updateBrandingHandler = async (brandingId) => {
     if (
       !brandingId ||
       !companyName ||
@@ -313,7 +312,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !fontFamily ||
       !accentColor ||
       !colorPalette?.length ||
-      !logos?.length ||
       !primaryColor ||
       !secondaryColor ||
       !textColor ||
@@ -343,7 +341,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !emailHeaderTextColor ||
       !emailFooterTextColor
     ) {
-      return toast.error('Please fill all fields before creating branding');
+      return toast.error("Please fill all fields before creating branding");
     }
     const colors = {
       primary: primaryColor,
@@ -362,37 +360,37 @@ const GlobalBrandingPage = ({ brandingId }) => {
       footerText: footerText,
     };
 
-    let finalLogos = logos.filter(logo => !logo.preview);
+    let finalLogos = logos.filter((logo) => !logo.preview);
 
     const formData = new FormData();
-    formData.append('name', companyName);
-    formData.append('url', websiteUrl);
-    formData.append('headerAlignment', headerAlignment);
-    formData.append('fontFamily', fontFamily);
-    formData.append('selectedLogo', selectedLogo);
-    formData.append('colorPalette', JSON.stringify(colorPalette));
-    formData.append('colors', JSON.stringify(colors));
-    formData.append('logos', JSON.stringify(finalLogos));
+    formData.append("name", companyName);
+    formData.append("url", websiteUrl);
+    formData.append("headerAlignment", headerAlignment);
+    formData.append("fontFamily", fontFamily);
+    formData.append("selectedLogo", selectedLogo);
+    formData.append("colorPalette", JSON.stringify(colorPalette));
+    formData.append("colors", JSON.stringify(colors));
+    formData.append("logos", JSON.stringify(finalLogos));
 
     // email
-    formData.append('emailHeader', emailHeader);
-    formData.append('emailFooter', emailFooter);
-    formData.append('headerHeading', headerHeading);
-    formData.append('headerDescription', headerDescription);
-    formData.append('footerHeading', footerHeading);
-    formData.append('footerDescription', footerDescription);
-    formData.append('emailHeadingColor', emailHeadingColor);
-    formData.append('emailTextColor', emailTextColor);
-    formData.append('emailHeaderColor', emailHeaderColor);
-    formData.append('emailFooterColor', emailFooterColor);
-    formData.append('emailBodyColor', emailBodyColor);
-    formData.append('emailHeaderTextColor', emailHeaderTextColor);
-    formData.append('emailFooterTextColor', emailFooterTextColor);
+    formData.append("emailHeader", emailHeader);
+    formData.append("emailFooter", emailFooter);
+    formData.append("headerHeading", headerHeading);
+    formData.append("headerDescription", headerDescription);
+    formData.append("footerHeading", footerHeading);
+    formData.append("footerDescription", footerDescription);
+    formData.append("emailHeadingColor", emailHeadingColor);
+    formData.append("emailTextColor", emailTextColor);
+    formData.append("emailHeaderColor", emailHeaderColor);
+    formData.append("emailFooterColor", emailFooterColor);
+    formData.append("emailBodyColor", emailBodyColor);
+    formData.append("emailHeaderTextColor", emailHeaderTextColor);
+    formData.append("emailFooterTextColor", emailFooterTextColor);
     if (selectedEmailLogo) {
-      formData.append('selectedEmailLogo', selectedEmailLogo);
+      formData.append("selectedEmailLogo", selectedEmailLogo);
     }
 
-    extraLogos.forEach(file => {
+    extraLogos.forEach((file) => {
       formData.append(`files`, file);
     });
 
@@ -427,37 +425,37 @@ const GlobalBrandingPage = ({ brandingId }) => {
           }
         }
 
-        toast.success(res?.message || 'Branding updated successfully!');
-        navigate('/branding');
+        toast.success(res?.message || "Branding updated successfully!");
+        navigate("/branding");
       } else {
-        toast.error('Failed to update branding. Please try again.');
+        toast.error("Failed to update branding. Please try again.");
       }
     } catch (error) {
-      console.error('Error updating branding:', error);
-      toast.error('Failed to update branding. Please try again.');
+      console.error("Error updating branding:", error);
+      toast.error("Failed to update branding. Please try again.");
     }
   };
 
   const extractColorsFromLogosHandler = async () => {
     if (!extraLogos || extraLogos.length < 1) {
-      toast.error('Please upload at least one new logo');
+      toast.error("Please upload at least one new logo");
       return;
     }
     try {
       const formData = new FormData();
-      extraLogos.forEach(file => {
-        formData.append('files', file);
+      extraLogos.forEach((file) => {
+        formData.append("files", file);
       });
       const res = await extractColorsFromLogos(formData).unwrap();
       if (res?.success && res?.data) {
         toast.success(res.message);
         const mergedColors = [...colorPalette, ...res.data];
         const uniqueColors = [...new Set(mergedColors)];
-        console.log('uniqueColors', uniqueColors);
+        console.log("uniqueColors", uniqueColors);
         setColorPalette(uniqueColors);
       }
     } catch (error) {
-      console.log('error while extracting colors from logo', error);
+      console.log("error while extracting colors from logo", error);
     }
   };
 
@@ -504,7 +502,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       } else if (singleBranding.logos?.length > 0) {
         // Default to the first logo if no logo is selected
         const firstLogo =
-          typeof singleBranding.logos[0] === 'string' ? singleBranding.logos[0] : singleBranding.logos[0]?.url;
+          typeof singleBranding.logos[0] === "string" ? singleBranding.logos[0] : singleBranding.logos[0]?.url;
         if (firstLogo) {
           setSelectedLogo(firstLogo);
         }
@@ -514,7 +512,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       } else if (singleBranding.logos?.length > 0) {
         // Default to the first logo if no logo is selected
         const firstLogo =
-          typeof singleBranding.logos[0] === 'string' ? singleBranding.logos[0] : singleBranding.logos[0]?.url;
+          typeof singleBranding.logos[0] === "string" ? singleBranding.logos[0] : singleBranding.logos[0]?.url;
         if (firstLogo) {
           setSelectedEmailLogo(firstLogo);
         }
@@ -564,7 +562,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   return (
     <div className="mb-6 rounded-xl border border-[#F0F0F0] bg-white px-3 md:px-6">
       <h1 className="mt-12 mb-6 text-lg font-semibold text-gray-500 md:text-2xl">Global Branding</h1>
-      <TextField label={'Company Name'} value={companyName} onChange={e => setCompanyName(e.target.value)} />
+      <TextField label={"Company Name"} value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
       <div className="mt-12">
         <div className="bg-white" id="screen-shot">
           <BrandingSource
@@ -577,7 +575,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
             setSelectedLogo={setSelectedLogo}
             selectedLogo={selectedLogo}
             defaultSelectedLogo={brandingId ? selectedLogo : null}
-            handleExtraLogoUpload={logo => setExtraLogos([...extraLogos, logo])}
+            handleExtraLogoUpload={(logo) => setExtraLogos([...extraLogos, logo])}
             extractColorsFromLogosHandler={extractColorsFromLogosHandler}
           />
           <ColorPalette colorPalette={colorPalette} />
@@ -651,14 +649,14 @@ const GlobalBrandingPage = ({ brandingId }) => {
               <ColorInput
                 image={image}
                 setImage={setImage}
-                label={'Background Color'}
+                label={"Background Color"}
                 color={emailHeaderColor}
                 setColor={setEmailHeaderColor}
               />
               <ColorInput
                 image={image}
                 setImage={setImage}
-                label={'Text Color'}
+                label={"Text Color"}
                 color={emailHeaderTextColor}
                 setColor={setEmailHeaderTextColor}
               />
@@ -666,15 +664,15 @@ const GlobalBrandingPage = ({ brandingId }) => {
             <div className="flex flex-col gap-2">
               <TextField
                 type="textarea"
-                label={'Header Headline Tex'}
+                label={"Header Headline Tex"}
                 value={headerHeading}
-                onChange={e => setHeaderHeading(e.target.value)}
+                onChange={(e) => setHeaderHeading(e.target.value)}
               />
               <TextField
                 type="textarea"
-                label={'Content'}
+                label={"Content"}
                 value={headerDescription}
-                onChange={e => setHeaderDescription(e.target.value)}
+                onChange={(e) => setHeaderDescription(e.target.value)}
               />
               <SelectLogoForEmail
                 logos={logos}
@@ -699,14 +697,14 @@ const GlobalBrandingPage = ({ brandingId }) => {
               <ColorInput
                 image={image}
                 setImage={setImage}
-                label={'Text'}
+                label={"Text"}
                 color={emailTextColor}
                 setColor={setEmailTextColor}
               />
               <ColorInput
                 image={image}
                 setImage={setImage}
-                label={'Body Background'}
+                label={"Body Background"}
                 color={emailBodyColor}
                 setColor={setEmailBodyColor}
               />
@@ -718,14 +716,14 @@ const GlobalBrandingPage = ({ brandingId }) => {
               <ColorInput
                 image={image}
                 setImage={setImage}
-                label={'Background Color'}
+                label={"Background Color"}
                 color={emailFooterColor}
                 setColor={setEmailFooterColor}
               />
               <ColorInput
                 image={image}
                 setImage={setImage}
-                label={'Text Color'}
+                label={"Text Color"}
                 color={emailFooterTextColor}
                 setColor={setEmailFooterTextColor}
               />
@@ -733,15 +731,15 @@ const GlobalBrandingPage = ({ brandingId }) => {
             <div className="flex flex-col gap-2">
               <TextField
                 type="textarea"
-                label={'Footer Headline Text'}
+                label={"Footer Headline Text"}
                 value={footerHeading}
-                onChange={e => setFooterHeading(e.target.value)}
+                onChange={(e) => setFooterHeading(e.target.value)}
               />
               <TextField
                 type="textarea"
-                label={'Content'}
+                label={"Content"}
                 value={footerDescription}
-                onChange={e => setFooterDescription(e.target.value)}
+                onChange={(e) => setFooterDescription(e.target.value)}
               />
             </div>
           </section>
@@ -749,11 +747,11 @@ const GlobalBrandingPage = ({ brandingId }) => {
 
         <div className="mt-6 mb-4 flex justify-end space-x-2 md:space-x-4">
           <div className="flex gap-2 md:gap-6">
-            <Button variant="secondary" label={'Cancel'} onClick={() => navigate('/branding')} />
+            <Button variant="secondary" label={"Cancel"} onClick={() => navigate("/branding")} />
             <Button
               disabled={isLoading || isUpdateLoading}
-              className={`${isLoading || isUpdateLoading ? 'cursor-not-allowed opacity-50' : ''} `}
-              label={brandingId ? 'Update Branding' : 'Create Branding'}
+              className={`${isLoading || isUpdateLoading ? "cursor-not-allowed opacity-50" : ""} `}
+              label={brandingId ? "Update Branding" : "Create Branding"}
               onClick={brandingId ? () => updateBrandingHandler(brandingId) : () => createBrandingHandler()}
             />
           </div>

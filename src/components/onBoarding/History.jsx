@@ -1,48 +1,61 @@
-import { getTableStyles } from '@/data/data';
-import { useBranding } from '@/hooks/BrandingContext';
-import { useGetFormHistoryQuery } from '@/redux/apis/formApis';
-import DataTable from 'react-data-table-component';
-
+import { getTableStyles } from "@/data/data";
+import { useBranding } from "@/hooks/BrandingContext";
+import { useGetFormHistoryQuery } from "@/redux/apis/formApis";
+import DataTable from "react-data-table-component";
 
 const columns = () => [
   {
-    name: 'Date/Time',
-    selector: row => new Date(row?.updatedAt || "").toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    name: "Date/Time",
+    selector: (row) =>
+      new Date(row?.updatedAt || "").toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }),
     sortable: true,
-    width: '200px',
+    width: "200px",
   },
   {
-    name: 'User',
-    selector: row => `${row?.role} ${row?.email}`,
+    name: "User",
+    selector: (row) => `${row?.email}`,
     sortable: true,
-    width: '300px',
+    width: "270px",
+  },
+  {
+    name: "User Type",
+    selector: (row) => `${row?.role}`,
+    sortable: true,
+    width: "130px",
   },
 
   {
-    name: 'Section',
-    selector: row => row?.sectionKey,
+    name: "Section",
+    selector: (row) => row?.sectionKey,
     sortable: true,
-    width: '200px',
+    width: "200px",
   },
   {
-    name: 'Action/Status',
+    name: "Action/Status",
     selector: (row) => row?.status,
     sortable: true,
-    width: '200px',
+    width: "200px",
   },
   {
-    name: 'Comment/Details',
-    selector: row => row?.comment,
+    name: "Comment/Details",
+    selector: (row) => row?.comment,
     sortable: true,
     wrap: true,
   },
-
-
-
 ];
 
 const History = ({ submittedFormId }) => {
-  const { data: historyData } = useGetFormHistoryQuery({ formSubmittedId: submittedFormId }, { skip: !submittedFormId });
+  const { data: historyData } = useGetFormHistoryQuery(
+    { formSubmittedId: submittedFormId },
+    { skip: !submittedFormId },
+  );
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
 
@@ -61,7 +74,7 @@ const History = ({ submittedFormId }) => {
         className="rounded-t-xl!"
       />
     </div>
-  )
-}
+  );
+};
 
 export { History };

@@ -1,8 +1,8 @@
-import Button from '@/components/shared/small/Button';
-import { setCompanyName } from '@/redux/slices/brandingSlice';
-import { detectLogo } from '@/utils/detectLogo';
-import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import Button from "@/components/shared/small/Button";
+import { setCompanyName } from "@/redux/slices/brandingSlice";
+import { detectLogo } from "@/utils/detectLogo";
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 
 const Preview = ({
   primaryColor,
@@ -17,12 +17,14 @@ const Preview = ({
   frameColor,
   headerAlignment,
 }) => {
-  const formattedText = companyName.toLowerCase().replace(/\s+/g, '-');
+  const currentDomain = window.location.hostname;
+  const currentProtocol = window.location.protocol;
+  const formattedText = companyName.toLowerCase().replace(/\s+/g, "-");
   const dispatch = useDispatch();
   const [copied, setCopied] = useState(false);
-  const text = `https://${formattedText || 'company'}.apply-secure.com`;
+  const text = `${currentProtocol}//${currentDomain}/application-form/${formattedText}`;
 
-  const handleCopy = async e => {
+  const handleCopy = async (e) => {
     await navigator.clipboard.writeText(e.target.value);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
@@ -31,8 +33,8 @@ const Preview = ({
   useEffect(() => {
     dispatch(setCompanyName(companyName));
     if (selectedLogo) {
-      detectLogo(selectedLogo).then(res => {
-        console.log('res', res);
+      detectLogo(selectedLogo).then((res) => {
+        console.log("res", res);
       });
     }
   }, [companyName, dispatch, formattedText, selectedLogo]);
@@ -41,11 +43,11 @@ const Preview = ({
       <h2 className="text-textPrimary text-[18px] font-medium">Preview</h2>
       <div className={`mt-5 rounded-md border p-3 md:p-6`}>
         <div
-          className={`${headerAlignment == 'right' ? 'justify-end!' : headerAlignment == 'center' ? 'justify-center!' : 'justify-start'} flex`}
+          className={`${headerAlignment == "right" ? "justify-end!" : headerAlignment == "center" ? "justify-center!" : "justify-start"} flex`}
         >
           <div className={`flex h-[100px] max-h-[100px] w-[250px] max-w-[250px]`}>
             <img
-              src={typeof selectedLogo === 'string' ? selectedLogo : selectedLogo}
+              src={typeof selectedLogo === "string" ? selectedLogo : selectedLogo}
               alt="logo"
               referrerPolicy="no-referrer"
               className="flex h-full max-w-full object-contain object-center"
@@ -55,10 +57,10 @@ const Preview = ({
         <p
           className="text-textPrimary mb-2 text-[22px] font-medium"
           style={{
-            color: textColor || '#000000',
+            color: textColor || "#000000",
           }}
         >
-          {companyName ? companyName.charAt(0).toUpperCase() + companyName.slice(1) : 'Company Name'}
+          {companyName ? companyName.charAt(0).toUpperCase() + companyName.slice(1) : "Company Name"}
         </p>
 
         <div className="relative inline-block">
@@ -69,8 +71,8 @@ const Preview = ({
             onClick={handleCopy}
             style={{
               width: `${text.length}ch`,
-              borderColor: frameColor || '#A7A7A7',
-              cursor: 'pointer',
+              borderColor: frameColor || "#A7A7A7",
+              cursor: "pointer",
             }}
             className="rounded border bg-white px-3 py-1 text-sm text-gray-700"
           />
@@ -79,8 +81,8 @@ const Preview = ({
           )}
         </div>
 
-        <p className="mt-6 text-[16px] font-normal" style={{ color: textColor || '#000000' }}>
-          This is how your form will appear with the selected branding.{' '}
+        <p className="mt-6 text-[16px] font-normal" style={{ color: textColor || "#000000" }}>
+          This is how your form will appear with the selected branding.{" "}
           <a href="#" className="underline" style={{ color: linkColor }}>
             Link will use the link color.
           </a>
@@ -88,21 +90,21 @@ const Preview = ({
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <Button
-            label={'Primary Button'}
+            label={"Primary Button"}
             style={{
-              color: buttonTextPrimary || '#000000',
-              backgroundColor: primaryColor || '#E5E7EB',
-              border: `1px solid ${primaryColor || '#E5E7EB'}`,
+              color: buttonTextPrimary || "#000000",
+              backgroundColor: primaryColor || "#E5E7EB",
+              border: `1px solid ${primaryColor || "#E5E7EB"}`,
             }}
           />
           <Button
             variant="secondary"
-            label={'Secondary Button'}
+            label={"Secondary Button"}
             className="border-none!"
             style={{
-              color: buttonTextSecondary || '#000000',
-              backgroundColor: secondaryColor || '#E5E7EB',
-              border: `1px solid ${secondaryColor || '#E5E7EB'}`,
+              color: buttonTextSecondary || "#000000",
+              backgroundColor: secondaryColor || "#E5E7EB",
+              border: `1px solid ${secondaryColor || "#E5E7EB"}`,
             }}
           />
         </div>
