@@ -13,6 +13,7 @@ const CATEGORY_OPTIONS = [
 ];
 
 const columns = () => [
+  { name: "Rule No", selector: (row) => row?.number, sortable: true, width: "110px" },
   {
     name: "Alert Name",
     selector: (row) => <span className="text-textPrimary font-semibold capitalize">{row?.name}</span>,
@@ -34,24 +35,12 @@ const columns = () => [
     grow: 2,
     wrap: true,
   },
-  {
-    name: "Alert Category",
-    selector: (row) => row?.category,
-    sortable: true,
-    width: "150px",
-  },
-  {
-    name: "Rule Priority",
-    sortable: true,
-    width: "150px",
-    cell: (row) => (
-      <span
-        className={`px-4 py-2 w-25 text-center rounded-sm font-semibold capitalize text-white ${row?.priority === 0 ? "bg-green-500!" : row?.priority === 1 ? "bg-yellow-500!" : "bg-red-500!"}`}
-      >
-        {row?.priority === 0 ? "Low" : row?.priority === 1 ? "Medium" : "High"}
-      </span>
-    ),
-  },
+  // {
+  //   name: "Alert Category",
+  //   selector: (row) => row?.category,
+  //   sortable: true,
+  //   width: "150px",
+  // },
 ];
 
 const ApplicationAnalysis = ({ submitFormData }) => {
@@ -62,17 +51,32 @@ const ApplicationAnalysis = ({ submitFormData }) => {
     skip: !submitFormData?._id,
   });
 
-  const [filters, setFilters] = useState({
-    category: "",
-  });
-
   const filteredRules = useMemo(() => {
-    let data =
-      alertsData?.data
-        ?.map((item) => ({ ...item, priority: Number(item?.priority) }))
-        .sort((a, b) => b?.priority - a?.priority) || [];
-    return data.filter((item) => !filters.category || item.category === filters.category);
-  }, [alertsData?.data, filters.category]);
+    // add number to the data
+
+    let data = alertsData?.data || [];
+    let allDisplayAlerts = data.filter((item) => item.category === "display");
+    let otherAllCategoryAlerts = data.filter((item) => item.category !== "display");
+    const allDisplayAlertWithNumber = allDisplayAlerts.map((item, index) => ({ ...item, number: index + 1 }));
+    const otherAllCategoryAlertWithNumber = otherAllCategoryAlerts.map((item, index) => ({
+      ...item,
+      number: index + 1,
+    }));
+    return {
+      allDisplayAlertWithNumber: [
+        ...allDisplayAlertWithNumber,
+        ...allDisplayAlertWithNumber,
+        ...allDisplayAlertWithNumber,
+        ...allDisplayAlertWithNumber,
+      ],
+      otherAllCategoryAlertWithNumber: [
+        ...otherAllCategoryAlertWithNumber,
+        ...otherAllCategoryAlertWithNumber,
+        ...otherAllCategoryAlertWithNumber,
+        ...otherAllCategoryAlertWithNumber,
+      ],
+    };
+  }, [alertsData?.data]);
 
   const handleApplyRules = async () => {
     try {
@@ -86,19 +90,8 @@ const ApplicationAnalysis = ({ submitFormData }) => {
   };
 
   return (
-    <div className="flex w-full p-4 items-center justify-center gap-4 flex-col">
+    <div className="flex w-full p-2 items-center justify-center gap-4 flex-col">
       <div className="flex w-full justify-end gap-2">
-        <div className="flex flex-col w-full md:w-50">
-          <SelectInputType
-            field={{
-              options: CATEGORY_OPTIONS,
-              uniqueId: "category",
-              placeholder: "Filter by category",
-            }}
-            onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-            form={{ category: { name: "category", value: filters.category } }}
-          />
-        </div>
         <Button
           label="Apply Rules"
           variant="primary"
@@ -108,17 +101,40 @@ const ApplicationAnalysis = ({ submitFormData }) => {
           icon={isApplyingRules ? CgSpinner : undefined}
         />
       </div>
-      <div className="w-full max-w-full ">
-        <DataTable
-          data={filteredRules}
-          columns={columns()}
-          customStyles={tableStyles}
-          pagination
-          highlightOnHover
-          progressPending={false}
-          noDataComponent="No History found"
-          className="rounded-t-xl!"
-        />
+      {/* if on tab or mobile then flex col else flex row  */}
+      <div className="w-full gap-4 flex flex-col ">
+        <div className="flex w-full flex-col gap-2">
+          <h1 className="text-textPrimary text-xl font-medium p-4">
+            <span className="font-bold"> Key Application Info:</span> (section that contain all display rule output)
+          </h1>
+          <div className="w-full max-w-full overflow-x-auto max-h-[30vh]">
+            <DataTable
+              data={filteredRules.allDisplayAlertWithNumber}
+              columns={columns()}
+              customStyles={tableStyles}
+              highlightOnHover
+              progressPending={false}
+              noDataComponent="No History found"
+              className="rounded-t-xl!"
+            />
+          </div>
+        </div>
+        <div className="flex w-full flex-col gap-2">
+          <h1 className="text-textPrimary text-xl font-medium p-4">
+            <span className="font-bold"> Application Alerts:</span> (section that contain all alert rule output)
+          </h1>
+          <div className="w-full max-w-full overflow-x-auto max-h-[30vh]">
+            <DataTable
+              data={filteredRules.otherAllCategoryAlertWithNumber}
+              columns={columns()}
+              customStyles={tableStyles}
+              highlightOnHover
+              progressPending={false}
+              noDataComponent="No History found"
+              className="rounded-t-xl!"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
