@@ -569,11 +569,10 @@ export default function SingleApplication() {
     socket.on("idMission_verified", async (data) => {
       console.log("verified id mission data is", data);
       if (user?._id && data?.Form_Data?.FullName) {
-        const res = await updateMyProfile({
-          _id: user?._id,
-          firstName: data?.Form_Data?.FullName?.split(" ")[0],
-          lastName: data?.Form_Data?.FullName?.split(" ")[1],
-        }).unwrap();
+        const firstName = data?.Form_Data?.First_Name || data?.Form_Data?.FullName?.split(" ")?.[0] || "";
+        const middleName = data?.Form_Data?.Middle_Name || data?.Form_Data?.FullName?.split(" ")?.[1] || "";
+        const lastName = data?.Form_Data?.Last_Name || data?.Form_Data?.FullName?.split(" ")?.[2] || "";
+        const res = await updateMyProfile({ _id: user?._id, firstName, middleName, lastName }).unwrap();
         if (!res.success) return toast.error(res.message);
         else {
           await getUserProfile()
