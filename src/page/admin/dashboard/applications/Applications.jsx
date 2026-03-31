@@ -1,22 +1,21 @@
-import ApplicantsTable from '@/components/admin/ApplicantsTable';
-import Button from '@/components/shared/small/Button';
-import CustomizableSelect from '@/components/shared/small/CustomizeableSelect';
-import Modal from '@/components/shared/small/Modal';
-import TextField from '@/components/shared/small/TextField';
+import ApplicantsTable from "@/components/admin/ApplicantsTable";
+import Button from "@/components/shared/small/Button";
+import CustomizableSelect from "@/components/shared/small/CustomizeableSelect";
+import Modal from "@/components/shared/small/Modal";
+import TextField from "@/components/shared/small/TextField";
 import {
   useGetAllSubmitFormsQuery,
   useGetSingleFormQueryQuery,
   useGetSubmittedFormUsersQuery,
   useGiveSpecialAccessToUserMutation,
-} from '@/redux/apis/formApis';
-import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
-import { ApplicationPdfViewCommonProps } from '../../userApplicationForms/ApplicationVerification/ApplicationPdfView';
+} from "@/redux/apis/formApis";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import { ApplicationPdfViewCommonProps } from "../../userApplicationForms/ApplicationVerification/ApplicationPdfView";
 // import Modal from '@/components/admin/shared/Modal';
 
 function Applications() {
   const { data, isLoading: isLoadingForm } = useGetAllSubmitFormsQuery();
-
 
   const [applicants, setApplicants] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,29 +25,26 @@ function Applications() {
   const [selectedFormId, setSelectedFormId] = useState(null);
   const [pdfData, setPdfData] = useState(null);
   const [filters, setFilters] = useState({
-    dateRange: { start: '', end: '' },
-    status: '',
+    dateRange: { start: "", end: "" },
+    status: "",
   });
-  const handleViewApplicant = useCallback(
-    row => {
-      setPdfData(row);
-      setIsModalOpen(true);
-    },
-    []
-  );
-  const handleDeleteApplicant = useCallback(async id => {
+  const handleViewApplicant = useCallback((row) => {
+    setPdfData(row);
+    setIsModalOpen(true);
+  }, []);
+  const handleDeleteApplicant = useCallback(async (id) => {
     setIsLoading(true);
     try {
-      setApplicants(prev => prev.filter(applicant => applicant.id !== id));
+      setApplicants((prev) => prev.filter((applicant) => applicant.id !== id));
     } catch (error) {
-      console.error('Error deleting applicant:', error);
+      console.error("Error deleting applicant:", error);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   const handleFilterChange = useCallback((name, value) => {
-    setFilters(prev => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
   }, []);
 
   useEffect(() => {
@@ -61,7 +57,11 @@ function Applications() {
     <>
       {openSpecialAccess && (
         <Modal onClose={() => setOpenSpecialAccess(false)}>
-          <SpecialAccessModal formId={selectedFormId} submittedFormId={selectedIdForSpecialAccessModal} setModal={setOpenSpecialAccess} />
+          <SpecialAccessModal
+            formId={selectedFormId}
+            submittedFormId={selectedIdForSpecialAccessModal}
+            setModal={setOpenSpecialAccess}
+          />
         </Modal>
       )}
 
@@ -85,14 +85,20 @@ function Applications() {
         {/* View Applicant Modal */}
         {isModalOpen && (pdfData?.form?._id || pdfData?.form) && (
           <Modal
-            width={'min-w-[80vw] max-w-2xl'}
+            width={"min-w-[80vw] max-w-2xl"}
             onClose={() => {
               setIsModalOpen(false);
               setPdfData(null);
             }}
             isLoading={isLoading}
           >
-            <ApplicationPdfViewCommonProps userId={pdfData?.user?._id || pdfData?.user} pdfId={pdfData?.form?._id || pdfData?.form} className="rounded-lg!" isPdf={true} isDownloadAble={true} />
+            <ApplicationPdfViewCommonProps
+              userId={pdfData?.user?._id || pdfData?.user}
+              pdfId={pdfData?.form?._id || pdfData?.form}
+              className="rounded-lg!"
+              isPdf={true}
+              isDownloadAble={true}
+            />
           </Modal>
         )}
       </div>
@@ -112,16 +118,15 @@ export const SpecialAccessModal = ({ formId, setModal, submittedFormId }) => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [specialSections, setSpecialSections] = useState([]);
 
-
   const [form, setForm] = useState({
-    email: '',
-    sectionKey: '',
+    email: "",
+    sectionKey: "",
   });
 
   const giveSpecialAccessToUserHandler = async () => {
     try {
-      if (!form?.email || !form?.sectionKey) return toast.error('Please select a user and section');
-      if (!submittedFormId) return toast.error('Form ID is required');
+      if (!form?.email || !form?.sectionKey) return toast.error("Please select a user and section");
+      if (!submittedFormId) return toast.error("Form ID is required");
       const res = await giveSpecialAccessToUser({
         formId: formId,
         submittedFormId: submittedFormId,
@@ -129,23 +134,25 @@ export const SpecialAccessModal = ({ formId, setModal, submittedFormId }) => {
         sectionKey: form?.sectionKey,
       }).unwrap();
       if (res?.success) {
-        toast?.success(res?.message || 'Form forwarded successfully');
+        toast?.success(res?.message || "Form forwarded successfully");
         setModal(false);
         setSelectedUsers([]);
         setSpecialSections([]);
-        setForm({ userId: '', sectionKey: '' });
+        setForm({ userId: "", sectionKey: "" });
       }
     } catch (error) {
-      console.error('Error forwarding a form to user:', error);
-      toast.error(error?.data?.message || 'Failed to forward a form to user');
+      console.error("Error forwarding a form to user:", error);
+      toast.error(error?.data?.message || "Failed to forward a form to user");
     }
   };
 
   useEffect(() => {
     setIsLoading(true);
     if (formData?.data?.sections?.length > 0) {
-      const specialSections = formData?.data?.sections?.filter(section => section?.isHidden && section?.key !== 'beneficial_owners');
-      const formatedSpecialSections = specialSections?.map(section => ({
+      const specialSections = formData?.data?.sections?.filter(
+        (section) => section?.isHidden && section?.key !== "beneficial_owners",
+      );
+      const formatedSpecialSections = specialSections?.map((section) => ({
         option: section?.name,
         value: section?.key,
       }));
@@ -153,9 +160,9 @@ export const SpecialAccessModal = ({ formId, setModal, submittedFormId }) => {
     }
     if (submittedFormUsers?.data?.length > 0) {
       const users = [];
-      submittedFormUsers?.data?.forEach(submitForm => {
+      submittedFormUsers?.data?.forEach((submitForm) => {
         users.push({
-          option: `${submitForm?.user?.firstName} ${submitForm?.user?.middleName ? ' ' : ''} ${submitForm?.user?.lastName}`,
+          option: `${submitForm?.user?.firstName} ${submitForm?.user?.middleName ? " " : ""} ${submitForm?.user?.lastName}`,
           value: submitForm?.user?.email,
         });
       });
@@ -163,10 +170,6 @@ export const SpecialAccessModal = ({ formId, setModal, submittedFormId }) => {
     }
     setIsLoading(false);
   }, [formData?.data?.sections, submittedFormUsers?.data]);
-
-
-
-
 
   if (isLoading) {
     return <CustomLoading />;
@@ -181,24 +184,24 @@ export const SpecialAccessModal = ({ formId, setModal, submittedFormId }) => {
           <CustomizableSelect
             options={selectedUsers}
             value={form?.email}
-            onSelect={value => setForm(prev => ({ ...prev, email: value }))}
-            label={'Select User'}
+            onSelect={(value) => setForm((prev) => ({ ...prev, email: value }))}
+            label={"Select User"}
             defaultText="Select User"
           />
-          <span className='text-sm text-gray-500'>or type email manually</span>
+          <span className="text-sm text-gray-500">or type email manually</span>
           <TextField
-            name='email'
-            placeholder='Enter email'
+            name="email"
+            placeholder="Enter email"
             value={form?.email}
-            onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
+            onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
           />
         </div>
 
         <div className="flex flex-col gap-2">
           <CustomizableSelect
             options={specialSections}
-            onSelect={value => setForm(prev => ({ ...prev, sectionKey: value }))}
-            label={'Select Section'}
+            onSelect={(value) => setForm((prev) => ({ ...prev, sectionKey: value }))}
+            label={"Select Section"}
             defaultText="Select Section"
           />
         </div>
@@ -208,9 +211,9 @@ export const SpecialAccessModal = ({ formId, setModal, submittedFormId }) => {
           <Button label="Cancel" variant="secondary" onClick={() => setModal(false)} />
           <Button
             disabled={isGivingSpecialAccess}
-            label="Send Access"
+            label="Send Form"
             variant="primary"
-            className={`${isGivingSpecialAccess ? 'cursor-not-allowed opacity-50' : ''}`}
+            className={`${isGivingSpecialAccess ? "cursor-not-allowed opacity-50" : ""}`}
             onClick={giveSpecialAccessToUserHandler}
           />
         </div>

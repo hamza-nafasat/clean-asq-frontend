@@ -267,7 +267,7 @@ const SpecialAccessModal = ({ allBeneficials, formId, setModal }) => {
           <Button label="Cancel" variant="secondary" onClick={() => setModal(false)} />
           <Button
             disabled={isGivingSpecialAccess}
-            label="Send Access"
+            label="Send Form"
             variant="primary"
             className={`${isGivingSpecialAccess ? "cursor-not-allowed opacity-50" : ""}`}
             onClick={giveSpecialAccessToUserHandler}
