@@ -1,5 +1,5 @@
-import { getTableStyles } from "@/data/data";
-import { useBranding } from "@/hooks/BrandingContext";
+import { getTableStyles } from '@/data/data';
+import { useBranding } from '@/hooks/BrandingContext';
 import {
   useCreateFormRuleMutation,
   useDeleteSingleFormRuleMutation,
@@ -7,180 +7,280 @@ import {
   useGetFormRuleFromAiMutation,
   useUpdateSingleFormRuleMutation,
   useUpdateStatusSingleFormRuleMutation,
-} from "@/redux/apis/formApis";
-import { MoreVertical, PencilIcon, PlusIcon, ToggleRight, Trash } from "lucide-react";
-import React, { useMemo, useRef, useState } from "react";
-import DataTable from "react-data-table-component";
-import { FaSpinner } from "react-icons/fa";
-import { useParams } from "react-router-dom";
-import { toast } from "react-toastify";
-import ConfirmationModal from "../shared/ConfirmationModal";
-import Button from "../shared/small/Button";
-import CustomLoading from "../shared/small/CustomLoading";
-import Modal from "../shared/small/Modal";
-import TextField from "../shared/small/TextField";
-import { ThreeDotEditViewDelete } from "../shared/ThreeDotViewEditDelete";
-import { SelectInputType } from "../shared/small/DynamicField";
-import { IoMdPersonAdd } from "react-icons/io";
+} from '@/redux/apis/formApis';
+import { MoreVertical, PencilIcon, PlusIcon, ToggleRight, Trash, GripVertical } from 'lucide-react';
+import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
+import { FaSpinner } from 'react-icons/fa';
+import { useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import ConfirmationModal from '../shared/ConfirmationModal';
+import Button from '../shared/small/Button';
+import CustomLoading from '../shared/small/CustomLoading';
+import Modal from '../shared/small/Modal';
+import TextField from '../shared/small/TextField';
+import { ThreeDotEditViewDelete } from '../shared/ThreeDotViewEditDelete';
+import { SelectInputType } from '../shared/small/DynamicField';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+  defaultDropAnimation,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
+// ─── Sortable Row ────────────────────────────────────────────────────────────
+const SortableRow = ({ row, actionMenu, setActionMenu, ButtonsForThreeDot }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: row._id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className={`border-b border-gray-100 hover:bg-gray-50 ${isDragging ? 'bg-gray-100 shadow-lg' : 'bg-white'}`}
+    >
+      {/* Drag Handle — only this cell gets the listeners */}
+      <td className="w-48  px-3 py-3 text-center">
+        <div
+          {...attributes}
+          {...listeners}
+          className="inline-flex cursor-grab active:cursor-grabbing rounded p-1 hover:bg-gray-200 transition-colors"
+          title="Drag to reorder"
+        >
+          <GripVertical size={18} className="text-gray-400" />
+        </div>
+      </td>
+
+      {/* Rule ID */}
+      <td className="w-24 px-3 py-3">
+        <span title={row._id} className="text-textPrimary text-xs truncate block max-w-[80px]">
+          {row._id}
+        </span>
+      </td>
+
+      {/* Order */}
+      <td className="w-16 px-3 py-3 text-center">
+        <span className="text-textPrimary text-sm">{row.orderNo + 1}</span>
+      </td>
+
+      {/* Rule Name */}
+      <td className="w-48 px-3 py-3">
+        <span className="text-textPrimary font-semibold capitalize text-sm">{row.name}</span>
+      </td>
+
+      {/* Rule Prompt */}
+      <td className="px-3 py-3">
+        <textarea
+          value={row.prompt}
+          readOnly
+          className="text-textPrimary border border-frameColor w-full resize-none rounded-md bg-[#FAFBFF] p-2 text-sm"
+          rows={2}
+        />
+      </td>
+
+      {/* Category */}
+      <td className="w-28 px-3 py-3">
+        <span className="font-semibold capitalize text-sm">{row.category}</span>
+      </td>
+
+      {/* Status */}
+      <td className="w-24 px-3 py-3">
+        <span
+          className={`font-semibold capitalize text-sm ${row.isActive ? 'text-green-600' : 'text-red-500'}`}
+        >
+          {row.isActive ? 'Active' : 'Inactive'}
+        </span>
+      </td>
+
+      {/* Actions */}
+      <td className="w-24 px-3 py-3">
+        <div className="relative">
+          <button
+            onClick={() => setActionMenu((prev) => (prev === row._id ? null : row._id))}
+            className="cursor-pointer rounded p-1 hover:bg-gray-100"
+            aria-label="Actions"
+          >
+            <MoreVertical size={18} />
+          </button>
+          {actionMenu === row._id && (
+            <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+};
+
+// ─── Drag Overlay ────────────────────────────────────────────────────────────
+const DragOverlayRow = ({ row }) => (
+  <div className="bg-white shadow-xl rounded-lg border border-blue-200 p-3 min-w-[320px]">
+    <div className="flex items-center gap-3">
+      <GripVertical size={20} className="text-gray-400" />
+      <div className="flex-1">
+        <div className="font-semibold text-sm">{row?.name}</div>
+        <div className="text-xs text-gray-500">ID: {row?._id?.slice(-6)}</div>
+      </div>
+      <span className="text-xs text-gray-500">#{row?.orderNo + 1}</span>
+    </div>
+  </div>
+);
+
+// ─── Constants ───────────────────────────────────────────────────────────────
 const CATEGORY_OPTIONS = [
-  { label: "Alert", value: "alert" },
-  { label: "Display", value: "display" },
+  { label: 'Alert', value: 'alert' },
+  { label: 'Display', value: 'display' },
 ];
 
 const STATUS_OPTIONS = [
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
+  { label: 'Active', value: 'active' },
+  { label: 'Inactive', value: 'inactive' },
 ];
 
 const RULE_FIELDS_GUIDE = [
+  { field: 'prompt', description: 'Instruction sent to AI to generate the rule logic.' },
   {
-    field: "prompt",
-    description: "Instruction sent to AI to generate the rule logic.",
+    field: 'handler',
+    description: 'JavaScript logic generated by AI. Runs in backend to evaluate the rule.',
   },
-  {
-    field: "handler",
-    description: "JavaScript logic generated by AI. This runs in backend to evaluate the rule.",
-  },
-  {
-    field: "formula",
-    description: "Human-readable logic of the rule. Helps understand how the rule works.",
-  },
-  {
-    field: "example",
-    description: "Example showing how the rule works with sample input and output.",
-  },
-  {
-    field: "explanation",
-    description: "Explanation of why this rule exists and what it detects or validates.",
-  },
-];
-const manageRulesColumns = () => [
-  {
-    name: "Rule Id",
-    sortable: true,
-    width: "100px",
-    cell: (row) => (
-      <span title={row?._id} className="text-textPrimary truncate text-sm">
-        {row?._id}
-      </span>
-    ),
-  },
-  {
-    name: "Rule Name",
-    sortable: true,
-    cell: (row) => <span className="text-textPrimary font-semibold capitalize">{row?.name}</span>,
-    width: "200px",
-  },
-  {
-    name: "Rule Prompt",
-    sortable: true,
-    cell: (row) => (
-      <textarea
-        value={row?.prompt}
-        readOnly
-        className="text-textPrimary border-frameColor w-full resize-none rounded-md border bg-[#FAFBFF] p-2 text-sm"
-        rows={2}
-      />
-    ),
-    grow: 2,
-    wrap: true,
-  },
-  // {
-  //   name: "Rule Priority",
-  //   sortable: true,
-  //   width: "150px",
-  //   cell: (row) => (
-  //     <span
-  //       className={`px-4 py-2 w-25 text-center rounded-sm font-semibold capitalize text-white ${row?.priority === 0 ? "bg-green-500!" : row?.priority === 1 ? "bg-yellow-500!" : "bg-red-500!"}`}
-  //     >
-  //       {row?.priority === 0 ? "Low" : row?.priority === 1 ? "Medium" : "High"}
-  //     </span>
-  //   ),
-  // },
-  {
-    name: "Category",
-    sortable: true,
-    width: "150px",
-    cell: (row) => <span className="font-semibold">{row?.category}</span>,
-  },
-  {
-    name: "Status",
-    width: "120px",
-    sortable: true,
-    cell: (row) => <span className="font-semibold capitalize">{row?.isActive ? "Active" : "Inactive"}</span>,
-  },
+  { field: 'formula', description: 'Human-readable logic of the rule.' },
+  { field: 'example', description: 'Example showing how the rule works with sample input/output.' },
+  { field: 'explanation', description: 'Explanation of why this rule exists and what it detects.' },
 ];
 
+// ─── Main Component ───────────────────────────────────────────────────────────
 const ManageRules = () => {
   const formId = useParams().formId;
-  const actionMenuRefs = useRef(new Map());
   const [actionMenu, setActionMenu] = useState(null);
   const [openCreateRuleModal, setOpenCreateRuleModal] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const [deleteRuleConfirmation, setDeleteRuleConfirmation] = useState(null);
   const [updateStatusRuleConfirmation, setUpdateStatusRuleConfirmation] = useState(null);
   const [updateRuleConfirmation, setUpdateRuleConfirmation] = useState(null);
-  const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
-  const [filters, setFilters] = useState({
-    name: "",
-    category: "",
-    status: "",
-  });
-  const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
+  const [filters, setFilters] = useState({ name: '', category: '', status: '' });
+  const [orderedRules, setOrderedRules] = useState([]);
+  const [isOrderChanged, setIsOrderChanged] = useState(false);
+  const [activeDragId, setActiveDragId] = useState(null);
 
   const { data: rules, isLoading, refetch } = useGetAllFormRulesQuery({ formId });
   const [deleteRule, { isLoading: isDeletingRule }] = useDeleteSingleFormRuleMutation();
-  const [updateStatusRule, { isLoading: isUpdatingStatusRule }] = useUpdateStatusSingleFormRuleMutation();
+  const [updateStatusRule, { isLoading: isUpdatingStatusRule }] =
+    useUpdateStatusSingleFormRuleMutation();
+  console.log('Fetched rules:', orderedRules);
+  // Sync server data → local state
+  useEffect(() => {
+    if (rules?.data) {
+      setOrderedRules(rules.data.map((rule, i) => ({ ...rule, orderNo: i })));
+      setIsOrderChanged(false);
+    }
+  }, [rules]);
 
-  const filteredRules = useMemo(() => {
-    let data = rules?.data || [];
-    return data.filter((rule) => {
-      // Name filter
-      const matchName = !filters.name || rule.name?.toLowerCase().includes(filters.name.toLowerCase());
-      // Category filter
-      const matchCategory = !filters.category || rule.category === filters.category;
-      // Status filter
-      const matchStatus =
-        !filters.status ||
-        (filters.status === "active" && rule.isActive) ||
-        (filters.status === "inactive" && !rule.isActive);
-      // Date filter
-      return matchName && matchCategory && matchStatus;
-    });
-  }, [rules, filters]);
+  // Filtered view
+  const filteredRules = useMemo(
+    () =>
+      orderedRules.filter((rule) => {
+        const matchName =
+          !filters.name || rule.name?.toLowerCase().includes(filters.name.toLowerCase());
+        const matchCategory = !filters.category || rule.category === filters.category;
+        const matchStatus =
+          !filters.status ||
+          (filters.status === 'active' && rule.isActive) ||
+          (filters.status === 'inactive' && !rule.isActive);
+        return matchName && matchCategory && matchStatus;
+      }),
+    [orderedRules, filters]
+  );
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragStart = useCallback((event) => setActiveDragId(event.active.id), []);
+
+  const handleDragEnd = useCallback(
+    ({ active, over }) => {
+      setActiveDragId(null);
+      if (!over || active.id === over.id) return;
+
+      const oldFilteredIdx = filteredRules.findIndex((r) => r._id === active.id);
+      const newFilteredIdx = filteredRules.findIndex((r) => r._id === over.id);
+      const oldFullIdx = orderedRules.findIndex((r) => r._id === filteredRules[oldFilteredIdx]._id);
+      const newFullIdx = orderedRules.findIndex((r) => r._id === filteredRules[newFilteredIdx]._id);
+
+      const reordered = arrayMove(orderedRules, oldFullIdx, newFullIdx).map((r, i) => ({
+        ...r,
+        orderNo: i,
+      }));
+
+      setOrderedRules(reordered);
+      setIsOrderChanged(true);
+      toast.success(`Moved from position ${oldFilteredIdx + 1} to ${newFilteredIdx + 1}`);
+    },
+    [filteredRules, orderedRules]
+  );
+
+  const handleDragCancel = useCallback(() => setActiveDragId(null), []);
+
+  const handleSaveOrder = () => {
+    toast.info('API integration pending — order saved locally');
+    // TODO: call your API here
+  };
+
+  const handleCancelOrder = async () => {
+    await refetch();
+    setIsOrderChanged(false);
+    toast.info('Order changes cancelled');
+  };
 
   const handleDeleteRule = async (ruleId) => {
     try {
       const res = await deleteRule({ ruleId }).unwrap();
       if (res?.success) {
-        toast?.success(res?.message || "Rule deleted successfully");
+        toast.success(res.message || 'Rule deleted successfully');
         await refetch();
         setDeleteRuleConfirmation(null);
       }
-    } catch (error) {
-      console.error("Error deleting rule:", error);
-      toast.error(error?.data?.message || "Failed to delete rule");
+    } catch (err) {
+      toast.error(err?.data?.message || 'Failed to delete rule');
     }
   };
+
   const handleUpdateStatusRule = async (ruleId, isActive) => {
     try {
       const res = await updateStatusRule({ ruleId, isActive: !isActive }).unwrap();
       if (res?.success) {
-        toast?.success(res?.message || "Rule status updated successfully");
+        toast.success(res.message || 'Rule status updated');
         await refetch();
         setUpdateStatusRuleConfirmation(null);
       }
-    } catch (error) {
-      console.error("Error updating status rule:", error);
-      toast.error(error?.data?.message || "Failed to update status rule");
+    } catch (err) {
+      toast.error(err?.data?.message || 'Failed to update status');
     }
   };
 
   const ButtonsForThreeDot = useMemo(
     () => [
       {
-        name: "Update Status",
+        name: 'Update Status',
         icon: <ToggleRight size={16} className="mr-2" />,
         onClick: (row) => {
           setSelectedRow(row);
@@ -189,7 +289,7 @@ const ManageRules = () => {
         },
       },
       {
-        name: "Update Rule",
+        name: 'Update Rule',
         icon: <PencilIcon size={16} className="mr-2" />,
         onClick: (row) => {
           setSelectedRow(row);
@@ -198,7 +298,7 @@ const ManageRules = () => {
         },
       },
       {
-        name: "Delete",
+        name: 'Delete',
         icon: <Trash size={16} className="mr-2" />,
         onClick: (row) => {
           setSelectedRow(row);
@@ -207,39 +307,11 @@ const ManageRules = () => {
         },
       },
     ],
-    [],
+    []
   );
 
-  const columns = useMemo(
-    () => [
-      ...manageRulesColumns(),
-      {
-        name: "Action",
-        width: "100px",
-        cell: (row) => {
-          if (!actionMenuRefs.current.has(row?._id)) {
-            actionMenuRefs.current.set(row?._id, React.createRef());
-          }
-          const rowRef = actionMenuRefs.current.get(row?._id);
-
-          return (
-            <div className="relative" ref={rowRef}>
-              <button
-                onClick={() => setActionMenu((prevActionMenu) => (prevActionMenu === row?._id ? null : row?._id))}
-                className="cursor-pointer rounded p-1 hover:bg-gray-100"
-                aria-label="Actions"
-              >
-                <MoreVertical size={18} />
-              </button>
-              {actionMenu === row._id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
-            </div>
-          );
-        },
-      },
-    ],
-    [ButtonsForThreeDot, actionMenu],
-  );
   if (isLoading) return <CustomLoading />;
+
   return (
     <>
       {openCreateRuleModal && (
@@ -249,7 +321,11 @@ const ManageRules = () => {
       )}
       {updateRuleConfirmation && (
         <Modal onClose={() => setUpdateRuleConfirmation(false)}>
-          <UpdateRuleModal ruleData={selectedRow} setModal={setUpdateRuleConfirmation} refetch={refetch} />
+          <UpdateRuleModal
+            ruleData={selectedRow}
+            setModal={setUpdateRuleConfirmation}
+            refetch={refetch}
+          />
         </Modal>
       )}
 
@@ -258,33 +334,50 @@ const ManageRules = () => {
         onClose={() => setDeleteRuleConfirmation(null)}
         onConfirm={() => handleDeleteRule(selectedRow?._id)}
         title="Delete Rule"
-        message={`Are you sure you want to delete this rule?`}
+        message="Are you sure you want to delete this rule?"
         isLoading={isDeletingRule}
         confirmButtonText="Delete"
         confirmButtonClassName="bg-red-500 text-white"
       />
-
       <ConfirmationModal
         isOpen={!!updateStatusRuleConfirmation}
         onClose={() => setUpdateStatusRuleConfirmation(null)}
         onConfirm={() => handleUpdateStatusRule(selectedRow?._id, selectedRow?.isActive)}
         isLoading={isUpdatingStatusRule}
         title="Update Status Rule"
-        message={`Are you sure you want to update the status of this rule?`}
+        message="Are you sure you want to update the status of this rule?"
         confirmButtonText="Update"
         confirmButtonClassName="bg-red-500 text-white"
       />
-      <div className="flex items-center justify-center p-4">
+
+      <div className="p-4">
         <div className="flex w-full flex-col gap-6">
-          {/* Filter  */}
+          {/* Filters */}
           <div className="w-full bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
             <div className="flex flex-col gap-4">
               <div className="flex flex-row justify-between items-center gap-4">
                 <h3 className="text-textPrimary text-lg font-semibold">Manage Rules</h3>
+                {isOrderChanged && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-orange-600 bg-orange-50 px-3 py-1 rounded-full">
+                      Order changed
+                    </span>
+                    <Button
+                      label="Save Order"
+                      variant="primary"
+                      size="sm"
+                      onClick={handleSaveOrder}
+                    />
+                    <Button
+                      label="Cancel"
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleCancelOrder}
+                    />
+                  </div>
+                )}
               </div>
-              {/* Top row */}
               <div className="flex flex-col md:flex-row gap-4 w-full">
-                {/* Search */}
                 <div className="flex flex-col w-full md:w-1/3">
                   <label className="text-xs text-gray-500 mb-1">Search</label>
                   <TextField
@@ -294,31 +387,23 @@ const ManageRules = () => {
                     onChange={(e) => setFilters({ ...filters, name: e.target.value })}
                   />
                 </div>
-                {/* Category */}
                 <div className="flex flex-col w-full md:w-1/4">
                   <label className="text-xs text-gray-500 mb-1">Category</label>
                   <SelectInputType
-                    field={{
-                      options: CATEGORY_OPTIONS,
-                      uniqueId: "category",
-                    }}
+                    field={{ options: CATEGORY_OPTIONS, uniqueId: 'category' }}
                     onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-                    form={{ category: { name: "category", value: filters.category } }}
+                    form={{ category: { name: 'category', value: filters.category } }}
                   />
                 </div>
-                {/* Status */}
                 <div className="flex flex-col w-full md:w-1/4">
                   <label className="text-xs text-gray-500 mb-1">Status</label>
                   <SelectInputType
-                    field={{
-                      options: STATUS_OPTIONS,
-                      uniqueId: "status",
-                    }}
+                    field={{ options: STATUS_OPTIONS, uniqueId: 'status' }}
                     onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                    form={{ status: { name: "status", value: filters.status } }}
+                    form={{ status: { name: 'status', value: filters.status } }}
                   />
                 </div>
-                <div className="flex  justify-end items-end">
+                <div className="flex justify-end items-end">
                   <Button
                     icon={PlusIcon}
                     className="w-40 h-13 rounded-lg"
@@ -331,17 +416,76 @@ const ManageRules = () => {
             </div>
           </div>
 
-          <div className="w-full max-w-full ">
-            <DataTable
-              data={filteredRules || []}
-              columns={columns}
-              customStyles={tableStyles}
-              pagination
-              highlightOnHover
-              progressPending={false}
-              noDataComponent="No Rules found"
-              className="rounded-t-xl!"
-            />
+          {/* Table with DnD */}
+          <div className="w-full overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="text-sm text-gray-500 px-4 pt-3 pb-2 flex items-center justify-between border-b border-gray-100">
+              <span className="inline-flex items-center gap-1">
+                <GripVertical size={14} />
+                Drag the handle (⠿) to reorder rules
+              </span>
+              {activeDragId && (
+                <span className="text-xs text-blue-600 animate-pulse">Dragging rule…</span>
+              )}
+            </div>
+
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
+            >
+              <SortableContext
+                items={filteredRules.map((r) => r._id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      <th className="w-14 px-3 py-3" />
+                      <th className="w-24 px-3 py-3">Rule ID</th>
+                      <th className="w-16 px-3 py-3 text-center">Order</th>
+                      <th className="w-48 px-3 py-3">Rule Name</th>
+                      <th className="px-3 py-3">Rule Prompt</th>
+                      <th className="w-28 px-3 py-3">Category</th>
+                      <th className="w-24 px-3 py-3">Status</th>
+                      <th className="w-24 px-3 py-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredRules.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="text-center py-12 text-gray-400">
+                          No rules found
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredRules.map((row) => (
+                        <SortableRow
+                          key={row._id}
+                          row={row}
+                          actionMenu={actionMenu}
+                          setActionMenu={setActionMenu}
+                          ButtonsForThreeDot={ButtonsForThreeDot}
+                        />
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </SortableContext>
+
+              <DragOverlay
+                dropAnimation={{
+                  ...defaultDropAnimation,
+                  duration: 200,
+                  easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+                }}
+              >
+                {activeDragId && (
+                  <DragOverlayRow row={filteredRules.find((r) => r._id === activeDragId)} />
+                )}
+              </DragOverlay>
+            </DndContext>
           </div>
         </div>
       </div>
@@ -353,36 +497,47 @@ export default ManageRules;
 
 const CreateRuleModal = ({ formId, setModal, refetch }) => {
   const [showRuleFieldsGuide, setShowRuleFieldsGuide] = useState(false);
-  const [prompt, setPrompt] = useState("");
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("");
-  const [handler, setHandler] = useState("");
-  const [formula, setFormula] = useState("");
-  const [example, setExample] = useState("");
-  const [explanation, setExplanation] = useState("");
+  const [prompt, setPrompt] = useState('');
+  const [name, setName] = useState('');
+  const [category, setCategory] = useState('');
+  const [handler, setHandler] = useState('');
+  const [formula, setFormula] = useState('');
+  const [example, setExample] = useState('');
+  const [explanation, setExplanation] = useState('');
   const [createRule, { isLoading: isCreatingRule }] = useCreateFormRuleMutation();
-  const [getFormRuleFromAi, { isLoading: isGettingFormRuleFromAi }] = useGetFormRuleFromAiMutation();
+  const [getFormRuleFromAi, { isLoading: isGettingFormRuleFromAi }] =
+    useGetFormRuleFromAiMutation();
 
   const createRuleHandler = async () => {
     try {
-      if (!formId || !prompt || !name || !handler || !formula || !example || !explanation || !category)
-        return toast.error("Please fill all the fields");
+      if (
+        !formId ||
+        !prompt ||
+        !name ||
+        !handler ||
+        !formula ||
+        !example ||
+        !explanation ||
+        !category
+      )
+        return toast.error('Please fill all the fields');
       const data = { formId, prompt, name, category, handler, formula, example, explanation };
       const res = await createRule(data).unwrap();
       if (res?.success) {
-        toast?.success(res?.message || "Rule created successfully");
+        toast?.success(res?.message || 'Rule created successfully');
         await refetch();
         setModal(false);
       }
     } catch (error) {
-      console.error("Error creating rule:", error);
-      toast.error(error?.data?.message || "Failed to create rule");
+      console.error('Error creating rule:', error);
+      toast.error(error?.data?.message || 'Failed to create rule');
     }
   };
 
   const getFormRuleFromAiHandler = async () => {
     try {
-      if (!formId || !prompt || !name || !category) return toast.error("Please fill all the fields");
+      if (!formId || !prompt || !name || !category)
+        return toast.error('Please fill all the fields');
       const res = await getFormRuleFromAi({ formId, prompt, name, category }).unwrap();
       if (res?.success) {
         setName(res?.data?.name);
@@ -392,8 +547,8 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
         setExplanation(res?.data?.explanation);
       }
     } catch (error) {
-      console.error("Error getting form rule from ai:", error);
-      toast.error(error?.data?.message || "Failed to get form rule from ai");
+      console.error('Error getting form rule from ai:', error);
+      toast.error(error?.data?.message || 'Failed to get form rule from ai');
     }
   };
   return (
@@ -410,12 +565,12 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
           />
           <SelectInputType
             field={{
-              label: "Category",
+              label: 'Category',
               options: CATEGORY_OPTIONS,
-              uniqueId: "category",
+              uniqueId: 'category',
             }}
             onChange={(e) => setCategory(e.target.value)}
-            form={{ category: { name: "category", value: category } }}
+            form={{ category: { name: 'category', value: category } }}
           />
           <TextField
             label="Prompt"
@@ -429,7 +584,7 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
 
           <div className="flex justify-end  w-full items-end gap-2">
             <Button
-              label={showRuleFieldsGuide ? "Hide Fields Guide" : "Preview Fields Guide"}
+              label={showRuleFieldsGuide ? 'Hide Fields Guide' : 'Preview Fields Guide'}
               variant="secondary"
               onClick={() => setShowRuleFieldsGuide((prev) => !prev)}
             />
@@ -479,7 +634,9 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
             {explanation && (
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Explanation</p>
-                <div className="text-sm text-gray-800 bg-white border rounded-md p-3">{explanation}</div>
+                <div className="text-sm text-gray-800 bg-white border rounded-md p-3">
+                  {explanation}
+                </div>
               </div>
             )}
             <div>
@@ -490,11 +647,17 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">Example Calculation</p>
-              <pre className="text-sm text-gray-800 bg-white border rounded-md p-3 whitespace-pre-wrap">{example}</pre>
+              <pre className="text-sm text-gray-800 bg-white border rounded-md p-3 whitespace-pre-wrap">
+                {example}
+              </pre>
             </div>
             <details className="mt-2">
-              <summary className="cursor-pointer text-sm text-gray-500">Show technical code</summary>
-              <pre className="text-xs bg-black text-green-400 p-3 rounded-md mt-2 overflow-x-auto">{handler}</pre>
+              <summary className="cursor-pointer text-sm text-gray-500">
+                Show technical code
+              </summary>
+              <pre className="text-xs bg-black text-green-400 p-3 rounded-md mt-2 overflow-x-auto">
+                {handler}
+              </pre>
             </details>
           </div>
         )}
@@ -533,12 +696,22 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
   const [example, setExample] = useState(ruleData?.example);
   const [explanation, setExplanation] = useState(ruleData?.explanation);
   const [updateRule, { isLoading: isUpdatingRule }] = useUpdateSingleFormRuleMutation();
-  const [getFormRuleFromAi, { isLoading: isGettingFormRuleFromAi }] = useGetFormRuleFromAiMutation();
+  const [getFormRuleFromAi, { isLoading: isGettingFormRuleFromAi }] =
+    useGetFormRuleFromAiMutation();
 
   const updateRuleHandler = async () => {
     try {
-      if (!ruleData?._id || !prompt || !name || !handler || !formula || !example || !explanation || !category)
-        return toast.error("Please fill all the fields");
+      if (
+        !ruleData?._id ||
+        !prompt ||
+        !name ||
+        !handler ||
+        !formula ||
+        !example ||
+        !explanation ||
+        !category
+      )
+        return toast.error('Please fill all the fields');
 
       const data = {
         formId: ruleData?.formId,
@@ -553,20 +726,26 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
 
       const res = await updateRule({ data, ruleId: ruleData?._id }).unwrap();
       if (res?.success) {
-        toast?.success(res?.message || "Rule updated successfully");
+        toast?.success(res?.message || 'Rule updated successfully');
         await refetch();
         setModal(false);
       }
     } catch (error) {
-      console.error("Error updating rule:", error);
-      toast.error(error?.data?.message || "Failed to update rule");
+      console.error('Error updating rule:', error);
+      toast.error(error?.data?.message || 'Failed to update rule');
     }
   };
 
   const getFormRuleFromAiHandler = async () => {
     try {
-      if (!ruleData?.formId || !prompt || !name || !category) return toast.error("Please fill all the fields");
-      const res = await getFormRuleFromAi({ formId: ruleData?.formId, prompt, name, category }).unwrap();
+      if (!ruleData?.formId || !prompt || !name || !category)
+        return toast.error('Please fill all the fields');
+      const res = await getFormRuleFromAi({
+        formId: ruleData?.formId,
+        prompt,
+        name,
+        category,
+      }).unwrap();
       if (res?.success) {
         setName(res?.data?.name);
         setHandler(res?.data?.handler);
@@ -576,8 +755,8 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
         setCategory(res?.data?.category);
       }
     } catch (error) {
-      console.error("Error getting form rule from ai:", error);
-      toast.error(error?.data?.message || "Failed to get form rule from ai");
+      console.error('Error getting form rule from ai:', error);
+      toast.error(error?.data?.message || 'Failed to get form rule from ai');
     }
   };
   return (
@@ -594,12 +773,12 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
           />
           <SelectInputType
             field={{
-              label: "Category",
+              label: 'Category',
               options: CATEGORY_OPTIONS,
-              uniqueId: "category",
+              uniqueId: 'category',
             }}
             onChange={(e) => setCategory(e.target.value)}
-            form={{ category: { name: "category", value: category } }}
+            form={{ category: { name: 'category', value: category } }}
           />
           <TextField
             label="Prompt"
@@ -613,7 +792,7 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
 
           <div className="flex justify-end  w-full items-end gap-2">
             <Button
-              label={showRuleFieldsGuide ? "Hide Fields Guide" : "Preview Fields Guide"}
+              label={showRuleFieldsGuide ? 'Hide Fields Guide' : 'Preview Fields Guide'}
               variant="secondary"
               onClick={() => setShowRuleFieldsGuide((prev) => !prev)}
             />
@@ -663,7 +842,9 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
             {explanation && (
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Explanation</p>
-                <div className="text-sm text-gray-800 bg-white border rounded-md p-3">{explanation}</div>
+                <div className="text-sm text-gray-800 bg-white border rounded-md p-3">
+                  {explanation}
+                </div>
               </div>
             )}
             <div>
@@ -674,11 +855,17 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">Example Calculation</p>
-              <pre className="text-sm text-gray-800 bg-white border rounded-md p-3 whitespace-pre-wrap">{example}</pre>
+              <pre className="text-sm text-gray-800 bg-white border rounded-md p-3 whitespace-pre-wrap">
+                {example}
+              </pre>
             </div>
             <details className="mt-2">
-              <summary className="cursor-pointer text-sm text-gray-500">Show technical code</summary>
-              <pre className="text-xs bg-black text-green-400 p-3 rounded-md mt-2 overflow-x-auto">{handler}</pre>
+              <summary className="cursor-pointer text-sm text-gray-500">
+                Show technical code
+              </summary>
+              <pre className="text-xs bg-black text-green-400 p-3 rounded-md mt-2 overflow-x-auto">
+                {handler}
+              </pre>
             </details>
           </div>
         )}
