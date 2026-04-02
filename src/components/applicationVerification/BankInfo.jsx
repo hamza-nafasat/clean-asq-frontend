@@ -134,12 +134,16 @@ function BankInfo({
   };
 
   useEffect(() => {
+    const findBankAccountNumberUniqueId = fields.find((field) => field.name === "bank_account_number")?.uniqueId;
+    const findConfirmBankAccountNumberUniqueId = fields.find(
+      (field) => field.name === "confirm_bank_account_number",
+    )?.uniqueId;
     const isMatch =
-      form.bank_account_number &&
-      form.confirm_bank_account_number &&
-      form.bank_account_number === form.confirm_bank_account_number;
+      form[findBankAccountNumberUniqueId]?.value &&
+      form[findConfirmBankAccountNumberUniqueId]?.value &&
+      form[findBankAccountNumberUniqueId]?.value === form[findConfirmBankAccountNumberUniqueId]?.value;
     setAccMatch(isMatch);
-  }, [form.bank_account_number, form.confirm_bank_account_number]);
+  }, [form, fields]);
 
   useEffect(() => {
     if (fields && fields.length > 0) {
