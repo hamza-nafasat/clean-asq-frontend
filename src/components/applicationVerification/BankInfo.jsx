@@ -279,8 +279,6 @@ function BankInfo({
             }
 
             if (field.name === "confirm_bank_account_number") {
-              // todo fix this
-              // const isMatch = form.bank_account_number && form[field.name] === form.bank_account_number;
               return (
                 <div key={index} className="relative mt-4">
                   <OtherInputType
@@ -291,10 +289,10 @@ function BankInfo({
                     className="w-full pr-10"
                     isConfirmField
                   />
-                  {/* <div className="mt-2 flex items-center gap-2">
-                    {form[field.name] && (
+                  <div className="mt-2 flex items-center gap-2">
+                    {form[field?.uniqueId]?.value && (
                       <span className="">
-                        {isMatch ? (
+                        {accMatch ? (
                           <CheckCircle className="h-5 w-5 text-green-500" />
                         ) : (
                           <XCircle className="h-5 w-5 text-red-500" />
@@ -302,7 +300,7 @@ function BankInfo({
                       </span>
                     )}
                     <p className="text-xs text-gray-500">Please type your account number manually (no copy/paste).</p>
-                  </div> */}
+                  </div>
                 </div>
               );
             }
