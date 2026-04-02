@@ -499,6 +499,15 @@ const formApis = createApi({
         body: data,
       }),
     }),
+
+    updateRulesOrder: builder.mutation({
+      query: (data) => ({
+        url: "/update-rules-order",
+        method: "PUT",
+        body: { rulesData: data },
+      }),
+      invalidatesTags: ["FormRules"],
+    }),
   }),
 });
 export const {
@@ -556,5 +565,6 @@ export const {
   useUpdateSingleFormRuleMutation,
   useUpdateStatusSingleFormRuleMutation,
   useGetFormRuleFromAiMutation,
+  useUpdateRulesOrderMutation,
 } = formApis;
 export default formApis;

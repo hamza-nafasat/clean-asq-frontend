@@ -1,16 +1,10 @@
 import { getTableStyles } from "@/data/data";
 import { useBranding } from "@/hooks/BrandingContext";
 import { useApplyRulesOnFormQuery } from "@/redux/apis/formApis";
-import DataTable from "react-data-table-component";
-import Button from "../shared/small/Button";
-import { CgSpinner } from "react-icons/cg";
 import { useMemo, useState } from "react";
-import { SelectInputType } from "../shared/small/DynamicField";
-
-const CATEGORY_OPTIONS = [
-  { label: "Alert", value: "alert" },
-  { label: "Display", value: "display" },
-];
+import DataTable from "react-data-table-component";
+import { CgSpinner } from "react-icons/cg";
+import Button from "../shared/small/Button";
 
 const columns = () => [
   { name: "Rule No", selector: (row) => row?.number, sortable: true, width: "110px" },
@@ -35,12 +29,6 @@ const columns = () => [
     grow: 2,
     wrap: true,
   },
-  // {
-  //   name: "Alert Category",
-  //   selector: (row) => row?.category,
-  //   sortable: true,
-  //   width: "150px",
-  // },
 ];
 
 const ApplicationAnalysis = ({ submitFormData }) => {
@@ -52,29 +40,16 @@ const ApplicationAnalysis = ({ submitFormData }) => {
   });
 
   const filteredRules = useMemo(() => {
-    // add number to the data
-
-    let data = alertsData?.data || [];
-    let allDisplayAlerts = data.filter((item) => item.category === "display");
-    let otherAllCategoryAlerts = data.filter((item) => item.category !== "display");
-    const allDisplayAlertWithNumber = allDisplayAlerts.map((item, index) => ({ ...item, number: index + 1 }));
-    const otherAllCategoryAlertWithNumber = otherAllCategoryAlerts.map((item, index) => ({
-      ...item,
-      number: index + 1,
-    }));
+    const data = alertsData?.data || [];
+    const allDisplayAlertWithNumber = data
+      ?.filter((item) => item.category === "display")
+      ?.map((item, index) => ({ ...item, number: index + 1 }));
+    const otherAllCategoryAlertWithNumber = data
+      .filter((item) => item.category !== "display")
+      ?.map((item, index) => ({ ...item, number: index + 1 }));
     return {
-      allDisplayAlertWithNumber: [
-        ...allDisplayAlertWithNumber,
-        ...allDisplayAlertWithNumber,
-        ...allDisplayAlertWithNumber,
-        ...allDisplayAlertWithNumber,
-      ],
-      otherAllCategoryAlertWithNumber: [
-        ...otherAllCategoryAlertWithNumber,
-        ...otherAllCategoryAlertWithNumber,
-        ...otherAllCategoryAlertWithNumber,
-        ...otherAllCategoryAlertWithNumber,
-      ],
+      allDisplayAlertWithNumber,
+      otherAllCategoryAlertWithNumber,
     };
   }, [alertsData?.data]);
 
@@ -103,11 +78,11 @@ const ApplicationAnalysis = ({ submitFormData }) => {
       </div>
       {/* if on tab or mobile then flex col else flex row  */}
       <div className="w-full gap-4 flex flex-col ">
-        <div className="flex w-full flex-col gap-2">
+        <div className="flex w-full flex-col gap-2 overflow-x-auto">
           <h1 className="text-textPrimary text-xl font-medium p-4">
             <span className="font-bold"> Key Application Info:</span> (section that contain all display rule output)
           </h1>
-          <div className="w-full max-w-full overflow-x-auto max-h-[30vh]">
+          <div className="w-full max-w-full">
             <DataTable
               data={filteredRules.allDisplayAlertWithNumber}
               columns={columns()}
@@ -123,7 +98,7 @@ const ApplicationAnalysis = ({ submitFormData }) => {
           <h1 className="text-textPrimary text-xl font-medium p-4">
             <span className="font-bold"> Application Alerts:</span> (section that contain all alert rule output)
           </h1>
-          <div className="w-full max-w-full overflow-x-auto max-h-[30vh]">
+          <div className="w-full max-w-full ">
             <DataTable
               data={filteredRules.otherAllCategoryAlertWithNumber}
               columns={columns()}

@@ -1,38 +1,38 @@
-import ApplicationInfo from '@/components/applicationVerification/ApplicationInfo';
-import BankInfo from '@/components/applicationVerification/BankInfo';
-import CompanyInformation from '@/components/applicationVerification/CompanyInformation';
-import CompanyOwners from '@/components/applicationVerification/CompanyOwners';
-import Documents from '@/components/applicationVerification/Documents';
-import PlaceHolder from '@/components/applicationVerification/PlaceHolder';
-import ProcessingInfo from '@/components/applicationVerification/ProcessingInfo';
-import { useMemo, useState } from 'react';
-import Stepper from '../../../../components/Stepper/Stepper';
+import ApplicationInfo from "@/components/applicationVerification/ApplicationInfo";
+import BankInfo from "@/components/applicationVerification/BankInfo";
+import CompanyInformation from "@/components/applicationVerification/CompanyInformation";
+import CompanyOwners from "@/components/applicationVerification/CompanyOwners";
+import Documents from "@/components/applicationVerification/Documents";
+import PlaceHolder from "@/components/applicationVerification/PlaceHolder";
+import ProcessingInfo from "@/components/applicationVerification/ProcessingInfo";
+import { useMemo, useState } from "react";
+import Stepper from "../../../../components/Stepper/Stepper";
 
 const steps = [
-  'Company Information',
-  'Company Owners',
-  'Bank Account Information',
-  'Processing Information',
-  'Application Information',
-  'Documents & Agreements',
-  'Placeholders',
+  "Company Information",
+  "Company Owners",
+  "Bank Account Information",
+  "Processing Information",
+  "Application Information",
+  "Documents & Agreements",
+  "Placeholders",
 ];
 
-export default function ApplicationVerification({ form }) {
+export default function ApplicationVerification() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState([
-    { idType: '', idNumber: '' }, // Verification
-    { companyName: '', registrationNumber: '', businessAddress: '' }, // Company Information
-    { owners: [{ name: '', percentage: '' }] }, // Company Owners
-    { accountNumber: '', bankName: '', branchName: '' }, // Bank Account
-    { processingType: '', processingTime: '' }, // Processing Information
-    { applicationType: '', applicationPurpose: '' }, // Application Information
+    { idType: "", idNumber: "" }, // Verification
+    { companyName: "", registrationNumber: "", businessAddress: "" }, // Company Information
+    { owners: [{ name: "", percentage: "" }] }, // Company Owners
+    { accountNumber: "", bankName: "", branchName: "" }, // Bank Account
+    { processingType: "", processingTime: "" }, // Processing Information
+    { applicationType: "", applicationPurpose: "" }, // Application Information
     { documents: [], agreementAccepted: false }, // Documents & Agreements
-    { placeholder1: '', placeholder2: '' }, // Application Information
+    { placeholder1: "", placeholder2: "" }, // Application Information
   ]);
 
   const updateField = (index, field, value) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
       return updated;
@@ -40,7 +40,7 @@ export default function ApplicationVerification({ form }) {
   };
 
   const handleComplete = () => {
-    console.log('Form submitted:', formData);
+    console.log("Form submitted:", formData);
   };
 
   const stepComponents = useMemo(
@@ -53,7 +53,7 @@ export default function ApplicationVerification({ form }) {
       <Documents key="documents" data={formData[6]} updateField={updateField} index={6} />,
       <PlaceHolder key="Placeholders" data={formData[7]} updateField={updateField} index={7} />,
     ],
-    [formData]
+    [formData],
   );
 
   return (
@@ -62,7 +62,7 @@ export default function ApplicationVerification({ form }) {
       <Stepper
         steps={steps}
         currentStep={currentStep}
-        onStepChange={step => setCurrentStep(step)}
+        onStepChange={(step) => setCurrentStep(step)}
         onComplete={handleComplete}
         visibleSteps={5}
         Children={stepComponents[currentStep]}
