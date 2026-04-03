@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import Button from "../shared/small/Button";
+import React, { useState, useEffect } from 'react';
+import Button from '../shared/small/Button';
 
 const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequiredFields = [] }) => {
   const [visibleStepRange, setVisibleStepRange] = useState({ start: 0, end: visibleSteps });
@@ -12,8 +12,8 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
       setWindowWidth(window.innerWidth);
     };
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Update visible steps when current step or window width changes
@@ -52,16 +52,16 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
             <React.Fragment key={actualIndex}>
               {/* Step Circle and Label */}
               <div
-                className={`relative flex flex-col items-center ${actualIndex === currentStep ? "top-[-14px]" : ""}`}
+                className={`relative flex flex-col items-center ${actualIndex === currentStep ? 'top-[-14px]' : ''}`}
               >
                 {/* Step Circle */}
                 <div
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-200 ${
                     actualIndex < currentStep
-                      ? `border-primary ${emptyRequiredFields.includes(actualIndex) ? "bg-[#974748]" : "bg-primary"}`
+                      ? `border-accent ${emptyRequiredFields.includes(actualIndex) ? 'bg-[#974748]' : 'bg-accent'}`
                       : actualIndex === currentStep
-                        ? "border-primary bg-primary"
-                        : `border-gray-300 ${emptyRequiredFields.includes(actualIndex) ? "bg-[#974748]/30" : "bg-white"}`
+                        ? 'border-accent bg-accent'
+                        : `border-gray-300 ${emptyRequiredFields.includes(actualIndex) ? 'bg-[#974748]/30' : 'bg-white'}`
                   }`}
                 >
                   {actualIndex < currentStep ? (
@@ -84,7 +84,7 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
                 <div className="mt-2">
                   <div
                     title={step}
-                    className={`text-center text-xs font-medium xl:max-w-[40px] cursor-pointer xl:truncate transition-colors duration-200 ${actualIndex === currentStep ? "text-primary" : "text-gray-400"} `}
+                    className={`text-center text-xs font-medium xl:max-w-[40px] cursor-pointer xl:truncate transition-colors duration-200 ${actualIndex === currentStep ? 'text-accent' : 'text-gray-400'} `}
                   >
                     {step}
                   </div>
@@ -95,8 +95,8 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
               {/* Connector Line */}
               {!isLastDisplayedStep && (
                 <div
-                  className={`h-[2px] flex-auto ${actualIndex < currentStep ? "bg-primary" : "bg-gray-300"}`}
-                  style={{ marginBottom: "48px" }}
+                  className={`h-[2px] flex-auto ${actualIndex < currentStep ? 'bg-accent' : 'bg-gray-300'}`}
+                  style={{ marginBottom: '48px' }}
                 />
               )}
             </React.Fragment>

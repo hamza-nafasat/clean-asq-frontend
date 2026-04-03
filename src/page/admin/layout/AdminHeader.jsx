@@ -15,14 +15,14 @@ import { HiMenu } from 'react-icons/hi';
 
 function AdminHeader({ setSidebarOpen }) {
   const navigate = useNavigate();
-  const { user } = useSelector(state => state.auth);
-  const { formHeaderText } = useSelector(state => state.form);
+  const { user } = useSelector((state) => state.auth);
+  const { formHeaderText } = useSelector((state) => state.form);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef(null);
   const { logo, headerAlignment } = useBranding();
   const [loadingTime, setLoadingTime] = useState(500);
 
-  const profileOpenHandler = () => setIsProfileOpen(prev => !prev);
+  const profileOpenHandler = () => setIsProfileOpen((prev) => !prev);
   const isGuest = !user?._id || user?.role?.name == 'guest';
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -91,14 +91,16 @@ const GuestHeader = ({
             <div className={`my-4 flex w-[300px] items-center`}>
               <img
                 onClick={handleLogoClick}
-                src={logo ||''}
+                src={logo || ''}
                 alt="Logo"
                 className={`object-contain ${'h-[100px] max-h-[200px] w-auto max-w-[300px]'} } cursor-pointer!`}
                 referrerPolicy="no-referrer"
               />
             </div>
           ) : (
-            <div className={`flex w-[300px] items-center gap-4 rounded-bl-[20px] px-6 py-2 ${user ? 'bg-white' : ''}`}>
+            <div
+              className={`flex w-[300px] items-center gap-4 rounded-bl-[20px] px-6 py-2 ${user ? 'bg-white' : ''}`}
+            >
               {user && (
                 <div className="relative flex items-center gap-2">
                   <div className="hidden items-center gap-2 md:flex">
@@ -110,7 +112,8 @@ const GuestHeader = ({
 
                     <div>
                       <h6 className="text-gray-800  text-sm font-semibold">
-                        {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''} {user?.lastName}
+                        {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''}{' '}
+                        {user?.lastName}
                       </h6>
                       <p className="text-gray-600 text-xs">{user?.email}</p>
                     </div>
@@ -135,11 +138,15 @@ const GuestHeader = ({
             </div>
           )}
           {/* center side  */}
-          {formHeaderText && <h6 className="text-header-text max-w-3xl text-2xl font-semibold">{formHeaderText}</h6>}
+          {formHeaderText && (
+            <h6 className="text-header-text max-w-3xl text-2xl font-semibold">{formHeaderText}</h6>
+          )}
 
           {/* right side  */}
           {headerAlignment == 'left' ? (
-            <div className={`flex w-[300px] items-center gap-4 rounded-bl-[20px] px-6 py-2 ${user ? 'bg-white' : ''}`}>
+            <div
+              className={`flex w-[300px] items-center gap-4 rounded-bl-[20px] px-6 py-2 ${user ? 'bg-white' : ''}`}
+            >
               {user && (
                 <div className="relative flex items-center gap-2">
                   <div className="hidden items-center gap-2 md:flex">
@@ -151,7 +158,8 @@ const GuestHeader = ({
 
                     <div>
                       <h6 className="text-sm font-semibold text-gray-800">
-                        {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''} {user?.lastName}
+                        {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''}{' '}
+                        {user?.lastName}
                       </h6>
                       <p className="text-xs text-gray-600">{user?.email}</p>
                     </div>
@@ -178,7 +186,7 @@ const GuestHeader = ({
             <div className={`my-4 flex w-[300px] items-center`}>
               <img
                 onClick={handleLogoClick}
-                src={logo ||''}
+                src={logo || ''}
                 alt="Logo"
                 className={`object-contain ${'h-[100px] max-h-[200px] w-auto max-w-[300px]'} } cursor-pointer!`}
                 referrerPolicy="no-referrer"
@@ -195,7 +203,7 @@ const GuestHeader = ({
           <div className={`my-4 flex max-w-3xl flex-col items-center`}>
             <img
               onClick={handleLogoClick}
-              src={logo ||''}
+              src={logo || ''}
               alt="Logo"
               className={`object-contain ${'h-[100px] max-h-[200px] w-auto max-w-[300px]'} } cursor-pointer!`}
               referrerPolicy="no-referrer"
@@ -204,7 +212,9 @@ const GuestHeader = ({
           </div>
 
           {/* right side  */}
-          <div className={`mx-6 flex w-[300px] items-center gap-4 rounded-bl-[20px] p-2 ${user ? 'bg-white' : ''}`}>
+          <div
+            className={`mx-6 flex w-[300px] items-center gap-4 rounded-bl-[20px] p-2 ${user ? 'bg-white' : ''}`}
+          >
             {user && (
               <div className="relative flex items-center gap-2">
                 <div className="hidden items-center gap-2 md:flex">
@@ -216,7 +226,8 @@ const GuestHeader = ({
 
                   <div>
                     <h6 className="text-sm font-semibold text-gray-800">
-                      {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''} {user?.lastName}
+                      {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''}{' '}
+                      {user?.lastName}
                     </h6>
                     <p className="text-xs text-gray-600">{user?.email}</p>
                   </div>
@@ -258,7 +269,10 @@ const UserHeader = ({
     <div className="bg-header flex min-h-20 items-center justify-between rounded-md p-2 shadow">
       {/* Hamburger Icon (mobile only) */}
       <div className="flex w-full items-center gap-2">
-        <button className="rounded-md p-2 hover:bg-gray-100 lg:hidden" onClick={() => setSidebarOpen(true)}>
+        <button
+          className="rounded-md p-2 hover:bg-gray-100 lg:hidden"
+          onClick={() => setSidebarOpen(true)}
+        >
           <HiMenu size={24} className="text-gray-800" />
         </button>
         <h1 className="text-header-text text-lg font-semibold">
@@ -276,10 +290,11 @@ const UserHeader = ({
               />
 
               <div>
-                <h6 className="text-gray-800  text-sm font-semibold">
-                  {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''} {user?.lastName}
+                <h6 className="text-headerText  text-sm font-semibold">
+                  {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''}{' '}
+                  {user?.lastName}
                 </h6>
-                <p className="text-gray-600 text-xs">{user?.email}</p>
+                <p className="text-headerText text-xs">{user?.email}</p>
               </div>
             </div>
 
@@ -340,8 +355,8 @@ const Profile = ({ isGuest, setIsProfileOpen }) => {
           to="/profile"
           className="flex items-center justify-between gap-4 rounded-t-md border-b bg-white px-2 py-2 hover:bg-[#b6feef]"
         >
-          <h6 className="text-textPrimary text-xs font-medium">My Profile</h6>
-          <IoChevronForwardOutline fontSize={18} className="text-primary" />
+          <h6 className="text-headerText text-xs font-medium">My Profile</h6>
+          <IoChevronForwardOutline fontSize={18} />
         </Link>
       )}
 
