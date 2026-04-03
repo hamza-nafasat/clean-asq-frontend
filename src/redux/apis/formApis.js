@@ -508,6 +508,19 @@ const formApis = createApi({
       }),
       invalidatesTags: ["FormRules"],
     }),
+    formDataWhichUseToCreateForms: builder.query({
+      query: ({ formId }) => ({
+        url: `/form-data-which-use-to-create-forms/${formId}`,
+        method: "GET",
+      }),
+    }),
+    checkFormRuleFromAi: builder.mutation({
+      query: (data) => ({
+        url: "/check-form-rule-from-ai",
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 export const {
@@ -566,5 +579,7 @@ export const {
   useUpdateStatusSingleFormRuleMutation,
   useGetFormRuleFromAiMutation,
   useUpdateRulesOrderMutation,
+  useFormDataWhichUseToCreateFormsQuery,
+  useCheckFormRuleFromAiMutation,
 } = formApis;
 export default formApis;

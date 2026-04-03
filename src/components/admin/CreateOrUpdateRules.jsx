@@ -1,5 +1,7 @@
 import {
+  useCheckFormRuleFromAiMutation,
   useCreateFormRuleMutation,
+  useFormDataWhichUseToCreateFormsQuery,
   useGetFormRuleFromAiMutation,
   useUpdateSingleFormRuleMutation,
 } from "@/redux/apis/formApis";
@@ -9,6 +11,7 @@ import { toast } from "react-toastify";
 import Button from "../shared/small/Button";
 import { SelectInputType } from "../shared/small/DynamicField";
 import TextField from "../shared/small/TextField";
+import CustomLoading from "../shared/small/CustomLoading";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const CATEGORY_OPTIONS = [
@@ -28,6 +31,7 @@ const RULE_FIELDS_GUIDE = [
   { field: "explanation", description: "Explanation of why this rule exists and what it detects." },
 ];
 const CreateRuleModal = ({ formId, setModal, refetch }) => {
+  const [promptForCheck, setPromptForCheck] = useState("");
   const [showRuleFieldsGuide, setShowRuleFieldsGuide] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [name, setName] = useState("");
@@ -39,6 +43,12 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
   const [explanation, setExplanation] = useState("");
   const [createRule, { isLoading: isCreatingRule }] = useCreateFormRuleMutation();
   const [getFormRuleFromAi, { isLoading: isGettingFormRuleFromAi }] = useGetFormRuleFromAiMutation();
+  const { data: formData, isLoading: isLoadingFormData } = useFormDataWhichUseToCreateFormsQuery({ formId });
+  const [checkFormRuleFromAi, { isLoading: isCheckingFormRuleFromAi }] = useCheckFormRuleFromAiMutation();
+  const [canCreateFormRule, setCanCreateFormRule] = useState({
+    canCreate: null,
+    message: "",
+  });
 
   const createRuleHandler = async () => {
     try {
@@ -75,13 +85,54 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
       toast.error(error?.data?.message || "Failed to get form rule from ai");
     }
   };
+
+  const checkPromptForCheckHandler = async () => {
+    try {
+      if (!promptForCheck) return toast.error("Please fill all the fields");
+      const res = await checkFormRuleFromAi({ formId, prompt: promptForCheck }).unwrap();
+      if (res?.success) {
+        setCanCreateFormRule((prev) => ({ ...prev, canCreate: res?.data?.canCreate, message: res?.data?.message }));
+      }
+    } catch (error) {
+      console.error("Error checking prompt for check:", error);
+    }
+  };
+  if (isLoadingFormData) return <CustomLoading />;
   return (
     <div className="flex items-center w-full justify-center p-4">
       <div className="flex w-full max-w-3xl flex-col gap-6">
         <h3 className="text-center text-2xl font-semibold text-gray-800">Create Rule</h3>
         <div className="flex flex-col gap-2 w-full">
+          <div className="flex item-center justify-center gap-2">
+            <TextField
+              label="Prompt for Check:"
+              id="prompt-for-check"
+              placeholder="Enter prompt for check"
+              value={promptForCheck}
+              onChange={(e) => setPromptForCheck(e.target.value)}
+            />
+
+            <Button
+              label="Check"
+              variant="primary"
+              className="h-12! self-end"
+              onClick={checkPromptForCheckHandler}
+              disabled={!promptForCheck || isCheckingFormRuleFromAi}
+              icon={isCheckingFormRuleFromAi && FaSpinner}
+              cnLeft="mr-2 w-4 h-4 animate-spin"
+            />
+          </div>
+          {canCreateFormRule.canCreate !== null && (
+            <div className="flex flex-col gap-2">
+              <p className={`text-sm ${canCreateFormRule.canCreate ? "text-green-700" : "text-red-500"}`}>
+                {canCreateFormRule.message}
+              </p>
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col gap-2 w-full">
           <TextField
-            label="Rule Name:*"
+            label="Rule Name:"
             id="rule-name"
             placeholder="Enter rule name"
             value={name}
@@ -97,7 +148,7 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
             form={{ category: { name: "category", value: category } }}
           />
           <TextField
-            label="Prompt"
+            label="Prompt:"
             id="prompt"
             type="textarea"
             placeholder="Enter prompt for rule creation"
@@ -108,7 +159,7 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
 
           <div className="flex justify-end  w-full items-end gap-2">
             <Button
-              label={showRuleFieldsGuide ? "Hide Fields Guide" : "Preview Fields Guide"}
+              label={showRuleFieldsGuide ? "Hide Ai Context" : "Preview Ai Context"}
               variant="secondary"
               onClick={() => setShowRuleFieldsGuide((prev) => !prev)}
             />
@@ -122,31 +173,13 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
               disabled={isGettingFormRuleFromAi || !prompt || !name || !category}
             />
           </div>
-          {showRuleFieldsGuide && (
+          {showRuleFieldsGuide && formData?.data && (
             <div className="flex flex-col gap-3 mt-4 border border-gray-200 rounded-xl p-4 bg-[#FAFBFF]">
-              <h4 className="text-lg font-semibold text-gray-800">Rule Fields Guide</h4>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border border-gray-200 rounded-md overflow-hidden">
-                  <thead className="bg-gray-100 text-gray-600">
-                    <tr>
-                      <th className="text-left px-3 py-2">Field</th>
-                      <th className="text-left px-3 py-2">Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {RULE_FIELDS_GUIDE.map((item, index) => (
-                      <tr key={index} className="border-t">
-                        <td className="px-3 py-2 font-mono text-blue-600">{item.field}</td>
-                        <td className="px-3 py-2 text-gray-700">{item.description}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="text-xs text-gray-500">
-                These fields are generated by AI and used to define how your rule works.
+              <h4 className="text-lg font-semibold text-gray-800">The data ai use to create the rules</h4>
+              <div className="overflow-x-auto overflow-y-auto max-h-[300px]">
+                <pre className="text-xs bg-black text-green-400 p-3 rounded-md mt-2 overflow-x-auto">
+                  {JSON.stringify(formData?.data, null, 2)}
+                </pre>
               </div>
             </div>
           )}
@@ -215,6 +248,9 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
   const [order] = useState(ruleData?.order);
   const [updateRule, { isLoading: isUpdatingRule }] = useUpdateSingleFormRuleMutation();
   const [getFormRuleFromAi, { isLoading: isGettingFormRuleFromAi }] = useGetFormRuleFromAiMutation();
+  const { data: formData, isLoading: isLoadingFormData } = useFormDataWhichUseToCreateFormsQuery({
+    formId: ruleData?.formId,
+  });
 
   const updateRuleHandler = async () => {
     try {
@@ -268,6 +304,7 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
       toast.error(error?.data?.message || "Failed to get form rule from ai");
     }
   };
+  if (isLoadingFormData) return <CustomLoading />;
   return (
     <div className="flex items-center justify-center p-4">
       <div className="flex w-full max-w-2xl flex-col gap-6">
@@ -301,7 +338,7 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
 
           <div className="flex justify-end  w-full items-end gap-2">
             <Button
-              label={showRuleFieldsGuide ? "Hide Fields Guide" : "Preview Fields Guide"}
+              label={showRuleFieldsGuide ? "Hide Ai Context" : "Preview Ai Context"}
               variant="secondary"
               onClick={() => setShowRuleFieldsGuide((prev) => !prev)}
             />
@@ -315,31 +352,13 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
               disabled={isGettingFormRuleFromAi || !prompt || !name || !category}
             />
           </div>
-          {showRuleFieldsGuide && (
+          {showRuleFieldsGuide && formData?.data && (
             <div className="flex flex-col gap-3 mt-4 border border-gray-200 rounded-xl p-4 bg-[#FAFBFF]">
-              <h4 className="text-lg font-semibold text-gray-800">Rule Fields Guide</h4>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border border-gray-200 rounded-md overflow-hidden">
-                  <thead className="bg-gray-100 text-gray-600">
-                    <tr>
-                      <th className="text-left px-3 py-2">Field</th>
-                      <th className="text-left px-3 py-2">Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {RULE_FIELDS_GUIDE.map((item, index) => (
-                      <tr key={index} className="border-t">
-                        <td className="px-3 py-2 font-mono text-blue-600">{item.field}</td>
-                        <td className="px-3 py-2 text-gray-700">{item.description}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="text-xs text-gray-500">
-                These fields are generated by AI and used to define how your rule works.
+              <h4 className="text-lg font-semibold text-gray-800">The data ai use to create the rules</h4>
+              <div className="overflow-x-auto overflow-y-auto max-h-[300px]">
+                <pre className="text-xs bg-black text-green-400 p-3 rounded-md mt-2 overflow-x-auto">
+                  {JSON.stringify(formData?.data, null, 2)}
+                </pre>
               </div>
             </div>
           )}
