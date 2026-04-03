@@ -1034,28 +1034,16 @@ export default function SingleApplication() {
                     <div className="mt-4 flex w-full flex-col items-center gap-4">
                       <Button className="w-full max-w-[230px]" label={"Refresh QR Code"} onClick={getQrAndWebLink} />
                     </div>
-                    {/* <div className="mt-4 flex w-full flex-col items-center gap-4">
-                      <Button
-                      className="w-full max-w-[230px]"
-                        label={'Open LInk in New Tab'}
-                        onClick={async () => {
-                          window.open(webLink, '_blank');
-                        }}
-                        rightIcon={MdVerifiedUser}
-                      />
-                    </div> */}
                   </>
                 )}
-                {isCreator && (
-                  <Button
-                    onClick={() => {
-                      setIdMissionVerified(true);
-                    }}
-                    className="w-full max-w-[230px]"
-                    variant="secondary"
-                    label={"Skip"}
-                  />
-                )}
+                <Button
+                  onClick={() => {
+                    setIdMissionVerified(true);
+                  }}
+                  className="w-full max-w-[230px]"
+                  variant="secondary"
+                  label={"Skip"}
+                />
               </div>
             )
           ) : (
