@@ -135,6 +135,7 @@ export default function ApplicationsCard() {
         isOpen={!!deleteConfirmation}
         onClose={() => setDeleteConfirmation(null)}
         onConfirm={handleDeleteForm}
+        isLoading={isLoading}
         title="Delete Form"
         message={`Are you sure you want to delete this form?`}
         confirmButtonText="Delete"

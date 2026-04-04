@@ -115,6 +115,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [footerBackground, setFooterBackground] = useState("#000000");
   const [footerText, setFooterText] = useState("#000000");
   const [frameColor, setFrameColor] = useState("#000000");
+  const [applicationFooterText, setApplicationFooterText] = useState("Fintainium All rights reserved");
   const [highlightingColor, setHighlightingColor] = useState("#000000");
   const [fontFamily, setFontFamily] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -161,6 +162,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
     setFooterBackground: setFooterBackgroundGlobal,
     setHeaderText: setHeaderTextGlobal,
     setFooterText: setFooterTextGlobal,
+    setApplicationFooterText: setApplicationFooterTextGlobal,
   } = useBranding();
 
   const [extractColorsFromLogos] = useExtractColorsFromLogosMutation();
@@ -176,7 +178,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
       const res = await fetchBranding({ url: websiteUrl }).unwrap();
       if (res.success) {
         const data = res.data;
-        // setCompanyName(data?.name || '');
         setFontFamily(data?.fontFamily || "");
         setLogos(data?.logos || []);
         setPrimaryColor(data?.colors?.primary);
@@ -191,6 +192,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
         setHeaderBackground(data?.colors?.headerBackground);
         setFooterBackground(data?.colors?.footerBackground);
         setHeaderAlignment(data?.headerAlignment);
+        setApplicationFooterText(data?.applicationFooterText || "Fintainium All rights reserved");
         if (Array.isArray(data?.color_palette?.fromLogo) && Array.isArray(data?.color_palette?.fromSite)) {
           setColorPalette([...data.color_palette.fromLogo, ...data.color_palette.fromSite]);
         }
@@ -222,6 +224,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !footerBackground ||
       !headerText ||
       !footerText ||
+      !applicationFooterText ||
       // email
       !emailHeader ||
       !emailFooter ||
@@ -267,6 +270,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append("colorPalette", JSON.stringify(colorPalette));
     formData.append("colors", JSON.stringify(colors));
     formData.append("logos", JSON.stringify(finalLogos));
+    formData.append("applicationFooterText", applicationFooterText); // added
 
     extraLogos.forEach((file) => {
       formData.append(`files`, file);
@@ -326,6 +330,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !footerBackground ||
       !headerText ||
       !footerText ||
+      !applicationFooterText ||
       // email
       !emailHeader ||
       !emailFooter ||
@@ -371,6 +376,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append("colorPalette", JSON.stringify(colorPalette));
     formData.append("colors", JSON.stringify(colors));
     formData.append("logos", JSON.stringify(finalLogos));
+    formData.append("applicationFooterText", applicationFooterText); // added
 
     // email
     formData.append("emailHeader", emailHeader);
@@ -422,6 +428,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
 
             setHeaderTextGlobal(userBranding.colors.headerText);
             setFooterTextGlobal(userBranding.colors.footerText);
+            setApplicationFooterTextGlobal(userBranding.applicationFooterText);
+            // added
           }
         }
 
@@ -479,6 +487,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setFooterBackground(singleBranding.colors.footerBackground);
       setHeaderText(singleBranding.colors.headerText);
       setFooterText(singleBranding.colors.footerText);
+      setApplicationFooterText(singleBranding.applicationFooterText);
       setFontFamily(singleBranding.fontFamily);
       setFontFamily(singleBranding.fontFamily);
       setButtonTextPrimary(singleBranding.colors.buttonTextPrimary);
@@ -597,6 +606,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
           setBackgroundColor={setBackgroundColor}
           frameColor={frameColor}
           setFrameColor={setFrameColor}
+          applicationFooterText={applicationFooterText}
+          setApplicationFooterText={setApplicationFooterText}
           highlightingColor={highlightingColor}
           setHighlightingColor={setHighlightingColor}
           fontFamily={fontFamily}

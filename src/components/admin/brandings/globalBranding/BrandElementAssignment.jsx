@@ -1,17 +1,18 @@
-import Button from '@/components/shared/small/Button';
-import CustomizableSelect from '@/components/shared/small/CustomizeableSelect';
-import html2canvas from 'html2canvas-pro';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import FontPicker from './FontPicker';
-import { LoaderIcon } from 'lucide-react';
+import Button from "@/components/shared/small/Button";
+import CustomizableSelect from "@/components/shared/small/CustomizeableSelect";
+import html2canvas from "html2canvas-pro";
+import { useCallback, useEffect, useRef, useState } from "react";
+import FontPicker from "./FontPicker";
+import { LoaderIcon } from "lucide-react";
+import TextField from "@/components/shared/small/TextField";
 
 export const ColorInput = ({ label, color, setColor, setImage, image }) => {
   const colorPickerDiv = useRef(null);
   const [ssLoading, setSSLoading] = useState(false);
   const [showSSButton, setShowSSButton] = useState(false);
-  const [colorPicker, setColorPicker] = useState('');
+  const [colorPicker, setColorPicker] = useState("");
   const handleChange = useCallback(
-    async e => {
+    async (e) => {
       setSSLoading(true);
       const newColor = e.target.value;
       setColorPicker(newColor);
@@ -19,7 +20,7 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
 
       setTimeout(async () => {
         const selector =
-          '#root > div:nth-child(2) > section > section > div.w-full.flex-1.items-center.justify-center > main > div > div:nth-child(1) > div > div > #screen-shot';
+          "#root > div:nth-child(2) > section > section > div.w-full.flex-1.items-center.justify-center > main > div > div:nth-child(1) > div > div > #screen-shot";
 
         console.log(`[ColorInput] 🔍 Trying to capture element:`, selector);
         const element = document.querySelector(selector);
@@ -29,8 +30,8 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
         }
 
         const previousFilter = element.style.filter;
-        element.style.filter = 'none';
-        element.style.colorScheme = 'light';
+        element.style.filter = "none";
+        element.style.colorScheme = "light";
 
         console.log(`[ColorInput] ✅ Element found. Starting html2canvas...`);
 
@@ -43,16 +44,16 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
 
           console.log(`[ColorInput] 📸 Screenshot captured successfully.`);
 
-          const imageData = canvas.toDataURL('image/png');
+          const imageData = canvas.toDataURL("image/png");
           const fileName = `screenshot-${Date.now()}.png`;
 
           // ✅ Convert base64 → File
           const response = await fetch(imageData);
           const blob = await response.blob();
-          const file = new File([blob], fileName, { type: 'image/png' });
+          const file = new File([blob], fileName, { type: "image/png" });
 
           // ✅ Optional: trigger download (kept original functionality)
-          const link = document.createElement('a');
+          const link = document.createElement("a");
           // link.download = fileName;
           link.href = imageData;
           document.body.appendChild(link);
@@ -62,7 +63,7 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
 
           // ✅ Save only filename to localStorage
           try {
-            localStorage.setItem('lastScreenshot', fileName);
+            localStorage.setItem("lastScreenshot", fileName);
             console.log(`[ColorInput] 💾 Stored only filename in localStorage.`);
           } catch (err) {
             console.error(`[ColorInput] ⚠️ Failed to save filename:`, err);
@@ -80,7 +81,7 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
         }
       }, 1000);
     },
-    [colorPicker, setColor, setImage]
+    [colorPicker, setColor, setImage],
   );
 
   const openHandleChange = async () => {
@@ -89,20 +90,20 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
   };
 
   useEffect(() => {
-    const handleClickOutside = event => {
+    const handleClickOutside = (event) => {
       if (colorPickerDiv.current && !colorPickerDiv.current.contains(event.target)) {
         setShowSSButton(false);
       }
     };
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
     return () => {
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, []);
 
   return (
     <div className="relative flex flex-col space-y-1">
-      <label htmlFor={label.toLowerCase().replace(/\s/g, '-') + '-color'} className="text-sm font-medium text-gray-700">
+      <label htmlFor={label.toLowerCase().replace(/\s/g, "-") + "-color"} className="text-sm font-medium text-gray-700">
         {label}
       </label>
 
@@ -112,7 +113,7 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
           className="size-14 cursor-pointer appearance-none rounded-lg border-none outline-none focus:ring-0"
           value={color}
           onFocus={() => setShowSSButton(true)}
-          onChange={e => {
+          onChange={(e) => {
             const newColor = e.target.value;
             setColorPicker(newColor);
             setColor(newColor);
@@ -123,9 +124,9 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
             <Button
               variant="primary"
               onClick={openHandleChange}
-              label={'Show Colors'}
+              label={"Show Colors"}
               disabled={ssLoading}
-              cnRight={'animate-spin'}
+              cnRight={"animate-spin"}
               rightIcon={ssLoading ? LoaderIcon : null}
             />
           </div>
@@ -175,6 +176,8 @@ const BrandElementAssignment = ({
   setFooterBackground,
   headerAlignment,
   setHeaderAlignment,
+  applicationFooterText,
+  setApplicationFooterText,
 }) => {
   return (
     <div className="mt-6">
@@ -203,12 +206,12 @@ const BrandElementAssignment = ({
             <CustomizableSelect
               initialValue={headerAlignment}
               options={[
-                { option: 'Left', value: 'left' },
-                { option: 'Center', value: 'center' },
-                { option: 'Right', value: 'right' },
+                { option: "Left", value: "left" },
+                { option: "Center", value: "center" },
+                { option: "Right", value: "right" },
               ]}
-              label={'Logo Alignment'}
-              onSelect={value => setHeaderAlignment(value)}
+              label={"Logo Alignment"}
+              onSelect={(value) => setHeaderAlignment(value)}
               defaultText="Choose Alignment"
             />
           </div>
@@ -285,11 +288,11 @@ const BrandElementAssignment = ({
 
           <div className="mt-3 flex items-center space-x-2">
             <span className="rounded bg-gray-100 px-4 py-3 text-lg font-semibold">Aa</span>
-            <FontPicker value={fontFamily.toLowerCase()} onChange={value => setFontFamily(value)} />
+            <FontPicker value={fontFamily.toLowerCase()} onChange={(value) => setFontFamily(value)} />
             <button
               type="button"
               className="rounded-sm border px-4 py-[13px] text-sm text-gray-700 shadow-sm"
-              onClick={() => setFontFamily('Inter')}
+              onClick={() => setFontFamily("Inter")}
             >
               Reset
             </button>
@@ -307,6 +310,12 @@ const BrandElementAssignment = ({
             setColor={setFooterBackground}
           />
           <ColorInput setImage={setImage} image={image} label="Text" color={footerText} setColor={setFooterText} />
+
+          <TextField
+            label="Application Footer Text"
+            value={applicationFooterText}
+            onChange={(e) => setApplicationFooterText(e.target.value)}
+          />
         </div>
       </section>
 
@@ -316,8 +325,8 @@ const BrandElementAssignment = ({
           <button
             onClick={() => {
               setImage(null);
-              localStorage.removeItem('lastScreenshot');
-              console.log('🗑️ Image removed and localStorage cleared');
+              localStorage.removeItem("lastScreenshot");
+              console.log("🗑️ Image removed and localStorage cleared");
             }}
             className="absolute top-2 right-4 flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-700"
           >
@@ -329,10 +338,10 @@ const BrandElementAssignment = ({
             src={URL.createObjectURL(image)}
             alt="Preview"
             style={{
-              width: '30vw',
-              height: 'auto',
+              width: "30vw",
+              height: "auto",
               borderRadius: 8,
-              objectFit: 'contain',
+              objectFit: "contain",
               marginRight: 16,
             }}
           />

@@ -1,7 +1,7 @@
-import { useGetSingleFormQueryQuery } from '@/redux/apis/formApis';
-import { useCallback, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useBranding } from './BrandingContext';
+import { useGetSingleFormQueryQuery } from "@/redux/apis/formApis";
+import { useCallback, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { useBranding } from "./BrandingContext";
 
 const useApplyBranding = ({ formId }) => {
   const [isApplied, setIsApplied] = useState(false);
@@ -25,16 +25,17 @@ const useApplyBranding = ({ formId }) => {
     setHeaderText,
     setFooterText,
     setHighlightingColor,
+    setApplicationFooterText,
   } = useBranding();
 
   const { data: form, isLoading } = useGetSingleFormQueryQuery({ _id: formId }, { skip: !formId });
-  const { user } = useSelector(state => state.auth);
+  const { user } = useSelector((state) => state.auth);
 
   const setBrandingHandler = useCallback(
-    formBranding => {
+    (formBranding) => {
       if (formBranding?.colors) {
-        console.log('form branding is applied');
-        setName(formBranding?.name || 'Apply Super Quick');
+        console.log("form branding is applied");
+        setName(formBranding?.name || "Apply Super Quick");
         setPrimaryColor(formBranding?.colors?.primary);
         setSecondaryColor(formBranding?.colors?.secondary);
         setAccentColor(formBranding?.colors?.accent);
@@ -50,6 +51,7 @@ const useApplyBranding = ({ formId }) => {
         setHeaderAlignment(formBranding?.headerAlignment);
         setHeaderText(formBranding?.colors?.headerText);
         setFooterText(formBranding?.colors?.footerText);
+        setApplicationFooterText(formBranding?.applicationFooterText);
       }
       if (formBranding?.logos) setLogo(formBranding?.selectedLogo);
       if (formBranding?.fontFamily) setFontFamily(formBranding?.fontFamily);
@@ -73,7 +75,8 @@ const useApplyBranding = ({ formId }) => {
       setHeaderAlignment,
       setHeaderText,
       setFooterText,
-    ]
+      setApplicationFooterText,
+    ],
   );
 
   useEffect(() => {
@@ -84,7 +87,7 @@ const useApplyBranding = ({ formId }) => {
       setBrandingHandler(formBranding);
     } else if (user?.branding) {
       const formBranding = user?.branding;
-      console.log('user branding is applied');
+      console.log("user branding is applied");
       setBrandingHandler(formBranding);
     }
     setIsApplying(false);
@@ -92,7 +95,7 @@ const useApplyBranding = ({ formId }) => {
 
     return () => {
       const formBranding = user?.branding;
-      console.log('returned branding is applied');
+      console.log("returned branding is applied");
       setBrandingHandler(formBranding);
       setIsApplied(true);
     };

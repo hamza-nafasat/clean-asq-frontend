@@ -59,6 +59,7 @@ function App() {
     setFooterBackground,
     setHeaderText,
     setFooterText,
+    setApplicationFooterText,
   } = useBranding();
 
   const getUserAndSetBranding = useCallback(async () => {
@@ -85,6 +86,7 @@ function App() {
           setHeaderAlignment(formBranding.headerAlignment);
           setHeaderText(formBranding.colors.headerText);
           setFooterText(formBranding.colors.footerText);
+          setApplicationFooterText(formBranding.applicationFooterText);
         }
       } else {
         dispatch(userNotExist());
@@ -115,6 +117,7 @@ function App() {
     setHeaderAlignment,
     setHeaderText,
     setFooterText,
+    setApplicationFooterText,
   ]);
 
   useEffect(() => {

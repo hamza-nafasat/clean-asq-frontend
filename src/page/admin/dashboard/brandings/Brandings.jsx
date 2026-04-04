@@ -59,6 +59,7 @@ const Brandings = () => {
     setHeaderText,
     setFooterText,
     setHighlightingColor,
+    setApplicationFooterText,
   } = useBranding();
 
   const ButtonsForThreeDot = [
@@ -133,6 +134,7 @@ const Brandings = () => {
               setHeaderText(userBranding?.headerText);
               setFooterText(userBranding?.footerText);
               setHighlightingColor(userBranding?.highlightingColor);
+              setApplicationFooterText(userBranding?.applicationFooterText);
             }
           }
           await getUserProfile()
@@ -204,7 +206,7 @@ const Brandings = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
-        (ref) => !ref.current?.contains(event.target)
+        (ref) => !ref.current?.contains(event.target),
       );
       if (clickedOutsideAllMenus) setActionMenu(null);
     };

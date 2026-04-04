@@ -31,6 +31,7 @@ const Login = () => {
     setHeaderAlignment,
     setHeaderText,
     setFooterText,
+    setApplicationFooterText,
   } = useBranding();
 
   const getUserAndSetBranding = useCallback(async () => {
@@ -60,6 +61,7 @@ const Login = () => {
           setHeaderAlignment(formBranding.headerAlignment);
           setHeaderText(formBranding.colors.headerText);
           setFooterText(formBranding.colors.footerText);
+          setApplicationFooterText(formBranding.applicationFooterText);
         }
       } else {
         dispatch(userNotExist());
@@ -88,6 +90,7 @@ const Login = () => {
     setHeaderAlignment,
     setHeaderText,
     setFooterText,
+    setApplicationFooterText,
   ]);
 
   const loginHandler = async (e) => {
