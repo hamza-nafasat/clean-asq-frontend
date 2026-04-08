@@ -1008,7 +1008,7 @@ export default function SingleApplication() {
               <div className="flex flex-col items-center gap-3">
                 {isCreator && (
                   <div className="flex w-full items-center justify-end p-4">
-                    <Button onClick={() => setShowIdMissionDataModal(true)} label={"Customize Text"} />
+                    <Button onClick={() => setCustomizeIdMissionTextModal(true)} label={"Customize Display Text"} />
                   </div>
                 )}
                 {qrCode && webLink && (
@@ -1016,29 +1016,16 @@ export default function SingleApplication() {
                     {/* <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
                     <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your identity</p> */}
                     {/* // id verification block formating  */}
-                    {form?.data?.idMissionDataDisplayFormatedText && (
-                      // <div className="flex w-full gap-3">
-                      //   <div
-                      //     className="w-full"
-                      //     dangerouslySetInnerHTML={{
-                      //       __html: String(idMissionSection?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
-                      //         if (match.includes("target=")) return match; // avoid duplicates
-                      //         return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-                      //       }),
-                      //     }}
-                      //   />
-                      // </div>
-                      <div className="flex items-end gap-3">
+
+                    {idMissionSection?.ai_formatting && (
+                      <div className="flex w-full gap-3">
                         <div
                           className="w-full"
                           dangerouslySetInnerHTML={{
-                            __html: String(form?.data?.idMissionDataDisplayFormatedText || "").replace(
-                              /<a(\s+.*?)?>/g,
-                              (match) => {
-                                if (match.includes("target=")) return match; // avoid duplicates
-                                return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-                              },
-                            ),
+                            __html: String(idMissionSection?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
+                              if (match.includes("target=")) return match; // avoid duplicates
+                              return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
+                            }),
                           }}
                         />
                       </div>
@@ -1057,22 +1044,25 @@ export default function SingleApplication() {
                   }}
                   className="w-full max-w-[230px]"
                   variant="secondary"
-                  label={"Skip"}
+                  label={"Enter ID Details Manually"}
                 />
               </div>
             )
           ) : (
             <div className="flex w-full flex-col p-2">
               <div className="flex items-center justify-between">
-                {idMissionSection?.ai_formatting ? (
-                  <div className="flex w-full gap-3">
+                {form?.data?.idMissionDataDisplayFormatedText ? (
+                  <div className="flex items-end gap-3">
                     <div
                       className="w-full"
                       dangerouslySetInnerHTML={{
-                        __html: String(idMissionSection?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
-                          if (match.includes("target=")) return match; // avoid duplicates
-                          return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-                        }),
+                        __html: String(form?.data?.idMissionDataDisplayFormatedText || "").replace(
+                          /<a(\s+.*?)?>/g,
+                          (match) => {
+                            if (match.includes("target=")) return match; // avoid duplicates
+                            return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
+                          },
+                        ),
                       }}
                     />
                   </div>
@@ -1086,8 +1076,8 @@ export default function SingleApplication() {
                 {isCreator && (
                   <Button
                     className="self-end"
-                    onClick={() => setCustomizeIdMissionTextModal(true)}
                     label={"Customize Display Text"}
+                    onClick={() => setShowIdMissionDataModal(true)}
                   />
                 )}
               </div>
