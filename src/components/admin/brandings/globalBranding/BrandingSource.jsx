@@ -1,12 +1,12 @@
-import Button from '@/components/shared/small/Button';
-import TextField from '@/components/shared/small/TextField';
-import { detectLogo } from '@/utils/detectLogo';
-import { useEffect, useRef, useState } from 'react';
-import { BsGlobe2 } from 'react-icons/bs';
-import { FiUpload, FiX } from 'react-icons/fi';
-import { GrImage } from 'react-icons/gr';
-import { IoColorPaletteOutline } from 'react-icons/io5';
-import { toast } from 'react-toastify';
+import Button from "@/components/shared/small/Button";
+import TextField from "@/components/shared/small/TextField";
+import { detectLogo } from "@/utils/detectLogo";
+import { useEffect, useRef, useState } from "react";
+import { BsGlobe2 } from "react-icons/bs";
+import { FiUpload, FiX } from "react-icons/fi";
+import { GrImage } from "react-icons/gr";
+import { IoColorPaletteOutline } from "react-icons/io5";
+import { toast } from "react-toastify";
 
 const BrandingSource = ({
   websiteUrl,
@@ -30,21 +30,21 @@ const BrandingSource = ({
   // Update selected logo index when selectedLogo or logos change
   useEffect(() => {
     if (selectedLogo && logos?.length > 0) {
-      const index = logos.findIndex(logo => (typeof logo === 'string' ? logo : logo?.url) === selectedLogo);
+      const index = logos.findIndex((logo) => (typeof logo === "string" ? logo : logo?.url) === selectedLogo);
       if (index !== -1) {
         const logoObj = logos[index];
-        const isPreview = typeof logoObj === 'object' && logoObj?.preview === true;
+        const isPreview = typeof logoObj === "object" && logoObj?.preview === true;
         if (!isPreview) {
           setSelectedLogoIndex(index);
         }
       } else if (logos.length > 0) {
         // If selectedLogo doesn't match any logo, select the first non-preview one
-        const firstNonPreviewLogo = logos.find(logo => {
-          const isPreview = typeof logo === 'object' && logo?.preview === true;
+        const firstNonPreviewLogo = logos.find((logo) => {
+          const isPreview = typeof logo === "object" && logo?.preview === true;
           return !isPreview;
         });
         if (firstNonPreviewLogo) {
-          const logoUrl = typeof firstNonPreviewLogo === 'string' ? firstNonPreviewLogo : firstNonPreviewLogo?.url;
+          const logoUrl = typeof firstNonPreviewLogo === "string" ? firstNonPreviewLogo : firstNonPreviewLogo?.url;
           const index = logos.indexOf(firstNonPreviewLogo);
           if (logoUrl) {
             setSelectedLogoIndex(index);
@@ -54,12 +54,12 @@ const BrandingSource = ({
       }
     } else if (logos?.length > 0 && selectedLogoIndex === null) {
       // If no logo is selected, select the first non-preview one
-      const firstNonPreviewLogo = logos.find(logo => {
-        const isPreview = typeof logo === 'object' && logo?.preview === true;
+      const firstNonPreviewLogo = logos.find((logo) => {
+        const isPreview = typeof logo === "object" && logo?.preview === true;
         return !isPreview;
       });
       if (firstNonPreviewLogo) {
-        const logoUrl = typeof firstNonPreviewLogo === 'string' ? firstNonPreviewLogo : firstNonPreviewLogo?.url;
+        const logoUrl = typeof firstNonPreviewLogo === "string" ? firstNonPreviewLogo : firstNonPreviewLogo?.url;
         const index = logos.indexOf(firstNonPreviewLogo);
         if (logoUrl) {
           setSelectedLogoIndex(index);
@@ -72,10 +72,10 @@ const BrandingSource = ({
   // Handle initial load with default selected logo
   useEffect(() => {
     if (defaultSelectedLogo && logos?.length > 0 && !selectedLogo) {
-      const index = logos.findIndex(logo => (typeof logo === 'string' ? logo : logo?.url) === defaultSelectedLogo);
+      const index = logos.findIndex((logo) => (typeof logo === "string" ? logo : logo?.url) === defaultSelectedLogo);
       if (index !== -1) {
         const logoObj = logos[index];
-        const isPreview = typeof logoObj === 'object' && logoObj?.preview === true;
+        const isPreview = typeof logoObj === "object" && logoObj?.preview === true;
         if (!isPreview) {
           setSelectedLogoIndex(index);
           setSelectedLogo(defaultSelectedLogo);
@@ -88,22 +88,22 @@ const BrandingSource = ({
   const logoFileInputRef = useRef(null);
 
   useEffect(() => {
-    const handlePaste = e => {
+    const handlePaste = (e) => {
       if (!pasteTarget) return;
       const items = e.clipboardData.items;
-      console.log('items in update branding', items);
+      console.log("items in update branding", items);
       for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf('image') !== -1) {
+        if (items[i].type.indexOf("image") !== -1) {
           const blob = items[i].getAsFile();
           const url = URL.createObjectURL(blob);
-          if (pasteTarget === 'websiteImage') {
+          if (pasteTarget === "websiteImage") {
             setWebsiteImage(url);
-          } else if (pasteTarget === 'logo') {
+          } else if (pasteTarget === "logo") {
             const blob = items[i].getAsFile();
             if (blob) {
               const fileUrl = URL.createObjectURL(blob);
               // add temporary preview
-              setLogos(prev => [...prev, { url: fileUrl, type: 'img', preview: true, invert: false }]);
+              setLogos((prev) => [...prev, { url: fileUrl, type: "img", preview: true, invert: false }]);
               // Upload it properly
               handleExtraLogoUpload(blob);
             }
@@ -116,22 +116,22 @@ const BrandingSource = ({
       }
     };
     if (pasteTarget) {
-      window.addEventListener('paste', handlePaste);
+      window.addEventListener("paste", handlePaste);
     }
     return () => {
-      window.removeEventListener('paste', handlePaste);
+      window.removeEventListener("paste", handlePaste);
     };
   }, [handleExtraLogoUpload, pasteTarget, setLogos]);
 
-  const handleUrlChange = e => {
+  const handleUrlChange = (e) => {
     setWebsiteUrl(e.target.value);
   };
 
-  const handleFileUpload = e => {
+  const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please upload an image file');
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please upload an image file");
         return;
       }
       const url = URL.createObjectURL(file);
@@ -144,51 +144,51 @@ const BrandingSource = ({
   };
 
   const handlePasteMenu = () => {
-    setShowPasteMenu(prev => !prev);
+    setShowPasteMenu((prev) => !prev);
   };
 
-  const handlePasteOption = target => {
+  const handlePasteOption = (target) => {
     setPasteTarget(target);
     setShowPasteMenu(false);
-    toast.success('Use Ctrl+V to paste');
+    toast.success("Use Ctrl+V to paste");
   };
 
   const handleLogoSelect = (idx, logo) => {
     // Check if logo is a preview (pasted/uploaded but not saved)
-    const logoObj = typeof logo === 'string' ? logos[idx] : logo;
-    const isPreview = typeof logoObj === 'object' && logoObj?.preview === true;
+    const logoObj = typeof logo === "string" ? logos[idx] : logo;
+    const isPreview = typeof logoObj === "object" && logoObj?.preview === true;
 
     if (isPreview) {
       // Don't show toast, tooltip already explains this
       return;
     }
 
-    const logoUrl = typeof logo === 'string' ? logo : logo?.url || logo;
+    const logoUrl = typeof logo === "string" ? logo : logo?.url || logo;
     setSelectedLogoIndex(idx);
     setSelectedLogo(logoUrl);
-    console.log('logo', logo);
+    console.log("logo", logo);
   };
 
-  const handleLogoFileUpload = async e => {
+  const handleLogoFileUpload = async (e) => {
     const files = Array.from(e.target.files);
     const newLogos = files
-      .filter(file => file.type.startsWith('image/'))
-      .map(file => ({
+      .filter((file) => file.type.startsWith("image/"))
+      .map((file) => ({
         file,
         preview: URL.createObjectURL(file),
       }));
 
     const detect = await detectLogo(newLogos[0]?.preview);
 
-    setLogos(prev => [...prev, { url: newLogos[0]?.preview, type: 'img', preview: true, invert: detect }]);
+    setLogos((prev) => [...prev, { url: newLogos[0]?.preview, type: "img", preview: true, invert: detect }]);
 
     if (newLogos.length > 0) {
       handleExtraLogoUpload(newLogos[0]?.file);
     }
   };
 
-  const handleRemoveLogo = idx => {
-    setLogos(prev => prev.filter((_, i) => i !== idx));
+  const handleRemoveLogo = (idx) => {
+    setLogos((prev) => prev.filter((_, i) => i !== idx));
     if (selectedLogoIndex === idx) setSelectedLogoIndex(null);
     else if (selectedLogoIndex > idx) setSelectedLogoIndex(selectedLogoIndex - 1);
   };
@@ -210,13 +210,13 @@ const BrandingSource = ({
             value={websiteUrl}
             onChange={handleUrlChange}
             placeholder="https://example.com"
-            label={'Enter Website URL'}
+            label={"Enter Website URL"}
           />
           {/* <p className="mt-2 text-sm text-gray-500">Enter a website URL, to extract its colors and logos for your branding.</p> */}
         </div>
         <Button
           onClick={extractBranding}
-          label={'Extract'}
+          label={"Extract"}
           icon={IoColorPaletteOutline}
           loading={isFetchLoading}
           disabled={isFetchLoading}
@@ -230,20 +230,20 @@ const BrandingSource = ({
         <div>
           <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
           <div className="relative flex gap-4">
-            <Button onClick={triggerFileInput} icon={FiUpload} label={'Upload Image'} />
+            <Button onClick={triggerFileInput} icon={FiUpload} label={"Upload Image"} />
             <div className="relative">
-              <Button onClick={handlePasteMenu} icon={FiUpload} label={'Paste as'} />
+              <Button onClick={handlePasteMenu} icon={FiUpload} label={"Paste as"} />
               {showPasteMenu && (
                 <div ref={pasteMenuRef} className="absolute right-0 z-10 mt-2 w-40 rounded border bg-white shadow-lg">
                   <button
                     className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-                    onClick={() => handlePasteOption('websiteImage')}
+                    onClick={() => handlePasteOption("websiteImage")}
                   >
                     Paste as Image
                   </button>
                   <button
                     className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-                    onClick={() => handlePasteOption('logo')}
+                    onClick={() => handlePasteOption("logo")}
                   >
                     Paste as Logo
                   </button>
@@ -264,7 +264,7 @@ const BrandingSource = ({
         </div>
         {/* website image section */}
         <div
-          className={`mt-4 flex ${websiteImage ? 'h-[300px]' : ''} w-full items-center justify-center rounded-md border p-4`}
+          className={`mt-4 flex ${websiteImage ? "h-[300px]" : ""} w-full items-center justify-center rounded-md border p-4`}
         >
           {websiteImage ? (
             <img src={websiteImage} alt="Website Preview" className="mt-2 h-full rounded border object-contain p-2" />
@@ -283,12 +283,12 @@ const BrandingSource = ({
           </div>
           <div className="flex items-center gap-2">
             <Button
-              label={'Extract New Colors'}
+              label={"Extract New Colors"}
               icon={IoColorPaletteOutline}
               onClick={() => extractColorsFromLogosHandler()}
             />
             <Button
-              label={'Upload Logo'}
+              label={"Upload Logo"}
               icon={FiUpload}
               onClick={() => logoFileInputRef.current && logoFileInputRef.current.click()}
             />
@@ -307,8 +307,8 @@ const BrandingSource = ({
           <div className="flex w-full flex-wrap items-center gap-2 overflow-auto p-2">
             {logos?.length > 0 ? (
               logos?.map((logo, idx) => {
-                const isPreview = typeof logo === 'object' && logo?.preview === true;
-                const logoUrl = typeof logo === 'string' ? logo : logo?.url;
+                const isPreview = typeof logo === "object" && logo?.preview === true;
+                const logoUrl = typeof logo === "string" ? logo : logo?.url;
                 return (
                   <div
                     key={idx}
@@ -316,13 +316,13 @@ const BrandingSource = ({
                     onMouseEnter={() => setHoveredLogoIndex(idx)}
                     onMouseLeave={() => setHoveredLogoIndex(null)}
                     className={`relative flex h-[130px] w-[200px] flex-col items-center justify-center gap-2 rounded-md border-2 transition-all duration-200 ${
-                      isPreview ? 'cursor-not-allowed opacity-50 grayscale' : 'cursor-pointer'
+                      isPreview ? "cursor-not-allowed opacity-50 grayscale" : "cursor-pointer"
                     } ${
                       isPreview
-                        ? 'border-gray-300'
+                        ? "border-gray-300"
                         : selectedLogoIndex === idx
-                          ? 'ring-opacity-50 border-green-500 ring-2 ring-green-500'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? "ring-opacity-50 border-green-500 ring-2 ring-green-500"
+                          : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     {/* Tooltip for preview logos */}
@@ -339,7 +339,7 @@ const BrandingSource = ({
                     {/* Close icon */}
                     <button
                       type="button"
-                      onClick={e => {
+                      onClick={(e) => {
                         e.stopPropagation();
                         handleRemoveLogo(idx);
                       }}
@@ -350,13 +350,13 @@ const BrandingSource = ({
 
                     <div
                       className={`flex h-[100px] w-[80%] flex-col items-center justify-center ${
-                        isPreview ? 'cursor-not-allowed' : 'cursor-pointer'
+                        isPreview ? "cursor-not-allowed" : "cursor-pointer"
                       }`}
                     >
                       <img
-                        src={typeof logo === 'string' ? logo : logo?.url}
+                        src={typeof logo === "string" ? logo : logo?.url}
                         alt={`Logo ${idx + 1}`}
-                        className={`h-[calc(100%-30px)] w-[96px] object-contain ${logo?.invert ? 'rounded-sm bg-gray-700' : ''}`}
+                        className={`h-[calc(100%-30px)] w-24 object-contain ${logo?.invert ? "rounded-sm bg-gray-700" : ""}`}
                         referrerPolicy="no-referrer"
                       />
                       <div>logo</div>
@@ -382,21 +382,21 @@ export const SelectLogoForEmail = ({ logos, selectedLogo, setSelectedLogo, setLo
   // Update selected logo index when selectedLogo or logos change
   useEffect(() => {
     if (selectedLogo && logos?.length > 0) {
-      const index = logos.findIndex(logo => (typeof logo === 'string' ? logo : logo?.url) === selectedLogo);
+      const index = logos.findIndex((logo) => (typeof logo === "string" ? logo : logo?.url) === selectedLogo);
       if (index !== -1) {
         const logoObj = logos[index];
-        const isPreview = typeof logoObj === 'object' && logoObj?.preview === true;
+        const isPreview = typeof logoObj === "object" && logoObj?.preview === true;
         if (!isPreview) {
           setSelectedLogoIndex(index);
         }
       } else if (logos.length > 0) {
         // If selectedLogo doesn't match any logo, select the first non-preview one
-        const firstNonPreviewLogo = logos.find(logo => {
-          const isPreview = typeof logo === 'object' && logo?.preview === true;
+        const firstNonPreviewLogo = logos.find((logo) => {
+          const isPreview = typeof logo === "object" && logo?.preview === true;
           return !isPreview;
         });
         if (firstNonPreviewLogo) {
-          const logoUrl = typeof firstNonPreviewLogo === 'string' ? firstNonPreviewLogo : firstNonPreviewLogo?.url;
+          const logoUrl = typeof firstNonPreviewLogo === "string" ? firstNonPreviewLogo : firstNonPreviewLogo?.url;
           const index = logos.indexOf(firstNonPreviewLogo);
           if (logoUrl) {
             setSelectedLogoIndex(index);
@@ -406,12 +406,12 @@ export const SelectLogoForEmail = ({ logos, selectedLogo, setSelectedLogo, setLo
       }
     } else if (logos?.length > 0 && selectedLogoIndex === null) {
       // If no logo is selected, select the first non-preview one
-      const firstNonPreviewLogo = logos.find(logo => {
-        const isPreview = typeof logo === 'object' && logo?.preview === true;
+      const firstNonPreviewLogo = logos.find((logo) => {
+        const isPreview = typeof logo === "object" && logo?.preview === true;
         return !isPreview;
       });
       if (firstNonPreviewLogo) {
-        const logoUrl = typeof firstNonPreviewLogo === 'string' ? firstNonPreviewLogo : firstNonPreviewLogo?.url;
+        const logoUrl = typeof firstNonPreviewLogo === "string" ? firstNonPreviewLogo : firstNonPreviewLogo?.url;
         const index = logos.indexOf(firstNonPreviewLogo);
         if (logoUrl) {
           setSelectedLogoIndex(index);
@@ -424,10 +424,10 @@ export const SelectLogoForEmail = ({ logos, selectedLogo, setSelectedLogo, setLo
   // Handle initial load with default selected logo
   useEffect(() => {
     if (defaultSelectedLogo && logos?.length > 0 && !selectedLogo) {
-      const index = logos.findIndex(logo => (typeof logo === 'string' ? logo : logo?.url) === defaultSelectedLogo);
+      const index = logos.findIndex((logo) => (typeof logo === "string" ? logo : logo?.url) === defaultSelectedLogo);
       if (index !== -1) {
         const logoObj = logos[index];
-        const isPreview = typeof logoObj === 'object' && logoObj?.preview === true;
+        const isPreview = typeof logoObj === "object" && logoObj?.preview === true;
         if (!isPreview) {
           setSelectedLogoIndex(index);
           setSelectedLogo(defaultSelectedLogo);
@@ -439,36 +439,36 @@ export const SelectLogoForEmail = ({ logos, selectedLogo, setSelectedLogo, setLo
 
   const handleLogoSelect = (idx, logo) => {
     // Check if logo is a preview (pasted/uploaded but not saved)
-    const logoObj = typeof logo === 'string' ? logos[idx] : logo;
-    const isPreview = typeof logoObj === 'object' && logoObj?.preview === true;
+    const logoObj = typeof logo === "string" ? logos[idx] : logo;
+    const isPreview = typeof logoObj === "object" && logoObj?.preview === true;
 
     if (isPreview) {
       // Don't show toast, tooltip already explains this
       return;
     }
 
-    const logoUrl = typeof logo === 'string' ? logo : logo?.url || logo;
+    const logoUrl = typeof logo === "string" ? logo : logo?.url || logo;
     setSelectedLogoIndex(idx);
     setSelectedLogo(logoUrl);
-    console.log('logo', logo);
+    console.log("logo", logo);
   };
 
-  const handleLogoFileUpload = async e => {
+  const handleLogoFileUpload = async (e) => {
     const files = Array.from(e.target.files);
     const newLogos = files
-      .filter(file => file.type.startsWith('image/'))
-      .map(file => ({
+      .filter((file) => file.type.startsWith("image/"))
+      .map((file) => ({
         file,
         preview: URL.createObjectURL(file),
       }));
 
     const detect = await detectLogo(newLogos[0]?.preview);
 
-    setLogos(prev => [...prev, { url: newLogos[0]?.preview, type: 'img', preview: true, invert: detect }]);
+    setLogos((prev) => [...prev, { url: newLogos[0]?.preview, type: "img", preview: true, invert: detect }]);
   };
 
-  const handleRemoveLogo = idx => {
-    setLogos(prev => prev.filter((_, i) => i !== idx));
+  const handleRemoveLogo = (idx) => {
+    setLogos((prev) => prev.filter((_, i) => i !== idx));
     if (selectedLogoIndex === idx) setSelectedLogoIndex(null);
     else if (selectedLogoIndex > idx) setSelectedLogoIndex(selectedLogoIndex - 1);
   };
@@ -497,8 +497,8 @@ export const SelectLogoForEmail = ({ logos, selectedLogo, setSelectedLogo, setLo
           <div className="flex w-full flex-wrap items-center gap-2 overflow-auto p-2">
             {logos?.length > 0 ? (
               logos?.map((logo, idx) => {
-                const isPreview = typeof logo === 'object' && logo?.preview === true;
-                const logoUrl = typeof logo === 'string' ? logo : logo?.url;
+                const isPreview = typeof logo === "object" && logo?.preview === true;
+                const logoUrl = typeof logo === "string" ? logo : logo?.url;
                 return (
                   <div
                     key={idx}
@@ -506,13 +506,13 @@ export const SelectLogoForEmail = ({ logos, selectedLogo, setSelectedLogo, setLo
                     onMouseEnter={() => setHoveredLogoIndex(idx)}
                     onMouseLeave={() => setHoveredLogoIndex(null)}
                     className={`relative flex h-[130px] w-[200px] flex-col items-center justify-center gap-2 rounded-md border-2 transition-all duration-200 ${
-                      isPreview ? 'cursor-not-allowed opacity-50 grayscale' : 'cursor-pointer'
+                      isPreview ? "cursor-not-allowed opacity-50 grayscale" : "cursor-pointer"
                     } ${
                       isPreview
-                        ? 'border-gray-300'
+                        ? "border-gray-300"
                         : selectedLogoIndex === idx
-                          ? 'ring-opacity-50 border-green-500 ring-2 ring-green-500'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? "ring-opacity-50 border-green-500 ring-2 ring-green-500"
+                          : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     {/* Tooltip for preview logos */}
@@ -529,7 +529,7 @@ export const SelectLogoForEmail = ({ logos, selectedLogo, setSelectedLogo, setLo
                     {/* Close icon */}
                     <button
                       type="button"
-                      onClick={e => {
+                      onClick={(e) => {
                         e.stopPropagation();
                         handleRemoveLogo(idx);
                       }}
@@ -540,13 +540,13 @@ export const SelectLogoForEmail = ({ logos, selectedLogo, setSelectedLogo, setLo
 
                     <div
                       className={`flex h-[100px] w-[80%] flex-col items-center justify-center ${
-                        isPreview ? 'cursor-not-allowed' : 'cursor-pointer'
+                        isPreview ? "cursor-not-allowed" : "cursor-pointer"
                       }`}
                     >
                       <img
-                        src={typeof logo === 'string' ? logo : logo?.url}
+                        src={typeof logo === "string" ? logo : logo?.url}
                         alt={`Logo ${idx + 1}`}
-                        className={`h-[calc(100%-30px)] w-[96px] object-contain ${logo?.invert ? 'rounded-sm bg-gray-700' : ''}`}
+                        className={`h-[calc(100%-30px)] w-24 object-contain ${logo?.invert ? "rounded-sm bg-gray-700" : ""}`}
                         referrerPolicy="no-referrer"
                       />
                       <div>logo</div>

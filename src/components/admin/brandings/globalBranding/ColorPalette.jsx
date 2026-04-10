@@ -1,35 +1,11 @@
-import React from 'react';
-import { useBranding } from '../../../../hooks/BrandingContext';
-import { HiOutlineSparkles } from 'react-icons/hi';
-import TextField from '@/components/shared/small/TextField';
-import { BiColor } from 'react-icons/bi';
-import { IoColorPaletteOutline } from 'react-icons/io5';
+import { BiColor } from "react-icons/bi";
+import { IoColorPaletteOutline } from "react-icons/io5";
+import { useBranding } from "../../../../hooks/BrandingContext";
 
 const ColorPalette = ({ colorPalette }) => {
-  const {
-    setPrimaryColor,
-    setSecondaryColor,
-    setAccentColor,
-    setTextColor,
-    setLinkColor,
-    setBackgroundColor,
-    setFrameColor,
-  } = useBranding();
+  const { setPrimaryColor } = useBranding();
 
-  const neutralColors = [
-    '#FFFFFF',
-    '#F8F9FA',
-    '#E9ECEF',
-    '#DEE2E8',
-    '#CED4DA',
-    '#ADB5BD',
-    '#6C757D',
-    '#495057',
-    '#343A40',
-    '#212529',
-  ];
-
-  const handleNeutralColorClick = color => {
+  const handleNeutralColorClick = (color) => {
     setPrimaryColor(color);
   };
 
@@ -41,62 +17,39 @@ const ColorPalette = ({ colorPalette }) => {
       </div>
       <div className="flex w-full flex-col justify-between gap-4">
         <div className="mt-6 grid grid-cols-2 gap-1 md:grid-cols-4 md:gap-8 xl:grid-cols-10 xl:gap-10">
-          {colorPalette?.map((color, index) => (
-            <div
-              key={index}
-              className="flex w-full cursor-pointer flex-col items-center gap-2"
-              onClick={() => handleNeutralColorClick(color)}
-            >
-              {/* Color box */}
+          {colorPalette?.map((color, index) => {
+            const hex = typeof color === "string" ? color : color?.hex;
+            const source = typeof color === "object" && color?.source ? color?.source : null;
+            return (
               <div
-                className="h-24 w-full rounded-md border shadow-sm"
-                style={{ backgroundColor: color, borderColor: '#e0e0e0' }}
-              ></div>
-
-              {/* Color code below */}
-              <div
-                className="text-sm font-medium"
-                style={{
-                  color: parseInt(color.substring(1), 16) > 0xffffff / 2 ? '#000' : '#555',
-                }}
+                key={index}
+                className="group relative flex w-full cursor-pointer flex-col items-center gap-2"
+                onClick={() => handleNeutralColorClick(hex)}
               >
-                {color}
+                {/* Color box */}
+                <div
+                  className="h-24 w-full rounded-md border shadow-sm"
+                  style={{ backgroundColor: hex, borderColor: "#e0e0e0" }}
+                >
+                  {source && (
+                    <div className="absolute bottom-8 left-1/2 z-10 hidden w-max max-w-40 -translate-x-1/2 rounded bg-gray-800 px-2 py-1 text-center text-xs text-white shadow group-hover:block">
+                      {source}
+                    </div>
+                  )}
+                </div>
+                {/* Color code below */}
+                <div
+                  className="text-sm font-medium"
+                  style={{ color: parseInt(hex?.substring(1), 16) > 0xffffff / 2 ? "#000" : "#555" }}
+                >
+                  {hex}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
-      <div className="border-primary my-6 border-t-2"></div>
 
-      <div className="mt-6 flex items-center gap-1.5 text-lg font-normal text-gray-500 md:gap-3">
-        <BiColor className="text-primary size-6" />
-        Neutral Color Options
-      </div>
-      <div className="mt-6 grid grid-cols-2 gap-1 md:grid-cols-4 md:gap-8 xl:grid-cols-10 xl:gap-10">
-        {neutralColors.map((color, index) => (
-          <div
-            key={index}
-            className="flex w-full cursor-pointer flex-col items-center gap-2"
-            onClick={() => handleNeutralColorClick(color)}
-          >
-            {/* Color box */}
-            <div
-              className="h-24 w-full rounded-md border shadow-sm"
-              style={{ backgroundColor: color, borderColor: '#e0e0e0' }}
-            ></div>
-
-            {/* Color code below */}
-            <div
-              className="text-sm font-medium"
-              style={{
-                color: parseInt(color.substring(1), 16) > 0xffffff / 2 ? '#000' : '#555',
-              }}
-            >
-              {color}
-            </div>
-          </div>
-        ))}
-      </div>
       <div className="border-primary my-6 border-t-2"></div>
 
       {/* Assign Brand Element section */}
@@ -114,3 +67,48 @@ const ColorPalette = ({ colorPalette }) => {
 };
 
 export default ColorPalette;
+
+// const neutralColors = [
+//   "#FFFFFF",
+//   "#F8F9FA",
+//   "#E9ECEF",
+//   "#DEE2E8",
+//   "#CED4DA",
+//   "#ADB5BD",
+//   "#6C757D",
+//   "#495057",
+//   "#343A40",
+//   "#212529",
+// ];
+
+// <div className="border-primary my-6 border-t-2"></div>
+
+// <div className="mt-6 flex items-center gap-1.5 text-lg font-normal text-gray-500 md:gap-3">
+//   <BiColor className="text-primary size-6" />
+//   Neutral Color Options
+// </div>
+// <div className="mt-6 grid grid-cols-2 gap-1 md:grid-cols-4 md:gap-8 xl:grid-cols-10 xl:gap-10">
+//   {neutralColors.map((color, index) => (
+//     <div
+//       key={index}
+//       className="flex w-full cursor-pointer flex-col items-center gap-2"
+//       onClick={() => handleNeutralColorClick(color)}
+//     >
+//       {/* Color box */}
+//       <div
+//         className="h-24 w-full rounded-md border shadow-sm"
+//         style={{ backgroundColor: color, borderColor: "#e0e0e0" }}
+//       ></div>
+
+//       {/* Color code below */}
+//       <div
+//         className="text-sm font-medium"
+//         style={{
+//           color: parseInt(color.substring(1), 16) > 0xffffff / 2 ? "#000" : "#555",
+//         }}
+//       >
+//         {color}
+//       </div>
+//     </div>
+//   ))}
+// </div>

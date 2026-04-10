@@ -413,12 +413,11 @@ export default function ApplicationsCard() {
 export const FormConfigurationModal = ({ form, refetch, setModal }) => {
   const [redirectUrl, setRedirectUrl] = useState(form?.redirectUrl || "");
   const [headerText, setHeaderText] = useState(form?.headerText || "");
-  const [footerText, setFooterText] = useState(form?.footerText || "");
   const [updateForm] = useUpdateFormMutation();
 
   const handleFormLocationUpdate = async () => {
     try {
-      const res = await updateForm({ _id: form?._id, data: { redirectUrl, headerText, footerText } }).unwrap();
+      const res = await updateForm({ _id: form?._id, data: { redirectUrl, headerText } }).unwrap();
       if (res?.success) {
         await refetch();
         toast?.success(res?.message || "Form updated successfully");
@@ -456,16 +455,6 @@ export const FormConfigurationModal = ({ form, refetch, setModal }) => {
             placeholder="Enter header text"
             value={headerText}
             onChange={(e) => setHeaderText(e.target.value)}
-            name="redirect-url"
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <TextField
-            label="Footer Text"
-            id="footer-text"
-            placeholder="Enter footer text"
-            value={footerText}
-            onChange={(e) => setFooterText(e.target.value)}
             name="redirect-url"
           />
         </div>

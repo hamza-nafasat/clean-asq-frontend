@@ -600,6 +600,7 @@ function CompanyOwners({
                                 />
                                 <TextField
                                   name="date_of_birth"
+                                  type="date"
                                   label="Date of Birth"
                                   value={date_of_birth}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
@@ -609,6 +610,7 @@ function CompanyOwners({
                                 <TextField
                                   name="driver_license_issuer_state"
                                   label="driver’s license issuer (state)"
+                                  type="date"
                                   value={driver_license_issuer_state}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                                   className={"max-w-[30%] min-w-[400px]"}

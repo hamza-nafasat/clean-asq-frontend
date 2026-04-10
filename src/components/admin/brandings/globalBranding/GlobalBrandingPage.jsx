@@ -187,14 +187,25 @@ const GlobalBrandingPage = ({ brandingId }) => {
         setLinkColor(data?.colors?.link);
         setBackgroundColor(data?.colors?.background);
         setFrameColor(data?.colors?.frame);
+        setHighlightingColor(data?.colors?.highlighting);
         setButtonTextPrimary(data?.colors?.buttonTextPrimary);
         setButtonTextSecondary(data?.colors?.buttonTextSecondary);
         setHeaderBackground(data?.colors?.headerBackground);
+        setHeaderText(data?.colors?.headerText);
         setFooterBackground(data?.colors?.footerBackground);
+        setFooterText(data?.colors?.footerText);
+        // Auto-populate email colors from extracted site colors
+        setEmailHeaderColor(data?.colors?.headerBackground);
+        setEmailHeaderTextColor(data?.colors?.headerText);
+        setEmailFooterColor(data?.colors?.footerBackground);
+        setEmailFooterTextColor(data?.colors?.footerText);
+        setEmailBodyColor(data?.colors?.background);
+        setEmailTextColor(data?.colors?.text);
+        if (data?.prominentHeadline) setHeaderHeading(data.prominentHeadline);
         setHeaderAlignment(data?.headerAlignment);
         setApplicationFooterText(data?.applicationFooterText || "Fintainium All rights reserved");
-        if (Array.isArray(data?.color_palette?.fromLogo) && Array.isArray(data?.color_palette?.fromSite)) {
-          setColorPalette([...data.color_palette.fromLogo, ...data.color_palette.fromSite]);
+        if (Array.isArray(data?.color_palette)) {
+          setColorPalette(data.color_palette);
         }
       }
     } catch (error) {
@@ -631,11 +642,17 @@ const GlobalBrandingPage = ({ brandingId }) => {
 
         <Preview
           companyName={companyName}
+          selectedLogo={selectedLogo}
+          headerBackground={headerBackground}
+          headerText={headerText}
+          footerBackground={footerBackground}
+          footerText={footerText}
+          backgroundColor={backgroundColor}
           primaryColor={primaryColor}
           secondaryColor={secondaryColor}
           accentColor={accentColor}
+          highlightingColor={highlightingColor}
           linkColor={linkColor}
-          selectedLogo={selectedLogo}
           buttonTextPrimary={buttonTextPrimary}
           buttonTextSecondary={buttonTextSecondary}
           textColor={textColor}

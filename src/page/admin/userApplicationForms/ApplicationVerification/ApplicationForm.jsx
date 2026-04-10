@@ -1,31 +1,27 @@
-import AggrementBlock from '@/components/applicationVerification/AggrementBlock';
-import BankInfo from '@/components/applicationVerification/BankInfo';
-import CompanyInformation from '@/components/applicationVerification/CompanyInformation';
-import CompanyOwners from '@/components/applicationVerification/CompanyOwners';
-import CustomSection from '@/components/applicationVerification/CustomSection';
-import Documents from '@/components/applicationVerification/Documents';
-import ProcessingInfo from '@/components/applicationVerification/ProcessingInfo';
-import CustomLoading from '@/components/shared/small/CustomLoading';
-import useApplyBranding from '@/hooks/useApplyBranding';
+import AggrementBlock from "@/components/applicationVerification/AggrementBlock";
+import BankInfo from "@/components/applicationVerification/BankInfo";
+import CompanyInformation from "@/components/applicationVerification/CompanyInformation";
+import CompanyOwners from "@/components/applicationVerification/CompanyOwners";
+import CustomSection from "@/components/applicationVerification/CustomSection";
+import Documents from "@/components/applicationVerification/Documents";
+import ProcessingInfo from "@/components/applicationVerification/ProcessingInfo";
+import CustomLoading from "@/components/shared/small/CustomLoading";
+import useApplyBranding from "@/hooks/useApplyBranding";
 import {
   useGetSavedFormMutation,
   useGetSingleFormQueryQuery,
   useSaveFormInDraftMutation,
   useSubmitFormMutation,
-} from '@/redux/apis/formApis';
-import { setIdMissionData } from '@/redux/slices/authSlice';
-import {
-  addSavedFormData,
-  updateFormHeaderAndFooter,
-  updateFormState,
-} from '@/redux/slices/formSlice';
-import { unwrapResult } from '@reduxjs/toolkit';
-import { useCallback, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import Stepper from '../../../../components/Stepper/Stepper';
-import { uploadFilesAndReplace } from '@/lib/utils';
+} from "@/redux/apis/formApis";
+import { setIdMissionData } from "@/redux/slices/authSlice";
+import { addSavedFormData, updateFormHeaderAndFooter, updateFormState } from "@/redux/slices/formSlice";
+import { unwrapResult } from "@reduxjs/toolkit";
+import { useCallback, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import Stepper from "../../../../components/Stepper/Stepper";
+import { uploadFilesAndReplace } from "@/lib/utils";
 
 export default function ApplicationForm() {
   const { user } = useSelector((state) => state.auth);
@@ -40,11 +36,7 @@ export default function ApplicationForm() {
   const [stepsComps, setStepsComps] = useState([]);
   const [isSavedApiRun, setIsSavedApiRun] = useState(false);
 
-  const {
-    data: form,
-    isLoading: formLoading,
-    refetch: formRefetch,
-  } = useGetSingleFormQueryQuery({ _id: formId });
+  const { data: form, isLoading: formLoading, refetch: formRefetch } = useGetSingleFormQueryQuery({ _id: formId });
   const [formSubmit] = useSubmitFormMutation();
   const [getSavedFormData] = useGetSavedFormMutation();
   const [saveFormInDraft] = useSaveFormInDraftMutation();
@@ -74,7 +66,7 @@ export default function ApplicationForm() {
             email: user?.email,
             name: user?.firstName + " " + user?.lastName,
             role: user?.role?.name,
-          }
+          };
           updatedData.updatedBy = updatedBy;
           // Update Redux state
           const res = await saveFormInDraft({
@@ -88,23 +80,15 @@ export default function ApplicationForm() {
           }
         }
       } catch (error) {
-        console.log('error while handling next', error);
-        toast.error(error?.data?.message || 'Error while handling next');
+        console.log("error while handling next", error);
+        toast.error(error?.data?.message || "Error while handling next");
       } finally {
         // Move to next step
         if (currentStep < form?.data?.sections?.length - 1) setCurrentStep(currentStep + 1);
         setLoadingNext(false);
       }
     },
-    [
-      currentStep,
-      dispatch,
-      form?.data?._id,
-      form?.data?.sections?.length,
-      formData,
-      saveFormInDraft,
-      user,
-    ]
+    [currentStep, dispatch, form?.data?._id, form?.data?.sections?.length, formData, saveFormInDraft, user],
   );
   const handleSubmit = useCallback(
     async ({ data, name, setLoadingNext }) => {
@@ -128,7 +112,7 @@ export default function ApplicationForm() {
             email: user?.email,
             name: user?.firstName + " " + user?.lastName,
             role: user?.role?.name,
-          }
+          };
           updatedData.updatedBy = updatedBy;
           // Save form draft (non-file data only)
           const res = await formSubmit({
@@ -137,17 +121,17 @@ export default function ApplicationForm() {
           }).unwrap();
           if (res.success) {
             toast.success(res.message);
-            navigate('/submited-successfully/' + form?.data?._id);
+            // navigate('/submited-successfully/' + form?.data?._id);
           }
         }
       } catch (error) {
-        console.log('error submitting form', error);
-        toast.error(error?.data?.message || 'Error while submitting form');
+        console.log("error submitting form", error);
+        toast.error(error?.data?.message || "Error while submitting form");
       } finally {
         setLoadingNext(false);
       }
     },
-    [form?.data?._id, formData, formSubmit, navigate, user]
+    [form?.data?._id, formData, formSubmit, user],
   );
   const saveInProgress = useCallback(
     async ({ data, name }) => {
@@ -169,7 +153,7 @@ export default function ApplicationForm() {
             email: user?.email,
             name: user?.firstName + " " + user?.lastName,
             role: user?.role?.name,
-          }
+          };
           updatedData.updatedBy = updatedBy;
           const res = await saveFormInDraft({
             formId: form?.data?._id,
@@ -178,11 +162,11 @@ export default function ApplicationForm() {
           if (res.success) toast.success(res.message);
         }
       } catch (error) {
-        console.log('error while saving form in draft', error);
-        toast.error(error?.data?.message || 'Error while saving form in draft');
+        console.log("error while saving form in draft", error);
+        toast.error(error?.data?.message || "Error while saving form in draft");
       }
     },
-    [form?.data?._id, formData, saveFormInDraft, user]
+    [form?.data?._id, formData, saveFormInDraft, user],
   );
 
   useEffect(() => {
@@ -200,32 +184,28 @@ export default function ApplicationForm() {
     if (form?.data?.footerText || form?.data?.headerText || form?.data?.name) {
       dispatch(
         updateFormHeaderAndFooter({
-          headerText: form?.data?.headerText || form?.data?.name || '',
-          footerText: form?.data?.footerText || 'All rights reserved',
-        })
+          headerText: form?.data?.headerText || form?.data?.name || "",
+          footerText: form?.data?.footerText || "All rights reserved",
+        }),
       );
     }
     return () => {
-      dispatch(updateFormHeaderAndFooter({ headerText: '', footerText: 'All rights reserved' }));
+      dispatch(updateFormHeaderAndFooter({ headerText: "", footerText: "All rights reserved" }));
     };
   }, [dispatch, form, getSavedFormData]);
 
   useEffect(() => {
     if (form?.data?.sections && form?.data?.sections?.length > 0 && isSavedApiRun) {
-      const companyInformationStep = form?.data?.sections.find(
-        (step) => step.key === 'company_information'
-      );
+      const companyInformationStep = form?.data?.sections.find((step) => step.key === "company_information");
       const data = [];
       const stepNames = [];
       const isOwner = user?._id && user?._id === form?.data?.owner;
-      const visibleSections = isOwner
-        ? form?.data?.sections
-        : form?.data?.sections?.filter((step) => !step?.isHidden);
+      const visibleSections = isOwner ? form?.data?.sections : form?.data?.sections?.filter((step) => !step?.isHidden);
       visibleSections.forEach((step) => {
         const sectionDataFromRedux = formData?.[step?.key];
         const commonProps = {
           _id: step._id,
-          sectionKey: step.key || 'hello',
+          sectionKey: step.key || "hello",
           name: step.name,
           title: step.title,
           fields: step?.fields ?? [],
@@ -242,25 +222,25 @@ export default function ApplicationForm() {
           saveInProgress,
           step,
         };
-        if (step.title === 'company_information_blk') {
+        if (step.title === "company_information_blk") {
           data.push(<CompanyInformation {...commonProps} />);
           stepNames.push(step.name);
-        } else if (step.title === 'beneficial_blk') {
+        } else if (step.title === "beneficial_blk") {
           data.push(<CompanyOwners {...commonProps} />);
           stepNames.push(step.name);
-        } else if (step.title === 'bank_account_info_blk') {
+        } else if (step.title === "bank_account_info_blk") {
           data.push(<BankInfo {...commonProps} />);
           stepNames.push(step.name);
-        } else if (step.title === 'avg_transactions_blk') {
+        } else if (step.title === "avg_transactions_blk") {
           data.push(<ProcessingInfo {...commonProps} />);
           stepNames.push(step.name);
-        } else if (step.title === 'incorporation_article_blk') {
+        } else if (step.title === "incorporation_article_blk") {
           data.push(<Documents {...commonProps} companyInformationStep={companyInformationStep} />);
           stepNames.push(step.name);
-        } else if (step.title === 'custom_section') {
+        } else if (step.title === "custom_section") {
           data.push(<CustomSection {...commonProps} />);
           stepNames.push(step.name);
-        } else if (step.title === 'agreement_blk') {
+        } else if (step.title === "agreement_blk") {
           data.push(<AggrementBlock {...commonProps} />);
           stepNames.push(step.name);
         }
@@ -286,12 +266,7 @@ export default function ApplicationForm() {
   if (!user?._id) return navigate(`/application-form/${form?.data?.branding?.name}/${formId}`);
   return (
     <div className="bg-backgroundColor h-full w-full overflow-hidden rounded-[10px] px-6 py-6">
-      <Stepper
-        steps={sectionNames}
-        currentStep={currentStep}
-        visibleSteps={0}
-        emptyRequiredFields={[]}
-      >
+      <Stepper steps={sectionNames} currentStep={currentStep} visibleSteps={0} emptyRequiredFields={[]}>
         {stepsComps[currentStep]}
       </Stepper>
     </div>
