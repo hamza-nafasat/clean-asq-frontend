@@ -13,6 +13,7 @@ import { ThreeDotEditViewDelete } from "../shared/ThreeDotViewEditDelete";
 import ApplicantSearch from "./ApplicantSearch";
 import { useSelector } from "react-redux";
 import checkPermission, { webPermissions } from "@/utils/checkPermission";
+import CopyPasteTooltip from "../shared/small/CopyPasteTooltip";
 // Table columns configuration
 const APPLICANT_TABLE_COLUMNS = [
   {
@@ -20,11 +21,7 @@ const APPLICANT_TABLE_COLUMNS = [
     selector: (row) => row?._id?.slice(0, 3),
     sortable: true,
     width: "100px",
-    cell: (row) => (
-      <span title={row?._id} className="cursor-pointer">
-        {row?._id?.slice(0, 3)}
-      </span>
-    ),
+    cell: (row) => <CopyPasteTooltip id={row?._id} />,
   },
   {
     name: "Name",
