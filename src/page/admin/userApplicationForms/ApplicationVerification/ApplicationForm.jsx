@@ -121,7 +121,7 @@ export default function ApplicationForm() {
           }).unwrap();
           if (res.success) {
             toast.success(res.message);
-            // navigate('/submited-successfully/' + form?.data?._id);
+            navigate("/submited-successfully/" + form?.data?._id);
           }
         }
       } catch (error) {
@@ -131,7 +131,17 @@ export default function ApplicationForm() {
         setLoadingNext(false);
       }
     },
-    [form?.data?._id, formData, formSubmit, user],
+    [
+      form?.data?._id,
+      formData,
+      formSubmit,
+      navigate,
+      user?._id,
+      user?.email,
+      user?.firstName,
+      user?.lastName,
+      user?.role?.name,
+    ],
   );
   const saveInProgress = useCallback(
     async ({ data, name }) => {

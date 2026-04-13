@@ -30,25 +30,24 @@ const APPLICANT_TABLE_COLUMNS = [
     name: "Name",
     selector: (row) => `${row?.user?.firstName} ${row?.user?.lastName}`,
     sortable: true,
-    width: "170px",
+    width: "200px",
   },
   {
     name: "Application",
     selector: (row) => row?.form?.name || "N/A",
     sortable: true,
-    width: "180px",
+    width: "250px",
   },
   {
     name: "Email",
     selector: (row) => row?.user?.email,
     sortable: true,
-    width: "200px",
+    width: "320px",
   },
   {
     name: "Client Type",
     selector: (row) => row?.user?.role?.name,
     sortable: true,
-    width: "140px",
     cell: (row) => (
       <span className="text-accent w-[130px] rounded-sm bg-gray-100 px-2.5 py-[3px] text-center text-xs font-bold capitalize">
         {row?.user?.role?.name}
@@ -359,7 +358,7 @@ const ApplicantsTable = ({
           </div>
         </div>
       </div>
-      <div className="mt-5 w-full  overflow-x-auto lg:w-[calc(100vw-350px)]! xl:w-full">
+      <div className="mt-5 w-full h-full overflow-x-auto lg:w-[calc(100vw-350px)]! xl:w-full">
         <DataTable
           columns={columns}
           data={filteredApplicants}

@@ -1,6 +1,6 @@
 export const ThreeDotEditViewDelete = ({ row, buttons }) => {
   return (
-    <div className="z-9999 mt-2 min-w-[120px] rounded border bg-white shadow-lg fixed right-0 ">
+    <div className="z-50 mt-2 min-w-[180px] rounded border bg-white shadow-lg absolute right-0 top-full">
       {buttons?.map((button, index) => (
         <button
           key={index}
