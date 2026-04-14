@@ -33,19 +33,19 @@ const emailHeaderTemplate = `
           
           <!-- Logo -->
           <tr>
-            <td align={{headerAlignment}} style="padding: 40px 20px 20px 20px; color: {{emailHeaderTextColor}};">
-              <img 
-                src="{{logo}}" 
+            <td align={{headerAlignment}} style="padding: {{emailHeaderPadding}}px 20px 20px 20px; color: {{emailHeaderTextColor}};">
+              <img
+                src="{{logo}}"
                 alt="{{companyName}}"
-                style="max-width: 140px; height: auto; display: block;"
+                style="max-width: {{emailLogoMaxWidth}}px; max-height: {{emailLogoMaxHeight}}px; object-fit: contain; display: block;"
               />
             </td>
           </tr>
 
           <!-- Company Name -->
           <tr>
-            <td align="center" style="padding: 20px 20px; color: {{emailHeaderTextColor}};">
-              <h1 style="margin: 0; font-size: 28px; font-weight: bold;">
+            <td align="center" style="padding: 20px 20px {{emailHeaderSpacing}}px 20px; color: {{emailHeaderTextColor}};">
+              <h1 style="margin: 0; font-size: {{headerHeadingSize}}px; font-weight: bold;">
                 {{headerHeading}}
               </h1>
             </td>
@@ -53,8 +53,8 @@ const emailHeaderTemplate = `
 
           <!-- Subtitle -->
           <tr>
-            <td align="center" style="padding: 0 20px 40px 20px; color: {{emailHeaderTextColor}};">
-              <p style="margin: 0; font-size: 13px;">
+            <td align="center" style="padding: 0 20px {{emailHeaderPadding}}px 20px; color: {{emailHeaderTextColor}};">
+              <p style="margin: 0; font-size: {{headerDescriptionSize}}px;">
                 {{headerDescription}}
               </p>
             </td>
@@ -77,11 +77,11 @@ const emailFooterTemplate = `
           
           <!-- Content -->
           <tr>
-            <td align="center" style="padding: 40px 20px; color: {{emailFooterTextColor}};">
-              <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: bold;">
+            <td align="center" style="padding: {{emailFooterPadding}}px 20px; color: {{emailFooterTextColor}};">
+              <h2 style="margin: 0 0 {{emailFooterSpacing}}px 0; font-size: {{footerHeadingSize}}px; font-weight: bold;">
                 {{footerHeading}}
               </h2>
-              <p style="margin: 0; font-size: 14px; color: {{emailFooterTextColor}}; line-height: 1.6;">
+              <p style="margin: 0; font-size: {{footerDescriptionSize}}px; color: {{emailFooterTextColor}}; line-height: 1.6;">
                 {{footerDescription}}
               </p>
             </td>
@@ -89,7 +89,7 @@ const emailFooterTemplate = `
 
           <!-- Copyright -->
           <tr>
-            <td align="center" style="padding: 0 20px 40px 20px; color: {{emailFooterTextColor}};">
+            <td align="center" style="padding: 0 20px {{emailFooterPadding}}px 20px; color: {{emailFooterTextColor}};">
               <p style="margin: 0; font-size: 12px; color: {{emailFooterTextColor}};">
                 © 2025 {{companyName}} All rights reserved.
               </p>
@@ -104,6 +104,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [image, setImage] = useState(null);
   const navigate = useNavigate();
   const [websiteUrl, setWebsiteUrl] = useState("");
+  const emailDomain = window.location.hostname;
   const [primaryColor, setPrimaryColor] = useState("#000000");
   const [secondaryColor, setSecondaryColor] = useState("#000000");
   const [accentColor, setAccentColor] = useState("#000000");
@@ -116,6 +117,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [footerText, setFooterText] = useState("#000000");
   const [frameColor, setFrameColor] = useState("#000000");
   const [applicationFooterText, setApplicationFooterText] = useState("Fintainium All rights reserved");
+  const [applicationFooterTextSize, setApplicationFooterTextSize] = useState(20);
+  const [appHeaderPadding, setAppHeaderPadding] = useState(8);
+  const [appFooterPadding, setAppFooterPadding] = useState(16);
   const [highlightingColor, setHighlightingColor] = useState("#000000");
   const [fontFamily, setFontFamily] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -140,6 +144,20 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [emailFooterTextColor, setEmailFooterTextColor] = useState("#1a1a1a");
   const [emailBodyColor, setEmailBodyColor] = useState("#1a1a1a");
   const [selectedEmailLogo, setSelectedEmailLogo] = useState();
+  const [headerHeadingSize, setHeaderHeadingSize] = useState(28);
+  const [headerDescriptionSize, setHeaderDescriptionSize] = useState(13);
+  const [footerHeadingSize, setFooterHeadingSize] = useState(20);
+  const [footerDescriptionSize, setFooterDescriptionSize] = useState(14);
+  const [emailHeaderPadding, setEmailHeaderPadding] = useState(40);
+  const [emailFooterPadding, setEmailFooterPadding] = useState(40);
+  const [emailHeaderSpacing, setEmailHeaderSpacing] = useState(20);
+  const [emailFooterSpacing, setEmailFooterSpacing] = useState(15);
+  const [appLogoMaxWidth, setAppLogoMaxWidth] = useState(300);
+  const [appLogoMaxHeight, setAppLogoMaxHeight] = useState(100);
+  const [emailLogoMaxWidth, setEmailLogoMaxWidth] = useState(180);
+  const [emailLogoMaxHeight, setEmailLogoMaxHeight] = useState(48);
+  const [senderEmail, setSenderEmail] = useState("");
+  const [replyToEmail, setReplyToEmail] = useState("");
 
   const compileHeader = Handlebars.compile(emailHeaderTemplate);
   const compileFooter = Handlebars.compile(emailFooterTemplate);
@@ -163,6 +181,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
     setHeaderText: setHeaderTextGlobal,
     setFooterText: setFooterTextGlobal,
     setApplicationFooterText: setApplicationFooterTextGlobal,
+    setAppLogoMaxWidth: setGlobalAppLogoMaxWidth,
+    setAppLogoMaxHeight: setGlobalAppLogoMaxHeight,
   } = useBranding();
 
   const [extractColorsFromLogos] = useExtractColorsFromLogosMutation();
@@ -282,6 +302,13 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append("colors", JSON.stringify(colors));
     formData.append("logos", JSON.stringify(finalLogos));
     formData.append("applicationFooterText", applicationFooterText); // added
+    formData.append("applicationFooterTextSize", applicationFooterTextSize);
+    formData.append("appHeaderPadding", appHeaderPadding);
+    formData.append("appFooterPadding", appFooterPadding);
+    formData.append("appLogoMaxWidth", appLogoMaxWidth);
+    formData.append("appLogoMaxHeight", appLogoMaxHeight);
+    formData.append("emailLogoMaxWidth", emailLogoMaxWidth);
+    formData.append("emailLogoMaxHeight", emailLogoMaxHeight);
 
     extraLogos.forEach((file) => {
       formData.append(`files`, file);
@@ -300,9 +327,19 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append("emailBodyColor", emailBodyColor);
     formData.append("emailHeaderTextColor", emailHeaderTextColor);
     formData.append("emailFooterTextColor", emailFooterTextColor);
+    formData.append("headerHeadingSize", headerHeadingSize);
+    formData.append("headerDescriptionSize", headerDescriptionSize);
+    formData.append("footerHeadingSize", footerHeadingSize);
+    formData.append("footerDescriptionSize", footerDescriptionSize);
+    formData.append("emailHeaderPadding", emailHeaderPadding);
+    formData.append("emailFooterPadding", emailFooterPadding);
+    formData.append("emailHeaderSpacing", emailHeaderSpacing);
+    formData.append("emailFooterSpacing", emailFooterSpacing);
     if (selectedEmailLogo) {
       formData.append("selectedEmailLogo", selectedEmailLogo);
     }
+    formData.append("senderEmail", senderEmail);
+    formData.append("replyToEmail", replyToEmail);
 
     console.log(extraLogos);
     try {
@@ -388,6 +425,13 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append("colors", JSON.stringify(colors));
     formData.append("logos", JSON.stringify(finalLogos));
     formData.append("applicationFooterText", applicationFooterText); // added
+    formData.append("applicationFooterTextSize", applicationFooterTextSize);
+    formData.append("appHeaderPadding", appHeaderPadding);
+    formData.append("appFooterPadding", appFooterPadding);
+    formData.append("appLogoMaxWidth", appLogoMaxWidth);
+    formData.append("appLogoMaxHeight", appLogoMaxHeight);
+    formData.append("emailLogoMaxWidth", emailLogoMaxWidth);
+    formData.append("emailLogoMaxHeight", emailLogoMaxHeight);
 
     // email
     formData.append("emailHeader", emailHeader);
@@ -403,9 +447,19 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append("emailBodyColor", emailBodyColor);
     formData.append("emailHeaderTextColor", emailHeaderTextColor);
     formData.append("emailFooterTextColor", emailFooterTextColor);
+    formData.append("headerHeadingSize", headerHeadingSize);
+    formData.append("headerDescriptionSize", headerDescriptionSize);
+    formData.append("footerHeadingSize", footerHeadingSize);
+    formData.append("footerDescriptionSize", footerDescriptionSize);
+    formData.append("emailHeaderPadding", emailHeaderPadding);
+    formData.append("emailFooterPadding", emailFooterPadding);
+    formData.append("emailHeaderSpacing", emailHeaderSpacing);
+    formData.append("emailFooterSpacing", emailFooterSpacing);
     if (selectedEmailLogo) {
       formData.append("selectedEmailLogo", selectedEmailLogo);
     }
+    formData.append("senderEmail", senderEmail);
+    formData.append("replyToEmail", replyToEmail);
 
     extraLogos.forEach((file) => {
       formData.append(`files`, file);
@@ -440,7 +494,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
             setHeaderTextGlobal(userBranding.colors.headerText);
             setFooterTextGlobal(userBranding.colors.footerText);
             setApplicationFooterTextGlobal(userBranding.applicationFooterText);
-            // added
+            if (userBranding?.appLogoMaxWidth) setGlobalAppLogoMaxWidth(userBranding.appLogoMaxWidth);
+            if (userBranding?.appLogoMaxHeight) setGlobalAppLogoMaxHeight(userBranding.appLogoMaxHeight);
           }
         }
 
@@ -499,6 +554,10 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setHeaderText(singleBranding.colors.headerText);
       setFooterText(singleBranding.colors.footerText);
       setApplicationFooterText(singleBranding.applicationFooterText);
+      if (singleBranding.applicationFooterTextSize)
+        setApplicationFooterTextSize(singleBranding.applicationFooterTextSize);
+      if (singleBranding.appHeaderPadding) setAppHeaderPadding(singleBranding.appHeaderPadding);
+      if (singleBranding.appFooterPadding) setAppFooterPadding(singleBranding.appFooterPadding);
       setFontFamily(singleBranding.fontFamily);
       setFontFamily(singleBranding.fontFamily);
       setButtonTextPrimary(singleBranding.colors.buttonTextPrimary);
@@ -516,6 +575,20 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setEmailFooterColor(singleBranding.emailFooterColor);
       setEmailHeaderTextColor(singleBranding.emailHeaderTextColor);
       setEmailFooterTextColor(singleBranding.emailFooterTextColor);
+      if (singleBranding.headerHeadingSize) setHeaderHeadingSize(singleBranding.headerHeadingSize);
+      if (singleBranding.headerDescriptionSize) setHeaderDescriptionSize(singleBranding.headerDescriptionSize);
+      if (singleBranding.footerHeadingSize) setFooterHeadingSize(singleBranding.footerHeadingSize);
+      if (singleBranding.footerDescriptionSize) setFooterDescriptionSize(singleBranding.footerDescriptionSize);
+      if (singleBranding.emailHeaderPadding) setEmailHeaderPadding(singleBranding.emailHeaderPadding);
+      if (singleBranding.emailFooterPadding) setEmailFooterPadding(singleBranding.emailFooterPadding);
+      if (singleBranding.emailHeaderSpacing) setEmailHeaderSpacing(singleBranding.emailHeaderSpacing);
+      if (singleBranding.emailFooterSpacing) setEmailFooterSpacing(singleBranding.emailFooterSpacing);
+      if (singleBranding.appLogoMaxWidth) setAppLogoMaxWidth(singleBranding.appLogoMaxWidth);
+      if (singleBranding.appLogoMaxHeight) setAppLogoMaxHeight(singleBranding.appLogoMaxHeight);
+      if (singleBranding.emailLogoMaxWidth) setEmailLogoMaxWidth(singleBranding.emailLogoMaxWidth);
+      if (singleBranding.emailLogoMaxHeight) setEmailLogoMaxHeight(singleBranding.emailLogoMaxHeight);
+      if (singleBranding.senderEmail) setSenderEmail(singleBranding.senderEmail);
+      if (singleBranding.replyToEmail) setReplyToEmail(singleBranding.replyToEmail);
       // Set the selected logo from the API response if available
       if (singleBranding.selectedLogo) {
         setSelectedLogo(singleBranding.selectedLogo);
@@ -556,6 +629,16 @@ const GlobalBrandingPage = ({ brandingId }) => {
       emailHeaderTextColor,
       emailFooterTextColor,
       logo: selectedEmailLogo || selectedLogo,
+      headerHeadingSize,
+      headerDescriptionSize,
+      footerHeadingSize,
+      footerDescriptionSize,
+      emailHeaderPadding,
+      emailFooterPadding,
+      emailHeaderSpacing,
+      emailFooterSpacing,
+      emailLogoMaxWidth,
+      emailLogoMaxHeight,
     };
     setEmailHeader(compileHeader(context));
     setEmailFooter(compileFooter(context));
@@ -577,6 +660,16 @@ const GlobalBrandingPage = ({ brandingId }) => {
     selectedEmailLogo,
     emailHeaderTextColor,
     emailFooterTextColor,
+    headerHeadingSize,
+    headerDescriptionSize,
+    footerHeadingSize,
+    footerDescriptionSize,
+    emailHeaderPadding,
+    emailFooterPadding,
+    emailHeaderSpacing,
+    emailFooterSpacing,
+    emailLogoMaxWidth,
+    emailLogoMaxHeight,
   ]);
 
   return (
@@ -619,6 +712,16 @@ const GlobalBrandingPage = ({ brandingId }) => {
           setFrameColor={setFrameColor}
           applicationFooterText={applicationFooterText}
           setApplicationFooterText={setApplicationFooterText}
+          applicationFooterTextSize={applicationFooterTextSize}
+          setApplicationFooterTextSize={setApplicationFooterTextSize}
+          appHeaderPadding={appHeaderPadding}
+          setAppHeaderPadding={setAppHeaderPadding}
+          appFooterPadding={appFooterPadding}
+          setAppFooterPadding={setAppFooterPadding}
+          appLogoMaxWidth={appLogoMaxWidth}
+          setAppLogoMaxWidth={setAppLogoMaxWidth}
+          appLogoMaxHeight={appLogoMaxHeight}
+          setAppLogoMaxHeight={setAppLogoMaxHeight}
           highlightingColor={highlightingColor}
           setHighlightingColor={setHighlightingColor}
           fontFamily={fontFamily}
@@ -658,23 +761,79 @@ const GlobalBrandingPage = ({ brandingId }) => {
           textColor={textColor}
           frameColor={frameColor}
           headerAlignment={headerAlignment}
+          applicationFooterText={applicationFooterText}
+          appHeaderPadding={appHeaderPadding}
+          appFooterPadding={appFooterPadding}
+          appLogoMaxWidth={appLogoMaxWidth}
+          appLogoMaxHeight={appLogoMaxHeight}
         />
         <div className="border-primary my-6 border-t-2"></div>
 
-        <div className="mt-6 rounded-xl border border-[#F0F0F0] p-3 shadow-sm md:p-6">
-          <EmailTemplatePreview
-            emailHeader={emailHeader}
-            emailFooter={emailFooter}
-            emailBodyColor={emailBodyColor}
-            emailText={emailTextColor}
-          />
-        </div>
         <article className="flex flex-col gap-2">
+          <section className="my-6 flex w-full flex-col gap-2">
+            <h3 className="border-b-2 text-lg font-semibold text-gray-800">Email Sending Settings</h3>
+            <div className="grid gap-x-6 gap-y-1" style={{ gridTemplateColumns: "1fr 1fr" }}>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-700">Sender Email Address</label>
+                <div className="flex h-14 items-center rounded-lg border border-gray-300 bg-[#FAFBFF] px-3 text-sm text-gray-700">
+                  <input
+                    type="text"
+                    placeholder="e.g. noreply"
+                    value={senderEmail.includes("@") ? senderEmail.split("@")[0] : senderEmail}
+                    onChange={(e) => setSenderEmail(e.target.value + (emailDomain ? `@${emailDomain}` : ""))}
+                    className="min-w-0 flex-1 bg-transparent outline-none"
+                  />
+                  {emailDomain && <span className="shrink-0 text-gray-400">@{emailDomain}</span>}
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-700">Reply-To Email Address</label>
+                <input
+                  type="email"
+                  placeholder="e.g. support@jira-instance.atlassian.net"
+                  value={replyToEmail}
+                  onChange={(e) => setReplyToEmail(e.target.value)}
+                  className="h-14 rounded-lg border border-gray-300 bg-[#FAFBFF] px-3 text-sm text-gray-700 outline-none"
+                />
+              </div>
+            </div>
+          </section>
+
+          <section className="my-6 flex w-full flex-col gap-2">
+            <SelectLogoForEmail
+              logos={logos}
+              setLogos={setLogos}
+              setSelectedLogo={setSelectedEmailLogo}
+              selectedLogo={selectedEmailLogo}
+              defaultSelectedLogo={brandingId ? selectedEmailLogo : null}
+            />
+            <div className="mt-2 grid gap-x-6 gap-y-1" style={{ gridTemplateColumns: "repeat(2, max-content)" }}>
+              <TextField
+                label={"Logo Max Width (px)"}
+                labelCs={"text-sm! font-base! text-gray-700!"}
+                type="number"
+                min={20}
+                max={600}
+                value={emailLogoMaxWidth}
+                onChange={(e) => setEmailLogoMaxWidth(Number(e.target.value))}
+              />
+              <TextField
+                label={"Logo Max Height (px)"}
+                labelCs={"text-sm! font-base! text-gray-700!"}
+                type="number"
+                min={20}
+                max={300}
+                value={emailLogoMaxHeight}
+                onChange={(e) => setEmailLogoMaxHeight(Number(e.target.value))}
+              />
+            </div>
+          </section>
           <section className="my-6 flex w-full flex-col gap-2">
             <h3 className="border-b-2 text-lg font-semibold text-gray-800">Email Header</h3>
 
-            <div className="flex max-w-[50%] items-center justify-between gap-4">
+            <div className="grid gap-x-6 gap-y-1" style={{ gridTemplateColumns: "repeat(3, max-content)" }}>
               <ColorInput
+                hideLabel
                 image={image}
                 setImage={setImage}
                 label={"Background Color"}
@@ -682,46 +841,74 @@ const GlobalBrandingPage = ({ brandingId }) => {
                 setColor={setEmailHeaderColor}
               />
               <ColorInput
+                hideLabel
                 image={image}
                 setImage={setImage}
                 label={"Text Color"}
                 color={emailHeaderTextColor}
                 setColor={setEmailHeaderTextColor}
               />
+              <TextField
+                label={"Height (px)"}
+                labelCs={"text-sm! font-base! text-gray-700!"}
+                type="number"
+                min={0}
+                max={200}
+                value={emailHeaderPadding}
+                onChange={(e) => setEmailHeaderPadding(Number(e.target.value))}
+              />
             </div>
             <div className="flex flex-col gap-2">
-              <TextField
-                type="textarea"
-                label={"Header Headline Tex"}
-                value={headerHeading}
-                onChange={(e) => setHeaderHeading(e.target.value)}
-              />
-              <TextField
-                type="textarea"
-                label={"Content"}
-                value={headerDescription}
-                onChange={(e) => setHeaderDescription(e.target.value)}
-              />
-              <SelectLogoForEmail
-                logos={logos}
-                setLogos={setLogos}
-                setSelectedLogo={setSelectedEmailLogo}
-                selectedLogo={selectedEmailLogo}
-                defaultSelectedLogo={brandingId ? selectedEmailLogo : null}
-              />
-              {/* logos selectable here  */}
+              <div className="grid gap-x-3 gap-y-1" style={{ gridTemplateColumns: "1fr max-content max-content" }}>
+                <TextField
+                  label={"Header Headline Text"}
+                  labelCs={"text-sm! font-base! text-gray-700!"}
+                  type="textarea"
+                  value={headerHeading}
+                  onChange={(e) => setHeaderHeading(e.target.value)}
+                />
+                <TextField
+                  label={"Font Size (px)"}
+                  labelCs={"text-sm! font-base! text-gray-700!"}
+                  type="number"
+                  min={8}
+                  max={72}
+                  value={headerHeadingSize}
+                  onChange={(e) => setHeaderHeadingSize(Number(e.target.value))}
+                />
+                <TextField
+                  label={"Height (px)"}
+                  labelCs={"text-sm! font-base! text-gray-700!"}
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={emailHeaderSpacing}
+                  onChange={(e) => setEmailHeaderSpacing(Number(e.target.value))}
+                />
+              </div>
+              <div className="grid gap-x-3 gap-y-1" style={{ gridTemplateColumns: "1fr max-content" }}>
+                <TextField
+                  label={"Header Description Text"}
+                  labelCs={"text-sm! font-base! text-gray-700!"}
+                  type="textarea"
+                  value={headerDescription}
+                  onChange={(e) => setHeaderDescription(e.target.value)}
+                />
+                <TextField
+                  label={"Font Size (px)"}
+                  labelCs={"text-sm! font-base! text-gray-700!"}
+                  type="number"
+                  min={8}
+                  max={72}
+                  value={headerDescriptionSize}
+                  onChange={(e) => setHeaderDescriptionSize(Number(e.target.value))}
+                />
+              </div>
             </div>
           </section>
           <section className="border-b-2b my-6 flex w-[70%] flex-col gap-2">
             <h3 className="border-b-2 text-lg font-semibold text-gray-800">Email Body</h3>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {/* <ColorInput
-                image={image}
-                setImage={setImage}
-                label={'Headings Color'}
-                color={emailHeadingColor}
-                setColor={setEmailHeadingColor}
-              /> */}
               <ColorInput
                 image={image}
                 setImage={setImage}
@@ -740,7 +927,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
           </section>
           <section className="my-6 flex w-full flex-col gap-2">
             <h3 className="border-b-2 text-lg font-semibold text-gray-800">Email Footer</h3>
-            <div className="flex max-w-[50%] items-center justify-between gap-4">
+            <div className="grid gap-x-6 gap-y-1" style={{ gridTemplateColumns: "repeat(3, max-content)" }}>
               <ColorInput
                 image={image}
                 setImage={setImage}
@@ -755,23 +942,74 @@ const GlobalBrandingPage = ({ brandingId }) => {
                 color={emailFooterTextColor}
                 setColor={setEmailFooterTextColor}
               />
+              <TextField
+                label={"Height (px)"}
+                labelCs={"text-sm! font-base! text-gray-700!"}
+                type="number"
+                min={0}
+                max={200}
+                value={emailFooterPadding}
+                onChange={(e) => setEmailFooterPadding(Number(e.target.value))}
+              />
             </div>
             <div className="flex flex-col gap-2">
-              <TextField
-                type="textarea"
-                label={"Footer Headline Text"}
-                value={footerHeading}
-                onChange={(e) => setFooterHeading(e.target.value)}
-              />
-              <TextField
-                type="textarea"
-                label={"Content"}
-                value={footerDescription}
-                onChange={(e) => setFooterDescription(e.target.value)}
-              />
+              <div className="grid gap-x-3 gap-y-1" style={{ gridTemplateColumns: "1fr max-content max-content" }}>
+                <TextField
+                  label={"Footer Headline Text"}
+                  labelCs={"text-sm! font-base! text-gray-700!"}
+                  type="textarea"
+                  value={footerHeading}
+                  onChange={(e) => setFooterHeading(e.target.value)}
+                />
+                <TextField
+                  label={"Font Size (px)"}
+                  labelCs={"text-sm! font-base! text-gray-700!"}
+                  type="number"
+                  min={8}
+                  max={72}
+                  value={footerHeadingSize}
+                  onChange={(e) => setFooterHeadingSize(Number(e.target.value))}
+                />
+                <TextField
+                  label={"Height (px)"}
+                  labelCs={"text-sm! font-base! text-gray-700!"}
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={emailFooterSpacing}
+                  onChange={(e) => setEmailFooterSpacing(Number(e.target.value))}
+                />
+              </div>
+              <div className="grid gap-x-3 gap-y-1" style={{ gridTemplateColumns: "1fr max-content" }}>
+                <TextField
+                  label={"Footer Description Text"}
+                  labelCs={"text-sm! font-base! text-gray-700!"}
+                  type="textarea"
+                  value={footerDescription}
+                  onChange={(e) => setFooterDescription(e.target.value)}
+                />
+                <TextField
+                  label={"Font Size (px)"}
+                  labelCs={"text-sm! font-base! text-gray-700!"}
+                  type="number"
+                  min={8}
+                  max={72}
+                  value={footerDescriptionSize}
+                  onChange={(e) => setFooterDescriptionSize(Number(e.target.value))}
+                />
+              </div>
             </div>
           </section>
         </article>
+
+        <div className="mt-6 rounded-xl border border-[#F0F0F0] p-3 shadow-sm md:p-6">
+          <EmailTemplatePreview
+            emailHeader={emailHeader}
+            emailFooter={emailFooter}
+            emailBodyColor={emailBodyColor}
+            emailText={emailTextColor}
+          />
+        </div>
 
         <div className="mt-6 mb-4 flex justify-end space-x-2 md:space-x-4">
           <div className="flex gap-2 md:gap-6">

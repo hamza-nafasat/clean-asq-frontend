@@ -42,6 +42,8 @@ export const BrandingProvider = ({ children }) => {
   const [headerAlignment, setHeaderAlignment] = useState("left");
   const [headerText, setHeaderText] = useState(DEFAULT_COLORS.headerText);
   const [footerText, setFooterText] = useState(DEFAULT_COLORS.footerText);
+  const [appLogoMaxWidth, setAppLogoMaxWidth] = useState(300);
+  const [appLogoMaxHeight, setAppLogoMaxHeight] = useState(200);
   const [applicationFooterText, setApplicationFooterText] = useState("Fintainium All rights reserved");
   // Load saved branding from localStorage on mount
   useEffect(() => {
@@ -176,6 +178,10 @@ export const BrandingProvider = ({ children }) => {
     setFooterText,
     applicationFooterText,
     setApplicationFooterText,
+    appLogoMaxWidth,
+    setAppLogoMaxWidth,
+    appLogoMaxHeight,
+    setAppLogoMaxHeight,
   };
 
   return <BrandingContext.Provider value={value}>{children}</BrandingContext.Provider>;

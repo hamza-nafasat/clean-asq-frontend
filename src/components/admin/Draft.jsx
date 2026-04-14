@@ -1,15 +1,15 @@
-import { useBranding } from '@/hooks/BrandingContext';
-import { FaCheck } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
-import Button from '../shared/small/Button';
-import { useDispatch, useSelector } from 'react-redux';
-import { addSavedFormData, updateEmailVerified } from '@/redux/slices/formSlice';
-import { unwrapResult } from '@reduxjs/toolkit';
-import { useGetSavedFormMutation, useRemoveSavedFormMutation } from '@/redux/apis/formApis';
+import { useBranding } from "@/hooks/BrandingContext";
+import { FaCheck } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import Button from "../shared/small/Button";
+import { useDispatch, useSelector } from "react-redux";
+import { addSavedFormData, updateEmailVerified } from "@/redux/slices/formSlice";
+import { unwrapResult } from "@reduxjs/toolkit";
+import { useGetSavedFormMutation, useRemoveSavedFormMutation } from "@/redux/apis/formApis";
 
 function Draft({ forms }) {
   const dispatch = useDispatch();
-  const { emailVerified } = useSelector(state => state.form);
+  const { emailVerified } = useSelector((state) => state.form);
   const navigate = useNavigate();
   const { logo } = useBranding();
   const [getSavedFormData] = useGetSavedFormMutation();
@@ -24,7 +24,7 @@ function Draft({ forms }) {
         const action = await dispatch(addSavedFormData(savedData || []));
         unwrapResult(action);
         if (!savedData?.company_lookup_data) {
-          console.log('saved data is ,', savedData);
+          console.log("saved data is ,", savedData);
           return navigate(`/verification?formid=${formId}`);
         } else {
           return navigate(`/application-form/${brandingName}/${formId}`);
@@ -33,7 +33,7 @@ function Draft({ forms }) {
         return navigate(`/verification?formid=${formId}`);
       }
     } catch (error) {
-      console.log('error while getting saved data', error);
+      console.log("error while getting saved data", error);
       return navigate(`/verification?formid=${formId}`);
     }
   };
@@ -43,7 +43,7 @@ function Draft({ forms }) {
       const res = await removeSavedForm({ formId: formId }).unwrap();
       if (res.success) await getSavedData(formId, brandingName);
     } catch (error) {
-      console.log('error while getting saved data', error);
+      console.log("error while getting saved data", error);
       return navigate(`/verification?formid=${formId}`);
     }
   };
@@ -56,7 +56,7 @@ function Draft({ forms }) {
           return (
             <div
               key={index}
-              className="relative flex min-w-0 flex-col rounded-[8px] border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
+              className="relative flex min-w-0 flex-col rounded-xl border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
             >
               <img
                 src={form?.branding?.selectedLogo || logo}
@@ -83,7 +83,7 @@ function Draft({ forms }) {
                 <div className="flex items-center gap-1 md:gap-2">
                   <FaCheck className="text-primary" />
                   <span>{form?.sections?.length} form sections</span>
-                </div>{' '}
+                </div>{" "}
                 <div className="flex items-center gap-1 md:gap-2">
                   <FaCheck className="text-primary" />
                   <span>AI-assisted completion available</span>
@@ -92,11 +92,11 @@ function Draft({ forms }) {
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
                 <span className="text-gray-500">Applicants: {form?.sections?.length}</span>
                 <span className="text-gray-500">
-                  Created:{' '}
-                  {new Date(form?.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
+                  Created:{" "}
+                  {new Date(form?.createdAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
                   })}
                 </span>
               </div>
@@ -108,13 +108,13 @@ function Draft({ forms }) {
                     backgroundColor: colors?.primary,
                     borderColor: colors?.primary,
                     color: colors?.buttonTextPrimary,
-                    transition: 'all 0.3s ease',
+                    transition: "all 0.3s ease",
                   }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.opacity = '0.6';
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = "0.6";
                   }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.opacity = '1';
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = "1";
                   }}
                 />
                 <Button
@@ -124,13 +124,13 @@ function Draft({ forms }) {
                     backgroundColor: colors?.primary,
                     borderColor: colors?.primary,
                     color: colors?.buttonTextPrimary,
-                    transition: 'all 0.3s ease',
+                    transition: "all 0.3s ease",
                   }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.opacity = '0.6';
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = "0.6";
                   }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.opacity = '1';
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = "1";
                   }}
                 />
               </div>

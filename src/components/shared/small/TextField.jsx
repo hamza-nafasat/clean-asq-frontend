@@ -43,6 +43,7 @@ const TextField = ({
   required = false,
   rows,
   cols,
+  labelCs = "",
   textAreaHeight = "45px",
   placeholder,
   ...rest
@@ -85,7 +86,9 @@ const TextField = ({
   if (type === "textarea")
     return (
       <div className={`input-box flex w-full flex-col items-start ${className}`}>
-        {label && <h4 className="text-textPrimary text-base font-medium lg:text-lg">{label}</h4>}
+        {label && (
+          <h4 className={`text-textPrimary text-base font-medium lg:text-lg ${labelCs && labelCs}`}>{label}</h4>
+        )}
 
         <div className={`relative w-full ${label ? "mt-2" : ""}`}>
           {leftIcon && (
@@ -93,7 +96,6 @@ const TextField = ({
           )}
 
           <textarea
-            {...rest}
             onChange={(e) => {
               const val = type === "date" ? normalizeDate(e.target.value) : e.target.value;
               onChange?.({ target: { name, value: val } });
@@ -110,6 +112,7 @@ const TextField = ({
             className={`${cn} relative min-h-[${textAreaHeight}]! w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:text-base $ ${
               leftIcon ? "pl-10" : ""
             } ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
+            {...rest}
           />
 
           {rightIcon && (
@@ -130,7 +133,7 @@ const TextField = ({
   // -----------------------------
   return (
     <div className={`input-box flex w-full flex-col items-start ${className}`}>
-      {label && <h4 className="text-textPrimary text-base font-medium lg:text-lg">{label}</h4>}
+      {label && <h4 className={`text-textPrimary text-base font-medium lg:text-lg ${labelCs && labelCs}`}>{label}</h4>}
 
       <div className={`relative w-full ${label ? "mt-2" : ""}`}>
         {leftIcon && (
@@ -165,7 +168,6 @@ const TextField = ({
           </div>
         ) : (
           <input
-            {...rest}
             name={name}
             disabled={disabled}
             placeholder={placeholder}
@@ -183,6 +185,7 @@ const TextField = ({
               onChange?.({ target: { name, value: val } });
             }}
             className={`${cn} relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${leftIcon ? "pl-10" : ""} ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""} `}
+            {...rest}
           />
         )}
 

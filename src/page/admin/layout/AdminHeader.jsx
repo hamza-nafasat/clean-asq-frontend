@@ -1,17 +1,17 @@
 // import { Button } from '@/components/ui/button';
-import { useLogoutMutation } from '@/redux/apis/authApis';
-import { userNotExist } from '@/redux/slices/authSlice';
-import { useEffect, useRef, useState } from 'react';
-import { HiChevronDown } from 'react-icons/hi';
-import { IoChevronForwardOutline, IoLogOutOutline } from 'react-icons/io5';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom'; // or 'next/link' if using Next.js
-import { toast } from 'react-toastify';
-import { Applications } from '@/assets/svgs/icon';
+import { useLogoutMutation } from "@/redux/apis/authApis";
+import { userNotExist } from "@/redux/slices/authSlice";
+import { useEffect, useRef, useState } from "react";
+import { HiChevronDown } from "react-icons/hi";
+import { IoChevronForwardOutline, IoLogOutOutline } from "react-icons/io5";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom"; // or 'next/link' if using Next.js
+import { toast } from "react-toastify";
+import { Applications } from "@/assets/svgs/icon";
 
-import CustomLoading from '@/components/shared/small/CustomLoading';
-import { useBranding } from '@/hooks/BrandingContext';
-import { HiMenu } from 'react-icons/hi';
+import CustomLoading from "@/components/shared/small/CustomLoading";
+import { useBranding } from "@/hooks/BrandingContext";
+import { HiMenu } from "react-icons/hi";
 
 function AdminHeader({ setSidebarOpen }) {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ function AdminHeader({ setSidebarOpen }) {
   const [loadingTime, setLoadingTime] = useState(500);
 
   const profileOpenHandler = () => setIsProfileOpen((prev) => !prev);
-  const isGuest = !user?._id || user?.role?.name == 'guest';
+  const isGuest = !user?._id || user?.role?.name == "guest";
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoadingTime(0);
@@ -33,9 +33,9 @@ function AdminHeader({ setSidebarOpen }) {
 
   const handleLogoClick = () => {
     if (isGuest) {
-      navigate('/submission');
+      navigate("/submission");
     } else {
-      navigate('/');
+      navigate("/");
     }
   };
   if (isGuest && loadingTime) return <CustomLoading />;
@@ -79,28 +79,26 @@ const GuestHeader = ({
   isGuest,
   setIsProfileOpen,
   handleLogoClick,
-  logo,
 }) => {
+  const { logo, appLogoMaxWidth, appLogoMaxHeight } = useBranding();
   return (
     <div className="bg-header flex min-h-20 items-center justify-between gap-8 rounded-md p-2 shadow">
       {/* when not header target center  */}
-      {headerAlignment !== 'center' ? (
+      {headerAlignment !== "center" ? (
         <>
           {/* left side  */}
-          {headerAlignment == 'left' ? (
+          {headerAlignment == "left" ? (
             <div className={`my-4 flex w-[300px] items-center`}>
               <img
                 onClick={handleLogoClick}
-                src={logo || ''}
+                src={logo || ""}
                 alt="Logo"
-                className={`object-contain ${'h-[100px] max-h-[200px] w-auto max-w-[300px]'} } cursor-pointer!`}
+                className={`object-contain h-full max-h-[${appLogoMaxHeight}px] w-auto max-w-[${appLogoMaxWidth}px] cursor-pointer!`}
                 referrerPolicy="no-referrer"
               />
             </div>
           ) : (
-            <div
-              className={`flex w-[300px] items-center gap-4 rounded-bl-[20px] px-6 py-2 ${user ? 'bg-white' : ''}`}
-            >
+            <div className={`flex w-[300px] items-center gap-4 rounded-bl-[20px] px-6 py-2 ${user ? "bg-white" : ""}`}>
               {user && (
                 <div className="relative flex items-center gap-2">
                   <div className="hidden items-center gap-2 md:flex">
@@ -112,8 +110,7 @@ const GuestHeader = ({
 
                     <div>
                       <h6 className="text-gray-800  text-sm font-semibold">
-                        {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''}{' '}
-                        {user?.lastName}
+                        {user?.firstName} {user?.middleName ? user?.middleName + " " : ""} {user?.lastName}
                       </h6>
                       <p className="text-gray-600 text-xs">{user?.email}</p>
                     </div>
@@ -122,14 +119,14 @@ const GuestHeader = ({
                   <div
                     onClick={profileOpenHandler}
                     ref={profileRef}
-                    className={`cursor-pointer transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`}
+                    className={`cursor-pointer transition-transform duration-300 ${isProfileOpen ? "rotate-180" : ""}`}
                   >
                     <HiChevronDown size={20} />
                   </div>
 
                   {/* Dropdown */}
                   <div
-                    className={`custom-scroll absolute top-[45px] right-0 z-10 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? 'opacity-100' : 'invisible opacity-0'}`}
+                    className={`custom-scroll absolute top-[45px] right-0 z-10 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? "opacity-100" : "invisible opacity-0"}`}
                   >
                     <Profile isGuest={isGuest} setIsProfileOpen={setIsProfileOpen} />
                   </div>
@@ -138,15 +135,11 @@ const GuestHeader = ({
             </div>
           )}
           {/* center side  */}
-          {formHeaderText && (
-            <h6 className="text-header-text max-w-3xl text-2xl font-semibold">{formHeaderText}</h6>
-          )}
+          {formHeaderText && <h6 className="text-header-text max-w-3xl text-2xl font-semibold">{formHeaderText}</h6>}
 
           {/* right side  */}
-          {headerAlignment == 'left' ? (
-            <div
-              className={`flex w-[300px] items-center gap-4 rounded-bl-[20px] px-6 py-2 ${user ? 'bg-white' : ''}`}
-            >
+          {headerAlignment == "left" ? (
+            <div className={`flex w-[300px] items-center gap-4 rounded-bl-[20px] px-6 py-2 ${user ? "bg-white" : ""}`}>
               {user && (
                 <div className="relative flex items-center gap-2">
                   <div className="hidden items-center gap-2 md:flex">
@@ -158,8 +151,7 @@ const GuestHeader = ({
 
                     <div>
                       <h6 className="text-sm font-semibold text-gray-800">
-                        {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''}{' '}
-                        {user?.lastName}
+                        {user?.firstName} {user?.middleName ? user?.middleName + " " : ""} {user?.lastName}
                       </h6>
                       <p className="text-xs text-gray-600">{user?.email}</p>
                     </div>
@@ -168,14 +160,14 @@ const GuestHeader = ({
                   <div
                     onClick={profileOpenHandler}
                     ref={profileRef}
-                    className={`cursor-pointer transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`}
+                    className={`cursor-pointer transition-transform duration-300 ${isProfileOpen ? "rotate-180" : ""}`}
                   >
                     <HiChevronDown size={20} />
                   </div>
 
                   {/* Dropdown */}
                   <div
-                    className={`custom-scroll absolute top-[45px] right-0 z-10 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? 'opacity-100' : 'invisible opacity-0'}`}
+                    className={`custom-scroll absolute top-[45px] right-0 z-10 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? "opacity-100" : "invisible opacity-0"}`}
                   >
                     <Profile isGuest={isGuest} setIsProfileOpen={setIsProfileOpen} />
                   </div>
@@ -186,9 +178,9 @@ const GuestHeader = ({
             <div className={`my-4 flex w-[300px] items-center`}>
               <img
                 onClick={handleLogoClick}
-                src={logo || ''}
+                src={logo || ""}
                 alt="Logo"
-                className={`object-contain ${'h-[100px] max-h-[200px] w-auto max-w-[300px]'} } cursor-pointer!`}
+                className={`object-contain h-full max-h-[${appLogoMaxHeight}px] w-auto max-w-[${appLogoMaxWidth}px] cursor-pointer!`}
                 referrerPolicy="no-referrer"
               />
             </div>
@@ -203,18 +195,16 @@ const GuestHeader = ({
           <div className={`my-4 flex max-w-3xl flex-col items-center`}>
             <img
               onClick={handleLogoClick}
-              src={logo || ''}
+              src={logo || ""}
               alt="Logo"
-              className={`object-contain ${'h-[100px] max-h-[200px] w-auto max-w-[300px]'} } cursor-pointer!`}
+              className={`object-contain h-full max-h-[${appLogoMaxHeight}px] w-auto max-w-[${appLogoMaxWidth}px] cursor-pointer!`}
               referrerPolicy="no-referrer"
             />
             <h6 className="text-xl font-semibold text-gray-800">{formHeaderText}</h6>
           </div>
 
           {/* right side  */}
-          <div
-            className={`mx-6 flex w-[300px] items-center gap-4 rounded-bl-[20px] p-2 ${user ? 'bg-white' : ''}`}
-          >
+          <div className={`mx-6 flex w-[300px] items-center gap-4 rounded-bl-[20px] p-2 ${user ? "bg-white" : ""}`}>
             {user && (
               <div className="relative flex items-center gap-2">
                 <div className="hidden items-center gap-2 md:flex">
@@ -226,8 +216,7 @@ const GuestHeader = ({
 
                   <div>
                     <h6 className="text-sm font-semibold text-gray-800">
-                      {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''}{' '}
-                      {user?.lastName}
+                      {user?.firstName} {user?.middleName ? user?.middleName + " " : ""} {user?.lastName}
                     </h6>
                     <p className="text-xs text-gray-600">{user?.email}</p>
                   </div>
@@ -236,14 +225,14 @@ const GuestHeader = ({
                 <div
                   onClick={profileOpenHandler}
                   ref={profileRef}
-                  className={`cursor-pointer transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`}
+                  className={`cursor-pointer transition-transform duration-300 ${isProfileOpen ? "rotate-180" : ""}`}
                 >
                   <HiChevronDown size={20} />
                 </div>
 
                 {/* Dropdown */}
                 <div
-                  className={`custom-scroll absolute top-[45px] right-0 z-10 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? 'opacity-100' : 'invisible opacity-0'}`}
+                  className={`custom-scroll absolute top-[45px] right-0 z-10 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? "opacity-100" : "invisible opacity-0"}`}
                 >
                   <Profile isGuest={isGuest} setIsProfileOpen={setIsProfileOpen} />
                 </div>
@@ -269,10 +258,7 @@ const UserHeader = ({
     <div className="bg-header flex min-h-20 items-center justify-between rounded-md p-2 shadow">
       {/* Hamburger Icon (mobile only) */}
       <div className="flex w-full items-center gap-2">
-        <button
-          className="rounded-md p-2 hover:bg-gray-100 lg:hidden"
-          onClick={() => setSidebarOpen(true)}
-        >
+        <button className="rounded-md p-2 hover:bg-gray-100 lg:hidden" onClick={() => setSidebarOpen(true)}>
           <HiMenu size={24} className="text-gray-800" />
         </button>
         <h1 className="text-header-text text-lg font-semibold">
@@ -291,8 +277,7 @@ const UserHeader = ({
 
               <div>
                 <h6 className="text-headerText  text-sm font-semibold">
-                  {user?.firstName} {user?.middleName ? user?.middleName + ' ' : ''}{' '}
-                  {user?.lastName}
+                  {user?.firstName} {user?.middleName ? user?.middleName + " " : ""} {user?.lastName}
                 </h6>
                 <p className="text-headerText text-xs">{user?.email}</p>
               </div>
@@ -301,14 +286,14 @@ const UserHeader = ({
             <div
               onClick={profileOpenHandler}
               ref={profileRef}
-              className={`cursor-pointer transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`}
+              className={`cursor-pointer transition-transform duration-300 ${isProfileOpen ? "rotate-180" : ""}`}
             >
               <HiChevronDown size={20} />
             </div>
 
             {/* Dropdown */}
             <div
-              className={`custom-scroll absolute top-[45px] right-0 z-10 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? 'opacity-100' : 'invisible opacity-0'}`}
+              className={`custom-scroll absolute top-[45px] right-0 z-10 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? "opacity-100" : "invisible opacity-0"}`}
             >
               <Profile isGuest={isGuest} setIsProfileOpen={setIsProfileOpen} />
             </div>
@@ -330,12 +315,12 @@ const Profile = ({ isGuest, setIsProfileOpen }) => {
       if (res.success) {
         await dispatch(userNotExist());
         toast.success(res.message);
-        return navigate('/login');
+        return navigate("/login");
       }
       setIsProfileOpen(false);
     } catch (error) {
-      console.log('error while logging out', error);
-      toast.error(error?.data?.message || 'Error while logging out');
+      console.log("error while logging out", error);
+      toast.error(error?.data?.message || "Error while logging out");
     }
   };
   return (
@@ -362,7 +347,7 @@ const Profile = ({ isGuest, setIsProfileOpen }) => {
 
       <div
         onClick={logoutHandler}
-        className={`flex cursor-pointer items-center justify-between gap-4 rounded-b-md bg-white px-2 py-2 hover:bg-[#b6feef] ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
+        className={`flex cursor-pointer items-center justify-between gap-4 rounded-b-md bg-white px-2 py-2 hover:bg-[#b6feef] ${isLoading ? "cursor-not-allowed opacity-50" : ""}`}
       >
         <h6 className={`text-[13px] font-medium`}>Logout</h6>
         <IoLogOutOutline fontSize={18} />
