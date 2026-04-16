@@ -26,6 +26,11 @@ const useApplyBranding = ({ formId }) => {
     setFooterText,
     setHighlightingColor,
     setApplicationFooterText,
+    setApplicationFooterTextSize,
+    setAppHeaderPadding,
+    setAppFooterPadding,
+    setAppLogoMaxWidth,
+    setAppLogoMaxHeight,
   } = useBranding();
 
   const { data: form, isLoading } = useGetSingleFormQueryQuery({ _id: formId }, { skip: !formId });
@@ -52,6 +57,12 @@ const useApplyBranding = ({ formId }) => {
         setHeaderText(formBranding?.colors?.headerText);
         setFooterText(formBranding?.colors?.footerText);
         setApplicationFooterText(formBranding?.applicationFooterText);
+        if (formBranding?.applicationFooterTextSize)
+          setApplicationFooterTextSize(formBranding?.applicationFooterTextSize);
+        if (formBranding?.appHeaderPadding) setAppHeaderPadding(formBranding?.appHeaderPadding);
+        if (formBranding?.appFooterPadding) setAppFooterPadding(formBranding?.appFooterPadding);
+        if (formBranding?.appLogoMaxWidth) setAppLogoMaxWidth(formBranding?.appLogoMaxWidth);
+        if (formBranding?.appLogoMaxHeight) setAppLogoMaxHeight(formBranding?.appLogoMaxHeight);
       }
       if (formBranding?.logos) setLogo(formBranding?.selectedLogo);
       if (formBranding?.fontFamily) setFontFamily(formBranding?.fontFamily);
@@ -76,6 +87,11 @@ const useApplyBranding = ({ formId }) => {
       setHeaderText,
       setFooterText,
       setApplicationFooterText,
+      setApplicationFooterTextSize,
+      setAppHeaderPadding,
+      setAppFooterPadding,
+      setAppLogoMaxWidth,
+      setAppLogoMaxHeight,
     ],
   );
 

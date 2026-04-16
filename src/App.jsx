@@ -60,6 +60,8 @@ function App() {
     setHeaderText,
     setFooterText,
     setApplicationFooterText,
+    setAppLogoMaxWidth,
+    setAppLogoMaxHeight,
   } = useBranding();
 
   const getUserAndSetBranding = useCallback(async () => {
@@ -87,6 +89,8 @@ function App() {
           setHeaderText(formBranding.colors.headerText);
           setFooterText(formBranding.colors.footerText);
           setApplicationFooterText(formBranding.applicationFooterText);
+          setAppLogoMaxWidth(formBranding.appLogoMaxWidth);
+          setAppLogoMaxHeight(formBranding.appLogoMaxHeight);
         }
       } else {
         dispatch(userNotExist());
@@ -118,6 +122,8 @@ function App() {
     setHeaderText,
     setFooterText,
     setApplicationFooterText,
+    setAppLogoMaxWidth,
+    setAppLogoMaxHeight,
   ]);
 
   useEffect(() => {

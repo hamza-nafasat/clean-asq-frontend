@@ -23,6 +23,7 @@ export default function ApplicationsCard() {
   const navigate = useNavigate();
   const buttonRef = useRef(null);
   const menuButtonRef = useRef(null);
+
   const [actionMenu, setActionMenu] = useState(null);
   const [clientQuery, setClientQuery] = useState("");
   const [nameQuery, setNameQuery] = useState("");
@@ -45,6 +46,7 @@ export default function ApplicationsCard() {
   const [locationModal, setLocationModal] = useState(false);
   const { logo } = useBranding();
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
+  const [isDeletingForm, setIsDeletingForm] = useState(false);
   const [formLocationData, setFormLocationData] = useState({
     title: "",
     subtitle: "",
@@ -54,19 +56,62 @@ export default function ApplicationsCard() {
     formatingTextInstructions: "",
   });
   const [deleteForm] = useDeleteSingleFormMutation();
+  const [updateForm] = useUpdateFormMutation();
+  const [renameModal, setRenameModal] = useState(false);
+  const [pendingFormName, setPendingFormName] = useState("");
+
+  const finalizeFormCreation = async (res) => {
+    if (res.data?._id && res.data?.name) {
+      await updateForm({ _id: res.data._id, data: { headerText: res.data.name } }).unwrap();
+      await refetch();
+    }
+  };
 
   const createFormWithCsvHandler = async () => {
-    console.log("file", file);
     if (!file) return toast.error("Please select a file");
     try {
       const formData = new FormData();
       formData.append("file", file);
       const res = await createForm(formData).unwrap();
-      if (res.success) toast.success(res.message);
+      if (res.success) {
+        toast.success(res.message);
+        await finalizeFormCreation(res);
+      }
+    } catch (error) {
+      console.error("Error creating form:", error);
+      const isDuplicate =
+        error?.status === 409 ||
+        error?.data?.message?.toLowerCase().includes("already") ||
+        error?.data?.message?.toLowerCase().includes("duplicate") ||
+        error?.data?.message?.toLowerCase().includes("exists");
+      if (isDuplicate) {
+        const nameFromError = error?.data?.existingName || error?.data?.name || "";
+        setPendingFormName(nameFromError);
+        setRenameModal(true);
+      } else {
+        toast.error(error?.data?.message || "Failed to create form");
+        setCreateFormModal(false);
+      }
+    }
+  };
+
+  const createFormWithNameOverrideHandler = async () => {
+    if (!pendingFormName.trim()) return toast.error("Please enter a form name");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("name", pendingFormName.trim());
+      const res = await createForm(formData).unwrap();
+      if (res.success) {
+        toast.success(res.message);
+        await finalizeFormCreation(res);
+      }
     } catch (error) {
       console.error("Error creating form:", error);
       toast.error(error?.data?.message || "Failed to create form");
     } finally {
+      setRenameModal(false);
+      setPendingFormName("");
       setCreateFormModal(false);
     }
   };
@@ -115,6 +160,7 @@ export default function ApplicationsCard() {
   const handleDeleteForm = async () => {
     try {
       if (!deleteConfirmation) return;
+      setIsDeletingForm(true);
       const res = await deleteForm({ _id: deleteConfirmation }).unwrap();
       if (res?.success) {
         await refetch();
@@ -125,6 +171,7 @@ export default function ApplicationsCard() {
       toast.error(error?.data?.message || "Failed to delete form");
     } finally {
       setDeleteConfirmation(null);
+      setIsDeletingForm(false);
     }
   };
 
@@ -135,7 +182,7 @@ export default function ApplicationsCard() {
         isOpen={!!deleteConfirmation}
         onClose={() => setDeleteConfirmation(null)}
         onConfirm={handleDeleteForm}
-        isLoading={isLoading}
+        isLoading={isLoading || isDeletingForm}
         title="Delete Form"
         message={`Are you sure you want to delete this form?`}
         confirmButtonText="Delete"
@@ -195,6 +242,45 @@ export default function ApplicationsCard() {
               label={"Create "}
               onClick={createFormWithCsvHandler}
             />
+          </div>
+        </Modal>
+      )}
+      {renameModal && (
+        <Modal
+          onClose={() => {
+            setRenameModal(false);
+            setCreateFormModal(false);
+            setPendingFormName("");
+          }}
+          title="Form Name Already Exists"
+        >
+          <div className="flex flex-col gap-4 p-4">
+            <p className="text-sm text-gray-600">
+              A form with this name already exists. Please enter a different name to continue.
+            </p>
+            <TextField
+              label="Form Name"
+              placeholder="Enter a unique form name"
+              value={pendingFormName}
+              onChange={(e) => setPendingFormName(e.target.value)}
+              name="form-name-override"
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="secondary"
+                label="Cancel"
+                onClick={() => {
+                  setRenameModal(false);
+                  setCreateFormModal(false);
+                  setPendingFormName("");
+                }}
+              />
+              <Button
+                label="Create"
+                className={`${(!pendingFormName.trim() || isLoading) && "pointer-events-none cursor-not-allowed opacity-50"}`}
+                onClick={createFormWithNameOverrideHandler}
+              />
+            </div>
           </div>
         </Modal>
       )}
@@ -276,11 +362,14 @@ export default function ApplicationsCard() {
               className="relative flex min-w-0 flex-col rounded-xl border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
             >
               <div className="flex justify-between">
-                <div className="flex h-[100px] max-h-[100px] w-[250px] max-w-[250px] items-start!">
+                <div
+                  className="flex h-[100px] max-h-[100px] w-[250px] max-w-[250px] items-center justify-center rounded-lg px-3"
+                  style={{ backgroundColor: form?.branding?.colors?.headerBackground || "#f3f4f6" }}
+                >
                   <img
                     src={form?.branding?.selectedLogo || logo}
                     alt="logo"
-                    className="flex h-full max-w-full object-contain object-center"
+                    className="h-full max-w-full object-contain"
                     referrerPolicy="no-referrer"
                   />
                 </div>
@@ -356,7 +445,7 @@ export default function ApplicationsCard() {
                 <div className="mt-4 min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <h2 className="text-base leading-tight font-bold wrap-break-word text-gray-700 sm:text-lg md:text-2xl">
-                      {form?.name}
+                      {form?.headerText || form?.name}
                     </h2>
                   </div>
                   {/* <div className="mt-1 truncate text-xs text-gray-500 sm:text-sm">Created from CSV import</div> */}
@@ -413,11 +502,12 @@ export default function ApplicationsCard() {
 export const FormConfigurationModal = ({ form, refetch, setModal }) => {
   const [redirectUrl, setRedirectUrl] = useState(form?.redirectUrl || "");
   const [headerText, setHeaderText] = useState(form?.headerText || "");
+  const [headerTextSize, setHeaderTextSize] = useState(form?.headerTextSize || 24);
   const [updateForm] = useUpdateFormMutation();
 
   const handleFormLocationUpdate = async () => {
     try {
-      const res = await updateForm({ _id: form?._id, data: { redirectUrl, headerText } }).unwrap();
+      const res = await updateForm({ _id: form?._id, data: { redirectUrl, headerText, headerTextSize } }).unwrap();
       if (res?.success) {
         await refetch();
         toast?.success(res?.message || "Form updated successfully");
@@ -449,14 +539,28 @@ export const FormConfigurationModal = ({ form, refetch, setModal }) => {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <TextField
-            label="Header Text"
-            id="header-text"
-            placeholder="Enter header text"
-            value={headerText}
-            onChange={(e) => setHeaderText(e.target.value)}
-            name="redirect-url"
-          />
+          <div className="flex items-end gap-3">
+            <div className="flex-1">
+              <TextField
+                label="Header Text"
+                id="header-text"
+                placeholder="Enter header text"
+                value={headerText}
+                onChange={(e) => setHeaderText(e.target.value)}
+                name="header-text"
+              />
+            </div>
+            <div className="flex flex-col gap-1 pb-1">
+              <TextField
+                type="number"
+                min={8}
+                label={"Size (px)"}
+                max={72}
+                value={headerTextSize}
+                onChange={(e) => setHeaderTextSize(Number(e.target.value))}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Format Text Label and Button */}

@@ -60,6 +60,8 @@ const Brandings = () => {
     setFooterText,
     setHighlightingColor,
     setApplicationFooterText,
+    setAppLogoMaxHeight,
+    setAppLogoMaxWidth,
   } = useBranding();
 
   const ButtonsForThreeDot = [
@@ -135,6 +137,8 @@ const Brandings = () => {
               setFooterText(userBranding?.footerText);
               setHighlightingColor(userBranding?.highlightingColor);
               setApplicationFooterText(userBranding?.applicationFooterText);
+              setAppLogoMaxWidth(userBranding?.appLogoMaxWidth);
+              setAppLogoMaxHeight(userBranding?.appLogoMaxHeight);
             }
           }
           await getUserProfile()
@@ -245,17 +249,20 @@ const Brandings = () => {
         {/* Create Branding
         </Button> */}
       </div>
-      <div className="mt-5 w-full lg:w-[calc(100vw-250px)] xl:w-full">
+      <div className="mt-5 w-full h-full overflow-y-auto lg:w-[calc(100vw-350px)]! xl:w-full">
         {/* <div className="min-w-[500px]"> */}
         <DataTable
           data={brandings?.data || []}
           columns={columns()}
           customStyles={tableStyles}
-          pagination
-          highlightOnHover
           progressPending={isLoading}
           noDataComponent="No Brandings Found"
           className="rounded-md!"
+          highlightOnHover
+          fixedHeader
+          persistTableHead
+          responsive
+          pagination
         />
         {/* </div> */}
       </div>

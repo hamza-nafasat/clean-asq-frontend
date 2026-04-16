@@ -359,9 +359,9 @@ const ApplicantsTable = ({
         <DataTable
           columns={columns}
           data={filteredApplicants}
-          highlightOnHover
           progressPending={isLoading}
           noDataComponent="No applicants found"
+          highlightOnHover
           fixedHeader
           persistTableHead
           responsive

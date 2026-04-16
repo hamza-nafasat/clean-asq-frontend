@@ -16,10 +16,10 @@ import { HiMenu } from "react-icons/hi";
 function AdminHeader({ setSidebarOpen }) {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  const { formHeaderText } = useSelector((state) => state.form);
+  const { formHeaderText, formHeaderTextSize } = useSelector((state) => state.form);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef(null);
-  const { logo, headerAlignment } = useBranding();
+  const { logo, headerAlignment, appHeaderPadding, appLogoMaxWidth, appLogoMaxHeight } = useBranding();
   const [loadingTime, setLoadingTime] = useState(500);
 
   const profileOpenHandler = () => setIsProfileOpen((prev) => !prev);
@@ -50,6 +50,10 @@ function AdminHeader({ setSidebarOpen }) {
       isGuest={isGuest}
       handleLogoClick={handleLogoClick}
       logo={logo}
+      appHeaderPadding={appHeaderPadding}
+      formHeaderTextSize={formHeaderTextSize}
+      appLogoMaxWidth={appLogoMaxWidth}
+      appLogoMaxHeight={appLogoMaxHeight}
     />
   ) : (
     <UserHeader
@@ -79,10 +83,17 @@ const GuestHeader = ({
   isGuest,
   setIsProfileOpen,
   handleLogoClick,
+  logo,
+  appHeaderPadding,
+  formHeaderTextSize,
+  appLogoMaxWidth,
+  appLogoMaxHeight,
 }) => {
-  const { logo, appLogoMaxWidth, appLogoMaxHeight } = useBranding();
   return (
-    <div className="bg-header flex min-h-20 items-center justify-between gap-8 rounded-md p-2 shadow">
+    <div
+      className="bg-header flex min-h-20 items-center justify-between gap-8 rounded-md shadow"
+      style={{ padding: `${appHeaderPadding ?? 8}px 8px` }}
+    >
       {/* when not header target center  */}
       {headerAlignment !== "center" ? (
         <>
@@ -93,7 +104,8 @@ const GuestHeader = ({
                 onClick={handleLogoClick}
                 src={logo || ""}
                 alt="Logo"
-                className={`object-contain h-full max-h-[${appLogoMaxHeight}px] w-auto max-w-[${appLogoMaxWidth}px] cursor-pointer!`}
+                className="w-auto object-contain cursor-pointer"
+                style={{ maxWidth: `${appLogoMaxWidth ?? 300}px`, maxHeight: `${appLogoMaxHeight ?? 100}px` }}
                 referrerPolicy="no-referrer"
               />
             </div>
@@ -135,7 +147,14 @@ const GuestHeader = ({
             </div>
           )}
           {/* center side  */}
-          {formHeaderText && <h6 className="text-header-text max-w-3xl text-2xl font-semibold">{formHeaderText}</h6>}
+          {formHeaderText && (
+            <h6
+              className="text-header-text max-w-3xl font-semibold"
+              style={{ fontSize: `${formHeaderTextSize || 24}px` }}
+            >
+              {formHeaderText}
+            </h6>
+          )}
 
           {/* right side  */}
           {headerAlignment == "left" ? (
@@ -180,7 +199,8 @@ const GuestHeader = ({
                 onClick={handleLogoClick}
                 src={logo || ""}
                 alt="Logo"
-                className={`object-contain h-full max-h-[${appLogoMaxHeight}px] w-auto max-w-[${appLogoMaxWidth}px] cursor-pointer!`}
+                className="w-auto object-contain cursor-pointer"
+                style={{ maxWidth: `${appLogoMaxWidth ?? 300}px`, maxHeight: `${appLogoMaxHeight ?? 100}px` }}
                 referrerPolicy="no-referrer"
               />
             </div>
@@ -197,10 +217,13 @@ const GuestHeader = ({
               onClick={handleLogoClick}
               src={logo || ""}
               alt="Logo"
-              className={`object-contain h-full max-h-[${appLogoMaxHeight}px] w-auto max-w-[${appLogoMaxWidth}px] cursor-pointer!`}
+              className="w-auto object-contain cursor-pointer"
+              style={{ maxWidth: `${appLogoMaxWidth ?? 300}px`, maxHeight: `${appLogoMaxHeight ?? 100}px` }}
               referrerPolicy="no-referrer"
             />
-            <h6 className="text-xl font-semibold text-gray-800">{formHeaderText}</h6>
+            <h6 className="font-semibold text-gray-800" style={{ fontSize: `${formHeaderTextSize || 24}px` }}>
+              {formHeaderText}
+            </h6>
           </div>
 
           {/* right side  */}

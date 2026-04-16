@@ -6,7 +6,7 @@ import FontPicker from "./FontPicker";
 import { LoaderIcon } from "lucide-react";
 import TextField from "@/components/shared/small/TextField";
 
-export const ColorInput = ({ label, color, setColor, setImage, image }) => {
+export const ColorInput = ({ label, color, setColor, setImage, image, hideLabel = false }) => {
   const colorPickerDiv = useRef(null);
   const [ssLoading, setSSLoading] = useState(false);
   const [showSSButton, setShowSSButton] = useState(false);
@@ -19,13 +19,13 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
       console.log(`[ColorInput] 🎨 Color changed to:`, newColor);
 
       setTimeout(async () => {
-        const selector =
-          "#root > div:nth-child(2) > section > section > div.w-full.flex-1.items-center.justify-center > main > div > div:nth-child(1) > div > div > #screen-shot";
+        const selector = "#screen-shot";
 
         console.log(`[ColorInput] 🔍 Trying to capture element:`, selector);
         const element = document.querySelector(selector);
         if (!element) {
           console.warn(`[ColorInput] ❌ Element not found`);
+          setSSLoading(false);
           return;
         }
 
@@ -102,12 +102,16 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
   }, []);
 
   return (
-    <div className="relative flex flex-col space-y-1">
-      <label htmlFor={label.toLowerCase().replace(/\s/g, "-") + "-color"} className="text-sm font-medium text-gray-700">
-        {label}
-      </label>
-
-      <div ref={colorPickerDiv} className="flex items-center space-x-2">
+    <div className="relative flex flex-col">
+      {!hideLabel && (
+        <label
+          htmlFor={label.toLowerCase().replace(/\s/g, "-") + "-color"}
+          className="mb-1 text-sm font-medium text-gray-700"
+        >
+          {label}
+        </label>
+      )}
+      <div ref={colorPickerDiv} className="flex items-stretch space-x-2">
         <input
           type="color"
           className="size-14 cursor-pointer appearance-none rounded-lg border-none outline-none focus:ring-0"
@@ -131,7 +135,7 @@ export const ColorInput = ({ label, color, setColor, setImage, image }) => {
             />
           </div>
         )}
-        <div className="flex h-12 w-28 items-center justify-center rounded-md border px-4 py-2 text-center text-sm shadow-sm">
+        <div className="flex h-14 w-28 items-center justify-center rounded-md border px-4 py-2 text-center text-sm shadow-sm">
           {color}
         </div>
       </div>
@@ -178,6 +182,16 @@ const BrandElementAssignment = ({
   setHeaderAlignment,
   applicationFooterText,
   setApplicationFooterText,
+  applicationFooterTextSize,
+  setApplicationFooterTextSize,
+  appHeaderPadding,
+  setAppHeaderPadding,
+  appFooterPadding,
+  setAppFooterPadding,
+  appLogoMaxWidth,
+  setAppLogoMaxWidth,
+  appLogoMaxHeight,
+  setAppLogoMaxHeight,
 }) => {
   return (
     <div className="mt-6">
@@ -185,36 +199,57 @@ const BrandElementAssignment = ({
 
       <section className="my-6 flex w-full flex-col gap-2">
         <h3 className="border-b-2 text-lg font-semibold text-gray-800">Application Header</h3>
-        <div className="flex w-full flex-wrap justify-between">
+        <div className="grid gap-x-6 gap-y-1" style={{ gridTemplateColumns: "repeat(6, max-content)" }}>
           <ColorInput
-            className="min-w-[400px]"
             setImage={setImage}
             image={image}
             label="Background"
             color={headerBackground}
             setColor={setHeaderBackground}
           />
-          <ColorInput
-            className="min-w-[400px]"
-            setImage={setImage}
-            image={image}
-            label="Text"
-            color={headerText}
-            setColor={setHeaderText}
+          <ColorInput setImage={setImage} image={image} label="Text" color={headerText} setColor={setHeaderText} />
+          <TextField
+            type="number"
+            min={0}
+            max={100}
+            labelCs="text-sm! font-base! text-gray-700!"
+            label="Padding (px)"
+            value={appHeaderPadding}
+            onChange={(e) => setAppHeaderPadding(Number(e.target.value))}
           />
-          <div className="flex max-w-[50%] flex-1">
+          <div className="w-48">
             <CustomizableSelect
+              label="Logo Alignment"
               initialValue={headerAlignment}
+              labelCs="text-sm! font-base! text-gray-700!"
               options={[
                 { option: "Left", value: "left" },
                 { option: "Center", value: "center" },
                 { option: "Right", value: "right" },
               ]}
-              label={"Logo Alignment"}
               onSelect={(value) => setHeaderAlignment(value)}
               defaultText="Choose Alignment"
+              buttonClassName="h-14"
             />
           </div>
+          <TextField
+            type="number"
+            min={20}
+            max={600}
+            label="Logo Max Width (px)"
+            labelCs="text-sm! font-base! text-gray-700!"
+            value={appLogoMaxWidth}
+            onChange={(e) => setAppLogoMaxWidth(Number(e.target.value))}
+          />
+          <TextField
+            type="number"
+            min={20}
+            max={300}
+            label="Logo Max Height (px)"
+            labelCs="text-sm! font-base! text-gray-700!"
+            value={appLogoMaxHeight}
+            onChange={(e) => setAppLogoMaxHeight(Number(e.target.value))}
+          />
         </div>
       </section>
       <section className="my-6 flex w-[70%] flex-col gap-2">
@@ -301,7 +336,7 @@ const BrandElementAssignment = ({
       </section>
       <section className="my-6 flex w-full flex-col gap-2">
         <h3 className="border-b-2 text-lg font-semibold text-gray-800">Application Footer</h3>
-        <div className="flex max-w-[50%] flex-wrap justify-between">
+        <div className="grid gap-x-6 gap-y-1" style={{ gridTemplateColumns: "repeat(3, max-content)" }}>
           <ColorInput
             setImage={setImage}
             image={image}
@@ -310,11 +345,31 @@ const BrandElementAssignment = ({
             setColor={setFooterBackground}
           />
           <ColorInput setImage={setImage} image={image} label="Text" color={footerText} setColor={setFooterText} />
-
+          <TextField
+            label="Padding (px)"
+            type="number"
+            min={0}
+            max={100}
+            labelCs="text-sm! font-base! text-gray-700!"
+            value={appFooterPadding}
+            onChange={(e) => setAppFooterPadding(Number(e.target.value))}
+          />
+        </div>
+        <div className="mt-2 grid gap-x-3 gap-y-1" style={{ gridTemplateColumns: "1fr max-content" }}>
           <TextField
             label="Application Footer Text"
+            labelCs="text-sm! font-base! text-gray-700!"
             value={applicationFooterText}
             onChange={(e) => setApplicationFooterText(e.target.value)}
+          />
+          <TextField
+            label="Size (px)"
+            type="number"
+            min={8}
+            labelCs="text-sm! font-base! text-gray-700!"
+            max={72}
+            value={applicationFooterTextSize}
+            onChange={(e) => setApplicationFooterTextSize(Number(e.target.value))}
           />
         </div>
       </section>
