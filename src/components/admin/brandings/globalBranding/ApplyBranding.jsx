@@ -1,7 +1,7 @@
-import Button from '@/components/shared/small/Button';
-import Checkbox from '@/components/shared/small/Checkbox';
-import { useGetMyAllFormsQuery } from '@/redux/apis/formApis';
-import React from 'react';
+import Button from "@/components/shared/small/Button";
+import Checkbox from "@/components/shared/small/Checkbox";
+import { useGetMyAllFormsQuery } from "@/redux/apis/formApis";
+import React from "react";
 // import Checkbox from '@/components/shared/Checkbox';
 
 function ApplyBranding({ selectedId, setSelectedId, onHome, setOnHome, brandings }) {
@@ -17,9 +17,9 @@ function ApplyBranding({ selectedId, setSelectedId, onHome, setOnHome, brandings
             required
             value={selectedId}
             className="border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
-            onChange={e => setSelectedId(e.target.value)}
+            onChange={(e) => setSelectedId(e.target.value)}
           >
-            <option value="">{'Choose an option'}</option>
+            <option value="">{"Choose an option"}</option>
             {Array.isArray(brandings)
               ? brandings?.map((option, index) => (
                   <option key={index} value={option?._id}>
@@ -37,7 +37,14 @@ function ApplyBranding({ selectedId, setSelectedId, onHome, setOnHome, brandings
         </div>
         {!brandings && (
           <div>
-            <Checkbox label="on Home" onChange={e => setOnHome(e.target.checked)} value={onHome} checked={onHome} />
+            <Checkbox
+              id="onHome"
+              name="onHome"
+              label="For Website"
+              onChange={(e) => setOnHome(e.target.checked)}
+              value={onHome}
+              checked={onHome}
+            />
           </div>
         )}
       </div>

@@ -1058,7 +1058,8 @@ const AiHelpModal = ({ aiResponse }) => {
 
     try {
       const res = await formateTextInMarkDown({
-        text: "You are an expert AI. Give an accurate HTML formatted answer to this prompt: " + updateAiPrompt,
+        text: updateAiPrompt,
+        helpText: aiResponse,
       }).unwrap();
 
       if (res.success) {

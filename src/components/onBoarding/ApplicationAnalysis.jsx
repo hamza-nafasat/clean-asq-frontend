@@ -19,12 +19,10 @@ const columns = () => [
     selector: (row) => row?.message,
     sortable: true,
     cell: (row) => (
-      <textarea
-        value={row?.message}
-        readOnly
-        className="text-textPrimary border-frameColor w-full resize-none rounded-md border bg-[#FAFBFF] p-2 text-sm"
-        rows={2}
-      />
+      <div className="text-textPrimary border-frameColor w-full resize-none rounded-md border p-2 text-sm">
+        <div dangerouslySetInnerHTML={{ __html: row?.message || "" }} />
+        {row?.error && <span className="text-red-500 text-sm">{row?.error}</span>}
+      </div>
     ),
     grow: 2,
     wrap: true,

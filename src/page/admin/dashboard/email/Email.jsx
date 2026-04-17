@@ -1,11 +1,11 @@
-import Modal from '@/components/shared/Modal';
-import Button from '@/components/shared/small/Button';
-import TextField from '@/components/shared/small/TextField';
-import React, { useState, useEffect, useRef } from 'react';
-import ReactQuill from 'react-quill-new';
-import 'react-quill-new/dist/quill.snow.css';
-import { FiMoreVertical } from 'react-icons/fi';
-import { toast } from 'react-toastify';
+import Modal from "@/components/shared/Modal";
+import Button from "@/components/shared/small/Button";
+import TextField from "@/components/shared/small/TextField";
+import React, { useState, useEffect, useRef } from "react";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
+import { FiMoreVertical } from "react-icons/fi";
+import { toast } from "react-toastify";
 import {
   useCreateEmailTemplateMutation,
   useUpdateSingleEmailTemplateMutation,
@@ -13,61 +13,65 @@ import {
   useGetAllEmailTemplatesQuery,
   useAttachTemplateToFormMutation,
   useUnAttachedFormsListQuery,
-} from '@/redux/apis/emailTemplateApis';
-import { useGetMyAllFormsQuery } from '@/redux/apis/formApis';
-import DropdownCheckbox from '@/components/shared/DropdownCheckbox';
-import CustomLoading from '@/components/shared/small/CustomLoading';
+} from "@/redux/apis/emailTemplateApis";
+import { useGetMyAllFormsQuery } from "@/redux/apis/formApis";
+import DropdownCheckbox from "@/components/shared/DropdownCheckbox";
+import CustomLoading from "@/components/shared/small/CustomLoading";
 
 const emailTypes = [
   {
-    label: 'Otp Email Template',
-    value: 'otp_email_template',
+    label: "Otp Email Template",
+    value: "otp_email_template",
   },
   {
-    label: 'Old Beneficial Owners Email Template',
-    value: 'old_beneficial_owners_email_template',
+    label: "Old Beneficial Owners Email Template",
+    value: "old_beneficial_owners_email_template",
   },
   {
-    label: 'New Beneficial Owners Email Template',
-    value: 'new_beneficial_owners_email_template',
+    label: "New Beneficial Owners Email Template",
+    value: "new_beneficial_owners_email_template",
   },
   {
-    label: 'Form Forwarded Email Template',
-    value: 'form_forwarded_email_template',
+    label: "Form Forwarded Email Template",
+    value: "form_forwarded_email_template",
+  },
+  {
+    label: "Welcome Email Template",
+    value: "welcome_email_template",
   },
 ];
 
 const quillModules = {
   toolbar: [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
-    ['bold', 'italic', 'underline', 'strike'],
-    [{ list: 'ordered' }, { list: 'bullet' }],
-    [{ script: 'sub' }, { script: 'super' }],
-    [{ indent: '-1' }, { indent: '+1' }],
-    [{ direction: 'rtl' }],
+    ["bold", "italic", "underline", "strike"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    [{ script: "sub" }, { script: "super" }],
+    [{ indent: "-1" }, { indent: "+1" }],
+    [{ direction: "rtl" }],
     [{ color: [] }, { background: [] }],
     [{ align: [] }],
-    ['link', 'image'],
-    ['clean'],
+    ["link", "image"],
+    ["clean"],
   ],
 };
 
 const quillFormats = [
-  'header',
-  'bold',
-  'italic',
-  'underline',
-  'strike',
-  'list',
-  'bullet',
-  'script',
-  'indent',
-  'direction',
-  'color',
-  'background',
-  'align',
-  'link',
-  'image',
+  "header",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "list",
+  "bullet",
+  "script",
+  "indent",
+  "direction",
+  "color",
+  "background",
+  "align",
+  "link",
+  "image",
 ];
 function Email() {
   const [viewModalData, setViewModalData] = useState(null);
@@ -75,10 +79,10 @@ function Email() {
   const { data: applicationForms } = useGetMyAllFormsQuery();
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [editData, setEditData] = useState({
-    templateName: '',
-    subject: '',
-    emailType: '',
-    body: '',
+    templateName: "",
+    subject: "",
+    emailType: "",
+    body: "",
   });
   const [isEdit, setIsEdit] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState(null);
@@ -93,12 +97,21 @@ function Email() {
 
   const templates = emailTemplates?.data;
 
-  const sedationKeywords = ['link', 'otp', 'email', 'password', 'frontEndUrl', 'recipientName', 'applicationCompanyName', 'brandCompanyName'];
+  const sedationKeywords = [
+    "link",
+    "otp",
+    "email",
+    "password",
+    "frontEndUrl",
+    "recipientName",
+    "applicationCompanyName",
+    "brandCompanyName",
+  ];
 
   <ReactQuill
-    className={`h-[200px] border ${!editData.body ? 'border-accent' : 'border-frameColor'}`}
+    className={`h-[200px] border ${!editData.body ? "border-accent" : "border-frameColor"}`}
     value={editData.body}
-    onChange={value => handleChange('body', value)}
+    onChange={(value) => handleChange("body", value)}
     modules={quillModules}
     formats={quillFormats}
     theme="snow"
@@ -109,10 +122,11 @@ function Email() {
     {sedationKeywords?.map((keyword, idx) => (
       <span
         key={idx}
-        className={`cursor-pointer rounded-md border px-2 py-1 ${editData.body.toLowerCase().includes(keyword.toLowerCase())
-          ? 'border-green-400 bg-green-100'
-          : 'border-gray-300 bg-gray-100'
-          }`}
+        className={`cursor-pointer rounded-md border px-2 py-1 ${
+          editData.body.toLowerCase().includes(keyword.toLowerCase())
+            ? "border-green-400 bg-green-100"
+            : "border-gray-300 bg-gray-100"
+        }`}
       >
         {keyword}
       </span>
@@ -120,18 +134,18 @@ function Email() {
   </div>;
 
   const handleChange = (field, value) => {
-    setEditData(prev => ({ ...prev, [field]: value }));
+    setEditData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
-    console.log('Saved Data:', editData);
+    console.log("Saved Data:", editData);
 
     try {
       const res = isEdit
         ? await updateEmailTemplate({
-          id: viewModalData?._id,
-          ...editData,
-        }).unwrap()
+            id: viewModalData?._id,
+            ...editData,
+          }).unwrap()
         : await createEmailTemplate(editData).unwrap();
 
       if (res?.success) {
@@ -140,13 +154,13 @@ function Email() {
 
       setIsEdit(false);
       setViewModalData(null);
-      setEditData({ templateName: '', subject: '', emailType: '', body: '' });
+      setEditData({ templateName: "", subject: "", emailType: "", body: "" });
     } catch (error) {
-      toast.error(error?.data?.message || 'Failed to save template');
+      toast.error(error?.data?.message || "Failed to save template");
     }
   };
 
-  const handleEdit = item => {
+  const handleEdit = (item) => {
     setIsEdit(true);
     setIsReadOnly(false);
     setViewModalData(item);
@@ -154,13 +168,13 @@ function Email() {
     setMenuOpenId(null);
   };
 
-  const handleAttachForms = item => {
+  const handleAttachForms = (item) => {
     setIsAttachFormModalOpen(true);
     setSelectedTemplate(item);
     setMenuOpenId(null);
   };
 
-  const handleView = item => {
+  const handleView = (item) => {
     setIsReadOnly(true);
     setViewModalData(item);
     setEditData(item);
@@ -168,17 +182,17 @@ function Email() {
 
   const handleCreate = () => {
     setIsReadOnly(false);
-    setEditData({ templateName: '', subject: '', emailType: '', body: '' });
+    setEditData({ templateName: "", subject: "", emailType: "", body: "" });
     setViewModalData({});
   };
 
-  const handleDelete = async item => {
+  const handleDelete = async (item) => {
     try {
       const res = await deleteEmailTemplate({ emailTemplateId: item?._id }).unwrap();
-      toast.success(res?.message || 'Deleted successfully');
+      toast.success(res?.message || "Deleted successfully");
       setMenuOpenId(null);
     } catch (error) {
-      toast.error(error?.data?.message || 'Failed to delete template');
+      toast.error(error?.data?.message || "Failed to delete template");
     }
   };
 
@@ -188,8 +202,8 @@ function Email() {
         setMenuOpenId(null);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -205,8 +219,8 @@ function Email() {
       {viewModalData && (
         <Modal
           onSave={!isReadOnly ? handleSave : () => setViewModalData(null)}
-          saveButtonText={!isReadOnly ? 'Save' : 'Close'}
-          title={isReadOnly ? 'Template Details' : viewModalData._id ? 'Edit Template' : 'Create Template'}
+          saveButtonText={!isReadOnly ? "Save" : "Close"}
+          title={isReadOnly ? "Template Details" : viewModalData._id ? "Edit Template" : "Create Template"}
           onClose={() => {
             (setViewModalData(null), setIsEdit(false));
           }}
@@ -215,21 +229,21 @@ function Email() {
             <TextField
               label="Template Name"
               value={editData.templateName}
-              onChange={e => handleChange('templateName', e.target.value)}
+              onChange={(e) => handleChange("templateName", e.target.value)}
               readOnly={isReadOnly}
-              cn={isReadOnly ? 'cursor-not-allowed' : ''}
+              cn={isReadOnly ? "cursor-not-allowed" : ""}
             />
 
             <div className="mb-4">
               <label className="text-textPrimary mb-1 block text-sm font-medium">Email Type</label>
               <select
-                name={'emailType'}
+                name={"emailType"}
                 value={editData.emailType}
-                onChange={e => handleChange('emailType', e.target.value)}
+                onChange={(e) => handleChange("emailType", e.target.value)}
                 className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
               >
                 <option value="">Choose an option</option>
-                {emailTypes?.map(opt => (
+                {emailTypes?.map((opt) => (
                   <option key={opt?.value} value={opt?.value}>
                     {opt?.label}
                   </option>
@@ -239,22 +253,22 @@ function Email() {
             <TextField
               label="Subject"
               value={editData.subject}
-              onChange={e => handleChange('subject', e.target.value)}
+              onChange={(e) => handleChange("subject", e.target.value)}
               readOnly={isReadOnly}
-              cn={isReadOnly ? 'cursor-not-allowed' : ''}
+              cn={isReadOnly ? "cursor-not-allowed" : ""}
             />
 
             <div className="custom-quill-wrapper">
               <ReactQuill
                 className="custom-quill h-[200px]"
                 value={editData.body}
-                onChange={value => handleChange('body', value)}
+                onChange={(value) => handleChange("body", value)}
                 modules={quillModules}
                 formats={quillFormats}
                 theme="snow"
                 readOnly={isReadOnly}
                 style={{
-                  '--border-color': editData.body ? 'var(--frameColor)' : 'var(--accent)',
+                  "--border-color": editData.body ? "var(--frameColor)" : "var(--accent)",
                 }}
               />
             </div>
@@ -265,11 +279,12 @@ function Email() {
                   {sedationKeywords.map((keyword, idx) => (
                     <span
                       key={idx}
-                      onClick={() => setEditData(prev => ({ ...prev, body: `${prev.body} {{${keyword}}}` }))}
-                      className={`cursor-pointer rounded-md border px-2 py-1 ${editData.body.toLowerCase().includes(keyword.toLowerCase())
-                        ? 'border-green-400 bg-green-100'
-                        : 'border-gray-300 bg-gray-100'
-                        }`}
+                      onClick={() => setEditData((prev) => ({ ...prev, body: `${prev.body} {{${keyword}}}` }))}
+                      className={`cursor-pointer rounded-md border px-2 py-1 ${
+                        editData.body.toLowerCase().includes(keyword.toLowerCase())
+                          ? "border-green-400 bg-green-100"
+                          : "border-gray-300 bg-gray-100"
+                      }`}
                     >
                       {keyword}
                     </span>
@@ -287,7 +302,7 @@ function Email() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {templates?.map(item => (
+        {templates?.map((item) => (
           <div
             key={item?._id}
             className="relative rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
@@ -357,24 +372,24 @@ export default Email;
 const ModalForAttachForms = React.memo(({ setIsAttachFormModalOpen, selectedTemplate }) => {
   const { data: unAttachedForms, isLoading: isLoadingUnAttachedForms } = useUnAttachedFormsListQuery(
     { emailTemplateId: selectedTemplate?._id },
-    { skip: !selectedTemplate?._id }
+    { skip: !selectedTemplate?._id },
   );
-  const [selectedForms, setSelectedForms] = useState(selectedTemplate?.forms?.map(form => form._id) || []);
+  const [selectedForms, setSelectedForms] = useState(selectedTemplate?.forms?.map((form) => form._id) || []);
   const [attachEmailToForms, { isLoading }] = useAttachTemplateToFormMutation();
 
   const onSaveHandler = async () => {
-    if (!selectedTemplate?._id) return toast.error('Please select template and forms');
+    if (!selectedTemplate?._id) return toast.error("Please select template and forms");
     try {
       const res = await attachEmailToForms({
         emailTemplateId: selectedTemplate?._id,
         formIds: selectedForms?.length ? selectedForms : [],
       }).unwrap();
       if (res.success) {
-        toast.success('Template attached to forms successfully');
+        toast.success("Template attached to forms successfully");
         setIsAttachFormModalOpen(false);
       }
     } catch (error) {
-      toast.error(error?.data?.message || 'Failed to attach template to forms');
+      toast.error(error?.data?.message || "Failed to attach template to forms");
       console.log(error);
     }
   };
@@ -390,10 +405,10 @@ const ModalForAttachForms = React.memo(({ setIsAttachFormModalOpen, selectedTemp
           <div className="mb-4">
             <label className="mb-1 block text-sm font-medium">Select Forms</label>
             <DropdownCheckbox
-              options={unAttachedForms?.data?.map(item => ({ label: item?.name, value: item?._id }))}
+              options={unAttachedForms?.data?.map((item) => ({ label: item?.name, value: item?._id }))}
               selected={selectedForms}
               defaultText={`Select Forms`}
-              onSelect={vals => setSelectedForms(vals)}
+              onSelect={(vals) => setSelectedForms(vals)}
             />
           </div>
         </div>

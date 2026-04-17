@@ -1,8 +1,8 @@
-import React from 'react';
+import React from "react";
 
-const Checkbox = ({ id, name, label, checked = false, onChange, disabled = false, className = '', ...rest }) => {
+const Checkbox = ({ id, name, label, checked = false, onChange, disabled = false, className = "", ...rest }) => {
   return (
-    <div className={`mt-5 flex w-full items-center space-x-2 ${className}`}>
+    <div className={`mt-5 flex w-full items-center space-x-2 ${className} `}>
       <input
         type="checkbox"
         id={id}
@@ -10,11 +10,11 @@ const Checkbox = ({ id, name, label, checked = false, onChange, disabled = false
         checked={checked}
         onChange={onChange}
         disabled={disabled}
-        className="text-primary accent-primary focus:ring-primary border-frameColor h-4 w-4 rounded"
+        className="text-primary cursor-pointe accent-primary focus:ring-primary border-frameColor h-4 w-4 rounded"
         {...rest}
       />
       {label && (
-        <label htmlFor={id} className="text-sm text-gray-700">
+        <label htmlFor={id} className="text-sm text-gray-700 cursor-pointer select-none">
           {label}
         </label>
       )}
