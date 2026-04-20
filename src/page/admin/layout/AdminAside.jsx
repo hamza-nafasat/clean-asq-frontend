@@ -63,9 +63,11 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
                 src={logo || ""}
                 alt="logo"
                 referrerPolicy="no-referrer"
-                className={`rounded-sm object-contain ${isNavOpen ? `h-full w-full max-h-[${appLogoMaxHeight}px] max-w-[${appLogoMaxWidth}px]` : "h-10 w-10"}`}
+                className={`rounded-sm object-contain ${isNavOpen ? `h-full w-full` : "h-10 w-10"}`}
                 style={{
                   backgroundColor: headerBackground || "",
+                  maxHeight: `${appLogoMaxHeight}px`,
+                  maxWidth: `${appLogoMaxWidth}px`,
                 }}
               />
             </Link>

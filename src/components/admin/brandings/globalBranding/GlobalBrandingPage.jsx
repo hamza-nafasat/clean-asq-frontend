@@ -691,7 +691,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
             handleExtraLogoUpload={(logo) => setExtraLogos([...extraLogos, logo])}
             extractColorsFromLogosHandler={extractColorsFromLogosHandler}
           />
-          <ColorPalette colorPalette={colorPalette} />
+          <ColorPalette colorPalette={colorPalette} setColorPalette={setColorPalette} />
         </div>
         <BrandElementAssignment
           image={image}

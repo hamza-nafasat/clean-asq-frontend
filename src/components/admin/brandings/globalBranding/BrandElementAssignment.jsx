@@ -6,7 +6,7 @@ import FontPicker from "./FontPicker";
 import { LoaderIcon } from "lucide-react";
 import TextField from "@/components/shared/small/TextField";
 
-export const ColorInput = ({ label, color, setColor, setImage, image, hideLabel = false }) => {
+export const ColorInput = ({ label, color, setColor, setImage, image, hideLabel = false, className = "" }) => {
   const colorPickerDiv = useRef(null);
   const [ssLoading, setSSLoading] = useState(false);
   const [showSSButton, setShowSSButton] = useState(false);
@@ -111,7 +111,7 @@ export const ColorInput = ({ label, color, setColor, setImage, image, hideLabel 
           {label}
         </label>
       )}
-      <div ref={colorPickerDiv} className="flex items-stretch space-x-2">
+      <div ref={colorPickerDiv} className={`flex items-stretch space-x-2 ${className ? className : ""}`}>
         <input
           type="color"
           className="size-14 cursor-pointer appearance-none rounded-lg border-none outline-none focus:ring-0"

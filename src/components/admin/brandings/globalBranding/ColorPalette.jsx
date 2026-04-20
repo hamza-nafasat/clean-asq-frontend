@@ -1,114 +1,68 @@
-import { BiColor } from "react-icons/bi";
-import { IoColorPaletteOutline } from "react-icons/io5";
-import { useBranding } from "../../../../hooks/BrandingContext";
+import { useRef } from "react";
 
-const ColorPalette = ({ colorPalette }) => {
-  const { setPrimaryColor } = useBranding();
+export default function ColorPalette({ colorPalette, setColorPalette }) {
+  const colorInputRefs = useRef([]);
 
-  const handleNeutralColorClick = (color) => {
-    setPrimaryColor(color);
+  const updateColorPalette = (color, index) => {
+    const newColorPalette = [...colorPalette];
+    newColorPalette[index] = {
+      hex: color,
+      source: "Manual",
+    };
+    setColorPalette(newColorPalette);
   };
 
   return (
     <div className="mt-6 w-full">
-      <div className="mb-4 flex items-center gap-1.5 text-[16px] font-medium text-gray-700 md:gap-3 md:text-xl">
-        <IoColorPaletteOutline className="text-primary size-6" />
-        Website / Image Color Palette
-      </div>
-      <div className="flex w-full flex-col justify-between gap-4">
-        <div className="mt-6 grid grid-cols-2 gap-1 md:grid-cols-4 md:gap-8 xl:grid-cols-10 xl:gap-10">
-          {colorPalette?.map((color, index) => {
-            const hex = typeof color === "string" ? color : color?.hex;
-            const source = typeof color === "object" && color?.source ? color?.source : null;
-            return (
+      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 xl:grid-cols-10 gap-4">
+        {colorPalette?.map((color, index) => {
+          const hex = typeof color === "string" ? color : color?.hex;
+          const source = typeof color === "object" && color?.source ? color.source : null;
+
+          return (
+            <div
+              key={index}
+              className="group relative cursor-pointer flex flex-col items-center gap-2"
+              onClick={() => colorInputRefs.current[index]?.click()}
+            >
+              {/* hidden input */}
+              <input
+                type="color"
+                value={hex}
+                ref={(el) => (colorInputRefs.current[index] = el)}
+                onChange={(e) => updateColorPalette(e.target.value, index)}
+                style={{
+                  position: "absolute",
+                  opacity: 0,
+                  pointerEvents: "none",
+                }}
+              />
+
+              {/* color box */}
               <div
-                key={index}
-                className="group relative flex w-full cursor-pointer flex-col items-center gap-2"
-                onClick={() => handleNeutralColorClick(hex)}
+                className="h-24 w-full rounded-md border shadow-sm relative"
+                style={{ backgroundColor: hex, borderColor: "#e0e0e0" }}
               >
-                {/* Color box */}
-                <div
-                  className="h-24 w-full rounded-md border shadow-sm"
-                  style={{ backgroundColor: hex, borderColor: "#e0e0e0" }}
-                >
-                  {source && (
-                    <div className="absolute bottom-8 left-1/2 z-10 hidden w-max max-w-40 -translate-x-1/2 rounded bg-gray-800 px-2 py-1 text-center text-xs text-white shadow group-hover:block">
-                      {source}
-                    </div>
-                  )}
-                </div>
-                {/* Color code below */}
-                <div
-                  className="text-sm font-medium"
-                  style={{ color: parseInt(hex?.substring(1), 16) > 0xffffff / 2 ? "#000" : "#555" }}
-                >
-                  {hex}
-                </div>
+                {source && (
+                  <div className="absolute bottom-1 left-1/2 z-10 hidden w-max max-w-30 -translate-x-1/2 rounded bg-gray-800 px-2 py-1 text-center text-xs text-white shadow group-hover:block">
+                    {source}
+                  </div>
+                )}
               </div>
-            );
-          })}
-        </div>
-      </div>
 
-      <div className="border-primary my-6 border-t-2"></div>
-
-      {/* Assign Brand Element section */}
-      <div className="mt-12 flex items-center space-x-6">
-        <div className="flex items-center gap-3 text-gray-600">
-          <BiColor className="text-primary size-6" />
-          Assign Brand Element
-        </div>
-        {/* <button className="flex items-center gap-2 rounded-sm bg-[#F5F5F5] px-3 py-2 text-gray-700">
-          <HiOutlineSparkles /> AI Help
-        </button> */}
+              {/* hex text */}
+              <div
+                className="text-sm font-medium"
+                style={{
+                  color: parseInt(hex?.substring(1), 16) > 0xffffff / 2 ? "#000" : "#555",
+                }}
+              >
+                {hex}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
-};
-
-export default ColorPalette;
-
-// const neutralColors = [
-//   "#FFFFFF",
-//   "#F8F9FA",
-//   "#E9ECEF",
-//   "#DEE2E8",
-//   "#CED4DA",
-//   "#ADB5BD",
-//   "#6C757D",
-//   "#495057",
-//   "#343A40",
-//   "#212529",
-// ];
-
-// <div className="border-primary my-6 border-t-2"></div>
-
-// <div className="mt-6 flex items-center gap-1.5 text-lg font-normal text-gray-500 md:gap-3">
-//   <BiColor className="text-primary size-6" />
-//   Neutral Color Options
-// </div>
-// <div className="mt-6 grid grid-cols-2 gap-1 md:grid-cols-4 md:gap-8 xl:grid-cols-10 xl:gap-10">
-//   {neutralColors.map((color, index) => (
-//     <div
-//       key={index}
-//       className="flex w-full cursor-pointer flex-col items-center gap-2"
-//       onClick={() => handleNeutralColorClick(color)}
-//     >
-//       {/* Color box */}
-//       <div
-//         className="h-24 w-full rounded-md border shadow-sm"
-//         style={{ backgroundColor: color, borderColor: "#e0e0e0" }}
-//       ></div>
-
-//       {/* Color code below */}
-//       <div
-//         className="text-sm font-medium"
-//         style={{
-//           color: parseInt(color.substring(1), 16) > 0xffffff / 2 ? "#000" : "#555",
-//         }}
-//       >
-//         {color}
-//       </div>
-//     </div>
-//   ))}
-// </div>
+}
