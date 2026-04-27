@@ -461,6 +461,7 @@ const formApis = createApi({
         url: `/apply-rules-on-form/${formSubmittedId}`,
         method: "GET",
       }),
+      invalidatesTags: ["SubmitForm"],
     }),
     getAllFormRules: builder.query({
       query: ({ formId }) => ({

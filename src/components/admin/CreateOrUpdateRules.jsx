@@ -17,6 +17,7 @@ import CustomLoading from "../shared/small/CustomLoading";
 const CATEGORY_OPTIONS = [
   { label: "Alert", value: "alert" },
   { label: "Display", value: "display" },
+  { label: "Update Status", value: "update_status" },
 ];
 
 // ─── Rule Fields Guide ────────────────────────────────────────────────────────────
