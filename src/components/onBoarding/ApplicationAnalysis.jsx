@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 import { CgSpinner } from "react-icons/cg";
 import Button from "../shared/small/Button";
+import { sanitizeHtml } from "@/utils/sanitizeHtml";
 
 const columns = () => [
   { name: "Rule No", selector: (row) => row?.number, sortable: true, width: "110px" },
@@ -20,7 +21,7 @@ const columns = () => [
     sortable: true,
     cell: (row) => (
       <div className="text-textPrimary border-frameColor w-full resize-none rounded-md border p-2 text-sm">
-        <div dangerouslySetInnerHTML={{ __html: row?.message || "" }} />
+        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(row?.message) || "" }} />
         {row?.error && <span className="text-red-500 text-sm">{row?.error}</span>}
       </div>
     ),

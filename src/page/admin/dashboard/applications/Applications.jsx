@@ -150,7 +150,7 @@ export const SpecialAccessModal = ({ formId, setModal, submittedFormId }) => {
     setIsLoading(true);
     if (formData?.data?.sections?.length > 0) {
       const specialSections = formData?.data?.sections?.filter(
-        (section) => section?.isHidden && section?.key !== "beneficial_owners",
+        (section) => section?.isHidden && section?.key !== "beneficial_information",
       );
       const formatedSpecialSections = specialSections?.map((section) => ({
         option: section?.name,

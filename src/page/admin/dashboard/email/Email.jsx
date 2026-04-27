@@ -17,6 +17,8 @@ import {
 import { useGetMyAllFormsQuery } from "@/redux/apis/formApis";
 import DropdownCheckbox from "@/components/shared/DropdownCheckbox";
 import CustomLoading from "@/components/shared/small/CustomLoading";
+import Checkbox from "@/components/shared/small/Checkbox";
+import { useSelector } from "react-redux";
 
 const emailTypes = [
   {
@@ -370,12 +372,14 @@ function Email() {
 export default Email;
 
 const ModalForAttachForms = React.memo(({ setIsAttachFormModalOpen, selectedTemplate }) => {
+  const { user } = useSelector((state) => state.auth);
   const { data: unAttachedForms, isLoading: isLoadingUnAttachedForms } = useUnAttachedFormsListQuery(
     { emailTemplateId: selectedTemplate?._id },
     { skip: !selectedTemplate?._id },
   );
   const [selectedForms, setSelectedForms] = useState(selectedTemplate?.forms?.map((form) => form._id) || []);
   const [attachEmailToForms, { isLoading }] = useAttachTemplateToFormMutation();
+  const [attachToMe, setAttachToMe] = useState(user?.welcomeMail === selectedTemplate?._id);
 
   const onSaveHandler = async () => {
     if (!selectedTemplate?._id) return toast.error("Please select template and forms");
@@ -383,6 +387,7 @@ const ModalForAttachForms = React.memo(({ setIsAttachFormModalOpen, selectedTemp
       const res = await attachEmailToForms({
         emailTemplateId: selectedTemplate?._id,
         formIds: selectedForms?.length ? selectedForms : [],
+        attachToMe: attachToMe,
       }).unwrap();
       if (res.success) {
         toast.success("Template attached to forms successfully");
@@ -411,6 +416,18 @@ const ModalForAttachForms = React.memo(({ setIsAttachFormModalOpen, selectedTemp
               onSelect={(vals) => setSelectedForms(vals)}
             />
           </div>
+          {selectedTemplate.emailType === "welcome_email_template" && (
+            <div className="flex justify-end">
+              <Checkbox
+                id="attachToMe"
+                name="attachToMe"
+                label="Attach to Me"
+                onChange={(e) => setAttachToMe(e.target.checked)}
+                value={attachToMe}
+                checked={attachToMe}
+              />
+            </div>
+          )}
         </div>
       )}
     </Modal>

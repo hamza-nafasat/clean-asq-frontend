@@ -45,6 +45,9 @@ export const BrandingProvider = ({ children }) => {
   const [appLogoMaxWidth, setAppLogoMaxWidth] = useState(300);
   const [appLogoMaxHeight, setAppLogoMaxHeight] = useState(200);
   const [applicationFooterText, setApplicationFooterText] = useState("Fintainium All rights reserved");
+  const [applicationFooterTextSize, setApplicationFooterTextSize] = useState(20);
+  const [appHeaderPadding, setAppHeaderPadding] = useState(8);
+  const [appFooterPadding, setAppFooterPadding] = useState(16);
   // Load saved branding from localStorage on mount
   useEffect(() => {
     const savedBranding = JSON.parse(localStorage.getItem("brandingData"));
@@ -67,6 +70,9 @@ export const BrandingProvider = ({ children }) => {
       setHeaderText(savedBranding.headerText || DEFAULT_COLORS.headerText);
       setFooterText(savedBranding.footerText || DEFAULT_COLORS.footerText);
       setApplicationFooterText(savedBranding.applicationFooterText || "Fintainium All rights reserved");
+      setApplicationFooterTextSize(savedBranding.applicationFooterTextSize || 20);
+      setAppHeaderPadding(savedBranding.appHeaderPadding || 8);
+      setAppFooterPadding(savedBranding.appFooterPadding || 16);
     }
   }, []);
 
@@ -90,6 +96,9 @@ export const BrandingProvider = ({ children }) => {
       headerText,
       footerText,
       applicationFooterText,
+      applicationFooterTextSize,
+      appHeaderPadding,
+      appFooterPadding,
     };
     localStorage.setItem("brandingData", JSON.stringify(brandingData));
 
@@ -137,6 +146,9 @@ export const BrandingProvider = ({ children }) => {
     headerText,
     footerText,
     applicationFooterText,
+    applicationFooterTextSize,
+    appHeaderPadding,
+    appFooterPadding,
   ]);
 
   const value = {
@@ -182,6 +194,12 @@ export const BrandingProvider = ({ children }) => {
     setAppLogoMaxWidth,
     appLogoMaxHeight,
     setAppLogoMaxHeight,
+    applicationFooterTextSize,
+    setApplicationFooterTextSize,
+    appHeaderPadding,
+    setAppHeaderPadding,
+    appFooterPadding,
+    setAppFooterPadding,
   };
 
   return <BrandingContext.Provider value={value}>{children}</BrandingContext.Provider>;
