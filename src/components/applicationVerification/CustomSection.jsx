@@ -1,6 +1,6 @@
 import { FIELD_TYPES } from "@/data/constants";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import SignatureBox from "../shared/SignatureBox";
@@ -17,6 +17,11 @@ import {
 import { EditSectionDisplayTextFromatingModal } from "../shared/small/EditSectionDisplayTextFromatingModal";
 import Modal from "../shared/small/Modal";
 import CustomizationFieldsModal from "./companyInfo/CustomizationFieldsModal";
+import { useGetIdMissionSessionMutation } from "@/redux/apis/idMissionApis";
+import { socket } from "@/main";
+import { formatData, makeCompleteName } from "@/utils/idMissionMapingUtils";
+import { LoadingWithTimer } from "../shared/small/LoadingWithTimer";
+import CustomLoading from "../shared/small/CustomLoading";
 
 function CustomSection({
   sectionKey,
@@ -40,6 +45,31 @@ function CustomSection({
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [loadingNext, setLoadingNext] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
+  const [webLink, setWebLink] = useState(null);
+  const [qrCode, setQrCode] = useState("");
+  const [getQrAndWebLinkLoading, setGetQrAndWebLinkLoading] = useState(false);
+  const [isIdMissionProcessing, setIsIdMissionProcessing] = useState(false);
+  const [getIdMissionSession, { isLoading: isGetIdMissionSessionLoading }] = useGetIdMissionSessionMutation();
+  const [idMissionVerifiedData, setIdMissionVerifiedData] = useState({
+    idMissionName: { name: "idMissionName", value: "" },
+    idMissionEmail: { name: "idMissionEmail", value: user?.email },
+    idMissionIdNumber: { name: "idMissionIdNumber", value: "" },
+    idMissionStreetAddress: { name: "idMissionStreetAddress", value: "" },
+    idMissionPhoneNumber: { name: "idMissionPhoneNumber", value: "" },
+    idMissionCompanyTitle: { name: "idMissionCompanyTitle", value: "" },
+    idMissionIssueDate: { name: "idMissionIssueDate", value: "" },
+    idMissionIdIssuer: { name: "idMissionIdIssuer", value: "" },
+    idMissionIdType: { name: "idMissionIdType", value: "" },
+    idMissionIdExpiryDate: { name: "idMissionIdExpiryDate", value: "" },
+    idMissionCity: { name: "idMissionCity", value: "" },
+    idMissionState: { name: "idMissionState", value: "" },
+    idMissionDateOfBirth: { name: "idMissionDateOfBirth", value: "" },
+    idMissionZipCode: { name: "idMissionZipCode", value: "" },
+    idMissionCountry: { name: "idMissionCountry", value: "" },
+    idMissionRoleFillingForCompany: { name: "idMissionRoleFillingForCompany", value: "" },
+    idMissionData: { name: "idMissionData", value: "null" },
+  });
+  // console.log("idMissionVerifiedData", idMissionVerifiedData);
   const requiredNames = useMemo(
     () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
     [fields],
@@ -68,12 +98,28 @@ function CustomSection({
       if (setIsSaving) setIsSaving(false);
     }
   };
-
+  const getQrAndWebLink = useCallback(async () => {
+    try {
+      const res = await getIdMissionSession({ sectionKey: sectionKey }).unwrap();
+      if (res.success) {
+        setQrCode(res.data?.customerData?.qrCode);
+        setWebLink(res.data?.customerData?.kycUrl);
+      }
+    } catch (error) {
+      console.log("Error fetching session ID:", error);
+    }
+  }, [getIdMissionSession, sectionKey]);
   useEffect(() => {
     const formFields = {};
     if (fields?.length) {
       fields?.forEach((field) => {
-        formFields[field?.uniqueId] = reduxData?.[field?.uniqueId] || "";
+        const idMissionValue = idMissionVerifiedData?.[field?.name]?.value;
+        const finalValue =
+          idMissionValue !== undefined
+            ? { name: field?.name, value: idMissionValue }
+            : (reduxData?.[field?.uniqueId] ?? "");
+        console.log(`finalValue for ${field?.name} is`, finalValue);
+        formFields[field?.uniqueId] = finalValue;
       });
       setForm(formFields);
     }
@@ -95,7 +141,7 @@ function CustomSection({
         },
       }));
     }
-  }, [fields, isSignature, reduxData]);
+  }, [fields, idMissionVerifiedData, isSignature, reduxData]);
 
   useEffect(() => {
     if (isCreator) {
@@ -128,6 +174,197 @@ function CustomSection({
     }
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
   }, [form, isCreator, isSignature, requiredNames]);
+  useEffect(() => {
+    if (step?.isIdMissionQr) {
+      setGetQrAndWebLinkLoading(true);
+      getQrAndWebLink().finally(() => setGetQrAndWebLinkLoading(false));
+    }
+  }, [getQrAndWebLink, step?.isIdMissionQr, setGetQrAndWebLinkLoading]);
+
+  // check and get socket events
+  useEffect(() => {
+    socket.on("idMission_processing_started", (data) => {
+      console.log("you start id mission verification", data);
+      setIsIdMissionProcessing(true);
+    });
+    // id mission verified success fully
+    socket.on("idMission_verified", async (data) => {
+      console.log("verified id mission data is", data);
+      setIsIdMissionProcessing(false);
+      const formDataOfIdMission = data?.Form_Data;
+      if (data?.sectionKey !== sectionKey) return;
+
+      setIdMissionVerifiedData({
+        idMissionName: {
+          name: "idMissionName",
+          value: makeCompleteName(
+            formDataOfIdMission?.First_Name,
+            formDataOfIdMission?.Middle_Name,
+            formDataOfIdMission?.Last_Name,
+            formDataOfIdMission?.FullName,
+            formDataOfIdMission?.Name,
+          ),
+        },
+
+        idMissionEmail: { name: "idMissionEmail", value: formDataOfIdMission?.Email || user?.email || "" },
+        idMissionIdNumber: { name: "idMissionIdNumber", value: formDataOfIdMission?.ID_Number || "" },
+        idMissionIdIssuer: {
+          name: "idMissionIdIssuer",
+          value: formDataOfIdMission?.ID_State
+            ? formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country
+            : formDataOfIdMission?.Issuing_Country || "",
+        },
+        idMissionIdType: { name: "idMissionIdType", value: formDataOfIdMission?.DocumentType || "" },
+        idMissionIdExpiryDate: {
+          name: "idMissionIdExpiryDate",
+          value: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : "",
+        },
+        idMissionStreetAddress: {
+          name: "idMissionStreetAddress",
+          value:
+            (formDataOfIdMission?.ParsedAddressStreetNumber || "") +
+            " " +
+            (formDataOfIdMission?.ParsedAddressStreetName || ""),
+        },
+        idMissionPhoneNumber: { name: "idMissionPhoneNumber", value: formDataOfIdMission?.PhoneNumber || "" },
+        idMissionZipCode: { name: "idMissionZipCode", value: formDataOfIdMission?.ParsedAddressPostalCode || "" },
+        dateOfBirth: {
+          name: "idMissionDateOfBirth",
+          value: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : "",
+        },
+        idMissionCountry: { name: "idMissionCountry", value: formDataOfIdMission?.Issuing_Country || "" },
+        issueDate: {
+          name: "idMissionIssueDate",
+          value: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : "",
+        },
+        idMissionCompanyTitle: { name: "idMissionCompanyTitle", value: "" },
+        idMissionState: { name: "idMissionState", value: formDataOfIdMission?.ParsedAddressProvince || "" },
+        idMissionCity: { name: "idMissionCity", value: formDataOfIdMission?.ParsedAddressMunicipality || "" },
+        idMissionData: { name: "idMissionData", value: formDataOfIdMission || "null" },
+        createdAt: idMissionVerifiedData?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    });
+    // id mission failed
+    socket.on("idMission_failed", async (data) => {
+      console.log("failed id mission data is", data);
+      // console.log('You are verified successfully', data);
+      setIsIdMissionProcessing(false);
+      const formDataOfIdMission = data?.Form_Data;
+      if (data?.sectionKey !== sectionKey) return;
+
+      setIdMissionVerifiedData({
+        idMissionName: {
+          name: "name",
+          value: makeCompleteName(
+            formDataOfIdMission?.First_Name,
+            formDataOfIdMission?.Middle_Name,
+            formDataOfIdMission?.Last_Name,
+            formDataOfIdMission?.FullName,
+            formDataOfIdMission?.Name,
+          ),
+        },
+        idMissionEmail: { name: "idMissionEmail", value: formDataOfIdMission?.Email || user?.email || "" },
+        idMissionIdNumber: { name: "idMissionIdNumber", value: formDataOfIdMission?.ID_Number || "" },
+        idMissionIdIssuer: {
+          name: "idIssuer",
+          value: formDataOfIdMission?.ID_State
+            ? formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country
+            : formDataOfIdMission?.Issuing_Country || "",
+        },
+        idMissionIdType: { name: "idMissionIdType", value: formDataOfIdMission?.DocumentType || "" },
+        idExpiryDate: {
+          name: "idMissionIdExpiryDate",
+          value: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : "",
+        },
+        idMissionStreetAddress: {
+          name: "idMissionStreetAddress",
+          value: formDataOfIdMission?.ParsedAddressStreetNumber + formDataOfIdMission?.ParsedAddressStreetName || "",
+        },
+        idMissionPhoneNumber: { name: "idMissionPhoneNumber", value: formDataOfIdMission?.PhoneNumber || "" },
+        idMissionZipCode: { name: "idMissionZipCode", value: formDataOfIdMission?.ParsedAddressPostalCode || "" },
+        idMissionDateOfBirth: {
+          name: "idMissionDateOfBirth",
+          value: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : "",
+        },
+        idMissionCountry: { name: "idMissionCountry", value: formDataOfIdMission?.Issuing_Country || "" },
+        issueDate: {
+          name: "idMissionIssueDate",
+          value: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : "",
+        },
+        idMissionCompanyTitle: { name: "idMissionCompanyTitle", value: "" },
+        idMissionState: { name: "idMissionState", value: formDataOfIdMission?.ParsedAddressProvince || "" },
+        idMissionCity: { name: "idMissionCity", value: formDataOfIdMission?.ParsedAddressMunicipality || "" },
+        idMissionData: { name: "idMissionData", value: formDataOfIdMission || "null" },
+        createdAt: idMissionVerifiedData?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    });
+    socket.on("idMission_other", async (data) => {
+      console.log("other id mission data is", data);
+
+      setIsIdMissionProcessing(false);
+      const formDataOfIdMission = data?.Form_Data;
+      if (data?.sectionKey !== sectionKey) return;
+      const metadata = data?.Metadata;
+      if (metadata?.sectionKey !== sectionKey) return;
+      setIdMissionVerifiedData({
+        idMissionName: {
+          name: "idMissionName",
+          value: makeCompleteName(
+            formDataOfIdMission?.First_Name,
+            formDataOfIdMission?.Middle_Name,
+            formDataOfIdMission?.Last_Name,
+            formDataOfIdMission?.FullName,
+            formDataOfIdMission?.Name,
+          ),
+        },
+        idMissionEmail: { name: "idMissionEmail", value: formDataOfIdMission?.Email || user?.email || "" },
+        idMissionIdNumber: { name: "idMissionIdNumber", value: formDataOfIdMission?.ID_Number || "" },
+        idMissionIdIssuer: {
+          name: "idMissionIdIssuer",
+          value: formDataOfIdMission?.ID_State
+            ? formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country
+            : formDataOfIdMission?.Issuing_Country || "",
+        },
+        idMissionIdType: { name: "idMissionIdType", value: formDataOfIdMission?.DocumentType || "" },
+        idMissionIdExpiryDate: {
+          name: "idMissionIdExpiryDate",
+          value: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : "",
+        },
+        idMissionStreetAddress: {
+          name: "idMissionStreetAddress",
+          value: formDataOfIdMission?.ParsedAddressStreetNumber + formDataOfIdMission?.ParsedAddressStreetName || "",
+        },
+        idMissionPhoneNumber: { name: "idMissionPhoneNumber", value: formDataOfIdMission?.PhoneNumber || "" },
+        idMissionZipCode: { name: "idMissionZipCode", value: formDataOfIdMission?.ParsedAddressPostalCode || "" },
+        idMissionDateOfBirth: {
+          name: "idMissionDateOfBirth",
+          value: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : "",
+        },
+        idMissionCountry: { name: "idMissionCountry", value: formDataOfIdMission?.Issuing_Country || "" },
+        idMissionIssueDate: {
+          name: "idMissionIssueDate",
+          value: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : "",
+        },
+        idMissionCompanyTitle: { name: "idMissionCompanyTitle", value: "" },
+        idMissionState: { name: "idMissionState", value: formDataOfIdMission?.ParsedAddressProvince || "" },
+        idMissionCity: { name: "idMissionCity", value: formDataOfIdMission?.ParsedAddressMunicipality || "" },
+        idMissionData: { name: "idMissionData", value: formDataOfIdMission || "null" },
+        createdAt: idMissionVerifiedData?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    });
+
+    // Cleanup listener when component unmounts
+    return () => {
+      socket.off("idMission_processing_started");
+      socket.off("idMission_verified");
+      socket.off("idMission_failed");
+      socket.off("idMission_other");
+    };
+  }, [idMissionVerifiedData?.createdAt, sectionKey, user?.email]);
+  if (isGetIdMissionSessionLoading) return <CustomLoading />;
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
@@ -162,6 +399,29 @@ function CustomSection({
           />
         </div>
       )}
+      <div className="flex items-center justify-center w-full">
+        {isIdMissionProcessing ? (
+          <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
+        ) : (
+          <>
+            {qrCode && webLink && (
+              <div className="flex flex-col  gap-4">
+                <div className="mt-4 flex w-full flex-col items-center gap-4">
+                  <img className="h-[230px] w-[230px]" src={`data:image/jpeg;base64,${qrCode}`} alt="qr code " />
+                </div>
+                <div className="mt-4 flex w-full flex-col items-center gap-4">
+                  <Button
+                    className="w-full max-w-[230px]"
+                    disabled={getQrAndWebLinkLoading}
+                    label={"Refresh QR Code"}
+                    onClick={getQrAndWebLink}
+                  />
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
       <div className="mt-6 flex flex-col gap-4">
         {fields?.map((field, index) => {
           if (field.name === "main_owner_own_25_percent_or_more" || field.type === "block") return null;
@@ -260,6 +520,7 @@ function CustomSection({
         <Modal onClose={() => setCustomizeModal(false)}>
           <CustomizationFieldsModal
             sectionId={_id}
+            suggestions={Object.keys(idMissionVerifiedData)}
             fields={fields}
             formRefetch={formRefetch}
             onClose={() => setCustomizeModal(false)}

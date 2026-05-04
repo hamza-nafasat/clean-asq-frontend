@@ -24,6 +24,8 @@ import Stepper from "../../../../components/Stepper/Stepper";
 import { uploadFilesAndReplace } from "@/lib/utils";
 
 export default function ApplicationForm() {
+  const queryParams = new URLSearchParams(window.location.search);
+  const step = queryParams.get("step");
   const { user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const params = useParams();
@@ -31,7 +33,7 @@ export default function ApplicationForm() {
   const dispatch = useDispatch();
   const { formData } = useSelector((state) => state?.form);
 
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(step ? parseInt(step) : 0);
   const [sectionNames, setSectionNames] = useState([]);
   const [stepsComps, setStepsComps] = useState([]);
   const [isSavedApiRun, setIsSavedApiRun] = useState(false);

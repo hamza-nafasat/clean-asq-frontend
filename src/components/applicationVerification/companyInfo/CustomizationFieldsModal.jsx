@@ -1,30 +1,31 @@
-import MakeFieldDataCustom from '@/components/shared/MakeFieldDataCustom';
-import Checkbox from '@/components/shared/small/Checkbox';
-import TextField from '@/components/shared/small/TextField';
-import { Button } from '@/components/ui/button';
+import MakeFieldDataCustom from "@/components/shared/MakeFieldDataCustom";
+import Checkbox from "@/components/shared/small/Checkbox";
+import TextField from "@/components/shared/small/TextField";
+import { Button } from "@/components/ui/button";
 import {
   useFormateTextInMarkDownMutation,
   useUpdateDeleteCreateFormFieldsMutation,
   useUpdateFormSectionMutation,
-} from '@/redux/apis/formApis';
-import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
-import DOMPurify from 'dompurify';
+} from "@/redux/apis/formApis";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import DOMPurify from "dompurify";
 
 function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, suggestions, isArticleForm, section }) {
   const [fieldsData, setFieldsData] = useState([]);
   const [originalFieldData, setOriginalFieldData] = useState([]);
   const [customizeForm, { isLoading }] = useUpdateDeleteCreateFormFieldsMutation();
   const [updateSection, { isLoading: isUpdatingSection }] = useUpdateFormSectionMutation();
+  const [isIdMissionQrEnabled, setIsIdMissionQrEnabled] = useState(section?.isIdMissionQr || false);
   const [signatureData, setSignatureData] = useState({
     isSignature: section?.isSignature || false,
     isSignDisplayText: section?.isSignDisplayText || false,
     isSignAiHelp: section?.isSignAiHelp || false,
-    signFormatedDisplayText: section?.signFormatedDisplayText || '',
-    signDisplayText: section?.signDisplayText || '',
-    signAiPrompt: section?.signAiPrompt || '',
-    signAiResponse: section?.signAiResponse || '',
-    formatingAiInstruction: section?.signatureTextFormattingInstructions || '',
+    signFormatedDisplayText: section?.signFormatedDisplayText || "",
+    signDisplayText: section?.signDisplayText || "",
+    signAiPrompt: section?.signAiPrompt || "",
+    signAiResponse: section?.signAiResponse || "",
+    formatingAiInstruction: section?.signatureTextFormattingInstructions || "",
   });
   const [formateTextInMarkDown, { isLoading: isFormating }] = useFormateTextInMarkDownMutation();
   const [signatureEnabling, setSignatureEnabling] = useState(false);
@@ -43,6 +44,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
           signAiPrompt: signatureData.signAiPrompt,
           signAiResponse: signatureData.signAiResponse,
           signatureTextFormattingInstructions: signatureData.formatingAiInstruction,
+          isIdMissionQr: isIdMissionQrEnabled,
         },
       }).unwrap();
       if (res.success) {
@@ -50,7 +52,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
         toast.success(res.message);
       }
     } catch (error) {
-      console.log('Error while updating signature', error);
+      console.log("Error while updating signature", error);
     } finally {
       setSignatureEnabling(false);
     }
@@ -58,7 +60,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
 
   const formateTextWithAi = useCallback(async () => {
     if (!signatureData?.signDisplayText || !signatureData?.formatingAiInstruction) {
-      toast.error('Please enter formatting instruction and text to format');
+      toast.error("Please enter formatting instruction and text to format");
       return;
     }
     try {
@@ -68,17 +70,17 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
       }).unwrap();
       if (res.success) {
         let html = DOMPurify.sanitize(res.data);
-        setSignatureData(prev => ({ ...prev, signFormatedDisplayText: html }));
+        setSignatureData((prev) => ({ ...prev, signFormatedDisplayText: html }));
       }
     } catch (err) {
       console.error(err);
-      toast.error(err?.data?.message || 'Failed to format text');
+      toast.error(err?.data?.message || "Failed to format text");
     }
   }, [formateTextInMarkDown, signatureData?.formatingAiInstruction, signatureData.signDisplayText]);
 
   const getResponseFromAi = useCallback(async () => {
     if (!signatureData?.signAiPrompt) {
-      return toast.error('Please enter formatting instruction and text to format');
+      return toast.error("Please enter formatting instruction and text to format");
     }
     try {
       const res = await formateTextInMarkDown({
@@ -87,17 +89,17 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
       if (res.success) {
         let html = DOMPurify.sanitize(res.data);
         //  update ai_response
-        setSignatureData(prev => ({ ...prev, signAiResponse: html }));
+        setSignatureData((prev) => ({ ...prev, signAiResponse: html }));
       }
     } catch (err) {
       console.error(err);
-      toast.error(err?.data?.message || 'Failed to format text');
+      toast.error(err?.data?.message || "Failed to format text");
     }
   }, [formateTextInMarkDown, signatureData?.signAiPrompt]);
 
-  const addNewFieldHandler = () => setFieldsData(prev => [...prev, { label: '', name: '', type: 'text' }]);
+  const addNewFieldHandler = () => setFieldsData((prev) => [...prev, { label: "", name: "", type: "text" }]);
 
-  const saveFormHandler = async fieldsData => {
+  const saveFormHandler = async (fieldsData) => {
     try {
       const res = await customizeForm({ sectionId, fieldsData }).unwrap();
       if (res.success) {
@@ -106,7 +108,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
         onClose();
       }
     } catch (error) {
-      console.log('Error while updating form fields', error);
+      console.log("Error while updating form fields", error);
     }
   };
 
@@ -143,24 +145,24 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
             label="Enable Signature for this section"
             checked={signatureData?.isSignature}
             disabled={signatureEnabling}
-            className={`${signatureEnabling ? 'pointer-events-none opacity-30' : ''}`}
-            onChange={e => setSignatureData(prev => ({ ...prev, isSignature: e.target.checked }))}
+            className={`${signatureEnabling ? "pointer-events-none opacity-30" : ""}`}
+            onChange={(e) => setSignatureData((prev) => ({ ...prev, isSignature: e.target.checked }))}
           />
           <Checkbox
             id="displayText"
             label="include display text"
             checked={signatureData?.isSignDisplayText}
             disabled={signatureEnabling}
-            className={`${signatureEnabling ? 'pointer-events-none opacity-30' : ''}`}
-            onChange={e => setSignatureData(prev => ({ ...prev, isSignDisplayText: e.target.checked }))}
+            className={`${signatureEnabling ? "pointer-events-none opacity-30" : ""}`}
+            onChange={(e) => setSignatureData((prev) => ({ ...prev, isSignDisplayText: e.target.checked }))}
           />
           <Checkbox
             id="aiHelp"
             label="Enable AI Help"
             checked={signatureData?.isSignAiHelp}
             disabled={signatureEnabling}
-            className={`${signatureEnabling ? 'pointer-events-none opacity-30' : ''}`}
-            onChange={e => setSignatureData(prev => ({ ...prev, isSignAiHelp: e.target.checked }))}
+            className={`${signatureEnabling ? "pointer-events-none opacity-30" : ""}`}
+            onChange={(e) => setSignatureData((prev) => ({ ...prev, isSignAiHelp: e.target.checked }))}
           />
         </div>
         {/* display text  */}
@@ -171,7 +173,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
               label="Display Text"
               value={signatureData?.signDisplayText}
               name="displayText"
-              onChange={e => setSignatureData(prev => ({ ...prev, signDisplayText: e.target.value }))}
+              onChange={(e) => setSignatureData((prev) => ({ ...prev, signDisplayText: e.target.value }))}
             />
 
             <label htmlFor="formattingInstructionForAi">
@@ -181,7 +183,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
               id="formattingInstructionForAi"
               rows={2}
               value={signatureData?.formatingAiInstruction}
-              onChange={e => setSignatureData(prev => ({ ...prev, formatingAiInstruction: e.target.value }))}
+              onChange={(e) => setSignatureData((prev) => ({ ...prev, formatingAiInstruction: e.target.value }))}
               className="w-full rounded-md border border-gray-300 p-2 outline-none"
             />
             <div className="flex justify-end">
@@ -193,9 +195,9 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
               <div
                 className="h-full p-4"
                 dangerouslySetInnerHTML={{
-                  __html: String(signatureData?.signFormatedDisplayText || '').replace(/<a(\s+.*?)?>/g, match => {
-                    if (match.includes('target=')) return match; // avoid duplicates
-                    return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                  __html: String(signatureData?.signFormatedDisplayText || "").replace(/<a(\s+.*?)?>/g, (match) => {
+                    if (match.includes("target=")) return match; // avoid duplicates
+                    return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
                   }),
                 }}
               />
@@ -211,7 +213,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
                 label="AI Prompt"
                 value={signatureData?.signAiPrompt}
                 name="aiPrompt"
-                onChange={e => setSignatureData(prev => ({ ...prev, signAiPrompt: e.target.value }))}
+                onChange={(e) => setSignatureData((prev) => ({ ...prev, signAiPrompt: e.target.value }))}
               />
               <Button onClick={getResponseFromAi} disabled={isFormating} className="bg-primary mt-8 text-white">
                 Generate
@@ -223,9 +225,9 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
                 <div
                   className="h-full p-4"
                   dangerouslySetInnerHTML={{
-                    __html: String(signatureData?.signAiResponse || '').replace(/<a(\s+.*?)?>/g, match => {
-                      if (match.includes('target=')) return match; // avoid duplicates
-                      return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                    __html: String(signatureData?.signAiResponse || "").replace(/<a(\s+.*?)?>/g, (match) => {
+                      if (match.includes("target=")) return match; // avoid duplicates
+                      return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
                     }),
                   }}
                 />
@@ -233,6 +235,17 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
             )}
           </div>
         )}
+        {/* id mission qr  */}
+        <div className="flex gap-2 pb-4">
+          <Checkbox
+            id="idMissionQr"
+            label="Enable ID Mission QR for this section"
+            checked={isIdMissionQrEnabled}
+            disabled={isUpdatingSection}
+            className={`${signatureEnabling ? "pointer-events-none opacity-30" : ""}`}
+            onChange={(e) => setIsIdMissionQrEnabled(e.target.checked)}
+          />
+        </div>
         <div className="flex w-full">
           <Button
             onClick={handleUpdateSectionForSignature}
@@ -252,7 +265,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
         <Button
           onClick={() => saveFormHandler(fieldsData)}
           disabled={isLoading}
-          className={`bg-primary cursor-pointer text-white ${isArticleForm ? 'w-full' : 'w-[45%]'}`}
+          className={`bg-primary cursor-pointer text-white ${isArticleForm ? "w-full" : "w-[45%]"}`}
         >
           Save Form
         </Button>

@@ -26,7 +26,7 @@ import {
   updateFormState,
 } from "@/redux/slices/formSlice";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
-import makeCompleteName from "@/utils/idMissionMapingUtils";
+import { formatData, makeCompleteName } from "@/utils/idMissionMapingUtils";
 import { collectClientDetails } from "@/utils/userDetails";
 import { Autocomplete } from "@react-google-maps/api";
 import { unwrapResult } from "@reduxjs/toolkit";
@@ -309,11 +309,6 @@ export default function SingleApplication() {
 
   // other functions
   // ==============
-
-  const formatData = useCallback((date) => {
-    const [d, m, y] = date.split("/");
-    return `${y}-${m}-${d}`;
-  }, []);
 
   const saveInProgress = useCallback(
     async ({ data, name }) => {
@@ -792,7 +787,6 @@ export default function SingleApplication() {
   }, [
     dispatch,
     formId,
-    formatData,
     getUserProfile,
     idMissionVerified,
     idMissionVerifiedData?.createdAt,
