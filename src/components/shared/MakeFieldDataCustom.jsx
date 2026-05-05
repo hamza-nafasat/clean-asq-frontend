@@ -1,14 +1,14 @@
-import ConfirmationModal from '@/components/shared/ConfirmationModal';
-import Checkbox from '@/components/shared/small/Checkbox';
-import TextField from '@/components/shared/small/TextField';
-import { Button } from '@/components/ui/button';
-import { FIELD_TYPES } from '@/data/constants';
-import { useFormateTextInMarkDownMutation } from '@/redux/apis/formApis';
-import DOMPurify from 'dompurify';
-import { TrashIcon, XIcon } from 'lucide-react';
-import React, { useCallback, useState } from 'react';
-import { MdOutlineRestore } from 'react-icons/md';
-import { toast } from 'react-toastify';
+import ConfirmationModal from "@/components/shared/ConfirmationModal";
+import Checkbox from "@/components/shared/small/Checkbox";
+import TextField from "@/components/shared/small/TextField";
+import { Button } from "@/components/ui/button";
+import { FIELD_TYPES } from "@/data/constants";
+import { useFormateTextInMarkDownMutation } from "@/redux/apis/formApis";
+import DOMPurify from "dompurify";
+import { TrashIcon, XIcon } from "lucide-react";
+import React, { useCallback, useState } from "react";
+import { MdOutlineRestore } from "react-icons/md";
+import { toast } from "react-toastify";
 
 const MakeFieldDataCustom = ({
   originalFieldData,
@@ -24,77 +24,78 @@ const MakeFieldDataCustom = ({
   field?.displayTextFormattingInstructions;
 
   const addNewOption = useCallback(() => {
-    setFieldsData(prev =>
+    setFieldsData((prev) =>
       prev.map((item, idx) =>
-        idx !== index ? item : { ...item, options: [...(item.options || []), { label: '', value: '' }] }
-      )
+        idx !== index ? item : { ...item, options: [...(item.options || []), { label: "", value: "" }] },
+      ),
     );
   }, [setFieldsData, index]);
 
   const removeOption = useCallback(
-    optionIdx => {
-      setFieldsData(prev =>
+    (optionIdx) => {
+      setFieldsData((prev) =>
         prev.map((item, idx) =>
-          idx !== index ? item : { ...item, options: item.options.filter((_, i) => i !== optionIdx) }
-        )
+          idx !== index ? item : { ...item, options: item.options.filter((_, i) => i !== optionIdx) },
+        ),
       );
     },
-    [setFieldsData, index]
+    [setFieldsData, index],
   );
 
   const updateFieldDataField = useCallback(
     (e, isCheckbox) => {
       const { name, value, checked } = e.target;
-      setFieldsData(prev =>
+      setFieldsData((prev) =>
         prev.map((item, idx) =>
           idx !== index
             ? item
             : {
                 ...item,
                 [name]: isCheckbox ? checked : value,
-              }
-        )
+              },
+        ),
       );
     },
-    [setFieldsData, index]
+    [setFieldsData, index],
   );
 
   const revertBackToOriginalData = useCallback(
-    name => {
+    (name) => {
       const originalData = originalFieldData?.[index]?.[name];
-      setFieldsData(prev =>
+      setFieldsData((prev) =>
         prev.map((item, idx) =>
           idx !== index
             ? item
             : {
                 ...item,
                 [name]: originalData,
-              }
-        )
+              },
+        ),
       );
     },
-    [setFieldsData, index, originalFieldData]
+    [setFieldsData, index, originalFieldData],
   );
 
   const updateFieldDataFieldForOptions = useCallback(
     (e, optionIndex) => {
+      console.log("e", e.target);
       const { name, value } = e.target;
-      setFieldsData(prev =>
+      setFieldsData((prev) =>
         prev.map((item, idx) =>
           idx !== index
             ? item
             : {
                 ...item,
                 options: item.options.map((opt, i) => (i !== optionIndex ? opt : { ...opt, [name]: value })),
-              }
-        )
+              },
+        ),
       );
     },
-    [setFieldsData, index]
+    [setFieldsData, index],
   );
 
   const handleDeleteField = useCallback(() => {
-    setFieldsData(prev => {
+    setFieldsData((prev) => {
       const copy = [...prev];
       copy.splice(index, 1);
       return copy;
@@ -103,12 +104,12 @@ const MakeFieldDataCustom = ({
   }, [setFieldsData, index]);
 
   const formateTextWithAi = useCallback(async () => {
-    const textForDisplay = field.displayText || '';
-    const instructions = field?.displayTextFormattingInstructions || '';
+    const textForDisplay = field.displayText || "";
+    const instructions = field?.displayTextFormattingInstructions || "";
 
-    console.log('textForDisplay', textForDisplay, instructions);
+    console.log("textForDisplay", textForDisplay, instructions);
     if (!instructions || !textForDisplay) {
-      toast.error('Please enter formatting instruction and text to format');
+      toast.error("Please enter formatting instruction and text to format");
       return;
     }
     try {
@@ -118,18 +119,18 @@ const MakeFieldDataCustom = ({
       }).unwrap();
       if (res.success) {
         let html = DOMPurify.sanitize(res.data);
-        setFieldsData(prev => prev.map((item, idx) => (idx !== index ? item : { ...item, ai_formatting: html })));
+        setFieldsData((prev) => prev.map((item, idx) => (idx !== index ? item : { ...item, ai_formatting: html })));
       }
     } catch (err) {
       console.error(err);
-      toast.error(err?.data?.message || 'Failed to format text');
+      toast.error(err?.data?.message || "Failed to format text");
     }
   }, [field?.displayTextFormattingInstructions, field.displayText, formateTextInMarkDown, index, setFieldsData]);
 
   const getResponseFromAi = useCallback(async () => {
-    const aiPrompt = field.aiPrompt || '';
+    const aiPrompt = field.aiPrompt || "";
     if (!aiPrompt) {
-      return toast.error('Please enter formatting instruction and text to format');
+      return toast.error("Please enter formatting instruction and text to format");
     }
     try {
       const res = await formateTextInMarkDown({
@@ -138,11 +139,11 @@ const MakeFieldDataCustom = ({
       if (res.success) {
         let html = DOMPurify.sanitize(res.data);
         //  update ai_response
-        setFieldsData(prev => prev.map((item, idx) => (idx !== index ? item : { ...item, aiResponse: html })));
+        setFieldsData((prev) => prev.map((item, idx) => (idx !== index ? item : { ...item, aiResponse: html })));
       }
     } catch (err) {
       console.error(err);
-      toast.error(err?.data?.message || 'Failed to format text');
+      toast.error(err?.data?.message || "Failed to format text");
     }
   }, [field.aiPrompt, formateTextInMarkDown, index, setFieldsData]);
 
@@ -173,7 +174,7 @@ const MakeFieldDataCustom = ({
             onChange={updateFieldDataField}
             rightIcon={originalFieldData?.[index]?.name ? <MdOutlineRestore /> : null}
             cnRight="cursor-pointer! text-red-500! hover:text-red-600! font-bold!"
-            onClickRightIcon={originalFieldData?.[index]?.name ? () => revertBackToOriginalData('name') : null}
+            onClickRightIcon={originalFieldData?.[index]?.name ? () => revertBackToOriginalData("name") : null}
           />
         </div>
         {/* Field Type & Placeholder */}
@@ -188,7 +189,7 @@ const MakeFieldDataCustom = ({
                   onChange={updateFieldDataField}
                   className="w-full p-2 outline-none"
                 >
-                  {Object.values(FIELD_TYPES).map(typeOpt => (
+                  {Object.values(FIELD_TYPES).map((typeOpt) => (
                     <option key={typeOpt} value={typeOpt}>
                       {typeOpt.charAt(0).toUpperCase() + typeOpt.slice(1)}
                     </option>
@@ -200,7 +201,7 @@ const MakeFieldDataCustom = ({
           {(simpleFieldType || selectFieldType) && (
             <TextField
               label="Change Placeholder"
-              value={field.placeholder || ''}
+              value={field.placeholder || ""}
               name="placeholder"
               onChange={updateFieldDataField}
             />
@@ -208,11 +209,11 @@ const MakeFieldDataCustom = ({
         </div>
 
         {/* for text field add suggestions list */}
-        {field?.type == 'text' && (
+        {field?.type == "text" && (
           <div className="flex items-center justify-between gap-2">
             <TextField
               label="Enter suggestions (comma separated)"
-              value={field.suggestions || ''}
+              value={field.suggestions || ""}
               name="suggestions"
               onChange={updateFieldDataField}
             />
@@ -221,10 +222,10 @@ const MakeFieldDataCustom = ({
         {/* Range settings */}
         {rangeFieldType && (
           <div className="flex w-full items-center gap-2">
-            {['minValue', 'maxValue', 'defaultValue'].map(key => (
+            {["minValue", "maxValue", "defaultValue"].map((key) => (
               <TextField
                 key={key}
-                label={key === 'minValue' ? 'Min Value' : key === 'maxValue' ? 'Max Value' : 'Default Value'}
+                label={key === "minValue" ? "Min Value" : key === "maxValue" ? "Max Value" : "Default Value"}
                 value={field[key] || 0}
                 name={key}
                 onChange={updateFieldDataField}
@@ -238,19 +239,19 @@ const MakeFieldDataCustom = ({
             label="Is Required"
             checked={field.required}
             name="required"
-            onChange={e => updateFieldDataField(e, true)}
+            onChange={(e) => updateFieldDataField(e, true)}
           />
           <Checkbox
             label="Enable AI Help"
             checked={field.aiHelp}
             name="aiHelp"
-            onChange={e => updateFieldDataField(e, true)}
+            onChange={(e) => updateFieldDataField(e, true)}
           />
           <Checkbox
             label="Enable Display Text"
             checked={field.isDisplayText}
             name="isDisplayText"
-            onChange={e => updateFieldDataField(e, true)}
+            onChange={(e) => updateFieldDataField(e, true)}
           />
         </div>
         {/* AI prompt & response */}
@@ -274,9 +275,9 @@ const MakeFieldDataCustom = ({
                 <div
                   className="h-full p-4"
                   dangerouslySetInnerHTML={{
-                    __html: String(field?.aiResponse || '').replace(/<a(\s+.*?)?>/g, match => {
-                      if (match.includes('target=')) return match; // avoid duplicates
-                      return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                    __html: String(field?.aiResponse || "").replace(/<a(\s+.*?)?>/g, (match) => {
+                      if (match.includes("target=")) return match; // avoid duplicates
+                      return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
                     }),
                   }}
                 />
@@ -294,13 +295,13 @@ const MakeFieldDataCustom = ({
                   label={`Option ${i + 1} Label`}
                   value={opt.label}
                   name="label"
-                  onChange={e => updateFieldDataFieldForOptions(e, i)}
+                  onChange={(e) => updateFieldDataFieldForOptions(e, i)}
                 />
                 <TextField
                   label={`Option ${i + 1} Value`}
                   value={opt.value}
                   name="value"
-                  onChange={e => updateFieldDataFieldForOptions(e, i)}
+                  onChange={(e) => updateFieldDataFieldForOptions(e, i)}
                 />
                 <Button onClick={() => removeOption(i)} className="mt-8 bg-red-500 hover:bg-red-700">
                   <TrashIcon className="h-5 w-5 text-white" />
@@ -344,9 +345,9 @@ const MakeFieldDataCustom = ({
               <div
                 className="h-full w-full p-4"
                 dangerouslySetInnerHTML={{
-                  __html: String(field?.ai_formatting || '').replace(/<a(\s+.*?)?>/g, match => {
-                    if (match.includes('target=')) return match; // avoid duplicates
-                    return match.replace('<a', '<a target="_blank" rel="noopener noreferrer"');
+                  __html: String(field?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
+                    if (match.includes("target=")) return match; // avoid duplicates
+                    return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
                   }),
                 }}
               />

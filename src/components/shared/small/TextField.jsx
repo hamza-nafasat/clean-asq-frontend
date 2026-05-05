@@ -198,7 +198,13 @@ const TextField = ({
                   key={index}
                   className="h-full cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-black"
                   onClick={() => {
-                    onChange?.({ target: { name, value: suggestion } });
+                    console.log("suggestion is", suggestion);
+                    onChange({ target: { name, value: suggestion } });
+                    setShowSuggestions(false);
+                  }}
+                  onMouseDown={() => {
+                    console.log("suggestion is", suggestion);
+                    onChange({ target: { name, value: suggestion } });
                     setShowSuggestions(false);
                   }}
                 >

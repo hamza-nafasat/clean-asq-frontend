@@ -8,8 +8,8 @@ function sanitizeHtml(dirtyHtml = "") {
 
   // Step 1: basic sanitize
   const clean = DOMPurify.sanitize(dirtyHtml, {
-    ALLOWED_TAGS: ["div", "span", "p", "b", "strong", "i", "ul", "ol", "li", "br", "iframe"],
-    ALLOWED_ATTR: ["style", "src", "width", "height", "loading"],
+    ALLOWED_TAGS: ["div", "span", "p", "b", "strong", "i", "ul", "ol", "li", "br", "iframe", "img"],
+    ALLOWED_ATTR: ["style", "src", "width", "height", "loading", "alt"],
     FORBID_TAGS: ["script"],
     FORBID_ATTR: ["onerror", "onload", "onclick"],
   });
