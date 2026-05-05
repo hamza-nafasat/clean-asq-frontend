@@ -243,7 +243,10 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
             checked={isIdMissionQrEnabled}
             disabled={isUpdatingSection}
             className={`${signatureEnabling ? "pointer-events-none opacity-30" : ""}`}
-            onChange={(e) => setIsIdMissionQrEnabled(e.target.checked)}
+            onChange={(e) => {
+              console.log("e.target.checked is", e.target.checked);
+              setIsIdMissionQrEnabled(e.target.checked);
+            }}
           />
         </div>
         <div className="flex w-full">

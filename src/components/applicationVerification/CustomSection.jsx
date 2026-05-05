@@ -45,7 +45,6 @@ function CustomSection({
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [loadingNext, setLoadingNext] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
-  const [webLink, setWebLink] = useState(null);
   const [qrCode, setQrCode] = useState("");
   const [getQrAndWebLinkLoading, setGetQrAndWebLinkLoading] = useState(false);
   const [isIdMissionProcessing, setIsIdMissionProcessing] = useState(false);
@@ -103,7 +102,6 @@ function CustomSection({
       const res = await getIdMissionSession({ sectionKey: sectionKey }).unwrap();
       if (res.success) {
         setQrCode(res.data?.customerData?.qrCode);
-        setWebLink(res.data?.customerData?.kycUrl);
       }
     } catch (error) {
       console.log("Error fetching session ID:", error);
@@ -118,7 +116,6 @@ function CustomSection({
           idMissionValue !== undefined
             ? { name: field?.name, value: idMissionValue }
             : (reduxData?.[field?.uniqueId] ?? "");
-        console.log(`finalValue for ${field?.name} is`, finalValue);
         formFields[field?.uniqueId] = finalValue;
       });
       setForm(formFields);
@@ -364,7 +361,6 @@ function CustomSection({
       socket.off("idMission_other");
     };
   }, [idMissionVerifiedData?.createdAt, sectionKey, user?.email]);
-  if (isGetIdMissionSessionLoading) return <CustomLoading />;
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
@@ -399,29 +395,33 @@ function CustomSection({
           />
         </div>
       )}
-      <div className="flex items-center justify-center w-full">
-        {isIdMissionProcessing ? (
-          <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
-        ) : (
-          <>
-            {qrCode && webLink && (
+      {step?.isIdMissionQr && (
+        <div className="flex items-center justify-center w-full">
+          {isIdMissionProcessing ? (
+            <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
+          ) : (
+            <>
               <div className="flex flex-col  gap-4">
                 <div className="mt-4 flex w-full flex-col items-center gap-4">
-                  <img className="h-[230px] w-[230px]" src={`data:image/jpeg;base64,${qrCode}`} alt="qr code " />
+                  {qrCode ? (
+                    <img className="h-[230px] w-[230px]" src={`data:image/jpeg;base64,${qrCode}`} alt="qr code " />
+                  ) : (
+                    <CustomLoading />
+                  )}
                 </div>
                 <div className="mt-4 flex w-full flex-col items-center gap-4">
                   <Button
                     className="w-full max-w-[230px]"
-                    disabled={getQrAndWebLinkLoading}
+                    disabled={getQrAndWebLinkLoading || isGetIdMissionSessionLoading}
                     label={"Refresh QR Code"}
                     onClick={getQrAndWebLink}
                   />
                 </div>
               </div>
-            )}
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </div>
+      )}
       <div className="mt-6 flex flex-col gap-4">
         {fields?.map((field, index) => {
           if (field.name === "main_owner_own_25_percent_or_more" || field.type === "block") return null;
