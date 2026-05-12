@@ -92,7 +92,6 @@ export default function SingleApplication() {
     signature: { name: "signature", value: { secureUrl: "", publicId: "", resourceType: "" } },
     data: { name: "data", value: "null" },
   });
-  console.log("idMissionVerifiedData", idMissionVerifiedData);
   const autocompleteRef = useRef(null);
 
   const idMissionSection = form?.data?.sections?.find((sec) => sec?.title?.toLowerCase() == "id_verification_blk");
@@ -330,7 +329,6 @@ export default function SingleApplication() {
             },
           },
         };
-        // console.log('save in progress', formDataInRedux);
         const res = await saveFormInDraft({
           formId: formId,
           formData: { ...formDataInRedux },
@@ -353,7 +351,6 @@ export default function SingleApplication() {
         const action = await dispatch(addSavedFormData(savedData || []));
         unwrapResult(action);
         if (!savedData?.company_lookup_data) {
-          console.log("saved data is ,", savedData);
           return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
         }
         setIdMissionVerifiedData({
@@ -386,7 +383,6 @@ export default function SingleApplication() {
         return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
       }
       console.log("error while getting saved form data", error);
-      // toast.error(error?.data?.message || 'Error while getting saved form data');
     }
   }, [dispatch, form?.data?.branding?.name, formId, getSavedFormData, navigate, user?.email]);
 
@@ -437,7 +433,6 @@ export default function SingleApplication() {
   const getQrAndWebLink = useCallback(async () => {
     try {
       const res = await getIdMissionSession().unwrap();
-      // console.log('session id is ', res);
       if (res.success) {
         setQrCode(res.data?.customerData?.qrCode);
         setWebLink(res.data?.customerData?.kycUrl);
@@ -556,13 +551,11 @@ export default function SingleApplication() {
   useEffect(() => {
     // Setup listener ONCE when component mounts
     // start id mission
-    socket.on("idMission_processing_started", (data) => {
-      console.log("you start id mission verification", data);
+    socket.on("idMission_processing_started", () => {
       setIsIdMissionProcessing(true);
     });
     // id mission verified success fully
     socket.on("idMission_verified", async (data) => {
-      console.log("verified id mission data is", data);
       if (user?._id && data?.Form_Data?.FullName) {
         const firstName = data?.Form_Data?.First_Name || data?.Form_Data?.FullName?.split(" ")?.[0] || "";
         const middleName = data?.Form_Data?.Middle_Name || data?.Form_Data?.FullName?.split(" ")?.[1] || "";
@@ -578,7 +571,6 @@ export default function SingleApplication() {
         }
       }
 
-      // console.log('You are verified successfully', data);
       setIsIdMissionProcessing(false);
       const formDataOfIdMission = data?.Form_Data;
 
@@ -636,8 +628,6 @@ export default function SingleApplication() {
     });
     // id mission failed
     socket.on("idMission_failed", async (data) => {
-      console.log("failed id mission data is", data);
-
       // console.log('you start id mission failed', data);
       // toast.error("you id didn't approved please try again");
       const action = await dispatch(
@@ -706,9 +696,6 @@ export default function SingleApplication() {
       setIdMissionVerified(true);
     });
     socket.on("idMission_other", async (data) => {
-      console.log("other id mission data is", data);
-
-      console.log("Id Mission Data ", data);
       const action = await dispatch(
         updateFormState({
           data: {
@@ -772,7 +759,7 @@ export default function SingleApplication() {
         updatedAt: new Date().toISOString(),
       });
       unwrapResult(action);
-      toast.error("you id didn't approved please try again");
+      // toast.error("you id didn't approved please try again");
       setIsIdMissionProcessing(false);
       setIdMissionVerified(true);
     });
@@ -805,7 +792,6 @@ export default function SingleApplication() {
         return Object.values(val).every((v) => v?.toString().trim() !== "");
       return true;
     });
-    console.log("allFilled", allFilled);
     setIsAllRequiredFieldsFilled(allFilled);
   }, [idMissionVerifiedData]);
 
@@ -1679,7 +1665,6 @@ const IdMissionDataModal = ({ form, formRefetch, setOpenIdMissionDataDisplayText
 
   const handleUpdateSectionForSignature = async () => {
     try {
-      console.log("");
       const res = await updateForm({
         _id: form?._id,
         data: {

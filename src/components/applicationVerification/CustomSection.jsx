@@ -180,14 +180,14 @@ function CustomSection({
 
   // check and get socket events
   useEffect(() => {
-    socket.on("idMission_processing_started", (data) => {
-      console.log("you start id mission verification", data);
+    socket.on("idMission_processing_started", () => {
+      // console.log("you start id mission verification", data);
       setIsIdMissionProcessing(true);
     });
     // id mission verified success fully
     socket.on("idMission_verified", async (data) => {
       if (data?.sectionKey !== sectionKey) return;
-      console.log("verified id mission data is", data);
+      // console.log("verified id mission data is", data);
       setIsIdMissionProcessing(false);
       const formDataOfIdMission = data?.Form_Data;
 
@@ -245,7 +245,7 @@ function CustomSection({
     // id mission failed
     socket.on("idMission_failed", async (data) => {
       if (data?.sectionKey !== sectionKey) return;
-      console.log("failed id mission data is", data);
+      // console.log("failed id mission data is", data);
       // console.log('You are verified successfully', data);
       setIsIdMissionProcessing(false);
       const formDataOfIdMission = data?.Form_Data;
@@ -299,7 +299,7 @@ function CustomSection({
     });
     socket.on("idMission_other", async (data) => {
       if (data?.sectionKey !== sectionKey) return;
-      console.log("other id mission data is", data);
+      // console.log("other id mission data is", data);
 
       setIsIdMissionProcessing(false);
       const formDataOfIdMission = data?.Form_Data;

@@ -6,18 +6,15 @@ import DOMPurify from "dompurify";
 function sanitizeHtml(dirtyHtml = "") {
   if (!dirtyHtml || typeof dirtyHtml !== "string") return "";
 
-  // Step 1: basic sanitize
   const clean = DOMPurify.sanitize(dirtyHtml, {
-    ALLOWED_TAGS: ["div", "span", "p", "b", "strong", "i", "ul", "ol", "li", "br", "iframe", "img"],
-    ALLOWED_ATTR: ["style", "src", "width", "height", "loading", "alt"],
     FORBID_TAGS: ["script"],
-    FORBID_ATTR: ["onerror", "onload", "onclick"],
+    FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onfocus", "onmouseenter"],
   });
 
   // Step 2: DOM parsing (for iframe control)
   const tempDiv = document.createElement("div");
   tempDiv.innerHTML = clean;
-
+  ("");
   const iframes = tempDiv.querySelectorAll("iframe");
 
   iframes.forEach((iframe) => {
