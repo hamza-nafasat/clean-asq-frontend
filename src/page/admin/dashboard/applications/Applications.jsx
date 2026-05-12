@@ -48,9 +48,7 @@ function Applications() {
   }, []);
 
   useEffect(() => {
-    if (!isLoadingForm && data?.data) {
-      setApplicants(data?.data);
-    }
+    if (!isLoadingForm && data?.data) setApplicants(data?.data);
   }, [data, isLoadingForm]);
 
   return (

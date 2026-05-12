@@ -26,7 +26,6 @@ const Brandings = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const actionMenuRefs = useRef(new Map());
-  const [isLoading] = useState(false);
   const [applyModal, setApplyModal] = useState(false);
   const [actionMenu, setActionMenu] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
@@ -220,9 +219,7 @@ const Brandings = () => {
     };
   }, [actionMenu]);
 
-  return isBrandingsLoading ? (
-    <CustomLoading />
-  ) : (
+  return (
     <div className="mt-5 w-full">
       {applyModal && (
         <ConfirmationModal
@@ -255,7 +252,7 @@ const Brandings = () => {
           data={brandings?.data || []}
           columns={columns()}
           customStyles={tableStyles}
-          progressPending={isLoading}
+          progressPending={isBrandingsLoading}
           noDataComponent="No Brandings Found"
           className="rounded-md!"
           highlightOnHover

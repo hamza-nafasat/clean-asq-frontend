@@ -52,7 +52,7 @@ const columns = () => [
 ];
 
 const History = ({ submittedFormId }) => {
-  const { data: historyData } = useGetFormHistoryQuery(
+  const { data: historyData, isLoading: isLoadingHistory } = useGetFormHistoryQuery(
     { formSubmittedId: submittedFormId },
     { skip: !submittedFormId },
   );
@@ -69,7 +69,7 @@ const History = ({ submittedFormId }) => {
         customStyles={tableStyles}
         pagination
         highlightOnHover
-        progressPending={false}
+        progressPending={isLoadingHistory}
         noDataComponent="No History found"
         className="rounded-t-xl!"
       />

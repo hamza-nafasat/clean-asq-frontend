@@ -34,11 +34,17 @@ const ApplicationAnalysis = ({ submitFormData }) => {
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   const [isApplyingRules, setIsApplyingRules] = useState(false);
-  const { data: alertsData, refetch: refetchAlertsData } = useApplyRulesOnFormQuery(submitFormData?._id, {
+  const [isFetchingAlertsData, setIsFetchingAlertsData] = useState(false);
+  const {
+    data: alertsData,
+    refetch: refetchAlertsData,
+    isLoading: isLoadingAlertsData,
+  } = useApplyRulesOnFormQuery(submitFormData?._id, {
     skip: !submitFormData?._id,
   });
 
   const filteredRules = useMemo(() => {
+    setIsFetchingAlertsData(true);
     const data = alertsData?.data || [];
     const allDisplayAlertWithNumber = data
       ?.filter((item) => item.category === "display")
@@ -46,6 +52,7 @@ const ApplicationAnalysis = ({ submitFormData }) => {
     const otherAllCategoryAlertWithNumber = data
       .filter((item) => item.category !== "display")
       ?.map((item, index) => ({ ...item, number: index + 1 }));
+    setIsFetchingAlertsData(false);
     return {
       allDisplayAlertWithNumber,
       otherAllCategoryAlertWithNumber,
@@ -87,7 +94,7 @@ const ApplicationAnalysis = ({ submitFormData }) => {
               columns={columns()}
               customStyles={tableStyles}
               highlightOnHover
-              progressPending={false}
+              progressPending={isLoadingAlertsData || isFetchingAlertsData}
               noDataComponent="No History found"
               className="rounded-t-xl!"
             />
@@ -103,7 +110,7 @@ const ApplicationAnalysis = ({ submitFormData }) => {
               columns={columns()}
               customStyles={tableStyles}
               highlightOnHover
-              progressPending={false}
+              progressPending={isLoadingAlertsData || isFetchingAlertsData}
               noDataComponent="No History found"
               className="rounded-t-xl!"
             />

@@ -95,6 +95,7 @@ const ApplicantsTable = ({
   setSelectedFormId,
 }) => {
   const navigate = useNavigate();
+  const [isApplicantsLoading, setIsApplicantsLoading] = useState(false);
   const [actionMenu, setActionMenu] = React.useState(null);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [editModalData, setEditModalData] = useState(null);
@@ -195,6 +196,7 @@ const ApplicantsTable = ({
   }, []);
 
   const filteredApplicants = useMemo(() => {
+    setIsApplicantsLoading(true);
     return applicants.filter((applicant) => {
       const matchesDateRange =
         (!filters.dateRange.start || applicant?.createdAt >= filters.dateRange.start) &&
@@ -204,7 +206,7 @@ const ApplicantsTable = ({
         !searchTerm || applicant?.user?.tole?.name?.toLowerCase().includes(searchTerm?.toLowerCase());
       const name = applicant?.user?.firstName + " " + applicant?.user?.lastName;
       const matchesName = !filters?.name || name?.toLowerCase().includes(filters.name.toLowerCase());
-
+      setIsApplicantsLoading(false);
       return matchesDateRange && matchesStatus && matchesSearch && matchesName;
     });
   }, [applicants, filters, searchTerm]);
@@ -359,7 +361,7 @@ const ApplicantsTable = ({
         <DataTable
           columns={columns}
           data={filteredApplicants}
-          progressPending={isLoading}
+          progressPending={isApplicantsLoading}
           noDataComponent="No applicants found"
           highlightOnHover
           fixedHeader
