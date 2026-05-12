@@ -21,11 +21,11 @@ import { ThreeDotEditViewDelete } from "../shared/ThreeDotViewEditDelete";
 import { useBranding } from "../../hooks/BrandingContext";
 
 const UserTable = () => {
-  const { data: users } = useGetAllUsersQuery();
-  const { data: userTypeOptions } = useGetAllRolesQuery();
+  const { data: users, isLoading: isLoadingUsers } = useGetAllUsersQuery();
+  const { data: userTypeOptions, isLoading: isLoadingUserTypeOptions } = useGetAllRolesQuery();
   const [createUser, { isLoading: isCreatingUser }] = useCreateUserMutation();
   const [deleteUser, { isLoading: isDeletingUser }] = useDeleteSingleUserMutation();
-  const [updateUser] = useUpdateSingleUserMutation();
+  const [updateUser, { isLoading: isUpdatingUser }] = useUpdateSingleUserMutation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editModalData, setEditModalData] = useState(null);
@@ -33,7 +33,6 @@ const UserTable = () => {
   const [actionMenu, setActionMenu] = useState(null);
   const [formData, setFormData] = useState(INITIAL_USER_FORM);
   const [formErrors, setFormErrors] = useState({});
-  const [isLoading] = useState(false);
   const actionMenuRefs = useRef(new Map());
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const [userIdForDelete, setUserIdForDelete] = useState(null);
@@ -284,7 +283,12 @@ const UserTable = () => {
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-[#323332]">User Table</h2>
         <div className="flex gap-2">
-          <Button icon={IoMdPersonAdd} label="Add User" onClick={() => setIsModalOpen(true)} disabled={isLoading} />
+          <Button
+            icon={IoMdPersonAdd}
+            label="Add User"
+            onClick={() => setIsModalOpen(true)}
+            disabled={isCreatingUser}
+          />
         </div>
       </div>
 
@@ -293,7 +297,7 @@ const UserTable = () => {
         columns={columns}
         data={users?.data || []}
         pagination
-        progressPending={isLoading}
+        progressPending={isLoadingUsers || isLoadingUserTypeOptions}
         noDataComponent="No users found"
         className="rounded-t-xl!"
         highlightOnHover
@@ -312,7 +316,7 @@ const UserTable = () => {
             setFormErrors({});
           }}
           onSave={handleAddUser}
-          isLoading={isLoading || isCreatingUser}
+          isLoading={isCreatingUser}
         >
           {renderFormField("firstName", formData.firstName, handleInputChange, "text", formErrors.firstName)}
           {renderFormField("lastName", formData.lastName, handleInputChange, "text", formErrors.lastName)}
@@ -340,7 +344,7 @@ const UserTable = () => {
             setFormErrors({});
           }}
           onSave={handleEditUser}
-          isLoading={isLoading}
+          isLoading={isUpdatingUser}
         >
           {renderFormField("firstName", editModalData.firstName, handleEditInputChange, "text", formErrors.firstName)}
           {renderFormField("lastName", editModalData.lastName, handleEditInputChange, "text", formErrors.lastName)}
@@ -372,7 +376,7 @@ const UserTable = () => {
             setFormErrors({});
           }}
           onSave={handleChangePassword}
-          isLoading={isLoading}
+          isLoading={isUpdatingUser}
         >
           {renderFormField(
             "password",
@@ -390,7 +394,7 @@ const UserTable = () => {
         onConfirm={handleDeleteUser}
         title="Delete User"
         message={`Are you sure you want to delete the user ${deleteConfirmation?.name}? This action cannot be undone.`}
-        isLoading={isLoading || isDeletingUser}
+        isLoading={isDeletingUser}
         confirmButtonText="Delete User"
         confirmButtonClassName="bg-red-500 border-none hover:bg-red-600 text-white"
         cancelButtonText="Keep User"

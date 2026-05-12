@@ -7,6 +7,7 @@ import { ApplicationAnalysis } from "@/components/onBoarding/ApplicationAnalysis
 import { AppViewer } from "@/components/onBoarding/AppViewer";
 import checkPermission, { webPermissions } from "@/utils/checkPermission";
 import { useSelector } from "react-redux";
+import { FormVersions } from "@/components/onBoarding/FormVersions";
 
 function OnBoarding() {
   const user = useSelector((state) => state.auth.user);
@@ -36,11 +37,17 @@ function OnBoarding() {
               variant={activeTab === "appViewer" ? "primary" : "secondary"}
               onClick={() => setActiveTab("appViewer")}
             />
+            <Button
+              label="Form Versions"
+              variant={activeTab === "formVersions" ? "primary" : "secondary"}
+              onClick={() => setActiveTab("formVersions")}
+            />
           </div>
         </div>
         {activeTab === "history" && <History submittedFormId={applicantId} />}
         {activeTab === "applicationAnalysis" && <ApplicationAnalysis submitFormData={submitFormData?.data} />}
         {activeTab === "appViewer" && <AppViewer data={submitFormData?.data} />}
+        {activeTab === "formVersions" && <FormVersions submittedFormId={applicantId} />}
       </div>
     </>
   );

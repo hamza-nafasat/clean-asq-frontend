@@ -5,7 +5,7 @@ const formApis = createApi({
   reducerPath: "formApi",
   baseQuery: fetchBaseQuery({ baseUrl: `${getEnv("SERVER_URL")}/api/form`, credentials: "include" }),
 
-  tagTypes: ["Form", "Strategy", "Prompts", "FormStrategy", "SubmitForm", "History", "FormRules"],
+  tagTypes: ["Form", "Strategy", "Prompts", "FormStrategy", "SubmitForm", "History", "FormRules", "SubmitFormVersions"],
   endpoints: (builder) => ({
     // create new form
     // ---------------
@@ -75,7 +75,7 @@ const formApis = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Form", "SubmitForm"],
+      invalidatesTags: ["Form", "SubmitForm", "SubmitFormVersions"],
     }),
 
     // update submitted form
@@ -86,7 +86,16 @@ const formApis = createApi({
         method: "PUT",
         body: { submittedFormId, formData },
       }),
-      invalidatesTags: ["SubmitForm", "History"],
+      invalidatesTags: ["SubmitForm", "History", "SubmitFormVersions"],
+    }),
+    // get form versions
+    // ---------------
+    getFormVersions: builder.query({
+      query: ({ submittedFormId }) => ({
+        url: `/form-versions/${submittedFormId}`,
+        method: "GET",
+      }),
+      providesTags: ["SubmitFormVersions"],
     }),
 
     // get submitted form users
@@ -534,6 +543,7 @@ export const {
   useDeleteSingleFormMutation,
   useSubmitFormMutation,
   useUpdateSubmittedFormMutation,
+  useGetFormVersionsQuery,
   useGetSubmittedFormUsersQuery,
   useGiveSpecialAccessToUserMutation,
   useApplicantGiveSpecialAccessToBeneficialOwnerMutation,

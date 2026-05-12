@@ -1,6 +1,6 @@
 import { APPLICANT_STATUS } from "@/data/constants";
 import { useDeleteSingleSubmitFormMutation } from "@/redux/apis/formApis";
-import { ArrowRight, Eye, MoreVertical, Pencil, Trash, UserIcon } from "lucide-react";
+import { ArrowRight, Eye, History, MoreVertical, Pencil, Trash, UserIcon } from "lucide-react";
 import PropTypes from "prop-types";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import DataTable from "react-data-table-component";
