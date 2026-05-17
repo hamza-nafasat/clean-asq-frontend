@@ -1,15 +1,15 @@
-import React from 'react';
+import React from "react";
 
 const Button = ({
   label,
   onClick,
-  className = '',
-  type = 'button',
+  className = "",
+  type = "button",
   icon: LeftIcon,
   rightIcon: RightIcon,
   cnLeft,
   cnRight,
-  variant = 'primary',
+  variant = "primary",
   loading = false,
   disabled = false,
   style = {},
@@ -32,14 +32,14 @@ const Button = ({
     `,
   };
 
-  const disabledClasses = disabled || loading ? 'opacity-40! cursor-not-allowed!' : '';
+  const disabledClasses = disabled || loading ? "opacity-40! cursor-not-allowed!" : "";
 
   return (
     <button
       type={type}
       onClick={disabled || loading ? undefined : onClick}
       disabled={disabled || loading}
-      className={` ${baseClasses} ${variantClasses[variant] || ''} ${disabledClasses} ${className} `}
+      className={` ${baseClasses} ${variantClasses[variant] || ""} ${disabledClasses} ${className} `}
       style={style}
       {...props}
     >
@@ -51,14 +51,7 @@ const Button = ({
             fill="none"
             viewBox="0 0 24 24"
           >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path
               className="opacity-75"
               fill="currentColor"

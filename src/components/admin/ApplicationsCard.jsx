@@ -6,7 +6,7 @@ import {
   useGetMyAllFormsQuery,
   useUpdateFormMutation,
 } from "@/redux/apis/formApis";
-import { MoreVertical } from "lucide-react";
+import { CopyIcon, MoreVertical } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { CiSearch } from "react-icons/ci";
 import { useNavigate } from "react-router-dom";
@@ -533,7 +533,31 @@ export const FormConfigurationModal = ({ form, refetch, setModal }) => {
         {/* Heading */}
         <h3 className="text-center text-lg font-semibold text-gray-800">Form Configuration</h3>
 
-        {/* Title Input */}
+        {/* Form url */}
+
+        <div className="flex items-center gap-2">
+          <TextField
+            label="Form URL"
+            id="redirect-url"
+            value={`${window.location.origin}/application-form/${form?.branding?.name}/${form?._id}`}
+            readOnly
+            onChange={() => {}}
+            name="redirect-url"
+          />
+          <Button
+            label={"Copy"}
+            variant="secondary"
+            onClick={() => {
+              navigator.clipboard.writeText(
+                `${window.location.origin}/application-form/${form?.branding?.name}/${form?._id}`,
+              );
+              toast.success("Copied to clipboard");
+            }}
+            className=" self-end! h-12!"
+            rightIcon={CopyIcon}
+            cnRight={"h-5! w-5!"}
+          />
+        </div>
 
         {/* Message Textarea */}
         <div className="flex flex-col gap-2">
@@ -556,6 +580,7 @@ export const FormConfigurationModal = ({ form, refetch, setModal }) => {
                 value={headerText}
                 onChange={(e) => setHeaderText(e.target.value)}
                 name="header-text"
+                style={{ fontSize: `${headerTextSize}px` }}
               />
             </div>
             <div className="flex flex-col gap-1 pb-1">

@@ -517,18 +517,14 @@ export default function SingleApplication() {
 
   // add footer and header text in state
   useEffect(() => {
-    if (form?.data?.footerText || form?.data?.headerText || form?.data?.name) {
-      dispatch(
-        updateFormHeaderAndFooter({
-          headerText: form?.data?.headerText || form?.data?.name || "",
-          footerText: form?.data?.footerText || "All rights reserved",
-        }),
-      );
+    const { footerText, headerText, name, headerTextSize } = form?.data || {};
+    if (footerText || headerText || name || headerTextSize) {
+      dispatch(updateFormHeaderAndFooter({ headerText, footerText, headerTextSize }));
     }
     return () => {
-      dispatch(updateFormHeaderAndFooter({ headerText: "", footerText: "All rights reserved" }));
+      dispatch(updateFormHeaderAndFooter({ headerText: "", footerText: "All rights reserved", headerTextSize: 24 }));
     };
-  }, [dispatch, form?.data?.footerText, form?.data?.headerText, form?.data?.name]);
+  }, [dispatch, form?.data]);
 
   // get qr and session id
   useEffect(() => {
