@@ -1,6 +1,35 @@
+import { useLayoutEffect, useRef, useState } from "react";
+
 export const ThreeDotEditViewDelete = ({ row, buttons }) => {
+  const menuRef = useRef(null);
+  const [coords, setCoords] = useState(null);
+
+  useLayoutEffect(() => {
+    if (!menuRef.current) return;
+    const parent = menuRef.current.parentElement;
+    if (!parent) return;
+    const triggerRect = parent.getBoundingClientRect();
+    const menuHeight = menuRef.current.offsetHeight;
+    const spaceBelow = window.innerHeight - triggerRect.bottom;
+    const openUp = spaceBelow < menuHeight + 8;
+
+    setCoords({
+      right: window.innerWidth - triggerRect.right,
+      top: openUp ? undefined : triggerRect.bottom + 4,
+      bottom: openUp ? window.innerHeight - triggerRect.top + 4 : undefined,
+    });
+  }, []);
+
   return (
-    <div className="z-50 mt-2 min-w-[180px] rounded border bg-white shadow-lg absolute right-0 top-full">
+    <div
+      ref={menuRef}
+      style={
+        coords
+          ? { position: "fixed", right: coords.right, top: coords.top, bottom: coords.bottom, zIndex: 9999 }
+          : { position: "fixed", opacity: 0, zIndex: 9999 }
+      }
+      className="min-w-[180px] rounded border bg-white shadow-lg"
+    >
       {buttons?.map((button, index) => (
         <button
           key={index}

@@ -18,7 +18,9 @@ import { useGetMyAllFormsQuery } from "@/redux/apis/formApis";
 import DropdownCheckbox from "@/components/shared/DropdownCheckbox";
 import CustomLoading from "@/components/shared/small/CustomLoading";
 import Checkbox from "@/components/shared/small/Checkbox";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/authApis";
+import { userExist } from "@/redux/slices/authSlice";
 
 const emailTypes = [
   {
@@ -75,7 +77,9 @@ const quillFormats = [
   "link",
   "image",
 ];
-function Email() {
+const sedationKeywords = ["link", "otp", "email", "password", "frontEndUrl", "recipientName", "brandCompanyName"];
+const Email = () => {
+  const menuRef = useRef(null);
   const [viewModalData, setViewModalData] = useState(null);
 
   const { data: applicationForms } = useGetMyAllFormsQuery();
@@ -95,20 +99,8 @@ function Email() {
   const [deleteEmailTemplate] = useDeleteSingleEmailTemplateMutation();
   const { data: emailTemplates, refetch: refetchEmailTemplates } = useGetAllEmailTemplatesQuery();
   const [isAttachFormModalOpen, setIsAttachFormModalOpen] = useState(false);
-  const menuRef = useRef(null);
 
   const templates = emailTemplates?.data;
-
-  const sedationKeywords = [
-    "link",
-    "otp",
-    "email",
-    "password",
-    "frontEndUrl",
-    "recipientName",
-    "applicationCompanyName",
-    "brandCompanyName",
-  ];
 
   <ReactQuill
     className={`h-[200px] border ${!editData.body ? "border-accent" : "border-frameColor"}`}
@@ -286,7 +278,7 @@ function Email() {
                         editData.body.toLowerCase().includes(keyword.toLowerCase())
                           ? "border-green-400 bg-green-100"
                           : "border-gray-300 bg-gray-100"
-                      }`}
+                      } hover:border-blue-400 hover:bg-blue-400 hover:text-white`}
                     >
                       {keyword}
                     </span>
@@ -367,16 +359,18 @@ function Email() {
       </div>
     </div>
   );
-}
+};
 
 export default Email;
 
 const ModalForAttachForms = React.memo(({ setIsAttachFormModalOpen, selectedTemplate }) => {
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { data: unAttachedForms, isLoading: isLoadingUnAttachedForms } = useUnAttachedFormsListQuery(
     { emailTemplateId: selectedTemplate?._id },
     { skip: !selectedTemplate?._id },
   );
+  const [getUserProfile, { isLoading: isLoadingUserProfile }] = useGetMyProfileFirstTimeMutation();
   const [selectedForms, setSelectedForms] = useState(selectedTemplate?.forms?.map((form) => form._id) || []);
   const [attachEmailToForms, { isLoading }] = useAttachTemplateToFormMutation();
   const [attachToMe, setAttachToMe] = useState(user?.welcomeMail === selectedTemplate?._id);
@@ -390,6 +384,10 @@ const ModalForAttachForms = React.memo(({ setIsAttachFormModalOpen, selectedTemp
         attachToMe: attachToMe,
       }).unwrap();
       if (res.success) {
+        const userData = await getUserProfile().unwrap();
+        if (userData?.success) {
+          dispatch(userExist(userData?.data));
+        }
         toast.success("Template attached to forms successfully");
         setIsAttachFormModalOpen(false);
       }
@@ -400,7 +398,11 @@ const ModalForAttachForms = React.memo(({ setIsAttachFormModalOpen, selectedTemp
   };
 
   return (
-    <Modal isLoading={isLoading} onSave={onSaveHandler} onClose={() => setIsAttachFormModalOpen(false)}>
+    <Modal
+      isLoading={isLoading || isLoadingUserProfile}
+      onSave={onSaveHandler}
+      onClose={() => setIsAttachFormModalOpen(false)}
+    >
       {isLoadingUnAttachedForms ? (
         <CustomLoading />
       ) : (
