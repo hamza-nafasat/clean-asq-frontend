@@ -61,6 +61,27 @@ const Brandings = () => {
     setApplicationFooterText,
     setAppLogoMaxHeight,
     setAppLogoMaxWidth,
+    setAiVoice,
+    setAiCustomPrompt,
+    setAiLaunchButtonColor,
+    setAiHeaderColor,
+    setAiBannerColor,
+    setAiBannerTextColor,
+    setAiSliderColor,
+    setPrivacyPolicyUrl,
+    setTermsOfServiceUrl,
+    setFavicon,
+    setTabTitle,
+    setHeaderEffect,
+    setFooterEffect,
+    setEmailHeaderEffect,
+    setEmailFooterEffect,
+    setButtonEffect,
+    setHeaderMaterial,
+    setFooterMaterial,
+    setButtonMaterial,
+    setEmailHeaderMaterial,
+    setEmailFooterMaterial,
   } = useBranding();
 
   const ButtonsForThreeDot = [
@@ -127,17 +148,38 @@ const Brandings = () => {
               setFrameColor(userBranding.colors.frame);
               setFontFamily(userBranding.fontFamily);
               setLogo(userBranding?.selectedLogo);
-              setButtonTextPrimary(userBranding?.buttonTextPrimary);
-              setButtonTextSecondary(userBranding?.buttonTextSecondary);
+              setButtonTextPrimary(userBranding?.colors?.buttonTextPrimary);
+              setButtonTextSecondary(userBranding?.colors?.buttonTextSecondary);
               setHeaderAlignment(userBranding?.headerAlignment);
-              setHeaderBackground(userBranding?.headerBackground);
-              setFooterBackground(userBranding?.footerBackground);
-              setHeaderText(userBranding?.headerText);
-              setFooterText(userBranding?.footerText);
-              setHighlightingColor(userBranding?.highlightingColor);
+              setHeaderBackground(userBranding?.colors?.headerBackground);
+              setFooterBackground(userBranding?.colors?.footerBackground);
+              setHeaderText(userBranding?.colors?.headerText);
+              setFooterText(userBranding?.colors?.footerText);
+              setHighlightingColor(userBranding?.colors?.highlighting);
               setApplicationFooterText(userBranding?.applicationFooterText);
               setAppLogoMaxWidth(userBranding?.appLogoMaxWidth);
               setAppLogoMaxHeight(userBranding?.appLogoMaxHeight);
+              setAiVoice(userBranding?.aiVoice || "nova");
+              setAiCustomPrompt(userBranding?.aiCustomPrompt || "");
+              setAiLaunchButtonColor(userBranding?.aiLaunchButtonColor || "");
+              setAiHeaderColor(userBranding?.aiHeaderColor || "");
+              setAiBannerColor(userBranding?.aiBannerColor || "");
+              setAiBannerTextColor(userBranding?.aiBannerTextColor || "");
+              setAiSliderColor(userBranding?.aiSliderColor || "");
+              setPrivacyPolicyUrl(userBranding?.privacyPolicyUrl || "");
+              setTermsOfServiceUrl(userBranding?.termsOfServiceUrl || "");
+              setFavicon(userBranding?.favicon || "");
+              setTabTitle(userBranding?.tabTitle || "");
+              setHeaderEffect(userBranding?.headerEffect || "none");
+              setFooterEffect(userBranding?.footerEffect || "none");
+              setEmailHeaderEffect(userBranding?.emailHeaderEffect || "none");
+              setEmailFooterEffect(userBranding?.emailFooterEffect || "none");
+              setButtonEffect(userBranding?.buttonEffect || "none");
+              setHeaderMaterial(userBranding?.headerMaterial ?? 0);
+              setFooterMaterial(userBranding?.footerMaterial ?? 0);
+              setButtonMaterial(userBranding?.buttonMaterial ?? 0);
+              setEmailHeaderMaterial(userBranding?.emailHeaderMaterial ?? 0);
+              setEmailFooterMaterial(userBranding?.emailFooterMaterial ?? 0);
             }
           }
           await getUserProfile()
@@ -219,8 +261,10 @@ const Brandings = () => {
     };
   }, [actionMenu]);
 
+  if (isBrandingsLoading) return <CustomLoading />;
+
   return (
-    <div className="mt-5 w-full">
+    <div className="mt-5 w-full" data-testid="branding-page">
       {applyModal && (
         <ConfirmationModal
           isOpen={!!applyModal}
@@ -242,7 +286,11 @@ const Brandings = () => {
         />
       )}
       <div className="mb-4 flex justify-end">
-        <Button label={"Create Branding"} onClick={() => navigate("/branding/create")} />
+        <Button
+          label={"Create Branding"}
+          onClick={() => navigate("/branding/create")}
+          data-testid="branding-create-btn"
+        />
         {/* Create Branding
         </Button> */}
       </div>

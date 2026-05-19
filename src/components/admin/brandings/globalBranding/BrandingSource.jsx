@@ -11,6 +11,8 @@ import { toast } from "react-toastify";
 const BrandingSource = ({
   websiteUrl,
   setWebsiteUrl,
+  websiteImage,
+  setWebsiteImage,
   logos,
   selectedLogo,
   setSelectedLogo,
@@ -20,12 +22,14 @@ const BrandingSource = ({
   defaultSelectedLogo = null, // Add this prop for the current branding logo
   handleExtraLogoUpload,
   extractColorsFromLogosHandler,
+  headerBackground,
 }) => {
-  const [websiteImage, setWebsiteImage] = useState(null);
+  // websiteImage/setWebsiteImage are lifted to GlobalBrandingPage so the AI can set them
   const [showPasteMenu, setShowPasteMenu] = useState(false);
   const [pasteTarget, setPasteTarget] = useState(null);
   const [selectedLogoIndex, setSelectedLogoIndex] = useState(null);
   const [hoveredLogoIndex, setHoveredLogoIndex] = useState(null);
+  const [logoDimensions, setLogoDimensions] = useState({});
 
   // Update selected logo index when selectedLogo or logos change
   useEffect(() => {
@@ -103,7 +107,7 @@ const BrandingSource = ({
             if (blob) {
               const fileUrl = URL.createObjectURL(blob);
               // add temporary preview
-              setLogos((prev) => [...prev, { url: fileUrl, type: "img", preview: true, invert: false }]);
+              setLogos((prev) => [...prev, { url: fileUrl, type: "img", preview: true }]);
               // Upload it properly
               handleExtraLogoUpload(blob);
             }
@@ -121,7 +125,7 @@ const BrandingSource = ({
     return () => {
       window.removeEventListener("paste", handlePaste);
     };
-  }, [handleExtraLogoUpload, pasteTarget, setLogos]);
+  }, [handleExtraLogoUpload, pasteTarget, setLogos, setWebsiteImage]);
 
   const handleUrlChange = (e) => {
     setWebsiteUrl(e.target.value);
@@ -235,18 +239,16 @@ const BrandingSource = ({
               <Button onClick={handlePasteMenu} icon={FiUpload} label={"Paste as"} />
               {showPasteMenu && (
                 <div ref={pasteMenuRef} className="absolute right-0 z-10 mt-2 w-40 rounded border bg-white shadow-lg">
-                  <button
+                  <Button
+                    label={"Paste as Image"}
                     className="block w-full px-4 py-2 text-left hover:bg-gray-100"
                     onClick={() => handlePasteOption("websiteImage")}
-                  >
-                    Paste as Image
-                  </button>
-                  <button
+                  />
+                  <Button
+                    label={"Paste as Logo"}
                     className="block w-full px-4 py-2 text-left hover:bg-gray-100"
                     onClick={() => handlePasteOption("logo")}
-                  >
-                    Paste as Logo
-                  </button>
+                  />
                 </div>
               )}
             </div>
@@ -264,10 +266,23 @@ const BrandingSource = ({
         </div>
         {/* website image section */}
         <div
-          className={`mt-4 flex ${websiteImage ? "h-[300px]" : ""} w-full items-center justify-center rounded-md border p-4`}
+          className={`relative mt-4 w-full rounded-md border p-4 ${websiteImage ? "max-h-[500px] overflow-y-auto" : "flex items-center justify-center"}`}
         >
           {websiteImage ? (
-            <img src={websiteImage} alt="Website Preview" className="mt-2 h-full rounded border object-contain p-2" />
+            <>
+              <img src={websiteImage} alt="Website Preview" className="mt-2 w-3/4 rounded border object-contain p-2" />
+              <Button
+                label={`${(
+                  <FiX
+                    size={18}
+                    type="button"
+                    onClick={() => setWebsiteImage(null)}
+                    className="absolute top-2 right-2 z-10 cursor-pointer rounded-full bg-white p-1 text-gray-500 shadow transition-transform duration-200 hover:scale-110 hover:text-red-500"
+                    aria-label="Remove screenshot"
+                  />
+                )}`}
+              />
+            </>
           ) : (
             <span className="text-gray-400">No website image uploaded or pasted.</span>
           )}
@@ -331,6 +346,14 @@ const BrandingSource = ({
                         You'll need to update branding before you'll be able to select this logo.
                       </div>
                     )}
+                    {/* Size tooltip for non-preview logos */}
+                    {!isPreview && hoveredLogoIndex === idx && logoDimensions[idx] && (
+                      <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center">
+                        <div className="rounded-t-md bg-gray-800 px-2 py-1 text-[11px] font-medium text-white">
+                          {logoDimensions[idx].h} × {logoDimensions[idx].w} px
+                        </div>
+                      </div>
+                    )}
                     {selectedLogoIndex === idx && !isPreview && (
                       <div className="absolute top-0 left-0 rounded-bl-md px-2 py-1 text-xs font-medium text-green-500">
                         Selected
@@ -349,15 +372,22 @@ const BrandingSource = ({
                     </button>
 
                     <div
-                      className={`flex h-[100px] w-[80%] flex-col items-center justify-center ${
+                      className={`flex h-[100px] w-[80%] flex-col items-center justify-center rounded-md ${
                         isPreview ? "cursor-not-allowed" : "cursor-pointer"
                       }`}
+                      style={{ background: headerBackground || "#f3f4f6" }}
                     >
                       <img
                         src={typeof logo === "string" ? logo : logo?.url}
                         alt={`Logo ${idx + 1}`}
-                        className={`h-[calc(100%-30px)] w-24 object-contain ${logo?.invert ? "rounded-sm bg-gray-700" : ""}`}
+                        className="h-[calc(100%-30px)] w-24 object-contain"
                         referrerPolicy="no-referrer"
+                        onLoad={(e) =>
+                          setLogoDimensions((prev) => ({
+                            ...prev,
+                            [idx]: { w: e.target.naturalWidth, h: e.target.naturalHeight },
+                          }))
+                        }
                       />
                       <div>logo</div>
                     </div>
@@ -375,9 +405,17 @@ const BrandingSource = ({
   );
 };
 
-export const SelectLogoForEmail = ({ logos, selectedLogo, setSelectedLogo, setLogos, defaultSelectedLogo = null }) => {
+export const SelectLogoForEmail = ({
+  logos,
+  selectedLogo,
+  setSelectedLogo,
+  setLogos,
+  defaultSelectedLogo = null,
+  headerBackground,
+}) => {
   const [selectedLogoIndex, setSelectedLogoIndex] = useState(null);
   const [hoveredLogoIndex, setHoveredLogoIndex] = useState(null);
+  const [logoDimensions, setLogoDimensions] = useState({});
 
   // Update selected logo index when selectedLogo or logos change
   useEffect(() => {
@@ -462,9 +500,7 @@ export const SelectLogoForEmail = ({ logos, selectedLogo, setSelectedLogo, setLo
         preview: URL.createObjectURL(file),
       }));
 
-    const detect = await detectLogo(newLogos[0]?.preview);
-
-    setLogos((prev) => [...prev, { url: newLogos[0]?.preview, type: "img", preview: true, invert: detect }]);
+    setLogos((prev) => [...prev, { url: newLogos[0]?.preview, type: "img", preview: true }]);
   };
 
   const handleRemoveLogo = (idx) => {
@@ -521,6 +557,14 @@ export const SelectLogoForEmail = ({ logos, selectedLogo, setSelectedLogo, setLo
                         You'll need to update branding before you'll be able to select this logo.
                       </div>
                     )}
+                    {/* Size tooltip for non-preview logos */}
+                    {!isPreview && hoveredLogoIndex === idx && logoDimensions[idx] && (
+                      <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center">
+                        <div className="rounded-t-md bg-gray-800 px-2 py-1 text-[11px] font-medium text-white">
+                          {logoDimensions[idx].h} × {logoDimensions[idx].w} px
+                        </div>
+                      </div>
+                    )}
                     {selectedLogoIndex === idx && !isPreview && (
                       <div className="absolute top-0 left-0 rounded-bl-md px-2 py-1 text-xs font-medium text-green-500">
                         Selected
@@ -539,15 +583,22 @@ export const SelectLogoForEmail = ({ logos, selectedLogo, setSelectedLogo, setLo
                     </button>
 
                     <div
-                      className={`flex h-[100px] w-[80%] flex-col items-center justify-center ${
+                      className={`flex h-[100px] w-[80%] flex-col items-center justify-center rounded-md ${
                         isPreview ? "cursor-not-allowed" : "cursor-pointer"
                       }`}
+                      style={{ background: headerBackground || "#f3f4f6" }}
                     >
                       <img
                         src={typeof logo === "string" ? logo : logo?.url}
                         alt={`Logo ${idx + 1}`}
-                        className={`h-[calc(100%-30px)] w-24 object-contain ${logo?.invert ? "rounded-sm bg-gray-700" : ""}`}
+                        className="h-[calc(100%-30px)] w-24 object-contain"
                         referrerPolicy="no-referrer"
+                        onLoad={(e) =>
+                          setLogoDimensions((prev) => ({
+                            ...prev,
+                            [idx]: { w: e.target.naturalWidth, h: e.target.naturalHeight },
+                          }))
+                        }
                       />
                       <div>logo</div>
                     </div>
