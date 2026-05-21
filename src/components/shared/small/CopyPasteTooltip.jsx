@@ -1,45 +1,38 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-const CopyPasteTooltip = ({ id }) => {
+const CopyPasteTooltip = ({ id, label }) => {
   const [copied, setCopied] = useState(false);
-  const [open, setOpen] = useState(false);
+  const timerRef = useRef(null);
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(id);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    } catch {
-      console.error("Copy failed");
+  useEffect(() => {
+    if (!copied) return;
+    const onKeyDown = () => clearTimeout(timerRef.current);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [copied]);
+
+  const handleCopy = () => {
+    if (copied) {
+      setCopied(false);
+      return;
     }
+    navigator.clipboard.writeText(id).then(() => {
+      setCopied(true);
+      timerRef.current = setTimeout(() => setCopied(false), 1500);
+    });
   };
 
+  const hasCustomLabel = label !== undefined;
+  const displayText = copied ? "✓ Copied" : hasCustomLabel ? label : `${id?.slice(0, 6)}…`;
+
   return (
-    <div
-      className="relative inline-block"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget)) {
-          setOpen(false);
-        }
-      }}
+    <span
+      title={id}
+      onClick={handleCopy}
+      className={`cursor-pointer text-xs ${!hasCustomLabel || copied ? "text-blue-600 hover:text-blue-800" : ""}`}
     >
-      {/* Short */}
-      <span className="cursor-pointer font-medium">{id?.slice(0, 3)}...</span>
-
-      {/* Tooltip */}
-      {open && (
-        <div className="absolute left-0 top-2 z-50 mt-2 min-w-[220px] w-full rounded border bg-white p-2 shadow-lg">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs break-all">{id}</span>
-
-            <button onClick={handleCopy} className="p-1 hover:bg-gray-100 rounded">
-              {copied ? "✓" : "📋"}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+      {displayText}
+    </span>
   );
 };
 

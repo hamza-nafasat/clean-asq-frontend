@@ -15,10 +15,11 @@ import { useSelector } from "react-redux";
 import checkPermission, { webPermissions } from "@/utils/checkPermission";
 import CopyPasteTooltip from "../shared/small/CopyPasteTooltip";
 // Table columns configuration
+
 const APPLICANT_TABLE_COLUMNS = [
   {
     name: "ID",
-    selector: (row) => row?._id?.slice(0, 3),
+    selector: (row) => row?._id,
     sortable: true,
     width: "100px",
     cell: (row) => <CopyPasteTooltip id={row?._id} />,
@@ -28,27 +29,40 @@ const APPLICANT_TABLE_COLUMNS = [
     selector: (row) => `${row?.user?.firstName} ${row?.user?.lastName}`,
     sortable: true,
     width: "200px",
+    cell: (row) => (
+      <CopyPasteTooltip
+        id={`${row?.user?.firstName} ${row?.user?.lastName}`}
+        label={`${row?.user?.firstName} ${row?.user?.lastName}`}
+      />
+    ),
   },
   {
     name: "Application",
     selector: (row) => row?.form?.name || "N/A",
     sortable: true,
     width: "250px",
+    cell: (row) => <CopyPasteTooltip id={row?.form?.name || "N/A"} label={row?.form?.name || "N/A"} />,
   },
   {
     name: "Email",
     selector: (row) => row?.user?.email,
     sortable: true,
     width: "320px",
+    cell: (row) => <CopyPasteTooltip id={row?.user?.email} label={row?.user?.email} />,
   },
   {
     name: "Client Type",
     selector: (row) => row?.user?.role?.name,
     sortable: true,
     cell: (row) => (
-      <span className="text-accent w-[130px] rounded-sm bg-gray-100 px-2.5 py-[3px] text-center text-xs font-bold capitalize">
-        {row?.user?.role?.name}
-      </span>
+      <CopyPasteTooltip
+        id={row?.user?.role?.name}
+        label={
+          <span className="text-accent w-[130px] rounded-sm bg-gray-100 px-2.5 py-[3px] text-center text-xs font-bold capitalize">
+            {row?.user?.role?.name}
+          </span>
+        }
+      />
     ),
   },
   {
@@ -64,6 +78,17 @@ const APPLICANT_TABLE_COLUMNS = [
       }),
     sortable: true,
     width: "200px",
+    cell: (row) => {
+      const formatted = new Date(row?.updatedAt || "").toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      return <CopyPasteTooltip id={formatted} label={formatted} />;
+    },
   },
   {
     name: "Status",
@@ -71,15 +96,20 @@ const APPLICANT_TABLE_COLUMNS = [
     sortable: true,
     width: "150px",
     cell: (row) => (
-      <span
-        className={`w-[100px] rounded-sm px-2.5 py-[3px] text-center font-bold capitalize ${
-          row.status === APPLICANT_STATUS.APPROVED ? "bg-[#34C7591A] text-[#34C759]" : ""
-        } ${row.status === APPLICANT_STATUS.REJECTED ? "bg-[#FF3B301A] text-[#FF3B30]" : ""} ${
-          row.status === APPLICANT_STATUS.PENDING ? "bg-yellow-100 text-yellow-800" : ""
-        } ${row.status === APPLICANT_STATUS.REVIEWING ? "bg-blue-100 text-blue-500" : ""}`}
-      >
-        {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
-      </span>
+      <CopyPasteTooltip
+        id={row?.status}
+        label={
+          <span
+            className={`w-[100px] rounded-sm px-2.5 py-[3px] text-center font-bold capitalize ${
+              row.status === APPLICANT_STATUS.APPROVED ? "bg-[#34C7591A] text-[#34C759]" : ""
+            } ${row.status === APPLICANT_STATUS.REJECTED ? "bg-[#FF3B301A] text-[#FF3B30]" : ""} ${
+              row.status === APPLICANT_STATUS.PENDING ? "bg-yellow-100 text-yellow-800" : ""
+            } ${row.status === APPLICANT_STATUS.REVIEWING ? "bg-blue-100 text-blue-500" : ""}`}
+          >
+            {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
+          </span>
+        }
+      />
     ),
   },
 ];

@@ -123,7 +123,7 @@ export default function ApplicationForm() {
           }).unwrap();
           if (res.success) {
             toast.success(res.message);
-            navigate("/submited-successfully/" + form?.data?._id);
+            // navigate("/submited-successfully/" + form?.data?._id);
           }
         }
       } catch (error) {
@@ -137,7 +137,7 @@ export default function ApplicationForm() {
       form?.data?._id,
       formData,
       formSubmit,
-      navigate,
+      // navigate,
       user?._id,
       user?.email,
       user?.firstName,
