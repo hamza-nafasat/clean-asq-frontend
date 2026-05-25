@@ -21,6 +21,8 @@ import ColorPalette from "./ColorPalette";
 import Preview, { EmailTemplatePreview } from "./Preview";
 import EffectPicker from "./EffectPicker";
 import FaviconPicker from "./FavIconPicker";
+import Checkbox from "@/components/shared/small/Checkbox";
+import { RiSparkling2Line } from "react-icons/ri";
 
 const emailHeaderTemplate = `
 <!DOCTYPE html>
@@ -1395,17 +1397,14 @@ const GlobalBrandingPage = ({ brandingId }) => {
 
           {/* Custom icon toggle */}
           <div className="flex items-center gap-2">
-            <TextField
-              hideLabel
+            <Checkbox
+              label={"  Use custom AI button icon"}
               type="checkbox"
               id="aiUseCustomIcon"
               checked={aiUseCustomIcon}
               onChange={(e) => setAiUseCustomIcon(e.target.checked)}
               className="h-4 w-4 rounded border-gray-300 accent-purple-600 cursor-pointer"
             />
-            <label htmlFor="aiUseCustomIcon" className="text-sm text-gray-700 cursor-pointer select-none">
-              Use custom AI button icon
-            </label>
           </div>
 
           {/* AI color pickers + live preview */}
@@ -1572,23 +1571,40 @@ const GlobalBrandingPage = ({ brandingId }) => {
         <div className="border-primary my-6 border-t-2"></div>
 
         {/* ── Browser Tab section ── */}
-        <section className="my-6 flex w-full flex-col gap-4">
-          <h3 className="border-b-2 text-lg font-semibold text-gray-800">Browser Tab</h3>
-          <p className="text-xs text-gray-400">
-            Set the text and icon that appear in the browser tab when an applicant opens a form using this branding.
-          </p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 max-w-2xl">
-            <div className="flex flex-col gap-1">
+        <section className="my-6 flex w-full flex-col gap-5">
+          <div className="space-y-1">
+            <h3 className="border-b-2 pb-2 text-lg font-semibold text-gray-800">Browser Tab</h3>
+
+            <p className="max-w-2xl text-xs leading-relaxed text-gray-400">
+              Set the text and icon that appear in the browser tab when an applicant opens a form using this branding.
+            </p>
+          </div>
+
+          <div className="grid max-w-2xl grid-cols-1 gap-5 rounded-xl border border-gray-200 bg-white p-4 sm:grid-cols-2">
+            {/* Tab Title */}
+            <div className="flex flex-col gap-2">
               <TextField
                 label={"Tab Title"}
+                labelCs="text-sm!"
                 type="text"
                 value={tabTitle}
                 onChange={(e) => setTabTitle(e.target.value)}
                 placeholder="e.g. Apply Now — Acme Financial"
-                className="h-10 rounded-lg border border-gray-300 bg-[#FAFBFF] px-3 text-sm text-gray-700 outline-none focus:border-primary"
               />
+
+              <span className="text-[11px] text-gray-400">This title will appear in the browser tab.</span>
             </div>
-            <FaviconPicker logos={logos} value={favicon} onChange={setFavicon} />
+
+            {/* Favicon */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">Browser Icon</label>
+
+              <div className="rounded-lg border border-gray-200 bg-[#FAFBFF] p-3">
+                <FaviconPicker logos={logos} value={favicon} onChange={setFavicon} />
+              </div>
+
+              <span className="text-[11px] text-gray-400">Choose the icon shown beside the tab title.</span>
+            </div>
           </div>
         </section>
 

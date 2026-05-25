@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+
+    <radialGradient id="w1" cx="74%" cy="76%" r="62%">
+      <stop offset="0%"   stop-color="#FF8C00" stop-opacity="0.62"/>
+      <stop offset="30%"  stop-color="#FF6200" stop-opacity="0.42"/>
+      <stop offset="65%"  stop-color="#E63900" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#C02000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="w2" cx="55%" cy="85%" r="52%">
+      <stop offset="0%"   stop-color="#FF5252" stop-opacity="0.38"/>
+      <stop offset="55%"  stop-color="#FF1744" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#D50000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="w3" cx="82%" cy="18%" r="48%">
+      <stop offset="0%"   stop-color="#FFD740" stop-opacity="0.40"/>
+      <stop offset="55%"  stop-color="#FFA000" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#FF6D00" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="c1" cx="26%" cy="22%" r="58%">
+      <stop offset="0%"   stop-color="#00E5FF" stop-opacity="0.44"/>
+      <stop offset="48%"  stop-color="#0091EA" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#0D47A1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="c2" cx="18%" cy="78%" r="50%">
+      <stop offset="0%"   stop-color="#7C4DFF" stop-opacity="0.32"/>
+      <stop offset="60%"  stop-color="#4527A0" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#1A0066" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vig" cx="50%" cy="50%" r="50%">
+      <stop offset="35%"  stop-color="black" stop-opacity="0"/>
+      <stop offset="70%"  stop-color="black" stop-opacity="0.24"/>
+      <stop offset="100%" stop-color="black" stop-opacity="0.68"/>
+    </radialGradient>
+    <radialGradient id="spec" cx="29%" cy="25%" r="38%">
+      <stop offset="0%"   stop-color="white" stop-opacity="0.82"/>
+      <stop offset="28%"  stop-color="white" stop-opacity="0.38"/>
+      <stop offset="65%"  stop-color="white" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Diamond shape restored -->
+    <clipPath id="clip">
+      <path d="M200 48 C265 48 352 135 352 200
+               C352 265 265 352 200 352
+               C135 352 48 265 48 200
+               C48 135 135 48 200 48Z"/>
+    </clipPath>
+
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowSm" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+  </defs>
+
+  <g clip-path="url(#clip)">
+    <rect width="400" height="400" fill="url(#w1)"/>
+    <rect width="400" height="400" fill="url(#w2)"/>
+    <rect width="400" height="400" fill="url(#w3)"/>
+    <rect width="400" height="400" fill="url(#c1)"/>
+    <rect width="400" height="400" fill="url(#c2)"/>
+    <rect width="400" height="400" fill="url(#vig)"/>
+    <rect width="400" height="400" fill="url(#spec)"/>
+  </g>
+
+  <!--
+    ANGULAR SPARKLE-BUBBLE
+    Straight lines form the arm sides (sparkle character).
+    Cubic bezier concave waists between each arm (sparkle junctions).
+    One arm is the callout — two straight lines meeting at a sharp tip.
+    Smaller and geometric, not circular.
+  -->
+  <path d="M224 141
+           C214 178,223 207,258 224
+           C221 213,194 223,178 258
+           C187 221,178 194,143 178
+           C179 188,207 178,224 141 Z"
+        fill="white"/>
+
+</svg>

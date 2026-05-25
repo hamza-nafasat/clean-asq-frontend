@@ -2,7 +2,7 @@ import React from "react";
 
 const Checkbox = ({ id, name, label, checked = false, onChange, disabled = false, className = "", ...rest }) => {
   return (
-    <div className={`mt-5 flex w-full items-center space-x-2 ${className} `}>
+    <div className={`mt-5 flex w-full items-center space-x-2  `}>
       <input
         type="checkbox"
         id={id}
@@ -10,7 +10,7 @@ const Checkbox = ({ id, name, label, checked = false, onChange, disabled = false
         checked={checked}
         onChange={onChange}
         disabled={disabled}
-        className="text-primary cursor-pointe accent-primary focus:ring-primary border-frameColor h-4 w-4 rounded"
+        className={`text-primary cursor-pointe accent-primary focus:ring-primary border-frameColor h-4 w-4 rounded  ${disabled ? "cursor-not-allowed opacity-50" : ""} ${className} `}
         {...rest}
       />
       {label && (
