@@ -940,6 +940,12 @@ export default function SingleApplication() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="max-w-[500px]"
+                      autoFocus={!otpSent ? true : false}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          sentOtpForEmail();
+                        }
+                      }}
                     />
                     <Button
                       onClick={sentOtpForEmail}
@@ -956,6 +962,12 @@ export default function SingleApplication() {
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
                         className="max-w-[500px]"
+                        autoFocus={otpSent ? true : false}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            verifyWithOtp();
+                          }
+                        }}
                       />
                       <Button
                         onClick={verifyWithOtp}

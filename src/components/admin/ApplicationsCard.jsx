@@ -78,6 +78,7 @@ export default function ApplicationsCard() {
       if (res.success) {
         toast.success(res.message);
         await finalizeFormCreation(res);
+        setCreateFormModal(false);
       }
     } catch (error) {
       console.error("Error creating form:", error);

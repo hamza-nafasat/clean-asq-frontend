@@ -19,6 +19,7 @@ import Checkbox from "../shared/small/Checkbox";
 import TextField from "../shared/small/TextField";
 import { ThreeDotEditViewDelete } from "../shared/ThreeDotViewEditDelete";
 import { useBranding } from "../../hooks/BrandingContext";
+import { formateDateAndTime } from "@/utils/userUtils";
 
 const UserTable = () => {
   const { data: users, isLoading: isLoadingUsers } = useGetAllUsersQuery();
@@ -228,6 +229,12 @@ const UserTable = () => {
       {
         name: "Role",
         selector: (row) => row?.role?.name,
+        sortable: true,
+      },
+
+      {
+        name: "Last Active",
+        selector: (row) => formateDateAndTime(row?.lastActive),
         sortable: true,
       },
 

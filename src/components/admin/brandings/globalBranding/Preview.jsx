@@ -208,7 +208,7 @@ export const EmailTemplatePreview = ({ emailHeader, emailFooter, emailText, emai
           <div dangerouslySetInnerHTML={{ __html: emailHeader }} />
           <div
             className={`align-center flex w-full justify-center p-4 md:p-6`}
-            style={{ color: emailText, backgroundColor: emailBodyColor }}
+            style={{ color: emailText, background: emailBodyColor }}
           >
             Email Body will be here ...
           </div>
