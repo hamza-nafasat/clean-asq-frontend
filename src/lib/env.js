@@ -6,9 +6,9 @@ const config = Object.freeze({
   VITE_RECAPTCHA_SITE_SECRET: import.meta.env.VITE_RECAPTCHA_SITE_SECRET,
 });
 
-const getEnv = key => {
+const getEnv = (key) => {
   const value = config[key];
-  if (!value) throw new Error(`Config ${key} not found`);
+  // if (!value) throw new Error(`Config ${key} not found`);
   return value;
 };
 

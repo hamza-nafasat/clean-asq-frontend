@@ -17,4 +17,13 @@ export default defineConfig({
       "@assets": path.resolve(__dirname, "./src/assets"),
     },
   },
+  // server: {
+  //   proxy: {
+  //     "/api": {
+  //       target: "http://54.201.57.129:5000",
+  //       changeOrigin: true,
+  //       // rewrite: (path) => path.replace(/^\/api/, ""),
+  //     },
+  //   },
+  // },
 });
