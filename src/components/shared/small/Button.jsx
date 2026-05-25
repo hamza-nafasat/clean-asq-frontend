@@ -23,7 +23,7 @@ const Button = ({
 
   const variantClasses = {
     primary: `
-      bg-[var(--primary)] border-[var(--primary)] text-buttonTextPrimary
+      btn-branded-primary bg-[var(--primary)] border-[var(--primary)] text-buttonTextPrimary
       hover:brightness-110 hover:border-[var(--primary)]
     `,
     secondary: `

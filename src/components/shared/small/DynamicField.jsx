@@ -42,7 +42,7 @@ const DynamicField = ({ cn, field, className = "", form, placeholder, value, set
         <h4 className="text-textPrimary text-base font-medium lg:text-lg">
           {label}:{required ? "*" : ""}
         </h4>
-        <div className="border-b-2 py-6">
+        <div className="border-b-2 py-2">
           <div className="grid grid-cols-2 gap-4 p-0">
             {options?.map((option, index) => (
               <div key={index} className="flex items-center gap-2 p-2">
@@ -114,7 +114,7 @@ const DynamicField = ({ cn, field, className = "", form, placeholder, value, set
   }
   if (type == "multi-checkbox") {
     return (
-      <div className={`flex w-full justify-between gap-8 ${className}`}>
+      <div className={`flex w-full justify-between gap-4 ${className}`}>
         <h4 className="text-textPrimary text-base font-medium lg:text-lg">
           {label}:{required ? "*" : ""}
         </h4>
@@ -203,7 +203,27 @@ const SelectInputType = ({ field, className, form, setForm, onChange }) => {
     ai_formatting,
   } = field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
-  const selectHandler = (e) => setForm({ ...form, [uniqueId]: { name: name, value: e.target.value } });
+  const selectMouseDownRef = useRef(false);
+  const selectTabPressedRef = useRef(false);
+
+  const advanceToNextField = (currentEl) => {
+    const focusable = Array.from(
+      document.querySelectorAll("input:not([disabled]), select:not([disabled]), textarea:not([disabled])"),
+    );
+    const idx = focusable.indexOf(currentEl);
+    if (idx !== -1 && idx < focusable.length - 1) focusable[idx + 1].focus();
+  };
+
+  const selectHandler = (e) => {
+    setForm({ ...form, [uniqueId]: { name: name, value: e.target.value } });
+    // Advance focus after a click/keyboard selection — but not on Tab (Tab already moves focus
+    // natively and we don't want to skip a field by advancing twice).
+    if (!selectTabPressedRef.current) {
+      const el = e.target;
+      setTimeout(() => advanceToNextField(el), 50);
+    }
+    selectTabPressedRef.current = false;
+  };
 
   // Determine current value to display
   let displayValue = form?.[uniqueId]?.value ?? "";
@@ -219,7 +239,7 @@ const SelectInputType = ({ field, className, form, setForm, onChange }) => {
 
   return (
     <>
-      <div className={`flex w-full flex-col items-start ${className}`}>
+      <div className={`flex w-full flex-col items-start ${className}`} data-ai-help-context={aiPrompt || undefined}>
         {openAiHelpModal && (
           <Modal onClose={() => setOpenAiHelpModal(false)}>
             <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
@@ -250,6 +270,22 @@ const SelectInputType = ({ field, className, form, setForm, onChange }) => {
             required={required}
             className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${!displayValue && required ? "bg-highlighting" : ""}`}
             onChange={onChange ? onChange : selectHandler}
+            onKeyDown={(e) => {
+              if (e.key === "Tab") selectTabPressedRef.current = true;
+            }}
+            onMouseDown={() => {
+              selectMouseDownRef.current = true;
+            }}
+            onFocus={(e) => {
+              if (!selectMouseDownRef.current) {
+                try {
+                  e.target.showPicker?.();
+                } catch (err) {
+                  console.error(err);
+                }
+              }
+              selectMouseDownRef.current = false;
+            }}
           >
             {/* Show placeholder if value is not in options */}
             <option value="">{placeholder ?? "Select an option"}</option>
@@ -287,7 +323,7 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
     }
   };
   return (
-    <div className={`flex w-full justify-between gap-8 ${className}`}>
+    <div className={`flex w-full justify-between gap-4 ${className}`} data-ai-help-context={aiPrompt || undefined}>
       {openAiHelpModal && (
         <Modal onClose={() => setOpenAiHelpModal(false)}>
           <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
@@ -312,11 +348,11 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
       <div className="flex w-full items-center gap-8">
         {options?.map((option, index) => (
           <div key={index} className="flex items-center justify-center gap-2">
-            <label htmlFor={option?.label} className="text-base text-gray-700 capitalize">
+            <label htmlFor={`${uniqueId}-option-${index}`} className="text-base text-gray-700 capitalize">
               {option?.label}
             </label>
             <input
-              id={option?.label}
+              id={`${uniqueId}-option-${index}`}
               type={"checkbox"}
               value={option?.value}
               checked={form[uniqueId]?.value?.includes(option?.value)}
@@ -342,7 +378,7 @@ const RadioInputType = ({ field, className, form, setForm, onChange, disabled = 
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const radioHandler = (option) => setForm({ ...form, [uniqueId]: { name: name, value: option.value } });
   return (
-    <div className={`flex w-full flex-col items-start ${className}`}>
+    <div className={`flex w-full flex-col items-start ${className}`} data-ai-help-context={aiPrompt || undefined}>
       {openAiHelpModal && (
         <Modal onClose={() => setOpenAiHelpModal(false)}>
           <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
@@ -371,7 +407,7 @@ const RadioInputType = ({ field, className, form, setForm, onChange, disabled = 
           </div>
         )}
       </div>
-      <div className="border-b-2 py-6">
+      <div className="border-b-2 py-2">
         <div className={`grid grid-cols-${optionColumnCount} gap-4 p-0`}>
           {options?.map((option, index) => (
             <div key={index} className="flex items-center gap-2 p-2 text-start">
@@ -414,7 +450,7 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
 
   const singleCheckBoxHandler = (e) => setForm({ ...form, [uniqueId]: { name: name, value: e.target.checked } });
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2" data-ai-help-context={aiPrompt || undefined}>
       <div className={`flex flex-col justify-between ${className}`}>
         {openAiHelpModal && (
           <Modal onClose={() => setOpenAiHelpModal(false)}>
@@ -422,7 +458,7 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
           </Modal>
         )}
         {ai_formatting && isDisplayText && (
-          <div className="flex h-full w-full flex-col gap-4 p-4 pb-0">
+          <div className="flex h-full w-full flex-col">
             <div
               className=""
               dangerouslySetInnerHTML={{
@@ -435,7 +471,7 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
           </div>
         )}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 p-4">
+          <div className="flex items-center gap-4 px-2">
             <input
               type={"checkbox"}
               name={name}
@@ -512,7 +548,7 @@ const RangeInputType = ({ field, className, form, setForm }) => {
     setForm({ ...form, [uniqueId]: { name: name, value: targetVAlue } });
   };
   return (
-    <div className={`flex w-full flex-col items-start ${className}`}>
+    <div className={`flex w-full flex-col items-start ${className}`} data-ai-help-context={aiPrompt || undefined}>
       {openAiHelpModal && (
         <Modal onClose={() => setOpenAiHelpModal(false)}>
           <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
@@ -568,7 +604,7 @@ const RangeInputType = ({ field, className, form, setForm }) => {
   );
 };
 
-const OtherInputType = ({ field, className, form, setForm, isConfirmField, suggestions = [] }) => {
+const OtherInputType = ({ field, className, form, setForm, isConfirmField, suggestions = [], autoFocus = false }) => {
   const isEmpty = (value) => {
     if (value === undefined || value === null) return true;
     if (typeof value === "string") return value.trim() === "";
@@ -607,6 +643,18 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const [autocomplete, setAutocomplete] = useState(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionIndex, setSuggestionIndex] = useState(-1);
+
+  // Move focus to the next focusable form element — used after a suggestion is selected
+  // so the AI's focusin listener can provide guidance for the next field.
+  const focusNext = (el) => {
+    if (!el) return;
+    const focusables = Array.from(
+      document.querySelectorAll("input:not([disabled]), select:not([disabled]), textarea:not([disabled])"),
+    ).filter((f) => f.offsetParent !== null && f.tabIndex !== -1);
+    const idx = focusables.indexOf(el);
+    if (idx >= 0 && idx + 1 < focusables.length) focusables[idx + 1].focus();
+  };
 
   const limitByFormat = (value, format) => {
     const maxDigits = format
@@ -688,7 +736,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
         </Modal>
       )}
 
-      <div className="flex w-full flex-col items-start gap-4">
+      <div className="flex w-full flex-col items-start gap-4" data-ai-help-context={aiPrompt || undefined}>
         <article className="flex w-full flex-col items-start gap-2">
           {ai_formatting && isDisplayText && (
             <div className="gap-4p-4 flex h-full w-full flex-col">
@@ -716,7 +764,9 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                   <textarea
                     ref={inputRef}
                     name={name}
+                    data-ai-label={label || undefined}
                     placeholder={placeholder}
+                    required={required || undefined}
                     value={getDisplayValue(type, form?.[uniqueId]?.value)}
                     onChange={(e) =>
                       setForm((prev) => ({
@@ -754,8 +804,11 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                       <input
                         ref={inputRef}
                         name={name}
+                        data-ai-label={label || undefined}
                         placeholder={placeholder}
                         type={type}
+                        required={required || undefined}
+                        data-ai-has-suggestions="true"
                         value={form?.[uniqueId]?.value || ""}
                         onChange={(e) =>
                           setForm((prev) => ({
@@ -777,7 +830,11 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                     <div>
                       <PhoneInput
                         international
-                        numberInputProps={{ style: { outline: "none" } }}
+                        numberInputProps={{
+                          style: { outline: "none" },
+                          required: required || undefined,
+                          "data-ai-label": label || undefined,
+                        }}
                         defaultCountry="US"
                         placeholder={placeholder || "Enter phone number"}
                         value={form?.[uniqueId]?.value || ""}
@@ -810,8 +867,11 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                     <input
                       ref={inputRef}
                       name={name}
+                      data-ai-label={label || undefined}
                       placeholder={placeholder}
                       type={(isMasked || isSSN) && type !== "date" ? "text" : type}
+                      required={required || undefined}
+                      data-ai-has-suggestions={fieldSuggestions?.length ? "true" : undefined}
                       value={getDisplayValue(type, form?.[uniqueId]?.value)}
                       onChange={(e) => {
                         let val = e.target.value;
@@ -823,10 +883,50 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                           digits = limitByFormat(digits, "3,2,4"); // 9 digits total
                           val = digits;
                         }
+                        const normalized = type === "date" ? normalizeDate(val) : val;
                         setForm((prev) => ({
                           ...prev,
-                          [uniqueId]: { name: name, value: type === "date" ? normalizeDate(val) : val },
+                          [uniqueId]: { name: name, value: normalized },
                         }));
+                        // When a complete date is picked via the date-picker UI (mouse),
+                        // focus stays on this input. Advance to the next field so the
+                        // AI's focusin listener fires — same effect as pressing Tab.
+                        if (type === "date" && normalized?.length === 10) {
+                          const year = parseInt(normalized.split("-")[0], 10);
+                          if (year >= 1900) setTimeout(() => focusNext(inputRef.current), 0);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        const activeSuggestions = fieldSuggestions?.length ? fieldSuggestions : suggestions || [];
+                        if (!showSuggestions || !activeSuggestions.length) return;
+                        if (e.key === "ArrowDown") {
+                          e.preventDefault();
+                          setSuggestionIndex((i) => Math.min(i + 1, activeSuggestions.length - 1));
+                        } else if (e.key === "ArrowUp") {
+                          e.preventDefault();
+                          setSuggestionIndex((i) => Math.max(i - 1, -1));
+                        } else if (e.key === "Enter" && suggestionIndex >= 0) {
+                          e.preventDefault();
+                          setForm((prev) => ({
+                            ...prev,
+                            [uniqueId]: { name, value: activeSuggestions[suggestionIndex] },
+                          }));
+                          setShowSuggestions(false);
+                          setSuggestionIndex(-1);
+                          setTimeout(() => focusNext(inputRef.current), 0);
+                        } else if (e.key === "Tab" && suggestionIndex >= 0) {
+                          // Don't prevent default — let Tab advance focus naturally.
+                          // Just commit the highlighted suggestion first.
+                          setForm((prev) => ({
+                            ...prev,
+                            [uniqueId]: { name, value: activeSuggestions[suggestionIndex] },
+                          }));
+                          setShowSuggestions(false);
+                          setSuggestionIndex(-1);
+                        } else if (e.key === "Escape") {
+                          setShowSuggestions(false);
+                          setSuggestionIndex(-1);
+                        }
                       }}
                       onFocus={() => {
                         setShowMasked(false);
@@ -835,10 +935,14 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                       onBlur={() => {
                         setShowMasked(true);
                         if (suggestions?.length || fieldSuggestions?.length)
-                          setTimeout(() => setShowSuggestions(false), 100);
+                          setTimeout(() => {
+                            setShowSuggestions(false);
+                            setSuggestionIndex(-1);
+                          }, 100);
                       }}
                       readOnly={showMasked}
                       autoComplete="off"
+                      autoFocus={autoFocus || undefined}
                       className={`relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
                         required && isEmpty(form[uniqueId]?.value)
                           ? "border-accent bg-highlighting border-2"
@@ -859,10 +963,12 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                       {fieldSuggestions.map((suggestion, index) => (
                         <div
                           key={index}
-                          className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                          className={`cursor-pointer px-4 py-2 hover:bg-gray-100 ${suggestionIndex === index ? "bg-gray-100 font-medium" : ""}`}
                           onMouseDown={() => {
                             setForm((prev) => ({ ...prev, [uniqueId]: { name: name, value: suggestion } }));
                             setShowSuggestions(false);
+                            setSuggestionIndex(-1);
+                            setTimeout(() => focusNext(inputRef.current), 0);
                           }}
                         >
                           {suggestion}
@@ -876,10 +982,12 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                       {suggestions.map((suggestion, index) => (
                         <div
                           key={index}
-                          className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                          className={`cursor-pointer px-4 py-2 hover:bg-gray-100 ${suggestionIndex === index ? "bg-gray-100 font-medium" : ""}`}
                           onMouseDown={() => {
                             setForm((prev) => ({ ...prev, [uniqueId]: { name: name, value: suggestion } }));
                             setShowSuggestions(false);
+                            setSuggestionIndex(-1);
+                            setTimeout(() => focusNext(inputRef.current), 0);
                           }}
                         >
                           {suggestion}
@@ -889,17 +997,18 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                   )}
 
                   {isMasked && (
-                    <span
+                    <button
+                      type="button"
                       onClick={() => setShowMasked(!showMasked)}
                       className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-sm text-gray-600"
+                      aria-label={showMasked ? "Show value" : "Hide value"}
                     >
                       {!showMasked ? <RxEyeOpen className="h-5 w-5" /> : <IoEyeOffSharp className="h-5 w-5" />}
-                    </span>
+                    </button>
                   )}
                 </div>
               )}
             </div>
-
             {aiHelp && (
               <div className="mt-8 flex items-center">
                 <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
@@ -979,7 +1088,7 @@ const FileInputType = ({ field, className, form, setForm }) => {
   const handleDragOver = (e) => e.preventDefault();
 
   return (
-    <div className={`flex w-full flex-col items-start ${className}`}>
+    <div className={`flex w-full flex-col items-start ${className}`} data-ai-help-context={aiPrompt || undefined}>
       {openAiHelpModal && (
         <Modal onClose={() => setOpenAiHelpModal(false)}>
           <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
@@ -1011,6 +1120,15 @@ const FileInputType = ({ field, className, form, setForm }) => {
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onClick={() => inputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                inputRef.current?.click();
+              }
+            }}
+            tabIndex={0}
+            role="button"
+            aria-label="Upload file"
           >
             <PiFileArrowUpFill className="text-textPrimary text-8xl" />
             <h4 className="text-textPrimary text-base font-medium">Click to upload or drag and drop a file</h4>
@@ -1149,7 +1267,7 @@ export const SimpleRadioInputType = ({ field, className, form, setForm, onChange
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const radioHandler = (option) => setForm({ ...form, [name]: option.value });
   return (
-    <div className={`flex w-full flex-col items-start ${className}`}>
+    <div className={`flex w-full flex-col items-start ${className}`} data-ai-help-context={aiPrompt || undefined}>
       {openAiHelpModal && (
         <Modal onClose={() => setOpenAiHelpModal(false)}>
           <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
@@ -1178,7 +1296,7 @@ export const SimpleRadioInputType = ({ field, className, form, setForm, onChange
           </div>
         )}
       </div>
-      <div className="border-b-2 py-6">
+      <div className="border-b-2 py-2">
         <div className="grid grid-cols-3 gap-4 p-0">
           {options?.map((option, index) => (
             <div key={index} className="flex items-center gap-2 p-2 text-start">

@@ -3,7 +3,8 @@ import { FIELD_TYPES } from "@/data/constants";
 import { useGetAllSearchStrategiesQuery, useUpdateFormSectionMutation } from "@/redux/apis/formApis";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
 import { X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Autocomplete } from "@react-google-maps/api";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GoPlus } from "react-icons/go";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
@@ -23,9 +24,10 @@ import {
 import { EditSectionDisplayTextFromatingModal } from "../shared/small/EditSectionDisplayTextFromatingModal";
 import Modal from "../shared/small/Modal";
 import CustomizationOwnerFieldsModal from "./companyInfo/CustomizationOwnerFieldsModal";
+import { STATE_SUGGESTIONS } from "@/constants/constants";
 
 const ssnField = {
-  label: "What is your Social Security Number?",
+  label: "What is your Social Security, Tax, or National ID Number?",
   name: "rolling_owner_ssn",
   uniqueId: "rolling_owner_ssn",
   required: true,
@@ -122,6 +124,16 @@ function CompanyOwners({
     } finally {
       if (setIsSaving) setIsSaving(false);
     }
+  };
+
+  const addressAutocompleteRefs = useRef({});
+  const onLoadAddress = (index) => (autocomplete) => {
+    addressAutocompleteRefs.current[index] = autocomplete;
+  };
+  const onPlaceChangedAddress = (index) => () => {
+    const place = addressAutocompleteRefs.current[index]?.getPlace();
+    if (!place?.formatted_address) return;
+    handleChangeOnOtherOwnersData({ target: { name: "address", value: place.formatted_address } }, index);
   };
 
   const handleChangeOnOtherOwnersData = (e, index, isFilter = false) => {
@@ -369,7 +381,9 @@ function CompanyOwners({
       )}
 
       <div className="mb-10 flex items-center justify-between">
-        <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
+        <h3 className="text-textPrimary text-2xl font-semibold" data-ai-display-text>
+          {name}
+        </h3>
         <div className="flex gap-2">
           <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={"Save my progress"} />
           {isCreator && (
@@ -384,6 +398,7 @@ function CompanyOwners({
       {step?.ai_formatting && (
         <div className="mb-4 flex w-full items-end justify-between gap-3">
           <div
+            data-ai-display-text
             dangerouslySetInnerHTML={{
               __html: String(step?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
                 if (match.includes("target=")) return match; // avoid duplicates
@@ -491,6 +506,7 @@ function CompanyOwners({
                             <TextField
                               label="Owner or primary operator name"
                               name="name"
+                              placeholder="First name, middle name (optional), last name"
                               value={name}
                               onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                             />
@@ -517,6 +533,7 @@ function CompanyOwners({
                               name="email"
                               label="Email Address"
                               type="email"
+                              placeholder="e.g. john.doe@email.com"
                               value={email}
                               required
                               onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
@@ -526,6 +543,7 @@ function CompanyOwners({
                               label="Phone Number"
                               formatting={"3,3,4"}
                               type="text"
+                              placeholder="e.g. 555-867-5309"
                               value={phone}
                               onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                               className={"max-w-[30%] min-w-[400px]"}
@@ -539,7 +557,7 @@ function CompanyOwners({
                                 options: [
                                   { label: "Primary Operator", value: "primary_operator" },
                                   { label: "Beneficial Owner", value: "beneficial_owner" },
-                                  { label: "both", value: "both" },
+                                  { label: "Both", value: "both" },
                                 ],
                                 required: true,
                               }}
@@ -548,7 +566,19 @@ function CompanyOwners({
                             />
                             <SimpleRadioInputType
                               field={{
-                                label: "Do you have full information for this person?",
+                                label: (
+                                  <span className="inline-flex items-center gap-1">
+                                    Do you have full information for this person?
+                                    <span className="group relative inline-flex items-center">
+                                      <span className="cursor-help text-gray-400 text-sm">ⓘ</span>
+                                      <span className="invisible group-hover:visible absolute left-5 top-0 z-50 w-72 rounded bg-gray-800 p-2 text-xs font-normal text-white shadow-lg">
+                                        "Full information" includes: Social Security, Tax, or National ID number · Home
+                                        address · Date of birth · Ownership percentage · Government-issued ID number and
+                                        issuer
+                                      </span>
+                                    </span>
+                                  </span>
+                                ),
                                 name: "have_detail",
                                 options: [
                                   { label: "No", value: "no" },
@@ -577,26 +607,54 @@ function CompanyOwners({
                               <div className="flex flex-wrap gap-4">
                                 <TextField
                                   name="ssn"
-                                  label="Social Security Number"
+                                  label="Social Security, Tax, or National ID Number"
+                                  placeholder="e.g. 123-45-6789"
                                   value={ssn}
                                   formatting="3,2,4"
                                   isMasked={true}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                                   className={"max-w-[30%] min-w-[400px]"}
                                 />
-                                <TextField
-                                  name="address"
-                                  label="Address"
-                                  value={address}
-                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"max-w-[30%] min-w-[400px]"}
-                                />
+                                <Autocomplete
+                                  onLoad={onLoadAddress(index)}
+                                  onPlaceChanged={onPlaceChangedAddress(index)}
+                                  options={{
+                                    types: ["address"],
+                                    fields: ["formatted_address"],
+                                  }}
+                                  className="max-w-[50%] min-w-[400px] w-full"
+                                >
+                                  <TextField
+                                    name="address"
+                                    label="Address"
+                                    value={address}
+                                    onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                    className={"w-full!"}
+                                  />
+                                </Autocomplete>
                                 <TextField
                                   name="percentage"
                                   label="Ownership Percentage"
-                                  value={percentage}
-                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"max-w-[30%] min-w-[400px]"}
+                                  placeholder="e.g. 25"
+                                  value={percentage.replace(/%$/, "")}
+                                  rightIcon={<span className="select-none font-medium text-gray-600">%</span>}
+                                  onChange={(e) => {
+                                    const raw = e.target.value.replace(/[^0-9.]/g, "");
+                                    if (raw === "" || raw === ".") {
+                                      handleChangeOnOtherOwnersData(
+                                        { target: { name: "percentage", value: raw } },
+                                        index,
+                                      );
+                                      return;
+                                    }
+                                    const num = Math.min(100, Math.max(0, parseFloat(raw) || 0));
+                                    const formatted = raw.endsWith(".") ? `${num}.` : `${num}%`;
+                                    handleChangeOnOtherOwnersData(
+                                      { target: { name: "percentage", value: formatted } },
+                                      index,
+                                    );
+                                  }}
+                                  className={"max-w-[15%] min-w-[150px]"}
                                 />
                                 <TextField
                                   name="date_of_birth"
@@ -609,15 +667,17 @@ function CompanyOwners({
 
                                 <TextField
                                   name="driver_license_issuer_state"
-                                  label="driver’s license issuer (state)"
-                                  type="date"
+                                  label="ID Issuer"
+                                  placeholder="State/Province or Country"
                                   value={driver_license_issuer_state}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                  suggestions={STATE_SUGGESTIONS}
                                   className={"max-w-[30%] min-w-[400px]"}
                                 />
                                 <TextField
                                   name="driver_license_number"
-                                  label="Driver’s License Number"
+                                  label="ID Number"
+                                  placeholder="As it appears on your ID"
                                   value={driver_license_number}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                                   className={"max-w-[30%] min-w-[400px]"}

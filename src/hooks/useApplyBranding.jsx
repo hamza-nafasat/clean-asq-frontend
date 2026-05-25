@@ -31,6 +31,28 @@ const useApplyBranding = ({ formId }) => {
     setAppFooterPadding,
     setAppLogoMaxWidth,
     setAppLogoMaxHeight,
+    setAiVoice,
+    setAiCustomPrompt,
+    setAiLaunchButtonColor,
+    setAiHeaderColor,
+    setAiBannerColor,
+    setAiBannerTextColor,
+    setAiUseCustomIcon,
+    setAiSliderColor,
+    setPrivacyPolicyUrl,
+    setTermsOfServiceUrl,
+    setFavicon,
+    setTabTitle,
+    setHeaderEffect,
+    setFooterEffect,
+    setButtonEffect,
+    setEmailHeaderEffect,
+    setEmailFooterEffect,
+    setHeaderMaterial,
+    setFooterMaterial,
+    setButtonMaterial,
+    setEmailHeaderMaterial,
+    setEmailFooterMaterial,
   } = useBranding();
 
   const { data: form, isLoading } = useGetSingleFormQueryQuery({ _id: formId }, { skip: !formId });
@@ -40,7 +62,7 @@ const useApplyBranding = ({ formId }) => {
     (formBranding) => {
       if (formBranding?.colors) {
         console.log("form branding is applied");
-        setName(formBranding?.name || "Apply Super Quick");
+        setName(formBranding?.name || "");
         setPrimaryColor(formBranding?.colors?.primary);
         setSecondaryColor(formBranding?.colors?.secondary);
         setAccentColor(formBranding?.colors?.accent);
@@ -66,6 +88,29 @@ const useApplyBranding = ({ formId }) => {
       }
       if (formBranding?.logos) setLogo(formBranding?.selectedLogo);
       if (formBranding?.fontFamily) setFontFamily(formBranding?.fontFamily);
+      // AI widget colors — always set (even to empty) so home branding overrides are cleared
+      setAiVoice(formBranding?.aiVoice || "nova");
+      setAiCustomPrompt(formBranding?.aiCustomPrompt || "");
+      setAiLaunchButtonColor(formBranding?.aiLaunchButtonColor || "");
+      setAiHeaderColor(formBranding?.aiHeaderColor || "");
+      setAiBannerColor(formBranding?.aiBannerColor || "");
+      setAiBannerTextColor(formBranding?.aiBannerTextColor || "");
+      setAiUseCustomIcon(formBranding?.aiUseCustomIcon !== false);
+      setAiSliderColor(formBranding?.aiSliderColor || "");
+      setPrivacyPolicyUrl(formBranding?.privacyPolicyUrl || "");
+      setTermsOfServiceUrl(formBranding?.termsOfServiceUrl || "");
+      setFavicon(formBranding?.favicon || "");
+      setTabTitle(formBranding?.tabTitle || "");
+      setHeaderEffect(formBranding?.headerEffect || "none");
+      setFooterEffect(formBranding?.footerEffect || "none");
+      setButtonEffect(formBranding?.buttonEffect || "none");
+      setEmailHeaderEffect(formBranding?.emailHeaderEffect || "none");
+      setEmailFooterEffect(formBranding?.emailFooterEffect || "none");
+      setHeaderMaterial(formBranding?.headerMaterial ?? 0);
+      setFooterMaterial(formBranding?.footerMaterial ?? 0);
+      setButtonMaterial(formBranding?.buttonMaterial ?? 0);
+      setEmailHeaderMaterial(formBranding?.emailHeaderMaterial ?? 0);
+      setEmailFooterMaterial(formBranding?.emailFooterMaterial ?? 0);
     },
     [
       setLogo,
@@ -92,6 +137,28 @@ const useApplyBranding = ({ formId }) => {
       setAppFooterPadding,
       setAppLogoMaxWidth,
       setAppLogoMaxHeight,
+      setAiVoice,
+      setAiCustomPrompt,
+      setAiLaunchButtonColor,
+      setAiHeaderColor,
+      setAiBannerColor,
+      setAiBannerTextColor,
+      setAiUseCustomIcon,
+      setAiSliderColor,
+      setPrivacyPolicyUrl,
+      setTermsOfServiceUrl,
+      setFavicon,
+      setTabTitle,
+      setHeaderEffect,
+      setFooterEffect,
+      setButtonEffect,
+      setEmailHeaderEffect,
+      setEmailFooterEffect,
+      setHeaderMaterial,
+      setFooterMaterial,
+      setButtonMaterial,
+      setEmailHeaderMaterial,
+      setEmailFooterMaterial,
     ],
   );
 

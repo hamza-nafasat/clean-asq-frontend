@@ -1,16 +1,14 @@
 import { AllRoles, AllUsers, Applicants, Applications } from "@/assets/svgs/icon";
 import { useBranding } from "@/hooks/BrandingContext";
-import { BrushIcon, CheckCircle } from "lucide-react";
+import { BrushIcon } from "lucide-react";
 import React, { useState } from "react";
 import { HiOutlineLightBulb } from "react-icons/hi";
 import { PiStrategyBold } from "react-icons/pi";
 import { RiHistoryLine } from "react-icons/ri";
-import { useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
 import ArrowBackIcon from "../../../assets/svgs/ArrowBackIcon";
 
 const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
-  const { user } = useSelector((state) => state.auth);
   const [isNavOpen, setIsNavOpen] = useState(true);
   const location = useLocation();
   const { logo, headerBackground, appLogoMaxWidth, appLogoMaxHeight } = useBranding();
@@ -23,18 +21,19 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
     { title: "Applications", link: "/applications", icon: <Applicants /> },
     { title: "Branding Management", link: "/branding", icon: <BrushIcon /> },
     { title: "Lookup management", link: "/strategies-key", icon: <HiOutlineLightBulb /> },
-    { title: "Verification", link: "/verification-test", icon: <CheckCircle /> },
     { title: "Strategies", link: "/strategies", icon: <PiStrategyBold /> },
-    {
-      title: "Pdf View",
-      link: `singleform/pdf-view/696f5c44bb3b82a0641facec/${user?._id}`,
-      icon: <RiHistoryLine size={20} />,
-    },
     {
       title: "Email",
       link: `email`,
       icon: <RiHistoryLine size={20} />,
     },
+
+    //  { title: "Verification", link: "/verification-test", icon: <CheckCircle /> },
+    // {
+    //   title: "Pdf View",
+    //   link: `singleform/pdf-view/696f5c44bb3b82a0641facec/${user?._id}`,
+    //   icon: <RiHistoryLine size={20} />,
+    // },
   ];
 
   return (
@@ -45,6 +44,7 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
       )}
 
       <div
+        data-testid="sidebar"
         className={`bg-backgroundColor fixed top-0 left-0 z-40 h-full rounded-md ${isNavOpen ? "p-4" : "p-8"} transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-[110%]"} lg:static lg:flex lg:translate-x-0 lg:flex-col lg:justify-between ${isNavOpen ? "w-[250px]" : "w-5"} shadow-lg`}
       >
         {/* Toggle Button (desktop only) */}
@@ -58,16 +58,16 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
         <div className="py-4">
           <div className={`mb-5 flex w-full items-center justify-center xl:mb-12`}>
             {" "}
-            <Link to="/application-forms" className="flex min-w-10 items-center justify-center h-full w-full">
+            <Link to="/application-forms" className="flex min-w-10 items-center justify-center">
               <img
                 src={logo || ""}
                 alt="logo"
                 referrerPolicy="no-referrer"
-                className={`rounded-sm object-contain ${isNavOpen ? `h-full w-full` : "h-10 w-10"}`}
+                className={`rounded-sm object-contain ${isNavOpen ? "h-full w-full" : "h-10 w-10"}`}
                 style={{
-                  backgroundColor: headerBackground || "",
-                  maxHeight: `${appLogoMaxHeight}px`,
-                  maxWidth: `${appLogoMaxWidth}px`,
+                  background: headerBackground || "",
+                  maxHeight: isNavOpen ? `${appLogoMaxHeight}px` : undefined,
+                  maxWidth: isNavOpen ? `${appLogoMaxWidth}px` : undefined,
                 }}
               />
             </Link>
@@ -80,6 +80,7 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
                 <Link
                   key={i}
                   to={page.link}
+                  data-testid={`nav-${page.title.toLowerCase().replace(/\s+/g, "-")}`}
                   onClick={() => setSidebarOpen(false)}
                   className={`flex w-full min-w-fit items-center rounded-md p-2 ${isNavOpen ? "size-12 gap-2" : "size-12"} ${isActive ? "bg-primary font-semibold text-white" : "hover:text-primary text-[#526581] hover:bg-gray-100"} `}
                 >
