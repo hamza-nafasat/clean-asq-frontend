@@ -1,26 +1,26 @@
 import DOMPurify from "dompurify";
 
-/**
- * Sanitize HTML + enforce iframe safety
- */
 function sanitizeHtml(dirtyHtml = "") {
   if (!dirtyHtml || typeof dirtyHtml !== "string") return "";
 
+  // First sanitize
   const clean = DOMPurify.sanitize(dirtyHtml, {
     FORBID_TAGS: ["script"],
+    // explicitly allow iframe
+    ADD_TAGS: ["iframe"],
+    // allow only required attrs
+    ADD_ATTR: ["src", "width", "height", "style", "loading", "allowfullscreen"],
     FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onfocus", "onmouseenter"],
   });
 
-  // Step 2: DOM parsing (for iframe control)
+  // Parse DOM
   const tempDiv = document.createElement("div");
   tempDiv.innerHTML = clean;
-  ("");
-  const iframes = tempDiv.querySelectorAll("iframe");
 
+  const iframes = tempDiv.querySelectorAll("iframe");
   iframes.forEach((iframe) => {
     const src = iframe.getAttribute("src") || "";
-
-    // Only allow Google Maps embeds
+    // allow only google maps
     const isGoogleMap = src.startsWith("https://www.google.com/maps") || src.startsWith("https://maps.google.com");
 
     if (!isGoogleMap) {
@@ -30,12 +30,14 @@ function sanitizeHtml(dirtyHtml = "") {
 
     // enforce safe defaults
     iframe.setAttribute("loading", "lazy");
-    iframe.setAttribute("width", "100%");
     iframe.setAttribute("height", "250");
+    iframe.setAttribute("width", "100%");
 
-    // strip any dangerous attrs
+    // remove unsafe attrs
     [...iframe.attributes].forEach((attr) => {
-      if (!["src", "width", "height", "loading", "style"].includes(attr.name)) {
+      const allowed = ["src", "width", "height", "loading", "style", "allowfullscreen"];
+
+      if (!allowed.includes(attr.name.toLowerCase())) {
         iframe.removeAttribute(attr.name);
       }
     });
@@ -43,4 +45,5 @@ function sanitizeHtml(dirtyHtml = "") {
 
   return tempDiv.innerHTML;
 }
+
 export { sanitizeHtml };
