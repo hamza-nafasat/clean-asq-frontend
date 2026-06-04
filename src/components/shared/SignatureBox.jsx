@@ -12,7 +12,9 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
   const [typedSignature, setTypedSignature] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
+  const [pendingAiFill, setPendingAiFill] = useState(false);
 
+  const outerDivRef = useRef(null);
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
   const drawing = useRef(false);
@@ -107,10 +109,17 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       canvas.width = 1600;
       canvas.height = 400;
       const ctx = canvas.getContext("2d");
-      ctx.font = '200px "Dancing Script", cursive';
       ctx.fillStyle = textColor;
       ctx.textBaseline = "middle";
       const text = typedSignature;
+      // Auto-fit: start at max size and scale down until the text fits with padding.
+      const maxFontSize = 200;
+      const paddedWidth = canvas.width - 80;
+      let fontSize = maxFontSize;
+      ctx.font = `${fontSize}px "Dancing Script", cursive`;
+      const measured = ctx.measureText(text).width;
+      if (measured > paddedWidth) fontSize = Math.floor(fontSize * (paddedWidth / measured));
+      ctx.font = `${fontSize}px "Dancing Script", cursive`;
       const x = (canvas.width - ctx.measureText(text).width) / 2;
       ctx.fillText(text, x, canvas.height / 2);
       return canvas.toDataURL("image/png");
@@ -161,7 +170,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
   //   img.src = url;
   // };
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     try {
       setIsSaving(true);
       const dataUrl = generateSignatureData();
@@ -174,13 +183,38 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       console.error("Error is Handle save signature box", err);
       setIsSaving(false);
     }
-  };
+  }, [generateSignatureData, onSave]);
 
   useEffect(() => {
     setupCanvas();
     window.addEventListener("resize", setupCanvas);
     return () => window.removeEventListener("resize", setupCanvas);
   }, [setupCanvas, mode]);
+
+  // AI max help mode: listen for a typed-signature request dispatched by the chat widget.
+  // Step 1 — switch to type mode and set the name. State setters are stable so no deps needed.
+  useEffect(() => {
+    const el = outerDivRef.current;
+    if (!el) return;
+    const handler = (e) => {
+      const name = e.detail?.name;
+      if (!name) return;
+      setMode("type");
+      setTypedSignature(name);
+      setPendingAiFill(true);
+    };
+    el.addEventListener("ai:fill-signature", handler);
+    return () => el.removeEventListener("ai:fill-signature", handler);
+  }, []);
+
+  // Step 2 — after React re-renders with mode="type" and the correct typedSignature,
+  // call handleSave so generateSignatureData picks up the right state. handleSave will
+  // call setMode("draw") on completion, switching to the draw tab to display the image.
+  useEffect(() => {
+    if (!pendingAiFill || mode !== "type" || !typedSignature.trim()) return;
+    setPendingAiFill(false);
+    handleSave();
+  }, [pendingAiFill, mode, typedSignature, handleSave]);
 
   // ---------- Update stroke style ----------
   useEffect(() => {
@@ -196,7 +230,28 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
 
   return (
     <div
+      ref={outerDivRef}
       className={` ${!isPdf || (!isDisabledAllFields && "bg-backgroundColor")} w-full rounded-2xl p-6 shadow-xl ${className}`}
+      {...(!isPdf && {
+        "data-ai-type": "sign",
+        "data-ai-id": "signature",
+        "data-ai-label": "Authorized Signature",
+        "data-ai-required": "true",
+        "data-ai-value": oldSignatureUrl ? "signed" : "",
+        "data-ai-text": (() => {
+          const strip = (v) =>
+            String(v || "")
+              .replace(/<[^>]*>/g, " ")
+              .replace(/\s+/g, " ")
+              .trim();
+          return (
+            strip(step?.signDisplayFormattedText) ||
+            strip(step?.signFormatedDisplayText) ||
+            strip(step?.ai_formatting)
+          ).slice(0, 500);
+        })(),
+        tabIndex: 0,
+      })}
     >
       {openAiHelpModal && (
         <Modal onClose={() => setOpenAiHelpModal(false)}>

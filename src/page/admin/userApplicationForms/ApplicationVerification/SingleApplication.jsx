@@ -6,7 +6,9 @@ import { EditSectionDisplayTextFromatingModal } from "@/components/shared/small/
 import { LoadingWithTimer } from "@/components/shared/small/LoadingWithTimer";
 import Modal from "@/components/shared/small/Modal";
 import TextField from "@/components/shared/small/TextField";
+import { useApplicantScreenContext } from "@/hooks/useApplicantScreenContext";
 import useApplyBranding from "@/hooks/useApplyBranding";
+import getEnv from "@/lib/env";
 import { socket } from "@/main";
 import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from "@/redux/apis/authApis";
 import {
@@ -45,14 +47,16 @@ export default function SingleApplication() {
   const { emailVerified } = useSelector((state) => state.form);
   const [webLink, setWebLink] = useState(null);
   const [qrCode, setQrCode] = useState("");
+  const [qrFetchError, setQrFetchError] = useState(false);
+  const [qrLoading, setQrLoading] = useState(false);
   const [otp, setOtp] = useState("");
   const [email, setEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-  const [getQrAndWebLinkLoading, setGetQrAndWebLinkLoading] = useState(false);
   const [isIdMissionProcessing, setIsIdMissionProcessing] = useState(false);
   const [idMissionVerified, setIdMissionVerified] = useState(false);
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [submiting, setSubmiting] = useState(false);
+  const [emailVerifiedLoading, setEmailVerifiedLoading] = useState(false);
 
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const [getIdMissionSession] = useGetIdMissionSessionMutation();
@@ -93,6 +97,26 @@ export default function SingleApplication() {
     data: { name: "data", value: "null" },
   });
   const autocompleteRef = useRef(null);
+  const idMissionFormRef = useRef(null); // used by DOM field discovery
+  const initialDataLoadRef = useRef(null); // tracks the in-flight getSavedFormDataAndSaveInRedux promise
+  const navigatingAwayRef = useRef(false); // set true before navigate() to suppress idmission-qr stage during the outbound render
+  const hasFocusedDetailsRef = useRef(false);
+  const submitFromEnterRef = useRef(null);
+
+  // ─── Render-level state snapshot ────────────────────────────────────────────
+  // Fires on every render so we can trace what changed.
+  const aiStageForLog =
+    !emailVerified || emailVerifiedLoading ? "email" : !idMissionVerified ? "idmission-qr" : "idmission-details";
+  console.log(
+    "%c[SA:render] stage=%s emailVerified=%s idMissionVerified=%s otpSent=%s email=%s otp=%s",
+    "color:#6366f1; font-weight:bold",
+    aiStageForLog,
+    emailVerified,
+    idMissionVerified,
+    otpSent,
+    email || "(empty)",
+    otp || "(empty)",
+  );
 
   const idMissionSection = form?.data?.sections?.find((sec) => sec?.title?.toLowerCase() == "id_verification_blk");
   const handleSignature = async (file, setIsSaving) => {
@@ -118,6 +142,166 @@ export default function SingleApplication() {
       if (setIsSaving) setIsSaving(false);
     }
   };
+
+  // Register this page with the AI applicant assistant.
+  // Context is scoped to the current stage so the AI only knows about
+  // what is visible to the applicant right now.
+  const aiStage =
+    !emailVerified || emailVerifiedLoading || navigatingAwayRef.current
+      ? "email"
+      : !idMissionVerified
+        ? "idmission-qr"
+        : "idmission-details";
+  console.log(
+    "%c[SA:aiCtx] registering screenId=single-application-%s  fields=%o  actions=%o",
+    "color:#0891b2; font-weight:bold",
+    aiStage,
+    aiStage === "email"
+      ? [
+          { id: "email-field", value: email, filled: !!email },
+          { id: "otp-field", value: otp, filled: !!otp },
+        ]
+      : [],
+    aiStage === "email" ? ["fillField", "sendOtpForEmail", "verifyOtpCode", "scrollToField"] : ["scrollToField"],
+  );
+  useApplicantScreenContext(
+    {
+      screenId: `single-application-${aiStage}`,
+      screenName:
+        aiStage === "email"
+          ? "Email Verification"
+          : aiStage === "idmission-qr"
+            ? "Identity Verification — QR Code"
+            : "Identity Verification — Personal Details",
+      description:
+        aiStage === "email"
+          ? "The applicant must verify their email address. They enter their email, receive a one-time passcode (OTP), and enter it to confirm."
+          : aiStage === "idmission-qr"
+            ? "The applicant scans a QR code (or uses a web link) with their phone to complete photo ID verification through IDMission. No form fields to fill at this step — they must use the QR code or web link."
+            : 'The applicant completes their personal details and adds their signature to proceed. Some fields may already be filled from identity verification — present those pre-filled values to the applicant for confirmation before moving on to empty fields. For the roleFillingForCompany field, valid values are: "both" (operator and primary contact), "primaryContact" (primary contact only), or "primaryOperatorAndController" (C-level executive or owner). Present these as readable choices to the applicant.',
+      aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
+      formRef: aiStage === "idmission-details" ? idMissionFormRef : null,
+      currentState: {
+        ...(aiStage === "email" && {
+          otpSent,
+          fields: [
+            {
+              id: "email-field",
+              label: "Email Address",
+              type: "email",
+              value: email,
+              required: true,
+              filled: !!email,
+              isSignature: false,
+            },
+            {
+              id: "otp-field",
+              label: "OTP Code",
+              type: "text",
+              value: otp,
+              required: true,
+              filled: !!otp,
+              isSignature: false,
+            },
+          ],
+        }),
+        ...(aiStage === "idmission-qr" && {
+          webLinkAvailable: !!webLink,
+          fields: [],
+        }),
+        // Fields are discovered from the live DOM via formRef — no hardcoded list needed.
+      },
+      actions: {
+        scrollToField: ({ fieldId }) => {
+          const el = document.getElementById(fieldId) || document.querySelector(`[name="${fieldId}"]`);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+        },
+        ...(aiStage === "email" && {
+          fillField: ({ fieldId, value }) => {
+            if (fieldId === "email-field") setEmail(value);
+            else if (fieldId === "otp-field") setOtp(value);
+          },
+          // Sends OTP directly — accepts email as arg to avoid React state flush timing issues
+          sendOtpForEmail: async ({ email: emailValue }) => {
+            console.log(
+              "%c[SA:AI→sendOtpForEmail] called — emailValue=%s formId=%s",
+              "color:#ea580c; font-weight:bold",
+              emailValue,
+              formId,
+            );
+            const res = await sendOtp({ email: emailValue, formId }).unwrap();
+            console.log(
+              "%c[SA:AI→sendOtpForEmail] API response — success=%s message=%s",
+              "color:#ea580c",
+              res?.success,
+              res?.message,
+            );
+            if (!res?.success) throw new Error(res?.message || "Failed to send OTP");
+            setEmail(emailValue);
+            setOtpSent(true);
+            return res;
+          },
+          // Verifies OTP directly — accepts both values as args to avoid state flush timing issues
+          verifyOtpCode: async ({ otp: otpValue, email: emailValue }) => {
+            console.log(
+              "%c[SA:AI→verifyOtpCode] called — email=%s otp=%s formId=%s",
+              "color:#ea580c; font-weight:bold",
+              emailValue,
+              otpValue,
+              formId,
+            );
+            setLoadingForValidatingOtp(true);
+            try {
+              const res = await verifyEmail({ email: emailValue, otp: otpValue, formId }).unwrap();
+              console.log("%c[SA:AI→verifyOtpCode] API response — success=%s", "color:#ea580c", res?.success);
+              if (!res?.success) throw new Error(res?.message || "Verification failed");
+              setOtp(otpValue);
+              // Raise the loading flag BEFORE dispatching emailVerified — React 18 batches
+              // these two state updates into one render, keeping aiStage="email" so the
+              // IDMission QR context is never registered until we know the user stays there.
+              setEmailVerifiedLoading(true);
+              console.log(
+                "%c[SA:AI→verifyOtpCode] OTP verified ✓ — dispatching updateEmailVerified(true)",
+                "color:#ea580c",
+              );
+              dispatch(updateEmailVerified(true));
+              await getUserProfile()
+                .then((r) => {
+                  console.log(
+                    "%c[SA:AI→verifyOtpCode] getUserProfile — success=%s userId=%s",
+                    "color:#ea580c",
+                    r?.data?.success,
+                    r?.data?.data?._id,
+                  );
+                  if (r?.data?.success) dispatch(userExist(r.data.data));
+                  else dispatch(userNotExist());
+                })
+                .catch(() => dispatch(userNotExist()));
+              console.log("%c[SA:AI→verifyOtpCode] calling getSavedFormDataAndSaveInRedux…", "color:#ea580c");
+              await getSavedFormDataAndSaveInRedux();
+              console.log("%c[SA:AI→verifyOtpCode] getSavedFormDataAndSaveInRedux complete", "color:#ea580c");
+              return res;
+            } finally {
+              setLoadingForValidatingOtp(false);
+              // Drop the loading flag — if we navigated away, this is a no-op (React ignores
+              // state updates from unmounted components). If we stayed, aiStage can now
+              // transition to "idmission-qr" and the QR context registers correctly.
+              setEmailVerifiedLoading(false);
+            }
+          },
+        }),
+        // fillField auto-provided by AIChatContext via DOM dispatch (formRef above)
+      },
+      // idMissionVerifiedData object reference changes on every field update,
+      // which re-triggers registerScreenContext so the DOM is re-read.
+      deps: [aiStage, email, otp, webLink, idMissionVerifiedData],
+      // clearOnMount: only wipe the chat history on the very first mount (before email
+      // verification). On remounts after navigating away (e.g. returning from company
+      // verification), emailVerified is already true in Redux — skip the reset so the
+      // conversation history and language are preserved across the navigation.
+    },
+    { clearOnMount: !emailVerified, autoOpen: false },
+  );
 
   // functions for autocomplete
   // ===========================
@@ -156,12 +340,28 @@ export default function SingleApplication() {
     const geometry = place.geometry;
     const parsed = parseComponents(components, geometry);
 
-    setIdMissionVerifiedData((prev) => ({ ...prev, ...parsed }));
+    setIdMissionVerifiedData((prev) => ({
+      ...prev,
+      streetAddress: { name: "streetAddress", value: parsed.streetAddress },
+      city: { name: "city", value: parsed.city },
+      state: { name: "state", value: parsed.state },
+      country: { name: "country", value: parsed.country },
+      zipCode: { name: "zipCode", value: parsed.zipCode },
+    }));
+    setTimeout(() => document.getElementById("companyTitle")?.focus(), 50);
   };
 
   const handleGeocodeResults = (results) => {
     const parsed = parseComponentsFromResults(results);
-    setIdMissionVerifiedData((prev) => ({ ...prev, ...parsed }));
+    setIdMissionVerifiedData((prev) => ({
+      ...prev,
+      streetAddress: { name: "streetAddress", value: parsed.streetAddress },
+      city: { name: "city", value: parsed.city },
+      state: { name: "state", value: parsed.state },
+      country: { name: "country", value: parsed.country },
+      zipCode: { name: "zipCode", value: parsed.zipCode },
+    }));
+    setTimeout(() => document.getElementById("companyTitle")?.focus(), 50);
   };
 
   const parseComponents = (components = [], geometry) => {
@@ -342,50 +542,6 @@ export default function SingleApplication() {
     [formData, formId, saveFormInDraft, user?._id, user?.email, user?.firstName, user?.lastName, user?.role?.name],
   );
 
-  const getSavedFormDataAndSaveInRedux = useCallback(async () => {
-    try {
-      const res = await getSavedFormData({ formId: formId }).unwrap();
-      if (res.success) {
-        const savedData = res?.data?.savedData || [];
-        const formDataOfIdMission = savedData?.idMission;
-        const action = await dispatch(addSavedFormData(savedData || []));
-        unwrapResult(action);
-        if (!savedData?.company_lookup_data) {
-          return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
-        }
-        setIdMissionVerifiedData({
-          name: { name: "name", value: formDataOfIdMission?.name?.value || "" },
-          email: { name: "email", value: formDataOfIdMission?.email?.value || user?.email },
-          idNumber: { name: "idNumber", value: formDataOfIdMission?.idNumber?.value || "" },
-          idIssuer: { name: "idIssuer", value: formDataOfIdMission?.idIssuer?.value || "" },
-          idType: { name: "idType", value: formDataOfIdMission?.idType?.value || "" },
-          idExpiryDate: { name: "idExpiryDate", value: formDataOfIdMission?.idExpiryDate?.value || "" },
-          streetAddress: { name: "streetAddress", value: formDataOfIdMission?.streetAddress?.value || "" },
-          phoneNumber: { name: "phoneNumber", value: formDataOfIdMission?.phoneNumber?.value || "" },
-          zipCode: { name: "zipCode", value: formDataOfIdMission?.zipCode?.value || "" },
-          dateOfBirth: { name: "dateOfBirth", value: formDataOfIdMission?.dateOfBirth?.value || "" },
-          country: { name: "country", value: formDataOfIdMission?.country?.value || "" },
-          issueDate: { name: "issueDate", value: formDataOfIdMission?.issueDate?.value || "" },
-          companyTitle: { name: "companyTitle", value: formDataOfIdMission?.companyTitle?.value || "" },
-          state: { name: "state", value: formDataOfIdMission?.state?.value || "" },
-          city: { name: "city", value: formDataOfIdMission?.city?.value || "" },
-          signature: { name: "signature", value: formDataOfIdMission?.signature?.value || "" },
-          createdAt: formDataOfIdMission?.createdAt || new Date().toISOString(),
-          updatedAt: formDataOfIdMission?.updatedAt || new Date().toISOString(),
-        });
-        if (formDataOfIdMission?.name?.value && savedData?.company_lookup_data) {
-          setIdMissionVerified(true);
-          setOpenRedirectModal(true);
-        }
-      }
-    } catch (error) {
-      if (error?.data?.message === "Form Not Saved in draft") {
-        return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
-      }
-      console.log("error while getting saved form data", error);
-    }
-  }, [dispatch, form?.data?.branding?.name, formId, getSavedFormData, navigate, user?.email]);
-
   const submitIdMissionData = useCallback(
     async (e) => {
       setOpenRedirectModal(false);
@@ -393,7 +549,7 @@ export default function SingleApplication() {
       setSubmiting(true);
       try {
         if (!idMissionVerifiedData?.signature?.value?.publicId && !idMissionVerifiedData?.signature?.value?.secureUrl) {
-          return toast.error("Please do and save the signature");
+          return toast.error("You must save your signature before taking the next step.");
         }
         const action = await dispatch(updateFormState({ data: idMissionVerifiedData, name: "idMission" }));
         unwrapResult(action);
@@ -409,6 +565,7 @@ export default function SingleApplication() {
           },
           name: "idMission",
         });
+        dispatch(updateEmailVerified(false));
         return navigate(`/singleform/stepper/${formId}`);
       } catch (error) {
         console.log("error while saving form in draft", error);
@@ -429,21 +586,14 @@ export default function SingleApplication() {
       user?.role?.name,
     ],
   );
-
-  const getQrAndWebLink = useCallback(async () => {
-    try {
-      const res = await getIdMissionSession().unwrap();
-      if (res.success) {
-        setQrCode(res.data?.customerData?.qrCode);
-        setWebLink(res.data?.customerData?.kycUrl);
-      }
-    } catch (error) {
-      console.log("Error fetching session ID:", error);
-    }
-  }, [getIdMissionSession]);
-
   const sentOtpForEmail = useCallback(async () => {
     try {
+      console.log(
+        "%c[SA:sentOtpForEmail] called — email=%s formId=%s",
+        "color:#16a34a; font-weight:bold",
+        email,
+        formId,
+      );
       if (!email) return toast.error("Please enter your email");
       const res = await sendOtp({ email, formId }).unwrap();
       if (res.success) {
@@ -452,6 +602,7 @@ export default function SingleApplication() {
       }
     } catch (error) {
       console.log("Error sending OTP:", error);
+      console.error("%c[SA:sentOtpForEmail] ERROR", "color:#dc2626; font-weight:bold", error);
       toast.error(error?.data?.message || "Failed to send OTP");
     }
   }, [email, formId, sendOtp]);
@@ -478,6 +629,193 @@ export default function SingleApplication() {
       setLoadingForValidatingOtp(false);
     }
   }, [dispatch, email, formId, getSavedFormDataAndSaveInRedux, getUserProfile, otp, verifyEmail]);
+  const getQrAndWebLink = useCallback(async () => {
+    setQrLoading(true);
+    setQrFetchError(false);
+    let timedOut = false;
+    const timeoutId = setTimeout(() => {
+      timedOut = true;
+      setQrLoading(false);
+      setQrFetchError(true);
+    }, 10000);
+    try {
+      const res = await getIdMissionSession().unwrap();
+      clearTimeout(timeoutId);
+      if (!timedOut) {
+        if (res.success) {
+          setQrCode(res.data?.customerData?.qrCode);
+          setWebLink(res.data?.customerData?.kycUrl);
+        } else {
+          setQrFetchError(true);
+        }
+      }
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (!timedOut) {
+        console.log("Error fetching session ID:", error);
+        setQrFetchError(true);
+      }
+    } finally {
+      setQrLoading(false);
+    }
+  }, [getIdMissionSession]);
+  // const getSavedFormDataAndSaveInRedux = useCallback(async () => {
+  //   try {
+  //     const res = await getSavedFormData({ formId: formId }).unwrap();
+  //     if (res.success) {
+  //       const savedData = res?.data?.savedData || [];
+  //       const formDataOfIdMission = savedData?.idMission;
+  //       const action = await dispatch(addSavedFormData(savedData || []));
+  //       unwrapResult(action);
+  //       if (!savedData?.company_lookup_data) {
+  //         return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
+  //       }
+  //       setIdMissionVerifiedData({
+  //         name: { name: "name", value: formDataOfIdMission?.name?.value || "" },
+  //         email: { name: "email", value: formDataOfIdMission?.email?.value || user?.email },
+  //         idNumber: { name: "idNumber", value: formDataOfIdMission?.idNumber?.value || "" },
+  //         idIssuer: { name: "idIssuer", value: formDataOfIdMission?.idIssuer?.value || "" },
+  //         idType: { name: "idType", value: formDataOfIdMission?.idType?.value || "" },
+  //         idExpiryDate: { name: "idExpiryDate", value: formDataOfIdMission?.idExpiryDate?.value || "" },
+  //         streetAddress: { name: "streetAddress", value: formDataOfIdMission?.streetAddress?.value || "" },
+  //         phoneNumber: { name: "phoneNumber", value: formDataOfIdMission?.phoneNumber?.value || "" },
+  //         zipCode: { name: "zipCode", value: formDataOfIdMission?.zipCode?.value || "" },
+  //         dateOfBirth: { name: "dateOfBirth", value: formDataOfIdMission?.dateOfBirth?.value || "" },
+  //         country: { name: "country", value: formDataOfIdMission?.country?.value || "" },
+  //         issueDate: { name: "issueDate", value: formDataOfIdMission?.issueDate?.value || "" },
+  //         companyTitle: { name: "companyTitle", value: formDataOfIdMission?.companyTitle?.value || "" },
+  //         state: { name: "state", value: formDataOfIdMission?.state?.value || "" },
+  //         city: { name: "city", value: formDataOfIdMission?.city?.value || "" },
+  //         signature: { name: "signature", value: formDataOfIdMission?.signature?.value || "" },
+  //         createdAt: formDataOfIdMission?.createdAt || new Date().toISOString(),
+  //         updatedAt: formDataOfIdMission?.updatedAt || new Date().toISOString(),
+  //       });
+  //       if (formDataOfIdMission?.name?.value && savedData?.company_lookup_data) {
+  //         setIdMissionVerified(true);
+  //         setOpenRedirectModal(true);
+  //       }
+  //     }
+  //   } catch (error) {
+  //     if (error?.data?.message === "Form Not Saved in draft") {
+  //       return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
+  //     }
+  //     console.log("error while getting saved form data", error);
+  //   }
+  // }, [dispatch, form?.data?.branding?.name, formId, getSavedFormData, navigate, user?.email]);
+
+  const getSavedFormDataAndSaveInRedux = useCallback(
+    async ({ skipRedirectOnError = false } = {}) => {
+      console.log(
+        "%c[SA:getSavedForm] called — skipRedirectOnError=%s formId=%s",
+        "color:#7c3aed; font-weight:bold",
+        skipRedirectOnError,
+        formId,
+      );
+      try {
+        const res = await getSavedFormData({ formId: formId }).unwrap();
+        console.log(
+          "%c[SA:getSavedForm] API response — success=%s keys=%o",
+          "color:#7c3aed",
+          res?.success,
+          res?.data?.savedData ? Object.keys(res.data.savedData) : [],
+        );
+        if (res.success) {
+          const savedData = res?.data?.savedData || [];
+          const formDataOfIdMission = savedData?.idMission;
+          console.log(
+            "%c[SA:getSavedForm] idMission data — name=%s email=%s company_lookup_data=%s",
+            "color:#7c3aed",
+            formDataOfIdMission?.name?.value || "(none)",
+            formDataOfIdMission?.email?.value || "(none)",
+            !!savedData?.company_lookup_data,
+          );
+          const action = await dispatch(addSavedFormData(savedData || []));
+          unwrapResult(action);
+          setIdMissionVerifiedData({
+            name: { name: "name", value: formDataOfIdMission?.name?.value || "" },
+            // Priority: (1) fresh OTP email from this session, (2) previously-saved draft
+            // email (also OTP-verified), (3) user?.email — safe here because after OTP
+            // verification the user is logged in AS the OTP email, so user?.email === OTP email.
+            // We never reach this fallback chain before emailVerified is true.
+            email: { name: "email", value: email || formDataOfIdMission?.email?.value || user?.email || "" },
+            idNumber: { name: "idNumber", value: formDataOfIdMission?.idNumber?.value || "" },
+            idIssuer: { name: "idIssuer", value: formDataOfIdMission?.idIssuer?.value || "" },
+            idType: { name: "idType", value: formDataOfIdMission?.idType?.value || "" },
+            idExpiryDate: { name: "idExpiryDate", value: formDataOfIdMission?.idExpiryDate?.value || "" },
+            streetAddress: { name: "streetAddress", value: formDataOfIdMission?.streetAddress?.value || "" },
+            address2: { name: "address2", value: formDataOfIdMission?.address2?.value || "" },
+            phoneNumber: { name: "phoneNumber", value: formDataOfIdMission?.phoneNumber?.value || "" },
+            zipCode: { name: "zipCode", value: formDataOfIdMission?.zipCode?.value || "" },
+            dateOfBirth: { name: "dateOfBirth", value: formDataOfIdMission?.dateOfBirth?.value || "" },
+            country: { name: "country", value: formDataOfIdMission?.country?.value || "" },
+            issueDate: { name: "issueDate", value: formDataOfIdMission?.issueDate?.value || "" },
+            companyTitle: { name: "companyTitle", value: formDataOfIdMission?.companyTitle?.value || "" },
+            state: { name: "state", value: formDataOfIdMission?.state?.value || "" },
+            city: { name: "city", value: formDataOfIdMission?.city?.value || "" },
+            signature: { name: "signature", value: formDataOfIdMission?.signature?.value || "" },
+            createdAt: formDataOfIdMission?.createdAt || new Date().toISOString(),
+            updatedAt: formDataOfIdMission?.updatedAt || new Date().toISOString(),
+          });
+          if (formDataOfIdMission?.name?.value && savedData?.company_lookup_data) {
+            console.log(
+              "%c[SA:getSavedForm] → idMissionVerified=true + openRedirectModal (name+lookup both present)",
+              "color:#7c3aed",
+            );
+            setIdMissionVerified(true);
+            setOpenRedirectModal(true);
+          } else if (!skipRedirectOnError && !savedData?.company_lookup_data) {
+            // Draft exists but company lookup hasn't completed yet — send to company page.
+            // Only redirect on the post-OTP path (skipRedirectOnError=false); on the remount
+            // path the lookup may still be running in the background, so we wait.
+            console.log(
+              "%c[SA:getSavedForm] → navigating to /verification (no company_lookup_data, skipRedirectOnError=false)",
+              "color:#7c3aed",
+            );
+            navigatingAwayRef.current = true;
+            return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
+          } else {
+            // User is staying on the QR / manual-entry step — fetch QR now (first time we know it's needed).
+            console.log(
+              "%c[SA:getSavedForm] → no navigation (skipRedirectOnError=%s name=%s lookup=%s) — fetching QR",
+              "color:#7c3aed",
+              skipRedirectOnError,
+              !!formDataOfIdMission?.name?.value,
+              !!savedData?.company_lookup_data,
+            );
+            getQrAndWebLink();
+          }
+        }
+      } catch (error) {
+        if (error?.data?.message === "Form Not Saved in draft") {
+          if (skipRedirectOnError) {
+            // Draft doesn't exist yet — company info hasn't been submitted. Don't redirect
+            // (the skipRedirectOnError=false call from verifyOtpCode handles navigation).
+            // Pre-fill email so it's ready if/when the user eventually reaches this page.
+            // Do NOT fetch QR here — the draft being absent means company info isn't done yet,
+            // so we have no business initialising IDMission.
+            console.log(
+              "%c[SA:getSavedForm] catch: Form Not Saved in draft + skipRedirectOnError → pre-filling email only",
+              "color:#ea580c",
+            );
+            setIdMissionVerifiedData((prev) => ({
+              ...prev,
+              email: { name: "email", value: prev.email?.value || email || user?.email || "" },
+            }));
+            return;
+          }
+          console.log(
+            "%c[SA:getSavedForm] catch: Form Not Saved in draft → navigating to /verification",
+            "color:#ea580c",
+          );
+          navigatingAwayRef.current = true;
+          return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
+        }
+        console.error("%c[SA:getSavedForm] ERROR", "color:#dc2626; font-weight:bold", error);
+        // toast.error(error?.data?.message || 'Error while getting saved form data');
+      }
+    },
+    [dispatch, email, form?.data?.branding?.name, formId, getQrAndWebLink, getSavedFormData, navigate, user?.email],
+  );
 
   const getQrLinkOnEmailVerified = useCallback(() => {
     if (emailVerified && formData && formData?.idMission) {
@@ -510,8 +848,11 @@ export default function SingleApplication() {
       setOpenRedirectModal(true);
     }
     if (!qrCode && !webLink) {
-      setGetQrAndWebLinkLoading(true);
-      getQrAndWebLink().finally(() => setGetQrAndWebLinkLoading(false));
+      setQrLoading(true);
+      getQrAndWebLink()
+        .then(() => setQrLoading(false))
+        .catch(() => setQrFetchError(true))
+        .finally(() => setQrLoading(false));
     }
   }, [emailVerified, formData, getQrAndWebLink, qrCode, user?.email, webLink]);
 
@@ -532,6 +873,49 @@ export default function SingleApplication() {
       getQrLinkOnEmailVerified();
     }
   }, [getQrLinkOnEmailVerified, idMissionVerified, qrCode, webLink]);
+
+  useEffect(() => {
+    console.log(
+      "%c[SA:effect/emailVerified] deps changed — emailVerified=%s idMissionVerified=%s → %s",
+      "color:#7c3aed",
+      emailVerified,
+      idMissionVerified,
+      emailVerified && !idMissionVerified
+        ? "calling getSavedFormDataAndSaveInRedux(skipRedirectOnError=true)"
+        : "skipping",
+    );
+    if (emailVerified && !idMissionVerified) {
+      // Store the promise so the "Enter Details Manually" button can await it.
+      // This prevents the button from changing stage before pre-fill data is loaded,
+      // which would cause two separate AI context reads and two auto-messages.
+      // skipRedirectOnError: true — companyLookup() may not have saved the draft yet.
+      // Don't redirect; let the QR/manual screen show and pre-fill what we can.
+      initialDataLoadRef.current = getSavedFormDataAndSaveInRedux({ skipRedirectOnError: true });
+    }
+  }, [emailVerified, idMissionVerified, getSavedFormDataAndSaveInRedux]);
+
+  useEffect(() => {
+    if (aiStage === "idmission-qr" && !qrCode) {
+      console.log(
+        "%c[SA:effect/qr] aiStage=idmission-qr, qrCode absent — fetching QR",
+        "color:#0891b2; font-weight:bold",
+      );
+      getQrAndWebLink();
+    }
+  }, [aiStage, qrCode, getQrAndWebLink]);
+
+  // Focus the email field once the screen finishes loading and the field is in the DOM.
+  // We watch the same conditions that gate the early <CustomLoading /> return so the field
+  // actually exists when we try to focus it. The small delay lets the chat widget settle.
+  useEffect(() => {
+    if (!isApplied || isFormLoading || isApplying || emailVerified) return;
+    setTimeout(() => document.getElementById("email-field")?.focus(), 100);
+  }, [isApplied, isFormLoading, isApplying, emailVerified]);
+
+  // Focus the OTP field as soon as it appears after sending the code.
+  useEffect(() => {
+    if (otpSent) setTimeout(() => document.getElementById("otp-field")?.focus(), 50);
+  }, [otpSent]);
 
   // get user when he logged in
   useEffect(() => {
@@ -791,6 +1175,52 @@ export default function SingleApplication() {
     setIsAllRequiredFieldsFilled(allFilled);
   }, [idMissionVerifiedData]);
 
+  useEffect(() => {
+    if (!idMissionVerified || hasFocusedDetailsRef.current) return;
+    hasFocusedDetailsRef.current = true;
+    let f1, f2;
+    f1 = requestAnimationFrame(() => {
+      f2 = requestAnimationFrame(() => {
+        const container = idMissionFormRef.current;
+        if (!container) return;
+        const inputs = Array.from(container.querySelectorAll("input:not([disabled]):not([readonly])")).filter(
+          (el) => el.offsetParent !== null,
+        );
+        if (inputs.length > 0) inputs[0].focus();
+      });
+    });
+    return () => {
+      cancelAnimationFrame(f1);
+      cancelAnimationFrame(f2);
+    };
+  }, [idMissionVerified]);
+
+  useEffect(() => {
+    if (!idMissionVerified) return;
+    const container = idMissionFormRef.current;
+    if (!container) return;
+    const handler = (e) => {
+      if (e.key !== "Enter" || e.defaultPrevented) return;
+      if (!container.contains(document.activeElement)) return;
+      if (document.activeElement?.tagName?.toLowerCase() !== "input") return;
+      const inputs = Array.from(container.querySelectorAll("input:not([disabled]):not([readonly])")).filter(
+        (el) => el.offsetParent !== null,
+      );
+      const idx = inputs.indexOf(document.activeElement);
+      if (idx === -1) return;
+      e.preventDefault();
+      if (idx < inputs.length - 1) {
+        inputs[idx + 1].focus();
+      } else {
+        submitFromEnterRef.current?.(e);
+      }
+    };
+    container.addEventListener("keydown", handler);
+    return () => container.removeEventListener("keydown", handler);
+  }, [idMissionVerified]);
+
+  submitFromEnterRef.current = isAllRequiredFieldsFilled && !submiting ? submitIdMissionData : null;
+
   const isCreator = user?._id && user?._id == form?.data?.owner && user?.role !== "guest";
   if (!isApplied || loadingForValidatingOtp || isFormLoading || isApplying) return <CustomLoading />;
 
@@ -893,6 +1323,7 @@ export default function SingleApplication() {
                   className="flex-1"
                   onClick={() => {
                     setOpenRedirectModal(false);
+                    dispatch(updateEmailVerified(false));
                     navigate(`/singleform/stepper/${formId}`);
                   }}
                   label="Continue to Next"
@@ -904,7 +1335,7 @@ export default function SingleApplication() {
       ) : isIdMissionProcessing ? (
         <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
       ) : (
-        <div className="mt-14 h-full overflow-auto text-center">
+        <div className="mt-14 h-full overflow-auto text-center" data-testid="single-application">
           {!idMissionVerified ? ( // TODO add not
             !emailVerified ? (
               <>
@@ -918,6 +1349,7 @@ export default function SingleApplication() {
                     <div className="flex w-full justify-center">
                       <div
                         className="w-full p-4 lg:px-20"
+                        data-ai-display-text
                         dangerouslySetInnerHTML={{
                           __html: String(form?.data?.otpDisplayFormatedText || "")
                             // kill vw padding
@@ -935,6 +1367,9 @@ export default function SingleApplication() {
                   )}
                   <div className="flex w-full items-center justify-center gap-4">
                     <TextField
+                      data-testid="verification-email-input"
+                      id="email-field"
+                      name="email-field"
                       type="email"
                       placeholder="Enter your email"
                       value={email}
@@ -952,11 +1387,15 @@ export default function SingleApplication() {
                       disabled={otpLoading}
                       className={`min-w-[130px] py-2 ${otpLoading && "cursor-not-allowed opacity-25"}`}
                       label={"Send Code"}
+                      data-testid="verification-send-otp-btn"
                     />
                   </div>
                   {otpSent && (
                     <div className="flex w-full items-center justify-center gap-4">
                       <TextField
+                        data-testid="verification-otp-input"
+                        id="otp-field"
+                        name="otp-field"
                         type="text"
                         placeholder="Enter your Code"
                         value={otp}
@@ -974,6 +1413,7 @@ export default function SingleApplication() {
                         disabled={emailLoading}
                         className={`min-w-[130px] py-2 ${emailLoading && "cursor-not-allowed opacity-25"}`}
                         label={"Submit Code"}
+                        data-testid="verification-submit-otp-btn"
                       />
                     </div>
                   )}
@@ -990,7 +1430,7 @@ export default function SingleApplication() {
                   )}
                 </div>
               </>
-            ) : getQrAndWebLinkLoading ? (
+            ) : qrLoading ? (
               <CustomLoading />
             ) : (
               <div className="flex flex-col items-center gap-3">
@@ -999,39 +1439,54 @@ export default function SingleApplication() {
                     <Button onClick={() => setCustomizeIdMissionTextModal(true)} label={"Customize Display Text"} />
                   </div>
                 )}
-                {qrCode && webLink && (
-                  <>
-                    {/* <h1 className="text-textPrimary text-start text-2xl font-semibold">Id Mission Verification</h1>
-                    <p className="text-textPrimary mt-10 text-[18px] font-semibold">We need to Verify your identity</p> */}
-                    {/* // id verification block formating  */}
-
-                    {idMissionSection?.ai_formatting && (
-                      <div className="flex w-full gap-3">
-                        <div
-                          className="w-full"
-                          dangerouslySetInnerHTML={{
-                            __html: String(idMissionSection?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
-                              if (match.includes("target=")) return match; // avoid duplicates
-                              return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-                            }),
-                          }}
-                        />
-                      </div>
-                    )}
-                    <div className="mt-4 flex w-full flex-col items-center gap-4">
-                      <img className="h-[230px] w-[230px]" src={`data:image/jpeg;base64,${qrCode}`} alt="qr code " />
-                    </div>
-                    <div className="mt-4 flex w-full flex-col items-center gap-4">
-                      <Button className="w-full max-w-[230px]" label={"Refresh QR Code"} onClick={getQrAndWebLink} />
-                    </div>
-                  </>
+                {(idMissionSection?.ai_formatting || idMissionSection?.displayText) && (
+                  <div className="flex w-full gap-3">
+                    <div
+                      className="w-full"
+                      data-ai-display-text
+                      dangerouslySetInnerHTML={{
+                        __html: String(idMissionSection?.ai_formatting || idMissionSection?.displayText || "").replace(
+                          /<a(\s+.*?)?>/g,
+                          (match) => {
+                            if (match.includes("target=")) return match;
+                            return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
+                          },
+                        ),
+                      }}
+                    />
+                  </div>
                 )}
+                <div className="mt-4 flex w-full flex-col items-center gap-4">
+                  {qrCode ? (
+                    <img
+                      data-testid="idmission-qr-code"
+                      className="h-[230px] w-[230px]"
+                      src={`data:image/jpeg;base64,${qrCode}`}
+                      alt="qr code "
+                    />
+                  ) : qrFetchError ? (
+                    <p className="max-w-[230px] text-center text-sm text-gray-500">
+                      QR code could not be loaded. Use the refresh button to try again, or enter your ID details
+                      manually below.
+                    </p>
+                  ) : null}
+                </div>
+                <div className="mt-4 flex w-full flex-col items-center gap-4">
+                  <Button
+                    data-testid="idmission-refresh-qr-btn"
+                    className="w-full max-w-[230px]"
+                    label={"Refresh QR Code"}
+                    onClick={getQrAndWebLink}
+                  />
+                </div>
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
+                    if (initialDataLoadRef.current) await initialDataLoadRef.current;
                     setIdMissionVerified(true);
                   }}
                   className="w-full max-w-[230px]"
                   variant="secondary"
+                  data-testid="idmission-manual-entry-btn"
                   label={"Enter ID Details Manually"}
                 />
               </div>
@@ -1043,6 +1498,7 @@ export default function SingleApplication() {
                   <div className="flex items-end gap-3">
                     <div
                       className="w-full"
+                      data-ai-display-text
                       dangerouslySetInnerHTML={{
                         __html: String(form?.data?.idMissionDataDisplayFormatedText || "").replace(
                           /<a(\s+.*?)?>/g,
@@ -1069,7 +1525,7 @@ export default function SingleApplication() {
                   />
                 )}
               </div>
-              <form className="flex flex-wrap gap-4">
+              <form ref={idMissionFormRef} className="flex flex-wrap gap-4">
                 <TextField
                   onChange={(e) =>
                     setIdMissionVerifiedData({
@@ -1077,12 +1533,17 @@ export default function SingleApplication() {
                       name: { name: "name", value: e.target.value },
                     })
                   }
+                  id="name"
+                  name="name"
                   required
                   value={idMissionVerifiedData?.name?.value}
                   label="Name:*"
+                  placeholder="First name, middle name (optional), last name"
                   className={"max-w-[400px]!"}
                 />
                 <TextField
+                  id="email"
+                  name="email"
                   value={idMissionVerifiedData?.email?.value}
                   onChange={(e) =>
                     setIdMissionVerifiedData({
@@ -1092,9 +1553,12 @@ export default function SingleApplication() {
                   }
                   label="Email Address:*"
                   required
+                  placeholder="e.g. john.doe@email.com"
                   className={"max-w-[400px]!"}
                 />
                 <TextField
+                  id="dateOfBirth"
+                  name="dateOfBirth"
                   type="date"
                   value={idMissionVerifiedData?.dateOfBirth?.value}
                   onChange={(e) =>
@@ -1108,6 +1572,8 @@ export default function SingleApplication() {
                   className={"max-w-[400px]!"}
                 />
                 <TextField
+                  id="idType"
+                  name="idType"
                   type="text"
                   value={idMissionVerifiedData?.idType?.value}
                   onChange={(e) =>
@@ -1116,11 +1582,15 @@ export default function SingleApplication() {
                       idType: { name: "idType", value: e.target.value },
                     })
                   }
-                  label="Id Type:*"
+                  label="ID Type:*"
                   required
+                  placeholder={'e.g. "Driver\'s License", "State ID", "Passport"'}
+                  suggestions={["Driver's License", "State ID", "Passport"]}
                   className={"max-w-[400px]!"}
                 />{" "}
                 <TextField
+                  id="idIssuer"
+                  name="idIssuer"
                   type="text"
                   value={idMissionVerifiedData?.idIssuer?.value}
                   onChange={(e) =>
@@ -1129,12 +1599,103 @@ export default function SingleApplication() {
                       idIssuer: { name: "idIssuer", value: e.target.value },
                     })
                   }
-                  label="Id Issuer:*"
+                  label="ID Issuer:*"
                   required
+                  placeholder="State/Province or Country"
+                  suggestions={[
+                    // Countries
+                    "United States",
+                    "Canada",
+                    "United Kingdom",
+                    "Australia",
+                    // US States
+                    "Alabama",
+                    "Alaska",
+                    "Arizona",
+                    "Arkansas",
+                    "California",
+                    "Colorado",
+                    "Connecticut",
+                    "Delaware",
+                    "Florida",
+                    "Georgia",
+                    "Hawaii",
+                    "Idaho",
+                    "Illinois",
+                    "Indiana",
+                    "Iowa",
+                    "Kansas",
+                    "Kentucky",
+                    "Louisiana",
+                    "Maine",
+                    "Maryland",
+                    "Massachusetts",
+                    "Michigan",
+                    "Minnesota",
+                    "Mississippi",
+                    "Missouri",
+                    "Montana",
+                    "Nebraska",
+                    "Nevada",
+                    "New Hampshire",
+                    "New Jersey",
+                    "New Mexico",
+                    "New York",
+                    "North Carolina",
+                    "North Dakota",
+                    "Ohio",
+                    "Oklahoma",
+                    "Oregon",
+                    "Pennsylvania",
+                    "Rhode Island",
+                    "South Carolina",
+                    "South Dakota",
+                    "Tennessee",
+                    "Texas",
+                    "Utah",
+                    "Vermont",
+                    "Virginia",
+                    "Washington",
+                    "West Virginia",
+                    "Wisconsin",
+                    "Wyoming",
+                    "District of Columbia",
+                    "Puerto Rico",
+                    // Canadian Provinces & Territories
+                    "Alberta",
+                    "British Columbia",
+                    "Manitoba",
+                    "New Brunswick",
+                    "Newfoundland and Labrador",
+                    "Northwest Territories",
+                    "Nova Scotia",
+                    "Nunavut",
+                    "Ontario",
+                    "Prince Edward Island",
+                    "Quebec",
+                    "Saskatchewan",
+                    "Yukon",
+                    // UK Countries
+                    "England",
+                    "Scotland",
+                    "Wales",
+                    "Northern Ireland",
+                    // Australian States & Territories
+                    "New South Wales",
+                    "Victoria",
+                    "Queensland",
+                    "Western Australia",
+                    "South Australia",
+                    "Tasmania",
+                    "Australian Capital Territory",
+                    "Northern Territory",
+                  ]}
                   className={"max-w-[400px]!"}
                 />{" "}
                 <TextField
-                  type="text"
+                  id="idExpiryDate"
+                  name="idExpiryDate"
+                  type="date"
                   value={idMissionVerifiedData?.idExpiryDate?.value}
                   onChange={(e) =>
                     setIdMissionVerifiedData({
@@ -1142,12 +1703,14 @@ export default function SingleApplication() {
                       idExpiryDate: { name: "idExpiryDate", value: e.target.value },
                     })
                   }
-                  label="Id Expiry Date:*"
+                  label="ID Expiry Date:*"
                   required
                   className={"max-w-[400px]!"}
                 />{" "}
                 <TextField
-                  type="text"
+                  id="issueDate"
+                  name="issueDate"
+                  type="date"
                   value={idMissionVerifiedData?.issueDate?.value}
                   onChange={(e) =>
                     setIdMissionVerifiedData({
@@ -1160,6 +1723,8 @@ export default function SingleApplication() {
                   className={"max-w-[400px]!"}
                 />{" "}
                 <TextField
+                  id="idNumber"
+                  name="idNumber"
                   required
                   onChange={(e) =>
                     setIdMissionVerifiedData({
@@ -1168,33 +1733,56 @@ export default function SingleApplication() {
                     })
                   }
                   value={idMissionVerifiedData?.idNumber?.value || ""}
-                  label="Id Number:*"
+                  label="ID Number:*"
+                  placeholder="As it appears on your ID"
                   className={"max-w-[400px]!"}
                 />{" "}
-                <Autocomplete
-                  onLoad={onLoad}
-                  className="w-full max-w-[400px]"
-                  onPlaceChanged={onPlaceChanged}
-                  options={{
-                    types: ["address"],
-                    fields: ["address_components", "geometry", "formatted_address", "place_id"],
-                  }}
-                >
-                  <TextField
-                    type="text"
-                    required
-                    value={idMissionVerifiedData?.streetAddress?.value || ""}
-                    onChange={(e) =>
-                      setIdMissionVerifiedData({
-                        ...idMissionVerifiedData,
-                        streetAddress: { name: "streetAddress", value: e.target.value },
-                      })
-                    }
-                    label="Street Address:*"
-                    className={"max-w-[400px]!"}
-                  />
-                </Autocomplete>
+                <div data-places-input="true" className="w-full max-w-[400px]">
+                  <Autocomplete
+                    onLoad={onLoad}
+                    className="w-full"
+                    onPlaceChanged={onPlaceChanged}
+                    options={{
+                      types: ["address"],
+                      fields: ["address_components", "geometry", "formatted_address", "place_id"],
+                    }}
+                  >
+                    <TextField
+                      id="streetAddress"
+                      name="streetAddress"
+                      type="text"
+                      required
+                      value={idMissionVerifiedData?.streetAddress?.value || ""}
+                      onChange={(e) =>
+                        setIdMissionVerifiedData({
+                          ...idMissionVerifiedData,
+                          streetAddress: { name: "streetAddress", value: e.target.value },
+                        })
+                      }
+                      label="Street Address:*"
+                      placeholder="Start typing your address"
+                      className={"max-w-[400px]!"}
+                    />
+                  </Autocomplete>
+                </div>
                 <TextField
+                  id="address2"
+                  name="address2"
+                  type="text"
+                  value={idMissionVerifiedData?.address2?.value || ""}
+                  onChange={(e) =>
+                    setIdMissionVerifiedData({
+                      ...idMissionVerifiedData,
+                      address2: { name: "address2", value: e.target.value },
+                    })
+                  }
+                  label="Address 2 (Apt, Suite, Unit)"
+                  placeholder="Apt, Suite, Unit, Floor, etc."
+                  className={"max-w-[400px]!"}
+                />
+                <TextField
+                  id="city"
+                  name="city"
                   type="text"
                   required
                   value={idMissionVerifiedData?.city?.value || ""}
@@ -1205,11 +1793,324 @@ export default function SingleApplication() {
                     })
                   }
                   label="City:*"
+                  placeholder="e.g. New York City"
+                  suggestions={[
+                    // US Major Cities
+                    "New York City",
+                    "Los Angeles",
+                    "Chicago",
+                    "Houston",
+                    "Phoenix",
+                    "Philadelphia",
+                    "San Antonio",
+                    "San Diego",
+                    "Dallas",
+                    "San Jose",
+                    "Austin",
+                    "Jacksonville",
+                    "Fort Worth",
+                    "Columbus",
+                    "Charlotte",
+                    "Indianapolis",
+                    "San Francisco",
+                    "Seattle",
+                    "Denver",
+                    "Nashville",
+                    "Oklahoma City",
+                    "El Paso",
+                    "Washington DC",
+                    "Boston",
+                    "Las Vegas",
+                    "Memphis",
+                    "Louisville",
+                    "Portland",
+                    "Baltimore",
+                    "Milwaukee",
+                    "Albuquerque",
+                    "Tucson",
+                    "Fresno",
+                    "Sacramento",
+                    "Mesa",
+                    "Kansas City",
+                    "Atlanta",
+                    "Omaha",
+                    "Colorado Springs",
+                    "Raleigh",
+                    "Long Beach",
+                    "Virginia Beach",
+                    "Minneapolis",
+                    "Tampa",
+                    "New Orleans",
+                    "Arlington",
+                    "Wichita",
+                    "Bakersfield",
+                    "Aurora",
+                    "Anaheim",
+                    "Santa Ana",
+                    "Corpus Christi",
+                    "Riverside",
+                    "St. Louis",
+                    "Lexington",
+                    "Pittsburgh",
+                    "Stockton",
+                    "Anchorage",
+                    "Cincinnati",
+                    "St. Paul",
+                    "Greensboro",
+                    "Toledo",
+                    "Newark",
+                    "Plano",
+                    "Henderson",
+                    "Orlando",
+                    "Lincoln",
+                    "Jersey City",
+                    "Chandler",
+                    "St. Petersburg",
+                    "Laredo",
+                    "Norfolk",
+                    "Madison",
+                    "Durham",
+                    "Lubbock",
+                    "Winston-Salem",
+                    "Garland",
+                    "Glendale",
+                    "Hialeah",
+                    "Reno",
+                    "Baton Rouge",
+                    "Irvine",
+                    "Chesapeake",
+                    "Irving",
+                    "Scottsdale",
+                    "North Las Vegas",
+                    "Fremont",
+                    "Gilbert",
+                    "San Bernardino",
+                    "Birmingham",
+                    "Rochester",
+                    "Richmond",
+                    "Spokane",
+                    "Des Moines",
+                    "Montgomery",
+                    "Modesto",
+                    "Fayetteville",
+                    "Tacoma",
+                    "Shreveport",
+                    "Akron",
+                    "Aurora",
+                    "Yonkers",
+                    "Oxnard",
+                    "Fontana",
+                    "Columbus",
+                    "Augusta",
+                    "Mobile",
+                    "Little Rock",
+                    "Moreno Valley",
+                    "Glendale",
+                    "Amarillo",
+                    "Huntington Beach",
+                    "Grand Rapids",
+                    "Salt Lake City",
+                    "Tallahassee",
+                    "Huntsville",
+                    "Worcester",
+                    "Knoxville",
+                    "Brownsville",
+                    "Santa Clarita",
+                    "Providence",
+                    "Garden Grove",
+                    "Oceanside",
+                    "Fort Lauderdale",
+                    "Chattanooga",
+                    "Tempe",
+                    "Cape Coral",
+                    "Eugene",
+                    "Peoria",
+                    "Cary",
+                    "Springfield",
+                    "Fort Wayne",
+                    "Sioux Falls",
+                    "Pembroke Pines",
+                    "Elk Grove",
+                    "Vancouver",
+                    "Corona",
+                    "Hollywood",
+                    "Hayward",
+                    "Clarksville",
+                    "Paterson",
+                    "Murfreesboro",
+                    "Macon",
+                    "Lakewood",
+                    "Killeen",
+                    "Syracuse",
+                    "Salinas",
+                    "Pomona",
+                    "Escondido",
+                    "Kansas City",
+                    "Sunnyvale",
+                    "Rockford",
+                    "Torrance",
+                    "Bridgeport",
+                    "Alexandria",
+                    "Savannah",
+                    "Roseville",
+                    "Surprise",
+                    "Pasadena",
+                    "Mesquite",
+                    "Gainesville",
+                    "Fullerton",
+                    "McAllen",
+                    "Thornton",
+                    "Olathe",
+                    "West Valley City",
+                    "Warren",
+                    "Hampton",
+                    "Dayton",
+                    "Columbia",
+                    "Sterling Heights",
+                    "Waco",
+                    "Cedar Rapids",
+                    "Elizabeth",
+                    "Denton",
+                    "Miramar",
+                    "Thousand Oaks",
+                    "Visalia",
+                    "Topleka",
+                    "Coral Springs",
+                    "Stamford",
+                    "Concord",
+                    "Hartford",
+                    "Roseville",
+                    "Simi Valley",
+                    "Columbia",
+                    "Surprise",
+                    "Lafayette",
+                    "Kent",
+                    "Santa Rosa",
+                    "El Monte",
+                    "Rancho Cucamonga",
+                    "Oceanside",
+                    "Ontario",
+                    "San Buenaventura",
+                    "Peoria",
+                    "Chattanooga",
+                    "Fort Collins",
+                    "Jackson",
+                    "Honolulu",
+                    "Anchorage",
+                    "Boise",
+                    "Billings",
+                    "Fargo",
+                    "Manchester",
+                    "San Juan",
+                    // Canadian Major Cities
+                    "Toronto",
+                    "Montreal",
+                    "Vancouver",
+                    "Calgary",
+                    "Edmonton",
+                    "Ottawa",
+                    "Winnipeg",
+                    "Quebec City",
+                    "Hamilton",
+                    "Kitchener",
+                    "London",
+                    "Victoria",
+                    "Halifax",
+                    "Oshawa",
+                    "Windsor",
+                    "Saskatoon",
+                    "Regina",
+                    "St. Catharines",
+                    "Barrie",
+                    "Kelowna",
+                    "Abbotsford",
+                    "Sudbury",
+                    "Kingston",
+                    "Saguenay",
+                    "Trois-Rivières",
+                    "Guelph",
+                    "Moncton",
+                    "Brantford",
+                    "Saint John",
+                    "Thunder Bay",
+                    "Sherbrooke",
+                    "Nanaimo",
+                    "Fredericton",
+                    "Charlottetown",
+                    "Lethbridge",
+                    "Red Deer",
+                    "Kamloops",
+                    "Chilliwack",
+                    "Prince George",
+                    // UK Major Cities
+                    "London",
+                    "Birmingham",
+                    "Manchester",
+                    "Glasgow",
+                    "Liverpool",
+                    "Leeds",
+                    "Sheffield",
+                    "Edinburgh",
+                    "Bristol",
+                    "Leicester",
+                    "Coventry",
+                    "Bradford",
+                    "Cardiff",
+                    "Belfast",
+                    "Nottingham",
+                    "Kingston upon Hull",
+                    "Newcastle upon Tyne",
+                    "Stoke-on-Trent",
+                    "Southampton",
+                    "Derby",
+                    "Portsmouth",
+                    "Brighton",
+                    "Plymouth",
+                    "Wolverhampton",
+                    "Oxford",
+                    "Cambridge",
+                    "Norwich",
+                    "Swansea",
+                    "Aberdeen",
+                    "Dundee",
+                    "Inverness",
+                    "Exeter",
+                    "Gloucester",
+                    "Bath",
+                    "York",
+                    "Chester",
+                    // Australian Major Cities
+                    "Sydney",
+                    "Melbourne",
+                    "Brisbane",
+                    "Perth",
+                    "Adelaide",
+                    "Gold Coast",
+                    "Canberra",
+                    "Newcastle",
+                    "Wollongong",
+                    "Logan City",
+                    "Geelong",
+                    "Hobart",
+                    "Townsville",
+                    "Cairns",
+                    "Darwin",
+                    "Toowoomba",
+                    "Ballarat",
+                    "Bendigo",
+                    "Launceston",
+                    "Mackay",
+                    "Rockhampton",
+                    "Bunbury",
+                    "Bundaberg",
+                    "Hervey Bay",
+                  ]}
                   className={"max-w-[400px]!"}
                 />
                 <TextField
+                  id="zipCode"
+                  name="zipCode"
                   type="text"
-                  required
                   value={idMissionVerifiedData?.zipCode?.value || ""}
                   onChange={(e) =>
                     setIdMissionVerifiedData({
@@ -1217,10 +2118,13 @@ export default function SingleApplication() {
                       zipCode: { name: "zipCode", value: e.target.value },
                     })
                   }
-                  label="Zip Code:*"
+                  label="Zip or Postal Code"
+                  placeholder="e.g. 90210"
                   className={"max-w-[400px]!"}
                 />
                 <TextField
+                  id="state"
+                  name="state"
                   type="text"
                   required
                   value={idMissionVerifiedData?.state?.value || ""}
@@ -1230,10 +2134,13 @@ export default function SingleApplication() {
                       state: { name: "state", value: e.target.value },
                     })
                   }
-                  label="State:*"
+                  label="State/Province:*"
+                  placeholder="e.g. California"
                   className={"max-w-[400px]!"}
                 />
                 <TextField
+                  id="country"
+                  name="country"
                   type="text"
                   required
                   value={idMissionVerifiedData?.country?.value || ""}
@@ -1244,9 +2151,12 @@ export default function SingleApplication() {
                     })
                   }
                   label="Country:*"
+                  placeholder="e.g. United States"
                   className={"max-w-[400px]!"}
                 />
                 <TextField
+                  id="companyTitle"
+                  name="companyTitle"
                   value={idMissionVerifiedData?.companyTitle?.value || ""}
                   onChange={(e) =>
                     setIdMissionVerifiedData({
@@ -1256,9 +2166,12 @@ export default function SingleApplication() {
                   }
                   label="Company Title:*"
                   required
+                  placeholder="e.g. CEO, Owner, Director"
                   className={"max-w-[400px]!"}
                 />
                 <TextField
+                  id="phoneNumber"
+                  name="phoneNumber"
                   value={idMissionVerifiedData?.phoneNumber?.value || ""}
                   onChange={(e) =>
                     setIdMissionVerifiedData({
@@ -1268,8 +2181,8 @@ export default function SingleApplication() {
                   }
                   formatting="3,3,4"
                   label="Phone Number:*"
+                  placeholder="e.g. 555-867-5309"
                   required
-                  name={"phoneNumber"}
                   type="text"
                   className={"max-w-[400px]!"}
                 />
@@ -1281,8 +2194,9 @@ export default function SingleApplication() {
                       label: "What is the role you are filling for the company as you complete this application? ",
                       options: [
                         {
-                          label: "Both a company operator and the primary contact",
-                          value: "both",
+                          label:
+                            "A primary company operator/controller (C-level executive, owner or other person that holds significant control over company direction and decisions)",
+                          value: "primaryOperatorAndController",
                         },
                         {
                           label:
@@ -1290,9 +2204,8 @@ export default function SingleApplication() {
                           value: "primaryContact",
                         },
                         {
-                          label:
-                            "A primary company operator/controller (C-level executive, owner or other person that holds significant control over company direction and decisions)",
-                          value: "primaryOperatorAndController",
+                          label: "Both a company operator and the primary contact",
+                          value: "both",
                         },
                       ],
                       name: "roleFillingForCompany",
@@ -1315,19 +2228,21 @@ export default function SingleApplication() {
                 </div>
                 <div className="flex w-full flex-col">
                   <div className="my-4 flex w-full justify-between gap-2">
-                    {idMissionSection?.signDisplayFormattedText && (
+                    {(form?.data?.idMissionSignDisplayFormatedText || form?.data?.idMissionSignDisplayText) && (
                       <div className="flex items-end gap-3">
                         <div
                           // className="flex flex-1 items-end gap-3"
                           className="w-full"
+                          data-ai-display-text
                           dangerouslySetInnerHTML={{
-                            __html: String(idMissionSection?.signDisplayFormattedText || "").replace(
-                              /<a(\s+.*?)?>/g,
-                              (match) => {
-                                if (match.includes("target=")) return match; // avoid duplicates
-                                return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-                              },
-                            ),
+                            __html: String(
+                              form?.data?.idMissionSignDisplayFormatedText ||
+                                form?.data?.idMissionSignDisplayText ||
+                                "",
+                            ).replace(/<a(\s+.*?)?>/g, (match) => {
+                              if (match.includes("target=")) return match; // avoid duplicates
+                              return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
+                            }),
                           }}
                         />
                       </div>
@@ -1344,11 +2259,30 @@ export default function SingleApplication() {
                       )}
                     </div>
                   </div>
-                  <SignatureBox
-                    oldSignatureUrl={idMissionVerifiedData?.signature?.value?.secureUrl || ""}
-                    className={"min-w-full"}
-                    onSave={handleSignature}
-                  />
+                  <div
+                    data-ai-type="sign"
+                    data-ai-id="signature-field"
+                    data-ai-label="Signature"
+                    data-ai-required="true"
+                    data-ai-value={idMissionVerifiedData?.signature?.value?.secureUrl || ""}
+                    data-ai-text={(() => {
+                      const strip = (v) =>
+                        String(v || "")
+                          .replace(/<[^>]*>/g, " ")
+                          .replace(/\s+/g, " ")
+                          .trim();
+                      return (
+                        strip(form?.data?.idMissionSignDisplayFormatedText) ||
+                        strip(form?.data?.idMissionSignDisplayText)
+                      ).slice(0, 500);
+                    })()}
+                  >
+                    <SignatureBox
+                      oldSignatureUrl={idMissionVerifiedData?.signature?.value?.secureUrl || ""}
+                      className={"min-w-full"}
+                      onSave={handleSignature}
+                    />
+                  </div>
                 </div>
               </form>
               <div className="flex w-full items-center justify-end gap-2 p-2">
@@ -1455,6 +2389,7 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
         {signatureData?.signFormatedDisplayText && (
           <div
             className="w-full"
+            data-ai-display-text
             dangerouslySetInnerHTML={{
               __html: String(signatureData?.signFormatedDisplayText || "").replace(/<a(\s+.*?)?>/g, (match) => {
                 if (match.includes("target=")) return match; // avoid duplicates

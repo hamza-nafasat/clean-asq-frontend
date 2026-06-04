@@ -1,4 +1,4 @@
-export function getManualExtractionScript() {
+function getManualExtractionScript() {
   return `(async () => {
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -293,3 +293,5 @@ export function getManualExtractionScript() {
   return result;
 })();`;
 }
+
+export { getManualExtractionScript };

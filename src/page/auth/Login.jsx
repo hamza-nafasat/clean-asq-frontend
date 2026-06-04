@@ -6,9 +6,11 @@ import { useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import TextField from "../../components/shared/small/TextField";
+import { UseAIChat } from "@/context/AiChatContext";
 
 const Login = () => {
   const dispatch = useDispatch();
+  const { clearMessages } = UseAIChat();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [login, { isLoading }] = useLoginMutation();
@@ -99,6 +101,7 @@ const Login = () => {
     try {
       const res = await login({ email, password }).unwrap();
       if (res.success) {
+        clearMessages();
         await getUserAndSetBranding();
       }
     } catch (error) {

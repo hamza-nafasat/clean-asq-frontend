@@ -57,6 +57,17 @@ const formApis = createApi({
       providesTags: ["Form"],
     }),
 
+    // CLONE form
+    // ---------------
+    cloneForm: builder.mutation({
+      query: ({ sourceFormId, name }) => ({
+        url: `/clone/${sourceFormId}`,
+        method: "POST",
+        body: name ? { name } : {},
+      }),
+      invalidatesTags: ["Form", "Strategy"],
+    }),
+
     // DELETE single form
     // ---------------
     deleteSingleForm: builder.mutation({
@@ -87,15 +98,6 @@ const formApis = createApi({
         body: { submittedFormId, formData },
       }),
       invalidatesTags: ["SubmitForm", "History", "SubmitFormVersions"],
-    }),
-    // get form versions
-    // ---------------
-    getFormVersions: builder.query({
-      query: ({ submittedFormId }) => ({
-        url: `/form-versions/${submittedFormId}`,
-        method: "GET",
-      }),
-      providesTags: ["SubmitFormVersions"],
     }),
 
     // get submitted form users
@@ -216,6 +218,25 @@ const formApis = createApi({
       providesTags: ["Form"],
     }),
 
+    // reorder form sections
+    // ---------------
+    reorderFormSections: builder.mutation({
+      query: (data) => ({
+        url: "/reorder-form-sections",
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Form"],
+    }),
+    // delete a form section
+    // ---------------
+    deleteFormSection: builder.mutation({
+      query: ({ sectionId }) => ({
+        url: `/delete-form-section/${sectionId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Form"],
+    }),
     // update form section
     // ---------------
     updateFormSection: builder.mutation({
@@ -465,12 +486,29 @@ const formApis = createApi({
       }),
       invalidatesTags: ["FormRules"],
     }),
+    cloneFormRules: builder.mutation({
+      query: ({ sourceFormId, targetFormId }) => ({
+        url: "/clone-form-rules",
+        method: "POST",
+        body: { sourceFormId, targetFormId },
+      }),
+      invalidatesTags: ["FormRules"],
+    }),
     applyRulesOnForm: builder.query({
       query: (formSubmittedId) => ({
         url: `/apply-rules-on-form/${formSubmittedId}`,
         method: "GET",
       }),
       invalidatesTags: ["SubmitForm"],
+    }),
+    // get form versions
+    // ---------------
+    getFormVersions: builder.query({
+      query: ({ submittedFormId }) => ({
+        url: `/form-versions/${submittedFormId}`,
+        method: "GET",
+      }),
+      providesTags: ["SubmitFormVersions"],
     }),
     getAllFormRules: builder.query({
       query: ({ formId }) => ({
@@ -534,6 +572,7 @@ const formApis = createApi({
   }),
 });
 export const {
+  useCloneFormMutation,
   useCreateFormMutation,
   useUpdateFormMutation,
   useUpdateFormLocationMutation,
@@ -556,6 +595,8 @@ export const {
   useGetSavedFormByUserIdMutation,
   useRemoveSavedFormMutation,
   useGetMyAllDraftsAndSubmittionsQuery,
+  useReorderFormSectionsMutation,
+  useDeleteFormSectionMutation,
   useUpdateFormSectionMutation,
   useUpdateDeleteCreateFormFieldsMutation,
   useFormateTextInMarkDownMutation,
@@ -583,6 +624,7 @@ export const {
   useDeleteSingleSubmitFormMutation,
   // form rules
   useCreateFormRuleMutation,
+  useCloneFormRulesMutation,
   useApplyRulesOnFormQuery,
   useGetAllFormRulesQuery,
   useDeleteSingleFormRuleMutation,

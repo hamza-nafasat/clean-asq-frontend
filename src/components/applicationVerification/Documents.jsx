@@ -220,7 +220,9 @@ function Documents({
     <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-textPrimary text-2xl font-semibold">{name}</h1>
+          <h1 className="text-textPrimary text-2xl font-semibold" data-ai-display-text>
+            {name}
+          </h1>
           {isCreator && (
             <div className="flex gap-2">
               <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={"Customize"} />
@@ -232,6 +234,7 @@ function Documents({
         {step?.ai_formatting && (
           <div className="mb-4 w-full">
             <div
+              data-ai-display-text
               dangerouslySetInnerHTML={{
                 __html: String(step?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
                   if (match.includes("target=")) return match; // avoid duplicates
@@ -326,6 +329,7 @@ function Documents({
                   <div className="flex w-full flex-col gap-4 p-4 pb-0">
                     <div
                       className="w-full"
+                      data-ai-display-text
                       dangerouslySetInnerHTML={{
                         __html: String(field?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
                           if (match.includes("target=")) return match; // avoid duplicates
@@ -388,12 +392,15 @@ function Documents({
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
-          {currentStep > 0 && <Button variant="secondary" label={"Previous"} onClick={handlePrevious} />}
+          {currentStep > 0 && (
+            <Button variant="secondary" label={"Previous"} onClick={handlePrevious} data-testid="form-back-btn" />
+          )}
           {currentStep < totalSteps - 1 ? (
             <Button
               disabled={loadingNext || !isAllRequiredFilled}
               className={`${(loadingNext || !isAllRequiredFilled) && "pinter-events-none cursor-not-allowed opacity-20"}`}
               label={isAllRequiredFilled ? "Next" : "Some fields are missing"}
+              data-testid="form-next-btn"
               onClick={updateFileDataHandler}
             />
           ) : (
@@ -401,6 +408,7 @@ function Documents({
               disabled={formLoading || loadingNext}
               className={`${(formLoading || loadingNext) && "pinter-events-none cursor-not-allowed opacity-20"}`}
               label={"Submit"}
+              data-testid="form-submit-btn"
               onClick={submitFileDataHandler}
             />
           )}

@@ -358,13 +358,13 @@ const Profile = ({ isGuest, setIsProfileOpen }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [logout, { isLoading }] = useLogoutMutation();
-  // const { setIsOpen } = UseAIChat();
+  const { setIsOpen } = UseAIChat();
 
   const logoutHandler = async () => {
     try {
       const res = await logout().unwrap();
       if (res.success) {
-        // setIsOpen(false);
+        setIsOpen(false);
         await dispatch(userNotExist());
         toast.success(res.message);
         return navigate("/login");

@@ -23,6 +23,7 @@ const BrandingSource = ({
   handleExtraLogoUpload,
   extractColorsFromLogosHandler,
   headerBackground,
+  onLogoSelected,
 }) => {
   // websiteImage/setWebsiteImage are lifted to GlobalBrandingPage so the AI can set them
   const [showPasteMenu, setShowPasteMenu] = useState(false);
@@ -53,6 +54,7 @@ const BrandingSource = ({
           if (logoUrl) {
             setSelectedLogoIndex(index);
             setSelectedLogo(logoUrl);
+            if (onLogoSelected) onLogoSelected(logoUrl);
           }
         }
       }
@@ -71,7 +73,7 @@ const BrandingSource = ({
         }
       }
     }
-  }, [logos, selectedLogo, selectedLogoIndex, setSelectedLogo]);
+  }, [logos, onLogoSelected, selectedLogo, selectedLogoIndex, setSelectedLogo]);
 
   // Handle initial load with default selected logo
   useEffect(() => {

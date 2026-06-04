@@ -3,8 +3,10 @@ import TextField from "@/components/shared/small/TextField";
 import { useBranding } from "@/hooks/BrandingContext";
 import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/authApis";
 import {
+  useAddBrandingInFormMutation,
   useCreateBrandingMutation,
   useExtractColorsFromLogosMutation,
+  useExtractColorsFromLogoUrlMutation,
   useFetchBrandingMutation,
   useGetSingleBrandingQuery,
   useUpdateSingleBrandingMutation,
@@ -12,7 +14,7 @@ import {
 import { userExist } from "@/redux/slices/authSlice";
 import Handlebars from "handlebars";
 import { useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import BrandElementAssignment, { ColorInput, GradientOrSolidInput } from "./BrandElementAssignment";
@@ -23,6 +25,10 @@ import EffectPicker from "./EffectPicker";
 import FaviconPicker from "./FavIconPicker";
 import Checkbox from "@/components/shared/small/Checkbox";
 import { RiSparkling2Line } from "react-icons/ri";
+import { useScreenContext } from "@/hooks/useScreenContext";
+import { useGetMyAllFormsQuery } from "@/redux/apis/formApis";
+import getEnv from "@/lib/env";
+import ManualExtractionModal from "./ManualExtractionModal";
 
 const emailHeaderTemplate = `
 <!DOCTYPE html>
@@ -110,6 +116,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [image, setImage] = useState(null);
   const [websiteImage, setWebsiteImage] = useState(null);
   const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
 
   const [extractColorsFromLogos] = useExtractColorsFromLogosMutation();
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
@@ -126,7 +133,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [secondaryColor, setSecondaryColor] = useState("#000000");
   const [accentColor, setAccentColor] = useState("#000000");
   const [textColor, setTextColor] = useState("#000000");
-  const [linkColor, setLinkColor] = useState("#000000");
+  const [linkColor, setLinkColor] = useState("#000 headerBackground={headerBackground}000");
   const [backgroundColor, setBackgroundColor] = useState("");
   const [headerBackground, setHeaderBackground] = useState("#000000");
   const [headerText, setHeaderText] = useState("#000000");
@@ -249,6 +256,31 @@ const GlobalBrandingPage = ({ brandingId }) => {
     setEmailHeaderMaterial: setGlobalEmailHeaderMaterial,
     setEmailFooterMaterial: setGlobalEmailFooterMaterial,
   } = useBranding();
+
+  const [extractColorsFromLogoUrl] = useExtractColorsFromLogoUrlMutation();
+
+  const [addBrandingToForm] = useAddBrandingInFormMutation();
+  const { data: allFormsResponse } = useGetMyAllFormsQuery();
+
+  const handleLogoSelected = async (logoUrl) => {
+    try {
+      const res = await extractColorsFromLogoUrl({ url: logoUrl }).unwrap();
+      if (res?.success && res?.data?.length) {
+        setColorPalette((prev) => {
+          let newIdx = 0;
+          return prev.map((entry) => {
+            const isLogoColor = typeof entry === "object" && entry?.source?.toLowerCase().includes("logo");
+            if (isLogoColor && newIdx < res.data.length) {
+              return res.data[newIdx++];
+            }
+            return entry;
+          });
+        });
+      }
+    } catch (error) {
+      console.log("error extracting colors from selected logo", error);
+    }
+  };
 
   const applyExtractedBranding = (data) => {
     if (data?.url) setWebsiteUrl(data.url);
@@ -601,16 +633,16 @@ const GlobalBrandingPage = ({ brandingId }) => {
     try {
       const updateRes = await updateBranding({ brandingId, data: formData }).unwrap();
       if (updateRes?.success) {
-        // // Update AI assistant colors in global context directly from the saved branding,
-        // // since getUserProfile() only returns the user's home branding (may differ from the one being edited)
-        // const saved = updateRes.data;
-        // if (saved?.aiLaunchButtonColor !== undefined) setGlobalAiLaunchButtonColor(saved.aiLaunchButtonColor);
-        // if (saved?.aiHeaderColor !== undefined) setGlobalAiHeaderColor(saved.aiHeaderColor);
-        // if (saved?.aiBannerColor !== undefined) setGlobalAiBannerColor(saved.aiBannerColor);
-        // if (saved?.aiBannerTextColor !== undefined) setGlobalAiBannerTextColor(saved.aiBannerTextColor);
-        // setGlobalAiUseCustomIcon(saved?.aiUseCustomIcon !== false);
-        // if (saved?.favicon !== undefined) setGlobalFavicon(saved.favicon);
-        // if (saved?.tabTitle !== undefined) setGlobalTabTitle(saved.tabTitle);
+        // Update AI assistant colors in global context directly from the saved branding,
+        // since getUserProfile() only returns the user's home branding (may differ from the one being edited)
+        const saved = updateRes.data;
+        if (saved?.aiLaunchButtonColor !== undefined) setGlobalAiLaunchButtonColor(saved.aiLaunchButtonColor);
+        if (saved?.aiHeaderColor !== undefined) setGlobalAiHeaderColor(saved.aiHeaderColor);
+        if (saved?.aiBannerColor !== undefined) setGlobalAiBannerColor(saved.aiBannerColor);
+        if (saved?.aiBannerTextColor !== undefined) setGlobalAiBannerTextColor(saved.aiBannerTextColor);
+        setGlobalAiUseCustomIcon(saved?.aiUseCustomIcon !== false);
+        if (saved?.favicon !== undefined) setGlobalFavicon(saved.favicon);
+        if (saved?.tabTitle !== undefined) setGlobalTabTitle(saved.tabTitle);
 
         const res = await getUserProfile().unwrap();
         if (res?.data?.branding?.colors) {
@@ -700,6 +732,200 @@ const GlobalBrandingPage = ({ brandingId }) => {
       console.log("error while extracting colors from logo", error);
     }
   };
+
+  const _formsList = (allFormsResponse?.data || []).map((f) => ({
+    _id: f._id,
+    name: f.name || f.headerText || "Untitled",
+    branding: f.branding ? { _id: f.branding._id || f.branding, name: f.branding.name } : null,
+  }));
+
+  useScreenContext({
+    screenId: brandingId ? `global-branding-${brandingId}` : "global-branding-new",
+    screenName: brandingId ? `Global Branding — ${companyName || brandingId}` : "Global Branding (New)",
+    assistantName: "Branding Assistant",
+    greeting: `Hi! I'm your **Branding Assistant**.\n\nHere's what I can do:\n- **Edit this branding** — update colors, fonts, header/footer styles, email templates, AI assistant colors, and more\n- **Recommend colors** — suggest a full color palette, match your website's brand, or pull inspiration from any URL\n- **Edit or create logos** — remove backgrounds, recolor elements, change background colors, or generate stylistic variations of any existing logo\n- **Manage the favicon and tab title** — upload a favicon or extract one from your website\n- **Apply branding to forms** — assign this branding profile to one or more application forms\n\nWhat would you like to work on?`,
+    description:
+      "The Global Branding screen lets admins configure company branding: colors, fonts, logos, header/footer styles, and email templates. Changes apply live across the entire application.",
+    brandingId: brandingId || null,
+    forms: _formsList,
+    currentState: {
+      primaryColor,
+      secondaryColor,
+      accentColor,
+      textColor,
+      linkColor,
+      backgroundColor,
+      headerBackground,
+      footerBackground,
+      headerText,
+      footerText,
+      frameColor,
+      highlightingColor,
+      buttonTextPrimary,
+      buttonTextSecondary,
+      buttonBorderPrimary,
+      buttonBorderSecondary,
+      fontFamily,
+      companyName,
+      websiteUrl,
+      headerAlignment,
+      appLogoMaxWidth,
+      appLogoMaxHeight,
+      appHeaderPadding,
+      appFooterPadding,
+      applicationFooterText,
+      applicationFooterTextSize,
+      emailHeaderColor,
+      emailHeaderTextColor,
+      emailFooterColor,
+      emailFooterTextColor,
+      emailBodyColor,
+      emailTextColor,
+      emailHeaderPadding,
+      emailFooterPadding,
+      aiVoice,
+      aiCustomPrompt,
+      aiLaunchButtonColor,
+      aiHeaderColor,
+      aiBannerColor,
+      aiBannerTextColor,
+      privacyPolicyUrl,
+      termsOfServiceUrl,
+      favicon,
+      tabTitle,
+      headerEffect,
+      footerEffect,
+      emailHeaderEffect,
+      emailFooterEffect,
+      buttonEffect,
+      headerMaterial,
+      footerMaterial,
+      buttonMaterial,
+      emailHeaderMaterial,
+      emailFooterMaterial,
+      selectedLogo: selectedLogo || null,
+      forms: _formsList,
+    },
+    actions: {
+      primaryColor: setPrimaryColor,
+      secondaryColor: setSecondaryColor,
+      accentColor: setAccentColor,
+      textColor: setTextColor,
+      linkColor: setLinkColor,
+      backgroundColor: setBackgroundColor,
+      headerBackground: setHeaderBackground,
+      footerBackground: setFooterBackground,
+      headerText: setHeaderText,
+      footerText: setFooterText,
+      frameColor: setFrameColor,
+      highlightingColor: setHighlightingColor,
+      buttonTextPrimary: setButtonTextPrimary,
+      buttonTextSecondary: setButtonTextSecondary,
+      buttonBorderPrimary: setButtonBorderPrimary,
+      buttonBorderSecondary: setButtonBorderSecondary,
+      fontFamily: setFontFamily,
+      companyName: setCompanyName,
+      websiteUrl: setWebsiteUrl,
+      headerAlignment: setHeaderAlignment,
+      applicationFooterText: setApplicationFooterText,
+      applicationFooterTextSize: setApplicationFooterTextSize,
+      appHeaderPadding: setAppHeaderPadding,
+      appFooterPadding: setAppFooterPadding,
+      appLogoMaxWidth: setAppLogoMaxWidth,
+      appLogoMaxHeight: setAppLogoMaxHeight,
+      emailHeaderColor: setEmailHeaderColor,
+      emailHeaderTextColor: setEmailHeaderTextColor,
+      emailFooterColor: setEmailFooterColor,
+      emailFooterTextColor: setEmailFooterTextColor,
+      emailBodyColor: setEmailBodyColor,
+      emailTextColor: setEmailTextColor,
+      emailHeaderPadding: setEmailHeaderPadding,
+      emailFooterPadding: setEmailFooterPadding,
+      aiVoice: setAiVoice,
+      aiCustomPrompt: setAiCustomPrompt,
+      aiLaunchButtonColor: setAiLaunchButtonColor,
+      aiHeaderColor: setAiHeaderColor,
+      aiBannerColor: setAiBannerColor,
+      aiBannerTextColor: setAiBannerTextColor,
+      privacyPolicyUrl: setPrivacyPolicyUrl,
+      termsOfServiceUrl: setTermsOfServiceUrl,
+      favicon: setFavicon,
+      tabTitle: setTabTitle,
+      headerEffect: setHeaderEffect,
+      footerEffect: setFooterEffect,
+      emailHeaderEffect: setEmailHeaderEffect,
+      emailFooterEffect: setEmailFooterEffect,
+      buttonEffect: setButtonEffect,
+      headerMaterial: setHeaderMaterial,
+      footerMaterial: setFooterMaterial,
+      buttonMaterial: setButtonMaterial,
+      emailHeaderMaterial: setEmailHeaderMaterial,
+      emailFooterMaterial: setEmailFooterMaterial,
+      setSuggestedColors,
+      addLogo: (url) => setLogos((prev) => [...prev, { url, type: "img", invert: false }]),
+      setLogos,
+      setWebsiteImage,
+      applyExtractedBranding,
+      openManualExtractionFlow: ({ url } = {}) => {
+        if (url) setWebsiteUrl(url.startsWith("http") ? url : `https://${url}`);
+        setExtractionModalTab("manual");
+        setIsExtractionModalOpen(true);
+      },
+      saveBranding: () => (brandingId ? updateBrandingHandler(brandingId) : createBrandingHandler()),
+      setFormsBranding: async ({ updates }) => {
+        const errors = [];
+        for (const { formId, brandingId: bId } of updates) {
+          try {
+            await addBrandingToForm({ brandingId: bId, formId, onHome: "no" }).unwrap();
+          } catch {
+            errors.push(formId);
+          }
+        }
+        if (errors.length) throw new Error(`Failed to set branding on ${errors.length} form(s)`);
+      },
+    },
+    logos: logos.map((l) => l.url || l.preview).filter(Boolean),
+    colorPalette: colorPalette.map((c) => (typeof c === "string" ? c : c?.hex)).filter(Boolean),
+    deps: {
+      brandingId,
+      primaryColor,
+      secondaryColor,
+      accentColor,
+      textColor,
+      linkColor,
+      backgroundColor,
+      headerBackground,
+      footerBackground,
+      headerText,
+      footerText,
+      frameColor,
+      highlightingColor,
+      buttonTextPrimary,
+      buttonTextSecondary,
+      buttonBorderPrimary,
+      buttonBorderSecondary,
+      fontFamily,
+      companyName,
+      headerAlignment,
+      emailHeaderColor,
+      emailHeaderTextColor,
+      emailFooterColor,
+      emailFooterTextColor,
+      emailBodyColor,
+      emailTextColor,
+      emailHeaderPadding,
+      emailFooterPadding,
+      aiVoice,
+      aiCustomPrompt,
+      aiLaunchButtonColor,
+      aiHeaderColor,
+      aiBannerColor,
+      aiBannerTextColor,
+      selectedLogo,
+      logosCount: logos.length,
+      formsCount: allFormsResponse?.data?.length ?? 0,
+    },
+  });
 
   useEffect(() => {
     if (brandingId) return; // only for new branding pages
@@ -899,45 +1125,64 @@ const GlobalBrandingPage = ({ brandingId }) => {
     emailLogoMaxHeight,
   ]);
 
-  // const playSample = async () => {
-  //   if (sampleAudioRef.current) {
-  //     sampleAudioRef.current.pause();
-  //     sampleAudioRef.current = null;
-  //     setSamplePlaying(false);
-  //     return;
-  //   }
-  //   setSamplePlaying(true);
-  //   try {
-  //     const SERVER_URL = getEnv("SERVER_URL");
-  //     const res = await fetch(`${SERVER_URL}/api/ai/tts`, {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       credentials: "include",
-  //       body: JSON.stringify({
-  //         text: "Hi there! I'm your application assistant. I'm here to help guide you through each step.",
-  //         voice: aiVoice,
-  //       }),
-  //     });
-  //     if (!res.ok) throw new Error("TTS unavailable");
-  //     const blob = await res.blob();
-  //     const url = URL.createObjectURL(blob);
-  //     const audio = new Audio(url);
-  //     sampleAudioRef.current = audio;
-  //     audio.onended = () => {
-  //       setSamplePlaying(false);
-  //       sampleAudioRef.current = null;
-  //       URL.revokeObjectURL(url);
-  //     };
-  //     audio.onerror = () => {
-  //       setSamplePlaying(false);
-  //       sampleAudioRef.current = null;
-  //     };
-  //     audio.play();
-  //   } catch {
-  //     setSamplePlaying(false);
-  //     toast.error("Could not play voice sample. Please try again.");
-  //   }
-  // };
+  // Restore the user's home branding AI colors when leaving this page
+  useEffect(() => {
+    return () => {
+      const branding = user?.branding;
+      setGlobalAiLaunchButtonColor(branding?.aiLaunchButtonColor || "");
+      setGlobalAiHeaderColor(branding?.aiHeaderColor || "");
+      setGlobalAiBannerColor(branding?.aiBannerColor || "");
+      setGlobalAiBannerTextColor(branding?.aiBannerTextColor || "");
+      setGlobalAiUseCustomIcon(branding?.aiUseCustomIcon !== false);
+    };
+  }, [
+    setGlobalAiBannerColor,
+    setGlobalAiBannerTextColor,
+    setGlobalAiHeaderColor,
+    setGlobalAiLaunchButtonColor,
+    setGlobalAiUseCustomIcon,
+    user?.branding,
+  ]);
+  const playSample = async () => {
+    if (sampleAudioRef.current) {
+      sampleAudioRef.current.pause();
+      0.8;
+      sampleAudioRef.current = null;
+      setSamplePlaying(false);
+      return;
+    }
+    setSamplePlaying(true);
+    try {
+      const SERVER_URL = getEnv("SERVER_URL");
+      const res = await fetch(`${SERVER_URL}/api/ai/tts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          text: "Hi there! I'm your application assistant. I'm here to help guide you through each step.",
+          voice: aiVoice,
+        }),
+      });
+      if (!res.ok) throw new Error("TTS unavailable");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      sampleAudioRef.current = audio;
+      audio.onended = () => {
+        setSamplePlaying(false);
+        sampleAudioRef.current = null;
+        URL.revokeObjectURL(url);
+      };
+      audio.onerror = () => {
+        setSamplePlaying(false);
+        sampleAudioRef.current = null;
+      };
+      audio.play();
+    } catch {
+      setSamplePlaying(false);
+      toast.error("Could not play voice sample. Please try again.");
+    }
+  };
 
   return (
     <div className="mb-6 rounded-xl border border-[#F0F0F0] bg-white px-3 md:px-6">
@@ -960,19 +1205,20 @@ const GlobalBrandingPage = ({ brandingId }) => {
             handleExtraLogoUpload={(logo) => setExtraLogos([...extraLogos, logo])}
             extractColorsFromLogosHandler={extractColorsFromLogosHandler}
             headerBackground={headerBackground}
+            onLogoSelected={handleLogoSelected}
             onOpenExtractionModal={(tab = "auto") => {
               setExtractionModalTab(tab);
               setIsExtractionModalOpen(true);
             }}
           />
 
-          {/* <ManualExtractionModal
+          <ManualExtractionModal
             isOpen={isExtractionModalOpen}
             onClose={() => setIsExtractionModalOpen(false)}
             initialUrl={websiteUrl}
             initialTab={extractionModalTab}
             onApply={(brandingData) => applyExtractedBranding(brandingData)}
-          /> */}
+          />
 
           <ColorPalette
             colorPalette={colorPalette}
@@ -1365,7 +1611,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
               </select>
               <button
                 type="button"
-                // onClick={playSample}
+                onClick={playSample}
                 title={samplePlaying ? "Stop sample" : "Play a short voice sample"}
                 className={`flex items-center gap-1.5 rounded-lg border px-3 h-10 text-sm font-medium transition-all whitespace-nowrap ${
                   samplePlaying

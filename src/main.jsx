@@ -9,6 +9,7 @@ import { BrandingProvider } from "./hooks/BrandingContext";
 import "./index.css";
 import getEnv from "./lib/env";
 import store from "./redux/store";
+import AIChatWidget from "./components/shared/AIChat/AIChatWidget";
 
 export const socket = io(getEnv("SERVER_URL"), {
   path: "/api/socket.io",
@@ -26,11 +27,12 @@ if (!container._reactRoot) {
     <LoadScript googleMapsApiKey={getEnv("GOOGLE_MAPS_API_KEY")} libraries={["places"]}>
       <BrandingProvider>
         <Provider store={store}>
-          <AIChatProvider>
-            <BrowserRouter>
+          <BrowserRouter>
+            <AIChatProvider>
               <App />
-            </BrowserRouter>
-          </AIChatProvider>
+              <AIChatWidget />
+            </AIChatProvider>
+          </BrowserRouter>
         </Provider>
       </BrandingProvider>
     </LoadScript>,

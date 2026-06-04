@@ -16,16 +16,20 @@ import {
 import { setIdMissionData } from "@/redux/slices/authSlice";
 import { addSavedFormData, updateFormHeaderAndFooter, updateFormState } from "@/redux/slices/formSlice";
 import { unwrapResult } from "@reduxjs/toolkit";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Stepper from "../../../../components/Stepper/Stepper";
 import { uploadFilesAndReplace } from "@/lib/utils";
+import { useApplicantScreenContext } from "@/hooks/useApplicantScreenContext";
+import getEnv from "@/lib/env";
 
 export default function ApplicationForm() {
+  const stepContainerRef = useRef(null);
   const queryParams = new URLSearchParams(window.location.search);
   const step = queryParams.get("step");
+
   const { user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const params = useParams();
@@ -92,6 +96,34 @@ export default function ApplicationForm() {
     },
     [currentStep, dispatch, form?.data?._id, form?.data?.sections?.length, formData, saveFormInDraft, user],
   );
+
+  useApplicantScreenContext({
+    screenId: `application-form-stepper-${currentStep}`,
+    screenName: sectionNames[currentStep] || "Application Form",
+    description: `Multi-step application form. Applicant is on step ${currentStep + 1} of ${stepsComps.length}.`,
+    aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
+    formRef: stepContainerRef,
+    currentState: {
+      currentStep,
+      totalSteps: stepsComps.length,
+      canGoNext: currentStep < stepsComps.length - 1,
+      canGoPrev: currentStep > 0,
+      // fields are discovered from the live DOM via formRef
+    },
+    actions: {
+      scrollToField: ({ fieldId }) => {
+        const el = document.getElementById(fieldId) || document.querySelector(`[name="${fieldId}"]`);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      },
+      goToNextStep: () => {
+        if (currentStep < stepsComps.length - 1) setCurrentStep(currentStep + 1);
+      },
+      goToPrevStep: () => {
+        if (currentStep > 0) setCurrentStep(currentStep - 1);
+      },
+    },
+    deps: [currentStep, stepsComps.length, sectionNames[currentStep], form?.data?._id],
+  });
   const handleSubmit = useCallback(
     async ({ data, name, setLoadingNext }) => {
       try {
@@ -198,6 +230,7 @@ export default function ApplicationForm() {
         updateFormHeaderAndFooter({
           headerText: form?.data?.headerText || form?.data?.name || "",
           footerText: form?.data?.footerText || "All rights reserved",
+          headerTextSize: form?.data?.headerTextSize || 24,
         }),
       );
     }
@@ -274,12 +307,23 @@ export default function ApplicationForm() {
     saveInProgress,
     user?._id,
   ]);
-  if (!isApplied || !form?.data?._id) return <CustomLoading />;
+  if (!isApplied || !form?.data?._id)
+    return (
+      <>
+        <div data-ai-loading="page" style={{ display: "none" }} />
+        <CustomLoading />
+      </>
+    );
   if (!user?._id) return navigate(`/application-form/${form?.data?.branding?.name}/${formId}`);
   return (
-    <div className="bg-backgroundColor h-full w-full overflow-hidden rounded-[10px] px-6 py-6">
+    <div
+      data-testid="application-form"
+      data-ai-loading={!isSavedApiRun ? "page" : undefined}
+      className="bg-backgroundColor h-full w-full overflow-hidden rounded-[10px] px-6 py-6"
+    >
       <Stepper steps={sectionNames} currentStep={currentStep} visibleSteps={0} emptyRequiredFields={[]}>
         {stepsComps[currentStep]}
+        <div ref={stepContainerRef}>{stepsComps[currentStep]}</div>
       </Stepper>
     </div>
   );

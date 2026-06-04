@@ -21,7 +21,10 @@ import Checkbox from "@/components/shared/small/Checkbox";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/authApis";
 import { userExist } from "@/redux/slices/authSlice";
+import getEnv from "@/lib/env";
+import { useScreenContext } from "@/hooks/useScreenContext";
 
+const SERVER_URL = getEnv("SERVER_URL");
 const emailTypes = [
   {
     label: "Otp Email Template",
@@ -77,6 +80,7 @@ const quillFormats = [
   "link",
   "image",
 ];
+
 const sedationKeywords = ["link", "otp", "email", "password", "frontEndUrl", "recipientName", "brandCompanyName"];
 const Email = () => {
   const menuRef = useRef(null);
@@ -99,6 +103,7 @@ const Email = () => {
   const [deleteEmailTemplate] = useDeleteSingleEmailTemplateMutation();
   const { data: emailTemplates, refetch: refetchEmailTemplates } = useGetAllEmailTemplatesQuery();
   const [isAttachFormModalOpen, setIsAttachFormModalOpen] = useState(false);
+  const [attachEmailTemplate] = useAttachTemplateToFormMutation();
 
   const templates = emailTemplates?.data;
 
@@ -126,6 +131,69 @@ const Email = () => {
       </span>
     ))}
   </div>;
+
+  // Register screen context so the AI chat widget knows what screen this is
+  // and can draft/proofread/enhance the currently open template
+  useScreenContext({
+    screenId: viewModalData?._id
+      ? `email-template-${viewModalData._id}`
+      : viewModalData
+        ? "email-template-new"
+        : "email-template-list",
+    screenName: viewModalData?._id
+      ? `Email Template — ${editData.templateName || "Untitled"}`
+      : viewModalData
+        ? "Email Template (New)"
+        : "Email Templates",
+    assistantName: "Email Composition Assistant",
+    description:
+      "The Email Templates screen lets admins create and edit transactional email templates used throughout the onboarding platform. Templates support placeholder variables for personalisation.",
+    aiEndpoint: `${SERVER_URL}/api/ai/email-chat`,
+    greeting: viewModalData
+      ? `Hi! I can see you have **${editData.templateName || "a template"}** open.\n\nI can help you:\n- **Draft** or rewrite the subject line and body\n- **Proofread and enhance** the existing content\n- **Reformat** for clarity and professionalism\n- **Insert variables** like {{recipientName}} or {{link}} where appropriate\n\nWhat would you like me to do?`
+      : `Hi! I'm your email template assistant.\n\nI can help you:\n- **Draft** new email templates from scratch\n- **Proofread and enhance** existing content\n- **Reformat** templates for clarity and professionalism\n\nTo get started, please **open or create an email template** using the list below — I'll be ready to help once you do!`,
+    currentState: {
+      templateName: editData.templateName,
+      emailType: editData.emailType,
+      subject: editData.subject,
+      body: editData.body,
+      isReadOnly,
+      availableVariables: sedationKeywords.map((k) => `{{${k}}}`).join(", "),
+      // Derive attached forms from the live query rather than viewModalData so it auto-updates after attach/detach
+      attachedForms: viewModalData?._id
+        ? (templates?.find((t) => t._id === viewModalData._id)?.forms || []).map((f) => ({ _id: f._id, name: f.name }))
+        : [],
+      availableForms: (applicationForms?.data || []).map((f) => ({ _id: f._id, name: f.name })),
+    },
+    actions: {
+      subject: (val) => handleChange("subject", val),
+      body: (val) => handleChange("body", val),
+      templateName: (val) => handleChange("templateName", val),
+      emailType: (val) => handleChange("emailType", val),
+      enableEdit: () => {
+        setIsReadOnly(false);
+        if (viewModalData?._id) setIsEdit(true);
+      },
+      saveEmailTemplate: () => handleSave(),
+      attachToForms: async ({ formIds }) => {
+        if (!viewModalData?._id) throw new Error("No template is currently open");
+        await attachEmailTemplate({
+          emailTemplateId: viewModalData._id,
+          formIds,
+        }).unwrap();
+      },
+    },
+    deps: {
+      viewModalOpen: !!viewModalData,
+      viewModalDataId: viewModalData?._id,
+      subject: editData.subject,
+      body: editData.body,
+      templateName: editData.templateName,
+      attachedFormCount: viewModalData?._id
+        ? (templates?.find((t) => t._id === viewModalData._id)?.forms || []).length
+        : 0,
+    },
+  });
 
   const handleChange = (field, value) => {
     setEditData((prev) => ({ ...prev, [field]: value }));
@@ -201,7 +269,7 @@ const Email = () => {
   }, []);
 
   return (
-    <div>
+    <div data-testid="email-page">
       {isAttachFormModalOpen && (
         <ModalForAttachForms
           refetchTemplates={refetchEmailTemplates}
@@ -226,6 +294,7 @@ const Email = () => {
               onChange={(e) => handleChange("templateName", e.target.value)}
               readOnly={isReadOnly}
               cn={isReadOnly ? "cursor-not-allowed" : ""}
+              data-testid="email-name-input"
             />
 
             <div className="mb-4">
@@ -234,6 +303,7 @@ const Email = () => {
                 name={"emailType"}
                 value={editData.emailType}
                 onChange={(e) => handleChange("emailType", e.target.value)}
+                data-testid="email-type-select"
                 className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
               >
                 <option value="">Choose an option</option>
@@ -250,9 +320,10 @@ const Email = () => {
               onChange={(e) => handleChange("subject", e.target.value)}
               readOnly={isReadOnly}
               cn={isReadOnly ? "cursor-not-allowed" : ""}
+              data-testid="email-subject-input"
             />
 
-            <div className="custom-quill-wrapper">
+            <div className="custom-quill-wrapper" data-testid="email-body-editor">
               <ReactQuill
                 className="custom-quill h-[200px]"
                 value={editData.body}
@@ -292,17 +363,19 @@ const Email = () => {
 
       <div className="flex items-center justify-between">
         <h1 className="mb-6 text-2xl font-semibold">Email Templates</h1>
-        <Button label="Create Email Template" onClick={handleCreate} />
+        <Button label="Create Email Template" onClick={handleCreate} data-testid="email-create-btn" />
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {templates?.map((item) => (
           <div
             key={item?._id}
+            data-testid="email-card"
             className="relative rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
           >
             <div className="absolute top-4 right-4">
               <FiMoreVertical
+                data-testid="email-card-menu-btn"
                 className="cursor-pointer text-gray-500 hover:text-gray-700"
                 onClick={() => setMenuOpenId(menuOpenId === item._id ? null : item._id)}
               />
@@ -312,18 +385,21 @@ const Email = () => {
                   className="absolute top-6 right-0 z-50 w-32 rounded-md border border-gray-200 bg-white shadow-lg"
                 >
                   <button
+                    data-testid="email-edit-btn"
                     className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
                     onClick={() => handleEdit(item)}
                   >
                     Edit
                   </button>
                   <button
+                    data-testid="email-attach-btn"
                     className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
                     onClick={() => handleAttachForms(item)}
                   >
                     Attach
                   </button>
                   <button
+                    data-testid="email-delete-btn"
                     className="w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
                     onClick={() => handleDelete(item)}
                   >
@@ -349,6 +425,7 @@ const Email = () => {
               </div>
             </div>
             <button
+              data-testid="email-view-btn"
               onClick={() => handleView(item)}
               className="mt-4 rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
             >

@@ -21,6 +21,10 @@ import { ThreeDotEditViewDelete } from "../shared/ThreeDotViewEditDelete";
 import { userExist, userNotExist } from "@/redux/slices/authSlice";
 import { useDispatch } from "react-redux";
 import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/authApis";
+import getEnv from "@/lib/env";
+import { useScreenContext } from "@/hooks/useScreenContext";
+
+const SERVER_URL = getEnv("SERVER_URL");
 
 // Define role status
 const ROLE_STATUS = {
@@ -150,6 +154,68 @@ function AllUserRoles() {
       return { ...prev, permissions };
     });
   }, []);
+
+  useScreenContext({
+    screenId: "role-management",
+    screenName: "Role Management",
+    assistantName: "Role Management Assistant",
+    description:
+      "The Role Management screen lets admins create and manage roles, each with a custom set of permissions. Roles are assigned to users to control what they can access and do in the platform.",
+    aiEndpoint: `${SERVER_URL}/api/ai/role-chat`,
+    greeting: `Hi! I'm your **Role Management Assistant**.\n\nI can help you:\n- **Explain any permission** — what it does and which roles typically need it\n- **Suggest permissions** for a role based on its purpose (e.g. manager, staff, guest)\n- **Create, edit, or delete roles** based on your instructions\n- **Review existing roles** and flag gaps or over-permissions\n\nWhat would you like to do?`,
+    currentState: {
+      roles: (roles?.data || []).map((r) => ({
+        _id: r._id,
+        name: r.name,
+        permissions: (r.permissions || []).map((p) => p.name),
+      })),
+      availablePermissions: (permissionsData?.data || []).map((p) => ({ _id: p._id, name: p.name })),
+    },
+    actions: {
+      createRole: async ({ name, permissionNames }) => {
+        const permissionIds = (permissionsData?.data || [])
+          .filter((p) => permissionNames.includes(p.name))
+          .map((p) => p._id);
+        try {
+          const res = await createRole({ name, permissions: permissionIds }).unwrap();
+          if (!res?.success) throw new Error(res?.message);
+          await getUserAndSetBranding();
+        } catch (err) {
+          toast.error(err?.data?.message || err?.message || "Failed to create role");
+          throw err;
+        }
+      },
+      updateRole: async ({ roleId, name, permissionNames }) => {
+        const role = roles?.data?.find((r) => r._id === roleId);
+        if (!role) throw new Error("Role not found");
+        const permissionIds = permissionNames
+          ? (permissionsData?.data || []).filter((p) => permissionNames.includes(p.name)).map((p) => p._id)
+          : (role.permissions || []).map((p) => p._id);
+        try {
+          const res = await editRole({
+            _id: roleId,
+            name: name || role.name,
+            permissions: permissionIds,
+          }).unwrap();
+          if (!res?.success) throw new Error(res?.message);
+          await getUserAndSetBranding();
+        } catch (err) {
+          toast.error(err?.data?.message || err?.message || "Failed to update role");
+          throw err;
+        }
+      },
+      deleteRole: async ({ roleId }) => {
+        try {
+          const res = await deleteRole({ _id: roleId }).unwrap();
+          if (!res?.success) throw new Error(res?.message);
+        } catch (err) {
+          toast.error(err?.data?.message || err?.message || "Failed to delete role");
+          throw err;
+        }
+      },
+    },
+    deps: { roleCount: roles?.data?.length, permissionCount: permissionsData?.data?.length },
+  });
 
   // No-op for add, edit, delete
   const handleAddRole = async () => {
@@ -335,15 +401,22 @@ function AllUserRoles() {
   }, []);
 
   return (
-    <div className="mt-5 w-full">
+    <div className="mt-5 w-full" data-testid="roles-page">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-textPrimary text-xl font-semibold">Role Management</h2>
         <div>
-          <Button icon={FaUserShield} label="Add Role" onClick={() => setIsModalOpen(true)} disabled={isCreatingRole} />
+          <Button
+            icon={FaUserShield}
+            label="Add Role"
+            onClick={() => setIsModalOpen(true)}
+            disabled={isCreatingRole}
+            data-testid="roles-create-btn"
+          />
         </div>
       </div>
 
       <DataTable
+        data-testid="roles-table"
         data={roles?.data || []}
         columns={columns()}
         customStyles={tableStyles}

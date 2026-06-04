@@ -1,5 +1,7 @@
+import { UseAIChat } from "@/context/AiChatContext";
 import { useBranding } from "@/hooks/BrandingContext";
-import { useRef, useState } from "react";
+import getEnv from "@/lib/env";
+import { useEffect, useRef, useState } from "react";
 import { FiExternalLink, FiPrinter, FiX } from "react-icons/fi";
 import { IoCheckmarkCircle } from "react-icons/io5";
 
@@ -14,15 +16,62 @@ function contrastColor(hex = "#000000") {
   return L > 0.179 ? "#000000" : "#ffffff";
 }
 
+const SERVER_URL = getEnv("SERVER_URL");
+
 function DocumentModal({ url, title, onClose }) {
   const { aiHeaderColor, accentColor, fontFamily } = useBranding();
+  const { setOverlayContext, clearOverlayContext, assistantMode, setIsOpen, addMessage } = UseAIChat();
 
   const headerBg = aiHeaderColor || accentColor || "#1e3a5f";
   const headerText = contrastColor(headerBg);
+  const [docText, setDocText] = useState(null); // extracted plain-text content
 
   const iframeRef = useRef(null);
-  const [, setDocText] = useState(null); // extracted plain-text content
   const [docStatus, setDocStatus] = useState("loading"); // "loading" | "ready" | "unavailable"
+
+  // Auto-open AI assistant when the document viewer opens.
+  // Clear the "user closed" flag so the widget actually opens — the user deliberately
+  // clicked a document link, which implies intent to use the AI assistant.
+  useEffect(() => {
+    sessionStorage.removeItem("ai-widget-user-closed");
+    setIsOpen(true);
+    addMessage({
+      role: "assistant",
+      content: `I can see you've opened **${title}**. I can summarize this document or answer any questions you have about it — just ask!`,
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Register / update the overlay context whenever the document content changes.
+  useEffect(() => {
+    const aiEndpoint =
+      assistantMode === "applicant"
+        ? `${SERVER_URL}/api/ai/applicant-document-chat`
+        : `${SERVER_URL}/api/ai/document-chat`;
+
+    const description = docText
+      ? `The applicant is reviewing the "${title}" document. ` +
+        `Use the full document text below to summarize it, answer questions, ` +
+        `and explain any sections they ask about.\n\n` +
+        `--- DOCUMENT BEGIN ---\n${docText.slice(0, 14000)}\n--- DOCUMENT END ---`
+      : `The applicant is opening the "${title}" document (${url}). ` +
+        `The document is still loading — once it's ready you'll have the full text. ` +
+        `Greet the applicant and let them know you can summarize or answer questions once it loads.`;
+
+    setOverlayContext({
+      screenId: `doc-viewer-${title.toLowerCase().replace(/\s+/g, "-")}`,
+      screenName: title,
+      aiEndpoint,
+      description,
+      currentState: {
+        documentUrl: url,
+        documentTitle: title,
+        documentLoaded: docText !== null,
+      },
+      actions: {},
+    });
+
+    return () => clearOverlayContext();
+  }, [url, title, assistantMode, docText]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Extract document text after the iframe finishes loading.
   const handleIframeLoad = () => {

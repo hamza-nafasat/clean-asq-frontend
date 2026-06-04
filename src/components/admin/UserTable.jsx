@@ -20,6 +20,10 @@ import TextField from "../shared/small/TextField";
 import { ThreeDotEditViewDelete } from "../shared/ThreeDotViewEditDelete";
 import { useBranding } from "../../hooks/BrandingContext";
 import { formateDateAndTime } from "@/utils/userUtils";
+import getEnv from "@/lib/env";
+import { useScreenContext } from "@/hooks/useScreenContext";
+
+const SERVER_URL = getEnv("SERVER_URL");
 
 const UserTable = () => {
   const { data: users, isLoading: isLoadingUsers } = useGetAllUsersQuery();
@@ -40,6 +44,100 @@ const UserTable = () => {
 
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
+
+  useScreenContext({
+    screenId: "user-management",
+    screenName: "User Management",
+    assistantName: "User Management Assistant",
+    description:
+      "The User Management screen lets admins create, edit, and delete user accounts, assign roles, and manage passwords. Each user has a first name, last name, email, and an assigned role.",
+    aiEndpoint: `${SERVER_URL}/api/ai/user-chat`,
+    greeting: `Hi! I'm your **User Management Assistant**.\n\nI can help you:\n- **List and categorize** users by role\n- **Spot duplicate accounts** based on email\n- **Create new users** and assign them to a role\n- **Edit user information** (name, email, role)\n- **Generate a secure random password** for a user\n- **Delete users** based on your instructions\n\nWhat would you like to do?`,
+    currentState: {
+      users: (users?.data || []).map((u) => ({
+        _id: u._id,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        email: u.email,
+        role: { _id: u.role?._id, name: u.role?.name },
+        createdAt: u.createdAt?.split("T")[0],
+        lastActive: u.lastActive?.split("T")[0] || null,
+      })),
+      availableRoles: (userTypeOptions?.data || []).map((r) => ({ _id: r._id, name: r.name })),
+    },
+    actions: {
+      createUser: async ({ firstName, lastName, email, password, roleId }) => {
+        try {
+          const res = await createUser({ firstName, lastName, email, password, role: roleId }).unwrap();
+          if (!res?.success) throw new Error(res?.message);
+        } catch (err) {
+          toast.error(err?.data?.message || err?.message || "Failed to create user");
+          throw err;
+        }
+      },
+      updateUser: async ({ userId, firstName, lastName, email, roleId }) => {
+        try {
+          const payload = { _id: userId };
+          if (firstName) payload.firstName = firstName;
+          if (lastName) payload.lastName = lastName;
+          if (email) payload.email = email;
+          if (roleId) payload.role = roleId;
+          const res = await updateUser(payload).unwrap();
+          if (!res?.success) throw new Error(res?.message);
+        } catch (err) {
+          toast.error(err?.data?.message || err?.message || "Failed to update user");
+          throw err;
+        }
+      },
+      changePassword: async ({ userId, newPassword }) => {
+        try {
+          const res = await updateUser({ _id: userId, password: newPassword }).unwrap();
+          if (!res?.success) throw new Error(res?.message);
+        } catch (err) {
+          toast.error(err?.data?.message || err?.message || "Failed to change password");
+          throw err;
+        }
+      },
+      changePasswords: async ({ updates }) => {
+        const errors = [];
+        for (const { userId, newPassword } of updates) {
+          try {
+            await updateUser({ _id: userId, password: newPassword }).unwrap();
+          } catch {
+            errors.push(userId);
+          }
+        }
+        if (errors.length) {
+          toast.error(`Failed to update ${errors.length} of ${updates.length} passwords`);
+          throw new Error(`Failed to update ${errors.length} passwords`);
+        }
+      },
+      deleteUser: async ({ userId }) => {
+        try {
+          const res = await deleteUser({ _id: userId }).unwrap();
+          if (!res?.success) throw new Error(res?.message);
+        } catch (err) {
+          toast.error(err?.data?.message || err?.message || "Failed to delete user");
+          throw err;
+        }
+      },
+      deleteUsers: async ({ userIds }) => {
+        const errors = [];
+        for (const userId of userIds) {
+          try {
+            await deleteUser({ _id: userId }).unwrap();
+          } catch {
+            errors.push(userId);
+          }
+        }
+        if (errors.length) {
+          toast.error(`Failed to delete ${errors.length} of ${userIds.length} users`);
+          throw new Error(`Failed to delete ${errors.length} users`);
+        }
+      },
+    },
+    deps: { userCount: users?.data?.length, roleCount: userTypeOptions?.data?.length },
+  });
 
   const handleInputChange = useCallback(
     (e) => {
@@ -286,7 +384,7 @@ const UserTable = () => {
   }, [actionMenu]);
 
   return (
-    <div className="mt-5">
+    <div className="mt-5" data-testid="users-page">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-[#323332]">User Table</h2>
         <div className="flex gap-2">
@@ -295,11 +393,13 @@ const UserTable = () => {
             label="Add User"
             onClick={() => setIsModalOpen(true)}
             disabled={isCreatingUser}
+            data-testid="invite-user-btn"
           />
         </div>
       </div>
 
       <DataTable
+        data-testid="users-table"
         customStyles={tableStyles}
         columns={columns}
         data={users?.data || []}

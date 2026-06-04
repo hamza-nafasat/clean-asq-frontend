@@ -30,6 +30,7 @@ import { useGetMyProfileFirstTimeMutation } from "./redux/apis/authApis";
 import { userExist, userNotExist } from "./redux/slices/authSlice";
 import { detectVPN } from "./utils/vpnDetection";
 import ManageRules from "./components/admin/ManageRules";
+import { DemoSessionProvider } from "./hooks/DemoSessionContext";
 
 const Brandings = lazy(() => import("./page/admin/dashboard/brandings/Brandings"));
 const CreateBranding = lazy(() => import("./page/admin/dashboard/brandings/CreateBranding"));
@@ -161,66 +162,68 @@ function App() {
   const isGuest = user?.role?.name === "guest";
   if (loading || isLoading) return <CustomLoading />;
   return (
-    <>
-      <Suspense fallback={<CustomLoading />}>
-        <Routes>
-          {/* root redirects */}
-          <Route
-            path="/"
-            element={user ? <Navigate to="/application-forms" replace /> : <Navigate to="/login" replace />}
-          />
-          <Route path="singleform/pdf-view/:pdfId/:userId" element={<ApplicationPdfView />} />
-          {/* public routes */}
-          <Route path="/" element={<AdminDashboard />}>
-            <Route path="application-form/:brandingName/:formId" element={<SingleApplication />} />
-            <Route path="hidden/:formId/:sectionKey" element={<FormHiddenSection />} />
-            <Route path="manage-rules/:formId" element={<ManageRules />} />
-            <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
-            <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
-            <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
-            <Route path="verification" element={<Verification />} />
-            <Route path="submission" element={<DraftSubmission />} />
-          </Route>
-          {/* non authentic routes */}
-          <Route element={<ProtectedRoute user={!user} redirect={isGuest ? "/submission" : "/application-forms"} />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/otp" element={<Otp />} />
-          </Route>
-
-          {/* authentic routes admin only */}
-          <Route
-            element={<ProtectedRoute user={!isGuest && user} redirect={isGuest && user ? "/submission" : "/login"} />}
-          >
-            {/* Admin */}
+    <DemoSessionProvider>
+      <>
+        <Suspense fallback={<CustomLoading />}>
+          <Routes>
+            {/* root redirects */}
+            <Route
+              path="/"
+              element={user ? <Navigate to="/application-forms" replace /> : <Navigate to="/login" replace />}
+            />
+            <Route path="singleform/pdf-view/:pdfId/:userId" element={<ApplicationPdfView />} />
+            {/* public routes */}
             <Route path="/" element={<AdminDashboard />}>
-              <Route index element={<Navigate to="application-forms" replace />} />
-              {/* HIDDEN FORM SECTION */}
-              <Route path="all-roles" element={<AllRoles />} />
-              <Route path="all-users" element={<AdminAllUsers />} />
-              <Route path="application-forms" element={<ApplicationForms />} />
-              <Route path="applications" element={<Applications />} />
-              <Route path="underwriting/:applicantId" element={<OnBoarding />} />
-              <Route path="branding" element={<Brandings />} />
-              <Route path="branding/create" element={<CreateBranding />} />
-              <Route path="branding/single/:brandingId" element={<CreateBranding />} />
-              <Route path="strategies-key" element={<FormStrategies />} />
-              <Route path="verification-test" element={<VerificationTest />} />
-              <Route path="strategies" element={<Strategies />} />
-              <Route path="email" element={<Email />} />
+              <Route path="application-form/:brandingName/:formId" element={<SingleApplication />} />
+              <Route path="hidden/:formId/:sectionKey" element={<FormHiddenSection />} />
+              <Route path="manage-rules/:formId" element={<ManageRules />} />
+              <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
+              <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
+              <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
+              <Route path="verification" element={<Verification />} />
+              <Route path="submission" element={<DraftSubmission />} />
+            </Route>
+            {/* non authentic routes */}
+            <Route element={<ProtectedRoute user={!user} redirect={isGuest ? "/submission" : "/application-forms"} />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/otp" element={<Otp />} />
             </Route>
 
-            {/*all User Forms or application layout  , with out sidebar */}
-            <Route path="/user-application-forms" element={<UserApplicationForms />}>
-              <Route index element={<Navigate to="application-verification" replace />} />
-            </Route>
-          </Route>
+            {/* authentic routes admin only */}
+            <Route
+              element={<ProtectedRoute user={!isGuest && user} redirect={isGuest && user ? "/submission" : "/login"} />}
+            >
+              {/* Admin */}
+              <Route path="/" element={<AdminDashboard />}>
+                <Route index element={<Navigate to="application-forms" replace />} />
+                {/* HIDDEN FORM SECTION */}
+                <Route path="all-roles" element={<AllRoles />} />
+                <Route path="all-users" element={<AdminAllUsers />} />
+                <Route path="application-forms" element={<ApplicationForms />} />
+                <Route path="applications" element={<Applications />} />
+                <Route path="underwriting/:applicantId" element={<OnBoarding />} />
+                <Route path="branding" element={<Brandings />} />
+                <Route path="branding/create" element={<CreateBranding />} />
+                <Route path="branding/single/:brandingId" element={<CreateBranding />} />
+                <Route path="strategies-key" element={<FormStrategies />} />
+                <Route path="verification-test" element={<VerificationTest />} />
+                <Route path="strategies" element={<Strategies />} />
+                <Route path="email" element={<Email />} />
+              </Route>
 
-          {/* Fallback */}
-          {/* <Route path="*" element={<RoleRedirect user={user} />} /> */}
-        </Routes>
-      </Suspense>
-      <ToastContainer autoClose={3000} />
-    </>
+              {/*all User Forms or application layout  , with out sidebar */}
+              <Route path="/user-application-forms" element={<UserApplicationForms />}>
+                <Route index element={<Navigate to="application-verification" replace />} />
+              </Route>
+            </Route>
+
+            {/* Fallback */}
+            {/* <Route path="*" element={<RoleRedirect user={user} />} /> */}
+          </Routes>
+        </Suspense>
+        <ToastContainer autoClose={3000} />
+      </>
+    </DemoSessionProvider>
   );
 }
 
