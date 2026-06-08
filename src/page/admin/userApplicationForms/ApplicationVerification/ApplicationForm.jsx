@@ -316,14 +316,10 @@ export default function ApplicationForm() {
     );
   if (!user?._id) return navigate(`/application-form/${form?.data?.branding?.name}/${formId}`);
   return (
-    <div
-      data-testid="application-form"
-      data-ai-loading={!isSavedApiRun ? "page" : undefined}
-      className="bg-backgroundColor h-full w-full overflow-hidden rounded-[10px] px-6 py-6"
-    >
+    <div data-testid="application-form" data-ai-loading={!isSavedApiRun ? "page" : undefined}>
       <Stepper steps={sectionNames} currentStep={currentStep} visibleSteps={0} emptyRequiredFields={[]}>
         {stepsComps[currentStep]}
-        <div ref={stepContainerRef}>{stepsComps[currentStep]}</div>
+        {/* <div ref={stepContainerRef}>{stepsComps[currentStep]}</div> */}
       </Stepper>
     </div>
   );

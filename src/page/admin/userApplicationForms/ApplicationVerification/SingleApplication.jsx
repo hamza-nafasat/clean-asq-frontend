@@ -1374,7 +1374,7 @@ export default function SingleApplication() {
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="max-w-[500px]"
+                      className="max-w-125"
                       autoFocus={!otpSent ? true : false}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
@@ -1474,7 +1474,7 @@ export default function SingleApplication() {
                 <div className="mt-4 flex w-full flex-col items-center gap-4">
                   <Button
                     data-testid="idmission-refresh-qr-btn"
-                    className="w-full max-w-[230px]"
+                    className="w-full max-w-57.5"
                     label={"Refresh QR Code"}
                     onClick={getQrAndWebLink}
                   />
@@ -1484,7 +1484,7 @@ export default function SingleApplication() {
                     if (initialDataLoadRef.current) await initialDataLoadRef.current;
                     setIdMissionVerified(true);
                   }}
-                  className="w-full max-w-[230px]"
+                  className="w-full max-w-57.5"
                   variant="secondary"
                   data-testid="idmission-manual-entry-btn"
                   label={"Enter ID Details Manually"}
@@ -1539,7 +1539,7 @@ export default function SingleApplication() {
                   value={idMissionVerifiedData?.name?.value}
                   label="Name:*"
                   placeholder="First name, middle name (optional), last name"
-                  className={"max-w-[400px]!"}
+                  className={"max-w-100!"}
                 />
                 <TextField
                   id="email"
@@ -1554,7 +1554,7 @@ export default function SingleApplication() {
                   label="Email Address:*"
                   required
                   placeholder="e.g. john.doe@email.com"
-                  className={"max-w-[400px]!"}
+                  className={"max-w-100!"}
                 />
                 <TextField
                   id="dateOfBirth"
@@ -2105,7 +2105,7 @@ export default function SingleApplication() {
                     "Bundaberg",
                     "Hervey Bay",
                   ]}
-                  className={"max-w-[400px]!"}
+                  className={"max-w-100!"}
                 />
                 <TextField
                   id="zipCode"
@@ -2120,7 +2120,7 @@ export default function SingleApplication() {
                   }
                   label="Zip or Postal Code"
                   placeholder="e.g. 90210"
-                  className={"max-w-[400px]!"}
+                  className={"max-w-100!"}
                 />
                 <TextField
                   id="state"
@@ -2136,7 +2136,7 @@ export default function SingleApplication() {
                   }
                   label="State/Province:*"
                   placeholder="e.g. California"
-                  className={"max-w-[400px]!"}
+                  className={"max-w-100!"}
                 />
                 <TextField
                   id="country"
@@ -2152,7 +2152,7 @@ export default function SingleApplication() {
                   }
                   label="Country:*"
                   placeholder="e.g. United States"
-                  className={"max-w-[400px]!"}
+                  className={"max-w-100!"}
                 />
                 <TextField
                   id="companyTitle"
@@ -2167,7 +2167,7 @@ export default function SingleApplication() {
                   label="Company Title:*"
                   required
                   placeholder="e.g. CEO, Owner, Director"
-                  className={"max-w-[400px]!"}
+                  className={"max-w-100!"}
                 />
                 <TextField
                   id="phoneNumber"
@@ -2184,7 +2184,7 @@ export default function SingleApplication() {
                   placeholder="e.g. 555-867-5309"
                   required
                   type="text"
-                  className={"max-w-[400px]!"}
+                  className={"max-w-100!"}
                 />
                 <div className="bg-backgroundColor flex w-full border p-4">
                   <RadioInputType
