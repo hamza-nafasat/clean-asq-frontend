@@ -1569,7 +1569,7 @@ export default function SingleApplication() {
                   }
                   label="Date of Birth:*"
                   required
-                  className={"max-w-[400px]!"}
+                  className={"max-w-100!"}
                 />
                 <TextField
                   id="idType"
@@ -1586,7 +1586,7 @@ export default function SingleApplication() {
                   required
                   placeholder={'e.g. "Driver\'s License", "State ID", "Passport"'}
                   suggestions={["Driver's License", "State ID", "Passport"]}
-                  className={"max-w-[400px]!"}
+                  className={"max-w-100!"}
                 />{" "}
                 <TextField
                   id="idIssuer"
@@ -1690,7 +1690,7 @@ export default function SingleApplication() {
                     "Australian Capital Territory",
                     "Northern Territory",
                   ]}
-                  className={"max-w-[400px]!"}
+                  className={"max-w-100!"}
                 />{" "}
                 <TextField
                   id="idExpiryDate"
@@ -1705,7 +1705,7 @@ export default function SingleApplication() {
                   }
                   label="ID Expiry Date:*"
                   required
-                  className={"max-w-[400px]!"}
+                  className={"max-w-100!"}
                 />{" "}
                 <TextField
                   id="issueDate"
@@ -1720,7 +1720,7 @@ export default function SingleApplication() {
                   }
                   label="Issue Date:*"
                   required
-                  className={"max-w-[400px]!"}
+                  className={"max-w-100!"}
                 />{" "}
                 <TextField
                   id="idNumber"
@@ -1735,9 +1735,9 @@ export default function SingleApplication() {
                   value={idMissionVerifiedData?.idNumber?.value || ""}
                   label="ID Number:*"
                   placeholder="As it appears on your ID"
-                  className={"max-w-[400px]!"}
+                  className={"max-w-100!"}
                 />{" "}
-                <div data-places-input="true" className="w-full max-w-[400px]">
+                <div data-places-input="true" className="w-full max-w-100">
                   <Autocomplete
                     onLoad={onLoad}
                     className="w-full"
@@ -1761,7 +1761,7 @@ export default function SingleApplication() {
                       }
                       label="Street Address:*"
                       placeholder="Start typing your address"
-                      className={"max-w-[400px]!"}
+                      className={"max-w-100!"}
                     />
                   </Autocomplete>
                 </div>
@@ -1778,7 +1778,7 @@ export default function SingleApplication() {
                   }
                   label="Address 2 (Apt, Suite, Unit)"
                   placeholder="Apt, Suite, Unit, Floor, etc."
-                  className={"max-w-[400px]!"}
+                  className={"max-w-100!"}
                 />
                 <TextField
                   id="city"
