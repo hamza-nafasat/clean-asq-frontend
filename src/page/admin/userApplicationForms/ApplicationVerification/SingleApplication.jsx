@@ -1385,7 +1385,7 @@ export default function SingleApplication() {
                     <Button
                       onClick={sentOtpForEmail}
                       disabled={otpLoading}
-                      className={`min-w-[130px] py-2 ${otpLoading && "cursor-not-allowed opacity-25"}`}
+                      className={`min-w-32.5 py-2 ${otpLoading && "cursor-not-allowed opacity-25"}`}
                       label={"Send Code"}
                       data-testid="verification-send-otp-btn"
                     />
@@ -1400,7 +1400,7 @@ export default function SingleApplication() {
                         placeholder="Enter your Code"
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
-                        className="max-w-[500px]"
+                        className="max-w-125"
                         autoFocus={otpSent ? true : false}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
@@ -1411,7 +1411,7 @@ export default function SingleApplication() {
                       <Button
                         onClick={verifyWithOtp}
                         disabled={emailLoading}
-                        className={`min-w-[130px] py-2 ${emailLoading && "cursor-not-allowed opacity-25"}`}
+                        className={`min-w-32.5 py-2 ${emailLoading && "cursor-not-allowed opacity-25"}`}
                         label={"Submit Code"}
                         data-testid="verification-submit-otp-btn"
                       />
@@ -1423,7 +1423,7 @@ export default function SingleApplication() {
                         dispatch(updateEmailVerified(true));
                         navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
                       }}
-                      className="w-full max-w-[650px]"
+                      className="w-full max-w-162.5"
                       variant="secondary"
                       label={"Skip"}
                     />
@@ -1460,12 +1460,12 @@ export default function SingleApplication() {
                   {qrCode ? (
                     <img
                       data-testid="idmission-qr-code"
-                      className="h-[230px] w-[230px]"
+                      className="h-57.5 w-57.5"
                       src={`data:image/jpeg;base64,${qrCode}`}
                       alt="qr code "
                     />
                   ) : qrFetchError ? (
-                    <p className="max-w-[230px] text-center text-sm text-gray-500">
+                    <p className="max-w-57.5 text-center text-sm text-gray-500">
                       QR code could not be loaded. Use the refresh button to try again, or enter your ID details
                       manually below.
                     </p>
