@@ -302,6 +302,149 @@ export default function SingleApplication() {
     },
     { clearOnMount: !emailVerified, autoOpen: false },
   );
+  const getQrAndWebLink = useCallback(async () => {
+    setQrLoading(true);
+    setQrFetchError(false);
+    let timedOut = false;
+    const timeoutId = setTimeout(() => {
+      timedOut = true;
+      setQrLoading(false);
+      setQrFetchError(true);
+    }, 10000);
+    try {
+      const res = await getIdMissionSession().unwrap();
+      clearTimeout(timeoutId);
+      if (!timedOut) {
+        if (res.success) {
+          setQrCode(res.data?.customerData?.qrCode);
+          setWebLink(res.data?.customerData?.kycUrl);
+        } else {
+          setQrFetchError(true);
+        }
+      }
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (!timedOut) {
+        console.log("Error fetching session ID:", error);
+        setQrFetchError(true);
+      }
+    } finally {
+      setQrLoading(false);
+    }
+  }, [getIdMissionSession]);
+  const getSavedFormDataAndSaveInRedux = useCallback(
+    async ({ skipRedirectOnError = false } = {}) => {
+      console.log(
+        "%c[SA:getSavedForm] called — skipRedirectOnError=%s formId=%s",
+        "color:#7c3aed; font-weight:bold",
+        skipRedirectOnError,
+        formId,
+      );
+      try {
+        const res = await getSavedFormData({ formId: formId }).unwrap();
+        console.log(
+          "%c[SA:getSavedForm] API response — success=%s keys=%o",
+          "color:#7c3aed",
+          res?.success,
+          res?.data?.savedData ? Object.keys(res.data.savedData) : [],
+        );
+        if (res.success) {
+          const savedData = res?.data?.savedData || [];
+          const formDataOfIdMission = savedData?.idMission;
+          console.log(
+            "%c[SA:getSavedForm] idMission data — name=%s email=%s company_lookup_data=%s",
+            "color:#7c3aed",
+            formDataOfIdMission?.name?.value || "(none)",
+            formDataOfIdMission?.email?.value || "(none)",
+            !!savedData?.company_lookup_data,
+          );
+          const action = await dispatch(addSavedFormData(savedData || []));
+          unwrapResult(action);
+          setIdMissionVerifiedData({
+            name: { name: "name", value: formDataOfIdMission?.name?.value || "" },
+            // Priority: (1) fresh OTP email from this session, (2) previously-saved draft
+            // email (also OTP-verified), (3) user?.email — safe here because after OTP
+            // verification the user is logged in AS the OTP email, so user?.email === OTP email.
+            // We never reach this fallback chain before emailVerified is true.
+            email: { name: "email", value: email || formDataOfIdMission?.email?.value || user?.email || "" },
+            idNumber: { name: "idNumber", value: formDataOfIdMission?.idNumber?.value || "" },
+            idIssuer: { name: "idIssuer", value: formDataOfIdMission?.idIssuer?.value || "" },
+            idType: { name: "idType", value: formDataOfIdMission?.idType?.value || "" },
+            idExpiryDate: { name: "idExpiryDate", value: formDataOfIdMission?.idExpiryDate?.value || "" },
+            streetAddress: { name: "streetAddress", value: formDataOfIdMission?.streetAddress?.value || "" },
+            address2: { name: "address2", value: formDataOfIdMission?.address2?.value || "" },
+            phoneNumber: { name: "phoneNumber", value: formDataOfIdMission?.phoneNumber?.value || "" },
+            zipCode: { name: "zipCode", value: formDataOfIdMission?.zipCode?.value || "" },
+            dateOfBirth: { name: "dateOfBirth", value: formDataOfIdMission?.dateOfBirth?.value || "" },
+            country: { name: "country", value: formDataOfIdMission?.country?.value || "" },
+            issueDate: { name: "issueDate", value: formDataOfIdMission?.issueDate?.value || "" },
+            companyTitle: { name: "companyTitle", value: formDataOfIdMission?.companyTitle?.value || "" },
+            state: { name: "state", value: formDataOfIdMission?.state?.value || "" },
+            city: { name: "city", value: formDataOfIdMission?.city?.value || "" },
+            signature: { name: "signature", value: formDataOfIdMission?.signature?.value || "" },
+            createdAt: formDataOfIdMission?.createdAt || new Date().toISOString(),
+            updatedAt: formDataOfIdMission?.updatedAt || new Date().toISOString(),
+          });
+          if (formDataOfIdMission?.name?.value && savedData?.company_lookup_data) {
+            console.log(
+              "%c[SA:getSavedForm] → idMissionVerified=true + openRedirectModal (name+lookup both present)",
+              "color:#7c3aed",
+            );
+            setIdMissionVerified(true);
+            setOpenRedirectModal(true);
+          } else if (!skipRedirectOnError && !savedData?.company_lookup_data) {
+            // Draft exists but company lookup hasn't completed yet — send to company page.
+            // Only redirect on the post-OTP path (skipRedirectOnError=false); on the remount
+            // path the lookup may still be running in the background, so we wait.
+            console.log(
+              "%c[SA:getSavedForm] → navigating to /verification (no company_lookup_data, skipRedirectOnError=false)",
+              "color:#7c3aed",
+            );
+            navigatingAwayRef.current = true;
+            return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
+          } else {
+            // User is staying on the QR / manual-entry step — fetch QR now (first time we know it's needed).
+            console.log(
+              "%c[SA:getSavedForm] → no navigation (skipRedirectOnError=%s name=%s lookup=%s) — fetching QR",
+              "color:#7c3aed",
+              skipRedirectOnError,
+              !!formDataOfIdMission?.name?.value,
+              !!savedData?.company_lookup_data,
+            );
+            getQrAndWebLink();
+          }
+        }
+      } catch (error) {
+        if (error?.data?.message === "Form Not Saved in draft") {
+          if (skipRedirectOnError) {
+            // Draft doesn't exist yet — company info hasn't been submitted. Don't redirect
+            // (the skipRedirectOnError=false call from verifyOtpCode handles navigation).
+            // Pre-fill email so it's ready if/when the user eventually reaches this page.
+            // Do NOT fetch QR here — the draft being absent means company info isn't done yet,
+            // so we have no business initialising IDMission.
+            console.log(
+              "%c[SA:getSavedForm] catch: Form Not Saved in draft + skipRedirectOnError → pre-filling email only",
+              "color:#ea580c",
+            );
+            setIdMissionVerifiedData((prev) => ({
+              ...prev,
+              email: { name: "email", value: prev.email?.value || email || user?.email || "" },
+            }));
+            return;
+          }
+          console.log(
+            "%c[SA:getSavedForm] catch: Form Not Saved in draft → navigating to /verification",
+            "color:#ea580c",
+          );
+          navigatingAwayRef.current = true;
+          return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
+        }
+        console.error("%c[SA:getSavedForm] ERROR", "color:#dc2626; font-weight:bold", error);
+        // toast.error(error?.data?.message || 'Error while getting saved form data');
+      }
+    },
+    [dispatch, email, form?.data?.branding?.name, formId, getQrAndWebLink, getSavedFormData, navigate, user?.email],
+  );
 
   // functions for autocomplete
   // ===========================
@@ -629,36 +772,7 @@ export default function SingleApplication() {
       setLoadingForValidatingOtp(false);
     }
   }, [dispatch, email, formId, getSavedFormDataAndSaveInRedux, getUserProfile, otp, verifyEmail]);
-  const getQrAndWebLink = useCallback(async () => {
-    setQrLoading(true);
-    setQrFetchError(false);
-    let timedOut = false;
-    const timeoutId = setTimeout(() => {
-      timedOut = true;
-      setQrLoading(false);
-      setQrFetchError(true);
-    }, 10000);
-    try {
-      const res = await getIdMissionSession().unwrap();
-      clearTimeout(timeoutId);
-      if (!timedOut) {
-        if (res.success) {
-          setQrCode(res.data?.customerData?.qrCode);
-          setWebLink(res.data?.customerData?.kycUrl);
-        } else {
-          setQrFetchError(true);
-        }
-      }
-    } catch (error) {
-      clearTimeout(timeoutId);
-      if (!timedOut) {
-        console.log("Error fetching session ID:", error);
-        setQrFetchError(true);
-      }
-    } finally {
-      setQrLoading(false);
-    }
-  }, [getIdMissionSession]);
+
   // const getSavedFormDataAndSaveInRedux = useCallback(async () => {
   //   try {
   //     const res = await getSavedFormData({ formId: formId }).unwrap();
@@ -702,120 +816,6 @@ export default function SingleApplication() {
   //     console.log("error while getting saved form data", error);
   //   }
   // }, [dispatch, form?.data?.branding?.name, formId, getSavedFormData, navigate, user?.email]);
-
-  const getSavedFormDataAndSaveInRedux = useCallback(
-    async ({ skipRedirectOnError = false } = {}) => {
-      console.log(
-        "%c[SA:getSavedForm] called — skipRedirectOnError=%s formId=%s",
-        "color:#7c3aed; font-weight:bold",
-        skipRedirectOnError,
-        formId,
-      );
-      try {
-        const res = await getSavedFormData({ formId: formId }).unwrap();
-        console.log(
-          "%c[SA:getSavedForm] API response — success=%s keys=%o",
-          "color:#7c3aed",
-          res?.success,
-          res?.data?.savedData ? Object.keys(res.data.savedData) : [],
-        );
-        if (res.success) {
-          const savedData = res?.data?.savedData || [];
-          const formDataOfIdMission = savedData?.idMission;
-          console.log(
-            "%c[SA:getSavedForm] idMission data — name=%s email=%s company_lookup_data=%s",
-            "color:#7c3aed",
-            formDataOfIdMission?.name?.value || "(none)",
-            formDataOfIdMission?.email?.value || "(none)",
-            !!savedData?.company_lookup_data,
-          );
-          const action = await dispatch(addSavedFormData(savedData || []));
-          unwrapResult(action);
-          setIdMissionVerifiedData({
-            name: { name: "name", value: formDataOfIdMission?.name?.value || "" },
-            // Priority: (1) fresh OTP email from this session, (2) previously-saved draft
-            // email (also OTP-verified), (3) user?.email — safe here because after OTP
-            // verification the user is logged in AS the OTP email, so user?.email === OTP email.
-            // We never reach this fallback chain before emailVerified is true.
-            email: { name: "email", value: email || formDataOfIdMission?.email?.value || user?.email || "" },
-            idNumber: { name: "idNumber", value: formDataOfIdMission?.idNumber?.value || "" },
-            idIssuer: { name: "idIssuer", value: formDataOfIdMission?.idIssuer?.value || "" },
-            idType: { name: "idType", value: formDataOfIdMission?.idType?.value || "" },
-            idExpiryDate: { name: "idExpiryDate", value: formDataOfIdMission?.idExpiryDate?.value || "" },
-            streetAddress: { name: "streetAddress", value: formDataOfIdMission?.streetAddress?.value || "" },
-            address2: { name: "address2", value: formDataOfIdMission?.address2?.value || "" },
-            phoneNumber: { name: "phoneNumber", value: formDataOfIdMission?.phoneNumber?.value || "" },
-            zipCode: { name: "zipCode", value: formDataOfIdMission?.zipCode?.value || "" },
-            dateOfBirth: { name: "dateOfBirth", value: formDataOfIdMission?.dateOfBirth?.value || "" },
-            country: { name: "country", value: formDataOfIdMission?.country?.value || "" },
-            issueDate: { name: "issueDate", value: formDataOfIdMission?.issueDate?.value || "" },
-            companyTitle: { name: "companyTitle", value: formDataOfIdMission?.companyTitle?.value || "" },
-            state: { name: "state", value: formDataOfIdMission?.state?.value || "" },
-            city: { name: "city", value: formDataOfIdMission?.city?.value || "" },
-            signature: { name: "signature", value: formDataOfIdMission?.signature?.value || "" },
-            createdAt: formDataOfIdMission?.createdAt || new Date().toISOString(),
-            updatedAt: formDataOfIdMission?.updatedAt || new Date().toISOString(),
-          });
-          if (formDataOfIdMission?.name?.value && savedData?.company_lookup_data) {
-            console.log(
-              "%c[SA:getSavedForm] → idMissionVerified=true + openRedirectModal (name+lookup both present)",
-              "color:#7c3aed",
-            );
-            setIdMissionVerified(true);
-            setOpenRedirectModal(true);
-          } else if (!skipRedirectOnError && !savedData?.company_lookup_data) {
-            // Draft exists but company lookup hasn't completed yet — send to company page.
-            // Only redirect on the post-OTP path (skipRedirectOnError=false); on the remount
-            // path the lookup may still be running in the background, so we wait.
-            console.log(
-              "%c[SA:getSavedForm] → navigating to /verification (no company_lookup_data, skipRedirectOnError=false)",
-              "color:#7c3aed",
-            );
-            navigatingAwayRef.current = true;
-            return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
-          } else {
-            // User is staying on the QR / manual-entry step — fetch QR now (first time we know it's needed).
-            console.log(
-              "%c[SA:getSavedForm] → no navigation (skipRedirectOnError=%s name=%s lookup=%s) — fetching QR",
-              "color:#7c3aed",
-              skipRedirectOnError,
-              !!formDataOfIdMission?.name?.value,
-              !!savedData?.company_lookup_data,
-            );
-            getQrAndWebLink();
-          }
-        }
-      } catch (error) {
-        if (error?.data?.message === "Form Not Saved in draft") {
-          if (skipRedirectOnError) {
-            // Draft doesn't exist yet — company info hasn't been submitted. Don't redirect
-            // (the skipRedirectOnError=false call from verifyOtpCode handles navigation).
-            // Pre-fill email so it's ready if/when the user eventually reaches this page.
-            // Do NOT fetch QR here — the draft being absent means company info isn't done yet,
-            // so we have no business initialising IDMission.
-            console.log(
-              "%c[SA:getSavedForm] catch: Form Not Saved in draft + skipRedirectOnError → pre-filling email only",
-              "color:#ea580c",
-            );
-            setIdMissionVerifiedData((prev) => ({
-              ...prev,
-              email: { name: "email", value: prev.email?.value || email || user?.email || "" },
-            }));
-            return;
-          }
-          console.log(
-            "%c[SA:getSavedForm] catch: Form Not Saved in draft → navigating to /verification",
-            "color:#ea580c",
-          );
-          navigatingAwayRef.current = true;
-          return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
-        }
-        console.error("%c[SA:getSavedForm] ERROR", "color:#dc2626; font-weight:bold", error);
-        // toast.error(error?.data?.message || 'Error while getting saved form data');
-      }
-    },
-    [dispatch, email, form?.data?.branding?.name, formId, getQrAndWebLink, getSavedFormData, navigate, user?.email],
-  );
 
   const getQrLinkOnEmailVerified = useCallback(() => {
     if (emailVerified && formData && formData?.idMission) {
