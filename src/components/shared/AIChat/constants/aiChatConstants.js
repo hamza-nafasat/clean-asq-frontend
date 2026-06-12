@@ -11,6 +11,7 @@ export const PANEL_MIN_HEIGHT = 380;
 export const MAX_API_HISTORY_TURNS = 30;
 
 export const PAGE_ROUTES = {
+  home: "/application-forms",
   "application-forms": "/application-forms",
   branding: "/branding",
   "branding-create": "/branding/create",
@@ -24,6 +25,7 @@ export const PAGE_ROUTES = {
 };
 
 export const PAGE_LABELS = {
+  home: "Home",
   "application-forms": "Application Forms",
   branding: "Branding Management",
   "branding-create": "Create New Branding",

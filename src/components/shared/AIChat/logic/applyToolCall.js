@@ -67,7 +67,7 @@ export function createApplyToolCall(bindings) {
       if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
       navTimeoutRef.current = setTimeout(() => {
         pendingFollowUpRef.current = null;
-      }, 15000);
+      }, 30000);
     }
 
     if (alreadyThere) {

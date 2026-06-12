@@ -1992,8 +1992,12 @@ export default function AIChatWidget() {
             announceScreen(screenName);
           }, 600);
         } else {
-          const greeting = ctx?.greeting || `I'm now on **${screenName}**. What would you like to do?`;
-          addMessage({ role: "assistant", content: greeting });
+          const isHandoff = !!pendingFollowUpRef.current;
+          if (isHandoff) {
+            addMessage({ role: "assistant", content: `--- **Now on: ${screenName}** ---` });
+          } else {
+            addMessage({ role: "assistant", content: `--- **Now on: ${screenName}** ---\n\nSwitched to **${screenName}**.` });
+          }
         }
         // If we arrived here via an AI navigateToPage tool call, auto-send the follow-up task.
         if (pendingFollowUpRef.current) {

@@ -154,10 +154,9 @@ export const AIChatProvider = ({ children }) => {
     const newEndpoint = context?.aiEndpoint || null;
     if (lastEndpointRef.current && newEndpoint && lastEndpointRef.current !== newEndpoint) {
       console.log(
-        `%c[CONTEXT] endpoint changed ${lastEndpointRef.current} → ${newEndpoint} — clearing messages`,
+        `%c[CONTEXT] endpoint changed ${lastEndpointRef.current} → ${newEndpoint} — clearing API history only`,
         "color:#c80; font-weight:bold",
       );
-      setMessages([]);
       clearApiHistory();
     }
     if (newEndpoint) lastEndpointRef.current = newEndpoint;
