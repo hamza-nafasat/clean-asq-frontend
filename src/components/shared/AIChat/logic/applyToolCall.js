@@ -48,10 +48,55 @@ export function createApplyToolCall(bindings) {
     triggerAutoMessage,
   } = bindings;
 
+  function handleNavigateToPage(args) {
+    const { page, reason, followUpTask } = args;
+    const route = PAGE_ROUTES[page];
+    const label = PAGE_LABELS[page] || page;
+    if (!route) return;
+
+    addMessage({
+      role: "assistant",
+      content: `Navigating you to **${label}**. ${reason}`,
+    });
+
+    const currentPath = window.location.pathname;
+    const alreadyThere = currentPath === route || (route !== "/" && currentPath.startsWith(`${route}/`));
+
+    if (followUpTask) {
+      pendingFollowUpRef.current = followUpTask;
+      if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
+      navTimeoutRef.current = setTimeout(() => {
+        pendingFollowUpRef.current = null;
+      }, 15000);
+    }
+
+    if (alreadyThere) {
+      if (followUpTask) {
+        pendingFollowUpRef.current = null;
+        if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
+        triggerAutoMessage(followUpTask);
+      }
+      return;
+    }
+
+    setTimeout(() => {
+      navigate(route);
+    }, 300);
+  }
+
   async function applyToolCall(tool, args, currentHistory) {
     console.log(`%c[TOOL] applyToolCall: ${tool}`, "color:#c0f; font-weight:bold", args);
     const ctx = getScreenContext();
-    if (!ctx?.actions) return;
+
+    // Cross-page navigation does not require page-specific actions — only bindings.
+    if (tool === "navigateToPage") {
+      handleNavigateToPage(args);
+      return;
+    }
+
+    if (!ctx?.actions) {
+      return;
+    }
     const defaultEndpoint =
       assistantMode === "applicant" ? `${SERVER_URL}/api/ai/applicant-chat` : `${SERVER_URL}/api/ai/branding-chat`;
     const chatEndpoint = ctx.aiEndpoint || defaultEndpoint;
@@ -745,9 +790,34 @@ export function createApplyToolCall(bindings) {
       return;
     }
 
+    if (tool === "viewApplication") {
+      const { explanation, applicationId } = args;
+      if (ctx.actions.viewApplication) ctx.actions.viewApplication({ applicationId });
+      addMessage({ role: "assistant", content: explanation });
+      if (isVoiceModeRef.current) speak(explanation);
+      return;
+    }
+
+    if (tool === "deleteApplications") {
+      const { explanation, applicationIds } = args;
+      try {
+        if (ctx.actions.deleteApplications) await ctx.actions.deleteApplications({ applicationIds });
+        addMessage({ role: "assistant", content: explanation });
+        if (isVoiceModeRef.current) speak(explanation);
+      } catch (err) {
+        const detail = err?.data?.message || err?.message || "";
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
+      }
+      return;
+    }
+
     if (tool === "openEditBranding") {
       const { explanation, brandingId } = args;
       if (ctx.actions.openEditBranding) ctx.actions.openEditBranding({ brandingId });
+      else if (brandingId) navigate(`/branding/single/${brandingId}`);
       addMessage({ role: "assistant", content: explanation });
       if (isVoiceModeRef.current) speak(explanation);
       return;
@@ -778,6 +848,7 @@ export function createApplyToolCall(bindings) {
         }
       }
       if (ctx.actions.openCreateBranding) ctx.actions.openCreateBranding();
+      else navigate("/branding/create");
       addMessage({ role: "assistant", content: explanation });
       if (isVoiceModeRef.current) speak(explanation);
       return;
@@ -1398,29 +1469,6 @@ export function createApplyToolCall(bindings) {
         input.addEventListener("cancel", cleanup);
         input.click();
       }, 100);
-      return;
-    }
-
-    if (tool === "navigateToPage") {
-      const { page, reason, followUpTask } = args;
-      const route = PAGE_ROUTES[page];
-      const label = PAGE_LABELS[page] || page;
-      if (!route) return;
-
-      addMessage({
-        role: "assistant",
-        content: `Navigating you to **${label}**. ${reason}`,
-      });
-
-      // Store follow-up so the screen-change effect can auto-send it
-      pendingFollowUpRef.current = followUpTask;
-      if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
-      // Safety: clear the follow-up after 15 s if the destination page never loads
-      navTimeoutRef.current = setTimeout(() => {
-        pendingFollowUpRef.current = null;
-      }, 15000);
-
-      setTimeout(() => navigate(route), 300);
       return;
     }
 

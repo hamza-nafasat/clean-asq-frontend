@@ -6,6 +6,8 @@ import { ThreeDotEditViewDelete } from "@/components/shared/ThreeDotViewEditDele
 // import { Button } from '@/components/ui/button';
 import { getTableStyles } from "@/data/data";
 import { useBranding } from "@/hooks/BrandingContext";
+import { useScreenContext } from "@/hooks/useScreenContext";
+import getEnv from "@/lib/env";
 import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/authApis";
 import {
   useAddBrandingInFormMutation,
@@ -260,6 +262,37 @@ const Brandings = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [actionMenu]);
+
+  const brandingListForAi = (brandings?.data || []).map((b) => ({
+    _id: b._id,
+    name: b.name,
+    url: b.url || "",
+    fontFamily: b.fontFamily || "",
+    logoCount: b.logos?.length || 0,
+    colors: b.colors || null,
+  }));
+
+  useScreenContext({
+    screenId: "branding-list",
+    screenName: "Branding Management",
+    assistantName: "Branding List Assistant",
+    aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/branding-list-chat`,
+    greeting:
+      "Hi! I'm your **Branding List Assistant**.\n\nI can help you:\n- **Find and describe** branding profiles\n- **Open the create page** for a new branding\n- **Open any profile** for editing\n- **Delete** profiles (with confirmation)\n\nWhat would you like to do?",
+    description: "The Branding Management screen lists all branding profiles in the system.",
+    currentState: { brandings: brandingListForAi },
+    actions: {
+      openCreateBranding: () => navigate("/branding/create"),
+      openEditBranding: ({ brandingId }) => navigate(`/branding/single/${brandingId}`),
+      deleteBrandings: async ({ brandingIds }) => {
+        for (const id of brandingIds) {
+          await deleteBranding(id).unwrap();
+        }
+        await refetch();
+      },
+    },
+    deps: { count: brandingListForAi.length, ids: brandingListForAi.map((b) => b._id).join(",") },
+  });
 
   if (isBrandingsLoading) return <CustomLoading />;
 

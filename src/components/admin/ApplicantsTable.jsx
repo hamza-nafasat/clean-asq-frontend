@@ -118,6 +118,7 @@ const ApplicantsTable = ({
   applicants,
   isLoading,
   onView,
+  onDeleteApplication,
   filters,
   onFilterChange,
   setOpenSpecialAccess,
@@ -144,18 +145,21 @@ const ApplicantsTable = ({
   const handleDeleteApplicant = useCallback(async () => {
     try {
       if (!deleteConfirmation) return;
-      console.log("delete confirmation", deleteConfirmation);
-      const res = await deleteSubmitForm({ _id: deleteConfirmation }).unwrap();
-      if (res.success) {
-        toast.success(res?.message);
-        setDeleteConfirmation(null);
-        setActionMenu(null);
+      if (onDeleteApplication) {
+        await onDeleteApplication(deleteConfirmation);
+      } else {
+        const res = await deleteSubmitForm({ _id: deleteConfirmation }).unwrap();
+        if (res.success) {
+          toast.success(res?.message);
+        }
       }
+      setDeleteConfirmation(null);
+      setActionMenu(null);
     } catch (error) {
       console.error("Error deleting application:", error);
-      toast.error(error?.data?.message || "Failed to delete application");
+      toast.error(error?.data?.message || error?.message || "Failed to delete application");
     }
-  }, [deleteConfirmation, deleteSubmitForm]);
+  }, [deleteConfirmation, deleteSubmitForm, onDeleteApplication]);
 
   // Handle search
   const handleSearch = useCallback((value) => {
@@ -387,7 +391,7 @@ const ApplicantsTable = ({
           </div>
         </div>
       </div>
-      <div className="mt-5 w-full h-full overflow-x-auto lg:w-[calc(100vw-350px)]! xl:w-full">
+      <div className="mt-5 w-full h-full overflow-x-auto lg:w-[calc(100vw-350px)]! xl:w-full" data-testid="applications-table">
         <DataTable
           columns={columns}
           data={filteredApplicants}
@@ -485,7 +489,7 @@ ApplicantsTable.propTypes = {
   ).isRequired,
   isLoading: PropTypes.bool,
   onView: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
+  onDeleteApplication: PropTypes.func,
   filters: PropTypes.shape({
     dateRange: PropTypes.shape({
       start: PropTypes.string,
