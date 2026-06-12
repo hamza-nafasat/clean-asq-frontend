@@ -12,20 +12,16 @@ const mdComponents = {
   tbody: ({ children }) => <tbody>{children}</tbody>,
   tr: ({ children }) => <tr className="border-b border-gray-200">{children}</tr>,
   th: ({ children }) => (
-    <th className="px-2 py-1 text-left font-semibold text-gray-700 border border-gray-200 whitespace-nowrap">{children}</th>
+    <th className="px-2 py-1 text-left font-semibold text-gray-700 border border-gray-200 whitespace-nowrap">
+      {children}
+    </th>
   ),
-  td: ({ children }) => (
-    <td className="px-2 py-1 text-gray-600 border border-gray-200">{children}</td>
-  ),
+  td: ({ children }) => <td className="px-2 py-1 text-gray-600 border border-gray-200">{children}</td>,
 };
 
 const ColorSwatch = ({ color, label }) => (
   <div className="flex items-center gap-2 text-xs text-gray-600">
-    <div
-      className="h-5 w-5 rounded border border-gray-200 flex-shrink-0"
-      style={{ backgroundColor: color }}
-      title={color}
-    />
+    <div className="h-5 w-5 rounded border border-gray-200 shrink-0" style={{ backgroundColor: color }} title={color} />
     <span className="font-mono">{color}</span>
     {label && <span className="text-gray-400">— {label}</span>}
   </div>
@@ -81,7 +77,13 @@ const handleCsvSave = async (csvDownload) => {
   }
 };
 
-export default function ChatMessage({ message, accentColor = "#6366f1", accentTextColor = "#ffffff", onAction, introButtonsDismissed = false }) {
+export default function ChatMessage({
+  message,
+  accentColor = "#6366f1",
+  accentTextColor = "#ffffff",
+  onAction,
+  introButtonsDismissed = false,
+}) {
   const isUser = message.role === "user";
   const isPalette = message.toolCall?.tool === "generateColorPalette";
   const isApply = message.toolCall?.tool === "applyBrandingChanges";
@@ -104,9 +106,13 @@ export default function ChatMessage({ message, accentColor = "#6366f1", accentTe
 
   return (
     <div className="flex justify-start" data-testid="ai-message-assistant">
-      <div className={`max-w-[90%] rounded-2xl rounded-bl-sm px-3 py-2 text-sm shadow-sm ${isError ? "bg-red-50 border-2 border-red-400 text-red-800" : "bg-white border border-gray-100 text-gray-700"}`}>
+      <div
+        className={`max-w-[90%] rounded-2xl rounded-bl-sm px-3 py-2 text-sm shadow-sm ${isError ? "bg-red-50 border-2 border-red-400 text-red-800" : "bg-white border border-gray-100 text-gray-700"}`}
+      >
         <div className="prose prose-sm max-w-none prose-p:my-1 prose-headings:my-1 prose-ul:my-1 prose-li:my-0">
-          <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>{message.content}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+            {message.content}
+          </ReactMarkdown>
         </div>
 
         {/* Applied changes summary */}
@@ -126,7 +132,7 @@ export default function ChatMessage({ message, accentColor = "#6366f1", accentTe
             {message.toolCall.colors.map((item, i) => (
               <div key={i} className="flex items-center gap-2 text-xs text-gray-600">
                 <div
-                  className="h-5 w-5 flex-shrink-0 rounded border border-gray-200"
+                  className="h-5 w-5 shrink-0 rounded border border-gray-200"
                   style={{ backgroundColor: item.hex }}
                   title={item.hex}
                 />
@@ -134,9 +140,7 @@ export default function ChatMessage({ message, accentColor = "#6366f1", accentTe
                 <span className="font-medium text-gray-700">
                   {item.targetProperty ? PALETTE_LABELS[item.targetProperty] || item.targetProperty : item.name}
                 </span>
-                {item.purpose && (
-                  <span className="text-gray-400">— {item.purpose}</span>
-                )}
+                {item.purpose && <span className="text-gray-400">— {item.purpose}</span>}
               </div>
             ))}
           </div>
@@ -150,7 +154,11 @@ export default function ChatMessage({ message, accentColor = "#6366f1", accentTe
               className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 active:bg-indigo-800 transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
               </svg>
               Save {message.csvDownload.filename}.csv
             </button>
@@ -175,10 +183,7 @@ export default function ChatMessage({ message, accentColor = "#6366f1", accentTe
 
         {/* Form structure preview */}
         {message.formPreview && (
-          <FormPreview
-            formName={message.formPreview.formName}
-            sections={message.formPreview.sections}
-          />
+          <FormPreview formName={message.formPreview.formName} sections={message.formPreview.sections} />
         )}
 
         {/* Palette preview — colors are auto-applied, swatches shown for reference */}

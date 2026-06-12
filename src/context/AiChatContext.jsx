@@ -3,6 +3,12 @@ import { discoverFormFields, domFillField } from "../lib/discoverFormFields";
 
 const AIChatContext = createContext(null);
 
+/** Trim oldest turns while keeping the most recent tool chain intact. */
+function trimApiHistory(history, maxTurns = 30) {
+  if (history.length <= maxTurns) return history;
+  return history.slice(-maxTurns);
+}
+
 export const AIChatProvider = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -36,6 +42,23 @@ export const AIChatProvider = ({ children }) => {
   const continuationPendingRef = useRef(false);
   // Stack of reversible AI actions — each entry: { description, revertFn(ctx) }
   const actionLogRef = useRef([]);
+  // Full API conversation (includes hidden auto-guide turns and tool-call chains)
+  const apiHistoryRef = useRef([]);
+
+  const clearApiHistory = useCallback(() => {
+    apiHistoryRef.current = [];
+  }, []);
+
+  const getApiHistory = useCallback(() => [...apiHistoryRef.current], []);
+
+  const appendApiHistory = useCallback((entries) => {
+    const batch = Array.isArray(entries) ? entries : [entries];
+    apiHistoryRef.current = trimApiHistory([...apiHistoryRef.current, ...batch]);
+  }, []);
+
+  const setApiHistory = useCallback((history) => {
+    apiHistoryRef.current = trimApiHistory(Array.isArray(history) ? history : []);
+  }, []);
 
   // Screens call this to register their state + action callbacks.
   // Conversation is preserved across screen changes — no wipe.
@@ -135,11 +158,12 @@ export const AIChatProvider = ({ children }) => {
         "color:#c80; font-weight:bold",
       );
       setMessages([]);
+      clearApiHistory();
     }
     if (newEndpoint) lastEndpointRef.current = newEndpoint;
 
     screenContextRef.current = context;
-  }, []);
+  }, [clearApiHistory]);
 
   const unregisterScreenContext = useCallback(() => {
     screenContextRef.current = null;
@@ -159,14 +183,18 @@ export const AIChatProvider = ({ children }) => {
     setMessages((prev) => [...prev, { ...msg, id: Date.now() + Math.random() }]);
   }, []);
 
-  const clearMessages = useCallback(() => setMessages([]), []);
+  const clearMessages = useCallback(() => {
+    setMessages([]);
+    clearApiHistory();
+  }, [clearApiHistory]);
 
   // Full session reset: wipe history, signal widget to reset voice mode.
   // Call this when a fresh application flow begins (clearOnMount).
   const resetSession = useCallback(() => {
     setMessages([]);
+    clearApiHistory();
     setWidgetResetSignal((s) => s + 1);
-  }, []);
+  }, [clearApiHistory]);
 
   const pushRevertable = useCallback((entry) => {
     actionLogRef.current.push(entry);
@@ -219,6 +247,10 @@ export const AIChatProvider = ({ children }) => {
         pendingAutoMessageRef,
         assistantMode,
         setAssistantMode,
+        getApiHistory,
+        appendApiHistory,
+        setApiHistory,
+        clearApiHistory,
       }}
     >
       {children}

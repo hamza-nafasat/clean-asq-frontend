@@ -1,314 +1,39 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { IoClose, IoSend } from "react-icons/io5";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useBranding } from "../../../hooks/BrandingContext";
-import getEnv from "../../../lib/env";
-import ChatMessage from "./ChatMessage";
-import ADEPanel from "./ADEPanel";
-import FieldErrorModal from "./FieldErrorModal";
-import PreFillModal from "./PreFillModal";
 import { checkFieldForErrors } from "../../../lib/checkFieldForErrors";
 import { discoverFormFields } from "../../../lib/discoverFormFields";
 import { UseAIChat } from "@/context/AiChatContext";
+import { buildChatPayload } from "./utils/buildChatPayload.js";
+import { mapVisibleToApiMessage } from "./utils/mapVisibleToApiMessage.js";
+import {
+  AI_CHAT_MODE,
+  contrastingIconColor,
+  PAGE_LABELS,
+  PAGE_ROUTES,
+  PANEL_HEIGHT,
+  PANEL_MIN_HEIGHT,
+  PANEL_MIN_WIDTH,
+  PANEL_WIDTH,
+  SERVER_URL,
+} from "./constants/aiChatConstants.js";
+import { useAiVoice } from "./hooks/useAiVoice.js";
+import { WIDGET_STRINGS } from "./constants/widgetStrings.js";
+import { LANGUAGES } from "./constants/languages.js";
+import { createApplyToolCall } from "./logic/applyToolCall.js";
+import ChatFab from "./components/ChatFab.jsx";
+import ChatPanel from "./components/ChatPanel.jsx";
+import ChatOverlays from "./components/ChatOverlays.jsx";
 
-// Translated widget-generated strings (error messages, confirmations, etc.)
-// All keys must be present for every language; English is the fallback.
-const WIDGET_STRINGS = {
-  en: {
-    error: "Sorry, something went wrong",
-    errorCouldnt: "Sorry, I wasn't able to do that",
-    errorVerify: "Sorry, that verification code didn't work",
-    errorSend: "Sorry, I couldn't send that",
-    tryAgain: "Please try again.",
-    keepOpenAck: "Great! I'll stay open and be here whenever you need me.",
-    introClosing: "I'm here to help as needed.",
-    revertFailed: "Sorry, the revert failed",
-    formNotLoaded: "Sorry, I couldn't load the form details",
-    fetchFailed: "Sorry, I couldn't fetch that page",
-    brandingApplied: (url) =>
-      `I've applied the branding from **${url}**. The colors, fonts, and logos have been pre-filled — feel free to ask me to adjust anything!`,
-  },
-  es: {
-    error: "Lo siento, algo salió mal",
-    errorCouldnt: "Lo siento, no pude hacer eso",
-    errorVerify: "Lo siento, ese código de verificación no funcionó",
-    errorSend: "Lo siento, no pude enviar eso",
-    tryAgain: "Por favor, inténtalo de nuevo.",
-    keepOpenAck: "¡Perfecto! Me quedaré abierto y estaré aquí cuando me necesites.",
-    introClosing: "Estoy aquí para ayudar cuando lo necesites.",
-    revertFailed: "Lo siento, no se pudo revertir la acción",
-    formNotLoaded: "Lo siento, no pude cargar los detalles del formulario",
-    fetchFailed: "Lo siento, no pude obtener esa página",
-    brandingApplied: (url) =>
-      `He aplicado el branding de **${url}**. Los colores, fuentes y logos han sido completados. ¡Puedes pedirme que ajuste lo que necesites!`,
-  },
-  fr: {
-    error: "Désolé, quelque chose s'est mal passé",
-    errorCouldnt: "Désolé, je n'ai pas pu faire cela",
-    errorVerify: "Désolé, ce code de vérification ne fonctionne pas",
-    errorSend: "Désolé, je n'ai pas pu envoyer cela",
-    tryAgain: "Veuillez réessayer.",
-    keepOpenAck: "Parfait ! Je reste ouvert et serai là quand vous aurez besoin de moi.",
-    introClosing: "Je suis là pour aider si besoin.",
-    revertFailed: "Désolé, l'annulation a échoué",
-    formNotLoaded: "Désolé, je n'ai pas pu charger les détails du formulaire",
-    fetchFailed: "Désolé, je n'ai pas pu récupérer cette page",
-    brandingApplied: (url) =>
-      `J'ai appliqué le branding de **${url}**. Les couleurs, polices et logos ont été pré-remplis — demandez-moi d'ajuster ce que vous souhaitez !`,
-  },
-  pt: {
-    error: "Desculpe, algo deu errado",
-    errorCouldnt: "Desculpe, não consegui fazer isso",
-    errorVerify: "Desculpe, esse código de verificação não funcionou",
-    errorSend: "Desculpe, não consegui enviar isso",
-    tryAgain: "Por favor, tente novamente.",
-    keepOpenAck: "Ótimo! Ficarei aberto e estarei aqui sempre que precisar de mim.",
-    introClosing: "Estou aqui para ajudar quando necessário.",
-    revertFailed: "Desculpe, a reversão falhou",
-    formNotLoaded: "Desculpe, não consegui carregar os detalhes do formulário",
-    fetchFailed: "Desculpe, não consegui buscar essa página",
-    brandingApplied: (url) =>
-      `Apliquei o branding de **${url}**. Cores, fontes e logotipos foram preenchidos — sinta-se à vontade para pedir ajustes!`,
-  },
-  zh: {
-    error: "抱歉，出现了问题",
-    errorCouldnt: "抱歉，无法完成该操作",
-    errorVerify: "抱歉，该验证码无效",
-    errorSend: "抱歉，无法发送",
-    tryAgain: "请重试。",
-    keepOpenAck: "太好了！我会一直在这里，随时为您提供帮助。",
-    introClosing: "我随时准备提供帮助。",
-    revertFailed: "抱歉，撤销操作失败",
-    formNotLoaded: "抱歉，无法加载表单详情",
-    fetchFailed: "抱歉，无法获取该页面",
-    brandingApplied: (url) => `已应用 **${url}** 的品牌设置。颜色、字体和徽标已预填充——请随时告诉我需要调整的地方！`,
-  },
-  ar: {
-    error: "عذراً، حدث خطأ ما",
-    errorCouldnt: "عذراً، لم أتمكن من إتمام ذلك",
-    errorVerify: "عذراً، رمز التحقق هذا لم يكن صحيحاً",
-    errorSend: "عذراً، لم أتمكن من الإرسال",
-    tryAgain: "يرجى المحاولة مرة أخرى.",
-    keepOpenAck: "رائع! سأبقى مفتوحاً وسأكون هنا كلما احتجت إليّ.",
-    introClosing: "أنا هنا للمساعدة عند الحاجة.",
-    revertFailed: "عذراً، فشل التراجع عن الإجراء",
-    formNotLoaded: "عذراً، لم أتمكن من تحميل تفاصيل النموذج",
-    fetchFailed: "عذراً، لم أتمكن من جلب تلك الصفحة",
-    brandingApplied: (url) =>
-      `تم تطبيق العلامة التجارية من **${url}**. تم ملء الألوان والخطوط والشعارات — اطلب مني أي تعديلات!`,
-  },
-  de: {
-    error: "Entschuldigung, etwas ist schiefgelaufen",
-    errorCouldnt: "Entschuldigung, ich konnte das nicht abschließen",
-    errorVerify: "Entschuldigung, dieser Bestätigungscode hat nicht funktioniert",
-    errorSend: "Entschuldigung, ich konnte das nicht senden",
-    tryAgain: "Bitte versuchen Sie es erneut.",
-    keepOpenAck: "Toll! Ich bleibe geöffnet und bin immer für Sie da.",
-    introClosing: "Ich bin bei Bedarf für Sie da.",
-    revertFailed: "Entschuldigung, die Rückgängig-Aktion ist fehlgeschlagen",
-    formNotLoaded: "Entschuldigung, ich konnte die Formulardetails nicht laden",
-    fetchFailed: "Entschuldigung, ich konnte die Seite nicht abrufen",
-    brandingApplied: (url) =>
-      `Das Branding von **${url}** wurde angewendet. Farben, Schriften und Logos wurden vorausgefüllt — bitten Sie mich gerne um Anpassungen!`,
-  },
-  it: {
-    error: "Spiacente, qualcosa è andato storto",
-    errorCouldnt: "Spiacente, non sono riuscito a completare quella operazione",
-    errorVerify: "Spiacente, quel codice di verifica non ha funzionato",
-    errorSend: "Spiacente, non sono riuscito a inviare",
-    tryAgain: "Per favore riprova.",
-    keepOpenAck: "Ottimo! Rimarrò aperto e sarò qui quando avrai bisogno di me.",
-    introClosing: "Sono qui per aiutare quando necessario.",
-    revertFailed: "Spiacente, il ripristino è fallito",
-    formNotLoaded: "Spiacente, non sono riuscito a caricare i dettagli del modulo",
-    fetchFailed: "Spiacente, non sono riuscito a recuperare quella pagina",
-    brandingApplied: (url) =>
-      `Ho applicato il branding di **${url}**. Colori, font e loghi sono stati precompilati — chiedimi pure di apportare modifiche!`,
-  },
-  ko: {
-    error: "죄송합니다, 문제가 발생했습니다",
-    errorCouldnt: "죄송합니다, 작업을 완료할 수 없었습니다",
-    errorVerify: "죄송합니다, 그 인증 코드가 작동하지 않았습니다",
-    errorSend: "죄송합니다, 전송할 수 없었습니다",
-    tryAgain: "다시 시도해 주세요.",
-    keepOpenAck: "좋습니다! 계속 열려 있을게요, 필요하실 때마다 여기 있겠습니다.",
-    introClosing: "필요하실 때 도움을 드리겠습니다.",
-    revertFailed: "죄송합니다, 되돌리기에 실패했습니다",
-    formNotLoaded: "죄송합니다, 양식 세부 정보를 불러올 수 없었습니다",
-    fetchFailed: "죄송합니다, 해당 페이지를 가져올 수 없었습니다",
-    brandingApplied: (url) =>
-      `**${url}**의 브랜딩이 적용되었습니다. 색상, 폰트, 로고가 미리 채워졌습니다 — 조정이 필요하시면 말씀해 주세요!`,
-  },
-  ja: {
-    error: "申し訳ありませんが、問題が発生しました",
-    errorCouldnt: "申し訳ありませんが、その操作を完了できませんでした",
-    errorVerify: "申し訳ありませんが、その確認コードは正しくありませんでした",
-    errorSend: "申し訳ありませんが、送信できませんでした",
-    tryAgain: "もう一度お試しください。",
-    keepOpenAck: "素晴らしい！開いたままにして、必要なときにいつでもここにいます。",
-    introClosing: "必要なときにいつでもお手伝いします。",
-    revertFailed: "申し訳ありませんが、元に戻すことができませんでした",
-    formNotLoaded: "申し訳ありませんが、フォームの詳細を読み込めませんでした",
-    fetchFailed: "申し訳ありませんが、そのページを取得できませんでした",
-    brandingApplied: (url) =>
-      `**${url}**のブランディングを適用しました。色、フォント、ロゴが事前に入力されました — 調整が必要な場合はお知らせください！`,
-  },
-  vi: {
-    error: "Xin lỗi, đã xảy ra lỗi",
-    errorCouldnt: "Xin lỗi, tôi không thể thực hiện điều đó",
-    errorVerify: "Xin lỗi, mã xác minh đó không hoạt động",
-    errorSend: "Xin lỗi, tôi không thể gửi điều đó",
-    tryAgain: "Vui lòng thử lại.",
-    keepOpenAck: "Tuyệt vời! Tôi sẽ ở đây bất cứ khi nào bạn cần.",
-    introClosing: "Tôi ở đây để giúp đỡ khi cần.",
-    revertFailed: "Xin lỗi, việc hoàn tác thất bại",
-    formNotLoaded: "Xin lỗi, tôi không thể tải chi tiết biểu mẫu",
-    fetchFailed: "Xin lỗi, tôi không thể tải trang đó",
-    brandingApplied: (url) =>
-      `Đã áp dụng thương hiệu từ **${url}**. Màu sắc, phông chữ và biểu trưng đã được điền sẵn — hãy yêu cầu tôi điều chỉnh bất cứ điều gì!`,
-  },
-  hi: {
-    error: "माफ़ करें, कुछ गलत हो गया",
-    errorCouldnt: "माफ़ करें, मैं ऐसा नहीं कर सका",
-    errorVerify: "माफ़ करें, वह सत्यापन कोड काम नहीं किया",
-    errorSend: "माफ़ करें, मैं वह नहीं भेज सका",
-    tryAgain: "कृपया पुनः प्रयास करें।",
-    keepOpenAck: "बढ़िया! मैं खुला रहूँगा और जब भी आपको ज़रूरत होगी, यहाँ रहूँगा।",
-    introClosing: "मैं आवश्यकता पड़ने पर सहायता करने के लिए यहाँ हूँ।",
-    revertFailed: "माफ़ करें, वापस करने में विफल रहा",
-    formNotLoaded: "माफ़ करें, मैं फ़ॉर्म विवरण लोड नहीं कर सका",
-    fetchFailed: "माफ़ करें, मैं वह पेज प्राप्त नहीं कर सका",
-    brandingApplied: (url) =>
-      `**${url}** से ब्रांडिंग लागू की गई। रंग, फ़ॉन्ट और लोगो पहले से भरे गए हैं — कुछ भी समायोजित करने के लिए मुझसे पूछें!`,
-  },
-  ru: {
-    error: "Извините, что-то пошло не так",
-    errorCouldnt: "Извините, я не смог это выполнить",
-    errorVerify: "Извините, этот код подтверждения не подошёл",
-    errorSend: "Извините, не удалось отправить",
-    tryAgain: "Пожалуйста, попробуйте снова.",
-    keepOpenAck: "Отлично! Я останусь открытым и буду здесь, когда вам понадоблюсь.",
-    introClosing: "Я здесь, чтобы помочь при необходимости.",
-    revertFailed: "Извините, не удалось отменить действие",
-    formNotLoaded: "Извините, не удалось загрузить детали формы",
-    fetchFailed: "Извините, не удалось загрузить эту страницу",
-    brandingApplied: (url) =>
-      `Применён брендинг из **${url}**. Цвета, шрифты и логотипы заполнены — попросите меня внести любые изменения!`,
-  },
-  tl: {
-    error: "Paumanhin, may naganap na mali",
-    errorCouldnt: "Paumanhin, hindi ko nagawa iyon",
-    errorVerify: "Paumanhin, hindi gumana ang code ng pagpapatunay",
-    errorSend: "Paumanhin, hindi ko maipadala iyon",
-    tryAgain: "Pakisubukan muli.",
-    keepOpenAck: "Napakagaling! Mananatili akong bukas at nandito kapag kailangan mo ako.",
-    introClosing: "Nandito ako para tumulong kung kinakailangan.",
-    revertFailed: "Paumanhin, nabigo ang pag-undo",
-    formNotLoaded: "Paumanhin, hindi ko ma-load ang mga detalye ng form",
-    fetchFailed: "Paumanhin, hindi ko makuha ang pahinang iyon",
-    brandingApplied: (url) =>
-      `Inilapat ang branding mula sa **${url}**. Ang mga kulay, font, at logo ay na-pre-fill — humingi sa akin ng anumang ayusin!`,
-  },
-  pl: {
-    error: "Przepraszam, coś poszło nie tak",
-    errorCouldnt: "Przepraszam, nie mogłem tego zrobić",
-    errorVerify: "Przepraszam, ten kod weryfikacyjny nie zadziałał",
-    errorSend: "Przepraszam, nie mogłem tego wysłać",
-    tryAgain: "Proszę spróbować ponownie.",
-    keepOpenAck: "Świetnie! Pozostanę otwarty i będę tutaj, kiedy mnie potrzebujesz.",
-    introClosing: "Jestem tutaj, aby pomóc w razie potrzeby.",
-    revertFailed: "Przepraszam, cofnięcie nie powiodło się",
-    formNotLoaded: "Przepraszam, nie mogłem załadować szczegółów formularza",
-    fetchFailed: "Przepraszam, nie mogłem pobrać tej strony",
-    brandingApplied: (url) =>
-      `Zastosowano branding z **${url}**. Kolory, czcionki i logo zostały wstępnie wypełnione — poproś mnie o wszelkie zmiany!`,
-  },
-};
-
-// Languages shown in the rotating applicant assistant banner.
-// `banner` is the translation of "Ask me a question in any language" in that language.
-const LANGUAGES = [
-  // ── Western Hemisphere ───────────────────────────────────────────────────
-  { code: "en", flag: "🇺🇸", native: "English", banner: "Ask me a question in any language" },
-  { code: "es", flag: "🇲🇽", native: "Español", banner: "Hazme una pregunta en cualquier idioma" },
-  { code: "pt", flag: "🇧🇷", native: "Português", banner: "Faça-me uma pergunta em qualquer idioma" },
-  { code: "fr", flag: "🇨🇦", native: "Français", banner: "Posez-moi une question dans n'importe quelle langue" },
-  { code: "ht", flag: "🇭🇹", native: "Kreyòl", banner: "Poze m yon kesyon nan nenpòt lang" },
-  // ── Europe ───────────────────────────────────────────────────────────────
-  { code: "de", flag: "🇩🇪", native: "Deutsch", banner: "Stellen Sie mir eine Frage in jeder Sprache" },
-  { code: "it", flag: "🇮🇹", native: "Italiano", banner: "Fammi una domanda in qualsiasi lingua" },
-  { code: "nl", flag: "🇳🇱", native: "Nederlands", banner: "Stel mij een vraag in elke taal" },
-  { code: "pl", flag: "🇵🇱", native: "Polski", banner: "Zadaj mi pytanie w dowolnym języku" },
-  { code: "ru", flag: "🇷🇺", native: "Русский", banner: "Задайте мне вопрос на любом языке" },
-  { code: "no", flag: "🇳🇴", native: "Norsk", banner: "Still meg et spørsmål på hvilket som helst språk" },
-  { code: "da", flag: "🇩🇰", native: "Dansk", banner: "Stil mig et spørgsmål på ethvert sprog" },
-  { code: "sv", flag: "🇸🇪", native: "Svenska", banner: "Ställ mig en fråga på vilket språk som helst" },
-  { code: "tr", flag: "🇹🇷", native: "Türkçe", banner: "Bana herhangi bir dilde soru sorun" },
-  // ── Asia / Middle East / Pacific ─────────────────────────────────────────
-  { code: "ar", flag: "🇸🇦", native: "العربية", banner: "اسألني سؤالاً بأي لغة" },
-  { code: "hi", flag: "🇮🇳", native: "हिन्दी", banner: "किसी भी भाषा में मुझसे प्रश्न पूछें" },
-  { code: "zh", flag: "🇨🇳", native: "中文", banner: "用任何语言问我一个问题" },
-  { code: "ja", flag: "🇯🇵", native: "日本語", banner: "どんな言語でも質問してください" },
-  { code: "ko", flag: "🇰🇷", native: "한국어", banner: "어떤 언어로든 질문해 주세요" },
-  { code: "vi", flag: "🇻🇳", native: "Tiếng Việt", banner: "Hỏi tôi một câu hỏi bằng bất kỳ ngôn ngữ nào" },
-  { code: "tl", flag: "🇵🇭", native: "Filipino", banner: "Magtanong sa akin sa anumang wika" },
-  { code: "id", flag: "🇮🇩", native: "Indonesia", banner: "Tanyakan pertanyaan kepada saya dalam bahasa apa pun" },
-  { code: "th", flag: "🇹🇭", native: "ภาษาไทย", banner: "ถามคำถามฉันในภาษาใดก็ได้" },
-];
+// Maps page IDs (from the backend navigateToPage tool) to frontend routes.
 
 // Maps page IDs (from the backend navigateToPage tool) to frontend routes.
 // Add new entries here when a new navigable page is added to navigationTool.js.
-const PAGE_ROUTES = {
-  "application-forms": "/application-forms",
-  branding: "/branding",
-  "branding-create": "/branding/create",
-  strategies: "/strategies",
-  "lookup-management": "/strategies-key",
-  "role-management": "/all-roles",
-  "user-management": "/all-users",
-  email: "/email",
-  applications: "/applications",
-  testing: "/testing",
-};
-
-const PAGE_LABELS = {
-  "application-forms": "Application Forms",
-  branding: "Branding Management",
-  "branding-create": "Create New Branding",
-  strategies: "Strategies",
-  "lookup-management": "Lookup Management",
-  "role-management": "Role Management",
-  "user-management": "User Management",
-  email: "Email Templates",
-  applications: "Applications",
-  testing: "Automated Testing",
-};
+// PAGE_ROUTES and PAGE_LABELS live in constants/aiChatConstants.js
 
 // Returns "#000000" or "#ffffff" — whichever contrasts more against the given hex background.
-// Uses the WCAG relative luminance formula.
-const contrastingIconColor = (hex = "#000000") => {
-  const h = hex.replace("#", "");
-  if (h.length < 6) return "#ffffff";
-  const toLinear = (c) => {
-    const s = c / 255;
-    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-  };
-  const r = toLinear(parseInt(h.slice(0, 2), 16));
-  const g = toLinear(parseInt(h.slice(2, 4), 16));
-  const b = toLinear(parseInt(h.slice(4, 6), 16));
-  const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  // Contrast ratio vs white = (L + 0.05) / 0.05, vs black = 1.05 / (L + 0.05)
-  return L > 0.179 ? "#000000" : "#ffffff";
-};
-
-const SERVER_URL = getEnv("SERVER_URL");
-const AI_CHAT_MODE = import.meta.env.VITE_AI_CHAT_MODE ?? "guided";
-
-const PANEL_WIDTH = 520;
-const PANEL_HEIGHT = 700;
-const PANEL_MIN_WIDTH = 300;
-const PANEL_MIN_HEIGHT = 380;
+// contrastingIconColor is imported from constants/aiChatConstants.js
 
 export default function AIChatWidget() {
   const {
@@ -330,6 +55,10 @@ export default function AIChatWidget() {
     autoMessageSignal,
     pendingAutoMessageRef,
     assistantMode,
+    getApiHistory,
+    appendApiHistory,
+    setApiHistory,
+    setOverlayContext,
   } = UseAIChat();
   // Logging wrapper — every setIsOpen call is traced so we can see who's opening the widget.
   const setIsOpen = useCallback(
@@ -342,7 +71,7 @@ export default function AIChatWidget() {
       _setIsOpen(val);
     },
     [_setIsOpen, assistantMode, messages.length],
-  ); // eslint-disable-line react-hooks/exhaustive-deps
+  );
   const { user } = useSelector((s) => s.auth);
   const {
     accentColor,
@@ -371,11 +100,25 @@ export default function AIChatWidget() {
   const fabIconColor = contrastingIconColor(effectiveLaunchColor);
   const headerIconColor = contrastingIconColor(effectiveHeaderColor);
   const [input, setInput] = useState("");
-  const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isVoiceMode, setIsVoiceMode] = useState(false);
   const voice = aiVoice || "nova";
-  const pendingListenRef = useRef(false); // set when user holds PTT while bot is speaking
+  const sendMessageRef = useRef(null);
+  const {
+    isListening,
+    isSpeaking,
+    isVoiceMode,
+    isVoiceModeRef,
+    isSpeakingRef,
+    pendingListenRef,
+    lastAIPlainTextRef,
+    justFinishedSpeakingRef,
+    onSpeakEndRef,
+    startPushToTalk,
+    stopListening,
+    stopSpeaking,
+    speak,
+    toggleVoiceMode,
+    setIsVoiceMode,
+  } = useAiVoice({ assistantMode, voice, sendMessageRef });
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
@@ -410,8 +153,6 @@ export default function AIChatWidget() {
   // Stores the most recent field-focus timer callback so onInputChange can reset the timer
   // when the user types (ensuring the pause window resets on each keystroke).
   const fieldTimerCallbackRef = useRef(null);
-  const recognitionRef = useRef(null);
-  const audioRef = useRef(null);
   const panelRef = useRef(null);
   // Panel dodge: saved position before moving out of the way of a field.
   // null means the panel is at its normal (user-chosen) position.
@@ -471,10 +212,7 @@ export default function AIChatWidget() {
   });
 
   // Refs kept current every render — safe to read inside callbacks/effects
-  const isVoiceModeRef = useRef(false);
-  const isSpeakingRef = useRef(false);
   const isLoadingRef = useRef(false);
-  const sendMessageRef = useRef(null);
   const autoGuideRef = useRef(null);
   // Tracks the most recent [FIELD_FOCUS] that arrived while the AI was busy.
   // Processed immediately after the current request finishes, ensuring the bot
@@ -486,17 +224,15 @@ export default function AIChatWidget() {
   // AbortController for the currently in-flight autoGuide fetch.
   // Aborted immediately when the user moves to a new field.
   const autoGuideAbortRef = useRef(null);
-  const justFinishedSpeakingRef = useRef(false);
   const pendingAnalysisRef = useRef(null);
   const pendingFormContinuationRef = useRef(null); // stores { toolArgs, history } while waiting for form data to load
   const pendingFollowUpRef = useRef(null); // task auto-sent after AI-triggered navigation
   const navTimeoutRef = useRef(null); // clears stale follow-up if page never loads
   const prevScreenIdRef = useRef(null);
   const initialGreetingShownRef = useRef(false); // prevents double-greeting when endpoint change clears messages mid-session
-  // Stores the plain-text of what the AI last said so we can reject echoes
-  const lastAIPlainTextRef = useRef("");
+  // Stores the plain-text of what the AI last said so we can reject echoes (from useAiVoice)
   // Called once when the current TTS utterance ends — used for the accessibility offer handoff
-  const onSpeakEndRef = useRef(null);
+  // onSpeakEndRef comes from useAiVoice
   // True while the one-shot accessibility offer is being spoken — blocks auto-listen restart
   const accessibilityOfferRef = useRef(false);
   // Tracks the most recently detected language (from AI [LANG:xx] tags) for widget string translation
@@ -538,22 +274,13 @@ export default function AIChatWidget() {
   // Reset voice/conversation mode when a new applicant session starts (clearOnMount fires)
   useEffect(() => {
     if (!widgetResetSignal) return;
-    // Stop any active TTS audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-    window.speechSynthesis?.cancel();
-    setIsSpeaking(false);
-    // Stop speech recognition
-    recognitionRef.current?.stop();
-    setIsListening(false);
-    // Turn off voice mode and clear pending listen
+    stopSpeaking();
+    stopListening();
     isVoiceModeRef.current = false;
     setIsVoiceMode(false);
     pendingListenRef.current = false;
     lastDetectedLanguageRef.current = null;
-  }, [widgetResetSignal]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [widgetResetSignal, stopSpeaking, stopListening, setIsVoiceMode, isVoiceModeRef, pendingListenRef]);
 
   // Auto-send a queued message (e.g. from clicking "Build live action" on the demo page)
   useEffect(() => {
@@ -1595,7 +1322,7 @@ export default function AIChatWidget() {
   // transitions and must not trigger a focus steal while the new applicant screen is mounting.
   useEffect(() => {
     if (isOpen && assistantMode !== "applicant") setTimeout(() => inputRef.current?.focus(), 100);
-  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen, assistantMode]);
 
   useEffect(() => {
     if (!isLoading && isOpen && (!suppressChatFocusRef.current || userFocusedChatRef.current)) {
@@ -2363,185 +2090,31 @@ export default function AIChatWidget() {
     runContinuation();
   }, [formDataSignal]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ---------- speech recognition — walkie-talkie PTT model ----------
-
-  // Core: actually begin capturing speech. Sends transcript via sendMessage on release.
-  // Stable — reads only refs so it's safe to call from onended handlers.
-  const beginListening = useCallback(() => {
-    if (!isVoiceModeRef.current) return;
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-    const rec = new SpeechRecognition();
-    rec.continuous = false;
-    rec.interimResults = false;
-    rec.lang = "en-US";
-    rec.onresult = (e) => {
-      const transcript = e.results[0][0].transcript.trim();
-      setIsListening(false);
-      if (transcript && sendMessageRef.current) sendMessageRef.current(transcript);
-    };
-    rec.onerror = () => setIsListening(false);
-    rec.onend = () => setIsListening(false);
-    recognitionRef.current = rec;
-    try {
-      rec.start();
-      setIsListening(true);
-    } catch {}
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Keep a ref so speak()'s onended handler can call it without stale closures
-  const beginListeningRef = useRef(beginListening);
-  beginListeningRef.current = beginListening;
-
-  // User holds mic button or spacebar: if bot is still speaking, queue for when it finishes.
-  const startPushToTalk = useCallback(() => {
-    if (!isVoiceModeRef.current) return;
-    if (isSpeakingRef.current) {
-      pendingListenRef.current = true; // beginListening() will fire from speak()'s onended
-      return;
-    }
-    beginListeningRef.current();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // User releases: stop the mic. The recognition onresult handler sends whatever was captured.
-  const stopListening = useCallback(() => {
-    pendingListenRef.current = false;
-    recognitionRef.current?.stop();
-    setIsListening(false);
-  }, []);
-
-  const toggleVoiceMode = () => {
-    const next = !isVoiceMode;
-    isVoiceModeRef.current = next;
-    setIsVoiceMode(next);
-    if (!next) {
-      stopListening();
-      stopSpeaking();
-      pendingListenRef.current = false;
-    }
-  };
-
-  // ---------- text-to-speech ----------
-
-  const stopSpeaking = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-    window.speechSynthesis?.cancel();
-    setIsSpeaking(false);
-  };
-
-  const speakFallback = (plain) => {
-    if (!window.speechSynthesis) {
-      onSpeakEndRef.current?.();
-      onSpeakEndRef.current = null;
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(plain);
-    utterance.rate = 1.05;
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => {
-      justFinishedSpeakingRef.current = true;
-      setIsSpeaking(false);
-      onSpeakEndRef.current?.();
-      onSpeakEndRef.current = null;
-      if (pendingListenRef.current) {
-        pendingListenRef.current = false;
-        beginListeningRef.current();
-      }
-    };
-    window.speechSynthesis.speak(utterance);
-  };
-
-  const speak = async (text) => {
-    stopSpeaking();
-    const plain = text
-      .replace(/\*\*(.+?)\*\*/g, "$1")
-      .replace(/\*(.+?)\*/g, "$1")
-      .replace(/#+\s/g, "")
-      .replace(/`(.+?)`/g, "$1")
-      .trim();
-
-    // Store for echo rejection
-    lastAIPlainTextRef.current = plain;
-
-    const ttsEndpoint =
-      assistantMode === "applicant" ? `${SERVER_URL}/api/ai/applicant-tts` : `${SERVER_URL}/api/ai/tts`;
-    try {
-      const res = await fetch(ttsEndpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ text: plain, voice }),
-      });
-      if (!res.ok) throw new Error("TTS unavailable");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.onplay = () => setIsSpeaking(true);
-      audio.onended = () => {
-        justFinishedSpeakingRef.current = true;
-        setIsSpeaking(false);
-        URL.revokeObjectURL(url);
-        audioRef.current = null;
-        onSpeakEndRef.current?.();
-        onSpeakEndRef.current = null;
-        if (pendingListenRef.current) {
-          pendingListenRef.current = false;
-          beginListeningRef.current();
-        }
-      };
-      audio.onerror = () => {
-        justFinishedSpeakingRef.current = true;
-        setIsSpeaking(false);
-        URL.revokeObjectURL(url);
-        audioRef.current = null;
-        onSpeakEndRef.current?.();
-        onSpeakEndRef.current = null;
-        if (pendingListenRef.current) {
-          pendingListenRef.current = false;
-          beginListeningRef.current();
-        }
-      };
-      await audio.play();
-    } catch {
-      speakFallback(plain);
-    }
-  };
-
   // ---------- AI messaging ----------
 
   // After a save tool completes, send the function result back to the AI so it can
   // chain a follow-up action (e.g. navigation) from the same user request.
   const continueAfterToolCall = async (toolName, toolArgs, resultSummary, currentHistory, chatEndpoint, ctx) => {
-    const toolResultHistory = [
-      ...currentHistory,
+    const toolTurns = [
       { role: "assistant", content: null, function_call: { name: toolName, arguments: JSON.stringify(toolArgs) } },
       { role: "function", name: toolName, content: resultSummary },
     ];
+    appendApiHistory(toolTurns);
+    const toolResultHistory = [...getApiHistory()];
     try {
       const res = await fetch(chatEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          messages: toolResultHistory,
-          chatMode: AI_CHAT_MODE,
-          context: {
-            screenId: ctx?.screenId,
-            screenName: ctx?.screenName,
-            description: ctx?.description,
-            currentState: ctx?.currentState,
-            logos: ctx?.logos,
-            colorPalette: ctx?.colorPalette || undefined,
-            forms: ctx?.forms || undefined,
-            brandingId: ctx?.brandingId || undefined,
-            maxHelpMode: assistantMode === "applicant",
-          },
-        }),
+        body: JSON.stringify(
+          buildChatPayload({
+            messages: toolResultHistory,
+            ctx,
+            assistantMode,
+            customPrompt: aiCustomPrompt,
+            formLanguage: formLanguageRef.current,
+          }),
+        ),
       });
       const data = await res.json();
       console.log("data", data);
@@ -2555,8 +2128,10 @@ export default function AIChatWidget() {
         if (postToolCtx?.screenId !== ctx?.screenId) return;
         await applyToolCall(data.tool, data.args, toolResultHistory);
       } else {
-        addMessage({ role: "assistant", content: data.content || toolArgs.explanation });
-        if (isVoiceModeRef.current) speak(data.content || toolArgs.explanation);
+        const assistantContent = data.content || toolArgs.explanation;
+        appendApiHistory({ role: "assistant", content: assistantContent });
+        addMessage({ role: "assistant", content: assistantContent });
+        if (isVoiceModeRef.current) speak(assistantContent);
         // Dodge toward the next unfilled field so the panel doesn't cover the field the AI is about to address.
         if (assistantMode === "applicant" && ctx?.currentState?.fields) {
           const nextField = ctx.currentState.fields.find((f) => !f.filled && !f.isSignature);
@@ -2974,1964 +2549,48 @@ export default function AIChatWidget() {
 
   // ── end panel dodge helpers ────────────────────────────────────────────────
 
-  const applyToolCall = async (tool, args, currentHistory) => {
-    console.log(`%c[TOOL] applyToolCall: ${tool}`, "color:#c0f; font-weight:bold", args);
-    const ctx = getScreenContext();
-    if (!ctx?.actions) return;
-    const defaultEndpoint =
-      assistantMode === "applicant" ? `${SERVER_URL}/api/ai/applicant-chat` : `${SERVER_URL}/api/ai/branding-chat`;
-    const chatEndpoint = ctx.aiEndpoint || defaultEndpoint;
-
-    if (tool === "revertLastAction") {
-      const { explanation } = args;
-      const entry = popRevertable();
-      if (!entry) {
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-        return;
-      }
-      try {
-        const freshCtx = getScreenContext();
-        await entry.revertFn(freshCtx);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("revertFailed")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "fetchWebsiteBranding") {
-      const { url, intent, companyName: aiProvidedName } = args;
-      addMessage({ role: "assistant", content: `Fetching **${url}**… this may take a moment.` });
-      try {
-        const res = await fetch(`${SERVER_URL}/api/ai/fetch-website-branding`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ url }),
-        });
-        const data = await res.json();
-        if (!data.success) throw new Error(data.message || "Failed");
-
-        const { brandingData, screenshotUrl } = data;
-
-        if (ctx.actions.applyExtractedBranding) {
-          ctx.actions.applyExtractedBranding(brandingData);
-        }
-        if (screenshotUrl && ctx.actions.setWebsiteImage) {
-          ctx.actions.setWebsiteImage(screenshotUrl);
-        }
-
-        // Auto-fill company name if blank
-        if (!ctx.currentState?.companyName && ctx.actions.companyName) {
-          const nameFromExtracted = brandingData?.name;
-          const nameFromDomain = (() => {
-            try {
-              const hostname = new URL(url.startsWith("http") ? url : `https://${url}`).hostname;
-              const base = hostname.replace(/^www\./, "").split(".")[0];
-              return base.charAt(0).toUpperCase() + base.slice(1);
-            } catch {
-              return "";
-            }
-          })();
-          const nameToUse = aiProvidedName || nameFromExtracted || nameFromDomain;
-          if (nameToUse) ctx.actions.companyName(nameToUse);
-        }
-
-        // Auto-fill website URL if blank
-        if (!ctx.currentState?.websiteUrl && ctx.actions.websiteUrl) {
-          ctx.actions.websiteUrl(url);
-        }
-
-        const imageUrl = screenshotUrl || null;
-        const visionContent = [
-          ...(imageUrl ? [{ type: "image_url", image_url: { url: imageUrl } }] : []),
-          {
-            type: "text",
-            text: `Here is the full-page screenshot and extracted branding data for ${url}:\n\n${JSON.stringify(brandingData, null, 2)}\n\nUser intent: ${intent || "analyze this branding for inspiration"}.\n\nPlease analyze the site's visual design and branding, then respond helpfully to the user's original request.`,
-          },
-        ];
-
-        const followUpHistory = [...currentHistory, { role: "user", content: visionContent }];
-
-        const aiRes = await fetch(chatEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            messages: followUpHistory,
-            context: {
-              screenId: ctx?.screenId,
-              screenName: ctx?.screenName,
-              description: ctx?.description,
-              currentState: ctx?.currentState,
-              logos: ctx?.logos,
-              // Use freshly extracted palette so logo colors are in the system prompt context
-              // before React state has had a chance to propagate applyExtractedBranding
-              colorPalette: brandingData?.color_palette || ctx?.colorPalette || undefined,
-              customPrompt: aiCustomPrompt || undefined,
-            },
-          }),
-        });
-        const aiData = await aiRes.json();
-        if (!aiData.success) throw new Error(aiData.message || "AI request failed");
-
-        if (aiData.type === "tool_call") {
-          await applyToolCall(aiData.tool, aiData.args, followUpHistory);
-        } else {
-          addMessage({ role: "assistant", content: aiData.content });
-          if (isVoiceModeRef.current) speak(aiData.content);
-        }
-      } catch {
-        addMessage({ role: "assistant", content: `${wt("fetchFailed")} **${url}**. ${wt("tryAgain")}` });
-      }
-      return;
-    }
-
-    if (tool === "openManualExtractionFlow") {
-      const { url, explanation } = args;
-      addMessage({ role: "assistant", content: explanation });
-      if (isVoiceModeRef.current) speak(explanation);
-      const action = ctx?.actions?.openManualExtractionFlow;
-      if (action) {
-        action({ url });
-      } else {
-        // Screen context doesn't support this tool — inform the user
-        addMessage({
-          role: "assistant",
-          content: "Open the Extract Branding modal and switch to the Manual Extract tab to continue.",
-        });
-      }
-      return;
-    }
-
-    if (tool === "extractBrandingFromPastedContent") {
-      const { content, explanation } = args;
-      addMessage({ role: "assistant", content: explanation });
-      try {
-        const res = await fetch(`${SERVER_URL}/api/ai/extract-branding-from-content`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ content }),
-        });
-        const data = await res.json();
-        if (!data.success) throw new Error("Failed to parse content");
-
-        const { colors, cssVars, logoUrls, colorCount } = data;
-        const parts = [
-          colorCount > 0 ? `${colorCount} hex colors` : null,
-          Object.keys(cssVars).length > 0 ? `${Object.keys(cssVars).length} CSS variables` : null,
-          logoUrls.length > 0 ? `${logoUrls.length} image URLs` : null,
-        ].filter(Boolean);
-
-        const summary = parts.length
-          ? `Extracted from pasted content: ${parts.join(", ")}.`
-          : "No recognizable colors or URLs found in the pasted content.";
-
-        const resultText = [
-          summary,
-          colors.length ? `Colors: ${colors.join(", ")}` : null,
-          Object.keys(cssVars).length ? `CSS variables: ${JSON.stringify(cssVars)}` : null,
-          logoUrls.length ? `Image URLs: ${logoUrls.join(", ")}` : null,
-        ]
-          .filter(Boolean)
-          .join("\n");
-
-        const followUpHistory = [...currentHistory, { role: "user", content: resultText }];
-
-        const aiRes = await fetch(chatEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            messages: followUpHistory,
-            context: {
-              screenId: ctx?.screenId,
-              screenName: ctx?.screenName,
-              description: ctx?.description,
-              currentState: ctx?.currentState,
-              logos: ctx?.logos,
-              colorPalette: ctx?.colorPalette || undefined,
-            },
-          }),
-        });
-        const aiData = await aiRes.json();
-        if (!aiData.success) throw new Error(aiData.message || "AI request failed");
-
-        if (aiData.type === "tool_call") {
-          await applyToolCall(aiData.tool, aiData.args, followUpHistory);
-        } else {
-          addMessage({ role: "assistant", content: aiData.content });
-          if (isVoiceModeRef.current) speak(aiData.content);
-        }
-      } catch {
-        addMessage({
-          role: "assistant",
-          content:
-            "I couldn't parse the pasted content. Try pasting just the hex color codes or CSS variables directly.",
-        });
-      }
-      return;
-    }
-
-    if (tool === "applyBrandingChanges") {
-      const { changes, explanation } = args;
-      // Snapshot current values before overwriting
-      const snapshot = {};
-      Object.keys(changes).forEach((key) => {
-        snapshot[key] = ctx.currentState?.[key];
-      });
-      pushRevertable({
-        description: `Applied branding changes (${Object.keys(changes).join(", ")})`,
-        revertFn: (freshCtx) => {
-          Object.entries(snapshot).forEach(([key, val]) => {
-            if (val !== undefined && freshCtx?.actions?.[key]) freshCtx.actions[key](val);
-          });
-        },
-      });
-      Object.entries(changes).forEach(([key, value]) => {
-        const setter = ctx.actions[key];
-        if (setter) setter(value);
-      });
-      addMessage({ role: "assistant", content: explanation, toolCall: { tool, changes } });
-      if (isVoiceModeRef.current) speak(explanation);
-      // Continue so the AI can chain the next step of a compound command (e.g. save, assign to form)
-      await continueAfterToolCall(
-        tool,
-        args,
-        "Branding changes applied to the screen.",
-        currentHistory,
-        chatEndpoint,
-        ctx,
-      );
-      return;
-    }
-
-    if (tool === "suggestColors") {
-      const { colors, explanation } = args;
-      // Populate the Custom Color Palette swatches
-      if (ctx.actions.setSuggestedColors) ctx.actions.setSuggestedColors(colors);
-      // Show in-chat preview with color swatches
-      addMessage({ role: "assistant", content: explanation, toolCall: { tool: "suggestColors", colors } });
-      if (isVoiceModeRef.current) speak(explanation);
-      // suggestColors is end-of-turn — show colors and wait for user confirmation before applying
-      return;
-    }
-
-    if (tool === "editLogo") {
-      const { logoUrl, instructions, explanation } = args;
-      addMessage({ role: "assistant", content: `${explanation} — this may take up to 30 seconds…` });
-      setIsLoading(true);
-      try {
-        const res = await fetch(`${SERVER_URL}/api/ai/logo-edit`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ logoUrl, instructions }),
-        });
-        const data = await res.json();
-        if (!data.success) throw new Error(data.message || "Logo edit failed");
-        const freshCtx = getScreenContext();
-        if (freshCtx?.actions?.addLogo) freshCtx.actions.addLogo(data.url);
-        addMessage({
-          role: "assistant",
-          content:
-            "Done! The modified logo has been added to your available logos — you can now select it from the logo panel.",
-        });
-        if (isVoiceModeRef.current) speak("Done! The modified logo has been added to your available logos.");
-      } catch (err) {
-        addMessage({
-          role: "assistant",
-          content: `Sorry, I couldn't edit the logo: ${err.message || "please try again."}`,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-      return;
-    }
-
-    if (
-      [
-        "resizeLogo",
-        "cropLogo",
-        "roundLogoCorners",
-        "flattenLogo",
-        "flipLogo",
-        "rotateLogo",
-        "grayscaleLogo",
-        "addLogoPadding",
-        "trimLogo",
-        "removeBackgroundFromLogo",
-      ].includes(tool)
-    ) {
-      const { logoUrl, explanation, ...params } = args;
-      const ENDPOINT_MAP = {
-        resizeLogo: "logo-resize",
-        cropLogo: "logo-crop",
-        roundLogoCorners: "logo-round-corners",
-        flattenLogo: "logo-flatten",
-        flipLogo: "logo-flip",
-        rotateLogo: "logo-rotate",
-        grayscaleLogo: "logo-grayscale",
-        addLogoPadding: "logo-padding",
-        trimLogo: "logo-trim",
-        removeBackgroundFromLogo: "logo-remove-background",
-      };
-      const endpoint = ENDPOINT_MAP[tool];
-      addMessage({ role: "assistant", content: explanation });
-      setIsLoading(true);
-      try {
-        const res = await fetch(`${SERVER_URL}/api/ai/${endpoint}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ logoUrl, ...params }),
-        });
-        const data = await res.json();
-        if (!data.success) throw new Error(data.message || "Logo processing failed");
-        const freshCtx = getScreenContext();
-        if (freshCtx?.actions?.addLogo) freshCtx.actions.addLogo(data.url);
-        addMessage({ role: "assistant", content: "Done! The modified logo has been added to your available logos." });
-        if (isVoiceModeRef.current) speak("Done! The modified logo has been added to your available logos.");
-      } catch (err) {
-        addMessage({
-          role: "assistant",
-          content: `Sorry, I couldn't process the logo: ${err.message || "please try again."}`,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-      return;
-    }
-
-    if (tool === "saveBranding") {
-      const { explanation } = args;
-      try {
-        if (ctx.actions.saveBranding) await ctx.actions.saveBranding();
-        // Chain a follow-up so the AI can issue a second action (e.g. navigation)
-        await continueAfterToolCall(tool, args, "Branding saved successfully.", currentHistory, chatEndpoint, ctx);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "updateEmailTemplate") {
-      const { subject, body, templateName, emailType, explanation } = args;
-      // Switch to edit mode so changes are visible and saveable
-      if (ctx.actions.enableEdit) ctx.actions.enableEdit();
-      if (subject !== undefined && ctx.actions.subject) ctx.actions.subject(subject);
-      if (body !== undefined && ctx.actions.body) ctx.actions.body(body);
-      if (templateName !== undefined && ctx.actions.templateName) ctx.actions.templateName(templateName);
-      if (emailType !== undefined && ctx.actions.emailType) ctx.actions.emailType(emailType);
-      addMessage({ role: "assistant", content: explanation });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-
-    if (tool === "saveEmailTemplate") {
-      const { explanation } = args;
-      try {
-        if (ctx.actions.saveEmailTemplate) await ctx.actions.saveEmailTemplate();
-        await continueAfterToolCall(
-          tool,
-          args,
-          "Email template saved successfully.",
-          currentHistory,
-          chatEndpoint,
-          ctx,
-        );
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "createStrategy") {
-      const { explanation, ...strategyArgs } = args;
-      try {
-        if (ctx.actions.createStrategy) await ctx.actions.createStrategy(strategyArgs);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "linkStrategyToForm") {
-      const { explanation, ...linkArgs } = args;
-      try {
-        if (ctx.actions.linkStrategyToForm) await ctx.actions.linkStrategyToForm(linkArgs);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "moveFormToStrategy") {
-      const { explanation, ...moveArgs } = args;
-      try {
-        if (ctx.actions.moveFormToStrategy) await ctx.actions.moveFormToStrategy(moveArgs);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "createStrategyAndMoveForm") {
-      const { explanation, ...createMoveArgs } = args;
-      try {
-        if (ctx.actions.createStrategyAndMoveForm) await ctx.actions.createStrategyAndMoveForm(createMoveArgs);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "createUser") {
-      const { explanation, ...userArgs } = args;
-      try {
-        if (ctx.actions.createUser) await ctx.actions.createUser(userArgs);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "updateUser") {
-      const { explanation, ...userArgs } = args;
-      try {
-        if (ctx.actions.updateUser) await ctx.actions.updateUser(userArgs);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "changePassword") {
-      const { explanation, ...pwArgs } = args;
-      try {
-        if (ctx.actions.changePassword) await ctx.actions.changePassword(pwArgs);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "changePasswords") {
-      const { explanation, ...pwArgs } = args;
-      try {
-        if (ctx.actions.changePasswords) await ctx.actions.changePasswords(pwArgs);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "deleteUser") {
-      const { explanation, ...userArgs } = args;
-      try {
-        if (ctx.actions.deleteUser) await ctx.actions.deleteUser(userArgs);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "deleteUsers") {
-      const { explanation, ...userArgs } = args;
-      try {
-        if (ctx.actions.deleteUsers) await ctx.actions.deleteUsers(userArgs);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "createRole") {
-      const { explanation, ...roleArgs } = args;
-      try {
-        if (ctx.actions.createRole) await ctx.actions.createRole(roleArgs);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "updateRole") {
-      const { explanation, ...roleArgs } = args;
-      // Snapshot old role state before updating
-      const roles = ctx.currentState?.roles || [];
-      const oldRole = roles.find((r) => r._id === roleArgs.roleId);
-      if (oldRole) {
-        pushRevertable({
-          description: `Updated role "${oldRole.name}"`,
-          revertFn: async (freshCtx) => {
-            if (freshCtx?.actions?.updateRole) {
-              await freshCtx.actions.updateRole({
-                roleId: oldRole._id,
-                name: oldRole.name,
-                permissionNames: oldRole.permissions,
-              });
-            }
-          },
-        });
-      }
-      try {
-        if (ctx.actions.updateRole) await ctx.actions.updateRole(roleArgs);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "deleteRole") {
-      const { explanation, ...roleArgs } = args;
-      try {
-        if (ctx.actions.deleteRole) await ctx.actions.deleteRole(roleArgs);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "setLookupActive") {
-      const { updates, explanation } = args;
-      // Snapshot old isActive per affected lookup
-      const lookups = ctx.currentState?.lookups || [];
-      const snapshot = updates.map(({ searchObjectKey }) => {
-        const lookup = lookups.find((l) => l.searchObjectKey === searchObjectKey);
-        return { searchObjectKey, wasActive: lookup?.isActive ?? false };
-      });
-      pushRevertable({
-        description: `Changed active status on ${updates.length} lookup(s)`,
-        revertFn: async (freshCtx) => {
-          if (freshCtx?.actions?.setLookupActive) {
-            for (const { searchObjectKey, wasActive } of snapshot) {
-              await freshCtx.actions.setLookupActive({ searchObjectKey, isActive: wasActive });
-            }
-          }
-        },
-      });
-      if (ctx.actions.setLookupActive) {
-        for (const update of updates) {
-          await ctx.actions.setLookupActive(update);
-        }
-      }
-      addMessage({ role: "assistant", content: explanation });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-
-    if (tool === "draftNewLookup") {
-      const { explanation, ...draftData } = args;
-      if (ctx.actions.openCreateModal) ctx.actions.openCreateModal(draftData);
-      addMessage({
-        role: "assistant",
-        content: `I've drafted a new lookup and opened it in the editor for your review.\n\n${explanation}`,
-      });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-
-    if (tool === "createLookup") {
-      const { explanation, ...lookupData } = args;
-      try {
-        if (ctx.actions.createLookup) await ctx.actions.createLookup(lookupData);
-        await continueAfterToolCall(tool, args, "Lookup created successfully.", currentHistory, chatEndpoint, ctx);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "updateLookup") {
-      const { explanation, ...lookupData } = args;
-      try {
-        if (ctx.actions.updateLookup) await ctx.actions.updateLookup(lookupData);
-        await continueAfterToolCall(tool, args, "Lookup updated successfully.", currentHistory, chatEndpoint, ctx);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "deleteBrandings") {
-      const { explanation, brandingIds } = args;
-      try {
-        if (ctx.actions.deleteBrandings) await ctx.actions.deleteBrandings({ brandingIds });
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "openEditBranding") {
-      const { explanation, brandingId } = args;
-      if (ctx.actions.openEditBranding) ctx.actions.openEditBranding({ brandingId });
-      addMessage({ role: "assistant", content: explanation });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-
-    if (tool === "openCreateBranding") {
-      const { explanation, fetchUrl } = args;
-      if (fetchUrl) {
-        addMessage({ role: "assistant", content: `Fetching branding from **${fetchUrl}**… this may take a moment.` });
-        try {
-          const res = await fetch(`${SERVER_URL}/api/ai/fetch-website-branding`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ url: fetchUrl }),
-          });
-          const data = await res.json();
-          if (!data.success) throw new Error(data.message || "Failed to fetch branding");
-          const pending = {
-            brandingData: data.brandingData,
-            screenshotUrl: data.screenshotUrl || null,
-            url: fetchUrl,
-          };
-          sessionStorage.setItem("pendingBrandingData", JSON.stringify(pending));
-          pendingAnalysisRef.current = pending;
-        } catch (err) {
-          addMessage({ role: "assistant", content: `${wt("fetchFailed")} **${fetchUrl}**: ${err.message}.` });
-        }
-      }
-      if (ctx.actions.openCreateBranding) ctx.actions.openCreateBranding();
-      addMessage({ role: "assistant", content: explanation });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-
-    if (tool === "selectFormForEditing") {
-      const { explanation, formId } = args;
-
-      // Guard against stale IDs (e.g. form was renamed/deleted since the last list refresh)
-      const knownForms = ctx.currentState?.forms || [];
-      if (formId && !knownForms.some((f) => String(f._id) === String(formId))) {
-        const formList = knownForms
-          .map(
-            (f) =>
-              `"${f.name}"${f.headerText && f.headerText !== f.name ? ` (displayed as "${f.headerText}")` : ""} [${f._id}]`,
-          )
-          .join(", ");
-        await continueAfterToolCall(
-          tool,
-          args,
-          `Error: Form ID "${formId}" is not in the current forms list — it may have been deleted or recreated with a new ID. Current forms: ${formList || "none"}. Please use a valid ID from this list.`,
-          currentHistory,
-          chatEndpoint,
-          ctx,
-        );
-        return;
-      }
-
-      addMessage({ role: "assistant", content: explanation || "Loading form details…" });
-      if (isVoiceModeRef.current) speak(explanation || "Loading form details.");
-      // Reset the form ID tracker so formDataSignal fires even if this form was
-      // already loaded — this guarantees fresh data on every readiness check.
-      signalContinuationPending();
-      pendingFormContinuationRef.current = { toolArgs: args, history: currentHistory };
-      if (ctx.actions.selectFormForEditing) ctx.actions.selectFormForEditing({ formId });
-      return;
-    }
-
-    if (tool === "cloneFormSettings") {
-      const { sourceFormId, targetFormId, sectionUpdates, fieldUpdates, explanation } = args;
-      const cloneFailures = [];
-
-      const targetSections = ctx.currentState?.detailedForm?.sections || [];
-      const targetSectionMap = new Map(targetSections.map((s) => [String(s._id), s]));
-      const forms = ctx.currentState?.forms || [];
-      const sourceForm = forms.find((f) => String(f._id) === String(sourceFormId));
-      const targetForm = forms.find((f) => String(f._id) === String(targetFormId));
-
-      // Branding — independent step
-      try {
-        const sourceBrandingId = sourceForm?.branding?._id ? String(sourceForm.branding._id) : null;
-        const sourceBrandingName = sourceForm?.branding?.name || sourceBrandingId;
-        const targetBrandingId = targetForm?.branding?._id ? String(targetForm.branding._id) : null;
-        if (!sourceBrandingId) {
-          cloneFailures.push("**Branding:** source has no branding — skipped");
-        } else if (sourceBrandingId === targetBrandingId) {
-          cloneFailures.push(`**Branding:** already set to "${sourceBrandingName}" — skipped`);
-        } else if (ctx.actions.setFormsBranding) {
-          await ctx.actions.setFormsBranding({
-            updates: [{ formId: String(targetFormId), brandingId: sourceBrandingId }],
-          });
-          cloneFailures.push(`**Branding:** applied "${sourceBrandingName}" ✓`);
-        }
-      } catch (err) {
-        cloneFailures.push(`**Branding:** failed — ${err?.message || "unknown error"} ✗`);
-      }
-
-      // Email templates — independent step
-      try {
-        const sourceTemplates = sourceForm?.emailTemplates || [];
-        const targetTemplateIds = new Set((targetForm?.emailTemplates || []).map((t) => String(t._id)));
-        const missingTemplates = sourceTemplates.filter((t) => !targetTemplateIds.has(String(t._id)));
-        if (!sourceTemplates.length) {
-          cloneFailures.push("**Email templates:** source has none — skipped");
-        } else if (!missingTemplates.length) {
-          cloneFailures.push(`**Email templates:** all ${sourceTemplates.length} already attached — skipped`);
-        } else if (ctx.actions.attachEmailTemplate) {
-          await ctx.actions.attachEmailTemplate({
-            formId: String(targetFormId),
-            templateIds: missingTemplates.map((t) => String(t._id)),
-          });
-          cloneFailures.push(
-            `**Email templates:** attached ${missingTemplates.map((t) => `"${t.name}"`).join(", ")} ✓`,
-          );
-        }
-      } catch (err) {
-        cloneFailures.push(`**Email templates:** failed — ${err?.message || "unknown error"} ✗`);
-      }
-
-      // Section updates — filter to valid target IDs and changed values, independent step
-      try {
-        const validSectionUpdates = (sectionUpdates || []).filter((u) => {
-          const existing = targetSectionMap.get(String(u.sectionId));
-          if (!existing) return false;
-          const isEmpty = (v) => !v || v === "(not set)";
-          if (u.displayText !== undefined && !isEmpty(u.displayText) && u.displayText !== existing.displayText)
-            return true;
-          if (
-            u.signDisplayText !== undefined &&
-            !isEmpty(u.signDisplayText) &&
-            u.signDisplayText !== (existing.signDisplayText || existing.signFormatedDisplayText)
-          )
-            return true;
-          if (
-            u.aiCustomizablePrompt !== undefined &&
-            !isEmpty(u.aiCustomizablePrompt) &&
-            u.aiCustomizablePrompt !== existing.aiCustomizablePrompt
-          )
-            return true;
-          if (u.aiFormatting !== undefined && !isEmpty(u.aiFormatting) && u.aiFormatting !== existing.ai_formatting)
-            return true;
-          if (u.isSignAiHelp !== undefined && u.isSignAiHelp !== existing.isSignAiHelp) return true;
-          if (u.signAiPrompt !== undefined && !isEmpty(u.signAiPrompt) && u.signAiPrompt !== existing.signAiPrompt)
-            return true;
-          if (u.ownerSuggestions?.length) return true;
-          return false;
-        });
-        if (validSectionUpdates.length && ctx.actions.updateSectionSettings) {
-          await ctx.actions.updateSectionSettings({ updates: validSectionUpdates });
-          cloneFailures.push(`**Section settings:** updated ${validSectionUpdates.length} section(s) ✓`);
-        } else {
-          cloneFailures.push("**Section settings:** all already matched — skipped");
-        }
-      } catch (err) {
-        cloneFailures.push(`**Section settings:** failed — ${err?.message || "unknown error"} ✗`);
-      }
-
-      // Field updates — independent step
-      try {
-        const validFieldUpdates = (fieldUpdates || []).filter((u) => targetSectionMap.has(String(u.sectionId)));
-        if (validFieldUpdates.length && ctx.actions.updateFieldSettings) {
-          await ctx.actions.updateFieldSettings({ updates: validFieldUpdates });
-          cloneFailures.push(`**Field settings:** updated fields in ${validFieldUpdates.length} section(s) ✓`);
-        } else {
-          cloneFailures.push("**Field settings:** all already matched — skipped");
-        }
-      } catch (err) {
-        cloneFailures.push(`**Field settings:** failed — ${err?.message || "unknown error"} ✗`);
-      }
-
-      // Underwriting rules — independent step (always reported)
-      try {
-        if (ctx.actions.cloneRules) {
-          const result = await ctx.actions.cloneRules({
-            sourceFormId: String(sourceFormId),
-            targetFormId: String(targetFormId),
-          });
-          if (result.cloned > 0) {
-            cloneFailures.push(
-              `**Underwriting rules:** cloned ${result.cloned} rule(s)${result.skipped ? ` (${result.skipped} already present — skipped)` : ""} ✓`,
-            );
-          } else if (result.skipped > 0) {
-            cloneFailures.push(
-              `**Underwriting rules:** all ${result.skipped} rule(s) already present on target — skipped ✓`,
-            );
-          } else {
-            cloneFailures.push(
-              `**Underwriting rules:** no rules were copied — no underwriting rules were found in the source form`,
-            );
-          }
-        }
-      } catch (err) {
-        cloneFailures.push(`**Underwriting rules:** failed — ${err?.message || "unknown error"} ✗`);
-      }
-
-      const finalMessage = `Settings clone complete:\n\n${cloneFailures.join("\n")}`;
-      addMessage({ role: "assistant", content: finalMessage });
-      if (isVoiceModeRef.current) speak(finalMessage);
-      return;
-    }
-
-    if (tool === "updateSectionSettings") {
-      const { updates, sourceFormId } = args;
-      const cloneResults = [];
-
-      // Each step runs independently — a failure in one never prevents the others.
-      if (sourceFormId) {
-        const targetFormId = ctx.currentState?.detailedForm?._id;
-        const forms = ctx.currentState?.forms || [];
-        const sourceForm = forms.find((f) => String(f._id) === String(sourceFormId));
-        const targetForm = forms.find((f) => String(f._id) === String(targetFormId));
-
-        // Branding
-        try {
-          const sourceBrandingId = sourceForm?.branding?._id ? String(sourceForm.branding._id) : null;
-          const sourceBrandingName = sourceForm?.branding?.name || sourceBrandingId;
-          const targetBrandingId = targetForm?.branding?._id ? String(targetForm.branding._id) : null;
-          if (!sourceBrandingId) {
-            cloneResults.push("**Branding:** source has no branding — skipped");
-          } else if (sourceBrandingId === targetBrandingId) {
-            cloneResults.push(`**Branding:** already set to "${sourceBrandingName}" — skipped`);
-          } else if (ctx.actions.setFormsBranding) {
-            await ctx.actions.setFormsBranding({
-              updates: [{ formId: String(targetFormId), brandingId: sourceBrandingId }],
-            });
-            cloneResults.push(`**Branding:** applied "${sourceBrandingName}" ✓`);
-          }
-        } catch (err) {
-          cloneResults.push(`**Branding:** failed — ${err?.message || "unknown error"} ✗`);
-        }
-
-        // Email templates
-        try {
-          const sourceTemplates = sourceForm?.emailTemplates || [];
-          const targetTemplateIds = new Set((targetForm?.emailTemplates || []).map((t) => String(t._id)));
-          const missingTemplates = sourceTemplates.filter((t) => !targetTemplateIds.has(String(t._id)));
-          if (!sourceTemplates.length) {
-            cloneResults.push("**Email templates:** source has none — skipped");
-          } else if (!missingTemplates.length) {
-            cloneResults.push(`**Email templates:** all ${sourceTemplates.length} already attached — skipped`);
-          } else if (ctx.actions.attachEmailTemplate) {
-            await ctx.actions.attachEmailTemplate({
-              formId: String(targetFormId),
-              templateIds: missingTemplates.map((t) => String(t._id)),
-            });
-            cloneResults.push(
-              `**Email templates:** attached ${missingTemplates.map((t) => `"${t.name}"`).join(", ")} ✓`,
-            );
-          }
-        } catch (err) {
-          cloneResults.push(`**Email templates:** failed — ${err?.message || "unknown error"} ✗`);
-        }
-      }
-
-      // Section updates — filter to only valid sections in the current detailed form
-      try {
-        const targetSections = ctx.currentState?.detailedForm?.sections || [];
-        const targetSectionMap = new Map(targetSections.map((s) => [String(s._id), s]));
-        const validUpdates = (updates || []).filter((u) => targetSectionMap.has(String(u.sectionId)));
-        if (validUpdates.length && ctx.actions.updateSectionSettings) {
-          await ctx.actions.updateSectionSettings({ updates: validUpdates });
-          const skipped = (updates || []).length - validUpdates.length;
-          cloneResults.push(
-            `**Section settings:** applied ${validUpdates.length} update(s)${skipped ? ` (${skipped} skipped — invalid section ID)` : ""} ✓`,
-          );
-        } else if ((updates || []).length && !validUpdates.length) {
-          cloneResults.push(`**Section settings:** skipped — no updates matched valid sections in the current form ✗`);
-        }
-      } catch (err) {
-        cloneResults.push(`**Section settings:** failed — ${err?.message || "unknown error"} ✗`);
-      }
-
-      // Underwriting rules — independent step
-      if (sourceFormId) {
-        const targetFormId = ctx.currentState?.detailedForm?._id;
-        try {
-          if (targetFormId && ctx.actions.cloneRules) {
-            const result = await ctx.actions.cloneRules({
-              sourceFormId: String(sourceFormId),
-              targetFormId: String(targetFormId),
-            });
-            if (result.cloned > 0) {
-              cloneResults.push(
-                `**Underwriting rules:** cloned ${result.cloned} rule(s)${result.skipped ? ` (${result.skipped} already present — skipped)` : ""} ✓`,
-              );
-            } else if (result.skipped > 0) {
-              cloneResults.push(
-                `**Underwriting rules:** all ${result.skipped} rule(s) already present on target — skipped ✓`,
-              );
-            } else {
-              cloneResults.push(
-                `**Underwriting rules:** no rules were copied — no underwriting rules were found in the source form`,
-              );
-            }
-          }
-        } catch (err) {
-          cloneResults.push(`**Underwriting rules:** failed — ${err?.message || "unknown error"} ✗`);
-        }
-      }
-
-      // Pass results to AI continuation so it can incorporate them into its final summary
-      const resultSummary = cloneResults.length
-        ? `Completed form-level settings. Results:\n${cloneResults.join("\n")}\n\nNow continue with field updates if any, then produce a final summary that incorporates these results verbatim.`
-        : "Section settings applied to preview. Continue with field updates if any, then summarise.";
-      await continueAfterToolCall(tool, args, resultSummary, currentHistory, chatEndpoint, ctx);
-      return;
-    }
-
-    if (tool === "updateFieldSettings") {
-      const { updates } = args;
-      try {
-        if (ctx.actions.updateFieldSettings) await ctx.actions.updateFieldSettings({ updates });
-        await continueAfterToolCall(
-          tool,
-          args,
-          "Field settings applied to preview.",
-          currentHistory,
-          chatEndpoint,
-          ctx,
-        );
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "reorderSections") {
-      const { sectionOrder, explanation } = args;
-      try {
-        if (ctx.actions.reorderSections) ctx.actions.reorderSections({ sectionOrder });
-        await continueAfterToolCall(tool, args, "Sections reordered in preview.", currentHistory, chatEndpoint, ctx);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "deleteSection") {
-      const { sectionId, explanation } = args;
-      try {
-        if (ctx.actions.deleteSection) ctx.actions.deleteSection({ sectionId });
-        await continueAfterToolCall(
-          tool,
-          args,
-          "Section marked for deletion in preview.",
-          currentHistory,
-          chatEndpoint,
-          ctx,
-        );
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "saveFormEdits") {
-      const { explanation } = args;
-      try {
-        if (ctx.actions.saveFormEdits) await ctx.actions.saveFormEdits();
-        addMessage({ role: "assistant", content: explanation || "All changes have been saved to the form." });
-        if (isVoiceModeRef.current) speak(explanation || "All changes have been saved.");
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `Save failed${detail ? `: ${detail}` : ""}. Some changes may not have been applied.`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "discardFormEdits") {
-      const { explanation } = args;
-      if (ctx.actions.discardFormEdits) ctx.actions.discardFormEdits();
-      addMessage({ role: "assistant", content: explanation || "All pending changes have been discarded." });
-      if (isVoiceModeRef.current) speak(explanation || "Pending changes discarded.");
-      return;
-    }
-
-    if (tool === "updateForms") {
-      const { explanation, updates } = args;
-      try {
-        if (ctx.actions.updateForms) await ctx.actions.updateForms({ updates });
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "setFormsBranding") {
-      const { explanation, updates } = args;
-      // Snapshot old branding per affected form before overwriting
-      const forms = ctx.currentState?.forms || [];
-      const snapshot = updates.map(({ formId }) => {
-        const form = forms.find((f) => f._id === formId);
-        return { formId, oldBrandingId: form?.branding?._id ?? null };
-      });
-      pushRevertable({
-        description: `Applied branding to ${updates.length} form(s)`,
-        revertFn: async (freshCtx) => {
-          const revertUpdates = snapshot
-            .filter((s) => s.oldBrandingId !== null)
-            .map((s) => ({ formId: s.formId, brandingId: s.oldBrandingId }));
-          const skipped = snapshot.filter((s) => s.oldBrandingId === null).length;
-          if (revertUpdates.length > 0 && freshCtx?.actions?.setFormsBranding) {
-            await freshCtx.actions.setFormsBranding({ updates: revertUpdates });
-          }
-          if (skipped > 0) {
-            addMessage({
-              role: "assistant",
-              content: `Note: ${skipped} form(s) had no branding set before this change and cannot be automatically reverted to "no branding".`,
-            });
-          }
-        },
-      });
-      try {
-        if (ctx.actions.setFormsBranding) await ctx.actions.setFormsBranding({ updates });
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "setFormsLocation") {
-      const { explanation, updates } = args;
-      // Snapshot old locationStatus per affected form
-      const forms = ctx.currentState?.forms || [];
-      const snapshot = updates.map(({ formId }) => {
-        const form = forms.find((f) => f._id === formId);
-        return { formId, oldLocationStatus: form?.locationStatus ?? "disabled" };
-      });
-      pushRevertable({
-        description: `Changed location setting on ${updates.length} form(s)`,
-        revertFn: async (freshCtx) => {
-          const revertUpdates = snapshot.map((s) => ({ formId: s.formId, locationStatus: s.oldLocationStatus }));
-          if (freshCtx?.actions?.setFormsLocation) {
-            await freshCtx.actions.setFormsLocation({ updates: revertUpdates });
-          }
-        },
-      });
-      try {
-        if (ctx.actions.setFormsLocation) await ctx.actions.setFormsLocation({ updates });
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "deleteForms") {
-      const { explanation, formIds } = args;
-      try {
-        if (ctx.actions.deleteForms) await ctx.actions.deleteForms({ formIds });
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "cloneForm") {
-      const { explanation, sourceFormId, newName } = args;
-      try {
-        if (ctx.actions.cloneForm) {
-          const result = await ctx.actions.cloneForm({ sourceFormId, newName });
-          const rulesCloned = result?.rulesCloned ?? 0;
-          const rulesNote =
-            rulesCloned > 0
-              ? `${rulesCloned} underwriting rule(s) cloned ✓`
-              : "No rules were copied — no underwriting rules were found in the source form";
-          await continueAfterToolCall(
-            tool,
-            args,
-            `Form cloned successfully. New form: "${result?.name}" [${result?._id}]. All settings were copied from the source including branding, email templates, strategy linkage, section display text, owner suggestions, and field settings. **Rules:** ${rulesNote}. To verify owner suggestions and section-level settings, use selectFormForEditing on the new form.`,
-            currentHistory,
-            chatEndpoint,
-            ctx,
-          );
-        }
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "attachEmailTemplate") {
-      const { formId, templateIds } = args;
-      try {
-        if (ctx.actions.attachEmailTemplate) await ctx.actions.attachEmailTemplate({ formId, templateIds });
-        await continueAfterToolCall(
-          tool,
-          args,
-          "Email templates attached successfully.",
-          currentHistory,
-          chatEndpoint,
-          ctx,
-        );
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "detachEmailTemplate") {
-      const { explanation, formId, templateIds } = args;
-      try {
-        if (ctx.actions.detachEmailTemplate) await ctx.actions.detachEmailTemplate({ formId, templateIds });
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "attachTemplateToForms") {
-      const { explanation, formIds } = args;
-      try {
-        if (ctx.actions.attachToForms) await ctx.actions.attachToForms({ formIds });
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "openCreateFormModal") {
-      const { explanation } = args;
-      if (ctx.actions.openCreateFormModal) ctx.actions.openCreateFormModal();
-      addMessage({ role: "assistant", content: explanation });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-
-    if (tool === "previewFormStructure") {
-      const { formName, sections, explanation } = args;
-      addMessage({ role: "assistant", content: explanation, formPreview: { formName, sections } });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-
-    if (tool === "readCsvFromPath") {
-      const { filePath, explanation } = args;
-      addMessage({ role: "assistant", content: explanation });
-      try {
-        const res = await fetch(`${SERVER_URL}/api/form/csv-from-path`, {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ filePath }),
-        });
-        const d = await res.json();
-        if (!d.success) throw new Error(d.message || "Could not read file");
-        // Use the same phrasing as openCsvFilePicker so the formChat AI follows
-        // the same CSV design workflow it uses after a manual file selection.
-        const csvMessage = `Here is the CSV I selected as a starting point:\n\n**File:** ${d.filename}\n\`\`\`\n${d.content}\n\`\`\``;
-        // Defer the send so applyToolCall can return first, the finally block can clear
-        // isLoading, and React can re-render sendMessageRef with the updated loading state.
-        // sendMessage guards with `if (isLoading) return` so calling it synchronously here
-        // (while still inside applyToolCall) silently no-ops.
-        setTimeout(() => {
-          if (sendMessageRef.current) sendMessageRef.current(csvMessage);
-        }, 100);
-      } catch (err) {
-        addMessage({ role: "assistant", content: `Could not read the file: ${err.message}` });
-      }
-      return;
-    }
-
-    if (tool === "openCsvFilePicker") {
-      const { explanation } = args;
-      addMessage({ role: "assistant", content: explanation });
-      setTimeout(() => {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".csv,text/csv";
-        input.style.display = "none";
-        document.body.appendChild(input);
-        const cleanup = () => {
-          if (document.body.contains(input)) document.body.removeChild(input);
-        };
-        input.onchange = async (e) => {
-          const file = e.target.files?.[0];
-          cleanup();
-          if (!file) return;
-          try {
-            const text = await file.text();
-            if (sendMessageRef.current) {
-              await sendMessageRef.current(
-                `Here is the CSV I selected as a starting point:\n\n**File:** ${file.name}\n\`\`\`\n${text}\n\`\`\``,
-              );
-            }
-          } catch {
-            addMessage({ role: "assistant", content: `${wt("errorCouldnt")}. ${wt("tryAgain")}` });
-          }
-        };
-        input.addEventListener("cancel", cleanup);
-        input.click();
-      }, 100);
-      return;
-    }
-
-    if (tool === "navigateToPage") {
-      const { page, reason, followUpTask } = args;
-      const route = PAGE_ROUTES[page];
-      const label = PAGE_LABELS[page] || page;
-      if (!route) return;
-
-      addMessage({
-        role: "assistant",
-        content: `Navigating you to **${label}**. ${reason}`,
-      });
-
-      // Store follow-up so the screen-change effect can auto-send it
-      pendingFollowUpRef.current = followUpTask;
-      if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
-      // Safety: clear the follow-up after 15 s if the destination page never loads
-      navTimeoutRef.current = setTimeout(() => {
-        pendingFollowUpRef.current = null;
-      }, 15000);
-
-      setTimeout(() => navigate(route), 300);
-      return;
-    }
-
-    if (tool === "generateFormCsv") {
-      const { csvContent, filename, explanation } = args;
-      // Attach the CSV to the message as a download action — the Save button in
-      // ChatMessage triggers showSaveFilePicker from a real user click, which is
-      // required by the browser's File System Access API security policy.
-      addMessage({
-        role: "assistant",
-        content: explanation,
-        csvDownload: { csvContent, filename },
-      });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-
-    // ── Applicant assistant tools ──────────────────────────────────────────────
-
-    if (tool === "fillField") {
-      const { fieldId } = args;
-      const fieldMeta = ctx.currentState?.fields?.find((f) => f.id === fieldId);
-      let value = args.value;
-
-      // Normalise date values to YYYY-MM-DD so <input type="date"> accepts them
-      if (fieldMeta?.type === "date" && value) {
-        const parsed = new Date(value);
-        if (!isNaN(parsed.getTime())) {
-          const y = parsed.getFullYear();
-          const m = String(parsed.getMonth() + 1).padStart(2, "0");
-          const d = String(parsed.getDate()).padStart(2, "0");
-          value = `${y}-${m}-${d}`;
-        }
-      }
-
-      // Normalise phone numbers to E.164 format (+[country][number], digits only)
-      if (
-        fieldMeta?.type === "tel" ||
-        fieldMeta?.type === "phone" ||
-        /phone|mobile|cell/i.test(fieldId) ||
-        /phone|mobile|cell/i.test(fieldMeta?.label || "")
-      ) {
-        if (value) {
-          // Strip everything except digits and a leading +
-          let digits = value.replace(/[^\d+]/g, "");
-          // If no country code present, infer from already-filled address fields
-          if (!digits.startsWith("+") && !digits.startsWith("00")) {
-            const fields = ctx.currentState?.fields || [];
-            const countryField = fields.find((f) => /country/i.test(f.label) || /country/i.test(f.id));
-            const stateField = fields.find((f) => /\bstate\b/i.test(f.label) || /\bstate\b/i.test(f.id));
-            const countryVal = (countryField?.value || "").toLowerCase();
-            const stateVal = (stateField?.value || "").toLowerCase();
-            const isUS =
-              /^(us|usa|united states)$/.test(countryVal) ||
-              /^(al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy|dc)$/.test(
-                stateVal,
-              );
-            digits = (isUS || (!countryVal && !stateVal) ? "+1" : "+") + digits;
-          } else if (digits.startsWith("00")) {
-            digits = "+" + digits.slice(2);
-          }
-          value = digits;
-        }
-      }
-      console.log(
-        `%c[TOOL:fillField] about to fill — fieldId="${fieldId}" value="${value}" (raw args.value="${args.value}")`,
-        "color:#e05; font-weight:bold",
-      );
-      try {
-        if (ctx.actions.fillField) {
-          // Dodge panel so user can see the field being filled
-          const fillEl = document.getElementById(fieldId) || document.querySelector(`[name="${CSS.escape(fieldId)}"]`);
-          activatedFieldIdRef.current = fieldId;
-          dodgeForField(fillEl);
-          await ctx.actions.fillField({ fieldId, value });
-          // Record every confirmed fill so goToNextStep can emit a session-wide lookup block.
-          if (value) confirmedValuesRef.current[fieldId] = value;
-          // Patch the context so the AI sees this field as filled — React won't have
-          // re-rendered yet, so the ref still carries the stale pre-fill state.
-          const patchedCtx = {
-            ...ctx,
-            currentState: {
-              ...ctx.currentState,
-              fields:
-                ctx.currentState?.fields?.map((f) => (f.id === fieldId ? { ...f, value, filled: true } : f)) ?? [],
-            },
-          };
-          // Build continuation result — tell the AI to advance to the next field in list order.
-          let fillResultMsg = `Field "${fieldId}" filled with "${value}" successfully.`;
-          if (assistantMode === "applicant") {
-            fillResultMsg =
-              `[FILL_CONFIRMED] Field "${fieldId}" filled with "${value}". ` +
-              `Do NOT apply Rule 3 (pre-filled confirmation) to this field. ` +
-              `Call openFieldPanel for the next empty field after "${fieldId}" in list order immediately — pure tool call only, zero chat text.`;
-          }
-          // Send the function result back so the AI confirms the fill and immediately
-          // asks for the next required field without waiting for user input.
-          await continueAfterToolCall(tool, args, fillResultMsg, currentHistory, chatEndpoint, patchedCtx);
-        }
-      } catch (err) {
-        const detail = err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "fillSignature") {
-      const { fieldId, name, explanation } = args;
-      // Dispatch a custom event to the SignatureBox — it handles rendering + saving.
-      const sigEl = fieldId
-        ? document.querySelector(`[data-ai-id="${CSS.escape(fieldId)}"]`)
-        : document.querySelector('[data-ai-type="sign"]');
-      if (sigEl) {
-        sigEl.dispatchEvent(new CustomEvent("ai:fill-signature", { detail: { name }, bubbles: false }));
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-        // Wait for the signature save to complete before telling the AI to continue.
-        // SignatureBox.onSave is async (API upload); it sets data-ai-value="signed" on the
-        // wrapper only after the parent updates oldSignatureUrl. A MutationObserver on that
-        // attribute is the minimal reactive wait — zero polling, zero side effects elsewhere.
-        if (sigEl.getAttribute("data-ai-value") !== "signed") {
-          await new Promise((resolve) => {
-            const timeout = setTimeout(resolve, 12000); // 12s hard cap
-            const observer = new MutationObserver(() => {
-              if (sigEl.getAttribute("data-ai-value") === "signed") {
-                clearTimeout(timeout);
-                observer.disconnect();
-                resolve();
-              }
-            });
-            observer.observe(sigEl, { attributes: true, attributeFilter: ["data-ai-value"] });
-          });
-        }
-        // Build continuation result — tell the AI to advance to the next field in list order.
-        let sigResultMsg = `Typed signature "${name}" recorded on the signature field.`;
-        if (assistantMode === "applicant") {
-          sigResultMsg =
-            `[FILL_CONFIRMED] You just recorded signature "${name}" in this exchange — the applicant provided this name moments ago. ` +
-            `Do NOT apply Rule 3 (pre-filled confirmation) to the signature field. ` +
-            `Move immediately to the next field after the signature in the list order. Do not go back to any previous field.`;
-        }
-        // Patch context so the AI sees the signature field as filled — same pattern as fillField.
-        const patchedCtx = {
-          ...ctx,
-          currentState: {
-            ...ctx.currentState,
-            fields:
-              ctx.currentState?.fields?.map((f) =>
-                f.isSignature || f.id === fieldId ? { ...f, value: "signed", filled: true } : f,
-              ) ?? [],
-          },
-        };
-        await continueAfterToolCall(tool, args, sigResultMsg, currentHistory, chatEndpoint, patchedCtx);
-      } else {
-        addMessage({ role: "assistant", content: wt("errorCouldnt") + ". " + wt("tryAgain") });
-      }
-      return;
-    }
-
-    if (tool === "openFieldPanel") {
-      const { fieldId, explanation } = args;
-      const fieldMeta = ctx.currentState?.fields?.find((f) => f.id === fieldId);
-      const fieldLabel = fieldMeta?.label || fieldId;
-      const fieldMode = fieldMeta?.fieldMode || "direct";
-
-      // Guard: openFieldPanel must never be called for radio or select fields.
-      // If the AI does it anyway, send an error back so it corrects itself.
-      if (fieldMeta?.type === "radio" || fieldMeta?.type === "select") {
-        const optionsList =
-          Array.isArray(fieldMeta.options) && fieldMeta.options.length
-            ? fieldMeta.options
-                .map((o, i) => `${String.fromCharCode(97 + i)}) ${o.label} [value: ${o.value}]`)
-                .join(", ")
-            : "(no options available)";
-        await continueAfterToolCall(
-          tool,
-          args,
-          `ERROR: openFieldPanel cannot be used for "${fieldLabel}" because it is a ${fieldMeta.type} field. ` +
-            `You MUST output a chat message listing options instead and wait for the applicant's choice, then call fillField. ` +
-            `Field options: ${optionsList}. Do NOT call openFieldPanel again for this field.`,
-          currentHistory,
-          chatEndpoint,
-          ctx,
-        );
-        return;
-      }
-
-      // Show the AI's explanation as a chat message first
-      if (explanation) {
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      }
-
-      // Store history + ctx for use in the completion callback
-      adePanelCallbackRef.current = { args, history: currentHistory, ctx };
-
-      // Scroll the chat panel so the ADE panel is visible
-      setTimeout(() => scrollToBottom(), 100);
-
-      // Dodge toward the target field so the panel doesn't cover it
-      const targetEl =
-        document.getElementById(fieldId) ||
-        document.querySelector(`[name="${CSS.escape(fieldId)}"]`) ||
-        document.querySelector(`[data-ai-id="${CSS.escape(fieldId)}"]`);
-      if (targetEl) setTimeout(() => dodgeForField(targetEl), 200);
-
-      setAdePanel({ fieldId, fieldLabel, fieldMode, required: fieldMeta?.required ?? true });
-      return;
-    }
-
-    if (tool === "scrollToField") {
-      const { fieldId } = args;
-      // Always silent — scrollToField never produces a chat message or spoken output.
-      if (ctx.actions.scrollToField) {
-        ctx.actions.scrollToField({ fieldId });
-      } else {
-        const el = document.getElementById(fieldId) || document.querySelector(`[name="${fieldId}"]`);
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-      // Keep focus in the chat input, not on the scrolled-to field.
-      if (assistantMode === "applicant") {
-        setTimeout(() => inputRef.current?.focus(), 50);
-      }
-      // Send result back so the AI can continue to the next action (e.g. openFieldPanel).
-      await continueAfterToolCall(
-        tool,
-        args,
-        `Scrolled to field "${fieldId}". Now call openFieldPanel for this field — Data Collection rules apply. Do NOT use activateField or output chat text.`,
-        currentHistory,
-        chatEndpoint,
-        ctx,
-      );
-      return;
-    }
-
-    if (tool === "activateField") {
-      const { fieldId, explanation } = args;
-      const el = document.getElementById(fieldId) || document.querySelector(`[name="${CSS.escape(fieldId)}"]`);
-      activatedFieldIdRef.current = fieldId;
-      // Always suppress the post-response chat auto-focus, even if the element
-      // isn't found yet — we don't want the chat input stealing focus.
-      suppressChatFocusRef.current = true;
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        // After scroll settles: re-snap to ensure field is in viewport, then
-        // dodge the panel if it overlaps, then focus.
-        setTimeout(() => {
-          // Re-look up in case React recreated the element during the wait
-          const target =
-            document.getElementById(fieldId) || document.querySelector(`[name="${CSS.escape(fieldId)}"]`) || el;
-          if (!target) {
-            suppressChatFocusRef.current = false;
-            return;
-          }
-          target.scrollIntoView({ behavior: "instant", block: "center" });
-
-          // Only move focus if the user hasn't already navigated to a different form field.
-          // If they clicked/tabbed somewhere else while waiting for the AI response, respect that.
-          // Also skip if the user is already on this exact field (don't disrupt mid-typing with select()).
-          const active = document.activeElement;
-          const alreadyOnTarget = active === target;
-          const userMovedElsewhere =
-            !alreadyOnTarget &&
-            active &&
-            active !== inputRef.current &&
-            ["INPUT", "SELECT", "TEXTAREA"].includes(active.tagName);
-          if (!alreadyOnTarget && !userMovedElsewhere) {
-            target.focus();
-            try {
-              target.select();
-            } catch (_) {}
-          }
-
-          dodgeForField(target);
-          // Release the chat-focus suppression shortly after so normal state can resume.
-          setTimeout(() => {
-            suppressChatFocusRef.current = false;
-          }, 400);
-        }, 400);
-      }
-      addMessage({ role: "assistant", content: explanation });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-
-    if (tool === "submitOtpCode") {
-      const { otp, email } = args;
-      console.log(
-        "%c[AI:submitOtpCode] tool fired — email=%s otp=%s screenId=%s",
-        "color:#ea580c; font-weight:bold",
-        email,
-        otp,
-        ctx?.screenId,
-      );
-      console.log(
-        "%c[AI:submitOtpCode] context fields=%o  actions=%o",
-        "color:#ea580c",
-        ctx?.currentState?.fields?.map((f) => ({ id: f.id, value: f.value, filled: f.filled })),
-        Object.keys(ctx?.actions || {}),
-      );
-      if (ctx.actions.fillField) ctx.actions.fillField({ fieldId: "otp-field", value: otp });
-      let resultSummary;
-      try {
-        if (ctx.actions.verifyOtpCode) await ctx.actions.verifyOtpCode({ otp, email });
-        resultSummary = "OTP verification succeeded. The applicant's email is now verified.";
-        // Record the verified email so Step 1 on any later page can match it purely by
-        // value — the synthetic key "_otp_email" is unambiguous (not a real field ID).
-        if (email) confirmedValuesRef.current["_otp_email"] = email;
-        console.log("%c[AI:submitOtpCode] ✓ verification succeeded", "color:#16a34a; font-weight:bold");
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        resultSummary = `OTP verification failed${detail ? `: ${detail}` : ""}. Ask the applicant whether they entered the code correctly and invite them to try again.`;
-        console.error(
-          "%c[AI:submitOtpCode] ✗ verification failed — detail=%s",
-          "color:#dc2626; font-weight:bold",
-          detail,
-        );
-      }
-      console.log("%c[AI:submitOtpCode] resultSummary → %s", "color:#ea580c", resultSummary);
-      await continueAfterToolCall(tool, args, resultSummary, currentHistory, chatEndpoint, ctx);
-      return;
-    }
-
-    if (tool === "submitEmailForOtp") {
-      const { email } = args;
-      console.log(
-        "%c[AI:submitEmailForOtp] tool fired — email=%s screenId=%s",
-        "color:#ea580c; font-weight:bold",
-        email,
-        ctx?.screenId,
-      );
-      console.log(
-        "%c[AI:submitEmailForOtp] context fields=%o  actions=%o",
-        "color:#ea580c",
-        ctx?.currentState?.fields?.map((f) => ({ id: f.id, value: f.value, filled: f.filled })),
-        Object.keys(ctx?.actions || {}),
-      );
-      if (ctx.actions.fillField) ctx.actions.fillField({ fieldId: "email-field", value: email });
-      let resultSummary;
-      try {
-        if (ctx.actions.sendOtpForEmail) await ctx.actions.sendOtpForEmail({ email });
-        resultSummary = `OTP email sent successfully to ${email}. Tell the applicant to check their inbox and spam folder, then come back and provide the code.`;
-        console.log("%c[AI:submitEmailForOtp] ✓ OTP sent", "color:#16a34a; font-weight:bold");
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        resultSummary = `Failed to send OTP email to ${email}${detail ? `: ${detail}` : ""}. Let the applicant know and ask them to check the email address or try again.`;
-        console.error("%c[AI:submitEmailForOtp] ✗ send failed — detail=%s", "color:#dc2626; font-weight:bold", detail);
-      }
-      console.log("%c[AI:submitEmailForOtp] resultSummary → %s", "color:#ea580c", resultSummary);
-      await continueAfterToolCall(tool, args, resultSummary, currentHistory, chatEndpoint, ctx);
-      return;
-    }
-
-    if (tool === "goToNextStep") {
-      if (ctx.actions.goToNextStep) await ctx.actions.goToNextStep();
-      // Wait for React to re-render with the new step's fields (or for navigation to complete)
-      await new Promise((r) => setTimeout(r, 150));
-      const freshCtx = getScreenContext();
-      // If the page navigated away (context null or different screenId), the screen-change
-      // effect and autoGuide handle the transition — nothing more needed here.
-      if (!freshCtx || freshCtx.screenId !== ctx.screenId) return;
-      // Build a compact confirmed-values block so the AI can do Step 1 matching on the
-      // next page without relying on scanning conversation history.
-      const confirmedEntries = Object.entries(confirmedValuesRef.current);
-      const confirmedBlock =
-        confirmedEntries.length > 0
-          ? ` [CONFIRMED THIS SESSION: ${confirmedEntries.map(([k, v]) => `${k}="${v}"`).join(", ")}]`
-          : "";
-      await continueAfterToolCall(
-        tool,
-        args,
-        `Moved to the next step successfully.${confirmedBlock}`,
-        currentHistory,
-        chatEndpoint,
-        freshCtx,
-      );
-      return;
-    }
-
-    if (tool === "enterTranslationMode") {
-      const { language, languageName, explanation } = args;
-      const mode = { lang: language, langName: languageName };
-      translationModeRef.current = mode;
-      setTranslationMode(mode);
-      tooltipCacheRef.current = {}; // clear cached translations from any previous language
-      addMessage({ role: "assistant", content: explanation || "" });
-      return;
-    }
-
-    if (tool === "goToPrevStep") {
-      if (ctx.actions.goToPrevStep) await ctx.actions.goToPrevStep();
-      await new Promise((r) => setTimeout(r, 150));
-      const freshCtx = getScreenContext();
-      if (!freshCtx || freshCtx.screenId !== ctx.screenId) return;
-      await continueAfterToolCall(
-        tool,
-        args,
-        "Moved to the previous step successfully.",
-        currentHistory,
-        chatEndpoint,
-        freshCtx,
-      );
-      return;
-    }
-
-    // ── Testing Assistant tools ────────────────────────────────────────────────
-
-    if (tool === "createTestCase") {
-      const { explanation, ...fields } = args;
-      try {
-        if (ctx.actions.createTestCase) await ctx.actions.createTestCase({ explanation, ...fields });
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `Couldn't create the test case${detail ? `: ${detail}` : ""}. Please try again.`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "updateTestCase") {
-      const { explanation, ...fields } = args;
-      try {
-        if (ctx.actions.updateTestCase) await ctx.actions.updateTestCase({ explanation, ...fields });
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `Couldn't update the test case${detail ? `: ${detail}` : ""}. Please try again.`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "deleteTestCases") {
-      const { testCaseIds, explanation } = args;
-      try {
-        if (ctx.actions.deleteTestCases) await ctx.actions.deleteTestCases({ testCaseIds, explanation });
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `Couldn't delete the test case(s)${detail ? `: ${detail}` : ""}. Please try again.`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "duplicateTestCase") {
-      const { explanation, testCaseId, newName } = args;
-      try {
-        if (ctx.actions.duplicateTestCase) await ctx.actions.duplicateTestCase({ testCaseId, newName, explanation });
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `Couldn't duplicate the test case${detail ? `: ${detail}` : ""}. Please try again.`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "openEditor") {
-      const { testCaseId, explanation } = args;
-      if (ctx.actions.openEditor) ctx.actions.openEditor({ testCaseId, explanation });
-      addMessage({ role: "assistant", content: explanation });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-
-    if (tool === "setFilterArea") {
-      const { area, explanation } = args;
-      if (ctx.actions.setFilterArea) ctx.actions.setFilterArea({ area, explanation });
-      addMessage({ role: "assistant", content: explanation });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-
-    if (tool === "seedFromStatic") {
-      const { explanation } = args;
-      try {
-        if (ctx.actions.seedFromStatic) await ctx.actions.seedFromStatic({ explanation });
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `Couldn't seed from static files${detail ? `: ${detail}` : ""}. Please try again.`,
-        });
-      }
-      return;
-    }
-
-    // ── Demo Builder tools ─────────────────────────────────────────────────────
-
-    if (tool === "updateBuilderSteps") {
-      const { message, ...stepsData } = args;
-      if (ctx.actions.updateBuilderSteps) ctx.actions.updateBuilderSteps(stepsData);
-      addMessage({
-        role: "assistant",
-        content: null,
-        function_call: { name: "updateBuilderSteps", arguments: JSON.stringify(args) },
-      });
-      addMessage({
-        role: "function",
-        name: "updateBuilderSteps",
-        content: `Steps replaced. New step count: ${stepsData.steps?.length ?? 0}.`,
-      });
-      addMessage({ role: "assistant", content: message });
-      if (isVoiceModeRef.current) speak(message);
-      return;
-    }
-
-    if (tool === "addStepToBuilder") {
-      const { message, ...stepData } = args;
-      if (ctx.actions.addStepToBuilder) ctx.actions.addStepToBuilder(stepData);
-      const stepDesc = `${stepData.step?.action || ""}${stepData.step?.selector ? ` ${stepData.step.selector}` : ""}${stepData.step?.value ? ` "${stepData.step.value}"` : ""}`;
-      addMessage({
-        role: "assistant",
-        content: null,
-        function_call: { name: "addStepToBuilder", arguments: JSON.stringify(args) },
-      });
-      addMessage({
-        role: "function",
-        name: "addStepToBuilder",
-        content: `Step confirmed and added: ${stepDesc}. Do NOT add this step again.`,
-      });
-      addMessage({ role: "assistant", content: message });
-      if (isVoiceModeRef.current) speak(message);
-      return;
-    }
-
-    if (tool === "buildDemoAction") {
-      const { explanation, ...actionData } = args;
-      if (ctx.actions.buildDemoAction) ctx.actions.buildDemoAction(actionData);
-      addMessage({ role: "assistant", content: explanation });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-
-    if (tool === "saveDemoAction") {
-      const { explanation, ...saveData } = args;
-      try {
-        if (ctx.actions.saveDemoAction) await ctx.actions.saveDemoAction(saveData);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `Couldn't save the demo action${detail ? `: ${detail}` : ""}. Please try again.`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "selectFeatures") {
-      const { explanation, ...selectData } = args;
-      if (ctx.actions.selectFeatures) ctx.actions.selectFeatures(selectData);
-      addMessage({ role: "assistant", content: explanation });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-
-    if (tool === "setNarrationInstructions") {
-      const { explanation, ...instrData } = args;
-      if (ctx.actions.setNarrationInstructions) ctx.actions.setNarrationInstructions(instrData);
-      addMessage({ role: "assistant", content: explanation });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-  };
+  const applyToolCall = createApplyToolCall({
+    getScreenContext,
+    assistantMode,
+    addMessage,
+    isVoiceModeRef,
+    speak,
+    wt,
+    aiCustomPrompt,
+    continueAfterToolCall,
+    pushRevertable,
+    popRevertable,
+    navigate,
+    setIsLoading,
+    setAdePanel,
+    adePanelCallbackRef,
+    confirmedValuesRef,
+    signalContinuationPending,
+    pendingFormContinuationRef,
+    appendApiHistory,
+    dodgeForField,
+    scrollToBottom,
+    setPreFillModal,
+    preFillShownRef,
+    setFieldErrorModal,
+    confirmedErrorsRef,
+    pendingFieldErrorRef,
+    blockedClickTargetRef,
+    navTimeoutRef,
+    pendingFollowUpRef,
+    formLanguageRef,
+    setIsOpen,
+    getApiHistory,
+    activatedFieldIdRef,
+    inputRef,
+    panelRef,
+    homePositionRef,
+    setIntroButtonsDismissed,
+    introButtonsDismissed,
+    pendingAnalysisRef,
+    setOverlayContext,
+    triggerAutoMessage: _triggerAutoMessage,
+  });
 
   // ── Assisted Direct Entry (ADE) panel callbacks ────────────────────────────
   const handleAdePanelComplete = useCallback(
@@ -5221,29 +2880,18 @@ export default function AIChatWidget() {
     const content = (text || input).trim();
     if (!content || isLoading) return;
     setInput("");
-    // User is explicitly talking — discard any pending auto-guidance so it doesn't
-    // fire after the manual response and confuse the conversation.
     pendingFieldFocusRef.current = null;
 
     const userMsg = { role: "user", content };
     addMessage(userMsg);
+    appendApiHistory(mapVisibleToApiMessage(userMsg));
     setIsLoading(true);
 
     const ctx = getScreenContext();
     const defaultEndpoint =
       assistantMode === "applicant" ? `${SERVER_URL}/api/ai/applicant-chat` : `${SERVER_URL}/api/ai/branding-chat`;
     const chatEndpoint = ctx?.aiEndpoint || defaultEndpoint;
-    const history = [...messages, userMsg].map((m) => {
-      const msg = { role: m.role, content: m.content ?? null };
-      if (m.function_call) msg.function_call = m.function_call;
-      if (m.name) msg.name = m.name;
-      // Embed suggestColors hex values into content so the AI can reproduce them exactly when asked to apply
-      if (m.toolCall?.tool === "suggestColors" && m.toolCall?.colors?.length) {
-        const colorList = m.toolCall.colors.map((c) => `${c.hex}→${c.targetProperty || c.purpose}`).join(", ");
-        msg.content = `${msg.content ?? ""}\n[Suggested colors: ${colorList}]`;
-      }
-      return msg;
-    });
+    const history = getApiHistory();
 
     console.log("%c[SEND] → AI request", "color:#070; font-weight:bold", {
       userMessage: content,
@@ -5256,22 +2904,15 @@ export default function AIChatWidget() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          messages: history,
-          context: {
-            screenId: ctx?.screenId,
-            screenName: ctx?.screenName,
-            description: ctx?.description,
-            currentState: ctx?.currentState,
-            logos: ctx?.logos,
-            colorPalette: ctx?.colorPalette || undefined,
-            forms: ctx?.forms || undefined,
-            brandingId: ctx?.brandingId || undefined,
-            maxHelpMode: assistantMode === "applicant",
-            formLanguage: formLanguageRef.current !== "English" ? formLanguageRef.current : undefined,
-          },
-          chatMode: AI_CHAT_MODE,
-        }),
+        body: JSON.stringify(
+          buildChatPayload({
+            messages: history,
+            ctx,
+            assistantMode,
+            customPrompt: aiCustomPrompt,
+            formLanguage: formLanguageRef.current,
+          }),
+        ),
       });
 
       const data = await res.json();
@@ -5288,6 +2929,7 @@ export default function AIChatWidget() {
       if (data.type === "tool_call") {
         await applyToolCall(data.tool, data.args, history);
       } else {
+        appendApiHistory({ role: "assistant", content: data.content });
         addMessage({ role: "assistant", content: data.content });
         if (isVoiceModeRef.current) speak(data.content);
       }
@@ -5335,35 +2977,17 @@ export default function AIChatWidget() {
     const defaultEndpoint =
       assistantMode === "applicant" ? `${SERVER_URL}/api/ai/applicant-chat` : `${SERVER_URL}/api/ai/branding-chat`;
     const chatEndpoint = ctx?.aiEndpoint || defaultEndpoint;
-    const history = [...messages].map((m) => {
-      const msg = { role: m.role, content: m.content ?? null };
-      if (m.function_call) msg.function_call = m.function_call;
-      if (m.name) msg.name = m.name;
-      if (m.toolCall?.tool === "suggestColors" && m.toolCall?.colors?.length) {
-        const colorList = m.toolCall.colors.map((c) => `${c.hex}→${c.targetProperty || c.purpose}`).join(", ");
-        msg.content = `${msg.content ?? ""}\n[Suggested colors: ${colorList}]`;
-      }
-      return msg;
-    });
-    const autoMsg = { role: "user", content: instruction };
+    const autoMsg = mapVisibleToApiMessage({ role: "user", content: instruction });
+    appendApiHistory(autoMsg);
 
     setIsLoading(true);
-    const autoGuidePayload = {
-      messages: [...history, autoMsg],
-      context: {
-        screenId: ctx?.screenId,
-        screenName: ctx?.screenName,
-        description: ctx?.description,
-        currentState: ctx?.currentState,
-        logos: ctx?.logos,
-        colorPalette: ctx?.colorPalette || undefined,
-        forms: ctx?.forms || undefined,
-        brandingId: ctx?.brandingId || undefined,
-        maxHelpMode: assistantMode === "applicant",
-        formLanguage: formLanguageRef.current !== "English" ? formLanguageRef.current : undefined,
-      },
-      chatMode: AI_CHAT_MODE,
-    };
+    const autoGuidePayload = buildChatPayload({
+      messages: getApiHistory(),
+      ctx,
+      assistantMode,
+      customPrompt: aiCustomPrompt,
+      formLanguage: formLanguageRef.current,
+    });
     console.log("%c[AUTOGUIDE] → AI request", "color:#a50; font-weight:bold", {
       instruction,
       fields: ctx?.currentState?.fields?.map((f) => ({ id: f.id, label: f.label, value: f.value, filled: f.filled })),
@@ -5393,8 +3017,9 @@ export default function AIChatWidget() {
         content: data.content,
       });
       if (data.type === "tool_call") {
-        await applyToolCall(data.tool, data.args, [...history, autoMsg]);
+        await applyToolCall(data.tool, data.args, getApiHistory());
       } else {
+        appendApiHistory({ role: "assistant", content: data.content });
         addMessage({ role: "assistant", content: data.content });
         if (isVoiceModeRef.current) speak(data.content);
         // Dodge the panel and scroll to the first empty field so the applicant sees it highlighted.
@@ -5444,350 +3069,93 @@ export default function AIChatWidget() {
   const isApplicantFormRoute = pathname.startsWith("/application-form/");
   if (pathname === "/login" || (!user && !isApplicantFormRoute)) return null;
 
+  const handleOpenFab = () => {
+    sessionStorage.removeItem(WIDGET_CLOSED_KEY);
+    const _t = headerBottom;
+    const _l = Math.max(0, window.innerWidth - PANEL_WIDTH - 24);
+    panelTargetRef.current = { top: _t, left: _l, width: PANEL_WIDTH, height: PANEL_HEIGHT };
+    setPanelWidth(PANEL_WIDTH);
+    setPanelHeight(PANEL_HEIGHT);
+    setPosition({ top: _t, left: _l });
+    setIsOpen(true);
+  };
+
+  const handleClosePanel = () => {
+    if (assistantMode === "applicant") sessionStorage.setItem(WIDGET_CLOSED_KEY, "1");
+    setIsOpen(false);
+    stopSpeaking();
+    stopListening();
+    isVoiceModeRef.current = false;
+    setIsVoiceMode(false);
+  };
+
   return (
     <>
-      {/* Launch button — sits flush below the app header, accent-colored */}
       {!isOpen && (
-        <button
-          ref={fabRef}
-          data-testid="ai-fab-btn"
-          onClick={() => {
-            // Applicant manually reopening — clear the "user closed" flag so it auto-opens again going forward
-            sessionStorage.removeItem(WIDGET_CLOSED_KEY);
-            const _t = headerBottom;
-            const _l = Math.max(0, window.innerWidth - PANEL_WIDTH - 24);
-            panelTargetRef.current = { top: _t, left: _l, width: PANEL_WIDTH, height: PANEL_HEIGHT };
-            setPanelWidth(PANEL_WIDTH);
-            setPanelHeight(PANEL_HEIGHT);
-            setPosition({ top: _t, left: _l });
-            setIsOpen(true);
-          }}
-          className="fixed right-16 z-[300] flex h-[70px] w-[70px] items-center justify-center rounded-full shadow-xl hover:scale-110 focus:outline-none overflow-hidden p-0"
-          style={{
-            bottom: fabNudged ? 8 : 72,
-            backgroundColor: effectiveLaunchColor,
-            transition: "bottom 0.35s cubic-bezier(0.4,0,0.2,1)",
-          }}
-          aria-label="Open AI assistant"
-        >
-          {aiUseCustomIcon !== false && (
-            <img
-              src="/azpayments_icon_adaptive.svg"
-              alt=""
-              style={{ width: "140%", height: "140%", minWidth: "140%", minHeight: "140%" }}
-              draggable={false}
-            />
-          )}
-        </button>
+        <ChatFab
+          fabRef={fabRef}
+          fabNudged={fabNudged}
+          effectiveLaunchColor={effectiveLaunchColor}
+          aiUseCustomIcon={aiUseCustomIcon}
+          onOpen={handleOpenFab}
+        />
       )}
 
-      {/* Chat panel */}
       {isOpen && (
-        <div
-          ref={panelRef}
-          data-testid="ai-chat-panel"
-          className="ai-chat-panel fixed z-[300] flex flex-col overflow-hidden rounded-2xl shadow-2xl"
-          style={{
-            width: panelWidth,
-            height: panelHeight,
-            top: position.top,
-            left: position.left,
-            background: "#fff",
-            fontFamily: fontFamily ? `var(--font-${fontFamily.toLowerCase()})` : undefined,
-            transition:
-              dragRef.current.isDragging || resizeRef.current.isResizing
-                ? "none"
-                : "top 0.35s cubic-bezier(0.4,0,0.2,1), left 0.35s cubic-bezier(0.4,0,0.2,1), width 0.35s cubic-bezier(0.4,0,0.2,1), height 0.35s cubic-bezier(0.4,0,0.2,1)",
-          }}
-        >
-          {/* Resize handles — transparent hit areas at each edge and corner */}
-          {/* edges */}
-          <div
-            onMouseDown={(e) => onResizeMouseDown(e, "n")}
-            style={{ position: "absolute", top: 0, left: 8, right: 8, height: 5, cursor: "n-resize", zIndex: 10 }}
-          />
-          <div
-            onMouseDown={(e) => onResizeMouseDown(e, "s")}
-            style={{ position: "absolute", bottom: 0, left: 8, right: 8, height: 5, cursor: "s-resize", zIndex: 10 }}
-          />
-          <div
-            onMouseDown={(e) => onResizeMouseDown(e, "e")}
-            style={{ position: "absolute", top: 8, right: 0, bottom: 8, width: 5, cursor: "e-resize", zIndex: 10 }}
-          />
-          <div
-            onMouseDown={(e) => onResizeMouseDown(e, "w")}
-            style={{ position: "absolute", top: 8, left: 0, bottom: 8, width: 5, cursor: "w-resize", zIndex: 10 }}
-          />
-          {/* corners */}
-          <div
-            onMouseDown={(e) => onResizeMouseDown(e, "nw")}
-            style={{ position: "absolute", top: 0, left: 0, width: 12, height: 12, cursor: "nw-resize", zIndex: 11 }}
-          />
-          <div
-            onMouseDown={(e) => onResizeMouseDown(e, "ne")}
-            style={{ position: "absolute", top: 0, right: 0, width: 12, height: 12, cursor: "ne-resize", zIndex: 11 }}
-          />
-          <div
-            onMouseDown={(e) => onResizeMouseDown(e, "sw")}
-            style={{ position: "absolute", bottom: 0, left: 0, width: 12, height: 12, cursor: "sw-resize", zIndex: 11 }}
-          />
-          <div
-            onMouseDown={(e) => onResizeMouseDown(e, "se")}
-            style={{
-              position: "absolute",
-              bottom: 0,
-              right: 0,
-              width: 12,
-              height: 12,
-              cursor: "se-resize",
-              zIndex: 11,
-            }}
-          />
-          {/* Bottom-right grip indicator */}
-          <div
-            onMouseDown={(e) => onResizeMouseDown(e, "se")}
-            style={{
-              position: "absolute",
-              bottom: 4,
-              right: 4,
-              zIndex: 12,
-              pointerEvents: "none",
-              opacity: 0.35,
-              lineHeight: 1,
-            }}
-          >
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" style={{ color: "#666" }}>
-              <rect x="6" y="0" width="2" height="2" />
-              <rect x="6" y="4" width="2" height="2" />
-              <rect x="6" y="8" width="2" height="2" />
-              <rect x="2" y="4" width="2" height="2" />
-              <rect x="2" y="8" width="2" height="2" />
-              <rect x="0" y="8" width="2" height="2" />
-            </svg>
-          </div>
-
-          {/* Header — drag handle */}
-          <div
-            onMouseDown={onHeaderMouseDown}
-            className="flex items-center justify-between px-4 py-3 select-none"
-            style={{
-              backgroundColor: effectiveHeaderColor,
-              cursor: "grab",
-            }}
-          >
-            <div className="flex items-center gap-2">
-              {aiUseCustomIcon !== false && (
-                <img src="/azpayments_icon_adaptive.svg" alt="" className="h-9 w-9 flex-shrink-0" draggable={false} />
-              )}
-              <div>
-                <p className="text-sm font-semibold leading-tight" style={{ color: headerIconColor }}>
-                  {getScreenContext()?.assistantName || "AI Assistant"}
-                </p>
-                <p className="text-xs leading-tight opacity-70" style={{ color: headerIconColor }}>
-                  {getScreenContext()?.screenName || "AI"}
-                </p>
-              </div>
-            </div>
-            <button
-              data-testid="ai-close-btn"
-              onClick={() => {
-                // Remember that the applicant explicitly closed the widget so it doesn't reopen
-                if (assistantMode === "applicant") sessionStorage.setItem(WIDGET_CLOSED_KEY, "1");
-                setIsOpen(false);
-                stopSpeaking();
-                stopListening();
-                isVoiceModeRef.current = false;
-                setIsVoiceMode(false);
-              }}
-              className="rounded-full p-1 transition-colors hover:bg-black/10"
-              style={{ color: headerIconColor }}
-            >
-              <IoClose className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* Language banner — rotates through translations of "Communicate with me in any language"
-               so speakers of any language immediately know they can write in their own. */}
-          <div
-            className="flex items-center px-3 py-2 border-b"
-            style={{ backgroundColor: effectiveBannerColor, borderColor: "rgba(0,0,0,0.1)" }}
-          >
-            <span
-              className="text-sm font-semibold w-full text-center"
-              style={{ color: effectiveBannerText, opacity: bannerFading ? 0 : 1, transition: "opacity 0.32s ease" }}
-            >
-              {LANGUAGES[bannerIdx].banner}
-            </span>
-          </div>
-
-          {/* Messages */}
-          <div
-            ref={messagesContainerRef}
-            data-testid="ai-messages"
-            className="flex-1 overflow-y-auto p-4 space-y-3"
-            style={{ backgroundColor: "#f8f9ff" }}
-          >
-            {messages
-              .filter((msg) => msg.role !== "function" && msg.content !== null)
-              .map((msg) => (
-                <ChatMessage
-                  key={msg.id}
-                  message={msg}
-                  accentColor={effectiveHeaderColor}
-                  accentTextColor={headerIconColor}
-                  onAction={handleMessageAction}
-                  introButtonsDismissed={introButtonsDismissed}
-                />
-              ))}
-            {isLoading && (
-              <div data-testid="ai-thinking" className="flex items-center gap-2 px-3 py-2">
-                <div className="flex gap-1">
-                  {[0, 1, 2].map((i) => (
-                    <span
-                      key={i}
-                      className="h-2 w-2 rounded-full bg-purple-400"
-                      style={{ animation: `bounce 1s ease-in-out ${i * 0.15}s infinite` }}
-                    />
-                  ))}
-                </div>
-                <span className="text-xs text-gray-400">Thinking…</span>
-              </div>
-            )}
-            {/* Assisted Direct Entry panel */}
-            {adePanel && (
-              <ADEPanel
-                fieldId={adePanel.fieldId}
-                fieldLabel={adePanel.fieldLabel}
-                fieldMode={adePanel.fieldMode}
-                isRequired={adePanel.required ?? true}
-                explanation={null}
-                accentColor={effectiveHeaderColor}
-                onComplete={handleAdePanelComplete}
-                onCancel={handleAdePanelCancel}
-              />
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input */}
-          <div className="border-t border-gray-100 bg-white px-3 pt-2 pb-3">
-            <div className="flex items-end gap-2">
-              <textarea
-                ref={inputRef}
-                data-testid="ai-chat-input"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onFocus={() => {
-                  suppressChatFocusRef.current = false;
-                  userFocusedChatRef.current = true;
-                }}
-                onBlur={(e) => {
-                  const next = e.relatedTarget;
-                  // Focus moved to a real element outside the chat panel — user intentionally left.
-                  if (next && next !== document.body && panelRef.current && !panelRef.current.contains(next)) {
-                    userFocusedChatRef.current = false;
-                  }
-                  // Focus went to null/body (e.g. textarea was disabled by isLoading) — keep the flag.
-                }}
-                placeholder={
-                  AI_CHAT_MODE === "basic"
-                    ? "Ask me anything about the application…"
-                    : assistantMode === "applicant"
-                      ? "Ask for help with any field…"
-                      : "Ask me to change colors, fonts, layout…"
-                }
-                rows={1}
-                className="flex-1 resize-none rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-200"
-                style={{ maxHeight: "100px", overflowY: "auto" }}
-                onInput={(e) => {
-                  e.target.style.height = "auto";
-                  e.target.style.height = Math.min(e.target.scrollHeight, 100) + "px";
-                }}
-                disabled={isLoading}
-              />
-
-              <button
-                data-testid="ai-send-btn"
-                onClick={() => sendMessage()}
-                disabled={!input.trim() || isLoading}
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-all disabled:opacity-30"
-                style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
-                aria-label="Send message"
-                type="button"
-              >
-                <IoSend className="h-4 w-4 text-white" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Pre-fill confirmation dialog — basic mode applicant only */}
-      {preFillModal && (
-        <PreFillModal
-          preFilled={preFillModal.preFilled}
-          remaining={preFillModal.remaining}
-          headerBg={effectiveHeaderColor}
-          headerTextColor={headerIconColor}
-          accentColor={effectiveHeaderColor}
-          buttonColor={primaryColor}
-          buttonTextColor={buttonTextPrimary}
+        <ChatPanel
+          panelRef={panelRef}
+          panelWidth={panelWidth}
+          panelHeight={panelHeight}
+          position={position}
+          dragRef={dragRef}
+          resizeRef={resizeRef}
           fontFamily={fontFamily}
-          onConfirm={handlePreFillConfirm}
-          onSkip={handlePreFillSkip}
+          effectiveHeaderColor={effectiveHeaderColor}
+          effectiveBannerColor={effectiveBannerColor}
+          effectiveBannerText={effectiveBannerText}
+          headerIconColor={headerIconColor}
+          aiUseCustomIcon={aiUseCustomIcon}
+          getScreenContext={getScreenContext}
+          onHeaderMouseDown={onHeaderMouseDown}
+          onResizeMouseDown={onResizeMouseDown}
+          onClose={handleClosePanel}
+          bannerIdx={bannerIdx}
+          bannerFading={bannerFading}
+          messagesContainerRef={messagesContainerRef}
+          messages={messages}
+          isLoading={isLoading}
+          adePanel={adePanel}
+          effectiveLaunchColor={effectiveHeaderColor}
+          handleAdePanelComplete={handleAdePanelComplete}
+          handleAdePanelCancel={handleAdePanelCancel}
+          messagesEndRef={messagesEndRef}
+          inputRef={inputRef}
+          input={input}
+          setInput={setInput}
+          handleKeyDown={handleKeyDown}
+          suppressChatFocusRef={suppressChatFocusRef}
+          userFocusedChatRef={userFocusedChatRef}
+          assistantMode={assistantMode}
+          sendMessage={sendMessage}
+          handleMessageAction={handleMessageAction}
+          introButtonsDismissed={introButtonsDismissed}
         />
       )}
 
-      {/* Silent field-error modal — basic mode applicant only */}
-      {fieldErrorModal && (
-        <FieldErrorModal
-          fieldLabel={fieldErrorModal.fieldLabel}
-          fieldType={fieldErrorModal.fieldType}
-          currentValue={fieldErrorModal.currentValue}
-          description={fieldErrorModal.description}
-          suggestion={fieldErrorModal.suggestion}
-          retryNote={fieldErrorModal.retryNote}
-          headerBg={effectiveHeaderColor}
-          headerTextColor={headerIconColor}
-          accentColor={effectiveHeaderColor}
-          fontFamily={fontFamily}
-          onKeep={handleFieldErrorKeep}
-          onSave={handleFieldErrorSave}
-        />
-      )}
-
-      {/* Hover-translation tooltip — shown when translation mode is active */}
-      {translationTooltip && (
-        <div
-          style={{
-            position: "fixed",
-            left: translationTooltip.x,
-            top: translationTooltip.y,
-            transform: "translate(-50%, -100%)",
-            zIndex: 99999,
-            pointerEvents: "none",
-            background: "rgba(30,20,60,0.92)",
-            color: "#fff",
-            fontSize: "12px",
-            lineHeight: "1.4",
-            padding: "4px 10px",
-            borderRadius: "6px",
-            maxWidth: "260px",
-            whiteSpace: "normal",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-          }}
-        >
-          {translationTooltip.text}
-        </div>
-      )}
-
-      <style>{`
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-4px); }
-        }
-      `}</style>
+      <ChatOverlays
+        preFillModal={preFillModal}
+        fieldErrorModal={fieldErrorModal}
+        translationTooltip={translationTooltip}
+        effectiveHeaderColor={effectiveHeaderColor}
+        headerIconColor={headerIconColor}
+        primaryColor={primaryColor}
+        buttonTextPrimary={buttonTextPrimary}
+        fontFamily={fontFamily}
+        handlePreFillConfirm={handlePreFillConfirm}
+        handlePreFillSkip={handlePreFillSkip}
+        handleFieldErrorKeep={handleFieldErrorKeep}
+        handleFieldErrorSave={handleFieldErrorSave}
+      />
     </>
   );
 }

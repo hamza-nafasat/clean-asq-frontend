@@ -52,7 +52,7 @@ function DocumentModal({ url, title, onClose }) {
       ? `The applicant is reviewing the "${title}" document. ` +
         `Use the full document text below to summarize it, answer questions, ` +
         `and explain any sections they ask about.\n\n` +
-        `--- DOCUMENT BEGIN ---\n${docText.slice(0, 14000)}\n--- DOCUMENT END ---`
+        `--- DOCUMENT BEGIN ---\n${docText.slice(0, 12000)}\n--- DOCUMENT END ---`
       : `The applicant is opening the "${title}" document (${url}). ` +
         `The document is still loading — once it's ready you'll have the full text. ` +
         `Greet the applicant and let them know you can summarize or answer questions once it loads.`;
