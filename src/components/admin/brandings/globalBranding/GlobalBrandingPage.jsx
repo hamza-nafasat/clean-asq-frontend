@@ -382,7 +382,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       !emailHeaderTextColor ||
       !emailFooterTextColor
     ) {
-      return toast.error("Please fill all fields before creating branding");
+      toast.error("Please fill all fields before creating branding");
+      throw new Error("Please fill all fields before creating branding");
     }
     const colors = {
       primary: primaryColor,

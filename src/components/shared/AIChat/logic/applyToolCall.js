@@ -1,6 +1,22 @@
 import { AI_CHAT_MODE, PAGE_LABELS, PAGE_ROUTES, SERVER_URL } from "../constants/aiChatConstants.js";
 import { resolveNavigationHandoff } from "../utils/resolveNavigationHandoff.js";
 
+const getLastUserMessageText = (history = []) => {
+  for (let i = history.length - 1; i >= 0; i--) {
+    const content = history[i]?.content;
+    if (history[i]?.role === "user" && typeof content === "string") return content;
+  }
+  return "";
+};
+
+const isBrandingSaveIntent = (text) =>
+  /\b(save(\s+the)?\s+branding|create(\s+the)?\s+branding|click.*create.*branding|create branding|submit.*branding|now create)\b/i.test(
+    text,
+  );
+
+const isBrandingRefetchIntent = (text) =>
+  /\b(re-?fetch|fetch again|scrape again|update (the )?palette from|pull (colors )?from (the )?website)\b/i.test(text);
+
 /**
  * Creates the tool-call handler with bindings from the chat widget/controller.
  * Body is extracted verbatim from AIChatWidget to keep behavior identical.
@@ -143,6 +159,46 @@ export function createApplyToolCall(bindings) {
 
     if (tool === "fetchWebsiteBranding") {
       const { url, intent, companyName: aiProvidedName } = args;
+      const lastUserText = getLastUserMessageText(currentHistory);
+      const paletteExists = (ctx?.colorPalette?.length ?? 0) > 0;
+
+      // Misrouted save/create — user asked to save or click Create, not re-scrape the site.
+      if (isBrandingSaveIntent(lastUserText)) {
+        try {
+          if (ctx.actions.saveBranding) await ctx.actions.saveBranding();
+          const msg = "Branding saved successfully.";
+          addMessage({ role: "assistant", content: msg });
+          if (isVoiceModeRef.current) speak(msg);
+        } catch (err) {
+          const detail = err?.data?.message || err?.message || "";
+          addMessage({
+            role: "assistant",
+            content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+          });
+        }
+        return;
+      }
+
+      // Palette already loaded — skip redundant fetch unless user explicitly asked to re-fetch.
+      if (paletteExists && !isBrandingRefetchIntent(lastUserText)) {
+        const domainInMessage = (() => {
+          try {
+            const host = new URL(url.startsWith("http") ? url : `https://${url}`).hostname.replace(/^www\./, "");
+            return lastUserText.toLowerCase().includes(host.split(".")[0]);
+          } catch {
+            return false;
+          }
+        })();
+        if (!domainInMessage) {
+          addMessage({
+            role: "assistant",
+            content:
+              "The website palette is already loaded. I'll use those colors — tell me if you want to **save** the branding or **tweak** any colors.",
+          });
+          return;
+        }
+      }
+
       addMessage({ role: "assistant", content: `Fetching **${url}**… this may take a moment.` });
       try {
         const res = await fetch(`${SERVER_URL}/api/ai/fetch-website-branding`, {
@@ -353,10 +409,34 @@ export function createApplyToolCall(bindings) {
       const { colors, explanation } = args;
       // Populate the Custom Color Palette swatches
       if (ctx.actions.setSuggestedColors) ctx.actions.setSuggestedColors(colors);
+
+      // Auto-apply colors that name a targetProperty (system prompt expects suggest + apply in one step).
+      const changes = {};
+      for (const c of colors || []) {
+        if (c?.targetProperty && c?.hex) changes[c.targetProperty] = c.hex;
+      }
+      if (Object.keys(changes).length > 0) {
+        const snapshot = {};
+        Object.keys(changes).forEach((key) => {
+          snapshot[key] = ctx.currentState?.[key];
+        });
+        pushRevertable({
+          description: `Applied suggested colors (${Object.keys(changes).join(", ")})`,
+          revertFn: (freshCtx) => {
+            Object.entries(snapshot).forEach(([key, val]) => {
+              if (val !== undefined && freshCtx?.actions?.[key]) freshCtx.actions[key](val);
+            });
+          },
+        });
+        Object.entries(changes).forEach(([key, value]) => {
+          const setter = ctx.actions[key];
+          if (setter) setter(value);
+        });
+      }
+
       // Show in-chat preview with color swatches
       addMessage({ role: "assistant", content: explanation, toolCall: { tool: "suggestColors", colors } });
       if (isVoiceModeRef.current) speak(explanation);
-      // suggestColors is end-of-turn — show colors and wait for user confirmation before applying
       return;
     }
 
