@@ -7,6 +7,7 @@ import { discoverFormFields } from "../../../lib/discoverFormFields";
 import { UseAIChat } from "@/context/AiChatContext";
 import { buildChatPayload } from "./utils/buildChatPayload.js";
 import { mapVisibleToApiMessage } from "./utils/mapVisibleToApiMessage.js";
+import { resolveNavigationHandoff } from "./utils/resolveNavigationHandoff.js";
 import {
   AI_CHAT_MODE,
   contrastingIconColor,
@@ -227,6 +228,8 @@ export default function AIChatWidget() {
   const pendingAnalysisRef = useRef(null);
   const pendingFormContinuationRef = useRef(null); // stores { toolArgs, history } while waiting for form data to load
   const pendingFollowUpRef = useRef(null); // task auto-sent after AI-triggered navigation
+  const pendingHandoffModeRef = useRef(null); // greeting | task — controls post-navigation behavior
+  const pendingHandoffUserMessageRef = useRef(null); // preserved before endpoint change clears API history
   const navTimeoutRef = useRef(null); // clears stale follow-up if page never loads
   const prevScreenIdRef = useRef(null);
   const initialGreetingShownRef = useRef(false); // prevents double-greeting when endpoint change clears messages mid-session
@@ -1679,6 +1682,36 @@ export default function AIChatWidget() {
     initialGreetingShownRef.current = true;
   }, [isOpen, messages.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const executeNavigationHandoff = useCallback(() => {
+    const ctx = getScreenContext();
+    const task = pendingFollowUpRef.current;
+    const handoffMode = pendingHandoffModeRef.current || "task";
+    const lastUserMessage =
+      pendingHandoffUserMessageRef.current ||
+      [...getApiHistory()].reverse().find((m) => m.role === "user")?.content ||
+      "";
+    pendingFollowUpRef.current = null;
+    pendingHandoffModeRef.current = null;
+    pendingHandoffUserMessageRef.current = null;
+    if (navTimeoutRef.current) {
+      clearTimeout(navTimeoutRef.current);
+      navTimeoutRef.current = null;
+    }
+
+    const resolved = resolveNavigationHandoff({
+      handoffMode,
+      followUpTask: task,
+      lastUserMessage: typeof lastUserMessage === "string" ? lastUserMessage : "",
+      greeting: ctx?.greeting,
+    });
+
+    if (resolved.type === "greeting") {
+      addMessage({ role: "assistant", content: resolved.content });
+    } else if (resolved.type === "task" && sendMessageRef.current) {
+      sendMessageRef.current(resolved.task);
+    }
+  }, [addMessage, getApiHistory, getScreenContext]);
+
   // When the active screen changes:
   //   1. Append a new greeting so the user sees the current screen's capabilities.
   //   2. Run any pending cross-page analysis (e.g. branding fetch → create page).
@@ -1753,7 +1786,11 @@ export default function AIChatWidget() {
         // screen transitions (e.g. email-verified → idmission-qr → ApplicationForm) only
         // produce a single announcement for the final destination.
         const task = pendingFollowUpRef.current;
+        const handoffMode = pendingHandoffModeRef.current || "task";
+        const handoffUserMessage = pendingHandoffUserMessageRef.current || "";
         pendingFollowUpRef.current = null;
+        pendingHandoffModeRef.current = null;
+        pendingHandoffUserMessageRef.current = null;
         if (navTimeoutRef.current) {
           clearTimeout(navTimeoutRef.current);
           navTimeoutRef.current = null;
@@ -1973,8 +2010,16 @@ export default function AIChatWidget() {
           announceScreen(finalName);
           lastAutoGuidedRef.current = { screenId: finalCtx.screenId, at: Date.now() };
           sendFirstFieldGuidance(finalCtx.currentState.fields, finalCtx);
-          if (task && sendMessageRef.current) {
-            sendMessageRef.current(task);
+          const handoffResolved = resolveNavigationHandoff({
+            handoffMode,
+            followUpTask: task,
+            lastUserMessage: handoffUserMessage,
+            greeting: finalCtx?.greeting,
+          });
+          if (handoffResolved.type === "greeting") {
+            addMessage({ role: "assistant", content: handoffResolved.content });
+          } else if (handoffResolved.type === "task" && sendMessageRef.current) {
+            sendMessageRef.current(handoffResolved.task);
           }
         }, 1000);
       } else {
@@ -1992,24 +2037,15 @@ export default function AIChatWidget() {
             announceScreen(screenName);
           }, 600);
         } else {
-          const isHandoff = !!pendingFollowUpRef.current;
+          const isHandoff = !!pendingFollowUpRef.current || pendingHandoffModeRef.current === "greeting";
           if (isHandoff) {
             addMessage({ role: "assistant", content: `--- **Now on: ${screenName}** ---` });
           } else {
             addMessage({ role: "assistant", content: `--- **Now on: ${screenName}** ---\n\nSwitched to **${screenName}**.` });
           }
         }
-        // If we arrived here via an AI navigateToPage tool call, auto-send the follow-up task.
-        if (pendingFollowUpRef.current) {
-          const task = pendingFollowUpRef.current;
-          pendingFollowUpRef.current = null;
-          if (navTimeoutRef.current) {
-            clearTimeout(navTimeoutRef.current);
-            navTimeoutRef.current = null;
-          }
-          setTimeout(() => {
-            if (sendMessageRef.current) sendMessageRef.current(task);
-          }, 600);
+        if (pendingFollowUpRef.current || pendingHandoffModeRef.current) {
+          setTimeout(() => executeNavigationHandoff(), 600);
         }
       }
     }
@@ -2582,6 +2618,8 @@ export default function AIChatWidget() {
     blockedClickTargetRef,
     navTimeoutRef,
     pendingFollowUpRef,
+    pendingHandoffModeRef,
+    pendingHandoffUserMessageRef,
     formLanguageRef,
     setIsOpen,
     getApiHistory,

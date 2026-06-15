@@ -1,4 +1,5 @@
 import { AI_CHAT_MODE, PAGE_LABELS, PAGE_ROUTES, SERVER_URL } from "../constants/aiChatConstants.js";
+import { resolveNavigationHandoff } from "../utils/resolveNavigationHandoff.js";
 
 /**
  * Creates the tool-call handler with bindings from the chat widget/controller.
@@ -34,6 +35,8 @@ export function createApplyToolCall(bindings) {
     blockedClickTargetRef,
     navTimeoutRef,
     pendingFollowUpRef,
+    pendingHandoffModeRef,
+    pendingHandoffUserMessageRef,
     formLanguageRef,
     setIsOpen,
     getApiHistory,
@@ -49,34 +52,48 @@ export function createApplyToolCall(bindings) {
   } = bindings;
 
   function handleNavigateToPage(args) {
-    const { page, reason, followUpTask } = args;
+    const { page, reason, followUpTask, handoffMode } = args;
     const route = PAGE_ROUTES[page];
     const label = PAGE_LABELS[page] || page;
     if (!route) return;
+
+    const currentPath = window.location.pathname;
+    const alreadyThere = currentPath === route || (route !== "/" && currentPath.startsWith(`${route}/`));
+
+    if (alreadyThere) {
+      pendingFollowUpRef.current = null;
+      pendingHandoffModeRef.current = null;
+      pendingHandoffUserMessageRef.current = null;
+      if (navTimeoutRef.current) {
+        clearTimeout(navTimeoutRef.current);
+        navTimeoutRef.current = null;
+      }
+      return;
+    }
 
     addMessage({
       role: "assistant",
       content: `Navigating you to **${label}**. ${reason}`,
     });
 
-    const currentPath = window.location.pathname;
-    const alreadyThere = currentPath === route || (route !== "/" && currentPath.startsWith(`${route}/`));
-
+    pendingHandoffModeRef.current = handoffMode === "greeting" ? "greeting" : "task";
+    const lastUser = [...getApiHistory()].reverse().find((m) => m.role === "user")?.content;
+    pendingHandoffUserMessageRef.current = typeof lastUser === "string" ? lastUser : "";
     if (followUpTask) {
       pendingFollowUpRef.current = followUpTask;
       if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
       navTimeoutRef.current = setTimeout(() => {
         pendingFollowUpRef.current = null;
+        pendingHandoffModeRef.current = null;
+        pendingHandoffUserMessageRef.current = null;
       }, 30000);
-    }
-
-    if (alreadyThere) {
-      if (followUpTask) {
-        pendingFollowUpRef.current = null;
-        if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
-        triggerAutoMessage(followUpTask);
-      }
-      return;
+    } else if (handoffMode === "greeting") {
+      pendingFollowUpRef.current = null;
+      if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
+      navTimeoutRef.current = setTimeout(() => {
+        pendingHandoffModeRef.current = null;
+        pendingHandoffUserMessageRef.current = null;
+      }, 30000);
     }
 
     setTimeout(() => {
