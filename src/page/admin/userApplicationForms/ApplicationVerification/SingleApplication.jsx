@@ -97,6 +97,7 @@ export default function SingleApplication() {
     data: { name: "data", value: "null" },
   });
   const autocompleteRef = useRef(null);
+  const emailFormRef = useRef(null); // email/OTP fields for AI DOM discovery + guided lock scoping
   const idMissionFormRef = useRef(null); // used by DOM field discovery
   const initialDataLoadRef = useRef(null); // tracks the in-flight getSavedFormDataAndSaveInRedux promise
   const navigatingAwayRef = useRef(false); // set true before navigate() to suppress idmission-qr stage during the outbound render
@@ -146,6 +147,7 @@ export default function SingleApplication() {
   // Register this page with the AI applicant assistant.
   // Context is scoped to the current stage so the AI only knows about
   // what is visible to the applicant right now.
+  const isGuestApplicant = user?.role?.name === "guest" || user?.role === "guest";
   const aiStage =
     !emailVerified || emailVerifiedLoading || navigatingAwayRef.current
       ? "email"
@@ -180,7 +182,10 @@ export default function SingleApplication() {
             ? "The applicant scans a QR code (or uses a web link) with their phone to complete photo ID verification through IDMission. No form fields to fill at this step — they must use the QR code or web link."
             : 'The applicant completes their personal details and adds their signature to proceed. Some fields may already be filled from identity verification — present those pre-filled values to the applicant for confirmation before moving on to empty fields. For the roleFillingForCompany field, valid values are: "both" (operator and primary contact), "primaryContact" (primary contact only), or "primaryOperatorAndController" (C-level executive or owner). Present these as readable choices to the applicant.',
       aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
-      formRef: aiStage === "idmission-details" ? idMissionFormRef : null,
+      // Logged-in admins/owners fill manually; guest applicants use guided AI chat.
+      allowManualEdit: !isGuestApplicant,
+      formRef:
+        aiStage === "idmission-details" ? idMissionFormRef : aiStage === "email" ? emailFormRef : null,
       currentState: {
         ...(aiStage === "email" && {
           otpSent,
@@ -294,7 +299,7 @@ export default function SingleApplication() {
       },
       // idMissionVerifiedData object reference changes on every field update,
       // which re-triggers registerScreenContext so the DOM is re-read.
-      deps: [aiStage, email, otp, webLink, idMissionVerifiedData],
+      deps: [aiStage, email, otp, webLink, idMissionVerifiedData, isGuestApplicant],
       // clearOnMount: only wipe the chat history on the very first mount (before email
       // verification). On remounts after navigating away (e.g. returning from company
       // verification), emailVerified is already true in Redux — skip the reset so the
@@ -1339,7 +1344,7 @@ export default function SingleApplication() {
           {!idMissionVerified ? ( // TODO add not
             !emailVerified ? (
               <>
-                <div className="flex flex-col items-center gap-3 w-full">
+                <div ref={emailFormRef} className="flex flex-col items-center gap-3 w-full">
                   {isCreator && (
                     <div className="flex w-full items-center justify-end">
                       <Button label="Edit OTP Display Text" onClick={() => setOpenOtpDisplayTextModal(true)} />

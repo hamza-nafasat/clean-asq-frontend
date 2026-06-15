@@ -30,6 +30,9 @@ const formSlice = createSlice({
     updateIsDisabledAllFields: (state, action) => {
       state.isDisabledAllFields = action.payload;
     },
+    clearSavedFormData: (state) => {
+      state.formData = {};
+    },
   },
 });
 
@@ -39,6 +42,7 @@ export const {
   addSavedFormData,
   updateFormHeaderAndFooter,
   updateIsDisabledAllFields,
+  clearSavedFormData,
 } = formSlice.actions;
 
 export default formSlice;

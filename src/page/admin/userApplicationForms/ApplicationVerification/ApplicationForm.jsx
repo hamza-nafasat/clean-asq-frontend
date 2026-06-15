@@ -14,7 +14,12 @@ import {
   useSubmitFormMutation,
 } from "@/redux/apis/formApis";
 import { setIdMissionData } from "@/redux/slices/authSlice";
-import { addSavedFormData, updateFormHeaderAndFooter, updateFormState } from "@/redux/slices/formSlice";
+import {
+  addSavedFormData,
+  clearSavedFormData,
+  updateFormHeaderAndFooter,
+  updateFormState,
+} from "@/redux/slices/formSlice";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -47,6 +52,7 @@ export default function ApplicationForm() {
   const [getSavedFormData] = useGetSavedFormMutation();
   const [saveFormInDraft] = useSaveFormInDraftMutation();
   const { isApplied } = useApplyBranding({ formId });
+  const isGuestApplicant = user?.role?.name === "guest" || user?.role === "guest";
 
   const handlePrevious = useCallback(() => {
     if (currentStep > 0) setCurrentStep(currentStep - 1);
@@ -102,6 +108,8 @@ export default function ApplicationForm() {
     screenName: sectionNames[currentStep] || "Application Form",
     description: `Multi-step application form. Applicant is on step ${currentStep + 1} of ${stepsComps.length}.`,
     aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
+    // Logged-in admins/owners fill manually; guest applicants use guided AI chat.
+    allowManualEdit: !isGuestApplicant,
     formRef: stepContainerRef,
     currentState: {
       currentStep,
@@ -122,7 +130,7 @@ export default function ApplicationForm() {
         if (currentStep > 0) setCurrentStep(currentStep - 1);
       },
     },
-    deps: [currentStep, stepsComps.length, sectionNames[currentStep], form?.data?._id],
+    deps: [currentStep, stepsComps.length, sectionNames[currentStep], form?.data?._id, isGuestApplicant],
   });
   const handleSubmit = useCallback(
     async ({ data, name, setLoadingNext }) => {
@@ -155,7 +163,9 @@ export default function ApplicationForm() {
           }).unwrap();
           if (res.success) {
             toast.success(res.message);
-            // navigate("/submited-successfully/" + form?.data?._id);
+            // clear redux state
+            dispatch(clearSavedFormData());
+            navigate("/submited-successfully/" + form?.data?._id);
           }
         }
       } catch (error) {
@@ -316,10 +326,13 @@ export default function ApplicationForm() {
     );
   if (!user?._id) return navigate(`/application-form/${form?.data?.branding?.name}/${formId}`);
   return (
-    <div data-testid="application-form" data-ai-loading={!isSavedApiRun ? "page" : undefined}>
+    <div
+      className="bg-backgroundColor h-full w-full overflow-hidden rounded-[10px] px-6 py-6"
+      data-testid="application-form"
+      data-ai-loading={!isSavedApiRun ? "page" : undefined}
+    >
       <Stepper steps={sectionNames} currentStep={currentStep} visibleSteps={0} emptyRequiredFields={[]}>
-        {stepsComps[currentStep]}
-        {/* <div ref={stepContainerRef}>{stepsComps[currentStep]}</div> */}
+        <div ref={stepContainerRef}>{stepsComps[currentStep]}</div>
       </Stepper>
     </div>
   );

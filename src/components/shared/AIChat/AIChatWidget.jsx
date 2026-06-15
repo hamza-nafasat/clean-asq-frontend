@@ -1251,10 +1251,14 @@ export default function AIChatWidget() {
   // Signature boxes ([data-ai-type="sign"]) use pointer-events:none since they can't use `disabled`.
   // Runs on page/step navigation (currentScreenId + formDataSignal).
   // Skipped in basic mode — the applicant fills the form themselves.
+  // Also skipped when screen context sets allowManualEdit (admin/owner testing the form).
   useEffect(() => {
     if (assistantMode !== "applicant" || AI_CHAT_MODE === "basic") return;
     // Small delay so the new page's DOM is fully rendered before we query
     const apply = () => {
+      const ctx = getScreenContext();
+      const allowManualEdit = ctx?.allowManualEdit === true;
+
       // Re-enable any previously tracked elements first (they're from the old page)
       for (const el of maxHelpDisabledElsRef.current) {
         el.disabled = false;
@@ -1268,13 +1272,16 @@ export default function AIChatWidget() {
       }
       maxHelpDisabledSignsRef.current = [];
 
+      if (allowManualEdit) return;
+
       const chatPanel = panelRef.current || document.querySelector(".ai-chat-panel");
+      const formRoot = ctx?.formRef?.current;
 
       // Disable standard form inputs.
       // Exception: Google Places autocomplete inputs (data-ai-type="places" or nested
       // inside such a wrapper) must stay enabled — the Places API requires live DOM
       // interaction and won't work on a disabled input.
-      const candidates = document.querySelectorAll(
+      const candidates = (formRoot || document).querySelectorAll(
         'input:not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"]),' + "select, textarea",
       );
       for (const el of candidates) {
@@ -1291,7 +1298,7 @@ export default function AIChatWidget() {
 
       // Block signature boxes — canvas + buttons can't use disabled, use pointer-events instead.
       // Also remove them from the tab order so Tab doesn't jump here while all other inputs are disabled.
-      const signWrappers = document.querySelectorAll('[data-ai-type="sign"]');
+      const signWrappers = (formRoot || document).querySelectorAll('[data-ai-type="sign"]');
       for (const wrapper of signWrappers) {
         if (!chatPanel?.contains(wrapper)) {
           wrapper.style.pointerEvents = "none";
@@ -1304,7 +1311,15 @@ export default function AIChatWidget() {
     };
     const t = setTimeout(apply, 150);
     return () => clearTimeout(t);
-  }, [assistantMode, currentScreenId, formDataSignal]);
+  }, [assistantMode, currentScreenId, formDataSignal, getScreenContext]);
+
+  // Close stale ADE panel when the applicant navigates to a new step/page so cleanup
+  // does not re-disable fields on the new screen.
+  useEffect(() => {
+    if (assistantMode !== "applicant" || AI_CHAT_MODE === "basic") return;
+    setAdePanel(null);
+    adePanelCallbackRef.current = null;
+  }, [assistantMode, currentScreenId]);
 
   // Auto-scroll to bottom whenever messages change
   useEffect(() => {
