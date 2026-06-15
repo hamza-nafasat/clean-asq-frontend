@@ -62,7 +62,7 @@ const ColumnsForFormVersions = () => [
   },
 ];
 
-const FormVersions = ({ submittedFormId }) => {
+const FormVersions = ({ submittedFormId, submitForm }) => {
   const [selectedVersion, setSelectedVersion] = useState(null);
   const [viewDetailsModal, setViewDetailsModal] = useState(false);
   // const [deleteVersionModal, setDeleteVersionModal] = useState(false);
@@ -144,11 +144,14 @@ const FormVersions = ({ submittedFormId }) => {
           width="min-w-[80vw] max-w-2xl"
           title="Version Details"
           isOpen={viewDetailsModal}
-          onClose={() => setViewDetailsModal(null)}
+          onClose={() => {
+            setViewDetailsModal(false);
+            setSelectedVersion(null);
+          }}
           hideSaveButton={true}
           hideCancelButton={true}
         >
-          <ViewDetailsModal selectedVersion={selectedVersion} />
+          <ViewDetailsModal key={selectedVersion?._id} selectedVersion={selectedVersion} submitForm={submitForm} />
         </Modal>
       )}
       <DataTable
@@ -169,12 +172,18 @@ const FormVersions = ({ submittedFormId }) => {
 
 export { FormVersions };
 
-const ViewDetailsModal = ({ selectedVersion }) => {
+const ViewDetailsModal = ({ selectedVersion, submitForm }) => {
+  const userId = submitForm?.user?._id || submitForm?.user;
+  const pdfId = submitForm?.form?._id || submitForm?.form || selectedVersion?.form?._id;
+  const initialSubmitData = selectedVersion?.snapshot?.submitData;
+
   return (
     <div className="flex w-full min-h-screen justify-center items-center">
       <ApplicationPdfViewCommonProps
-        userId={selectedVersion?.actor?._id}
-        pdfId={selectedVersion?.form?._id}
+        userId={userId}
+        pdfId={pdfId}
+        initialSubmitData={initialSubmitData}
+        submittedFormId={submitForm?._id}
         className="rounded-lg!"
       />
     </div>

@@ -47,7 +47,9 @@ function OnBoarding() {
         {activeTab === "history" && <History submittedFormId={applicantId} />}
         {activeTab === "applicationAnalysis" && <ApplicationAnalysis submitFormData={submitFormData?.data} />}
         {activeTab === "appViewer" && <AppViewer data={submitFormData?.data} />}
-        {activeTab === "formVersions" && <FormVersions submittedFormId={applicantId} />}
+        {activeTab === "formVersions" && (
+          <FormVersions submittedFormId={applicantId} submitForm={submitFormData?.data} />
+        )}
       </div>
     </>
   );
