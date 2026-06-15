@@ -356,7 +356,7 @@ const MakeFieldDataCustom = ({
         )}
       </div>
       <div className="flex w-full justify-end">
-        <Button onClick={() => setConfirmDelete(true)} className="max-w-[200px] bg-red-600 text-white hover:bg-red-700">
+        <Button onClick={() => setConfirmDelete(true)} className="max-w-50 bg-red-600 text-white hover:bg-red-700">
           Delete Field
         </Button>
       </div>

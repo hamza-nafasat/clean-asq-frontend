@@ -198,7 +198,7 @@ const ApplicantsTable = ({
             name={field}
             value={value}
             onChange={onChange}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
+            className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${
               error ? "border-red-500" : "border-gray-300"
             }`}
           >
@@ -364,7 +364,7 @@ const ApplicantsTable = ({
           <select
             value={filters.status}
             onChange={(e) => onFilterChange("status", e.target.value)}
-            className="border-frameColor mt-2 h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
+            className="border-frameColor mt-2 h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base"
           >
             <option value="">All Statuses</option>
             {Object.values(APPLICANT_STATUS).map((status) => (
@@ -391,7 +391,10 @@ const ApplicantsTable = ({
           </div>
         </div>
       </div>
-      <div className="mt-5 w-full h-full overflow-x-auto lg:w-[calc(100vw-350px)]! xl:w-full" data-testid="applications-table">
+      <div
+        className="mt-5 w-full h-full overflow-x-auto lg:w-[calc(100vw-350px)]! xl:w-full"
+        data-testid="applications-table"
+      >
         <DataTable
           columns={columns}
           data={filteredApplicants}

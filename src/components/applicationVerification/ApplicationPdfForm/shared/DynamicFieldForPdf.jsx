@@ -58,7 +58,7 @@ const SelectInputType = ({ field, className, form, setForm, sectionKey }) => {
             disabled={isDisabledAllFields}
             required={required}
             value={form?.[uniqueId]?.value}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${isDisabledAllFields ? "opacity-70 cursor-not-allowed" : ""}`}
+            className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${isDisabledAllFields ? "opacity-70 cursor-not-allowed" : ""}`}
             onChange={selectHandler}
           >
             <option value="">{placeholder ?? "Choose an option"}</option>
@@ -104,7 +104,7 @@ const MultiCheckboxInputType = ({ field, className, form, setForm, sectionKey })
           <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
         </Modal>
       )}
-      <h4 className="text-textPrimary min-w-[200px]lg:text-lg text-base font-medium">
+      <h4 className="text-textPrimary min-w-50lg:text-lg text-base font-medium">
         {label}:{required ? "*" : ""}
       </h4>
       {ai_formatting && isDisplayText && (
@@ -173,7 +173,7 @@ const RadioInputType = ({ field, className, form, setForm, onChange, sectionKey 
         </div>
       )}
       <div className="flex w-full">
-        <h4 className="text-textPrimary min-w-[200px] text-base font-medium lg:text-lg">
+        <h4 className="text-textPrimary min-w-50 text-base font-medium lg:text-lg">
           {label}:{required ? "*" : ""}
         </h4>
       </div>
@@ -345,7 +345,7 @@ const RangeInputType = ({ field, className, form, setForm, sectionKey }) => {
           aria-disabled={isDisabledAllFields}
           value={Number(form?.[uniqueId]?.value) || 0}
           type="range"
-          className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${isDisabledAllFields ? "opacity-70 cursor-not-allowed" : ""}`}
+          className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${className} ${isDisabledAllFields ? "opacity-70 cursor-not-allowed" : ""}`}
           onChange={onRangeChange}
         />
         <div className="flex w-full gap-2">
@@ -354,7 +354,7 @@ const RangeInputType = ({ field, className, form, setForm, sectionKey }) => {
             aria-disabled={isDisabledAllFields}
             type="number"
             value={Number(form?.[uniqueId]?.value) || 0}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${isDisabledAllFields ? "opacity-70 cursor-not-allowed" : ""}`}
+            className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${className} ${isDisabledAllFields ? "opacity-70 cursor-not-allowed" : ""}`}
             onChange={onRangeChange}
           />
         </div>
@@ -450,7 +450,7 @@ const FileInputType = ({ field, className, form, setForm, sectionKey }) => {
       <div className="flex w-full gap-2 mt-2">
         <div className="w-full">
           <div
-            className={`relative mt-2 flex h-[283px] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-10 text-gray-500 transition hover:border-[#5570F1] hover:bg-blue-50 ${isDisabledAllFields ? "opacity-70 cursor-not-allowed!" : ""}`}
+            className={`relative mt-2 flex h-70.75 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-10 text-gray-500 transition hover:border-[#5570F1] hover:bg-blue-50 ${isDisabledAllFields ? "opacity-70 cursor-not-allowed!" : ""}`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onClick={isDisabledAllFields ? undefined : () => inputRef.current?.click()}
@@ -624,7 +624,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, secti
                     onBlur={() => setShowMasked(true)}
                     readOnly={showMasked}
                     autoComplete="off"
-                    className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+                    className={`h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${className} ${
                       required && isEmpty(form?.[uniqueId]?.value)
                         ? "border-accent border-2"
                         : "border-frameColor border"
@@ -668,7 +668,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, secti
                     }}
                     readOnly={showMasked}
                     autoComplete="off"
-                    className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+                    className={`h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${className} ${
                       required && isEmpty(form?.[uniqueId]?.value)
                         ? "border-accent border-2"
                         : "border-frameColor border"
@@ -773,7 +773,7 @@ const AiHelpModal = ({ aiResponse }) => {
           type="text"
           value={updateAiPrompt}
           onChange={(e) => setUpdateAiPrompt(e.target.value)}
-          className="border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
+          className="border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base"
         />
         <Button className="text-nowrap" label="Get Response" onClick={getResponseFromAi} loading={isLoading} />
       </div>

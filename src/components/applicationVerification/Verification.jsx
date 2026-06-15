@@ -1,21 +1,21 @@
-import { useGetMyProfileFirstTimeMutation } from '@/redux/apis/authApis';
-import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from '@/redux/apis/idMissionApis';
-import { userExist, userNotExist } from '@/redux/slices/authSlice';
-import { updateEmailVerified } from '@/redux/slices/formSlice';
-import { useEffect, useState } from 'react';
-import { MdVerifiedUser } from 'react-icons/md';
-import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
-import Button from '../shared/small/Button';
-import TextField from '../shared/small/TextField';
+import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/authApis";
+import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } from "@/redux/apis/idMissionApis";
+import { userExist, userNotExist } from "@/redux/slices/authSlice";
+import { updateEmailVerified } from "@/redux/slices/formSlice";
+import { useEffect, useState } from "react";
+import { MdVerifiedUser } from "react-icons/md";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import Button from "../shared/small/Button";
+import TextField from "../shared/small/TextField";
 
 function Verification() {
   const dispatch = useDispatch();
-  const { emailVerified } = useSelector(state => state.form);
+  const { emailVerified } = useSelector((state) => state.form);
   const [webLink, setWebLink] = useState(null);
-  const [qrCode, setQrCode] = useState('');
-  const [otp, setOtp] = useState('');
-  const [email, setEmail] = useState('');
+  const [qrCode, setQrCode] = useState("");
+  const [otp, setOtp] = useState("");
+  const [email, setEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
 
   const [getIdMissionSession] = useGetIdMissionSessionMutation();
@@ -26,33 +26,33 @@ function Verification() {
   const getSessionId = async () => {
     try {
       const res = await getIdMissionSession().unwrap();
-      console.log('session id is ', res);
+      console.log("session id is ", res);
       if (res.success) {
         setQrCode(res.data?.customerData?.qrCode);
         setWebLink(res.data?.customerData?.kycUrl);
       }
     } catch (error) {
-      console.log('Error fetching session ID:', error);
+      console.log("Error fetching session ID:", error);
     }
   };
 
   const sentOtpForEmail = async () => {
     try {
-      if (!email) return toast.error('Please enter your email');
+      if (!email) return toast.error("Please enter your email");
       const res = await sendOtp({ email }).unwrap();
       if (res.success) {
         setOtpSent(true);
         toast.success(res.message);
       }
     } catch (error) {
-      console.log('Error sending OTP:', error);
-      toast.error(error?.data?.message || 'Failed to send OTP');
+      console.log("Error sending OTP:", error);
+      toast.error(error?.data?.message || "Failed to send OTP");
     }
   };
 
   const verifyWithOtp = async () => {
     try {
-      if (!email || !otp) return toast.error('Please enter your email and otp');
+      if (!email || !otp) return toast.error("Please enter your email and otp");
       const res = await verifyEmail({ email, otp }).unwrap();
       if (res.success) {
         await getSessionId();
@@ -61,14 +61,14 @@ function Verification() {
         toast.success(res.message);
       }
     } catch (error) {
-      console.log('Error sending OTP:', error);
-      toast.error(error?.data?.message || 'Failed to send OTP');
+      console.log("Error sending OTP:", error);
+      toast.error(error?.data?.message || "Failed to send OTP");
     }
   };
 
   useEffect(() => {
     getUserProfile()
-      .then(res => {
+      .then((res) => {
         if (res?.data?.success) dispatch(userExist(res.data.data));
         else dispatch(userNotExist());
       })
@@ -86,14 +86,14 @@ function Verification() {
               type="email"
               placeholder="Enter your email"
               value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="max-w-[500px]"
+              onChange={(e) => setEmail(e.target.value)}
+              className="max-w-125"
             />
             <Button
               onClick={sentOtpForEmail}
               disabled={otpLoading}
-              className={`min-w-[130px] py-[8px] ${otpLoading && 'cursor-not-allowed opacity-25'}`}
-              label={'Send Code'}
+              className={`min-w-32.5 py-2 ${otpLoading && "cursor-not-allowed opacity-25"}`}
+              label={"Send Code"}
             />
           </div>
           {otpSent && (
@@ -102,14 +102,14 @@ function Verification() {
                 type="text"
                 placeholder="Enter your OTP"
                 value={otp}
-                onChange={e => setOtp(e.target.value)}
-                className="max-w-[500px]"
+                onChange={(e) => setOtp(e.target.value)}
+                className="max-w-125"
               />
               <Button
                 onClick={verifyWithOtp}
                 disabled={emailLoading}
-                className={`min-w-[130px] py-[8px] ${emailLoading && 'cursor-not-allowed opacity-25'}`}
-                label={'Submit Code'}
+                className={`min-w-32.5 py-2 ${emailLoading && "cursor-not-allowed opacity-25"}`}
+                label={"Submit Code"}
               />
             </div>
           )}
@@ -121,11 +121,11 @@ function Verification() {
           {qrCode && webLink && (
             <>
               <div className="mt-4 flex w-full flex-col items-center gap-4">
-                <img className="h-[230px] w-[230px]" src={`data:image/jpeg;base64,${qrCode}`} alt="qr code " />
+                <img className="h-57.5 w-57.5" src={`data:image/jpeg;base64,${qrCode}`} alt="qr code " />
               </div>
               {/* <div className="mt-4 flex w-full flex-col items-center gap-4">
                 <Button
-                  className="max-w-[400px]"
+                  className="max-w-100"
                   label={'Open LInk in New Tab'}
                   onClick={() => {
                     window.open(webLink, '_blank');

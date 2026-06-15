@@ -16,7 +16,7 @@ function ApplyBranding({ selectedId, setSelectedId, onHome, setOnHome, brandings
           <select
             required
             value={selectedId}
-            className="border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
+            className="border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base"
             onChange={(e) => setSelectedId(e.target.value)}
           >
             <option value="">{"Choose an option"}</option>

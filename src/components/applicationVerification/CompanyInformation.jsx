@@ -556,7 +556,7 @@ function CompanyInformation({
                 placeholder="Type NAICS code or description..."
                 type="text"
                 value={naicsToMccDetails.NAICS}
-                className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${!naicsToMccDetails.NAICS ? "bg-highlighting border-accent! border-2" : ""}`}
+                className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${!naicsToMccDetails.NAICS ? "bg-highlighting border-accent! border-2" : ""}`}
                 data-ai-has-suggestions="true"
                 data-ai-required="true"
                 data-ai-label="NAICS Code and Description"
@@ -695,7 +695,7 @@ const NAICSModal = ({ naicsApiData, setNaicsApiData, setNaicsToMccDetails, setSh
             type={"text"}
             readOnly
             value={`${naicsApiData?.bestMatch?.naics ? naicsApiData?.bestMatch?.naics + " ," : ""} ${naicsApiData?.bestMatch?.naicsDescription || ""} ${naicsApiData?.bestMatch?.mcc ? " , " + naicsApiData?.bestMatch?.mcc : ""} ${naicsApiData?.bestMatch?.mccDescription ? " , " + naicsApiData?.bestMatch?.mccDescription : ""}`}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
+            className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base`}
           />
         </div>
       </section>
@@ -710,7 +710,7 @@ const NAICSModal = ({ naicsApiData, setNaicsApiData, setNaicsToMccDetails, setSh
                 readOnly
                 value={`${match?.naics}, ${match?.naicsDescription} ${match?.mcc ? `, ${match?.mcc} , ${match?.mccDescription}` : ""}`}
                 title={`${match?.naics}, ${match?.naicsDescription} ${match?.mcc ? `, ${match?.mcc} , ${match?.mccDescription}` : ""}`}
-                className={`border-frameColor h-[45px] w-full cursor-pointer rounded-lg bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
+                className={`border-frameColor h-11.25 w-full cursor-pointer rounded-lg bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base`}
               />
             </button>
           ))}

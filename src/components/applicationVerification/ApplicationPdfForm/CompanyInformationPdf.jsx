@@ -344,7 +344,7 @@ function CompanyInformationPdf({
                 placeholder="Type NAICS code or description..."
                 type="text"
                 value={naicsToMccDetails.NAICS}
-                className="border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
+                className="border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base"
                 onChange={handleNaicsInputChange}
                 onFocus={() => (naicsToMccDetails.NAICS ? setShowSuggestions(true) : setShowSuggestions(false))}
               />
@@ -426,7 +426,7 @@ const NAICSModal = ({ naicsApiData, setNaicsApiData, setNaicsToMccDetails, setSh
             type={"text"}
             readOnly
             value={`${naicsApiData?.bestMatch?.naics ? naicsApiData?.bestMatch?.naics + " ," : ""} ${naicsApiData?.bestMatch?.naicsDescription || ""}`}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
+            className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base`}
           />
         </div>
       </section>
@@ -440,7 +440,7 @@ const NAICSModal = ({ naicsApiData, setNaicsApiData, setNaicsToMccDetails, setSh
                 type={"text"}
                 readOnly
                 value={`${match?.naics}, ${match?.naicsDescription}`}
-                className={`border-frameColor h-[45px] w-full cursor-pointer! rounded-lg bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
+                className={`border-frameColor h-11.25 w-full cursor-pointer! rounded-lg bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base`}
               />
             </button>
           ))}

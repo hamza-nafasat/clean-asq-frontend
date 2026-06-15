@@ -1,30 +1,30 @@
-import DropdownCheckbox from '@/components/shared/DropdownCheckbox';
-import Button from '@/components/shared/small/Button';
-import TextField from '@/components/shared/small/TextField';
-import { useUpdateFormStrategyMutation } from '@/redux/apis/formApis';
-import React, { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
+import DropdownCheckbox from "@/components/shared/DropdownCheckbox";
+import Button from "@/components/shared/small/Button";
+import TextField from "@/components/shared/small/TextField";
+import { useUpdateFormStrategyMutation } from "@/redux/apis/formApis";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
-const renderFormField = (field, value, onChange, type = 'text', options = null, error = null) => {
+const renderFormField = (field, value, onChange, type = "text", options = null, error = null) => {
   const labelText = field
     .split(/(?=[A-Z])/) // split camelCase into words
-    .join(' ')
-    .replace(/^\w/, c => c.toUpperCase());
+    .join(" ")
+    .replace(/^\w/, (c) => c.toUpperCase());
 
-  if (type === 'select' && options) {
+  if (type === "select" && options) {
     return (
       <div className="mb-4">
         <label className="text-textPrimary mb-1 block text-sm font-medium">{labelText}</label>
         <select
           name={field}
           value={value}
-          onChange={e => onChange(field, e.target.value)}
-          className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
-            error ? 'border-red-500' : 'border-frameColor'
+          onChange={(e) => onChange(field, e.target.value)}
+          className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${
+            error ? "border-red-500" : "border-frameColor"
           }`}
         >
           <option value="">Choose an option</option>
-          {options.map(opt => (
+          {options.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
             </option>
@@ -35,7 +35,7 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
     );
   }
 
-  if (type === 'checkbox') {
+  if (type === "checkbox") {
     return (
       <div className="mb-4 flex items-center space-x-2">
         <input type="checkbox" checked={value} onChange={() => onChange(field, !value)} />
@@ -44,7 +44,7 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
     );
   }
 
-  if (type === 'multi-select' && options) {
+  if (type === "multi-select" && options) {
     return (
       <div className="mb-4">
         <label className="mb-1 block text-sm font-medium">{labelText}</label>
@@ -52,7 +52,7 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
           options={options}
           selected={value}
           defaultText={`Select ${labelText}`}
-          onSelect={vals => onChange(field, vals)}
+          onSelect={(vals) => onChange(field, vals)}
         />
       </div>
     );
@@ -66,7 +66,7 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
         name={field}
         type={type}
         value={value}
-        onChange={e => onChange(field, e.target.value)} // ensure handler works
+        onChange={(e) => onChange(field, e.target.value)} // ensure handler works
         placeholder={`Enter ${labelText}`}
         className="w-full rounded border p-2 text-sm"
       />
@@ -76,24 +76,24 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
 };
 
 function EditStrategies({ selectedRow, setEditModalData, forms = [], formKeys = [] }) {
-  const [form, setForm] = useState({ name: '', form: '', searchStrategies: [] });
+  const [form, setForm] = useState({ name: "", form: "", searchStrategies: [] });
   const [updateFormStrategy, { isLoading }] = useUpdateFormStrategyMutation();
 
   useEffect(() => {
     if (selectedRow) {
       setForm({
-        name: selectedRow.name || '',
-        form: selectedRow.forms?.map(f => f?._id) || '',
-        searchStrategies: selectedRow?.searchStrategies?.map(s => s?._id) || [],
+        name: selectedRow.name || "",
+        form: selectedRow.forms?.map((f) => f?._id) || "",
+        searchStrategies: selectedRow?.searchStrategies?.map((s) => s?._id) || [],
       });
     }
   }, [selectedRow]);
 
   const handleChange = (field, value) => {
-    setForm(prev => ({ ...prev, [field]: value }));
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const res = await updateFormStrategy({ FormStrategyId: selectedRow._id, data: form }).unwrap();
@@ -103,7 +103,7 @@ function EditStrategies({ selectedRow, setEditModalData, forms = [], formKeys = 
       }
     } catch (error) {
       console.log(error);
-      toast.error(error?.data?.message || 'Failed to update form strategy');
+      toast.error(error?.data?.message || "Failed to update form strategy");
     }
 
     // pass updated data back to parent
@@ -111,14 +111,14 @@ function EditStrategies({ selectedRow, setEditModalData, forms = [], formKeys = 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {renderFormField('name', form.name, handleChange, 'text')}
-      {renderFormField('form', form.form, handleChange, 'multi-select', forms)}
-      {renderFormField('searchStrategies', form.searchStrategies, handleChange, 'multi-select', formKeys)}
+      {renderFormField("name", form.name, handleChange, "text")}
+      {renderFormField("form", form.form, handleChange, "multi-select", forms)}
+      {renderFormField("searchStrategies", form.searchStrategies, handleChange, "multi-select", formKeys)}
       <div className="flex w-full justify-end">
         <Button
           type="submit"
           disabled={isLoading}
-          className={isLoading ? 'cursor-not-allowed opacity-50' : ''}
+          className={isLoading ? "cursor-not-allowed opacity-50" : ""}
           label="Save"
         />
       </div>

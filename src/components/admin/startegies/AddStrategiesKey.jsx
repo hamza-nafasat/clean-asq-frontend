@@ -1,31 +1,31 @@
-import DropdownCheckbox from '@/components/shared/DropdownCheckbox';
-import Button from '@/components/shared/small/Button';
-import TextField from '@/components/shared/small/TextField';
-import { useCreateSearchStrategyMutation, useUpdateSearchStrategyMutation } from '@/redux/apis/formApis';
-import { useState } from 'react';
-import { toast } from 'react-toastify';
+import DropdownCheckbox from "@/components/shared/DropdownCheckbox";
+import Button from "@/components/shared/small/Button";
+import TextField from "@/components/shared/small/TextField";
+import { useCreateSearchStrategyMutation, useUpdateSearchStrategyMutation } from "@/redux/apis/formApis";
+import { useState } from "react";
+import { toast } from "react-toastify";
 
 // ✅ Dynamic form field renderer
-const renderFormField = (field, value, onChange, type = 'text', options = null, error = null) => {
+const renderFormField = (field, value, onChange, type = "text", options = null, error = null) => {
   const labelText = field
     .split(/(?=[A-Z])/) // split camelCase into words
-    .join(' ')
-    .replace(/^\w/, c => c.toUpperCase());
+    .join(" ")
+    .replace(/^\w/, (c) => c.toUpperCase());
 
-  if (type === 'select' && options) {
+  if (type === "select" && options) {
     return (
       <div className="mb-4">
         <label className="text-textPrimary mb-1 block text-sm font-medium">{labelText}</label>
         <select
           name={field}
           value={value}
-          onChange={e => onChange(field, e.target.value)}
-          className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
-            error ? 'border-red-500' : 'border-frameColor'
+          onChange={(e) => onChange(field, e.target.value)}
+          className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${
+            error ? "border-red-500" : "border-frameColor"
           }`}
         >
           <option value="">Select</option>
-          {options.map(opt => (
+          {options.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
             </option>
@@ -36,7 +36,7 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
     );
   }
 
-  if (type === 'checkbox') {
+  if (type === "checkbox") {
     return (
       <div className="mb-4 flex items-center space-x-2">
         <input type="checkbox" checked={value} onChange={() => onChange(field, !value)} />
@@ -45,7 +45,7 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
     );
   }
 
-  if (type === 'multi-select' && options) {
+  if (type === "multi-select" && options) {
     return (
       <div className="mb-4">
         <label className="mb-1 block text-sm font-medium">{labelText}</label>
@@ -53,21 +53,21 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
           options={options}
           selected={value}
           defaultText={`Select ${labelText}`}
-          onSelect={vals => onChange(field, vals)}
+          onSelect={(vals) => onChange(field, vals)}
         />
       </div>
     );
   }
-  if (type === 'textarea') {
+  if (type === "textarea") {
     return (
       <div className="mb-4">
         <label className="text-textPrimary mb-1 block text-sm font-medium">{labelText}</label>
         <textarea
           name={field}
           value={value}
-          onChange={e => onChange(field, e.target.value)}
-          className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${
-            error ? 'border-red-500' : 'border-frameColor'
+          onChange={(e) => onChange(field, e.target.value)}
+          className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${
+            error ? "border-red-500" : "border-frameColor"
           }`}
         />
         {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
@@ -83,7 +83,7 @@ const renderFormField = (field, value, onChange, type = 'text', options = null, 
         name={field}
         type={type}
         value={value}
-        onChange={e => onChange(field, e.target.value)} // ensure handler works
+        onChange={(e) => onChange(field, e.target.value)} // ensure handler works
         placeholder={`Enter ${labelText}`}
         className="w-full rounded border p-2 text-sm"
       />
@@ -96,25 +96,25 @@ const AddStrategiesKey = ({ selectedRow, companyOptions, extractAsOptions, setEd
   const [createSearchStrategy] = useCreateSearchStrategyMutation();
   const [updateSearchStrategy] = useUpdateSearchStrategyMutation();
   const [form, setForm] = useState({
-    searchObjectKey: selectedRow?.searchObjectKey || '',
+    searchObjectKey: selectedRow?.searchObjectKey || "",
     companyIdentification: selectedRow?.companyIdentification || [],
-    extractAs: selectedRow?.extractAs || '',
-    searchTerms: selectedRow?.searchTerms || '',
-    extractionPrompt: selectedRow?.extractionPrompt || '',
+    extractAs: selectedRow?.extractAs || "",
+    searchTerms: selectedRow?.searchTerms || "",
+    extractionPrompt: selectedRow?.extractionPrompt || "",
     active: selectedRow?.isActive || false,
   });
 
   const handleChange = (field, value) => {
-    setForm(prev => ({ ...prev, [field]: value }));
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const { active, companyIdentification, extractAs, extractionPrompt, searchObjectKey, searchTerms } = form;
 
       if (!searchObjectKey || !searchTerms || !extractionPrompt || !extractAs || !companyIdentification.length) {
-        return toast.error('Please fill all required fields');
+        return toast.error("Please fill all required fields");
       }
       if (!selectedRow?._id) {
         const res = await createSearchStrategy({
@@ -128,7 +128,7 @@ const AddStrategiesKey = ({ selectedRow, companyOptions, extractAsOptions, setEd
           },
         }).unwrap();
         if (res?.success) {
-          toast.success('Search strategy created successfully');
+          toast.success("Search strategy created successfully");
         }
       } else {
         const res = await updateSearchStrategy({
@@ -144,12 +144,12 @@ const AddStrategiesKey = ({ selectedRow, companyOptions, extractAsOptions, setEd
           },
         }).unwrap();
         if (res?.success) {
-          toast.success('Search strategy updated successfully');
+          toast.success("Search strategy updated successfully");
         }
       }
     } catch (error) {
-      console.error('Error creating search strategy:', error);
-      toast.error(error?.data?.message || 'Failed to create search strategy');
+      console.error("Error creating search strategy:", error);
+      toast.error(error?.data?.message || "Failed to create search strategy");
     } finally {
       if (selectedRow?._id) setEditModalData(null);
       else setIsModalOpen(false);
@@ -158,24 +158,24 @@ const AddStrategiesKey = ({ selectedRow, companyOptions, extractAsOptions, setEd
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {renderFormField('searchObjectKey', form?.searchObjectKey, handleChange)}
+      {renderFormField("searchObjectKey", form?.searchObjectKey, handleChange)}
       {renderFormField(
-        'companyIdentification',
+        "companyIdentification",
         form.companyIdentification,
         handleChange,
-        'multi-select',
-        companyOptions
+        "multi-select",
+        companyOptions,
       )}
-      {renderFormField('extractAs', form.extractAs, handleChange, 'select', extractAsOptions)}
-      {renderFormField('searchTerms', form.searchTerms, handleChange)}
-      {renderFormField('extractionPrompt', form.extractionPrompt, handleChange, 'textarea')}
-      {renderFormField('active', form.active, handleChange, 'checkbox')}
+      {renderFormField("extractAs", form.extractAs, handleChange, "select", extractAsOptions)}
+      {renderFormField("searchTerms", form.searchTerms, handleChange)}
+      {renderFormField("extractionPrompt", form.extractionPrompt, handleChange, "textarea")}
+      {renderFormField("active", form.active, handleChange, "checkbox")}
 
       {/* <button type="submit" className="w-full rounded bg-blue-600 py-2 text-white hover:bg-blue-700">
         Save
       </button> */}
       <div className="flex w-full justify-end">
-        <Button type="submit" label={'Save'} />
+        <Button type="submit" label={"Save"} />
       </div>
     </form>
   );

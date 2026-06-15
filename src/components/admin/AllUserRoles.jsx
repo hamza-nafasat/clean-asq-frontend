@@ -368,7 +368,7 @@ function AllUserRoles() {
             name={field}
             value={value}
             onChange={onChange}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base${
+            className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base${
               error ? "border-red-500" : "border-frameColor"
             }`}
           >
@@ -469,13 +469,13 @@ function AllUserRoles() {
         <Modal title="View Role" onClose={() => setViewModalData(null)} hideSaveButton isLoading={isGettingUserProfile}>
           <div className="mb-4">
             <label className="mb-1 block text-sm font-medium text-gray-700">Role Name</label>
-            <div className="border-frameColor flex h-[45px] w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base">
+            <div className="border-frameColor flex h-11.25 w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base">
               {viewModalData.name}
             </div>
           </div>
           <div className="mb-4">
             <label className="mb-1 block text-sm font-medium text-gray-700">Status</label>
-            <div className="border-frameColor flex h-[45px] w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base">
+            <div className="border-frameColor flex h-11.25 w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base">
               <span className={`text-textPrimary inline-flex rounded-full px-2 py-1 text-xs font-semibold`}>
                 {viewModalData.status === ROLE_STATUS.ACTIVE ? "Active" : "Inactive"}
               </span>
@@ -483,7 +483,7 @@ function AllUserRoles() {
           </div>
           <div className="mb-4">
             <label className="mb-1 block text-sm font-medium text-gray-700">Created Date</label>
-            <div className="border-frameColor flex h-[45px] w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base">
+            <div className="border-frameColor flex h-11.25 w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base">
               {viewModalData?.createdAt?.split("T")?.[0]}
             </div>
           </div>

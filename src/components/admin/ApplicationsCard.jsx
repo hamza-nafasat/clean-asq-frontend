@@ -923,7 +923,7 @@ export default function ApplicationsCard() {
               >
                 <div className="flex justify-between">
                   <div
-                    className="flex h-[100px] max-h-[100px] w-[250px] max-w-[250px] items-center justify-center rounded-lg px-3"
+                    className="flex h-25 max-h-25 w-[250px] max-w-[250px] items-center justify-center rounded-lg px-3"
                     style={{ background: form?.branding?.colors?.headerBackground || "#f3f4f6" }}
                   >
                     <img

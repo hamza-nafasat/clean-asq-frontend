@@ -268,7 +268,7 @@ const BrandingSource = ({
         </div>
         {/* website image section */}
         <div
-          className={`relative mt-4 w-full rounded-md border p-4 ${websiteImage ? "max-h-[500px] overflow-y-auto" : "flex items-center justify-center"}`}
+          className={`relative mt-4 w-full rounded-md border p-4 ${websiteImage ? "max-h-125 overflow-y-auto" : "flex items-center justify-center"}`}
         >
           {websiteImage ? (
             <>
@@ -332,7 +332,7 @@ const BrandingSource = ({
                     onClick={() => handleLogoSelect(idx, logoUrl)}
                     onMouseEnter={() => setHoveredLogoIndex(idx)}
                     onMouseLeave={() => setHoveredLogoIndex(null)}
-                    className={`relative flex h-[130px] w-[200px] flex-col items-center justify-center gap-2 rounded-md border-2 transition-all duration-200 ${
+                    className={`relative flex h-32.5 w-50 flex-col items-center justify-center gap-2 rounded-md border-2 transition-all duration-200 ${
                       isPreview ? "cursor-not-allowed opacity-50 grayscale" : "cursor-pointer"
                     } ${
                       isPreview
@@ -374,7 +374,7 @@ const BrandingSource = ({
                     </button>
 
                     <div
-                      className={`flex h-[100px] w-[80%] flex-col items-center justify-center rounded-md ${
+                      className={`flex h-25 w-[80%] flex-col items-center justify-center rounded-md ${
                         isPreview ? "cursor-not-allowed" : "cursor-pointer"
                       }`}
                       style={{ background: headerBackground || "#f3f4f6" }}
@@ -543,7 +543,7 @@ export const SelectLogoForEmail = ({
                     onClick={() => handleLogoSelect(idx, logoUrl)}
                     onMouseEnter={() => setHoveredLogoIndex(idx)}
                     onMouseLeave={() => setHoveredLogoIndex(null)}
-                    className={`relative flex h-[130px] w-[200px] flex-col items-center justify-center gap-2 rounded-md border-2 transition-all duration-200 ${
+                    className={`relative flex h-32.5 w-50 flex-col items-center justify-center gap-2 rounded-md border-2 transition-all duration-200 ${
                       isPreview ? "cursor-not-allowed opacity-50 grayscale" : "cursor-pointer"
                     } ${
                       isPreview
@@ -585,7 +585,7 @@ export const SelectLogoForEmail = ({
                     </button>
 
                     <div
-                      className={`flex h-[100px] w-[80%] flex-col items-center justify-center rounded-md ${
+                      className={`flex h-25 w-[80%] flex-col items-center justify-center rounded-md ${
                         isPreview ? "cursor-not-allowed" : "cursor-pointer"
                       }`}
                       style={{ background: headerBackground || "#f3f4f6" }}

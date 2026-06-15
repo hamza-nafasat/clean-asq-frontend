@@ -108,7 +108,7 @@ const Email = () => {
   const templates = emailTemplates?.data;
 
   <ReactQuill
-    className={`h-[200px] border ${!editData.body ? "border-accent" : "border-frameColor"}`}
+    className={`h-50 border ${!editData.body ? "border-accent" : "border-frameColor"}`}
     value={editData.body}
     onChange={(value) => handleChange("body", value)}
     modules={quillModules}
@@ -304,7 +304,7 @@ const Email = () => {
                 value={editData.emailType}
                 onChange={(e) => handleChange("emailType", e.target.value)}
                 data-testid="email-type-select"
-                className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base`}
+                className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base`}
               >
                 <option value="">Choose an option</option>
                 {emailTypes?.map((opt) => (
@@ -325,7 +325,7 @@ const Email = () => {
 
             <div className="custom-quill-wrapper" data-testid="email-body-editor">
               <ReactQuill
-                className="custom-quill h-[200px]"
+                className="custom-quill h-50"
                 value={editData.body}
                 onChange={(value) => handleChange("body", value)}
                 modules={quillModules}

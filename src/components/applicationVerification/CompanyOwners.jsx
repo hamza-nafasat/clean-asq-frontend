@@ -501,7 +501,7 @@ function CompanyOwners({
                         key={index}
                         className="mt-3 flex min-w-full flex-col items-center justify-between gap-4 border-2 border-[#066969] p-4 md:flex-row"
                       >
-                        <div className="wrap flex w-full min-w-[400px] flex-col gap-3">
+                        <div className="wrap flex w-full  min-w-100 flex-col gap-3">
                           <div className="relative flex w-full gap-4">
                             <TextField
                               label="Owner or primary operator name"
@@ -511,7 +511,7 @@ function CompanyOwners({
                               onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                             />
                             {filteredOwners?.length > 0 && (
-                              <ul className="absolute top-20 mt-1 w-full max-w-[400px] rounded border bg-white shadow">
+                              <ul className="absolute top-20 mt-1 w-full max-w-100 rounded border bg-white shadow">
                                 {filteredOwners.map((name, i) => (
                                   <li
                                     key={i}
@@ -546,7 +546,7 @@ function CompanyOwners({
                               placeholder="e.g. 555-867-5309"
                               value={phone}
                               onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                              className={"max-w-[30%] min-w-[400px]"}
+                              className={"max-w-[30%]  min-w-100"}
                             />
                           </div>
                           <div className="flex w-full gap-4">
@@ -613,7 +613,7 @@ function CompanyOwners({
                                   formatting="3,2,4"
                                   isMasked={true}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"max-w-[30%] min-w-[400px]"}
+                                  className={"max-w-[30%]  min-w-100"}
                                 />
                                 <Autocomplete
                                   onLoad={onLoadAddress(index)}
@@ -622,7 +622,7 @@ function CompanyOwners({
                                     types: ["address"],
                                     fields: ["formatted_address"],
                                   }}
-                                  className="max-w-[50%] min-w-[400px] w-full"
+                                  className="max-w-[50%]  min-w-100 w-full"
                                 >
                                   <TextField
                                     name="address"
@@ -654,7 +654,7 @@ function CompanyOwners({
                                       index,
                                     );
                                   }}
-                                  className={"max-w-[15%] min-w-[150px]"}
+                                  className={"max-w-[15%] min-w-37.5"}
                                 />
                                 <TextField
                                   name="date_of_birth"
@@ -662,7 +662,7 @@ function CompanyOwners({
                                   label="Date of Birth"
                                   value={date_of_birth}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"max-w-[30%] min-w-[400px]"}
+                                  className={"max-w-[30%]  min-w-100"}
                                 />
 
                                 <TextField
@@ -672,7 +672,7 @@ function CompanyOwners({
                                   value={driver_license_issuer_state}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                                   suggestions={STATE_SUGGESTIONS}
-                                  className={"max-w-[30%] min-w-[400px]"}
+                                  className={"max-w-[30%]  min-w-100"}
                                 />
                                 <TextField
                                   name="driver_license_number"
@@ -680,7 +680,7 @@ function CompanyOwners({
                                   placeholder="As it appears on your ID"
                                   value={driver_license_number}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"max-w-[30%] min-w-[400px]"}
+                                  className={"max-w-[30%]  min-w-100"}
                                 />
                               </div>
                             </div>

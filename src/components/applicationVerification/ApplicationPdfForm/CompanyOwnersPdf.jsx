@@ -216,11 +216,12 @@ function CompanyOwnersPdf({
     }
 
     // 2) Figure out what to add…
+    const sectionData = formInnerData?.[sectionKey] ?? {};
     const toAdd = Object.fromEntries(
-      Object.entries(initialForm).filter(([key]) => !(key in formInnerData[sectionKey])),
+      Object.entries(initialForm).filter(([key]) => !(key in sectionData)),
     );
     // 3) …and what to remove
-    const toRemoveKeys = Object.keys(formInnerData?.[sectionKey]).filter((key) => !(key in initialForm));
+    const toRemoveKeys = Object.keys(sectionData).filter((key) => !(key in initialForm));
     // 4) If there’s nothing to do, bail out
     if (Object.keys(toAdd).length === 0 && toRemoveKeys.length === 0) return;
     // 5) Apply both additions and deletions in one go
@@ -231,7 +232,7 @@ function CompanyOwnersPdf({
     //   return { ...cleaned, ...toAdd };
     // });
     setFormInnerData((prev) => {
-      const sectionPrevData = prev?.[sectionKey];
+      const sectionPrevData = prev?.[sectionKey] ?? {};
       const cleaned = Object.fromEntries(
         Object.entries(sectionPrevData).filter(([key]) => !toRemoveKeys.includes(key)),
       );
@@ -405,7 +406,7 @@ function CompanyOwnersPdf({
                         key={index}
                         className="mt-3 flex min-w-full flex-col items-center justify-between gap-4 border-2 border-[#066969] p-4 md:flex-row"
                       >
-                        <div className="wrap flex w-full min-w-[400px] flex-col gap-3">
+                        <div className="wrap flex w-full min-w-100 flex-col gap-3">
                           <div className="relative flex w-full gap-4">
                             <TextField
                               label="Owner or primary operator name"
@@ -414,7 +415,7 @@ function CompanyOwnersPdf({
                               onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                             />
                             {filteredOwners?.length > 0 && (
-                              <ul className="absolute top-20 mt-1 w-full max-w-[400px] rounded border bg-white shadow">
+                              <ul className="absolute top-20 mt-1 w-full max-w-100 rounded border bg-white shadow">
                                 {filteredOwners.map((name, i) => (
                                   <li
                                     key={i}
@@ -492,7 +493,7 @@ function CompanyOwnersPdf({
                                   formatting="3,3,4"
                                   value={phone}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"max-w-[30%] min-w-[400px]"}
+                                  className={"max-w-[30%] min-w-100"}
                                 />
                                 <TextField
                                   name="ssn"
@@ -501,28 +502,28 @@ function CompanyOwnersPdf({
                                   value={ssn}
                                   isMasked={true}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"max-w-[30%] min-w-[400px]"}
+                                  className={"max-w-[30%]  min-w-100"}
                                 />
                                 <TextField
                                   name="address"
                                   label="Address"
                                   value={address}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"max-w-[30%] min-w-[400px]"}
+                                  className={"max-w-[30%]  min-w-100"}
                                 />
                                 <TextField
                                   name="percentage"
                                   label="Ownership Percentage"
                                   value={percentage}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"max-w-[30%] min-w-[400px]"}
+                                  className={"max-w-[30%]  min-w-100"}
                                 />
                                 <TextField
                                   name="date_of_birth"
                                   label="Date of Birth"
                                   value={date_of_birth}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"max-w-[30%] min-w-[400px]"}
+                                  className={"max-w-[30%]  min-w-100"}
                                 />
 
                                 <TextField
@@ -530,14 +531,14 @@ function CompanyOwnersPdf({
                                   label="driver’s license issuer (state)"
                                   value={driver_license_issuer_state}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"max-w-[30%] min-w-[400px]"}
+                                  className={"max-w-[30%]  min-w-100"}
                                 />
                                 <TextField
                                   name="driver_license_number"
                                   label="Driver’s License Number"
                                   value={driver_license_number}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"max-w-[30%] min-w-[400px]"}
+                                  className={"max-w-[30%]  min-w-100"}
                                 />
                               </div>
                             </div>

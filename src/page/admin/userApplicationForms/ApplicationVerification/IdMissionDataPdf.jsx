@@ -253,7 +253,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
           value={formInnerData?.[sectionKey]?.name?.value}
           label="Name:*"
           name="name"
-          className={`max-w-[400px]!`}
+          className={`max-w-100!`}
         />
         <TextField
           isPdf={true}
@@ -268,7 +268,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
           label="Email Address:*"
           required
           name="email"
-          className={"max-w-[400px]!"}
+          className={"max-w-100!"}
         />
         <TextField
           type="date"
@@ -284,7 +284,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
           label="Date of Birth:*"
           required
           name="dateOfBirth"
-          className={"max-w-[400px]!"}
+          className={"max-w-100!"}
         />
         <TextField
           type="text"
@@ -300,7 +300,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
           }
           label="Id Type:*"
           required
-          className={"max-w-[400px]!"}
+          className={"max-w-100!"}
         />{" "}
         <TextField
           type="text"
@@ -316,7 +316,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
           }
           label="Id Issuer:*"
           required
-          className={"max-w-[400px]!"}
+          className={"max-w-100!"}
         />{" "}
         <TextField
           type="text"
@@ -332,7 +332,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
           }
           label="Id Expiry Date:*"
           required
-          className={"max-w-[400px]!"}
+          className={"max-w-100!"}
         />{" "}
         <TextField
           type="text"
@@ -348,7 +348,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
           }
           label="Issue Date:*"
           required
-          className={"max-w-[400px]!"}
+          className={"max-w-100!"}
         />{" "}
         <TextField
           isPdf={true}
@@ -363,12 +363,12 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
           }
           value={formInnerData?.[sectionKey]?.idNumber?.value || ""}
           label="Id Number:*"
-          className={"max-w-[400px]!"}
+          className={"max-w-100!"}
         />{" "}
         <Autocomplete
           onLoad={onLoad}
           onPlaceChanged={onPlaceChanged}
-          className="w-full max-w-[400px]"
+          className="w-full max-w-100"
           options={{
             types: ["address"],
             fields: ["address_components", "geometry", "formatted_address", "place_id"],
@@ -391,7 +391,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
               }))
             }
             label="Street Address:*"
-            className={"max-w-[400px]!"}
+            className={"max-w-100!"}
           />
         </Autocomplete>
         <TextField
@@ -408,7 +408,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
             }))
           }
           label="City:*"
-          className={"max-w-[400px]!"}
+          className={"max-w-100!"}
         />
         <TextField
           type="text"
@@ -424,7 +424,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
             }))
           }
           label="Zip Code:*"
-          className={"max-w-[400px]!"}
+          className={"max-w-100!"}
         />
         <TextField
           type="text"
@@ -440,7 +440,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
             }))
           }
           label="State:*"
-          className={"max-w-[400px]!"}
+          className={"max-w-100!"}
         />
         <TextField
           type="text"
@@ -456,7 +456,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
             }))
           }
           label="Country:*"
-          className={"max-w-[400px]!"}
+          className={"max-w-100!"}
         />
         <TextField
           isPdf={true}
@@ -471,7 +471,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
           }
           label="Company Title:*"
           required
-          className={"max-w-[400px]!"}
+          className={"max-w-100!"}
         />
         <TextField
           isPdf={true}
@@ -488,7 +488,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
           required
           type="text"
           formatting="3,3,4"
-          className={"max-w-[400px]!"}
+          className={"max-w-100!"}
         />
         <div className="flex w-full border bg-white p-4">
           <SimpleRadioInputType

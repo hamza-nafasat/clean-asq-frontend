@@ -98,13 +98,13 @@ const DynamicField = ({ cn, field, className = "", form, placeholder, value, set
               {...rest}
               type="range"
               value={value ?? 0}
-              className={`${cn} border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
+              className={`${cn} border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${className}`}
               onChange={(e) => onRangeChange(e, 0, 100)}
             />
             <input
               type="number"
               value={value ?? 0}
-              className={`${cn} border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
+              className={`${cn} border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${className}`}
               onChange={(e) => onRangeChange(e, 0, 100)}
             />
           </div>
@@ -151,7 +151,7 @@ const DynamicField = ({ cn, field, className = "", form, placeholder, value, set
           <select
             name={name}
             id={id}
-            className="border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
+            className="border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base"
             {...rest}
             onChange={selectHandler}
           >
@@ -180,7 +180,7 @@ const DynamicField = ({ cn, field, className = "", form, placeholder, value, set
             placeholder={placeholder}
             type={type}
             value={value}
-            className={`${cn} border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className}`}
+            className={`${cn} border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${className}`}
           />
         </div>
       </div>
@@ -268,7 +268,7 @@ const SelectInputType = ({ field, className, form, setForm, onChange }) => {
             name={name}
             value={displayValue}
             required={required}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${!displayValue && required ? "bg-highlighting" : ""}`}
+            className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${!displayValue && required ? "bg-highlighting" : ""}`}
             onChange={onChange ? onChange : selectHandler}
             onKeyDown={(e) => {
               if (e.key === "Tab") selectTabPressedRef.current = true;
@@ -329,7 +329,7 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
           <AiHelpModal aiPrompt={aiPrompt} aiResponse={aiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
         </Modal>
       )}
-      <h4 className="text-textPrimary min-w-[200px]lg:text-lg text-base font-medium">
+      <h4 className="text-textPrimary min-w-50lg:text-lg text-base font-medium">
         {label}:{required ? "*" : ""}
       </h4>
       {ai_formatting && isDisplayText && (
@@ -398,7 +398,7 @@ const RadioInputType = ({ field, className, form, setForm, onChange, disabled = 
         </div>
       )}
       <div className="flex w-full">
-        <h4 className="text-textPrimary min-w-[200px] text-base font-medium lg:text-lg">
+        <h4 className="text-textPrimary min-w-50 text-base font-medium lg:text-lg">
           {label}:{required ? "*" : ""}
         </h4>
         {aiHelp && (
@@ -579,14 +579,14 @@ const RangeInputType = ({ field, className, form, setForm }) => {
         <input
           value={Number(form[uniqueId]?.value) || 0}
           type="range"
-          className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} `}
+          className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${className} `}
           onChange={onRangeChange}
         />
         <div className="flex w-full gap-2">
           <input
             type="number"
             value={Number(form[uniqueId]?.value) || 0}
-            className={`border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+            className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${className} ${
               (required && isEmpty(form[uniqueId]?.value)) || form[uniqueId]?.value === 0
                 ? "border-accent bg-highlighting border-2"
                 : "border-frameColor border"
@@ -778,7 +778,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                     onBlur={() => setShowMasked(true)}
                     readOnly={showMasked}
                     autoComplete="off"
-                    className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+                    className={`h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${className} ${
                       required && isEmpty(form[uniqueId]?.value)
                         ? "border-accent bg-highlighting border-2"
                         : "border-frameColor border"
@@ -819,7 +819,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                             },
                           }))
                         }
-                        className={`relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+                        className={`relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${className} ${
                           required && isEmpty(form[uniqueId]?.value)
                             ? "border-accent bg-highlighting border-2"
                             : "border-frameColor border"
@@ -847,7 +847,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                             },
                           }))
                         }
-                        className={`h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+                        className={`h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${className} ${
                           required && (!form?.[uniqueId]?.value || !isValidPhoneNumber(form?.[uniqueId]?.value))
                             ? "border-red-500 border-2"
                             : "border-frameColor border"
@@ -943,7 +943,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                       readOnly={showMasked}
                       autoComplete="off"
                       autoFocus={autoFocus || undefined}
-                      className={`relative h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base ${className} ${
+                      className={`relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${className} ${
                         required && isEmpty(form[uniqueId]?.value)
                           ? "border-accent bg-highlighting border-2"
                           : "border-frameColor border"
@@ -1114,7 +1114,7 @@ const FileInputType = ({ field, className, form, setForm }) => {
       <div className="flex w-full gap-2 mt-2">
         <div className="w-full">
           <div
-            className={`relative mt-2 flex h-[283px] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-10 text-gray-500 transition hover:border-[#5570F1] hover:bg-blue-50 ${
+            className={`relative mt-2 flex h-70.75 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-10 text-gray-500 transition hover:border-[#5570F1] hover:bg-blue-50 ${
               required && isEmpty(form[uniqueId]?.value) ? "border-accent bg-highlighting" : "border-gray-300"
             }`}
             onDrop={handleDrop}
@@ -1197,7 +1197,7 @@ const AiHelpModal = ({ aiResponse }) => {
         <img
           src={logo || ""}
           alt="Logo"
-          className={`object-contain ${"h-[100px] max-h-[200px] w-auto max-w-[300px]"} } cursor-pointer!`}
+          className={`object-contain ${"h-25 max-h-50 w-auto max-w-75"} } cursor-pointer!`}
           referrerPolicy="no-referrer"
         />
       </div>
@@ -1242,7 +1242,7 @@ const AiHelpModal = ({ aiResponse }) => {
           type="text"
           value={updateAiPrompt}
           onChange={(e) => setUpdateAiPrompt(e.target.value)}
-          className="border-frameColor h-[45px] w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-[50px] md:text-base"
+          className="border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5 md:text-base"
         />
         <Button className="text-nowrap" label="Get Response" onClick={getResponseFromAi} loading={isLoading} />
       </div>
@@ -1287,7 +1287,7 @@ export const SimpleRadioInputType = ({ field, className, form, setForm, onChange
         </div>
       )}
       <div className="flex w-full">
-        <h4 className="text-textPrimary min-w-[200px] text-base font-medium lg:text-lg">
+        <h4 className="text-textPrimary min-w-50 text-base font-medium lg:text-lg">
           {label}:{required ? "*" : ""}
         </h4>
         {aiHelp && (

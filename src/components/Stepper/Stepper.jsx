@@ -51,9 +51,7 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
           return (
             <React.Fragment key={actualIndex}>
               {/* Step Circle and Label */}
-              <div
-                className={`relative flex flex-col items-center ${actualIndex === currentStep ? "top-[-14px]" : ""}`}
-              >
+              <div className={`relative flex flex-col items-center ${actualIndex === currentStep ? "-top-3.5" : ""}`}>
                 {/* Step Circle */}
                 <div
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-200 ${
@@ -84,18 +82,18 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
                 <div className="mt-2">
                   <div
                     title={step}
-                    className={`text-center text-xs font-medium xl:max-w-[40px] cursor-pointer xl:truncate transition-colors duration-200 ${actualIndex === currentStep ? "text-accent" : "text-gray-400"} `}
+                    className={`text-center text-xs font-medium xl:max-w-10 cursor-pointer xl:truncate transition-colors duration-200 ${actualIndex === currentStep ? "text-accent" : "text-gray-400"} `}
                   >
                     {step}
                   </div>
                 </div>
-                {actualIndex !== currentStep && <div className="mt-2 h-[20px]" />}
+                {actualIndex !== currentStep && <div className="mt-2 h-5" />}
               </div>
 
               {/* Connector Line */}
               {!isLastDisplayedStep && (
                 <div
-                  className={`h-[2px] flex-auto ${actualIndex < currentStep ? "bg-accent" : "bg-gray-300"}`}
+                  className={`h-0.5 flex-auto ${actualIndex < currentStep ? "bg-accent" : "bg-gray-300"}`}
                   style={{ marginBottom: "48px" }}
                 />
               )}
