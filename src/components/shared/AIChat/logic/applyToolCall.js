@@ -5,6 +5,12 @@ import {
   getMistakenBrandingApplyDeclineMessage,
   shouldBlockMistakenBrandingApply,
 } from "./brandingApplyIntent.js";
+import {
+  FORWARD_FORM_DECLINE_MESSAGE,
+  getMistakenViewApplicationMessage,
+  isUnderwritingIntent,
+  shouldBlockMistakenViewApplication,
+} from "./applicationListIntent.js";
 
 const getLastUserMessageText = (history = []) => {
   for (let i = history.length - 1; i >= 0; i--) {
@@ -894,7 +900,36 @@ export function createApplyToolCall(bindings) {
 
     if (tool === "viewApplication") {
       const { explanation, applicationId } = args;
+      const lastUser =
+        getLastUserMessageText(currentHistory) ||
+        getLastUserMessageText(getApiHistory?.() || []);
+
+      if (shouldBlockMistakenViewApplication(lastUser)) {
+        if (isUnderwritingIntent(lastUser) && ctx.actions.openUnderwriting) {
+          ctx.actions.openUnderwriting({ applicationId });
+          const msg =
+            explanation ||
+            "Opening underwriting for this application.";
+          addMessage({ role: "assistant", content: msg });
+          if (isVoiceModeRef.current) speak(msg);
+          return;
+        }
+        const declineMessage =
+          getMistakenViewApplicationMessage(lastUser) || FORWARD_FORM_DECLINE_MESSAGE;
+        addMessage({ role: "assistant", content: declineMessage });
+        if (isVoiceModeRef.current) speak(declineMessage);
+        return;
+      }
+
       if (ctx.actions.viewApplication) ctx.actions.viewApplication({ applicationId });
+      addMessage({ role: "assistant", content: explanation });
+      if (isVoiceModeRef.current) speak(explanation);
+      return;
+    }
+
+    if (tool === "openUnderwriting") {
+      const { explanation, applicationId } = args;
+      if (ctx.actions.openUnderwriting) ctx.actions.openUnderwriting({ applicationId });
       addMessage({ role: "assistant", content: explanation });
       if (isVoiceModeRef.current) speak(explanation);
       return;

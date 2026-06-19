@@ -13,11 +13,13 @@ import {
   useGiveSpecialAccessToUserMutation,
 } from "@/redux/apis/formApis";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { ApplicationPdfViewCommonProps } from "../../userApplicationForms/ApplicationVerification/ApplicationPdfView";
 // import Modal from '@/components/admin/shared/Modal';
 
 function Applications() {
+  const navigate = useNavigate();
   const { data, isLoading: isLoadingForm, refetch } = useGetAllSubmitFormsQuery();
   const [deleteSubmitForm] = useDeleteSingleSubmitFormMutation();
 
@@ -84,7 +86,7 @@ function Applications() {
     assistantName: "Applications Review Assistant",
     aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applications-list-chat`,
     greeting:
-      "Hi! I'm your **Applications Review Assistant**.\n\nI can help you:\n- **Find and describe** submitted applications\n- **Open an application** for PDF/detail review\n- **Delete** submissions (with confirmation)\n- **Navigate** to other admin screens\n\nWhat would you like to do?",
+      "Hi! I'm your **Applications Review Assistant**.\n\nI can help you:\n- **Find and describe** submitted applications\n- **Open an application** for PDF/detail review\n- **Open underwriting** for a submission\n- **Delete** submissions (with confirmation)\n- **Navigate** to other admin screens\n\nNote: Forward Form must be done from the row menu — I can't open that dialog from chat.\n\nWhat would you like to do?",
     description: "The Applications screen lists submitted applications for admin review.",
     currentState: {
       applicants: applicantsForAi,
@@ -94,6 +96,9 @@ function Applications() {
       viewApplication: ({ applicationId }) => {
         const row = applicants.find((a) => String(a._id) === String(applicationId));
         if (row) handleViewApplicant(row);
+      },
+      openUnderwriting: ({ applicationId }) => {
+        if (applicationId) navigate(`/underwriting/${applicationId}`);
       },
       deleteApplications: ({ applicationIds }) => deleteApplicationsByIds(applicationIds),
     },
