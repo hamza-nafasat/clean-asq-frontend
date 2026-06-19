@@ -1,5 +1,10 @@
 import { AI_CHAT_MODE, PAGE_LABELS, PAGE_ROUTES, SERVER_URL } from "../constants/aiChatConstants.js";
 import { resolveNavigationHandoff } from "../utils/resolveNavigationHandoff.js";
+import {
+  APPLY_BRANDING_MODAL_DECLINE_MESSAGE,
+  getMistakenBrandingApplyDeclineMessage,
+  shouldBlockMistakenBrandingApply,
+} from "./brandingApplyIntent.js";
 
 const getLastUserMessageText = (history = []) => {
   for (let i = history.length - 1; i >= 0; i--) {
@@ -1323,23 +1328,66 @@ export function createApplyToolCall(bindings) {
       return;
     }
 
+    if (tool === "openApplyBrandingModal") {
+      addMessage({ role: "assistant", content: APPLY_BRANDING_MODAL_DECLINE_MESSAGE });
+      if (isVoiceModeRef.current) speak(APPLY_BRANDING_MODAL_DECLINE_MESSAGE);
+      return;
+    }
+
     if (tool === "setFormsBranding") {
       const { explanation, updates } = args;
-      // Snapshot old branding per affected form before overwriting
-      const forms = ctx.currentState?.forms || [];
-      const snapshot = updates.map(({ formId }) => {
-        const form = forms.find((f) => f._id === formId);
-        return { formId, oldBrandingId: form?.branding?._id ?? null };
+      const lastUser =
+        getLastUserMessageText(currentHistory) ||
+        getLastUserMessageText(getApiHistory?.() || []);
+
+      if (shouldBlockMistakenBrandingApply(lastUser)) {
+        const declineMessage = getMistakenBrandingApplyDeclineMessage(lastUser);
+        addMessage({ role: "assistant", content: declineMessage });
+        if (isVoiceModeRef.current) speak(declineMessage);
+        return;
+      }
+      const forms = ctx.forms || ctx.currentState?.forms || ctx.currentState?.availableForms || [];
+      const oldHomeBrandingId = ctx.homeBranding?._id ?? ctx.currentState?.homeBranding?._id ?? null;
+      let appliedHome = false;
+
+      const snapshot = updates.map(({ formId, brandingId, applyToHome }) => {
+        if (applyToHome) appliedHome = true;
+        const form = formId ? forms.find((f) => f._id === formId) : null;
+        return {
+          formId,
+          brandingId,
+          applyToHome: !!applyToHome,
+          oldBrandingId: form?.branding?._id ?? null,
+        };
       });
+
+      const formCount = snapshot.filter((s) => s.formId).length;
+      const targetDesc = [
+        formCount ? `${formCount} form(s)` : null,
+        appliedHome ? "home/website" : null,
+      ]
+        .filter(Boolean)
+        .join(" and ");
+
       pushRevertable({
-        description: `Applied branding to ${updates.length} form(s)`,
+        description: `Applied branding to ${targetDesc || "selected target(s)"}`,
         revertFn: async (freshCtx) => {
           const revertUpdates = snapshot
-            .filter((s) => s.oldBrandingId !== null)
+            .filter((s) => s.formId && s.oldBrandingId !== null)
             .map((s) => ({ formId: s.formId, brandingId: s.oldBrandingId }));
-          const skipped = snapshot.filter((s) => s.oldBrandingId === null).length;
+          const skipped = snapshot.filter((s) => s.formId && s.oldBrandingId === null).length;
           if (revertUpdates.length > 0 && freshCtx?.actions?.setFormsBranding) {
             await freshCtx.actions.setFormsBranding({ updates: revertUpdates });
+          }
+          if (appliedHome && oldHomeBrandingId && freshCtx?.actions?.setFormsBranding) {
+            await freshCtx.actions.setFormsBranding({
+              updates: [{ brandingId: oldHomeBrandingId, applyToHome: true }],
+            });
+          } else if (appliedHome && !oldHomeBrandingId) {
+            addMessage({
+              role: "assistant",
+              content: "Note: home/website had no prior branding and cannot be automatically cleared.",
+            });
           }
           if (skipped > 0) {
             addMessage({

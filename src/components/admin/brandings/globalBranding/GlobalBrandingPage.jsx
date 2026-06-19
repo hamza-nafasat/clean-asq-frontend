@@ -28,7 +28,15 @@ import { RiSparkling2Line } from "react-icons/ri";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import { useGetMyAllFormsQuery } from "@/redux/apis/formApis";
 import getEnv from "@/lib/env";
+import {
+  executeBrandingAssignment,
+  executeBrandingAssignments,
+  getBrandingSettersFromHook,
+  mapHomeBranding,
+} from "@/lib/executeBrandingAssignment";
 import ManualExtractionModal from "./ManualExtractionModal";
+import ApplyBranding from "./ApplyBranding";
+import ConfirmationModal from "@/components/shared/ConfirmationModal";
 
 const emailHeaderTemplate = `
 <!DOCTYPE html>
@@ -128,12 +136,15 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [isExtractionModalOpen, setIsExtractionModalOpen] = useState(false);
   const [extractionModalTab, setExtractionModalTab] = useState("auto");
+  const [applyBrandingModalOpen, setApplyBrandingModalOpen] = useState(false);
+  const [applyFormId, setApplyFormId] = useState(null);
+  const [applyOnHome, setApplyOnHome] = useState(false);
   const emailDomain = window.location.hostname;
   const [primaryColor, setPrimaryColor] = useState("#000000");
   const [secondaryColor, setSecondaryColor] = useState("#000000");
   const [accentColor, setAccentColor] = useState("#000000");
   const [textColor, setTextColor] = useState("#000000");
-  const [linkColor, setLinkColor] = useState("#000 headerBackground={headerBackground}000");
+  const [linkColor, setLinkColor] = useState("#000000");
   const [backgroundColor, setBackgroundColor] = useState("");
   const [headerBackground, setHeaderBackground] = useState("#000000");
   const [headerText, setHeaderText] = useState("#000000");
@@ -260,7 +271,89 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [extractColorsFromLogoUrl] = useExtractColorsFromLogoUrlMutation();
 
   const [addBrandingToForm] = useAddBrandingInFormMutation();
-  const { data: allFormsResponse } = useGetMyAllFormsQuery();
+  const { data: allFormsResponse, refetch: refetchAllForms } = useGetMyAllFormsQuery();
+
+  const globalBrandingSetters = getBrandingSettersFromHook({
+    setPrimaryColor: setGlobalPrimaryColor,
+    setSecondaryColor: setGlobalSecondaryColor,
+    setAccentColor: setGlobalAccentColor,
+    setTextColor: setGlobalTextColor,
+    setLinkColor: setGlobalLinkColor,
+    setBackgroundColor: setGlobalBackgroundColor,
+    setFrameColor: setGlobalFrameColor,
+    setHighlightingColor: setGlobalHighlightingColor,
+    setFontFamily: setGlobalFontFamily,
+    setLogo: setGlobalLogo,
+    setButtonTextPrimary: setButtonTextPrimaryGlobal,
+    setButtonTextSecondary: setButtonTextSecondaryGlobal,
+    setHeaderAlignment: setHeaderAlignmentGlobal,
+    setHeaderBackground: setHeaderBackgroundGlobal,
+    setFooterBackground: setFooterBackgroundGlobal,
+    setHeaderText: setHeaderTextGlobal,
+    setFooterText: setFooterTextGlobal,
+    setApplicationFooterText: setApplicationFooterTextGlobal,
+    setAppLogoMaxWidth: setGlobalAppLogoMaxWidth,
+    setAppLogoMaxHeight: setGlobalAppLogoMaxHeight,
+    setAiVoice: setGlobalAiVoice,
+    setAiCustomPrompt: setGlobalAiCustomPrompt,
+    setAiLaunchButtonColor: setGlobalAiLaunchButtonColor,
+    setAiHeaderColor: setGlobalAiHeaderColor,
+    setAiBannerColor: setGlobalAiBannerColor,
+    setAiBannerTextColor: setGlobalAiBannerTextColor,
+    setPrivacyPolicyUrl: setPrivacyPolicyUrlGlobal,
+    setTermsOfServiceUrl: setTermsOfServiceUrlGlobal,
+    setFavicon: setGlobalFavicon,
+    setTabTitle: setGlobalTabTitle,
+    setHeaderEffect: setGlobalHeaderEffect,
+    setFooterEffect: setGlobalFooterEffect,
+    setEmailHeaderEffect: setGlobalEmailHeaderEffect,
+    setEmailFooterEffect: setGlobalEmailFooterEffect,
+    setButtonEffect: setGlobalButtonEffect,
+    setHeaderMaterial: setGlobalHeaderMaterial,
+    setFooterMaterial: setGlobalFooterMaterial,
+    setButtonMaterial: setGlobalButtonMaterial,
+    setEmailHeaderMaterial: setGlobalEmailHeaderMaterial,
+    setEmailFooterMaterial: setGlobalEmailFooterMaterial,
+  });
+
+  const dispatchUserRefresh = async (profileRes) => {
+    if (profileRes?.success) {
+      dispatch(userExist(profileRes.data));
+    }
+  };
+
+  const onConfirmApplyBranding = async () => {
+    const effectiveBrandingId = brandingId;
+    if (!effectiveBrandingId) {
+      toast.error("Save the branding profile before applying it to forms or home");
+      return;
+    }
+    if (!applyFormId && !applyOnHome) {
+      toast.error("Select a form or check For Website");
+      return;
+    }
+    try {
+      const res = await executeBrandingAssignment({
+        addBrandingMutation: addBrandingToForm,
+        getUserProfile,
+        brandingSetters: globalBrandingSetters,
+        dispatchUserRefresh,
+        assignment: {
+          brandingId: effectiveBrandingId,
+          formId: applyFormId || undefined,
+          applyToHome: applyOnHome,
+        },
+      });
+      await refetchAllForms();
+      toast.success(res?.message || "Branding applied successfully");
+    } catch (error) {
+      toast.error(error?.message || error?.data?.message || "Failed to apply branding");
+    } finally {
+      setApplyBrandingModalOpen(false);
+      setApplyFormId(null);
+      setApplyOnHome(false);
+    }
+  };
 
   const handleLogoSelected = async (logoUrl) => {
     try {
@@ -739,16 +832,19 @@ const GlobalBrandingPage = ({ brandingId }) => {
     name: f.name || f.headerText || "Untitled",
     branding: f.branding ? { _id: f.branding._id || f.branding, name: f.branding.name } : null,
   }));
+  const homeBranding = mapHomeBranding(user);
 
   useScreenContext({
     screenId: brandingId ? `global-branding-${brandingId}` : "global-branding-new",
     screenName: brandingId ? `Global Branding — ${companyName || brandingId}` : "Global Branding (New)",
     assistantName: "Branding Assistant",
-    greeting: `Hi! I'm your **Branding Assistant**.\n\nHere's what I can do:\n- **Edit this branding** — update colors, fonts, header/footer styles, email templates, AI assistant colors, and more\n- **Recommend colors** — suggest a full color palette, match your website's brand, or pull inspiration from any URL\n- **Edit or create logos** — remove backgrounds, recolor elements, change background colors, or generate stylistic variations of any existing logo\n- **Manage the favicon and tab title** — upload a favicon or extract one from your website\n- **Apply branding to forms** — assign this branding profile to one or more application forms\n\nWhat would you like to work on?`,
+    greeting: `Hi! I'm your **Branding Assistant**.\n\nHere's what I can do:\n- **Edit this branding** — update colors, fonts, header/footer styles, email templates, AI assistant colors, and more\n- **Recommend colors** — suggest a full color palette, match your website's brand, or pull inspiration from any URL\n- **Edit or create logos** — remove backgrounds, recolor elements, change background colors, or generate stylistic variations of any existing logo\n- **Manage the favicon and tab title** — upload a favicon or extract one from your website\n- **Apply branding** — assign this profile to application forms and/or the home/website\n\nWhat would you like to work on?`,
     description:
       "The Global Branding screen lets admins configure company branding: colors, fonts, logos, header/footer styles, and email templates. Changes apply live across the entire application.",
     brandingId: brandingId || null,
     forms: _formsList,
+    homeBranding,
+    availableForms: _formsList,
     currentState: {
       primaryColor,
       secondaryColor,
@@ -874,15 +970,24 @@ const GlobalBrandingPage = ({ brandingId }) => {
       },
       saveBranding: () => (brandingId ? updateBrandingHandler(brandingId) : createBrandingHandler()),
       setFormsBranding: async ({ updates }) => {
-        const errors = [];
-        for (const { formId, brandingId: bId } of updates) {
-          try {
-            await addBrandingToForm({ brandingId: bId, formId, onHome: "no" }).unwrap();
-          } catch {
-            errors.push(formId);
-          }
-        }
-        if (errors.length) throw new Error(`Failed to set branding on ${errors.length} form(s)`);
+        const effectiveId = brandingId;
+        if (!effectiveId) throw new Error("Save the branding profile before applying it");
+        await executeBrandingAssignments({
+          updates: updates.map((u) => ({
+            ...u,
+            brandingId: u.brandingId || effectiveId,
+          })),
+          addBrandingMutation: addBrandingToForm,
+          getUserProfile,
+          brandingSetters: globalBrandingSetters,
+          dispatchUserRefresh,
+        });
+        await refetchAllForms();
+      },
+      openApplyBrandingModal: ({ formId, applyToHome } = {}) => {
+        if (formId) setApplyFormId(formId);
+        if (applyToHome !== undefined) setApplyOnHome(!!applyToHome);
+        setApplyBrandingModalOpen(true);
       },
     },
     logos: logos.map((l) => l.url || l.preview).filter(Boolean),
@@ -1220,6 +1325,32 @@ const GlobalBrandingPage = ({ brandingId }) => {
             initialTab={extractionModalTab}
             onApply={(brandingData) => applyExtractedBranding(brandingData)}
           />
+
+          {applyBrandingModalOpen && (
+            <ConfirmationModal
+              isOpen={applyBrandingModalOpen}
+              title="Apply Branding"
+              confirmButtonText="Apply Branding"
+              confirmButtonClassName="border-none hover:bg-red-600 text-white"
+              cancelButtonText="cancel"
+              onConfirm={onConfirmApplyBranding}
+              onClose={() => {
+                setApplyBrandingModalOpen(false);
+                setApplyFormId(null);
+                setApplyOnHome(false);
+              }}
+              message={
+                <ApplyBranding
+                  selectedId={applyFormId}
+                  setSelectedId={setApplyFormId}
+                  setOnHome={setApplyOnHome}
+                  onHome={applyOnHome}
+                  initialFormId={applyFormId}
+                  initialOnHome={applyOnHome}
+                />
+              }
+            />
+          )}
 
           <ColorPalette
             colorPalette={colorPalette}
@@ -1657,7 +1788,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
           {/* AI color pickers + live preview */}
           <div className="flex flex-wrap gap-8">
             {/* Color controls */}
-            <div className="flex flex-col gap-4 min-w-[260px]">
+            <div className="flex flex-col gap-4 min-w-65">
               <p className="text-xs text-gray-400 -mb-2">
                 Leave unchanged to use the matching branding color as the default.
               </p>

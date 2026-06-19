@@ -8,6 +8,12 @@ import { getTableStyles } from "@/data/data";
 import { useBranding } from "@/hooks/BrandingContext";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import getEnv from "@/lib/env";
+import {
+  executeBrandingAssignment,
+  executeBrandingAssignments,
+  getBrandingSettersFromHook,
+  mapHomeBranding,
+} from "@/lib/executeBrandingAssignment";
 import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/authApis";
 import {
   useAddBrandingInFormMutation,
@@ -20,7 +26,7 @@ import { MoreVertical, Pencil, Trash } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import DataTable from "react-data-table-component";
 import { FaExchangeAlt } from "react-icons/fa";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -36,7 +42,8 @@ const Brandings = () => {
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   const [selectedBranding, setSelectedBranding] = useState(null);
 
-  const { refetch: formRefetch } = useGetMyAllFormsQuery();
+  const { data: allFormsData, refetch: formRefetch } = useGetMyAllFormsQuery();
+  const user = useSelector((state) => state.auth.user);
 
   const { data: brandings = [], isLoading: isBrandingsLoading, refetch } = useGetAllBrandingsQuery();
   const [deleteBranding, { isLoading: isDeleting }] = useDeleteSingleBrandingMutation();
@@ -125,83 +132,88 @@ const Brandings = () => {
     },
   ];
 
+  const brandingSetters = getBrandingSettersFromHook({
+    setPrimaryColor,
+    setSecondaryColor,
+    setAccentColor,
+    setTextColor,
+    setLinkColor,
+    setBackgroundColor,
+    setFrameColor,
+    setFontFamily,
+    setLogo,
+    setButtonTextPrimary,
+    setButtonTextSecondary,
+    setHeaderAlignment,
+    setHeaderBackground,
+    setFooterBackground,
+    setHeaderText,
+    setFooterText,
+    setHighlightingColor,
+    setApplicationFooterText,
+    setAppLogoMaxWidth,
+    setAppLogoMaxHeight,
+    setAiVoice,
+    setAiCustomPrompt,
+    setAiLaunchButtonColor,
+    setAiHeaderColor,
+    setAiBannerColor,
+    setAiBannerTextColor,
+    setAiSliderColor,
+    setPrivacyPolicyUrl,
+    setTermsOfServiceUrl,
+    setFavicon,
+    setTabTitle,
+    setHeaderEffect,
+    setFooterEffect,
+    setEmailHeaderEffect,
+    setEmailFooterEffect,
+    setButtonEffect,
+    setHeaderMaterial,
+    setFooterMaterial,
+    setButtonMaterial,
+    setEmailHeaderMaterial,
+    setEmailFooterMaterial,
+  });
+
+  const dispatchUserRefresh = async (profileRes) => {
+    if (profileRes?.success) {
+      dispatch(userExist(profileRes.data));
+    } else {
+      dispatch(userNotExist());
+    }
+  };
+
   const onConfirmApply = async () => {
-    if (!selectedBranding) toast.error("Branding ID is missing");
-    if (!selectedId && !onHome) toast.error("Form ID is required if onHome is not provided");
+    if (!selectedBranding) {
+      toast.error("Branding ID is missing");
+      return;
+    }
+    if (!selectedId && !onHome) {
+      toast.error("Form ID is required if onHome is not provided");
+      return;
+    }
     try {
-      const res = await addFromBranding({
-        brandingId: selectedBranding,
-        formId: selectedId,
-        onHome: onHome ? "yes" : "no",
-      }).unwrap();
-      console.log("res", res);
-      if (res?.success) {
-        if (onHome) {
-          const res = await getUserProfile().unwrap();
-          if (res?.data?.branding?.colors) {
-            const userBranding = res?.data?.branding;
-            if (userBranding?.colors) {
-              setPrimaryColor(userBranding.colors.primary);
-              setSecondaryColor(userBranding.colors.secondary);
-              setAccentColor(userBranding.colors.accent);
-              setTextColor(userBranding.colors.text);
-              setLinkColor(userBranding.colors.link);
-              setBackgroundColor(userBranding.colors.background);
-              setFrameColor(userBranding.colors.frame);
-              setFontFamily(userBranding.fontFamily);
-              setLogo(userBranding?.selectedLogo);
-              setButtonTextPrimary(userBranding?.colors?.buttonTextPrimary);
-              setButtonTextSecondary(userBranding?.colors?.buttonTextSecondary);
-              setHeaderAlignment(userBranding?.headerAlignment);
-              setHeaderBackground(userBranding?.colors?.headerBackground);
-              setFooterBackground(userBranding?.colors?.footerBackground);
-              setHeaderText(userBranding?.colors?.headerText);
-              setFooterText(userBranding?.colors?.footerText);
-              setHighlightingColor(userBranding?.colors?.highlighting);
-              setApplicationFooterText(userBranding?.applicationFooterText);
-              setAppLogoMaxWidth(userBranding?.appLogoMaxWidth);
-              setAppLogoMaxHeight(userBranding?.appLogoMaxHeight);
-              setAiVoice(userBranding?.aiVoice || "nova");
-              setAiCustomPrompt(userBranding?.aiCustomPrompt || "");
-              setAiLaunchButtonColor(userBranding?.aiLaunchButtonColor || "");
-              setAiHeaderColor(userBranding?.aiHeaderColor || "");
-              setAiBannerColor(userBranding?.aiBannerColor || "");
-              setAiBannerTextColor(userBranding?.aiBannerTextColor || "");
-              setAiSliderColor(userBranding?.aiSliderColor || "");
-              setPrivacyPolicyUrl(userBranding?.privacyPolicyUrl || "");
-              setTermsOfServiceUrl(userBranding?.termsOfServiceUrl || "");
-              setFavicon(userBranding?.favicon || "");
-              setTabTitle(userBranding?.tabTitle || "");
-              setHeaderEffect(userBranding?.headerEffect || "none");
-              setFooterEffect(userBranding?.footerEffect || "none");
-              setEmailHeaderEffect(userBranding?.emailHeaderEffect || "none");
-              setEmailFooterEffect(userBranding?.emailFooterEffect || "none");
-              setButtonEffect(userBranding?.buttonEffect || "none");
-              setHeaderMaterial(userBranding?.headerMaterial ?? 0);
-              setFooterMaterial(userBranding?.footerMaterial ?? 0);
-              setButtonMaterial(userBranding?.buttonMaterial ?? 0);
-              setEmailHeaderMaterial(userBranding?.emailHeaderMaterial ?? 0);
-              setEmailFooterMaterial(userBranding?.emailFooterMaterial ?? 0);
-            }
-          }
-          await getUserProfile()
-            .then((res) => {
-              if (res?.data?.success) {
-                dispatch(userExist(res.data.data));
-                console.log(res?.data?.data?.branding);
-              } else dispatch(userNotExist());
-            })
-            .catch(() => dispatch(userNotExist()));
-        }
-        await formRefetch();
-        toast?.success(res?.message || "Branding applied successfully");
-      }
+      const res = await executeBrandingAssignment({
+        addBrandingMutation: addFromBranding,
+        getUserProfile,
+        brandingSetters,
+        dispatchUserRefresh,
+        assignment: {
+          brandingId: selectedBranding,
+          formId: selectedId || undefined,
+          applyToHome: onHome,
+        },
+      });
+      await formRefetch();
+      toast?.success(res?.message || "Branding applied successfully");
     } catch (error) {
       console.error("Error applying branding:", error);
-      toast.error(error?.data?.message || "Failed to apply branding");
+      toast.error(error?.message || error?.data?.message || "Failed to apply branding");
     } finally {
       setApplyModal(false);
       setSelectedId(null);
+      setSelectedBranding(null);
       setOnHome(false);
     }
   };
@@ -272,15 +284,28 @@ const Brandings = () => {
     colors: b.colors || null,
   }));
 
+  const availableForms = (allFormsData?.data || []).map((f) => ({
+    _id: f._id,
+    name: f.name,
+    branding: f.branding ? { _id: f.branding._id, name: f.branding.name } : null,
+  }));
+
+  const homeBranding = mapHomeBranding(user);
+
   useScreenContext({
     screenId: "branding-list",
     screenName: "Branding Management",
     assistantName: "Branding List Assistant",
     aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/branding-list-chat`,
     greeting:
-      "Hi! I'm your **Branding List Assistant**.\n\nI can help you:\n- **Find and describe** branding profiles\n- **Open the create page** for a new branding\n- **Open any profile** for editing\n- **Delete** profiles (with confirmation)\n\nWhat would you like to do?",
+      "Hi! I'm your **Branding List Assistant**.\n\nI can help you:\n- **Find and describe** branding profiles\n- **Apply branding** to forms and/or the home/website\n- **Open the create page** for a new branding\n- **Open any profile** for editing\n- **Delete** profiles (with confirmation)\n\nWhat would you like to do?",
     description: "The Branding Management screen lists all branding profiles in the system.",
-    currentState: { brandings: brandingListForAi },
+    currentState: {
+      brandings: brandingListForAi,
+      availableBrandings: brandingListForAi,
+      availableForms,
+      homeBranding,
+    },
     actions: {
       openCreateBranding: () => navigate("/branding/create"),
       openEditBranding: ({ brandingId }) => navigate(`/branding/single/${brandingId}`),
@@ -290,8 +315,30 @@ const Brandings = () => {
         }
         await refetch();
       },
+      setFormsBranding: async ({ updates }) => {
+        const { message } = await executeBrandingAssignments({
+          updates,
+          addBrandingMutation: addFromBranding,
+          getUserProfile,
+          brandingSetters,
+          dispatchUserRefresh,
+        });
+        await Promise.all([refetch(), formRefetch()]);
+        toast.success(message || "Branding applied successfully");
+      },
+      openApplyBrandingModal: ({ brandingId, formId, applyToHome } = {}) => {
+        if (brandingId) setSelectedBranding(brandingId);
+        if (formId) setSelectedId(formId);
+        if (applyToHome !== undefined) setOnHome(!!applyToHome);
+        setApplyModal(true);
+      },
     },
-    deps: { count: brandingListForAi.length, ids: brandingListForAi.map((b) => b._id).join(",") },
+    deps: {
+      count: brandingListForAi.length,
+      ids: brandingListForAi.map((b) => b._id).join(","),
+      formsCount: availableForms.length,
+      homeBrandingId: homeBranding?._id,
+    },
   });
 
   if (isBrandingsLoading) return <CustomLoading />;

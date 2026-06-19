@@ -1,7 +1,14 @@
 import { useBranding } from "@/hooks/BrandingContext";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import getEnv from "@/lib/env";
+import {
+  executeBrandingAssignment,
+  executeBrandingAssignments,
+  getBrandingSettersFromHook,
+  mapHomeBranding,
+} from "@/lib/executeBrandingAssignment";
 import { effectToBoxShadow, materialToGloss, parseEffectState } from "@/lib/effectPresets";
+import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/authApis";
 import { useAddBrandingInFormMutation, useGetAllBrandingsQuery } from "@/redux/apis/brandingApis";
 import { useAttachTemplateToFormMutation, useGetAllEmailTemplatesQuery } from "@/redux/apis/emailTemplateApis";
 import {
@@ -23,9 +30,11 @@ import {
 
 import { CopyIcon, MoreVertical } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { CiSearch } from "react-icons/ci";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { userExist, userNotExist } from "@/redux/slices/authSlice";
 import FileUploader from "../applicationVerification/Documents/FileUploader";
 import ConfirmationModal from "../shared/ConfirmationModal";
 import Button from "../shared/small/Button";
@@ -80,8 +89,22 @@ function applyPendingEdits(formData, pending) {
 
 export default function ApplicationsCard() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
   const buttonRef = useRef(null);
   const menuButtonRef = useRef(null);
+  const brandingCtx = useBranding();
+  const { logo } = brandingCtx;
+  const brandingSetters = getBrandingSettersFromHook(brandingCtx);
+  const [getUserProfile] = useGetMyProfileFirstTimeMutation();
+
+  const dispatchUserRefresh = async (profileRes) => {
+    if (profileRes?.success) {
+      dispatch(userExist(profileRes.data));
+    } else {
+      dispatch(userNotExist());
+    }
+  };
 
   const [createForm, { isLoading }] = useCreateFormMutation();
   const { data: forms, refetch, isLoading: isLoadingForms } = useGetMyAllFormsQuery();
@@ -107,7 +130,6 @@ export default function ApplicationsCard() {
   const [selectedBranding, setSelectedBranding] = useState(null);
   const [onHome, setOnHome] = useState(false);
   const [locationModal, setLocationModal] = useState(false);
-  const { logo } = useBranding();
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const [formLocationData, setFormLocationData] = useState({
     title: "",
@@ -143,6 +165,8 @@ export default function ApplicationsCard() {
   const [reorderFormSectionsMutation] = useReorderFormSectionsMutation();
   const [deleteFormSectionMutation] = useDeleteFormSectionMutation();
   const [pendingFormEdits, setPendingFormEdits] = useState(null);
+
+  const homeBranding = mapHomeBranding(user);
 
   useScreenContext({
     screenId: "application-forms",
@@ -184,6 +208,7 @@ export default function ApplicationsCard() {
         privacyPolicyUrl: b.privacyPolicyUrl || "",
         termsOfServiceUrl: b.termsOfServiceUrl || "",
       })),
+      homeBranding,
       availableEmailTemplates: (allEmailTemplates?.data || []).map((t) => ({
         _id: t._id,
         name: t.templateName,
@@ -487,20 +512,20 @@ export default function ApplicationsCard() {
         }
       },
       setFormsBranding: async ({ updates }) => {
-        const errors = [];
-        for (const { formId, brandingId } of updates) {
-          try {
-            const res = await addFromBranding({ brandingId, formId, onHome: "no" }).unwrap();
-            if (!res?.success) throw new Error(res?.message);
-          } catch {
-            errors.push(formId);
-          }
-        }
+        await executeBrandingAssignments({
+          updates,
+          addBrandingMutation: addFromBranding,
+          getUserProfile,
+          brandingSetters,
+          dispatchUserRefresh,
+        });
         await refetch();
-        if (errors.length) {
-          toast.error(`Failed to set branding on ${errors.length} of ${updates.length} forms`);
-          throw new Error(`Failed to set branding on ${errors.length} forms`);
-        }
+      },
+      openApplyBrandingModal: ({ brandingId, formId, applyToHome } = {}) => {
+        if (formId) setSelectedId(formId);
+        if (brandingId) setSelectedBranding(brandingId);
+        if (applyToHome !== undefined) setOnHome(!!applyToHome);
+        setOpenModal(true);
       },
       setFormsLocation: async ({ updates }) => {
         const errors = [];
@@ -664,22 +689,31 @@ export default function ApplicationsCard() {
   };
 
   const onConfirmApply = async () => {
-    if (!selectedBranding) toast.error("Branding ID is missing");
-    if (!selectedId && !onHome) toast.error("Form ID is required if onHome is not provided");
+    if (!selectedBranding) {
+      toast.error("Branding ID is missing");
+      return;
+    }
+    if (!selectedId && !onHome) {
+      toast.error("Form ID is required if onHome is not provided");
+      return;
+    }
     try {
-      const res = await addFromBranding({
-        brandingId: selectedBranding,
-        formId: selectedId,
-        onHome: onHome ? "yes" : "no",
-      }).unwrap();
-      console.log("res", res);
-      if (res?.success) {
-        await refetch();
-        toast?.success(res?.message || "Branding applied successfully");
-      }
+      const res = await executeBrandingAssignment({
+        addBrandingMutation: addFromBranding,
+        getUserProfile,
+        brandingSetters,
+        dispatchUserRefresh,
+        assignment: {
+          brandingId: selectedBranding,
+          formId: selectedId || undefined,
+          applyToHome: onHome,
+        },
+      });
+      await refetch();
+      toast?.success(res?.message || "Branding applied successfully");
     } catch (error) {
       console.error("Error applying branding:", error);
-      toast.error(error?.data?.message || "Failed to apply branding");
+      toast.error(error?.message || error?.data?.message || "Failed to apply branding");
     } finally {
       setOpenModal(false);
       setSelectedId(null);
@@ -923,7 +957,7 @@ export default function ApplicationsCard() {
               >
                 <div className="flex justify-between">
                   <div
-                    className="flex h-25 max-h-25 w-[250px] max-w-[250px] items-center justify-center rounded-lg px-3"
+                    className="flex h-25 max-h-25 w-62.5 max-w-62.5 items-center justify-center rounded-lg px-3"
                     style={{ background: form?.branding?.colors?.headerBackground || "#f3f4f6" }}
                   >
                     <img
