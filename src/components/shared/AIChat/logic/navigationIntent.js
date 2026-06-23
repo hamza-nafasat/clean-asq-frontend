@@ -26,6 +26,12 @@ export function resolveNavigationPageFromText(text) {
   if (isModalOnlyRequest(text)) return null;
 
   const t = text.toLowerCase();
+
+  // Create-branding destination without an explicit go-to verb (e.g. "create new branding").
+  if (/\b(create|new|design)\b/.test(t) && /\bbranding\b/.test(t)) {
+    return "branding-create";
+  }
+
   const hasNavVerb =
     /\b(go to|goto|navigate|take me|open|show|switch to|visit)\b/.test(t) ||
     /\bgo\s+home\b/.test(t);
@@ -34,7 +40,10 @@ export function resolveNavigationPageFromText(text) {
   if (/\b(home\s*page|homepage|dashboard|main\s+page|take me home)\b/.test(t) || /\bgo\s+home\b/.test(t)) {
     return "home";
   }
-  if (/\b(create|new)\b/.test(t) && /\bbranding\b/.test(t)) {
+  if (/\b(branding\s+management|branding\s+list|list\s+brandings?|manage\s+brandings?)\b/.test(t)) {
+    return "branding";
+  }
+  if (/\b(create|new|design)\b/.test(t) && /\bbranding\b/.test(t)) {
     return "branding-create";
   }
   if (/\b(application\s+forms?|applications?\s+forms?|forms?\s+page|form\s+management)\b/.test(t)) {

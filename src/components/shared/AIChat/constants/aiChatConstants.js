@@ -11,6 +11,7 @@ export const PANEL_MIN_HEIGHT = 380;
 export const MAX_API_HISTORY_TURNS = 30;
 
 export const PAGE_ROUTES = {
+  // `home` and `application-forms` are intentional aliases — same route, different page IDs for AI navigation phrasing.
   home: "/application-forms",
   "application-forms": "/application-forms",
   branding: "/branding",

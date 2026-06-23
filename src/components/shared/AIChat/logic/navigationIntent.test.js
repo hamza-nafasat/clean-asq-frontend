@@ -22,6 +22,17 @@ describe("navigationIntent", () => {
     assert.equal(shouldClientNavigateFromMessage("go to application forms and create a new form"), null);
   });
 
+  it("routes branding list vs create separately", () => {
+    assert.equal(resolveNavigationPageFromText("take me to branding"), "branding");
+    assert.equal(resolveNavigationPageFromText("open the branding page"), "branding");
+    assert.equal(resolveNavigationPageFromText("go to branding management"), "branding");
+    assert.equal(resolveNavigationPageFromText("open new branding page"), "branding-create");
+    assert.equal(resolveNavigationPageFromText("create new branding"), "branding-create");
+    assert.equal(shouldClientNavigateFromMessage("take me to branding"), "branding");
+    assert.equal(shouldClientNavigateFromMessage("open new branding page"), "branding-create");
+    assert.equal(shouldClientNavigateFromMessage("create new branding"), "branding-create");
+  });
+
   it("does not treat modal requests as navigation", () => {
     assert.equal(resolveNavigationPageFromText("open the apply branding modal"), null);
     assert.equal(resolveNavigationPageFromText("open the setlocation modal"), null);
