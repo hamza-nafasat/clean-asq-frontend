@@ -44,6 +44,8 @@ export const AIChatProvider = ({ children }) => {
   const actionLogRef = useRef([]);
   // Full API conversation (includes hidden auto-guide turns and tool-call chains)
   const apiHistoryRef = useRef([]);
+  // 1–2 turn snapshot (user + nav assistant) restored after aiEndpoint change.
+  const pendingHandoffHistoryRef = useRef(null);
 
   const clearApiHistory = useCallback(() => {
     apiHistoryRef.current = [];
@@ -58,6 +60,18 @@ export const AIChatProvider = ({ children }) => {
 
   const setApiHistory = useCallback((history) => {
     apiHistoryRef.current = trimApiHistory(Array.isArray(history) ? history : []);
+  }, []);
+
+  /** Queue user + navigation assistant turns to seed API history after aiEndpoint change. */
+  const setPendingHandoffHistory = useCallback((entries) => {
+    if (!entries?.length) {
+      pendingHandoffHistoryRef.current = null;
+      return;
+    }
+    pendingHandoffHistoryRef.current = entries.map((m) => ({
+      role: m.role,
+      content: m.content ?? null,
+    }));
   }, []);
 
   // Screens call this to register their state + action callbacks.
@@ -158,6 +172,15 @@ export const AIChatProvider = ({ children }) => {
         "color:#c80; font-weight:bold",
       );
       clearApiHistory();
+      const handoffSeed = pendingHandoffHistoryRef.current;
+      if (handoffSeed?.length) {
+        apiHistoryRef.current = trimApiHistory([...handoffSeed]);
+        pendingHandoffHistoryRef.current = null;
+        console.log(
+          `%c[CONTEXT] restored navigation handoff seed (${handoffSeed.length} turn(s))`,
+          "color:#16a34a; font-weight:bold",
+        );
+      }
     }
     if (newEndpoint) lastEndpointRef.current = newEndpoint;
 
@@ -185,6 +208,7 @@ export const AIChatProvider = ({ children }) => {
   const clearMessages = useCallback(() => {
     setMessages([]);
     clearApiHistory();
+    pendingHandoffHistoryRef.current = null;
   }, [clearApiHistory]);
 
   // Full session reset: wipe history, signal widget to reset voice mode.
@@ -192,6 +216,7 @@ export const AIChatProvider = ({ children }) => {
   const resetSession = useCallback(() => {
     setMessages([]);
     clearApiHistory();
+    pendingHandoffHistoryRef.current = null;
     setWidgetResetSignal((s) => s + 1);
   }, [clearApiHistory]);
 
@@ -250,6 +275,7 @@ export const AIChatProvider = ({ children }) => {
         appendApiHistory,
         setApiHistory,
         clearApiHistory,
+        setPendingHandoffHistory,
       }}
     >
       {children}

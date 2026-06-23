@@ -60,6 +60,7 @@ export default function AIChatWidget() {
     getApiHistory,
     appendApiHistory,
     setApiHistory,
+    setPendingHandoffHistory,
     setOverlayContext,
   } = UseAIChat();
   // Logging wrapper — every setIsOpen call is traced so we can see who's opening the widget.
@@ -2639,6 +2640,7 @@ export default function AIChatWidget() {
     formLanguageRef,
     setIsOpen,
     getApiHistory,
+    setPendingHandoffHistory,
     activatedFieldIdRef,
     inputRef,
     panelRef,
@@ -2967,7 +2969,6 @@ export default function AIChatWidget() {
     const defaultEndpoint =
       assistantMode === "applicant" ? `${SERVER_URL}/api/ai/applicant-chat` : `${SERVER_URL}/api/ai/branding-chat`;
     const chatEndpoint = ctx?.aiEndpoint || defaultEndpoint;
-    const historyForAi = getApiHistory();
 
     console.log("%c[SEND] → AI request", "color:#070; font-weight:bold", {
       userMessage: content,

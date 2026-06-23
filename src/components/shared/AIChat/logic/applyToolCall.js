@@ -68,6 +68,7 @@ export function createApplyToolCall(bindings) {
     formLanguageRef,
     setIsOpen,
     getApiHistory,
+    setPendingHandoffHistory,
     activatedFieldIdRef,
     inputRef,
     panelRef,
@@ -96,17 +97,21 @@ export function createApplyToolCall(bindings) {
         clearTimeout(navTimeoutRef.current);
         navTimeoutRef.current = null;
       }
+      const alreadyThereContent = `You're already on **${label}**. What would you like to do here?`;
       addMessage({
         role: "assistant",
-        content: `You're already on **${label}**. What would you like to do here?`,
+        content: alreadyThereContent,
       });
+      appendApiHistory({ role: "assistant", content: alreadyThereContent });
       return;
     }
 
+    const navContent = `Navigating you to **${label}**. ${reason}`;
     addMessage({
       role: "assistant",
-      content: `Navigating you to **${label}**. ${reason}`,
+      content: navContent,
     });
+    appendApiHistory({ role: "assistant", content: navContent });
 
     pendingHandoffModeRef.current = handoffMode === "greeting" ? "greeting" : "task";
     const lastUser = [...getApiHistory()].reverse().find((m) => m.role === "user")?.content;
@@ -129,6 +134,17 @@ export function createApplyToolCall(bindings) {
     }
 
     setTimeout(() => {
+      // Queue handoff seed immediately before route change (user + nav assistant only).
+      if (setPendingHandoffHistory) {
+        const lastUserTurn = [...getApiHistory()].reverse().find((m) => m.role === "user");
+        if (lastUserTurn && typeof lastUserTurn.content === "string") {
+          const handoffSeed = [
+            { role: "user", content: lastUserTurn.content },
+            { role: "assistant", content: navContent },
+          ];
+          setPendingHandoffHistory(handoffSeed);
+        }
+      }
       navigate(route);
     }, 300);
   }
