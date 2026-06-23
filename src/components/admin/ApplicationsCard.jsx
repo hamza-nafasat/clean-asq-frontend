@@ -29,7 +29,7 @@ import {
 } from "@/redux/apis/formApis";
 
 import { CopyIcon, MoreVertical } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CiSearch } from "react-icons/ci";
 import { useNavigate } from "react-router-dom";
@@ -167,6 +167,62 @@ export default function ApplicationsCard() {
   const [pendingFormEdits, setPendingFormEdits] = useState(null);
 
   const homeBranding = mapHomeBranding(user);
+
+  const emailTemplateFormLinkCount = (allEmailTemplates?.data || []).reduce(
+    (sum, t) => sum + (t.forms || []).length,
+    0,
+  );
+  const formsCount = forms?.data?.length ?? 0;
+  const brandingsCount = brandings?.data?.length ?? 0;
+  const selectedFormId = selectedFormForEditing ?? "";
+  const detailedFormId = singleFormData?.data?._id ?? "";
+  const detailedFormSectionCount = singleFormData?.data?.sections?.length ?? 0;
+  const singleFormLoadError = !!singleFormError;
+  const formRulesCount = (formRulesData?.data || []).length;
+  const searchStrategiesCount = searchStrategies?.data?.length ?? 0;
+  const formStrategiesCount = formStrategies?.data?.length ?? 0;
+  const pendingEditsFormId = pendingFormEdits?.formId ?? "";
+  const pendingSectionUpdateCount = Object.keys(pendingFormEdits?.sectionUpdates || {}).length;
+  const pendingFieldUpdateCount = Object.keys(pendingFormEdits?.fieldUpdates || {}).length;
+  const pendingHasSectionOrder = !!pendingFormEdits?.sectionOrder;
+  const pendingDeletedSectionCount = pendingFormEdits?.deletedSections?.length ?? 0;
+
+  const screenContextDeps = useMemo(
+    () => ({
+      formsCount,
+      brandingsCount,
+      selectedFormId,
+      detailedFormId,
+      detailedFormSectionCount,
+      singleFormLoadError,
+      formRulesCount,
+      searchStrategiesCount,
+      formStrategiesCount,
+      emailTemplateFormLinkCount,
+      pendingEditsFormId,
+      pendingSectionUpdateCount,
+      pendingFieldUpdateCount,
+      pendingHasSectionOrder,
+      pendingDeletedSectionCount,
+    }),
+    [
+      formsCount,
+      brandingsCount,
+      selectedFormId,
+      detailedFormId,
+      detailedFormSectionCount,
+      singleFormLoadError,
+      formRulesCount,
+      searchStrategiesCount,
+      formStrategiesCount,
+      emailTemplateFormLinkCount,
+      pendingEditsFormId,
+      pendingSectionUpdateCount,
+      pendingFieldUpdateCount,
+      pendingHasSectionOrder,
+      pendingDeletedSectionCount,
+    ],
+  );
 
   useScreenContext({
     screenId: "application-forms",
@@ -618,18 +674,7 @@ export default function ApplicationsCard() {
         if (errors.length) throw new Error(`Failed to detach ${errors.length} template(s)`);
       },
     },
-    deps: [
-      forms?.data?.length,
-      brandings?.data?.length,
-      selectedFormForEditing,
-      singleFormData,
-      singleFormError,
-      formRulesData,
-      searchStrategies?.data?.length,
-      formStrategies?.data?.length,
-      (allEmailTemplates?.data || []).reduce((sum, t) => sum + (t.forms || []).length, 0),
-      pendingFormEdits,
-    ],
+    deps: screenContextDeps,
   });
 
   const finalizeFormCreation = async (res) => {
