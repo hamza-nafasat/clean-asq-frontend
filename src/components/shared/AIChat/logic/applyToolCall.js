@@ -21,6 +21,14 @@ const getLastUserMessageText = (history = []) => {
   return "";
 };
 
+const LANG_TAG_RE = /^\[LANG:([a-z]{2})\]\s*/;
+const stripLangTag = (text) => {
+  if (!text) return { text: "", detectedLanguage: null };
+  const m = text.match(LANG_TAG_RE);
+  if (!m) return { text, detectedLanguage: null };
+  return { text: text.slice(m[0].length), detectedLanguage: m[1] };
+};
+
 const isBrandingSaveIntent = (text) =>
   /\b(save(\s+the)?\s+branding|create(\s+the)?\s+branding|click.*create.*branding|create branding|submit.*branding|now create)\b/i.test(
     text,
@@ -78,6 +86,10 @@ export function createApplyToolCall(bindings) {
     pendingAnalysisRef,
     setOverlayContext,
     triggerAutoMessage,
+    translationModeRef,
+    setTranslationMode,
+    tooltipCacheRef,
+    lastDetectedLanguageRef,
   } = bindings;
 
   function handleNavigateToPage(args) {
@@ -2064,11 +2076,17 @@ export function createApplyToolCall(bindings) {
 
     if (tool === "enterTranslationMode") {
       const { language, languageName, explanation } = args;
-      const mode = { lang: language, langName: languageName };
+      const { text: explanationText, detectedLanguage: taggedLang } = stripLangTag(explanation || "");
+      const mode = {
+        lang: language || taggedLang || "en",
+        langName: languageName || "English",
+      };
       translationModeRef.current = mode;
       setTranslationMode(mode);
+      if (lastDetectedLanguageRef) lastDetectedLanguageRef.current = mode.lang;
       tooltipCacheRef.current = {}; // clear cached translations from any previous language
-      addMessage({ role: "assistant", content: explanation || "" });
+      addMessage({ role: "assistant", content: explanationText });
+      if (isVoiceModeRef.current && explanationText) speak(explanationText);
       return;
     }
 

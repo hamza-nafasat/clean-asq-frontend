@@ -2176,7 +2176,6 @@ export default function AIChatWidget() {
       const data = await res.json();
       console.log("data", data);
       if (!data.success) throw new Error(data.message || "AI request failed");
-      applyDetectedLanguage(data.detectedLanguage);
       if (data.type === "tool_call") {
         // Guard: if the screen changed since the AI was sent this context, discard the tool call.
         // This prevents stale responses (e.g. goToNextStep after OTP verification) from acting
@@ -2184,7 +2183,13 @@ export default function AIChatWidget() {
         const postToolCtx = getScreenContext();
         if (postToolCtx?.screenId !== ctx?.screenId) return;
         await applyToolCall(data.tool, data.args, toolResultHistory);
+        if (data.tool === "enterTranslationMode") {
+          applyDetectedLanguage(translationModeRef.current?.lang ?? data.detectedLanguage);
+        } else {
+          applyDetectedLanguage(data.detectedLanguage);
+        }
       } else {
+        applyDetectedLanguage(data.detectedLanguage);
         const assistantContent = data.content || toolArgs.explanation;
         appendApiHistory({ role: "assistant", content: assistantContent });
         addMessage({ role: "assistant", content: assistantContent });
@@ -2244,20 +2249,46 @@ export default function AIChatWidget() {
 
     const { lang, langName } = translationMode;
 
-    // Find the nearest ancestor that directly contains non-whitespace text nodes.
-    // Excludes the chat panel, interactive form controls, and pure-icon elements.
+    // Find a reasonable text block near the cursor. Prefer innermost short text;
+    // also accept semantic tags and direct text nodes when walking up.
+    const TEXT_TAGS = new Set([
+      "LABEL", "BUTTON", "A", "TH", "TD", "SPAN", "P",
+      "H1", "H2", "H3", "H4", "H5", "H6", "LI", "DT", "DD", "FIGCAPTION", "LEGEND",
+    ]);
+    const MAX_HOVER_TEXT = 200;
+
+    const findInnerTextEl = (start) => {
+      if (!start || start.nodeType !== Node.ELEMENT_NODE) return null;
+      let node = start;
+      while (node.children.length === 1) {
+        const child = node.children[0];
+        if (!child || child.nodeType !== Node.ELEMENT_NODE) break;
+        node = child;
+      }
+      const text = node.textContent?.trim() ?? "";
+      return text.length > 1 && text.length <= MAX_HOVER_TEXT ? node : null;
+    };
+
     const getTextBlock = (el) => {
-      if (!el) return null;
-      if (panelRef.current?.contains(el)) return null; // never inside the chat widget
-      if (["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName)) return null;
+      if (!el || el.nodeType !== Node.ELEMENT_NODE) return null;
+      if (panelRef.current?.contains(el)) return null;
+      if (["INPUT", "TEXTAREA", "SELECT", "SVG"].includes(el.tagName)) return null;
+
+      const inner = findInnerTextEl(el);
+      if (inner && !panelRef.current?.contains(inner)) return inner;
 
       let node = el;
       while (node && node !== document.body) {
         if (node === panelRef.current) return null;
-        const hasDirectText = Array.from(node.childNodes).some(
-          (n) => n.nodeType === Node.TEXT_NODE && n.textContent?.trim().length > 1,
-        );
-        if (hasDirectText) return node;
+        if (["INPUT", "TEXTAREA", "SELECT"].includes(node.tagName)) return null;
+
+        const text = node.textContent?.trim() ?? "";
+        if (text.length > 1 && text.length <= MAX_HOVER_TEXT) {
+          const hasDirectText = Array.from(node.childNodes).some(
+            (n) => n.nodeType === Node.TEXT_NODE && n.textContent?.trim().length > 1,
+          );
+          if (hasDirectText || TEXT_TAGS.has(node.tagName)) return node;
+        }
         node = node.parentElement;
       }
       return null;
@@ -2650,6 +2681,10 @@ export default function AIChatWidget() {
     pendingAnalysisRef,
     setOverlayContext,
     triggerAutoMessage: _triggerAutoMessage,
+    translationModeRef,
+    setTranslationMode,
+    tooltipCacheRef,
+    lastDetectedLanguageRef,
   });
 
   // ── Assisted Direct Entry (ADE) panel callbacks ────────────────────────────
@@ -2995,7 +3030,6 @@ export default function AIChatWidget() {
       const data = await res.json();
       console.log("data", data);
       if (!data.success) throw new Error(data.message || "AI request failed");
-      applyDetectedLanguage(data.detectedLanguage);
       console.log("%c[SEND] ← AI response", "color:#070", {
         type: data.type,
         tool: data.tool,
@@ -3005,7 +3039,15 @@ export default function AIChatWidget() {
 
       if (data.type === "tool_call") {
         await applyToolCall(data.tool, data.args, history);
+        // enterTranslationMode sets translationModeRef — apply language after so we
+        // don't clear mode when the API's detectedLanguage disagrees with the tool args.
+        const langArg =
+          data.tool === "enterTranslationMode"
+            ? translationModeRef.current?.lang ?? data.detectedLanguage
+            : data.detectedLanguage;
+        applyDetectedLanguage(langArg);
       } else {
+        applyDetectedLanguage(data.detectedLanguage);
         appendApiHistory({ role: "assistant", content: data.content });
         addMessage({ role: "assistant", content: data.content });
         if (isVoiceModeRef.current) speak(data.content);
@@ -3086,7 +3128,6 @@ export default function AIChatWidget() {
       // discard this response entirely.
       if (isFieldFocus && generation !== fieldFocusGenerationRef.current) return;
 
-      applyDetectedLanguage(data.detectedLanguage);
       console.log("%c[AUTOGUIDE] ← AI response", "color:#a50", {
         type: data.type,
         tool: data.tool,
@@ -3095,7 +3136,13 @@ export default function AIChatWidget() {
       });
       if (data.type === "tool_call") {
         await applyToolCall(data.tool, data.args, getApiHistory());
+        if (data.tool === "enterTranslationMode") {
+          applyDetectedLanguage(translationModeRef.current?.lang ?? data.detectedLanguage);
+        } else {
+          applyDetectedLanguage(data.detectedLanguage);
+        }
       } else {
+        applyDetectedLanguage(data.detectedLanguage);
         appendApiHistory({ role: "assistant", content: data.content });
         addMessage({ role: "assistant", content: data.content });
         if (isVoiceModeRef.current) speak(data.content);
