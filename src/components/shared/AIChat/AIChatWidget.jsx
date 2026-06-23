@@ -23,6 +23,7 @@ import { useAiVoice } from "./hooks/useAiVoice.js";
 import { WIDGET_STRINGS } from "./constants/widgetStrings.js";
 import { LANGUAGES } from "./constants/languages.js";
 import { createApplyToolCall } from "./logic/applyToolCall.js";
+import { shouldClientNavigateFromMessage } from "./logic/navigationIntent.js";
 import ChatFab from "./components/ChatFab.jsx";
 import ChatPanel from "./components/ChatPanel.jsx";
 import ChatOverlays from "./components/ChatOverlays.jsx";
@@ -2945,10 +2946,28 @@ export default function AIChatWidget() {
     setIsLoading(true);
 
     const ctx = getScreenContext();
+    const history = getApiHistory();
+
+    const clientNavPage =
+      assistantMode === "service-provider" ? shouldClientNavigateFromMessage(content) : null;
+    if (clientNavPage) {
+      await applyToolCall(
+        "navigateToPage",
+        {
+          page: clientNavPage,
+          reason: `Taking you to ${PAGE_LABELS[clientNavPage] || clientNavPage}.`,
+          handoffMode: "greeting",
+        },
+        history,
+      );
+      setIsLoading(false);
+      return;
+    }
+
     const defaultEndpoint =
       assistantMode === "applicant" ? `${SERVER_URL}/api/ai/applicant-chat` : `${SERVER_URL}/api/ai/branding-chat`;
     const chatEndpoint = ctx?.aiEndpoint || defaultEndpoint;
-    const history = getApiHistory();
+    const historyForAi = getApiHistory();
 
     console.log("%c[SEND] → AI request", "color:#070; font-weight:bold", {
       userMessage: content,

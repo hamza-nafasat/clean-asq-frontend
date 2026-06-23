@@ -5,6 +5,7 @@ import {
   getMistakenBrandingApplyDeclineMessage,
   shouldBlockMistakenBrandingApply,
 } from "./brandingApplyIntent.js";
+import { resolveNavigationPageFromText } from "./navigationIntent.js";
 import {
   FORWARD_FORM_DECLINE_MESSAGE,
   getMistakenViewApplicationMessage,
@@ -95,6 +96,10 @@ export function createApplyToolCall(bindings) {
         clearTimeout(navTimeoutRef.current);
         navTimeoutRef.current = null;
       }
+      addMessage({
+        role: "assistant",
+        content: `You're already on **${label}**. What would you like to do here?`,
+      });
       return;
     }
 
@@ -1374,8 +1379,18 @@ export function createApplyToolCall(bindings) {
       const lastUser =
         getLastUserMessageText(currentHistory) ||
         getLastUserMessageText(getApiHistory?.() || []);
+      const blockMistaken = shouldBlockMistakenBrandingApply(lastUser);
 
-      if (shouldBlockMistakenBrandingApply(lastUser)) {
+      if (blockMistaken) {
+        const navPage = resolveNavigationPageFromText(lastUser);
+        if (navPage) {
+          handleNavigateToPage({
+            page: navPage,
+            reason: `Taking you to ${PAGE_LABELS[navPage] || navPage}.`,
+            handoffMode: "greeting",
+          });
+          return;
+        }
         const declineMessage = getMistakenBrandingApplyDeclineMessage(lastUser);
         addMessage({ role: "assistant", content: declineMessage });
         if (isVoiceModeRef.current) speak(declineMessage);
