@@ -194,6 +194,20 @@ export const WIDGET_STRINGS = {
     brandingApplied: (url) =>
       `Inilapat ang branding mula sa **${url}**. Ang mga kulay, font, at logo ay na-pre-fill — humingi sa akin ng anumang ayusin!`,
   },
+  ur: {
+    error: "معذرت، کچھ غلط ہو گیا",
+    errorCouldnt: "معذرت، میں یہ نہیں کر سکا",
+    errorVerify: "معذرت، وہ تصدیقی کوڈ کام نہیں کیا",
+    errorSend: "معذرت، میں یہ نہیں بھیج سکا",
+    tryAgain: "براہ کرم دوبارہ کوشش کریں۔",
+    keepOpenAck: "بہترین! میں کھلا رہوں گا اور جب بھی آپ کو ضرورت ہو یہاں ہوں گا۔",
+    introClosing: "میں ضرورت پڑنے پر مدد کے لیے یہاں ہوں۔",
+    revertFailed: "معذرت، واپس لینا ناکام رہا",
+    formNotLoaded: "معذرت، فارم کی تفصیلات لوڈ نہیں ہو سکیں",
+    fetchFailed: "معذرت، وہ صفحہ حاصل نہیں ہو سکا",
+    brandingApplied: (url) =>
+      `میں نے **${url}** سے برانڈنگ لاگو کر دی ہے۔ رنگ، فونٹس اور لوگوز بھر دیے گئے ہیں — کوئی تبدیلی چاہیں تو مجھ سے کہیں!`,
+  },
   pl: {
     error: "Przepraszam, coś poszło nie tak",
     errorCouldnt: "Przepraszam, nie mogłem tego zrobić",

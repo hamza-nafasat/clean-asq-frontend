@@ -15,6 +15,7 @@ export const LANGUAGES = [
   { code: "sv", flag: "🇸🇪", native: "Svenska", banner: "Ställ mig en fråga på vilket språk som helst" },
   { code: "tr", flag: "🇹🇷", native: "Türkçe", banner: "Bana herhangi bir dilde soru sorun" },
   { code: "ar", flag: "🇸🇦", native: "العربية", banner: "اسألني سؤالاً بأي لغة" },
+  { code: "ur", flag: "🇵🇰", native: "اردو", banner: "کسی بھی زبان میں مجھ سے سوال پوچھیں" },
   { code: "hi", flag: "🇮🇳", native: "हिन्दी", banner: "किसी भी भाषा में मुझसे प्रश्न पूछें" },
   { code: "zh", flag: "🇨🇳", native: "中文", banner: "用任何语言问我一个问题" },
   { code: "ja", flag: "🇯🇵", native: "日本語", banner: "どんな言語でも質問してください" },

@@ -2085,7 +2085,7 @@ export function createApplyToolCall(bindings) {
       setTranslationMode(mode);
       if (lastDetectedLanguageRef) lastDetectedLanguageRef.current = mode.lang;
       tooltipCacheRef.current = {}; // clear cached translations from any previous language
-      addMessage({ role: "assistant", content: explanationText });
+      addMessage({ role: "assistant", content: explanationText, lang: mode.lang });
       if (isVoiceModeRef.current && explanationText) speak(explanationText);
       return;
     }

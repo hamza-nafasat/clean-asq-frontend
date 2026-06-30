@@ -1,8 +1,9 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import FormPreview from "./FormPreview";
+import { resolveMessageDirection } from "./utils/detectTextLanguage";
 
-const mdComponents = {
+const mdComponents = (dir) => ({
   table: ({ children }) => (
     <div className="overflow-x-auto my-2">
       <table className="w-full border-collapse text-xs">{children}</table>
@@ -12,12 +13,18 @@ const mdComponents = {
   tbody: ({ children }) => <tbody>{children}</tbody>,
   tr: ({ children }) => <tr className="border-b border-gray-200">{children}</tr>,
   th: ({ children }) => (
-    <th className="px-2 py-1 text-left font-semibold text-gray-700 border border-gray-200 whitespace-nowrap">
+    <th
+      className={`px-2 py-1 font-semibold text-gray-700 border border-gray-200 whitespace-nowrap ${dir === "rtl" ? "text-right" : "text-left"}`}
+    >
       {children}
     </th>
   ),
   td: ({ children }) => <td className="px-2 py-1 text-gray-600 border border-gray-200">{children}</td>,
-};
+  p: ({ children }) => <p className="my-1.5 leading-relaxed">{children}</p>,
+  li: ({ children }) => <li className="my-0.5 leading-relaxed">{children}</li>,
+  ul: ({ children }) => <ul className="my-2 list-disc space-y-1 ps-5">{children}</ul>,
+  ol: ({ children }) => <ol className="my-2 list-decimal space-y-1 ps-5">{children}</ol>,
+});
 
 const ColorSwatch = ({ color, label }) => (
   <div className="flex items-center gap-2 text-xs text-gray-600">
@@ -88,13 +95,14 @@ export default function ChatMessage({
   const isPalette = message.toolCall?.tool === "generateColorPalette";
   const isApply = message.toolCall?.tool === "applyBrandingChanges";
   const isSuggest = message.toolCall?.tool === "suggestColors";
+  const textDir = resolveMessageDirection(message.content, message.lang);
 
   if (isUser) {
     return (
-      <div className="flex justify-end" data-testid="ai-message-user">
+      <div className={`flex ${textDir === "rtl" ? "justify-start" : "justify-end"}`} data-testid="ai-message-user">
         <div
-          className="max-w-[80%] rounded-2xl rounded-br-sm px-3 py-2 text-sm"
-          style={{ backgroundColor: accentColor, color: accentTextColor }}
+          className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${textDir === "rtl" ? "rounded-bl-sm text-right" : "rounded-br-sm"}`}
+          style={{ backgroundColor: accentColor, color: accentTextColor, direction: textDir, unicodeBidi: "plaintext" }}
         >
           {message.content}
         </div>
@@ -105,12 +113,15 @@ export default function ChatMessage({
   const isError = message.content?.trimStart().startsWith("⚠️");
 
   return (
-    <div className="flex justify-start" data-testid="ai-message-assistant">
+    <div className={`flex ${textDir === "rtl" ? "justify-end" : "justify-start"}`} data-testid="ai-message-assistant">
       <div
-        className={`max-w-[90%] rounded-2xl rounded-bl-sm px-3 py-2 text-sm shadow-sm ${isError ? "bg-red-50 border-2 border-red-400 text-red-800" : "bg-white border border-gray-100 text-gray-700"}`}
+        className={`max-w-[90%] rounded-2xl px-3 py-2 text-sm shadow-sm ${textDir === "rtl" ? "rounded-br-sm text-right" : "rounded-bl-sm"} ${isError ? "bg-red-50 border-2 border-red-400 text-red-800" : "bg-white border border-gray-100 text-gray-700"}`}
+        style={{ direction: textDir, unicodeBidi: "plaintext" }}
       >
-        <div className="prose prose-sm max-w-none prose-p:my-1 prose-headings:my-1 prose-ul:my-1 prose-li:my-0">
-          <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+        <div
+          className={`prose prose-sm max-w-none prose-p:my-1 prose-headings:my-1 prose-ul:my-1 prose-li:my-0 leading-relaxed ${textDir === "rtl" ? "text-right" : ""}`}
+        >
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents(textDir)}>
             {message.content}
           </ReactMarkdown>
         </div>

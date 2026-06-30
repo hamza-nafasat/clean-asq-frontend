@@ -6,6 +6,7 @@ import { checkFieldForErrors } from "../../../lib/checkFieldForErrors";
 import { discoverFormFields } from "../../../lib/discoverFormFields";
 import { UseAIChat } from "@/context/AiChatContext";
 import { buildChatPayload } from "./utils/buildChatPayload.js";
+import { detectFormLanguage, detectTextLanguage, resolveDefaultResponseLanguage } from "./utils/detectTextLanguage.js";
 import { mapVisibleToApiMessage } from "./utils/mapVisibleToApiMessage.js";
 import { resolveNavigationHandoff } from "./utils/resolveNavigationHandoff.js";
 import {
@@ -1359,6 +1360,7 @@ export default function AIChatWidget() {
     Portuguese: "pt",
     Chinese: "zh",
     Arabic: "ar",
+    Urdu: "ur",
     German: "de",
     Italian: "it",
     Korean: "ko",
@@ -1369,7 +1371,14 @@ export default function AIChatWidget() {
     Tagalog: "tl",
     Filipino: "tl",
     Polish: "pl",
+    Turkish: "tr",
   };
+
+  const getDefaultResponseLanguage = () =>
+    resolveDefaultResponseLanguage({
+      customPrompt: aiCustomPrompt,
+      formLanguage: formLanguageRef.current,
+    });
 
   // Update the last detected language ref whenever the AI signals a language via [LANG:xx].
   // Also manages translation mode: auto-deactivate when the user returns to the base language,
@@ -1552,38 +1561,6 @@ export default function AIChatWidget() {
     return () => clearInterval(id);
   }, [assistantMode]);
 
-  // Detect the natural language of the form from its field labels and descriptions.
-  // Returns a language name (e.g. "Spanish") for use in the system prompt.
-  const detectFormLanguage = (ctx) => {
-    const fields = ctx?.currentState?.fields || [];
-    const text = [
-      ctx?.screenName || "",
-      ctx?.description || "",
-      ...fields.map((f) => `${f.label || ""} ${f.description || ""} ${f.placeholder || ""}`),
-    ].join(" ");
-    const len = text.replace(/\s/g, "").length || 1;
-
-    // Non-Latin script detection by Unicode range
-    if ((text.match(/[\u0600-\u06FF]/g) || []).length / len > 0.12) return "Arabic";
-    if ((text.match(/[\u4E00-\u9FFF]/g) || []).length / len > 0.12) return "Chinese";
-    if ((text.match(/[\u3040-\u30FF]/g) || []).length / len > 0.12) return "Japanese";
-    if ((text.match(/[\uAC00-\uD7AF]/g) || []).length / len > 0.12) return "Korean";
-    if ((text.match(/[\u0400-\u04FF]/g) || []).length / len > 0.12) return "Russian";
-    if ((text.match(/[\u0590-\u05FF]/g) || []).length / len > 0.12) return "Hebrew";
-    if ((text.match(/[\u0E00-\u0E7F]/g) || []).length / len > 0.12) return "Thai";
-    if ((text.match(/[\u0900-\u097F]/g) || []).length / len > 0.12) return "Hindi";
-
-    // Latin-script language detection via common field-label words
-    const tl = text.toLowerCase();
-    if (/\b(nombre|empresa|dirección|ciudad|país|fecha|teléfono|correo|apellido)\b/.test(tl)) return "Spanish";
-    if (/\b(nom|prénom|adresse|entreprise|ville|pays|téléphone|courriel|date)\b/.test(tl)) return "French";
-    if (/\b(nome|empresa|endereço|cidade|estado|país|telefone|cpf|cnpj)\b/.test(tl)) return "Portuguese";
-    if (/\b(vorname|nachname|unternehmen|anschrift|straße|stadt|land|telefon|datum)\b/.test(tl)) return "German";
-    if (/\b(nome|azienda|indirizzo|città|paese|telefono|codice fiscale|data)\b/.test(tl)) return "Italian";
-
-    return "English";
-  };
-
   // Show greeting only on very first open (empty transcript).
   // Guard: after the initial greeting has been shown once, subsequent messages.length===0
   // events are caused by endpoint-change navigation — the screen-change effect handles those.
@@ -1614,6 +1591,8 @@ export default function AIChatWidget() {
             "Ciao! Sono il tuo **assistente per la domanda**. Ho il contesto completo di questa domanda e posso rispondere a qualsiasi tua domanda.\n\nChiedimi pure qualsiasi cosa sul modulo, i requisiti o il processo.",
           Arabic:
             "مرحباً! أنا **مساعد الطلب** الخاص بك. لدي سياق كامل حول هذا الطلب ويمكنني الإجابة على أي أسئلة لديك.\n\nلا تتردد في سؤالي عن أي شيء يتعلق بالنموذج أو المتطلبات أو العملية.",
+          Urdu:
+            "سلام! میں آپ کا **درخواست معاون** ہوں۔ مجھے اس درخواست کا مکمل سیاق معلوم ہے اور میں آپ کے کسی بھی سوال کا جواب دے سکتا ہوں۔\n\nفارم، ضروریات یا عملے کے بارے میں کچھ بھی پوچھنے میں ہچکچاہٹ محسوس نہ کریں۔",
           Chinese:
             "你好！我是您的**申请助手**。我对本申请有完整的上下文，可以回答您的任何问题。\n\n欢迎随时询问有关表格、要求或流程的任何问题。",
           Japanese:
@@ -1780,7 +1759,7 @@ export default function AIChatWidget() {
           if (data.type === "tool_call") {
             await applyToolCall(data.tool, data.args, [{ role: "user", content: visionContent }]);
           } else {
-            addMessage({ role: "assistant", content: data.content });
+            addMessage({ role: "assistant", content: data.content, lang: data.detectedLanguage });
             if (isVoiceModeRef.current) speak(data.content);
           }
         } catch {
@@ -2130,7 +2109,7 @@ export default function AIChatWidget() {
         if (data.type === "tool_call") {
           await applyToolCall(data.tool, data.args, continuationHistory);
         } else {
-          addMessage({ role: "assistant", content: data.content });
+          addMessage({ role: "assistant", content: data.content, lang: data.detectedLanguage });
           if (isVoiceModeRef.current) speak(data.content);
         }
       } catch (err) {
@@ -2170,6 +2149,7 @@ export default function AIChatWidget() {
             assistantMode,
             customPrompt: aiCustomPrompt,
             formLanguage: formLanguageRef.current,
+            defaultResponseLanguage: getDefaultResponseLanguage(),
           }),
         ),
       });
@@ -2192,7 +2172,7 @@ export default function AIChatWidget() {
         applyDetectedLanguage(data.detectedLanguage);
         const assistantContent = data.content || toolArgs.explanation;
         appendApiHistory({ role: "assistant", content: assistantContent });
-        addMessage({ role: "assistant", content: assistantContent });
+        addMessage({ role: "assistant", content: assistantContent, lang: data.detectedLanguage });
         if (isVoiceModeRef.current) speak(assistantContent);
         // Dodge toward the next unfilled field so the panel doesn't cover the field the AI is about to address.
         if (assistantMode === "applicant" && ctx?.currentState?.fields) {
@@ -2208,7 +2188,7 @@ export default function AIChatWidget() {
       }
     } catch {
       // Fall back to just showing the explanation
-      addMessage({ role: "assistant", content: toolArgs.explanation });
+      addMessage({ role: "assistant", content: toolArgs.explanation, lang: lastDetectedLanguageRef.current });
       if (isVoiceModeRef.current) speak(toolArgs.explanation);
     }
   };
@@ -2977,7 +2957,7 @@ export default function AIChatWidget() {
     setInput("");
     pendingFieldFocusRef.current = null;
 
-    const userMsg = { role: "user", content };
+    const userMsg = { role: "user", content, lang: detectTextLanguage(content)?.code };
     addMessage(userMsg);
     appendApiHistory(mapVisibleToApiMessage(userMsg));
     setIsLoading(true);
@@ -3023,6 +3003,7 @@ export default function AIChatWidget() {
             assistantMode,
             customPrompt: aiCustomPrompt,
             formLanguage: formLanguageRef.current,
+            defaultResponseLanguage: getDefaultResponseLanguage(),
           }),
         ),
       });
@@ -3049,7 +3030,7 @@ export default function AIChatWidget() {
       } else {
         applyDetectedLanguage(data.detectedLanguage);
         appendApiHistory({ role: "assistant", content: data.content });
-        addMessage({ role: "assistant", content: data.content });
+        addMessage({ role: "assistant", content: data.content, lang: data.detectedLanguage });
         if (isVoiceModeRef.current) speak(data.content);
       }
     } catch (err) {
@@ -3106,6 +3087,7 @@ export default function AIChatWidget() {
       assistantMode,
       customPrompt: aiCustomPrompt,
       formLanguage: formLanguageRef.current,
+      defaultResponseLanguage: getDefaultResponseLanguage(),
     });
     console.log("%c[AUTOGUIDE] → AI request", "color:#a50; font-weight:bold", {
       instruction,
@@ -3144,7 +3126,7 @@ export default function AIChatWidget() {
       } else {
         applyDetectedLanguage(data.detectedLanguage);
         appendApiHistory({ role: "assistant", content: data.content });
-        addMessage({ role: "assistant", content: data.content });
+        addMessage({ role: "assistant", content: data.content, lang: data.detectedLanguage });
         if (isVoiceModeRef.current) speak(data.content);
         // Dodge the panel and scroll to the first empty field so the applicant sees it highlighted.
         if (assistantMode === "applicant") {

@@ -1,10 +1,21 @@
 import { AI_CHAT_MODE } from "../constants/aiChatConstants.js";
+import { resolveDefaultResponseLanguage } from "./detectTextLanguage.js";
 
 /**
  * Build the standard POST body for /api/ai/* chat endpoints.
  * Always includes customPrompt when provided (branding personality).
  */
-export function buildChatPayload({ messages, ctx, assistantMode, customPrompt, formLanguage }) {
+export function buildChatPayload({
+  messages,
+  ctx,
+  assistantMode,
+  customPrompt,
+  formLanguage,
+  defaultResponseLanguage,
+}) {
+  const resolvedDefault =
+    defaultResponseLanguage || resolveDefaultResponseLanguage({ customPrompt, formLanguage });
+
   return {
     messages,
     chatMode: AI_CHAT_MODE,
@@ -23,6 +34,8 @@ export function buildChatPayload({ messages, ctx, assistantMode, customPrompt, f
       maxHelpMode: assistantMode === "applicant",
       formLanguage: formLanguage && formLanguage !== "English" ? formLanguage : undefined,
       customPrompt: customPrompt || undefined,
+      defaultResponseLanguage:
+        resolvedDefault?.code && resolvedDefault.code !== "en" ? resolvedDefault : undefined,
     },
   };
 }
