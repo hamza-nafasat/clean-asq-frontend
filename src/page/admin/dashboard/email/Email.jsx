@@ -46,6 +46,10 @@ const emailTypes = [
     label: "Welcome Email Template",
     value: "welcome_email_template",
   },
+  {
+    label: "Rule Triggered Email Template",
+    value: "rule_triggered_email_template",
+  },
 ];
 
 const quillModules = {

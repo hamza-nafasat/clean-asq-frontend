@@ -9,15 +9,22 @@ import { useState } from "react";
 import { FaSpinner } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Button from "../shared/small/Button";
-import { SelectInputType } from "../shared/small/DynamicField";
+import { CheckboxInputType, MultiCheckboxInputType, SelectInputType } from "../shared/small/DynamicField";
 import TextField from "../shared/small/TextField";
 import CustomLoading from "../shared/small/CustomLoading";
+import Checkbox from "../shared/small/Checkbox";
+import { useGetAllEmailTemplatesQuery } from "@/redux/apis/emailTemplateApis";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const CATEGORY_OPTIONS = [
   { label: "Alert", value: "alert" },
   { label: "Display", value: "display" },
   { label: "Update Status", value: "update_status" },
+];
+const RECIPIENT_EMAIL_OPTIONS = [
+  { label: "Beneficial Owners", value: "beneficial_owners" },
+  { label: "Applicant", value: "applicant" },
+  { label: "All", value: "all" },
 ];
 
 const CreateRuleModal = ({ formId, setModal, refetch }) => {
@@ -35,16 +42,46 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
   const [getFormRuleFromAi, { isLoading: isGettingFormRuleFromAi }] = useGetFormRuleFromAiMutation();
   const { data: formData, isLoading: isLoadingFormData } = useFormDataWhichUseToCreateFormsQuery({ formId });
   const [checkFormRuleFromAi, { isLoading: isCheckingFormRuleFromAi }] = useCheckFormRuleFromAiMutation();
+  const { data: emailTemplates, isLoading: isLoadingEmailTemplates } = useGetAllEmailTemplatesQuery();
   const [canCreateFormRule, setCanCreateFormRule] = useState({
     canCreate: null,
     message: "",
   });
+  const [isEmailSentOn, setIsEmailSentOn] = useState(false);
+  const [recieverEmail, setRecieverEmail] = useState("applicant");
+  const [emailTemplateId, setEmailTemplateId] = useState("");
 
   const createRuleHandler = async () => {
     try {
-      if (!formId || !prompt || !name || !handler || !formula || !example || !explanation || !category || !order)
+      const data = {
+        formId,
+        prompt,
+        name,
+        category,
+        handler,
+        formula,
+        example,
+        explanation,
+        order,
+        isEmailSentOn: String(isEmailSentOn),
+        recieverEmail,
+        emailTemplateId,
+      };
+      if (
+        !formId ||
+        !prompt ||
+        !name ||
+        !handler ||
+        !formula ||
+        !example ||
+        !explanation ||
+        !category ||
+        !order ||
+        !String(isEmailSentOn) ||
+        (isEmailSentOn && !(recieverEmail && emailTemplateId))
+      )
         return toast.error("Please fill all the fields");
-      const data = { formId, prompt, name, category, handler, formula, example, explanation, order };
+
       const res = await createRule(data).unwrap();
       if (res?.success) {
         toast?.success(res?.message || "Rule created successfully");
@@ -87,7 +124,7 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
       console.error("Error checking prompt for check:", error);
     }
   };
-  if (isLoadingFormData) return <CustomLoading />;
+  if (isLoadingFormData || isLoadingEmailTemplates) return <CustomLoading />;
   return (
     <div className="flex items-center w-full justify-center p-4">
       <div className="flex w-full max-w-3xl flex-col gap-6">
@@ -147,6 +184,40 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
             onChange={(e) => setPrompt(e.target.value)}
           />
 
+          <Checkbox
+            id="isEmailSentOn"
+            name="isEmailSentOn"
+            label="Send Email"
+            checked={isEmailSentOn}
+            onChange={() => setIsEmailSentOn((prev) => !prev)}
+          />
+          {isEmailSentOn && (
+            <>
+              <SelectInputType
+                field={{
+                  label: "Reciever's Email:",
+                  options: RECIPIENT_EMAIL_OPTIONS,
+                  uniqueId: "recieverEmail",
+                }}
+                onChange={(e) => setRecieverEmail(e.target.value)}
+                form={{ recieverEmail: { name: "recieverEmail", value: recieverEmail } }}
+              />
+              <SelectInputType
+                field={{
+                  label: "Email Template:",
+                  options: emailTemplates?.data
+                    ?.filter((template) => template?.emailType === "rule_triggered_email_template")
+                    ?.map((template) => ({
+                      label: template?.templateName,
+                      value: template?._id,
+                    })),
+                  uniqueId: "emailTemplateId",
+                }}
+                onChange={(e) => setEmailTemplateId(e.target.value)}
+                form={{ emailTemplateId: { name: "emailTemplateId", value: emailTemplateId } }}
+              />
+            </>
+          )}
           <div className="flex justify-end  w-full items-end gap-2">
             <Button
               label={showRuleFieldsGuide ? "Hide Ai Context" : "Preview Ai Context"}
@@ -166,7 +237,7 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
           {showRuleFieldsGuide && formData?.data && (
             <div className="flex flex-col gap-3 mt-4 border border-gray-200 rounded-xl p-4 bg-[#FAFBFF]">
               <h4 className="text-lg font-semibold text-gray-800">The data ai use to create the rules</h4>
-              <div className="overflow-x-auto overflow-y-auto max-h-[300px]">
+              <div className="overflow-x-auto overflow-y-auto max-h-75">
                 <pre className="text-xs bg-black text-green-400 p-3 rounded-md mt-2 overflow-x-auto">
                   {JSON.stringify(formData?.data, null, 2)}
                 </pre>
@@ -241,12 +312,13 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
   const { data: formData, isLoading: isLoadingFormData } = useFormDataWhichUseToCreateFormsQuery({
     formId: ruleData?.formId,
   });
+  const { data: emailTemplates, isLoading: isLoadingEmailTemplates } = useGetAllEmailTemplatesQuery();
+  const [emailTemplateId, setEmailTemplateId] = useState(ruleData?.emailTemplateId);
+  const [isEmailSentOn, setIsEmailSentOn] = useState(ruleData?.isEmailSentOn);
+  const [recieverEmail, setRecieverEmail] = useState(ruleData?.recieverEmail);
 
   const updateRuleHandler = async () => {
     try {
-      if (!ruleData?._id || !prompt || !name || !handler || !formula || !example || !explanation || !category || !order)
-        return toast.error("Please fill all the fields");
-
       const data = {
         formId: ruleData?.formId,
         prompt,
@@ -257,7 +329,25 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
         example,
         explanation,
         order,
+        isEmailSentOn: String(isEmailSentOn),
+        recieverEmail,
+        emailTemplateId,
       };
+
+      if (
+        !ruleData?._id ||
+        !prompt ||
+        !name ||
+        !handler ||
+        !formula ||
+        !example ||
+        !explanation ||
+        !category ||
+        !order ||
+        !String(isEmailSentOn) ||
+        (isEmailSentOn && !(recieverEmail && emailTemplateId))
+      )
+        return toast.error("Please fill all the fields");
 
       const res = await updateRule({ data, ruleId: ruleData?._id }).unwrap();
       if (res?.success) {
@@ -294,7 +384,7 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
       toast.error(error?.data?.message || "Failed to get form rule from ai");
     }
   };
-  if (isLoadingFormData) return <CustomLoading />;
+  if (isLoadingFormData || isLoadingEmailTemplates) return <CustomLoading />;
   return (
     <div className="flex items-center justify-center p-4">
       <div className="flex w-full max-w-2xl flex-col gap-6">
@@ -326,6 +416,37 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
             onChange={(e) => setPrompt(e.target.value)}
           />
 
+          <Checkbox
+            id="isEmailSentOn"
+            name="isEmailSentOn"
+            label="Send Email"
+            checked={isEmailSentOn}
+            onChange={() => setIsEmailSentOn((prev) => !prev)}
+          />
+          {isEmailSentOn && (
+            <>
+              <SelectInputType
+                field={{
+                  label: "Reciever's Email:",
+                  options: RECIPIENT_EMAIL_OPTIONS,
+                  uniqueId: "recieverEmail",
+                }}
+                onChange={(e) => setRecieverEmail(e.target.value)}
+                form={{ recieverEmail: { name: "recieverEmail", value: recieverEmail } }}
+              />
+              <SelectInputType
+                field={{
+                  label: "Email Template:",
+                  options: emailTemplates?.data
+                    ?.filter((template) => template?.emailType === "rule_triggered_email_template")
+                    ?.map((template) => ({ label: template?.templateName, value: template?._id })),
+                  uniqueId: "emailTemplateId",
+                }}
+                onChange={(e) => setEmailTemplateId(e.target.value)}
+                form={{ emailTemplateId: { name: "emailTemplateId", value: emailTemplateId } }}
+              />
+            </>
+          )}
           <div className="flex justify-end  w-full items-end gap-2">
             <Button
               label={showRuleFieldsGuide ? "Hide Ai Context" : "Preview Ai Context"}
@@ -345,7 +466,7 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
           {showRuleFieldsGuide && formData?.data && (
             <div className="flex flex-col gap-3 mt-4 border border-gray-200 rounded-xl p-4 bg-[#FAFBFF]">
               <h4 className="text-lg font-semibold text-gray-800">The data ai use to create the rules</h4>
-              <div className="overflow-x-auto overflow-y-auto max-h-[300px]">
+              <div className="overflow-x-auto overflow-y-auto max-h-75">
                 <pre className="text-xs bg-black text-green-400 p-3 rounded-md mt-2 overflow-x-auto">
                   {JSON.stringify(formData?.data, null, 2)}
                 </pre>
