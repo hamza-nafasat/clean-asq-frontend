@@ -83,6 +83,7 @@ const quillFormats = [
   "align",
   "link",
   "image",
+  "data",
 ];
 
 const sedationKeywords = ["link", "otp", "email", "password", "frontEndUrl", "recipientName", "brandCompanyName"];
