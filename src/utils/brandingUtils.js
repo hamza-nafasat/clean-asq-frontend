@@ -1,3 +1,5 @@
+import html2canvas from "html2canvas-pro";
+
 export const applyBrandingToCSS = (brandingColors) => {
   if (!brandingColors) return;
 
@@ -100,4 +102,73 @@ export const resetToDefaultBranding = () => {
 
 export const getBrandingPriority = (userBranding, formBranding) => {
   return formBranding || userBranding || null;
+};
+
+export const handleChange = async ({
+  e,
+  setSSLoading,
+  setColorPicker,
+  colorPicker,
+  setImage,
+  setShowSSButton,
+  setColor,
+}) => {
+  setSSLoading(true);
+  const newColor = e.target.value;
+  setColorPicker(newColor);
+  console.log(`[ColorInput] 🎨 Color changed to:`, newColor);
+
+  setTimeout(async () => {
+    const selector = "#screen-shot";
+    console.log(`[ColorInput] 🔍 Trying to capture element:`, selector);
+    const element = document.querySelector(selector);
+    if (!element) {
+      console.warn(`[ColorInput] ❌ Element not found`);
+      setSSLoading(false);
+      return;
+    }
+
+    const previousFilter = element.style.filter;
+    element.style.filter = "none";
+    element.style.colorScheme = "light";
+    console.log(`[ColorInput] ✅ Element found. Starting html2canvas...`);
+    try {
+      const canvas = await html2canvas(element, {
+        useCORS: true,
+        scale: 2,
+        backgroundColor: null,
+      });
+      console.log(`[ColorInput] 📸 Screenshot captured successfully.`);
+      const imageData = canvas.toDataURL("image/png");
+      const fileName = `screenshot-${Date.now()}.png`;
+      // ✅ Convert base64 → File
+      const response = await fetch(imageData);
+      const blob = await response.blob();
+      const file = new File([blob], fileName, { type: "image/png" });
+      // ✅ Optional: trigger download (kept original functionality)
+      const link = document.createElement("a");
+      // link.download = fileName;
+      link.href = imageData;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      console.log(`[ColorInput] ✅ Image downloaded successfully as "${fileName}".`);
+      // ✅ Save only filename to localStorage
+      try {
+        localStorage.setItem("lastScreenshot", fileName);
+        console.log(`[ColorInput] 💾 Stored only filename in localStorage.`);
+      } catch (err) {
+        console.error(`[ColorInput] ⚠️ Failed to save filename:`, err);
+      }
+      setImage(file); // ✅ Set actual File object
+    } catch (error) {
+      console.error(`[ColorInput] ❌ Error capturing screenshot:`, error);
+    } finally {
+      element.style.filter = previousFilter;
+      if (colorPicker) setColor(colorPicker);
+      console.log("done one done done");
+      setShowSSButton(false);
+      setSSLoading(false);
+    }
+  }, 1000);
 };

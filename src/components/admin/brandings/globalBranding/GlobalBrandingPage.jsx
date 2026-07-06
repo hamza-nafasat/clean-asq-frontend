@@ -13,7 +13,7 @@ import {
 } from "@/redux/apis/brandingApis";
 import { userExist } from "@/redux/slices/authSlice";
 import Handlebars from "handlebars";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -27,7 +27,6 @@ import Checkbox from "@/components/shared/small/Checkbox";
 import { RiSparkling2Line } from "react-icons/ri";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import { useGetMyAllFormsQuery } from "@/redux/apis/formApis";
-import getEnv from "@/lib/env";
 import {
   executeBrandingAssignment,
   executeBrandingAssignments,
@@ -217,8 +216,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [buttonMaterial, setButtonMaterial] = useState(0);
   const [emailHeaderMaterial, setEmailHeaderMaterial] = useState(0);
   const [emailFooterMaterial, setEmailFooterMaterial] = useState(0);
-  const [samplePlaying, setSamplePlaying] = useState(false);
-  const sampleAudioRef = useRef(null);
+  // const [samplePlaying, setSamplePlaying] = useState(false);
+  // const sampleAudioRef = useRef(null);
 
   const compileHeader = Handlebars.compile(emailHeaderTemplate);
   const compileFooter = Handlebars.compile(emailFooterTemplate);
@@ -1249,46 +1248,47 @@ const GlobalBrandingPage = ({ brandingId }) => {
     setGlobalAiUseCustomIcon,
     user?.branding,
   ]);
-  const playSample = async () => {
-    if (sampleAudioRef.current) {
-      sampleAudioRef.current.pause();
-      0.8;
-      sampleAudioRef.current = null;
-      setSamplePlaying(false);
-      return;
-    }
-    setSamplePlaying(true);
-    try {
-      const SERVER_URL = getEnv("SERVER_URL");
-      const res = await fetch(`${SERVER_URL}/api/ai/tts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          text: "Hi there! I'm your application assistant. I'm here to help guide you through each step.",
-          voice: aiVoice,
-        }),
-      });
-      if (!res.ok) throw new Error("TTS unavailable");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      sampleAudioRef.current = audio;
-      audio.onended = () => {
-        setSamplePlaying(false);
-        sampleAudioRef.current = null;
-        URL.revokeObjectURL(url);
-      };
-      audio.onerror = () => {
-        setSamplePlaying(false);
-        sampleAudioRef.current = null;
-      };
-      audio.play();
-    } catch {
-      setSamplePlaying(false);
-      toast.error("Could not play voice sample. Please try again.");
-    }
-  };
+
+  // const playSample = async () => {
+  //   if (sampleAudioRef.current) {
+  //     sampleAudioRef.current.pause();
+  //     0.8;
+  //     sampleAudioRef.current = null;
+  //     setSamplePlaying(false);
+  //     return;
+  //   }
+  //   setSamplePlaying(true);
+  //   try {
+  //     const SERVER_URL = getEnv("SERVER_URL");
+  //     const res = await fetch(`${SERVER_URL}/api/ai/tts`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       credentials: "include",
+  //       body: JSON.stringify({
+  //         text: "Hi there! I'm your application assistant. I'm here to help guide you through each step.",
+  //         voice: aiVoice,
+  //       }),
+  //     });
+  //     if (!res.ok) throw new Error("TTS unavailable");
+  //     const blob = await res.blob();
+  //     const url = URL.createObjectURL(blob);
+  //     const audio = new Audio(url);
+  //     sampleAudioRef.current = audio;
+  //     audio.onended = () => {
+  //       setSamplePlaying(false);
+  //       sampleAudioRef.current = null;
+  //       URL.revokeObjectURL(url);
+  //     };
+  //     audio.onerror = () => {
+  //       setSamplePlaying(false);
+  //       sampleAudioRef.current = null;
+  //     };
+  //     audio.play();
+  //   } catch {
+  //     setSamplePlaying(false);
+  //     toast.error("Could not play voice sample. Please try again.");
+  //   }
+  // };
 
   return (
     <div className="mb-6 rounded-xl border border-[#F0F0F0] bg-white px-3 md:px-6">
@@ -1323,7 +1323,10 @@ const GlobalBrandingPage = ({ brandingId }) => {
             onClose={() => setIsExtractionModalOpen(false)}
             initialUrl={websiteUrl}
             initialTab={extractionModalTab}
-            onApply={(brandingData) => applyExtractedBranding(brandingData)}
+            onApply={(brandingData) => {
+              applyExtractedBranding(brandingData);
+              if (!companyName && brandingData?.name) setCompanyName(brandingData.name);
+            }}
           />
 
           {applyBrandingModalOpen && (
@@ -1520,17 +1523,14 @@ const GlobalBrandingPage = ({ brandingId }) => {
 
             <div className="grid gap-x-6 gap-y-1" style={{ gridTemplateColumns: "repeat(3, max-content)" }}>
               <GradientOrSolidInput
-                label={"Background Color"}
-                value={emailHeaderColor}
-                onChange={setEmailHeaderColor}
-              />
-              <ColorInput
                 image={image}
                 setImage={setImage}
-                label={"Text Color"}
-                color={emailHeaderTextColor}
-                setColor={setEmailHeaderTextColor}
+                label={"Background Gradient"}
+                value={emailHeaderColor}
+                onChange={setEmailHeaderColor}
+                setColor={setEmailHeaderColor}
               />
+
               <TextField
                 label={"Height (px)"}
                 labelCs="text-sm!"
@@ -1615,13 +1615,21 @@ const GlobalBrandingPage = ({ brandingId }) => {
                 color={emailTextColor}
                 setColor={setEmailTextColor}
               />
-              <GradientOrSolidInput label={"Body Background"} value={emailBodyColor} onChange={setEmailBodyColor} />
+              <GradientOrSolidInput
+                image={image}
+                setImage={setImage}
+                label={"Body Background"}
+                value={emailBodyColor}
+                onChange={setEmailBodyColor}
+              />
             </div>
           </section>
           <section className="my-6 flex w-full flex-col gap-2">
             <h3 className="border-b-2 text-lg font-semibold text-gray-800">Email Footer</h3>
             <div className="grid gap-x-6 gap-y-1" style={{ gridTemplateColumns: "repeat(3, max-content)" }}>
               <GradientOrSolidInput
+                image={image}
+                setImage={setImage}
                 label={"Background Color"}
                 value={emailFooterColor}
                 onChange={setEmailFooterColor}
@@ -1715,7 +1723,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
         <section className="my-6 flex w-full flex-col gap-4">
           <h3 className="border-b-2 text-lg font-semibold text-gray-800">AI Configuration</h3>
 
-          {/* Voice selector */}
+          {/* Voice selector 
           <div className="flex flex-col gap-1 max-w-sm">
             <label className="text-sm font-medium text-gray-700">AI Assistant Voice</label>
             <p className="text-xs text-gray-400">
@@ -1756,7 +1764,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
             </div>
           </div>
 
-          {/* Custom system prompt */}
+           Custom system prompt 
           <div className="flex flex-col gap-1 max-w-2xl">
             <label className="text-sm font-medium text-gray-700">Custom Personality Settings</label>
             <p className="text-xs text-gray-400">
@@ -1771,7 +1779,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
               rows={4}
               className="mt-1 rounded-lg border border-gray-300 bg-[#FAFBFF] px-3 py-2 text-sm text-gray-700 outline-none focus:border-purple-400 resize-y"
             />
-          </div>
+          </div> */}
 
           {/* Custom icon toggle */}
           <div className="flex items-center gap-2">

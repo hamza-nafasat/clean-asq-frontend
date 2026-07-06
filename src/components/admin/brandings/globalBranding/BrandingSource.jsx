@@ -3,7 +3,7 @@ import TextField from "@/components/shared/small/TextField";
 import { detectLogo } from "@/utils/detectLogo";
 import { useEffect, useRef, useState } from "react";
 import { BsGlobe2 } from "react-icons/bs";
-import { FiUpload, FiX } from "react-icons/fi";
+import { FiShield, FiUpload, FiX } from "react-icons/fi";
 import { GrImage } from "react-icons/gr";
 import { IoColorPaletteOutline } from "react-icons/io5";
 import { toast } from "react-toastify";
@@ -24,6 +24,7 @@ const BrandingSource = ({
   extractColorsFromLogosHandler,
   headerBackground,
   onLogoSelected,
+  onOpenExtractionModal,
 }) => {
   // websiteImage/setWebsiteImage are lifted to GlobalBrandingPage so the AI can set them
   const [showPasteMenu, setShowPasteMenu] = useState(false);
@@ -227,6 +228,13 @@ const BrandingSource = ({
           loading={isFetchLoading}
           disabled={isFetchLoading}
           className="h-12.5!"
+        />
+        <Button
+          onClick={() => onOpenExtractionModal?.("manual")}
+          label={"Protected Site?"}
+          icon={FiShield}
+          className="h-12.5!"
+          title="Use this if the site blocks automated extraction"
         />
       </div>
       <div className="mt-3 mb-4 flex items-center justify-between gap-5">

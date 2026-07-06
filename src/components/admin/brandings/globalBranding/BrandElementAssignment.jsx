@@ -1,93 +1,28 @@
 import Button from "@/components/shared/small/Button";
 import CustomizableSelect from "@/components/shared/small/CustomizeableSelect";
-import html2canvas from "html2canvas-pro";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import FontPicker from "./FontPicker";
 import { LoaderIcon } from "lucide-react";
 import TextField from "@/components/shared/small/TextField";
 import EffectPicker from "./EffectPicker";
+import { handleChange } from "@/utils/brandingUtils";
 
 export const ColorInput = ({ label, color, setColor, setImage, image, hideLabel = false, className = "" }) => {
   const colorPickerDiv = useRef(null);
   const [ssLoading, setSSLoading] = useState(false);
   const [showSSButton, setShowSSButton] = useState(false);
   const [colorPicker, setColorPicker] = useState("");
-  const handleChange = useCallback(
-    async (e) => {
-      setSSLoading(true);
-      const newColor = e.target.value;
-      setColorPicker(newColor);
-      console.log(`[ColorInput] 🎨 Color changed to:`, newColor);
-
-      setTimeout(async () => {
-        const selector = "#screen-shot";
-
-        console.log(`[ColorInput] 🔍 Trying to capture element:`, selector);
-        const element = document.querySelector(selector);
-        if (!element) {
-          console.warn(`[ColorInput] ❌ Element not found`);
-          setSSLoading(false);
-          return;
-        }
-
-        const previousFilter = element.style.filter;
-        element.style.filter = "none";
-        element.style.colorScheme = "light";
-
-        console.log(`[ColorInput] ✅ Element found. Starting html2canvas...`);
-
-        try {
-          const canvas = await html2canvas(element, {
-            useCORS: true,
-            scale: 2,
-            backgroundColor: null,
-          });
-
-          console.log(`[ColorInput] 📸 Screenshot captured successfully.`);
-
-          const imageData = canvas.toDataURL("image/png");
-          const fileName = `screenshot-${Date.now()}.png`;
-
-          // ✅ Convert base64 → File
-          const response = await fetch(imageData);
-          const blob = await response.blob();
-          const file = new File([blob], fileName, { type: "image/png" });
-
-          // ✅ Optional: trigger download (kept original functionality)
-          const link = document.createElement("a");
-          // link.download = fileName;
-          link.href = imageData;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          console.log(`[ColorInput] ✅ Image downloaded successfully as "${fileName}".`);
-
-          // ✅ Save only filename to localStorage
-          try {
-            localStorage.setItem("lastScreenshot", fileName);
-            console.log(`[ColorInput] 💾 Stored only filename in localStorage.`);
-          } catch (err) {
-            console.error(`[ColorInput] ⚠️ Failed to save filename:`, err);
-          }
-
-          setImage(file); // ✅ Set actual File object
-        } catch (error) {
-          console.error(`[ColorInput] ❌ Error capturing screenshot:`, error);
-        } finally {
-          element.style.filter = previousFilter;
-          if (colorPicker) setColor(colorPicker);
-
-          setShowSSButton(false);
-          setSSLoading(false);
-        }
-      }, 1000);
-    },
-    [colorPicker, setColor, setImage],
-  );
 
   const openHandleChange = async () => {
     if (image) return;
-    await handleChange({ target: { value: colorPicker } });
+    await handleChange({
+      e: { target: { value: colorPicker } },
+      setSSLoading,
+      setColorPicker,
+      setImage,
+      setShowSSButton,
+      setColor,
+    });
   };
 
   useEffect(() => {
@@ -237,9 +172,11 @@ const BrandElementAssignment = ({
         <h3 className="border-b-2 text-lg font-semibold text-gray-800">Application Header</h3>
         <div className="flex flex-wrap gap-x-6 gap-y-4 items-end">
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Background</label>
+            {/* <label className="text-sm font-medium text-gray-700">Background</label> */}
             <GradientOrSolidInput
-              hideLabel
+              setImage={setImage}
+              image={image}
+              setColor={setHeaderBackground}
               label="Background"
               value={headerBackground}
               onChange={setHeaderBackground}
@@ -393,7 +330,14 @@ const BrandElementAssignment = ({
               color={accentColor}
               setColor={setAccentColor}
             />
-            <GradientOrSolidInput label="Background Color" value={backgroundColor} onChange={setBackgroundColor} />
+            <GradientOrSolidInput
+              setImage={setImage}
+              image={image}
+              setColor={setBackgroundColor}
+              label="Background Color"
+              value={backgroundColor}
+              onChange={setBackgroundColor}
+            />
             <ColorInput
               setImage={setImage}
               image={image}
@@ -437,7 +381,7 @@ const BrandElementAssignment = ({
             <Button
               type="button"
               label={"Reset"}
-              className="rounded-sm border px-4 py-[13px] text-s shadow-sm"
+              className="rounded-sm border px-4 py-3.25 text-s shadow-sm"
               onClick={() => setFontFamily("Inter")}
             />
           </div>
@@ -448,7 +392,14 @@ const BrandElementAssignment = ({
         <h3 className="border-b-2 text-lg font-semibold text-gray-800">Application Footer</h3>
         <div className="flex flex-wrap gap-x-6 gap-y-4 items-end">
           <div className="flex flex-col gap-1">
-            <GradientOrSolidInput label="Background" value={footerBackground} onChange={setFooterBackground} />
+            <GradientOrSolidInput
+              setImage={setImage}
+              image={image}
+              setColor={setFooterBackground}
+              label="Background"
+              value={footerBackground}
+              onChange={setFooterBackground}
+            />
           </div>
           <div className="flex flex-col gap-1">
             <ColorInput setImage={setImage} image={image} label="Text" color={footerText} setColor={setFooterText} />
@@ -559,13 +510,30 @@ const parseGradient = (value) => {
   return { angle: parseInt(match[1]), color1: match[2], color2: match[3] };
 };
 
-export const GradientOrSolidInput = ({ label, value, onChange, hideLabel = false }) => {
+export const GradientOrSolidInput = ({ label, value, onChange, hideLabel = false, image, setImage, setColor }) => {
+  const colorPickerDiv = useRef(null);
   const parsed = parseGradient(value);
   const [mode, setMode] = useState(parsed ? "gradient" : "solid");
   const [solidColor, setSolidColor] = useState(parsed ? "#000000" : value || "#000000");
   const [color1, setColor1] = useState(parsed?.color1 || "#3b82f6");
   const [color2, setColor2] = useState(parsed?.color2 || "#8b5cf6");
   const [angle, setAngle] = useState(parsed?.angle ?? 135);
+
+  const [ssLoading, setSSLoading] = useState(false);
+  const [showSSButton, setShowSSButton] = useState(false);
+  const [colorPicker, setColorPicker] = useState("");
+
+  const openHandleChange = async () => {
+    if (image) return;
+    await handleChange({
+      e: { target: { value: colorPicker } },
+      setSSLoading,
+      setColorPicker,
+      setImage,
+      setShowSSButton,
+      setColor,
+    });
+  };
 
   const prevValueRef = useRef(value);
   useEffect(() => {
@@ -611,6 +579,18 @@ export const GradientOrSolidInput = ({ label, value, onChange, hideLabel = false
     onChange(`linear-gradient(${a}deg, ${color1}, ${color2})`);
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (colorPickerDiv.current && !colorPickerDiv.current.contains(event.target)) {
+        setShowSSButton(false);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="flex flex-col">
       {!hideLabel && <label className="mb-1 text-sm font-medium text-gray-700">{label}</label>}
@@ -631,16 +611,30 @@ export const GradientOrSolidInput = ({ label, value, onChange, hideLabel = false
         </button>
       </div>
       {mode === "solid" ? (
-        <div className="flex items-stretch space-x-2">
+        <div ref={colorPickerDiv} className="flex items-stretch space-x-2">
           <input
             type="color"
             value={solidColor}
+            onFocus={() => setShowSSButton(true)}
             onChange={(e) => handleSolid(e.target.value)}
             className="size-14 cursor-pointer rounded-lg border-none outline-none focus:ring-0"
           />
-          <div className="flex h-14 w-28 items-center justify-center rounded-md border px-4 py-2 text-center text-sm shadow-sm">
-            {solidColor}
-          </div>
+          {showSSButton ? (
+            <div className="flex">
+              <Button
+                variant="primary"
+                onClick={openHandleChange}
+                label={"Show Colors"}
+                disabled={ssLoading}
+                cnRight={"animate-spin"}
+                rightIcon={ssLoading ? LoaderIcon : null}
+              />
+            </div>
+          ) : (
+            <div className="flex h-14 w-28 items-center justify-center rounded-md border px-4 py-2 text-center text-sm shadow-sm">
+              {solidColor}
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-2">
@@ -675,6 +669,7 @@ export const GradientOrSolidInput = ({ label, value, onChange, hideLabel = false
               />
             </div>
           </div>
+
           <div
             className="h-6 w-full rounded-md border"
             style={{ background: `linear-gradient(${angle}deg, ${color1}, ${color2})` }}
