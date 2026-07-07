@@ -1112,8 +1112,11 @@ export default function AIChatWidget() {
       enterTriggeredBtn = null;
 
       // Retry-with-backoff: field may not be in the DOM yet (e.g. OTP input appears after API call).
-      buttonTriggeredFocusRef.current = true;
-      setTimeout(() => focusNextAfterButton(screenId, 0), 350);
+      // Skip when the owner/admin fills manually — auto-advancing focus scrolls the page to the top.
+      if (!getScreenContext()?.allowManualEdit) {
+        buttonTriggeredFocusRef.current = true;
+        setTimeout(() => focusNextAfterButton(screenId, 0), 350);
+      }
     };
 
     // Mouse-click handler: covers buttons the user clicks directly (not via Enter).
@@ -1123,7 +1126,14 @@ export default function AIChatWidget() {
       if (!btn || btn.disabled) return;
       if (panelRef.current?.contains(btn)) return; // ignore chat panel buttons
       if (btn === enterTriggeredBtn) return; // already handled by Enter key path above
-      const screenId = getScreenContext()?.screenId;
+      // Signature box controls (Draw/Type/Clear/Save) are not navigation buttons — clicking
+      // them must never yank focus (and scroll the page) to the first empty field elsewhere.
+      if (btn.closest("[data-ai-type='sign']")) return;
+      const ctx = getScreenContext();
+      // When the owner/admin fills the form manually (allowManualEdit), the assistant must not
+      // auto-advance focus after a button press — doing so scrolls the page to the first empty field.
+      if (ctx?.allowManualEdit) return;
+      const screenId = ctx?.screenId;
       buttonTriggeredFocusRef.current = true;
       setTimeout(() => focusNextAfterButton(screenId, 0), 350);
     };
