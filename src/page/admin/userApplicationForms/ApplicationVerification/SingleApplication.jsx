@@ -6,6 +6,7 @@ import { EditSectionDisplayTextFromatingModal } from "@/components/shared/small/
 import { LoadingWithTimer } from "@/components/shared/small/LoadingWithTimer";
 import Modal from "@/components/shared/small/Modal";
 import TextField from "@/components/shared/small/TextField";
+import { ID_ISSUE_STATES_AND_COUNTRIES, MAJOR_CITIES } from "@/data/constants";
 import { useApplicantScreenContext } from "@/hooks/useApplicantScreenContext";
 import useApplyBranding from "@/hooks/useApplyBranding";
 import getEnv from "@/lib/env";
@@ -184,8 +185,7 @@ export default function SingleApplication() {
       aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
       // Logged-in admins/owners fill manually; guest applicants use guided AI chat.
       allowManualEdit: !isGuestApplicant,
-      formRef:
-        aiStage === "idmission-details" ? idMissionFormRef : aiStage === "email" ? emailFormRef : null,
+      formRef: aiStage === "idmission-details" ? idMissionFormRef : aiStage === "email" ? emailFormRef : null,
       currentState: {
         ...(aiStage === "email" && {
           otpSent,
@@ -778,50 +778,6 @@ export default function SingleApplication() {
     }
   }, [dispatch, email, formId, getSavedFormDataAndSaveInRedux, getUserProfile, otp, verifyEmail]);
 
-  // const getSavedFormDataAndSaveInRedux = useCallback(async () => {
-  //   try {
-  //     const res = await getSavedFormData({ formId: formId }).unwrap();
-  //     if (res.success) {
-  //       const savedData = res?.data?.savedData || [];
-  //       const formDataOfIdMission = savedData?.idMission;
-  //       const action = await dispatch(addSavedFormData(savedData || []));
-  //       unwrapResult(action);
-  //       if (!savedData?.company_lookup_data) {
-  //         return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
-  //       }
-  //       setIdMissionVerifiedData({
-  //         name: { name: "name", value: formDataOfIdMission?.name?.value || "" },
-  //         email: { name: "email", value: formDataOfIdMission?.email?.value || user?.email },
-  //         idNumber: { name: "idNumber", value: formDataOfIdMission?.idNumber?.value || "" },
-  //         idIssuer: { name: "idIssuer", value: formDataOfIdMission?.idIssuer?.value || "" },
-  //         idType: { name: "idType", value: formDataOfIdMission?.idType?.value || "" },
-  //         idExpiryDate: { name: "idExpiryDate", value: formDataOfIdMission?.idExpiryDate?.value || "" },
-  //         streetAddress: { name: "streetAddress", value: formDataOfIdMission?.streetAddress?.value || "" },
-  //         phoneNumber: { name: "phoneNumber", value: formDataOfIdMission?.phoneNumber?.value || "" },
-  //         zipCode: { name: "zipCode", value: formDataOfIdMission?.zipCode?.value || "" },
-  //         dateOfBirth: { name: "dateOfBirth", value: formDataOfIdMission?.dateOfBirth?.value || "" },
-  //         country: { name: "country", value: formDataOfIdMission?.country?.value || "" },
-  //         issueDate: { name: "issueDate", value: formDataOfIdMission?.issueDate?.value || "" },
-  //         companyTitle: { name: "companyTitle", value: formDataOfIdMission?.companyTitle?.value || "" },
-  //         state: { name: "state", value: formDataOfIdMission?.state?.value || "" },
-  //         city: { name: "city", value: formDataOfIdMission?.city?.value || "" },
-  //         signature: { name: "signature", value: formDataOfIdMission?.signature?.value || "" },
-  //         createdAt: formDataOfIdMission?.createdAt || new Date().toISOString(),
-  //         updatedAt: formDataOfIdMission?.updatedAt || new Date().toISOString(),
-  //       });
-  //       if (formDataOfIdMission?.name?.value && savedData?.company_lookup_data) {
-  //         setIdMissionVerified(true);
-  //         setOpenRedirectModal(true);
-  //       }
-  //     }
-  //   } catch (error) {
-  //     if (error?.data?.message === "Form Not Saved in draft") {
-  //       return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
-  //     }
-  //     console.log("error while getting saved form data", error);
-  //   }
-  // }, [dispatch, form?.data?.branding?.name, formId, getSavedFormData, navigate, user?.email]);
-
   const getQrLinkOnEmailVerified = useCallback(() => {
     if (emailVerified && formData && formData?.idMission) {
       const formDataOfIdMission = formData?.idMission;
@@ -941,75 +897,56 @@ export default function SingleApplication() {
     });
     // id mission verified success fully
     socket.on("idMission_verified", async (data) => {
-      if (user?._id && data?.Form_Data?.FullName) {
-        const firstName = data?.Form_Data?.First_Name || data?.Form_Data?.FullName?.split(" ")?.[0] || "";
-        const middleName = data?.Form_Data?.Middle_Name || data?.Form_Data?.FullName?.split(" ")?.[1] || "";
-        const lastName = data?.Form_Data?.Last_Name || data?.Form_Data?.FullName?.split(" ")?.[2] || "";
-        const res = await updateMyProfile({ _id: user?._id, firstName, middleName, lastName }).unwrap();
-        if (!res.success) return toast.error(res.message);
-        else {
-          await getUserProfile()
-            .then((res) => {
-              if (res?.data?.success) dispatch(userExist(res.data.data));
-            })
-            .catch(() => dispatch(userNotExist()));
-        }
-      }
+      const f = data?.Form_Data;
 
+      // 1) Fill the UI immediately from the webhook payload
       setIsIdMissionProcessing(false);
-      const formDataOfIdMission = data?.Form_Data;
-
       setIdMissionVerifiedData({
         name: {
           name: "name",
-          value: makeCompleteName(
-            formDataOfIdMission?.First_Name,
-            formDataOfIdMission?.Middle_Name,
-            formDataOfIdMission?.Last_Name,
-            formDataOfIdMission?.FullName,
-            formDataOfIdMission?.Name,
-          ),
+          value: makeCompleteName(f?.First_Name, f?.Middle_Name, f?.Last_Name, f?.FullName, f?.Name),
         },
-
-        email: { name: "email", value: formDataOfIdMission?.Email || user?.email || "" },
-        idNumber: { name: "idNumber", value: formDataOfIdMission?.ID_Number || "" },
+        email: { name: "email", value: f?.Email || user?.email || "" },
+        idNumber: { name: "idNumber", value: f?.ID_Number || "" },
         idIssuer: {
           name: "idIssuer",
-          value: formDataOfIdMission?.ID_State
-            ? formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country
-            : formDataOfIdMission?.Issuing_Country || "",
+          value: f?.ID_State ? f?.ID_State + f?.Issuing_Country : f?.Issuing_Country || "",
         },
-        idType: { name: "idType", value: formDataOfIdMission?.DocumentType || "" },
-        idExpiryDate: {
-          name: "idExpiryDate",
-          value: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : "",
-        },
+        idType: { name: "idType", value: f?.DocumentType || "" },
+        idExpiryDate: { name: "idExpiryDate", value: f?.Expiration_Date ? formatData(f?.Expiration_Date) : "" },
         streetAddress: {
           name: "streetAddress",
-          value:
-            (formDataOfIdMission?.ParsedAddressStreetNumber || "") +
-            " " +
-            (formDataOfIdMission?.ParsedAddressStreetName || ""),
+          value: (f?.ParsedAddressStreetNumber || "") + " " + (f?.ParsedAddressStreetName || ""),
         },
-        phoneNumber: { name: "phoneNumber", value: formDataOfIdMission?.PhoneNumber || "" },
-        zipCode: { name: "zipCode", value: formDataOfIdMission?.ParsedAddressPostalCode || "" },
-        dateOfBirth: {
-          name: "dateOfBirth",
-          value: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : "",
-        },
-        country: { name: "country", value: formDataOfIdMission?.Issuing_Country || "" },
-        issueDate: {
-          name: "issueDate",
-          value: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : "",
-        },
+        phoneNumber: { name: "phoneNumber", value: f?.PhoneNumber || "" },
+        zipCode: { name: "zipCode", value: f?.ParsedAddressPostalCode || "" },
+        dateOfBirth: { name: "dateOfBirth", value: f?.Date_of_Birth ? formatData(f?.Date_of_Birth) : "" },
+        country: { name: "country", value: f?.Issuing_Country || "" },
+        issueDate: { name: "issueDate", value: f?.Issue_Date ? formatData(f?.Issue_Date) : "" },
         companyTitle: { name: "companyTitle", value: "" },
-        state: { name: "state", value: formDataOfIdMission?.ParsedAddressProvince || "" },
-        city: { name: "city", value: formDataOfIdMission?.ParsedAddressMunicipality || "" },
-        data: { name: "data", value: formDataOfIdMission || "null" },
+        state: { name: "state", value: f?.ParsedAddressProvince || "" },
+        city: { name: "city", value: f?.ParsedAddressMunicipality || "" },
+        data: { name: "data", value: f || "null" },
         createdAt: idMissionVerifiedData?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
       setIdMissionVerified(true);
+
+      // 2) Sync profile in the background — does NOT block the form
+      if (user?._id && f?.FullName) {
+        try {
+          const firstName = f?.First_Name || f?.FullName?.split(" ")?.[0] || "";
+          const middleName = f?.Middle_Name || f?.FullName?.split(" ")?.[1] || "";
+          const lastName = f?.Last_Name || f?.FullName?.split(" ")?.[2] || "";
+          const res = await updateMyProfile({ _id: user?._id, firstName, middleName, lastName }).unwrap();
+          if (res?.success) {
+            const r = await getUserProfile();
+            if (r?.data?.success) dispatch(userExist(r.data.data));
+          }
+        } catch (e) {
+          console.error("profile sync failed", e);
+        }
+      }
     });
     // id mission failed
     socket.on("idMission_failed", async (data) => {
@@ -1148,7 +1085,6 @@ export default function SingleApplication() {
       setIsIdMissionProcessing(false);
       setIdMissionVerified(true);
     });
-
     // Cleanup listener when component unmounts
     return () => {
       socket.off("idMission_processing_started");
@@ -1341,7 +1277,7 @@ export default function SingleApplication() {
         <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
       ) : (
         <div className="mt-14 h-full overflow-auto text-center" data-testid="single-application">
-          {!idMissionVerified ? ( // TODO add not
+          {!idMissionVerified ? (
             !emailVerified ? (
               <>
                 <div ref={emailFormRef} className="flex flex-col items-center gap-3 w-full">
@@ -1496,819 +1432,426 @@ export default function SingleApplication() {
                 />
               </div>
             )
-          ) : (
-            <div className="flex w-full flex-col p-2">
-              <div className="flex items-center justify-between">
-                {form?.data?.idMissionDataDisplayFormatedText ? (
-                  <div className="flex items-end gap-3">
-                    <div
-                      className="w-full"
-                      data-ai-display-text
-                      dangerouslySetInnerHTML={{
-                        __html: String(form?.data?.idMissionDataDisplayFormatedText || "").replace(
-                          /<a(\s+.*?)?>/g,
-                          (match) => {
-                            if (match.includes("target=")) return match; // avoid duplicates
-                            return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-                          },
-                        ),
-                      }}
+          ) : idMissionVerified ? (
+            idMissionVerifiedData && (
+              <div className="flex w-full flex-col p-2">
+                <div className="flex items-center justify-between">
+                  {form?.data?.idMissionDataDisplayFormatedText ? (
+                    <div className="flex items-end gap-3">
+                      <div
+                        className="w-full"
+                        data-ai-display-text
+                        dangerouslySetInnerHTML={{
+                          __html: String(form?.data?.idMissionDataDisplayFormatedText || "").replace(
+                            /<a(\s+.*?)?>/g,
+                            (match) => {
+                              if (match.includes("target=")) return match; // avoid duplicates
+                              return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
+                            },
+                          ),
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex w-full gap-3">
+                      <h3 className="text-textPrimary mb-4 w-full text-center text-2xl font-semibold">
+                        Primary Applicant Information
+                      </h3>
+                    </div>
+                  )}
+                  {isCreator && (
+                    <Button
+                      className="self-end"
+                      label={"Customize Display Text"}
+                      onClick={() => setShowIdMissionDataModal(true)}
                     />
-                  </div>
-                ) : (
-                  <div className="flex w-full gap-3">
-                    <h3 className="text-textPrimary mb-4 w-full text-center text-2xl font-semibold">
-                      Primary Applicant Information
-                    </h3>
-                  </div>
-                )}
-                {isCreator && (
-                  <Button
-                    className="self-end"
-                    label={"Customize Display Text"}
-                    onClick={() => setShowIdMissionDataModal(true)}
-                  />
-                )}
-              </div>
-              <form ref={idMissionFormRef} className="flex flex-wrap gap-4">
-                <TextField
-                  onChange={(e) =>
-                    setIdMissionVerifiedData({
-                      ...idMissionVerifiedData,
-                      name: { name: "name", value: e.target.value },
-                    })
-                  }
-                  id="name"
-                  name="name"
-                  required
-                  value={idMissionVerifiedData?.name?.value}
-                  label="Name:*"
-                  placeholder="First name, middle name (optional), last name"
-                  className={"max-w-100!"}
-                />
-                <TextField
-                  id="email"
-                  name="email"
-                  value={idMissionVerifiedData?.email?.value}
-                  onChange={(e) =>
-                    setIdMissionVerifiedData({
-                      ...idMissionVerifiedData,
-                      email: { name: "email", value: e.target.value },
-                    })
-                  }
-                  label="Email Address:*"
-                  required
-                  placeholder="e.g. john.doe@email.com"
-                  className={"max-w-100!"}
-                />
-                <TextField
-                  id="dateOfBirth"
-                  name="dateOfBirth"
-                  type="date"
-                  value={idMissionVerifiedData?.dateOfBirth?.value}
-                  onChange={(e) =>
-                    setIdMissionVerifiedData({
-                      ...idMissionVerifiedData,
-                      dateOfBirth: { name: "dateOfBirth", value: e.target.value },
-                    })
-                  }
-                  label="Date of Birth:*"
-                  required
-                  className={"max-w-100!"}
-                />
-                <TextField
-                  id="idType"
-                  name="idType"
-                  type="text"
-                  value={idMissionVerifiedData?.idType?.value}
-                  onChange={(e) =>
-                    setIdMissionVerifiedData({
-                      ...idMissionVerifiedData,
-                      idType: { name: "idType", value: e.target.value },
-                    })
-                  }
-                  label="ID Type:*"
-                  required
-                  placeholder={'e.g. "Driver\'s License", "State ID", "Passport"'}
-                  suggestions={["Driver's License", "State ID", "Passport"]}
-                  className={"max-w-100!"}
-                />{" "}
-                <TextField
-                  id="idIssuer"
-                  name="idIssuer"
-                  type="text"
-                  value={idMissionVerifiedData?.idIssuer?.value}
-                  onChange={(e) =>
-                    setIdMissionVerifiedData({
-                      ...idMissionVerifiedData,
-                      idIssuer: { name: "idIssuer", value: e.target.value },
-                    })
-                  }
-                  label="ID Issuer:*"
-                  required
-                  placeholder="State/Province or Country"
-                  suggestions={[
-                    // Countries
-                    "United States",
-                    "Canada",
-                    "United Kingdom",
-                    "Australia",
-                    // US States
-                    "Alabama",
-                    "Alaska",
-                    "Arizona",
-                    "Arkansas",
-                    "California",
-                    "Colorado",
-                    "Connecticut",
-                    "Delaware",
-                    "Florida",
-                    "Georgia",
-                    "Hawaii",
-                    "Idaho",
-                    "Illinois",
-                    "Indiana",
-                    "Iowa",
-                    "Kansas",
-                    "Kentucky",
-                    "Louisiana",
-                    "Maine",
-                    "Maryland",
-                    "Massachusetts",
-                    "Michigan",
-                    "Minnesota",
-                    "Mississippi",
-                    "Missouri",
-                    "Montana",
-                    "Nebraska",
-                    "Nevada",
-                    "New Hampshire",
-                    "New Jersey",
-                    "New Mexico",
-                    "New York",
-                    "North Carolina",
-                    "North Dakota",
-                    "Ohio",
-                    "Oklahoma",
-                    "Oregon",
-                    "Pennsylvania",
-                    "Rhode Island",
-                    "South Carolina",
-                    "South Dakota",
-                    "Tennessee",
-                    "Texas",
-                    "Utah",
-                    "Vermont",
-                    "Virginia",
-                    "Washington",
-                    "West Virginia",
-                    "Wisconsin",
-                    "Wyoming",
-                    "District of Columbia",
-                    "Puerto Rico",
-                    // Canadian Provinces & Territories
-                    "Alberta",
-                    "British Columbia",
-                    "Manitoba",
-                    "New Brunswick",
-                    "Newfoundland and Labrador",
-                    "Northwest Territories",
-                    "Nova Scotia",
-                    "Nunavut",
-                    "Ontario",
-                    "Prince Edward Island",
-                    "Quebec",
-                    "Saskatchewan",
-                    "Yukon",
-                    // UK Countries
-                    "England",
-                    "Scotland",
-                    "Wales",
-                    "Northern Ireland",
-                    // Australian States & Territories
-                    "New South Wales",
-                    "Victoria",
-                    "Queensland",
-                    "Western Australia",
-                    "South Australia",
-                    "Tasmania",
-                    "Australian Capital Territory",
-                    "Northern Territory",
-                  ]}
-                  className={"max-w-100!"}
-                />{" "}
-                <TextField
-                  id="idExpiryDate"
-                  name="idExpiryDate"
-                  type="date"
-                  value={idMissionVerifiedData?.idExpiryDate?.value}
-                  onChange={(e) =>
-                    setIdMissionVerifiedData({
-                      ...idMissionVerifiedData,
-                      idExpiryDate: { name: "idExpiryDate", value: e.target.value },
-                    })
-                  }
-                  label="ID Expiry Date:*"
-                  required
-                  className={"max-w-100!"}
-                />{" "}
-                <TextField
-                  id="issueDate"
-                  name="issueDate"
-                  type="date"
-                  value={idMissionVerifiedData?.issueDate?.value}
-                  onChange={(e) =>
-                    setIdMissionVerifiedData({
-                      ...idMissionVerifiedData,
-                      issueDate: { name: "issueDate", value: e.target.value },
-                    })
-                  }
-                  label="Issue Date:*"
-                  required
-                  className={"max-w-100!"}
-                />{" "}
-                <TextField
-                  id="idNumber"
-                  name="idNumber"
-                  required
-                  onChange={(e) =>
-                    setIdMissionVerifiedData({
-                      ...idMissionVerifiedData,
-                      idNumber: { name: "idNumber", value: e.target.value },
-                    })
-                  }
-                  value={idMissionVerifiedData?.idNumber?.value || ""}
-                  label="ID Number:*"
-                  placeholder="As it appears on your ID"
-                  className={"max-w-100!"}
-                />{" "}
-                <div data-places-input="true" className="w-full max-w-100">
-                  <Autocomplete
-                    onLoad={onLoad}
-                    className="w-full"
-                    onPlaceChanged={onPlaceChanged}
-                    options={{
-                      types: ["address"],
-                      fields: ["address_components", "geometry", "formatted_address", "place_id"],
-                    }}
-                  >
-                    <TextField
-                      id="streetAddress"
-                      name="streetAddress"
-                      type="text"
-                      required
-                      value={idMissionVerifiedData?.streetAddress?.value || ""}
-                      onChange={(e) =>
-                        setIdMissionVerifiedData({
-                          ...idMissionVerifiedData,
-                          streetAddress: { name: "streetAddress", value: e.target.value },
-                        })
-                      }
-                      label="Street Address:*"
-                      placeholder="Start typing your address"
-                      className={"max-w-100!"}
-                    />
-                  </Autocomplete>
+                  )}
                 </div>
-                <TextField
-                  id="address2"
-                  name="address2"
-                  type="text"
-                  value={idMissionVerifiedData?.address2?.value || ""}
-                  onChange={(e) =>
-                    setIdMissionVerifiedData({
-                      ...idMissionVerifiedData,
-                      address2: { name: "address2", value: e.target.value },
-                    })
-                  }
-                  label="Address 2 (Apt, Suite, Unit)"
-                  placeholder="Apt, Suite, Unit, Floor, etc."
-                  className={"max-w-100!"}
-                />
-                <TextField
-                  id="city"
-                  name="city"
-                  type="text"
-                  required
-                  value={idMissionVerifiedData?.city?.value || ""}
-                  onChange={(e) =>
-                    setIdMissionVerifiedData({
-                      ...idMissionVerifiedData,
-                      city: { name: "city", value: e.target.value },
-                    })
-                  }
-                  label="City:*"
-                  placeholder="e.g. New York City"
-                  suggestions={[
-                    // US Major Cities
-                    "New York City",
-                    "Los Angeles",
-                    "Chicago",
-                    "Houston",
-                    "Phoenix",
-                    "Philadelphia",
-                    "San Antonio",
-                    "San Diego",
-                    "Dallas",
-                    "San Jose",
-                    "Austin",
-                    "Jacksonville",
-                    "Fort Worth",
-                    "Columbus",
-                    "Charlotte",
-                    "Indianapolis",
-                    "San Francisco",
-                    "Seattle",
-                    "Denver",
-                    "Nashville",
-                    "Oklahoma City",
-                    "El Paso",
-                    "Washington DC",
-                    "Boston",
-                    "Las Vegas",
-                    "Memphis",
-                    "Louisville",
-                    "Portland",
-                    "Baltimore",
-                    "Milwaukee",
-                    "Albuquerque",
-                    "Tucson",
-                    "Fresno",
-                    "Sacramento",
-                    "Mesa",
-                    "Kansas City",
-                    "Atlanta",
-                    "Omaha",
-                    "Colorado Springs",
-                    "Raleigh",
-                    "Long Beach",
-                    "Virginia Beach",
-                    "Minneapolis",
-                    "Tampa",
-                    "New Orleans",
-                    "Arlington",
-                    "Wichita",
-                    "Bakersfield",
-                    "Aurora",
-                    "Anaheim",
-                    "Santa Ana",
-                    "Corpus Christi",
-                    "Riverside",
-                    "St. Louis",
-                    "Lexington",
-                    "Pittsburgh",
-                    "Stockton",
-                    "Anchorage",
-                    "Cincinnati",
-                    "St. Paul",
-                    "Greensboro",
-                    "Toledo",
-                    "Newark",
-                    "Plano",
-                    "Henderson",
-                    "Orlando",
-                    "Lincoln",
-                    "Jersey City",
-                    "Chandler",
-                    "St. Petersburg",
-                    "Laredo",
-                    "Norfolk",
-                    "Madison",
-                    "Durham",
-                    "Lubbock",
-                    "Winston-Salem",
-                    "Garland",
-                    "Glendale",
-                    "Hialeah",
-                    "Reno",
-                    "Baton Rouge",
-                    "Irvine",
-                    "Chesapeake",
-                    "Irving",
-                    "Scottsdale",
-                    "North Las Vegas",
-                    "Fremont",
-                    "Gilbert",
-                    "San Bernardino",
-                    "Birmingham",
-                    "Rochester",
-                    "Richmond",
-                    "Spokane",
-                    "Des Moines",
-                    "Montgomery",
-                    "Modesto",
-                    "Fayetteville",
-                    "Tacoma",
-                    "Shreveport",
-                    "Akron",
-                    "Aurora",
-                    "Yonkers",
-                    "Oxnard",
-                    "Fontana",
-                    "Columbus",
-                    "Augusta",
-                    "Mobile",
-                    "Little Rock",
-                    "Moreno Valley",
-                    "Glendale",
-                    "Amarillo",
-                    "Huntington Beach",
-                    "Grand Rapids",
-                    "Salt Lake City",
-                    "Tallahassee",
-                    "Huntsville",
-                    "Worcester",
-                    "Knoxville",
-                    "Brownsville",
-                    "Santa Clarita",
-                    "Providence",
-                    "Garden Grove",
-                    "Oceanside",
-                    "Fort Lauderdale",
-                    "Chattanooga",
-                    "Tempe",
-                    "Cape Coral",
-                    "Eugene",
-                    "Peoria",
-                    "Cary",
-                    "Springfield",
-                    "Fort Wayne",
-                    "Sioux Falls",
-                    "Pembroke Pines",
-                    "Elk Grove",
-                    "Vancouver",
-                    "Corona",
-                    "Hollywood",
-                    "Hayward",
-                    "Clarksville",
-                    "Paterson",
-                    "Murfreesboro",
-                    "Macon",
-                    "Lakewood",
-                    "Killeen",
-                    "Syracuse",
-                    "Salinas",
-                    "Pomona",
-                    "Escondido",
-                    "Kansas City",
-                    "Sunnyvale",
-                    "Rockford",
-                    "Torrance",
-                    "Bridgeport",
-                    "Alexandria",
-                    "Savannah",
-                    "Roseville",
-                    "Surprise",
-                    "Pasadena",
-                    "Mesquite",
-                    "Gainesville",
-                    "Fullerton",
-                    "McAllen",
-                    "Thornton",
-                    "Olathe",
-                    "West Valley City",
-                    "Warren",
-                    "Hampton",
-                    "Dayton",
-                    "Columbia",
-                    "Sterling Heights",
-                    "Waco",
-                    "Cedar Rapids",
-                    "Elizabeth",
-                    "Denton",
-                    "Miramar",
-                    "Thousand Oaks",
-                    "Visalia",
-                    "Topleka",
-                    "Coral Springs",
-                    "Stamford",
-                    "Concord",
-                    "Hartford",
-                    "Roseville",
-                    "Simi Valley",
-                    "Columbia",
-                    "Surprise",
-                    "Lafayette",
-                    "Kent",
-                    "Santa Rosa",
-                    "El Monte",
-                    "Rancho Cucamonga",
-                    "Oceanside",
-                    "Ontario",
-                    "San Buenaventura",
-                    "Peoria",
-                    "Chattanooga",
-                    "Fort Collins",
-                    "Jackson",
-                    "Honolulu",
-                    "Anchorage",
-                    "Boise",
-                    "Billings",
-                    "Fargo",
-                    "Manchester",
-                    "San Juan",
-                    // Canadian Major Cities
-                    "Toronto",
-                    "Montreal",
-                    "Vancouver",
-                    "Calgary",
-                    "Edmonton",
-                    "Ottawa",
-                    "Winnipeg",
-                    "Quebec City",
-                    "Hamilton",
-                    "Kitchener",
-                    "London",
-                    "Victoria",
-                    "Halifax",
-                    "Oshawa",
-                    "Windsor",
-                    "Saskatoon",
-                    "Regina",
-                    "St. Catharines",
-                    "Barrie",
-                    "Kelowna",
-                    "Abbotsford",
-                    "Sudbury",
-                    "Kingston",
-                    "Saguenay",
-                    "Trois-Rivières",
-                    "Guelph",
-                    "Moncton",
-                    "Brantford",
-                    "Saint John",
-                    "Thunder Bay",
-                    "Sherbrooke",
-                    "Nanaimo",
-                    "Fredericton",
-                    "Charlottetown",
-                    "Lethbridge",
-                    "Red Deer",
-                    "Kamloops",
-                    "Chilliwack",
-                    "Prince George",
-                    // UK Major Cities
-                    "London",
-                    "Birmingham",
-                    "Manchester",
-                    "Glasgow",
-                    "Liverpool",
-                    "Leeds",
-                    "Sheffield",
-                    "Edinburgh",
-                    "Bristol",
-                    "Leicester",
-                    "Coventry",
-                    "Bradford",
-                    "Cardiff",
-                    "Belfast",
-                    "Nottingham",
-                    "Kingston upon Hull",
-                    "Newcastle upon Tyne",
-                    "Stoke-on-Trent",
-                    "Southampton",
-                    "Derby",
-                    "Portsmouth",
-                    "Brighton",
-                    "Plymouth",
-                    "Wolverhampton",
-                    "Oxford",
-                    "Cambridge",
-                    "Norwich",
-                    "Swansea",
-                    "Aberdeen",
-                    "Dundee",
-                    "Inverness",
-                    "Exeter",
-                    "Gloucester",
-                    "Bath",
-                    "York",
-                    "Chester",
-                    // Australian Major Cities
-                    "Sydney",
-                    "Melbourne",
-                    "Brisbane",
-                    "Perth",
-                    "Adelaide",
-                    "Gold Coast",
-                    "Canberra",
-                    "Newcastle",
-                    "Wollongong",
-                    "Logan City",
-                    "Geelong",
-                    "Hobart",
-                    "Townsville",
-                    "Cairns",
-                    "Darwin",
-                    "Toowoomba",
-                    "Ballarat",
-                    "Bendigo",
-                    "Launceston",
-                    "Mackay",
-                    "Rockhampton",
-                    "Bunbury",
-                    "Bundaberg",
-                    "Hervey Bay",
-                  ]}
-                  className={"max-w-100!"}
-                />
-                <TextField
-                  id="zipCode"
-                  name="zipCode"
-                  type="text"
-                  value={idMissionVerifiedData?.zipCode?.value || ""}
-                  onChange={(e) =>
-                    setIdMissionVerifiedData({
-                      ...idMissionVerifiedData,
-                      zipCode: { name: "zipCode", value: e.target.value },
-                    })
-                  }
-                  label="Zip or Postal Code"
-                  placeholder="e.g. 90210"
-                  className={"max-w-100!"}
-                />
-                <TextField
-                  id="state"
-                  name="state"
-                  type="text"
-                  required
-                  value={idMissionVerifiedData?.state?.value || ""}
-                  onChange={(e) =>
-                    setIdMissionVerifiedData({
-                      ...idMissionVerifiedData,
-                      state: { name: "state", value: e.target.value },
-                    })
-                  }
-                  label="State/Province:*"
-                  placeholder="e.g. California"
-                  className={"max-w-100!"}
-                />
-                <TextField
-                  id="country"
-                  name="country"
-                  type="text"
-                  required
-                  value={idMissionVerifiedData?.country?.value || ""}
-                  onChange={(e) =>
-                    setIdMissionVerifiedData({
-                      ...idMissionVerifiedData,
-                      country: { name: "country", value: e.target.value },
-                    })
-                  }
-                  label="Country:*"
-                  placeholder="e.g. United States"
-                  className={"max-w-100!"}
-                />
-                <TextField
-                  id="companyTitle"
-                  name="companyTitle"
-                  value={idMissionVerifiedData?.companyTitle?.value || ""}
-                  onChange={(e) =>
-                    setIdMissionVerifiedData({
-                      ...idMissionVerifiedData,
-                      companyTitle: { name: "companyTitle", value: e.target.value },
-                    })
-                  }
-                  label="Company Title:*"
-                  required
-                  placeholder="e.g. CEO, Owner, Director"
-                  className={"max-w-100!"}
-                />
-                <TextField
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  value={idMissionVerifiedData?.phoneNumber?.value || ""}
-                  onChange={(e) =>
-                    setIdMissionVerifiedData({
-                      ...idMissionVerifiedData,
-                      phoneNumber: { name: "phoneNumber", value: e.target.value },
-                    })
-                  }
-                  formatting="3,3,4"
-                  label="Phone Number:*"
-                  placeholder="e.g. 555-867-5309"
-                  required
-                  type="text"
-                  className={"max-w-100!"}
-                />
-                <div className="bg-backgroundColor flex w-full border p-4">
-                  <RadioInputType
-                    optionColumnCount={1}
-                    className={"w-full"}
-                    field={{
-                      label: "What is the role you are filling for the company as you complete this application? ",
-                      options: [
-                        {
-                          label:
-                            "A primary company operator/controller (C-level executive, owner or other person that holds significant control over company direction and decisions)",
-                          value: "primaryOperatorAndController",
-                        },
-                        {
-                          label:
-                            "The primary contact for the company for this product or service, but not a company operator/controller ",
-                          value: "primaryContact",
-                        },
-                        {
-                          label: "Both a company operator and the primary contact",
-                          value: "both",
-                        },
-                      ],
-                      name: "roleFillingForCompany",
-                      uniqueId: "roleFillingForCompany",
-                      required: true,
-                    }}
-                    form={{
-                      roleFillingForCompany: {
-                        name: "roleFillingForCompany",
-                        value: idMissionVerifiedData?.roleFillingForCompany?.value || "",
-                      },
-                    }}
+                <form ref={idMissionFormRef} className="flex flex-wrap gap-4">
+                  <TextField
                     onChange={(e) =>
                       setIdMissionVerifiedData({
                         ...idMissionVerifiedData,
-                        roleFillingForCompany: { name: "roleFillingForCompany", value: e?.target?.value },
+                        name: { name: "name", value: e.target.value },
                       })
                     }
+                    id="name"
+                    name="name"
+                    required
+                    value={idMissionVerifiedData?.name?.value}
+                    label="Name:*"
+                    placeholder="First name, middle name (optional), last name"
+                    className={"max-w-100!"}
                   />
-                </div>
-                <div className="flex w-full flex-col">
-                  <div className="my-4 flex w-full justify-between gap-2">
-                    {(form?.data?.idMissionSignDisplayFormatedText || form?.data?.idMissionSignDisplayText) && (
-                      <div className="flex items-end gap-3">
-                        <div
-                          // className="flex flex-1 items-end gap-3"
-                          className="w-full"
-                          data-ai-display-text
-                          dangerouslySetInnerHTML={{
-                            __html: String(
-                              form?.data?.idMissionSignDisplayFormatedText ||
-                                form?.data?.idMissionSignDisplayText ||
-                                "",
-                            ).replace(/<a(\s+.*?)?>/g, (match) => {
-                              if (match.includes("target=")) return match; // avoid duplicates
-                              return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-                            }),
-                          }}
-                        />
-                      </div>
-                    )}
-                    <div className="flex items-center justify-end gap-2">
-                      {isCreator && (
-                        <div className="flex items-center gap-2">
-                          <Button label="Enable Help" onClick={() => setShowSignatureHelpModal(true)} />
-                          <Button label="Customize Signature" onClick={() => setShowSignatureModal(true)} />
-                        </div>
-                      )}
-                      {idMissionSection?.signAiResponse && (
-                        <Button label="Help" onClick={() => setOpenAiHelpSignModal(true)} />
-                      )}
-                    </div>
+                  <TextField
+                    id="email"
+                    name="email"
+                    value={idMissionVerifiedData?.email?.value}
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        email: { name: "email", value: e.target.value },
+                      })
+                    }
+                    label="Email Address:*"
+                    required
+                    placeholder="e.g. john.doe@email.com"
+                    className={"max-w-100!"}
+                  />
+                  <TextField
+                    id="dateOfBirth"
+                    name="dateOfBirth"
+                    type="date"
+                    value={idMissionVerifiedData?.dateOfBirth?.value}
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        dateOfBirth: { name: "dateOfBirth", value: e.target.value },
+                      })
+                    }
+                    label="Date of Birth:*"
+                    required
+                    className={"max-w-100!"}
+                  />
+                  <TextField
+                    id="idType"
+                    name="idType"
+                    type="text"
+                    value={idMissionVerifiedData?.idType?.value}
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        idType: { name: "idType", value: e.target.value },
+                      })
+                    }
+                    label="ID Type:*"
+                    required
+                    placeholder={'e.g. "Driver\'s License", "State ID", "Passport"'}
+                    suggestions={["Driver's License", "State ID", "Passport"]}
+                    className={"max-w-100!"}
+                  />{" "}
+                  <TextField
+                    id="idIssuer"
+                    name="idIssuer"
+                    type="text"
+                    value={idMissionVerifiedData?.idIssuer?.value}
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        idIssuer: { name: "idIssuer", value: e.target.value },
+                      })
+                    }
+                    label="ID Issuer:*"
+                    required
+                    placeholder="State/Province or Country"
+                    suggestions={ID_ISSUE_STATES_AND_COUNTRIES}
+                    className={"max-w-100!"}
+                  />{" "}
+                  <TextField
+                    id="idExpiryDate"
+                    name="idExpiryDate"
+                    type="date"
+                    value={idMissionVerifiedData?.idExpiryDate?.value}
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        idExpiryDate: { name: "idExpiryDate", value: e.target.value },
+                      })
+                    }
+                    label="ID Expiry Date:*"
+                    required
+                    className={"max-w-100!"}
+                  />{" "}
+                  <TextField
+                    id="issueDate"
+                    name="issueDate"
+                    type="date"
+                    value={idMissionVerifiedData?.issueDate?.value}
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        issueDate: { name: "issueDate", value: e.target.value },
+                      })
+                    }
+                    label="Issue Date:*"
+                    required
+                    className={"max-w-100!"}
+                  />{" "}
+                  <TextField
+                    id="idNumber"
+                    name="idNumber"
+                    required
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        idNumber: { name: "idNumber", value: e.target.value },
+                      })
+                    }
+                    value={idMissionVerifiedData?.idNumber?.value || ""}
+                    label="ID Number:*"
+                    placeholder="As it appears on your ID"
+                    className={"max-w-100!"}
+                  />{" "}
+                  <div data-places-input="true" className="w-full max-w-100">
+                    <Autocomplete
+                      onLoad={onLoad}
+                      className="w-full"
+                      onPlaceChanged={onPlaceChanged}
+                      options={{
+                        types: ["address"],
+                        fields: ["address_components", "geometry", "formatted_address", "place_id"],
+                      }}
+                    >
+                      <TextField
+                        id="streetAddress"
+                        name="streetAddress"
+                        type="text"
+                        required
+                        value={idMissionVerifiedData?.streetAddress?.value || ""}
+                        onChange={(e) =>
+                          setIdMissionVerifiedData({
+                            ...idMissionVerifiedData,
+                            streetAddress: { name: "streetAddress", value: e.target.value },
+                          })
+                        }
+                        label="Street Address:*"
+                        placeholder="Start typing your address"
+                        className={"max-w-100!"}
+                      />
+                    </Autocomplete>
                   </div>
-                  <div
-                    data-ai-type="sign"
-                    data-ai-id="signature-field"
-                    data-ai-label="Signature"
-                    data-ai-required="true"
-                    data-ai-value={idMissionVerifiedData?.signature?.value?.secureUrl || ""}
-                    data-ai-text={(() => {
-                      const strip = (v) =>
-                        String(v || "")
-                          .replace(/<[^>]*>/g, " ")
-                          .replace(/\s+/g, " ")
-                          .trim();
-                      return (
-                        strip(form?.data?.idMissionSignDisplayFormatedText) ||
-                        strip(form?.data?.idMissionSignDisplayText)
-                      ).slice(0, 500);
-                    })()}
-                  >
-                    <SignatureBox
-                      oldSignatureUrl={idMissionVerifiedData?.signature?.value?.secureUrl || ""}
-                      className={"min-w-full"}
-                      onSave={handleSignature}
+                  <TextField
+                    id="address2"
+                    name="address2"
+                    type="text"
+                    value={idMissionVerifiedData?.address2?.value || ""}
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        address2: { name: "address2", value: e.target.value },
+                      })
+                    }
+                    label="Address 2 (Apt, Suite, Unit)"
+                    placeholder="Apt, Suite, Unit, Floor, etc."
+                    className={"max-w-100!"}
+                  />
+                  <TextField
+                    id="city"
+                    name="city"
+                    type="text"
+                    required
+                    value={idMissionVerifiedData?.city?.value || ""}
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        city: { name: "city", value: e.target.value },
+                      })
+                    }
+                    label="City:*"
+                    placeholder="e.g. New York City"
+                    suggestions={MAJOR_CITIES}
+                    className={"max-w-100!"}
+                  />
+                  <TextField
+                    id="zipCode"
+                    name="zipCode"
+                    type="text"
+                    value={idMissionVerifiedData?.zipCode?.value || ""}
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        zipCode: { name: "zipCode", value: e.target.value },
+                      })
+                    }
+                    label="Zip or Postal Code"
+                    placeholder="e.g. 90210"
+                    className={"max-w-100!"}
+                  />
+                  <TextField
+                    id="state"
+                    name="state"
+                    type="text"
+                    required
+                    value={idMissionVerifiedData?.state?.value || ""}
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        state: { name: "state", value: e.target.value },
+                      })
+                    }
+                    label="State/Province:*"
+                    placeholder="e.g. California"
+                    className={"max-w-100!"}
+                  />
+                  <TextField
+                    id="country"
+                    name="country"
+                    type="text"
+                    required
+                    value={idMissionVerifiedData?.country?.value || ""}
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        country: { name: "country", value: e.target.value },
+                      })
+                    }
+                    label="Country:*"
+                    placeholder="e.g. United States"
+                    className={"max-w-100!"}
+                  />
+                  <TextField
+                    id="companyTitle"
+                    name="companyTitle"
+                    value={idMissionVerifiedData?.companyTitle?.value || ""}
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        companyTitle: { name: "companyTitle", value: e.target.value },
+                      })
+                    }
+                    label="Company Title:*"
+                    required
+                    placeholder="e.g. CEO, Owner, Director"
+                    className={"max-w-100!"}
+                  />
+                  <TextField
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    value={idMissionVerifiedData?.phoneNumber?.value || ""}
+                    onChange={(e) =>
+                      setIdMissionVerifiedData({
+                        ...idMissionVerifiedData,
+                        phoneNumber: { name: "phoneNumber", value: e.target.value },
+                      })
+                    }
+                    formatting="3,3,4"
+                    label="Phone Number:*"
+                    placeholder="e.g. 555-867-5309"
+                    required
+                    type="text"
+                    className={"max-w-100!"}
+                  />
+                  <div className="bg-backgroundColor flex w-full border p-4">
+                    <RadioInputType
+                      optionColumnCount={1}
+                      className={"w-full"}
+                      field={{
+                        label: "What is the role you are filling for the company as you complete this application? ",
+                        options: [
+                          {
+                            label:
+                              "A primary company operator/controller (C-level executive, owner or other person that holds significant control over company direction and decisions)",
+                            value: "primaryOperatorAndController",
+                          },
+                          {
+                            label:
+                              "The primary contact for the company for this product or service, but not a company operator/controller ",
+                            value: "primaryContact",
+                          },
+                          {
+                            label: "Both a company operator and the primary contact",
+                            value: "both",
+                          },
+                        ],
+                        name: "roleFillingForCompany",
+                        uniqueId: "roleFillingForCompany",
+                        required: true,
+                      }}
+                      form={{
+                        roleFillingForCompany: {
+                          name: "roleFillingForCompany",
+                          value: idMissionVerifiedData?.roleFillingForCompany?.value || "",
+                        },
+                      }}
+                      onChange={(e) =>
+                        setIdMissionVerifiedData({
+                          ...idMissionVerifiedData,
+                          roleFillingForCompany: { name: "roleFillingForCompany", value: e?.target?.value },
+                        })
+                      }
                     />
                   </div>
-                </div>
-              </form>
-              <div className="flex w-full items-center justify-end gap-2 p-2">
-                {isCreator && (
+                  <div className="flex w-full flex-col">
+                    <div className="my-4 flex w-full justify-between gap-2">
+                      {(form?.data?.idMissionSignDisplayFormatedText || form?.data?.idMissionSignDisplayText) && (
+                        <div className="flex items-end gap-3">
+                          <div
+                            // className="flex flex-1 items-end gap-3"
+                            className="w-full"
+                            data-ai-display-text
+                            dangerouslySetInnerHTML={{
+                              __html: String(
+                                form?.data?.idMissionSignDisplayFormatedText ||
+                                  form?.data?.idMissionSignDisplayText ||
+                                  "",
+                              ).replace(/<a(\s+.*?)?>/g, (match) => {
+                                if (match.includes("target=")) return match; // avoid duplicates
+                                return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
+                              }),
+                            }}
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-center justify-end gap-2">
+                        {isCreator && (
+                          <div className="flex items-center gap-2">
+                            <Button label="Enable Help" onClick={() => setShowSignatureHelpModal(true)} />
+                            <Button label="Customize Signature" onClick={() => setShowSignatureModal(true)} />
+                          </div>
+                        )}
+                        {idMissionSection?.signAiResponse && (
+                          <Button label="Help" onClick={() => setOpenAiHelpSignModal(true)} />
+                        )}
+                      </div>
+                    </div>
+                    <div
+                      data-ai-type="sign"
+                      data-ai-id="signature-field"
+                      data-ai-label="Signature"
+                      data-ai-required="true"
+                      data-ai-value={idMissionVerifiedData?.signature?.value?.secureUrl || ""}
+                      data-ai-text={(() => {
+                        const strip = (v) =>
+                          String(v || "")
+                            .replace(/<[^>]*>/g, " ")
+                            .replace(/\s+/g, " ")
+                            .trim();
+                        return (
+                          strip(form?.data?.idMissionSignDisplayFormatedText) ||
+                          strip(form?.data?.idMissionSignDisplayText)
+                        ).slice(0, 500);
+                      })()}
+                    >
+                      <SignatureBox
+                        oldSignatureUrl={idMissionVerifiedData?.signature?.value?.secureUrl || ""}
+                        className={"min-w-full"}
+                        onSave={handleSignature}
+                      />
+                    </div>
+                  </div>
+                </form>
+                <div className="flex w-full items-center justify-end gap-2 p-2">
+                  {isCreator && (
+                    <Button
+                      onClick={() => {
+                        navigate(`/singleform/stepper/${formId}`);
+                      }}
+                      className="mt-4"
+                      variant="secondary"
+                      label={"Skip for now"}
+                    />
+                  )}
                   <Button
-                    onClick={() => {
-                      navigate(`/singleform/stepper/${formId}`);
-                    }}
+                    disabled={!isAllRequiredFieldsFilled || submiting}
+                    label={!isAllRequiredFieldsFilled ? "Some fields are missing" : "Continue to next"}
+                    onClick={submitIdMissionData}
                     className="mt-4"
-                    variant="secondary"
-                    label={"Skip for now"}
                   />
-                )}
-                <Button
-                  disabled={!isAllRequiredFieldsFilled || submiting}
-                  label={!isAllRequiredFieldsFilled ? "Some fields are missing" : "Continue to next"}
-                  onClick={submitIdMissionData}
-                  className="mt-4"
-                />
+                </div>
               </div>
-            </div>
+            )
+          ) : (
+            <CustomLoading />
           )}
         </div>
       )}

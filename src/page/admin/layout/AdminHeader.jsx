@@ -37,6 +37,9 @@ function AdminHeader({ setSidebarOpen }) {
   const { logo, headerAlignment, appHeaderPadding, appLogoMaxWidth, appLogoMaxHeight } = useBranding();
   const [loadingTime, setLoadingTime] = useState(500);
 
+  // const { headerBackground } = useBranding();
+  // const textOnHeader = contrastColor(headerBackground);
+
   const profileOpenHandler = () => setIsProfileOpen((prev) => !prev);
   const isGuest = !user?._id || user?.role?.name == "guest";
   useEffect(() => {
@@ -116,7 +119,7 @@ const GuestHeader = ({
         <>
           {/* left side  */}
           {headerAlignment == "left" ? (
-            <div className={`my-4 flex w-[300px] items-center`}>
+            <div className={`my-4 flex w-75 items-center`}>
               <img
                 onClick={handleLogoClick}
                 src={logo || ""}
@@ -127,7 +130,7 @@ const GuestHeader = ({
               />
             </div>
           ) : (
-            <div className="flex w-[300px] items-center gap-4 px-6 py-2">
+            <div className="flex w-75 items-center gap-4 px-6 py-2">
               {user && (
                 <div className="relative flex items-center gap-2">
                   <div className="hidden items-center gap-2 md:flex">
@@ -157,7 +160,7 @@ const GuestHeader = ({
 
                   {/* Dropdown */}
                   <div
-                    className={`custom-scroll absolute top-[45px] right-0 z-350 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? "opacity-100" : "invisible opacity-0"}`}
+                    className={`custom-scroll absolute top-11.25 right-0 z-350 w-37.5 rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? "opacity-100" : "invisible opacity-0"}`}
                   >
                     <Profile isGuest={isGuest} setIsProfileOpen={setIsProfileOpen} />
                   </div>
@@ -177,7 +180,7 @@ const GuestHeader = ({
 
           {/* right side  */}
           {headerAlignment == "left" ? (
-            <div className="flex w-[300px] items-center gap-4 px-6 py-2">
+            <div className="flex w-75 items-center gap-4 px-6 py-2">
               {user && (
                 <div className="relative flex items-center gap-2">
                   <div className="hidden items-center gap-2 md:flex">
@@ -207,7 +210,7 @@ const GuestHeader = ({
 
                   {/* Dropdown */}
                   <div
-                    className={`custom-scroll absolute top-[45px] right-0 z-350 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? "opacity-100" : "invisible opacity-0"}`}
+                    className={`custom-scroll absolute top-11.25 right-0 z-350 w-37.5 rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? "opacity-100" : "invisible opacity-0"}`}
                   >
                     <Profile isGuest={isGuest} setIsProfileOpen={setIsProfileOpen} />
                   </div>
@@ -215,7 +218,7 @@ const GuestHeader = ({
               )}
             </div>
           ) : (
-            <div className={`my-4 flex w-[300px] items-center`}>
+            <div className={`my-4 flex w-75 items-center`}>
               <img
                 onClick={handleLogoClick}
                 src={logo || ""}
@@ -231,7 +234,7 @@ const GuestHeader = ({
         // when header target center
         <>
           {/* left side  */}
-          <div className={`flex w-[300px] items-center gap-4 rounded-bl-[20px] px-6 py-2`}></div>
+          <div className={`flex w-75 items-center gap-4 rounded-bl-[20px] px-6 py-2`}></div>
           {/* center side  */}
           <div className={`my-4 flex max-w-3xl flex-col items-center`}>
             <img
@@ -248,7 +251,7 @@ const GuestHeader = ({
           </div>
 
           {/* right side  */}
-          <div className="mx-6 flex w-[300px] items-center gap-4 p-2">
+          <div className="mx-6 flex w-75 items-center gap-4 p-2">
             {user && (
               <div className="relative flex items-center gap-2">
                 <div className="hidden items-center gap-2 md:flex">
@@ -278,7 +281,7 @@ const GuestHeader = ({
 
                 {/* Dropdown */}
                 <div
-                  className={`custom-scroll absolute top-[45px] right-0 z-350 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? "opacity-100" : "invisible opacity-0"}`}
+                  className={`custom-scroll absolute top-11.25 right-0 z-350 w-37.5 rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? "opacity-100" : "invisible opacity-0"}`}
                 >
                   <Profile isGuest={isGuest} setIsProfileOpen={setIsProfileOpen} />
                 </div>
@@ -299,13 +302,15 @@ const UserHeader = ({
   isGuest,
   setIsProfileOpen,
   setSidebarOpen,
+  formHeaderText,
+  formHeaderTextSize,
 }) => {
   const { headerBackground } = useBranding();
   const textOnHeader = contrastColor(headerBackground);
   return (
-    <div className="bg-header flex min-h-20 items-center justify-between rounded-md p-2 shadow">
+    <div className="bg-header flex min-h-20 items-center justify-between gap-8 rounded-md p-2 shadow">
       {/* Hamburger Icon (mobile only) */}
-      <div className="flex w-full items-center gap-2">
+      <div className="flex items-center gap-2">
         <button className="rounded-md p-2 hover:bg-gray-100 lg:hidden" onClick={() => setSidebarOpen(true)}>
           <HiMenu size={24} style={{ color: textOnHeader }} />
         </button>
@@ -313,6 +318,18 @@ const UserHeader = ({
           Welcome {user?.firstName} {user?.lastName}
         </h1>
       </div>
+
+      <div className="flex">
+        {formHeaderText && (
+          <h6
+            className="text-header-text max-w-3xl font-semibold"
+            style={{ fontSize: `${formHeaderTextSize || 24}px` }}
+          >
+            {formHeaderText}
+          </h6>
+        )}
+      </div>
+
       {user && (
         <div className="flex items-center gap-4 px-6 py-2">
           <div className="relative flex items-center gap-2">
@@ -343,7 +360,7 @@ const UserHeader = ({
 
             {/* Dropdown */}
             <div
-              className={`custom-scroll absolute top-[45px] right-0 z-350 w-[150px] rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? "opacity-100" : "invisible opacity-0"}`}
+              className={`custom-scroll absolute top-11.25 right-0 z-350 w-37.5 rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? "opacity-100" : "invisible opacity-0"}`}
             >
               <Profile isGuest={isGuest} setIsProfileOpen={setIsProfileOpen} />
             </div>
