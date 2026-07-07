@@ -946,7 +946,7 @@ export default function SingleApplication() {
             firstName = f?.First_Name || f?.FullName?.split(" ")?.[0] || "";
             lastName = f?.Last_Name || f?.FullName?.split(" ")?.[1] || "";
           }
-          const res = await updateMyProfile({ _id: currentUser?._id, firstName, middleName, lastName }).unwrap();
+          const res = await updateMyProfile({ _id: user?._id, firstName, middleName, lastName }).unwrap();
           if (res?.success) {
             const r = await getUserProfile();
             if (r?.data?.success) dispatch(userExist(r.data.data));
