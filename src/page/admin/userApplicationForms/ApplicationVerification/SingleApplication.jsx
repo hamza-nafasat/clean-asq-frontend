@@ -935,10 +935,18 @@ export default function SingleApplication() {
       // 2) Sync profile in the background — does NOT block the form
       if (user?._id && f?.FullName) {
         try {
-          const firstName = f?.First_Name || f?.FullName?.split(" ")?.[0] || "";
-          const middleName = f?.Middle_Name || f?.FullName?.split(" ")?.[1] || "";
-          const lastName = f?.Last_Name || f?.FullName?.split(" ")?.[2] || "";
-          const res = await updateMyProfile({ _id: user?._id, firstName, middleName, lastName }).unwrap();
+          let firstName = "";
+          let middleName = "";
+          let lastName = "";
+          if (f.FullName?.split(" ").length > 2) {
+            firstName = f?.First_Name || f?.FullName?.split(" ")?.[0] || "";
+            middleName = f?.Middle_Name || f?.FullName?.split(" ")?.[1] || "";
+            lastName = f?.Last_Name || f?.FullName?.split(" ")?.[2] || "";
+          } else {
+            firstName = f?.First_Name || f?.FullName?.split(" ")?.[0] || "";
+            lastName = f?.Last_Name || f?.FullName?.split(" ")?.[1] || "";
+          }
+          const res = await updateMyProfile({ _id: currentUser?._id, firstName, middleName, lastName }).unwrap();
           if (res?.success) {
             const r = await getUserProfile();
             if (r?.data?.success) dispatch(userExist(r.data.data));
@@ -950,8 +958,6 @@ export default function SingleApplication() {
     });
     // id mission failed
     socket.on("idMission_failed", async (data) => {
-      // console.log('you start id mission failed', data);
-      // toast.error("you id didn't approved please try again");
       const action = await dispatch(
         updateFormState({
           data: {
@@ -1092,16 +1098,7 @@ export default function SingleApplication() {
       socket.off("idMission_failed");
       socket.off("idMission_other");
     };
-  }, [
-    dispatch,
-    formId,
-    getUserProfile,
-    idMissionVerified,
-    idMissionVerifiedData?.createdAt,
-    updateMyProfile,
-    user?._id,
-    user?.email,
-  ]);
+  }, [dispatch, getUserProfile, idMissionVerifiedData?.createdAt, updateMyProfile, user?._id, user?.email]);
 
   // check validations
   useEffect(() => {
