@@ -1262,10 +1262,14 @@ export {
 };
 export default DynamicField;
 
-export const SimpleRadioInputType = ({ field, className, form, setForm, onChange, disabled = false }) => {
+export const SimpleRadioInputType = ({ field, className, form, setForm, onChange, disabled = false, groupName }) => {
   const { label, options, name, required, aiHelp, aiPrompt, aiResponse, isDisplayText, ai_formatting } = field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const radioHandler = (option) => setForm({ ...form, [name]: option.value });
+  // DOM name used for native radio grouping. Defaults to the state key, but callers rendering
+  // the same field across repeated boxes must pass a unique groupName so the browser doesn't
+  // treat radios in different boxes as one mutually-exclusive group.
+  const radioGroupName = groupName || name;
   return (
     <div className={`flex w-full flex-col items-start ${className}`} data-ai-help-context={aiPrompt || undefined}>
       {openAiHelpModal && (
@@ -1302,16 +1306,16 @@ export const SimpleRadioInputType = ({ field, className, form, setForm, onChange
             <div key={index} className="flex items-center gap-2 p-2 text-start">
               <input
                 disabled={disabled}
-                name={name}
+                name={radioGroupName}
                 type={"radio"}
-                id={option.value + index + name}
+                id={option.value + index + radioGroupName}
                 value={option.value}
                 checked={form[name] === option.value}
                 className={`text-textPrimary accent-primary size-5 ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
                 required={required}
                 onChange={onChange ? (e) => onChange(e) : () => radioHandler(option)}
               />
-              <label htmlFor={option.value + index + name} className="text-textPrimary text-base">
+              <label htmlFor={option.value + index + radioGroupName} className="text-textPrimary text-base">
                 {option?.label}
               </label>
             </div>
