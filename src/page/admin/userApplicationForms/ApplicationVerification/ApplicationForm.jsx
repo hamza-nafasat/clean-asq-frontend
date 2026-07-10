@@ -30,6 +30,18 @@ import { uploadFilesAndReplace } from "@/lib/utils";
 import { useApplicantScreenContext } from "@/hooks/useApplicantScreenContext";
 import getEnv from "@/lib/env";
 
+// Section titles that map to a renderable step component in the stepper below.
+// Keep this in sync with the step.title branches in the effect.
+const RENDERABLE_SECTION_TITLES = [
+  "company_information_blk",
+  "beneficial_blk",
+  "bank_account_info_blk",
+  "avg_transactions_blk",
+  "incorporation_article_blk",
+  "custom_section",
+  "agreement_blk",
+];
+
 export default function ApplicationForm() {
   const stepContainerRef = useRef(null);
   const queryParams = new URLSearchParams(window.location.search);
@@ -95,12 +107,12 @@ export default function ApplicationForm() {
         console.log("error while handling next", error);
         toast.error(error?.data?.message || "Error while handling next");
       } finally {
-        // Move to next step
-        if (currentStep < form?.data?.sections?.length - 1) setCurrentStep(currentStep + 1);
+        // Move to next step (cap at the number of actual rendered steps)
+        if (currentStep < stepsComps.length - 1) setCurrentStep(currentStep + 1);
         setLoadingNext(false);
       }
     },
-    [currentStep, dispatch, form?.data?._id, form?.data?.sections?.length, formData, saveFormInDraft, user],
+    [currentStep, dispatch, form?.data?._id, stepsComps.length, formData, saveFormInDraft, user],
   );
 
   useApplicantScreenContext({
@@ -176,10 +188,11 @@ export default function ApplicationForm() {
       }
     },
     [
+      dispatch,
       form?.data?._id,
       formData,
       formSubmit,
-      // navigate,
+      navigate,
       user?._id,
       user?.email,
       user?.firstName,
@@ -255,12 +268,18 @@ export default function ApplicationForm() {
       const data = [];
       const stepNames = [];
       const isOwner = user?._id && user?._id === form?.data?.owner;
-      const visibleSections = isOwner ? form?.data?.sections : form?.data?.sections?.filter((step) => !step?.isHidden);
+      // Only sections that map to a renderable step component count towards the stepper.
+      // Sections with an unrecognized title are neither rendered nor counted, so
+      // totalSteps stays in sync with the actual number of steps (fixes last-step
+      // showing "Next" instead of "Submit").
+      const visibleSections = (
+        isOwner ? form?.data?.sections : form?.data?.sections?.filter((step) => !step?.isHidden)
+      )?.filter((step) => RENDERABLE_SECTION_TITLES.includes(step?.title));
       visibleSections.forEach((step) => {
         const sectionDataFromRedux = formData?.[step?.key];
         const commonProps = {
           _id: step._id,
-          sectionKey: step.key || "hello",
+          sectionKey: step.key || "",
           name: step.name,
           title: step.title,
           fields: step?.fields ?? [],
@@ -300,6 +319,7 @@ export default function ApplicationForm() {
           stepNames.push(step.name);
         }
       });
+
       setStepsComps(data);
       setSectionNames(stepNames);
     }

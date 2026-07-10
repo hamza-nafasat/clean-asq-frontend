@@ -500,7 +500,7 @@ function CustomSection({
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
           {currentStep > 0 && <Button variant="secondary" label={"Previous"} onClick={handlePrevious} />}
-          {currentStep < totalSteps - 2 ? (
+          {currentStep < totalSteps - 1 ? (
             <Button
               disabled={!isAllRequiredFieldsFilled}
               label={!isAllRequiredFieldsFilled ? "Some required fields are missing" : "Next"}
