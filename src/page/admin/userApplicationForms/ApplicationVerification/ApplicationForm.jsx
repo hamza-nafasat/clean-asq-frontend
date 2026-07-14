@@ -120,8 +120,10 @@ export default function ApplicationForm() {
     screenName: sectionNames[currentStep] || "Application Form",
     description: `Multi-step application form. Applicant is on step ${currentStep + 1} of ${stepsComps.length}.`,
     aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
-    // Logged-in admins/owners fill manually; guest applicants use guided AI chat.
-    allowManualEdit: !isGuestApplicant,
+    // Keep the whole stepper manually editable for everyone (including guest applicants)
+    // so all fields — inputs, radios, checkboxes, selects — stay enabled and clickable.
+    // The AI assistant can still fill these fields via the DOM.
+    allowManualEdit: true,
     formRef: stepContainerRef,
     currentState: {
       currentStep,

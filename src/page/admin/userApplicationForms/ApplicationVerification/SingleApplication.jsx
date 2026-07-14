@@ -145,9 +145,6 @@ export default function SingleApplication() {
     }
   };
 
-  // Register this page with the AI applicant assistant.
-  // Context is scoped to the current stage so the AI only knows about
-  // what is visible to the applicant right now.
   const isGuestApplicant = user?.role?.name === "guest" || user?.role === "guest";
   const aiStage =
     !emailVerified || emailVerifiedLoading || navigatingAwayRef.current
@@ -155,18 +152,7 @@ export default function SingleApplication() {
       : !idMissionVerified
         ? "idmission-qr"
         : "idmission-details";
-  console.log(
-    "%c[SA:aiCtx] registering screenId=single-application-%s  fields=%o  actions=%o",
-    "color:#0891b2; font-weight:bold",
-    aiStage,
-    aiStage === "email"
-      ? [
-          { id: "email-field", value: email, filled: !!email },
-          { id: "otp-field", value: otp, filled: !!otp },
-        ]
-      : [],
-    aiStage === "email" ? ["fillField", "sendOtpForEmail", "verifyOtpCode", "scrollToField"] : ["scrollToField"],
-  );
+
   useApplicantScreenContext(
     {
       screenId: `single-application-${aiStage}`,
@@ -183,8 +169,10 @@ export default function SingleApplication() {
             ? "The applicant scans a QR code (or uses a web link) with their phone to complete photo ID verification through IDMission. No form fields to fill at this step — they must use the QR code or web link."
             : 'The applicant completes their personal details and adds their signature to proceed. Some fields may already be filled from identity verification — present those pre-filled values to the applicant for confirmation before moving on to empty fields. For the roleFillingForCompany field, valid values are: "both" (operator and primary contact), "primaryContact" (primary contact only), or "primaryOperatorAndController" (C-level executive or owner). Present these as readable choices to the applicant.',
       aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
-      // Logged-in admins/owners fill manually; guest applicants use guided AI chat.
-      allowManualEdit: !isGuestApplicant,
+      // Keep this page manually editable for everyone (including guest applicants) so the
+      // email/OTP and IDMission detail fields stay enabled. The AI assistant can still fill
+      // these fields via the DOM.
+      allowManualEdit: true,
       formRef: aiStage === "idmission-details" ? idMissionFormRef : aiStage === "email" ? emailFormRef : null,
       currentState: {
         ...(aiStage === "email" && {
@@ -228,19 +216,7 @@ export default function SingleApplication() {
           },
           // Sends OTP directly — accepts email as arg to avoid React state flush timing issues
           sendOtpForEmail: async ({ email: emailValue }) => {
-            console.log(
-              "%c[SA:AI→sendOtpForEmail] called — emailValue=%s formId=%s",
-              "color:#ea580c; font-weight:bold",
-              emailValue,
-              formId,
-            );
             const res = await sendOtp({ email: emailValue, formId }).unwrap();
-            console.log(
-              "%c[SA:AI→sendOtpForEmail] API response — success=%s message=%s",
-              "color:#ea580c",
-              res?.success,
-              res?.message,
-            );
             if (!res?.success) throw new Error(res?.message || "Failed to send OTP");
             setEmail(emailValue);
             setOtpSent(true);
@@ -248,62 +224,36 @@ export default function SingleApplication() {
           },
           // Verifies OTP directly — accepts both values as args to avoid state flush timing issues
           verifyOtpCode: async ({ otp: otpValue, email: emailValue }) => {
-            console.log(
-              "%c[SA:AI→verifyOtpCode] called — email=%s otp=%s formId=%s",
-              "color:#ea580c; font-weight:bold",
-              emailValue,
-              otpValue,
-              formId,
-            );
             setLoadingForValidatingOtp(true);
             try {
               const res = await verifyEmail({ email: emailValue, otp: otpValue, formId }).unwrap();
-              console.log("%c[SA:AI→verifyOtpCode] API response — success=%s", "color:#ea580c", res?.success);
               if (!res?.success) throw new Error(res?.message || "Verification failed");
               setOtp(otpValue);
               // Raise the loading flag BEFORE dispatching emailVerified — React 18 batches
               // these two state updates into one render, keeping aiStage="email" so the
               // IDMission QR context is never registered until we know the user stays there.
               setEmailVerifiedLoading(true);
-              console.log(
-                "%c[SA:AI→verifyOtpCode] OTP verified ✓ — dispatching updateEmailVerified(true)",
-                "color:#ea580c",
-              );
               dispatch(updateEmailVerified(true));
               await getUserProfile()
                 .then((r) => {
-                  console.log(
-                    "%c[SA:AI→verifyOtpCode] getUserProfile — success=%s userId=%s",
-                    "color:#ea580c",
-                    r?.data?.success,
-                    r?.data?.data?._id,
-                  );
                   if (r?.data?.success) dispatch(userExist(r.data.data));
                   else dispatch(userNotExist());
                 })
                 .catch(() => dispatch(userNotExist()));
-              console.log("%c[SA:AI→verifyOtpCode] calling getSavedFormDataAndSaveInRedux…", "color:#ea580c");
-              await getSavedFormDataAndSaveInRedux();
-              console.log("%c[SA:AI→verifyOtpCode] getSavedFormDataAndSaveInRedux complete", "color:#ea580c");
+              // After email is verified, always send the applicant to company verification.
+              // Once that page is completed it redirects back to /application-form/... where
+              // this screen (with emailVerified=true) fetches the IDMission QR code.
+              navigatingAwayRef.current = true;
+              navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
               return res;
             } finally {
               setLoadingForValidatingOtp(false);
-              // Drop the loading flag — if we navigated away, this is a no-op (React ignores
-              // state updates from unmounted components). If we stayed, aiStage can now
-              // transition to "idmission-qr" and the QR context registers correctly.
               setEmailVerifiedLoading(false);
             }
           },
         }),
-        // fillField auto-provided by AIChatContext via DOM dispatch (formRef above)
       },
-      // idMissionVerifiedData object reference changes on every field update,
-      // which re-triggers registerScreenContext so the DOM is re-read.
       deps: [aiStage, email, otp, webLink, idMissionVerifiedData, isGuestApplicant],
-      // clearOnMount: only wipe the chat history on the very first mount (before email
-      // verification). On remounts after navigating away (e.g. returning from company
-      // verification), emailVerified is already true in Redux — skip the reset so the
-      // conversation history and language are preserved across the navigation.
     },
     { clearOnMount: !emailVerified, autoOpen: false },
   );
@@ -768,7 +718,11 @@ export default function SingleApplication() {
             else dispatch(userNotExist());
           })
           .catch(() => dispatch(userNotExist()));
-        await getSavedFormDataAndSaveInRedux();
+        // After email is verified, always send the applicant to company verification.
+        // Once that page is completed it redirects back to /application-form/... where
+        // this screen (with emailVerified=true) fetches the IDMission QR code.
+        navigatingAwayRef.current = true;
+        navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
       }
     } catch (error) {
       console.log("Error sending OTP:", error);
@@ -776,7 +730,7 @@ export default function SingleApplication() {
     } finally {
       setLoadingForValidatingOtp(false);
     }
-  }, [dispatch, email, formId, getSavedFormDataAndSaveInRedux, getUserProfile, otp, verifyEmail]);
+  }, [dispatch, email, formId, form?.data?.branding?.name, getUserProfile, navigate, otp, verifyEmail]);
 
   const getQrLinkOnEmailVerified = useCallback(() => {
     if (emailVerified && formData && formData?.idMission) {
@@ -1139,12 +1093,20 @@ export default function SingleApplication() {
     if (!container) return;
     const handler = (e) => {
       if (e.key !== "Enter" || e.defaultPrevented) return;
-      if (!container.contains(document.activeElement)) return;
-      if (document.activeElement?.tagName?.toLowerCase() !== "input") return;
-      const inputs = Array.from(container.querySelectorAll("input:not([disabled]):not([readonly])")).filter(
-        (el) => el.offsetParent !== null,
-      );
-      const idx = inputs.indexOf(document.activeElement);
+      const active = document.activeElement;
+      if (!container.contains(active)) return;
+      if (active?.tagName?.toLowerCase() !== "input") return;
+      // Radio/checkbox inputs are toggled with space/arrows — don't hijack Enter for them.
+      if (active.type === "radio" || active.type === "checkbox") return;
+      // Let Google Places autocomplete keep Enter while its suggestion dropdown is open,
+      // so selecting an address (which fills city/state/zip/country) still works.
+      const pac = document.querySelector(".pac-container");
+      if (pac && getComputedStyle(pac).display !== "none" && active.closest("[data-places-input]")) return;
+      // Only text-style inputs participate in the "Enter → next field" chain.
+      const inputs = Array.from(
+        container.querySelectorAll("input:not([disabled]):not([readonly]):not([type=hidden])"),
+      ).filter((el) => el.offsetParent !== null && el.type !== "radio" && el.type !== "checkbox");
+      const idx = inputs.indexOf(active);
       if (idx === -1) return;
       e.preventDefault();
       if (idx < inputs.length - 1) {

@@ -165,7 +165,10 @@ function CompanyVerification({ formId, brandingName }) {
       "After all required fields are filled, call goToNextStep to submit and proceed automatically. " +
       'If the applicant says their company has no website, fill field "noWebsite" with value "true" to check the checkbox — this removes the URL requirement.',
     aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
-    allowManualEdit: !isGuestApplicant,
+    // Keep this page manually editable for everyone (including guest applicants) so the
+    // company name / website URL fields and the "no website" checkbox stay enabled and
+    // Enter-to-advance works. The AI assistant can still fill these fields via the DOM.
+    allowManualEdit: true,
     formRef: companyFormRef,
     currentState: {}, // fields discovered from DOM via formRef
     actions: {
