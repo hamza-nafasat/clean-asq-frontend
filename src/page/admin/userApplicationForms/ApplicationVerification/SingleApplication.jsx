@@ -1087,37 +1087,35 @@ export default function SingleApplication() {
     };
   }, [idMissionVerified]);
 
-  useEffect(() => {
-    if (!idMissionVerified) return;
+  // Enter-to-advance for the IDMission details form: pressing Enter in a text field
+  // moves focus to the next text field (and submits on the last one). Attached directly
+  // to the <form> via React onKeyDown so it reliably runs before the AI widget's global
+  // Enter handler, regardless of ref/HMR timing.
+  const handleIdMissionEnter = useCallback((e) => {
+    if (e.key !== "Enter" || e.defaultPrevented) return;
+    const active = e.target;
+    if (active?.tagName?.toLowerCase() !== "input") return;
+    // Radio/checkbox inputs are toggled with space/arrows — don't hijack Enter for them.
+    if (active.type === "radio" || active.type === "checkbox") return;
     const container = idMissionFormRef.current;
     if (!container) return;
-    const handler = (e) => {
-      if (e.key !== "Enter" || e.defaultPrevented) return;
-      const active = document.activeElement;
-      if (!container.contains(active)) return;
-      if (active?.tagName?.toLowerCase() !== "input") return;
-      // Radio/checkbox inputs are toggled with space/arrows — don't hijack Enter for them.
-      if (active.type === "radio" || active.type === "checkbox") return;
-      // Let Google Places autocomplete keep Enter while its suggestion dropdown is open,
-      // so selecting an address (which fills city/state/zip/country) still works.
-      const pac = document.querySelector(".pac-container");
-      if (pac && getComputedStyle(pac).display !== "none" && active.closest("[data-places-input]")) return;
-      // Only text-style inputs participate in the "Enter → next field" chain.
-      const inputs = Array.from(
-        container.querySelectorAll("input:not([disabled]):not([readonly]):not([type=hidden])"),
-      ).filter((el) => el.offsetParent !== null && el.type !== "radio" && el.type !== "checkbox");
-      const idx = inputs.indexOf(active);
-      if (idx === -1) return;
-      e.preventDefault();
-      if (idx < inputs.length - 1) {
-        inputs[idx + 1].focus();
-      } else {
-        submitFromEnterRef.current?.(e);
-      }
-    };
-    container.addEventListener("keydown", handler);
-    return () => container.removeEventListener("keydown", handler);
-  }, [idMissionVerified]);
+    // Let Google Places autocomplete keep Enter while its suggestion dropdown is open,
+    // so selecting an address (which fills city/state/zip/country) still works.
+    const pac = document.querySelector(".pac-container");
+    if (pac && getComputedStyle(pac).display !== "none" && active.closest("[data-places-input]")) return;
+    // Only visible, editable text-style inputs participate in the "Enter → next field" chain.
+    const inputs = Array.from(
+      container.querySelectorAll("input:not([disabled]):not([readonly]):not([type=hidden])"),
+    ).filter((el) => el.offsetParent !== null && el.type !== "radio" && el.type !== "checkbox");
+    const idx = inputs.indexOf(active);
+    if (idx === -1) return;
+    e.preventDefault();
+    if (idx < inputs.length - 1) {
+      inputs[idx + 1].focus();
+    } else {
+      submitFromEnterRef.current?.(e);
+    }
+  }, []);
 
   submitFromEnterRef.current = isAllRequiredFieldsFilled && !submiting ? submitIdMissionData : null;
 
@@ -1426,7 +1424,7 @@ export default function SingleApplication() {
                     />
                   )}
                 </div>
-                <form ref={idMissionFormRef} className="flex flex-wrap gap-4">
+                <form ref={idMissionFormRef} onKeyDown={handleIdMissionEnter} className="flex flex-wrap gap-4">
                   <TextField
                     onChange={(e) =>
                       setIdMissionVerifiedData({
