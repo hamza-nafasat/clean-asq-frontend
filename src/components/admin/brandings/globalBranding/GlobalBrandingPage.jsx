@@ -376,7 +376,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
 
   const applyExtractedBranding = (data) => {
     if (data?.url) setWebsiteUrl(data.url);
-    if (data?.name) setCompanyName(data.name);
+    if (data?.name & !companyName) setCompanyName(data.name);
     setFontFamily(data?.fontFamily || "");
     setLogos(data?.logos || []);
     setPrimaryColor(data?.colors?.primary);
