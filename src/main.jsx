@@ -10,6 +10,7 @@ import "./index.css";
 import getEnv from "./lib/env";
 import store from "./redux/store";
 import AIChatWidget from "./components/shared/AIChat/AIChatWidget";
+import ErrorBoundary from "./components/shared/ErrorBoundary";
 
 export const socket = io(getEnv("SERVER_URL"), {
   path: "/api/socket.io",
@@ -29,8 +30,12 @@ if (!container._reactRoot) {
         <Provider store={store}>
           <BrowserRouter>
             <AIChatProvider>
-              <App />
-              <AIChatWidget />
+              <ErrorBoundary name="App">
+                <App />
+              </ErrorBoundary>
+              <ErrorBoundary name="AIChatWidget" silent>
+                <AIChatWidget />
+              </ErrorBoundary>
             </AIChatProvider>
           </BrowserRouter>
         </Provider>

@@ -1,3 +1,4 @@
+import { UseAIChat } from "@/context/AiChatContext";
 import { useBranding } from "@/hooks/BrandingContext";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import getEnv from "@/lib/env";
@@ -23,9 +24,11 @@ import {
   useGetMyAllFormsQuery,
   useGetSingleFormQueryQuery,
   useReorderFormSectionsMutation,
+  useAddFormSectionMutation,
   useUpdateDeleteCreateFormFieldsMutation,
   useUpdateFormMutation,
   useUpdateFormSectionMutation,
+  useFormateTextInMarkDownMutation,
 } from "@/redux/apis/formApis";
 
 import { CopyIcon, MoreVertical } from "lucide-react";
@@ -46,6 +49,8 @@ import { LocationModalComponent } from "./varification/LocationStatusModal";
 
 const SERVER_URL = getEnv("SERVER_URL");
 
+// Merge pending AI edits on top of the raw DB form data for preview purposes.
+// Returns a new object in the same shape as singleFormData.data.
 function applyPendingEdits(formData, pending) {
   if (!formData || !pending) return formData;
   let sections = [...(formData.sections || [])];
@@ -96,6 +101,7 @@ export default function ApplicationsCard() {
   const brandingCtx = useBranding();
   const { logo } = brandingCtx;
   const brandingSetters = getBrandingSettersFromHook(brandingCtx);
+  const { addMessage, setIsOpen } = UseAIChat();
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
 
   const dispatchUserRefresh = async (profileRes) => {
@@ -161,10 +167,20 @@ export default function ApplicationsCard() {
   const { data: searchStrategies } = useGetAllSearchStrategiesQuery();
   const { data: formStrategies, refetch: refetchFormStrategies } = useGetAllFormStrategiesQuery();
   const [updateFormSection] = useUpdateFormSectionMutation();
+  const [formateTextInMarkDown] = useFormateTextInMarkDownMutation();
+  const [addFormSectionMutation] = useAddFormSectionMutation();
   const [updateDeleteCreateFormFields] = useUpdateDeleteCreateFormFieldsMutation();
   const [reorderFormSectionsMutation] = useReorderFormSectionsMutation();
   const [deleteFormSectionMutation] = useDeleteFormSectionMutation();
   const [pendingFormEdits, setPendingFormEdits] = useState(null);
+  // Always-current source of truth so action closures read the latest pending edits
+  // synchronously (React setState is async), matching the ref-based accumulation model.
+  const pendingFormEditsRef = useRef(null);
+  // Stable read of the loaded form for save-time loops (avoids stale closures).
+  const singleFormDataRef = useRef(null);
+  useEffect(() => {
+    singleFormDataRef.current = singleFormData;
+  }, [singleFormData]);
 
   const homeBranding = mapHomeBranding(user);
 
@@ -229,7 +245,7 @@ export default function ApplicationsCard() {
     screenName: "Application Forms",
     assistantName: "Form Management Assistant",
     aiEndpoint: `${SERVER_URL}/api/ai/form-chat`,
-    greeting: `Hi! I'm your **Form Management Assistant**.\n\nI can help you:\n- **Preview a form** — render a visual overview of any form's structure in the chat\n- **Check form readiness** — audit a form across 8 criteria: branding assigned, email templates attached, lookup strategy & field linkages, section display text, sign display text, owner suggestions on block sections, underwriting rules configured, and AI help configured on fields\n- **Update header text and font size**\n- **Update redirect URLs**\n- **Change branding** on one or all forms\n- **Edit form content** — update section display text, AI prompts, reorder sections, delete sections (changes preview instantly and save when you confirm)\n- **Delete** forms\n- **Clone settings** from one form to another\n- **Clone a form** — create a complete copy of an existing form as a new independent form (including email template attachments), no CSV required\n- **Design a new form CSV** — select an existing CSV as a starting point, discuss changes, preview the structure, and I'll generate a ready-to-upload CSV file\n\nWhat would you like to do?`,
+    greeting: `Hi! I'm your **Form Management Assistant**.\n\nI can help you:\n- **Create or delete forms**\n- **Clone a form**\n- **Reorder or delete sections** in a form\n- **Preview a form**\n- **Check form readiness**\n- **Change branding, email templates, header text, redirect URLs, and location settings**\n\n> **Note:** Editing section display text, field labels, or AI prompts must be done in the form editor UI directly.\n\nWhat would you like to do?`,
     currentState: {
       forms: (forms?.data || []).map((f) => {
         const fId = String(f._id);
@@ -264,7 +280,6 @@ export default function ApplicationsCard() {
         privacyPolicyUrl: b.privacyPolicyUrl || "",
         termsOfServiceUrl: b.termsOfServiceUrl || "",
       })),
-      homeBranding,
       availableEmailTemplates: (allEmailTemplates?.data || []).map((t) => ({
         _id: t._id,
         name: t.templateName,
@@ -359,119 +374,145 @@ export default function ApplicationsCard() {
       },
       // Preview-mode: accumulate section setting changes locally; nothing written to DB yet.
       updateSectionSettings: ({ updates }) => {
-        setPendingFormEdits((prev) => {
-          const base = prev || {
-            formId: selectedFormForEditing,
-            sectionUpdates: {},
-            fieldUpdates: {},
-            sectionOrder: null,
-            deletedSections: [],
+        const base = pendingFormEditsRef.current || {
+          formId: selectedFormForEditing,
+          sectionUpdates: {},
+          fieldUpdates: {},
+          sectionOrder: null,
+          deletedSections: [],
+        };
+        const sectionUpdates = { ...base.sectionUpdates };
+        for (const {
+          sectionId,
+          displayText,
+          displayTextFormattingInstructions,
+          signDisplayText,
+          aiCustomizablePrompt,
+          aiFormatting,
+          isSignAiHelp,
+          signAiPrompt,
+          ownerSuggestions,
+          isHidden,
+        } of updates) {
+          sectionUpdates[String(sectionId)] = {
+            ...(sectionUpdates[String(sectionId)] || {}),
+            ...(displayText !== undefined && { displayText }),
+            ...(displayTextFormattingInstructions !== undefined && { displayTextFormattingInstructions }),
+            ...(signDisplayText !== undefined && { signDisplayText }),
+            ...(aiCustomizablePrompt !== undefined && { aiCustomizablePrompt }),
+            ...(aiFormatting !== undefined && { aiFormatting }),
+            ...(isSignAiHelp !== undefined && { isSignAiHelp }),
+            ...(signAiPrompt !== undefined && { signAiPrompt }),
+            ...(ownerSuggestions !== undefined && { ownerSuggestions }),
+            ...(isHidden !== undefined && { isHidden }),
           };
-          const sectionUpdates = { ...base.sectionUpdates };
-          for (const {
-            sectionId,
-            displayText,
-            signDisplayText,
-            aiCustomizablePrompt,
-            aiFormatting,
-            isSignAiHelp,
-            signAiPrompt,
-            ownerSuggestions,
-          } of updates) {
-            sectionUpdates[String(sectionId)] = {
-              ...(sectionUpdates[String(sectionId)] || {}),
-              ...(displayText !== undefined && { displayText }),
-              ...(signDisplayText !== undefined && { signDisplayText }),
-              ...(aiCustomizablePrompt !== undefined && { aiCustomizablePrompt }),
-              ...(aiFormatting !== undefined && { aiFormatting }),
-              ...(isSignAiHelp !== undefined && { isSignAiHelp }),
-              ...(signAiPrompt !== undefined && { signAiPrompt }),
-              ...(ownerSuggestions !== undefined && { ownerSuggestions }),
-            };
-          }
-          return { ...base, sectionUpdates };
-        });
+        }
+        const next = { ...base, sectionUpdates };
+        pendingFormEditsRef.current = next;
+        setPendingFormEdits(next);
       },
       // Preview-mode: accumulate field changes locally; nothing written to DB yet.
       updateFieldSettings: ({ updates }) => {
-        setPendingFormEdits((prev) => {
-          const base = prev || {
-            formId: selectedFormForEditing,
-            sectionUpdates: {},
-            fieldUpdates: {},
-            sectionOrder: null,
-            deletedSections: [],
-          };
-          const fieldUpdates = { ...base.fieldUpdates };
-          for (const { sectionId, fields: fieldChanges } of updates) {
-            const sectionMap = { ...(fieldUpdates[String(sectionId)] || {}) };
-            for (const {
-              fieldId,
-              label,
-              name,
-              displayText,
-              isDisplayText,
-              placeholder,
-              aiHelp,
-              aiPrompt,
-              aiResponse,
-              ai_formatting,
-            } of fieldChanges) {
-              sectionMap[String(fieldId)] = {
-                ...(sectionMap[String(fieldId)] || {}),
-                ...(label !== undefined && { label }),
-                ...(name !== undefined && { name }),
-                ...(displayText !== undefined && { displayText }),
-                ...(isDisplayText !== undefined && { isDisplayText }),
-                ...(placeholder !== undefined && { placeholder }),
-                ...(aiHelp !== undefined && { aiHelp }),
-                ...(aiPrompt !== undefined && { aiPrompt }),
-                ...(aiResponse !== undefined && { aiResponse }),
-                ...(ai_formatting !== undefined && { ai_formatting }),
-              };
-            }
-            fieldUpdates[String(sectionId)] = sectionMap;
+        const base = pendingFormEditsRef.current || {
+          formId: selectedFormForEditing,
+          sectionUpdates: {},
+          fieldUpdates: {},
+          sectionOrder: null,
+          deletedSections: [],
+        };
+        const fieldUpdates = { ...base.fieldUpdates };
+        for (const { sectionId, fields: fieldChanges } of updates) {
+          const sectionMap = { ...(fieldUpdates[String(sectionId)] || {}) };
+          for (const {
+            fieldId,
+            label,
+            name,
+            displayText,
+            isDisplayText,
+            placeholder,
+            aiHelp,
+            aiPrompt,
+            aiResponse,
+            ai_formatting,
+          } of fieldChanges) {
+            sectionMap[String(fieldId)] = {
+              ...(sectionMap[String(fieldId)] || {}),
+              ...(label !== undefined && { label }),
+              ...(name !== undefined && { name }),
+              ...(displayText !== undefined && { displayText }),
+              ...(isDisplayText !== undefined && { isDisplayText }),
+              ...(placeholder !== undefined && { placeholder }),
+              ...(aiHelp !== undefined && { aiHelp }),
+              ...(aiPrompt !== undefined && { aiPrompt }),
+              ...(aiResponse !== undefined && { aiResponse }),
+              ...(ai_formatting !== undefined && { ai_formatting }),
+            };
           }
-          return { ...base, fieldUpdates };
-        });
+          fieldUpdates[String(sectionId)] = sectionMap;
+        }
+        const next = { ...base, fieldUpdates };
+        pendingFormEditsRef.current = next;
+        setPendingFormEdits(next);
       },
       // Preview-mode: store a new section ordering locally.
       reorderSections: ({ sectionOrder }) => {
-        setPendingFormEdits((prev) => {
-          const base = prev || {
-            formId: selectedFormForEditing,
-            sectionUpdates: {},
-            fieldUpdates: {},
-            sectionOrder: null,
-            deletedSections: [],
-          };
-          return { ...base, sectionOrder };
-        });
+        const base = pendingFormEditsRef.current || {
+          formId: selectedFormForEditing,
+          sectionUpdates: {},
+          fieldUpdates: {},
+          sectionOrder: null,
+          deletedSections: [],
+        };
+        const next = { ...base, sectionOrder };
+        pendingFormEditsRef.current = next;
+        setPendingFormEdits(next);
       },
       // Preview-mode: mark a section as deleted locally.
       deleteSection: ({ sectionId }) => {
-        setPendingFormEdits((prev) => {
-          const base = prev || {
-            formId: selectedFormForEditing,
-            sectionUpdates: {},
-            fieldUpdates: {},
-            sectionOrder: null,
-            deletedSections: [],
-          };
-          const deletedSections = base.deletedSections.includes(String(sectionId))
-            ? base.deletedSections
-            : [...base.deletedSections, String(sectionId)];
-          return { ...base, deletedSections };
-        });
+        const base = pendingFormEditsRef.current || {
+          formId: selectedFormForEditing,
+          sectionUpdates: {},
+          fieldUpdates: {},
+          sectionOrder: null,
+          deletedSections: [],
+        };
+        const deletedSections = base.deletedSections.includes(String(sectionId))
+          ? base.deletedSections
+          : [...base.deletedSections, String(sectionId)];
+        const next = { ...base, deletedSections };
+        pendingFormEditsRef.current = next;
+        setPendingFormEdits(next);
       },
       // Discard all pending preview edits.
       discardFormEdits: () => {
+        pendingFormEditsRef.current = null;
         setPendingFormEdits(null);
+      },
+      // Add a new section directly to the DB, then reload the form.
+      addSection: async ({ formId, title, name, key, isHidden, position }) => {
+        const res = await addFormSectionMutation({ formId, title, name, key, isHidden, position }).unwrap();
+        if (!res?.success) throw new Error(res?.message);
+        setSelectedFormForEditing(null);
+        setTimeout(() => setSelectedFormForEditing(formId), 0);
+        return res.data;
+      },
+      // Add a new field directly to the DB, then reload the form.
+      addField: async ({ sectionId, label, type, required, placeholder, options }) => {
+        const fieldData = { label, type, required: required || false };
+        if (placeholder) fieldData.placeholder = placeholder;
+        if (options?.length) fieldData.options = options;
+        const res = await updateDeleteCreateFormFields({ sectionId, fieldsData: [fieldData] }).unwrap();
+        if (!res?.success) throw new Error(res?.message);
+        const currentFormId = selectedFormForEditing;
+        setSelectedFormForEditing(null);
+        setTimeout(() => setSelectedFormForEditing(currentFormId), 0);
+        return res;
       },
       // Commit all pending preview edits to the database.
       saveFormEdits: async () => {
-        const edits = pendingFormEdits;
-        if (!edits) return;
+        const edits = pendingFormEditsRef.current;
+        console.log("[saveFormEdits] edits from ref:", JSON.stringify(edits));
+        if (!edits) return { saved: false };
         const errors = [];
         const deleted = edits.deletedSections || [];
 
@@ -489,31 +530,117 @@ export default function ApplicationsCard() {
         if (edits.sectionOrder) {
           try {
             const filteredOrder = edits.sectionOrder.filter((id) => !deleted.includes(String(id)));
+            console.log("[saveFormEdits] calling reorderFormSectionsMutation:", {
+              formId: edits.formId,
+              sectionOrder: filteredOrder,
+            });
             const res = await reorderFormSectionsMutation({
               formId: edits.formId,
               sectionOrder: filteredOrder,
             }).unwrap();
+            console.log("[saveFormEdits] reorder result:", res);
             if (!res?.success) throw new Error(res?.message);
           } catch (err) {
+            console.error("[saveFormEdits] reorder error:", err);
             errors.push(`Reorder: ${err?.data?.message || err?.message}`);
           }
         }
 
+        // 2b. Auto-hide: sections after the agreement/signature block → hidden; sections before → visible
+        if (edits.sectionOrder) {
+          const allSections = singleFormDataRef.current?.data?.sections || [];
+          const sectionById = new Map(allSections.map((s) => [String(s._id), s]));
+          const filteredOrder = edits.sectionOrder.filter((id) => !deleted.includes(String(id)));
+          const agreementIdx = filteredOrder.findIndex((id) => {
+            const s = sectionById.get(String(id));
+            return s?.isSignature || s?.key === "agreement_blk";
+          });
+          if (agreementIdx !== -1) {
+            for (let i = 0; i < filteredOrder.length; i++) {
+              const sectionId = filteredOrder[i];
+              const section = sectionById.get(String(sectionId));
+              if (!section) continue;
+              const shouldBeHidden = i > agreementIdx;
+              if (!!section.isHidden !== shouldBeHidden) {
+                try {
+                  await updateFormSection({ _id: sectionId, data: { isHidden: shouldBeHidden } }).unwrap();
+                } catch (err) {
+                  console.error("[saveFormEdits] auto-hide error for section", sectionId, err);
+                }
+              }
+            }
+          }
+        }
+
         // 3. Section setting updates
+        console.log("[saveFormEdits] sectionUpdates:", edits.sectionUpdates);
         for (const [sectionId, upd] of Object.entries(edits.sectionUpdates || {})) {
           if (deleted.includes(String(sectionId))) continue;
           try {
+            const currentSection = singleFormDataRef.current?.data?.sections?.find(
+              (s) => String(s._id) === String(sectionId),
+            );
+            console.log("[saveFormEdits] section upd:", JSON.stringify(upd));
+            console.log(
+              "[saveFormEdits] currentSection displayText:",
+              currentSection?.displayText,
+              "| displayTextFormattingInstructions:",
+              currentSection?.displayTextFormattingInstructions,
+              "| ai_formatting:",
+              currentSection?.ai_formatting?.slice?.(0, 80),
+            );
             const payload = {};
             if (upd.displayText !== undefined) payload.displayText = upd.displayText;
+            if (upd.displayTextFormattingInstructions !== undefined)
+              payload.displayTextFormattingInstructions = upd.displayTextFormattingInstructions;
             if (upd.signDisplayText !== undefined) payload.signDisplayText = upd.signDisplayText;
             if (upd.aiCustomizablePrompt !== undefined) payload.aiCustomizablePrompt = upd.aiCustomizablePrompt;
-            if (upd.aiFormatting !== undefined) payload.aiFormatting = upd.aiFormatting;
+            // aiFormatting is never saved directly from AI tool args — always generated by the pipeline below
             if (upd.isSignAiHelp !== undefined) payload.isSignAiHelp = upd.isSignAiHelp;
             if (upd.signAiPrompt !== undefined) payload.signAiPrompt = upd.signAiPrompt;
             if (upd.ownerSuggestions?.length) payload.ownerSuggesstions = upd.ownerSuggestions;
+            if (upd.isHidden !== undefined) payload.isHidden = upd.isHidden;
+
+            // When displayText or displayTextFormattingInstructions changed, run the formatting pipeline
+            // to regenerate ai_formatting (the HTML shown to applicants), just like the Edit modal does.
+            // Note: upd.aiFormatting is intentionally ignored here — the backend sanitizer remaps it to
+            // displayTextFormattingInstructions before it reaches the frontend.
+            if (upd.displayText !== undefined || upd.displayTextFormattingInstructions !== undefined) {
+              const textToFormat = upd.displayText ?? currentSection?.displayText ?? "";
+              const instructions =
+                upd.displayTextFormattingInstructions ?? currentSection?.displayTextFormattingInstructions ?? "";
+              console.log(
+                "[saveFormEdits] formatting pipeline — textToFormat:",
+                JSON.stringify(textToFormat),
+                "| instructions:",
+                JSON.stringify(instructions),
+              );
+              if (textToFormat) {
+                try {
+                  const formatRes = await formateTextInMarkDown({ text: textToFormat, instructions }).unwrap();
+                  console.log("[saveFormEdits] format result:", JSON.stringify(formatRes?.data)?.slice(0, 120));
+                  if (formatRes?.data) payload.aiFormatting = formatRes.data;
+                } catch (fmtErr) {
+                  console.error("[saveFormEdits] format text error — ai_formatting not updated:", fmtErr);
+                  // Do not fall back to raw text; leave ai_formatting unchanged rather than corrupt it
+                }
+              } else {
+                console.warn(
+                  "[saveFormEdits] textToFormat is empty — formatting pipeline skipped, ai_formatting not updated",
+                );
+              }
+            } else {
+              console.log(
+                "[saveFormEdits] formatting pipeline skipped — displayText/displayTextFormattingInstructions not in upd, or aiFormatting explicitly set",
+              );
+            }
+
+            console.log("[saveFormEdits] calling updateFormSection:", { _id: sectionId, data: payload });
             const res = await updateFormSection({ _id: sectionId, data: payload }).unwrap();
+            console.log("[saveFormEdits] updateFormSection result:", res);
             if (!res?.success) throw new Error(res?.message);
           } catch (err) {
+            console.error("[saveFormEdits] section update error:", err);
             errors.push(`Section ${sectionId}: ${err?.data?.message || err?.message}`);
           }
         }
@@ -522,7 +649,7 @@ export default function ApplicationsCard() {
         for (const [sectionId, fieldMap] of Object.entries(edits.fieldUpdates || {})) {
           if (deleted.includes(String(sectionId))) continue;
           try {
-            const section = singleFormData?.data?.sections?.find((s) => String(s._id) === String(sectionId));
+            const section = singleFormDataRef.current?.data?.sections?.find((s) => String(s._id) === String(sectionId));
             if (!section) continue;
             const fieldsData = (section.fields || []).map((field) => {
               const upd = fieldMap[String(field._id)];
@@ -547,9 +674,11 @@ export default function ApplicationsCard() {
           }
         }
 
+        pendingFormEditsRef.current = null;
         setPendingFormEdits(null);
         await refetch();
         if (errors.length) throw new Error(`Saved with ${errors.length} error(s): ${errors.join("; ")}`);
+        return { saved: true };
       },
       updateForms: async ({ updates }) => {
         const errors = [];
@@ -576,12 +705,6 @@ export default function ApplicationsCard() {
           dispatchUserRefresh,
         });
         await refetch();
-      },
-      openApplyBrandingModal: ({ brandingId, formId, applyToHome } = {}) => {
-        if (formId) setSelectedId(formId);
-        if (brandingId) setSelectedBranding(brandingId);
-        if (applyToHome !== undefined) setOnHome(!!applyToHome);
-        setOpenModal(true);
       },
       setFormsLocation: async ({ updates }) => {
         const errors = [];
@@ -680,7 +803,15 @@ export default function ApplicationsCard() {
   const finalizeFormCreation = async (res) => {
     if (res.data?._id && res.data?.name) {
       await updateForm({ _id: res.data._id, data: { headerText: res.data.name } }).unwrap();
+      if (homeBranding?._id) {
+        await addFromBranding({ brandingId: homeBranding._id, formId: res.data._id, onHome: "no" }).unwrap();
+      }
       await refetch();
+      setIsOpen(true);
+      addMessage({
+        role: "assistant",
+        content: `Form **"${res.data.name}"** was created successfully${homeBranding?._id ? " and the default branding has been applied" : ""}. You can now configure its sections, fields, AI prompts, and email templates — just let me know what you'd like to do next.`,
+      });
     }
   };
 
@@ -884,7 +1015,13 @@ export default function ApplicationsCard() {
           }}
           title="Form Name Already Exists"
         >
-          <div className="flex flex-col gap-4 p-4">
+          <form
+            className="flex flex-col gap-4 p-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (pendingFormName.trim() && !isLoading) createFormWithNameOverrideHandler();
+            }}
+          >
             <p className="text-sm text-gray-600">
               A form with this name already exists. Please enter a different name to continue.
             </p>
@@ -894,9 +1031,15 @@ export default function ApplicationsCard() {
               value={pendingFormName}
               onChange={(e) => setPendingFormName(e.target.value)}
               name="form-name-override"
+              autoFocus
+              onFocus={(e) => {
+                const len = e.target.value.length;
+                e.target.setSelectionRange(len, len);
+              }}
             />
             <div className="flex justify-end gap-2">
               <Button
+                type="button"
                 variant="secondary"
                 label="Cancel"
                 onClick={() => {
@@ -906,12 +1049,13 @@ export default function ApplicationsCard() {
                 }}
               />
               <Button
+                type="submit"
                 label="Create"
+                loading={isLoading}
                 className={`${(!pendingFormName.trim() || isLoading) && "pointer-events-none cursor-not-allowed opacity-50"}`}
-                onClick={createFormWithNameOverrideHandler}
               />
             </div>
-          </div>
+          </form>
         </Modal>
       )}
       <div className="mb-6 flex items-center justify-between">
@@ -1083,24 +1227,17 @@ export default function ApplicationsCard() {
                 <div className="flex items-start gap-2 md:gap-4">
                   {/* <CardIcon /> */}
                   <div className="mt-4 min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex flex-col item-start justify-between gap-2">
                       <h2 className="text-base leading-tight font-bold wrap-break-word text-gray-700 sm:text-lg md:text-2xl">
-                        {form?.headerText || form?.name}
+                        {form?.name}
                       </h2>
+                      <p className="text-sm leading-tight font-bold wrap-break-word text-gray-400">
+                        {form?.headerText}
+                      </p>
                     </div>
-                    {/* <div className="mt-1 truncate text-xs text-gray-500 sm:text-sm">Created from CSV import</div> */}
                   </div>
                 </div>
-                {/* <div className="mt-3 space-y-1 text-sm text-gray-700 md:mt-3 md:text-base">
-        <div className="flex items-center gap-1 md:gap-2">
-          <FaCheck className="text-primary" />
-          <span>{form?.sections?.length} form sections</span>
-        </div>{' '}
-        <div className="flex items-center gap-1 md:gap-2">
-          <FaCheck className="text-primary" />
-          <span>AI-assisted completion available</span>
-        </div>
-      </div> */}
+
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
                   {/* <span className="text-gray-500">Applicants: {form?.sections?.length}</span> */}
                   <span className="text-gray-500">

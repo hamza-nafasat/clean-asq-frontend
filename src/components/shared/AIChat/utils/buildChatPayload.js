@@ -1,41 +1,24 @@
-import { AI_CHAT_MODE } from "../constants/aiChatConstants.js";
-import { resolveDefaultResponseLanguage } from "./detectTextLanguage.js";
-
 /**
  * Build the standard POST body for /api/ai/* chat endpoints.
- * Always includes customPrompt when provided (branding personality).
+ * Matches the wire payload sent by the stagging AIChatWidget exactly:
+ *   { messages, context: { screenId, screenName, description, currentState,
+ *     logos, colorPalette, forms, brandingId, maxHelpMode, formLanguage? } }
+ * `formLanguage` is only included when it is a non-English language.
  */
-export function buildChatPayload({
-  messages,
-  ctx,
-  assistantMode,
-  customPrompt,
-  formLanguage,
-  defaultResponseLanguage,
-}) {
-  const resolvedDefault =
-    defaultResponseLanguage || resolveDefaultResponseLanguage({ customPrompt, formLanguage });
-
-  return {
-    messages,
-    chatMode: AI_CHAT_MODE,
-    context: {
-      screenId: ctx?.screenId,
-      screenName: ctx?.screenName,
-      description: ctx?.description,
-      currentState: ctx?.currentState,
-      logos: ctx?.logos,
-      colorPalette: ctx?.colorPalette || undefined,
-      forms: ctx?.forms || ctx?.currentState?.forms || undefined,
-      brandingId: ctx?.brandingId || undefined,
-      homeBranding: ctx?.homeBranding || ctx?.currentState?.homeBranding || undefined,
-      availableForms: ctx?.availableForms || ctx?.currentState?.availableForms || undefined,
-      availableBrandings: ctx?.availableBrandings || ctx?.currentState?.availableBrandings || undefined,
-      maxHelpMode: assistantMode === "applicant",
-      formLanguage: formLanguage && formLanguage !== "English" ? formLanguage : undefined,
-      customPrompt: customPrompt || undefined,
-      defaultResponseLanguage:
-        resolvedDefault?.code && resolvedDefault.code !== "en" ? resolvedDefault : undefined,
-    },
+export function buildChatPayload({ messages, ctx, assistantMode, currentState, formLanguage }) {
+  const context = {
+    screenId: ctx?.screenId,
+    screenName: ctx?.screenName,
+    description: ctx?.description,
+    currentState: currentState !== undefined ? currentState : ctx?.currentState,
+    logos: ctx?.logos,
+    colorPalette: ctx?.colorPalette || undefined,
+    forms: ctx?.forms || undefined,
+    brandingId: ctx?.brandingId || undefined,
+    maxHelpMode: assistantMode === "applicant",
   };
+  if (formLanguage && formLanguage !== "English") {
+    context.formLanguage = formLanguage;
+  }
+  return { messages, context };
 }

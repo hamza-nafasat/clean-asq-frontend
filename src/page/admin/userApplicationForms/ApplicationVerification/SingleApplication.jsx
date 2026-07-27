@@ -9,6 +9,7 @@ import TextField from "@/components/shared/small/TextField";
 import { ID_ISSUE_STATES_AND_COUNTRIES, MAJOR_CITIES } from "@/data/constants";
 import { useApplicantScreenContext } from "@/hooks/useApplicantScreenContext";
 import useApplyBranding from "@/hooks/useApplyBranding";
+import { usePageDownload } from "@/hooks/usePageDownload";
 import getEnv from "@/lib/env";
 import { socket } from "@/main";
 import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from "@/redux/apis/authApis";
@@ -98,7 +99,6 @@ export default function SingleApplication() {
     data: { name: "data", value: "null" },
   });
   const autocompleteRef = useRef(null);
-  const emailFormRef = useRef(null); // email/OTP fields for AI DOM discovery + guided lock scoping
   const idMissionFormRef = useRef(null); // used by DOM field discovery
   const initialDataLoadRef = useRef(null); // tracks the in-flight getSavedFormDataAndSaveInRedux promise
   const navigatingAwayRef = useRef(false); // set true before navigate() to suppress idmission-qr stage during the outbound render
@@ -121,6 +121,44 @@ export default function SingleApplication() {
   );
 
   const idMissionSection = form?.data?.sections?.find((sec) => sec?.title?.toLowerCase() == "id_verification_blk");
+
+  // Download button — shown only when idMissionFormRef is mounted (IDMission details stage).
+  // getHasFields returns false when the ref is null (QR / OTP stages), so shouldShow auto-toggles
+  // without any hardcoded stage checks.
+  const { buttonLabel: downloadLabel, shouldShow: showDownload, handleDownload, isDownloading } = usePageDownload({
+    pageName: idMissionSection?.name || "Identity Verification",
+    displayHtml: form?.data?.idMissionDataDisplayFormatedText || "",
+    userName: [user?.firstName, user?.lastName].filter(Boolean).join(" ") || null,
+    userEmail: user?.email || null,
+    signDisplayHtml:
+      form?.data?.idMissionSignDisplayFormatedText ||
+      form?.data?.idMissionSignDisplayText ||
+      idMissionSection?.signDisplayFormattedText ||
+      idMissionSection?.signDisplayText ||
+      null,
+    getHasFields: () => {
+      const el = idMissionFormRef.current;
+      if (!el) return false;
+      return el.querySelectorAll("input:not([type=hidden]):not([type=file]), select, textarea").length > 0;
+    },
+    getFieldRows: () => {
+      if (!idMissionFormRef.current) return [];
+      const rows = [];
+      idMissionFormRef.current
+        .querySelectorAll("input:not([type=hidden]):not([type=file]), select, textarea")
+        .forEach((el) => {
+          const value = el.value?.trim();
+          if (!value) return;
+          // TextField renders an <h4> label as a sibling of the input's wrapper div
+          const wrapperDiv = el.closest("div");
+          const h4 = wrapperDiv?.parentElement?.querySelector("h4");
+          const label = h4?.textContent?.trim() || el.placeholder || el.name || el.id;
+          if (label) rows.push({ label: label.replace(/[*:]+$/, "").trim(), value });
+        });
+      return rows;
+    },
+    signatureUrl: idMissionVerifiedData?.signature?.value?.secureUrl || null,
+  });
   const handleSignature = async (file, setIsSaving) => {
     try {
       if (!file) return toast.error("Please add signature");
@@ -145,7 +183,6 @@ export default function SingleApplication() {
     }
   };
 
-  const isGuestApplicant = user?.role?.name === "guest" || user?.role === "guest";
   const aiStage =
     !emailVerified || emailVerifiedLoading || navigatingAwayRef.current
       ? "email"
@@ -169,11 +206,7 @@ export default function SingleApplication() {
             ? "The applicant scans a QR code (or uses a web link) with their phone to complete photo ID verification through IDMission. No form fields to fill at this step — they must use the QR code or web link."
             : 'The applicant completes their personal details and adds their signature to proceed. Some fields may already be filled from identity verification — present those pre-filled values to the applicant for confirmation before moving on to empty fields. For the roleFillingForCompany field, valid values are: "both" (operator and primary contact), "primaryContact" (primary contact only), or "primaryOperatorAndController" (C-level executive or owner). Present these as readable choices to the applicant.',
       aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
-      // Keep this page manually editable for everyone (including guest applicants) so the
-      // email/OTP and IDMission detail fields stay enabled. The AI assistant can still fill
-      // these fields via the DOM.
-      allowManualEdit: true,
-      formRef: aiStage === "idmission-details" ? idMissionFormRef : aiStage === "email" ? emailFormRef : null,
+      formRef: aiStage === "idmission-details" ? idMissionFormRef : null,
       currentState: {
         ...(aiStage === "email" && {
           otpSent,
@@ -240,11 +273,7 @@ export default function SingleApplication() {
                   else dispatch(userNotExist());
                 })
                 .catch(() => dispatch(userNotExist()));
-              // After email is verified, always send the applicant to company verification.
-              // Once that page is completed it redirects back to /application-form/... where
-              // this screen (with emailVerified=true) fetches the IDMission QR code.
-              navigatingAwayRef.current = true;
-              navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
+              await getSavedFormDataAndSaveInRedux();
               return res;
             } finally {
               setLoadingForValidatingOtp(false);
@@ -253,7 +282,7 @@ export default function SingleApplication() {
           },
         }),
       },
-      deps: [aiStage, email, otp, webLink, idMissionVerifiedData, isGuestApplicant],
+      deps: [aiStage, email, otp, webLink, idMissionVerifiedData],
     },
     { clearOnMount: !emailVerified, autoOpen: false },
   );
@@ -1234,10 +1263,15 @@ export default function SingleApplication() {
         <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
       ) : (
         <div className="mt-14 h-full overflow-auto text-center" data-testid="single-application">
+          {showDownload && (
+            <div className="flex justify-end mb-2 px-2">
+              <Button variant="secondary" onClick={handleDownload} label={downloadLabel} disabled={isDownloading} />
+            </div>
+          )}
           {!idMissionVerified ? (
             !emailVerified ? (
               <>
-                <div ref={emailFormRef} className="flex flex-col items-center gap-3 w-full">
+                <div className="flex flex-col items-center gap-3 w-full">
                   {isCreator && (
                     <div className="flex w-full items-center justify-end">
                       <Button label="Edit OTP Display Text" onClick={() => setOpenOtpDisplayTextModal(true)} />

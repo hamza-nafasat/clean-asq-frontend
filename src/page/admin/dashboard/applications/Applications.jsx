@@ -3,8 +3,6 @@ import Button from "@/components/shared/small/Button";
 import CustomizableSelect from "@/components/shared/small/CustomizeableSelect";
 import Modal from "@/components/shared/small/Modal";
 import TextField from "@/components/shared/small/TextField";
-import { useScreenContext } from "@/hooks/useScreenContext";
-import getEnv from "@/lib/env";
 import {
   useDeleteSingleSubmitFormMutation,
   useGetAllSubmitFormsQuery,
@@ -12,14 +10,12 @@ import {
   useGetSubmittedFormUsersQuery,
   useGiveSpecialAccessToUserMutation,
 } from "@/redux/apis/formApis";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { ApplicationPdfViewCommonProps } from "../../userApplicationForms/ApplicationVerification/ApplicationPdfView";
 // import Modal from '@/components/admin/shared/Modal';
 
 function Applications() {
-  const navigate = useNavigate();
   const { data, isLoading: isLoadingForm, refetch } = useGetAllSubmitFormsQuery();
   const [deleteSubmitForm] = useDeleteSingleSubmitFormMutation();
 
@@ -52,8 +48,13 @@ function Applications() {
 
   const handleDeleteApplication = useCallback(
     async (id) => {
-      await deleteApplicationsByIds([id]);
-      toast.success("Application deleted");
+      setIsLoading(true);
+      try {
+        await deleteApplicationsByIds([id]);
+        toast.success("Application deleted");
+      } finally {
+        setIsLoading(false);
+      }
     },
     [deleteApplicationsByIds],
   );
@@ -65,49 +66,6 @@ function Applications() {
   useEffect(() => {
     if (!isLoadingForm && data?.data) setApplicants(data?.data);
   }, [data, isLoadingForm]);
-
-  const applicantsForAi = useMemo(
-    () =>
-      (applicants || []).map((a) => ({
-        _id: a._id,
-        firstName: a.user?.firstName || "",
-        lastName: a.user?.lastName || "",
-        email: a.user?.email || "",
-        formName: a.form?.name || "",
-        status: a.status || "",
-        submittedDate: a.updatedAt ? a.updatedAt.split("T")[0] : "",
-      })),
-    [applicants],
-  );
-
-  useScreenContext({
-    screenId: "applications-list",
-    screenName: "Applications",
-    assistantName: "Applications Review Assistant",
-    aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applications-list-chat`,
-    greeting:
-      "Hi! I'm your **Applications Review Assistant**.\n\nI can help you:\n- **Find and describe** submitted applications\n- **Open an application** for PDF/detail review\n- **Open underwriting** for a submission\n- **Delete** submissions (with confirmation)\n- **Navigate** to other admin screens\n\nNote: Forward Form must be done from the row menu — I can't open that dialog from chat.\n\nWhat would you like to do?",
-    description: "The Applications screen lists submitted applications for admin review.",
-    currentState: {
-      applicants: applicantsForAi,
-      filters,
-    },
-    actions: {
-      viewApplication: ({ applicationId }) => {
-        const row = applicants.find((a) => String(a._id) === String(applicationId));
-        if (row) handleViewApplicant(row);
-      },
-      openUnderwriting: ({ applicationId }) => {
-        if (applicationId) navigate(`/underwriting/${applicationId}`);
-      },
-      deleteApplications: ({ applicationIds }) => deleteApplicationsByIds(applicationIds),
-    },
-    deps: {
-      count: applicantsForAi.length,
-      filterKey: JSON.stringify(filters),
-      ids: applicantsForAi.map((a) => a._id).join(","),
-    },
-  });
 
   return (
     <>

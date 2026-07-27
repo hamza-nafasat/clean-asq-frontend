@@ -6,7 +6,9 @@ import CustomSection from "@/components/applicationVerification/CustomSection";
 import Documents from "@/components/applicationVerification/Documents";
 import ProcessingInfo from "@/components/applicationVerification/ProcessingInfo";
 import CustomLoading from "@/components/shared/small/CustomLoading";
+import Button from "@/components/shared/small/Button";
 import useApplyBranding from "@/hooks/useApplyBranding";
+import { usePageDownload } from "@/hooks/usePageDownload";
 import {
   useGetSavedFormMutation,
   useGetSingleFormQueryQuery,
@@ -57,6 +59,7 @@ export default function ApplicationForm() {
   const [currentStep, setCurrentStep] = useState(step ? parseInt(step) : 0);
   const [sectionNames, setSectionNames] = useState([]);
   const [stepsComps, setStepsComps] = useState([]);
+  const [renderedSections, setRenderedSections] = useState([]);
   const [isSavedApiRun, setIsSavedApiRun] = useState(false);
 
   const { data: form, isLoading: formLoading, refetch: formRefetch } = useGetSingleFormQueryQuery({ _id: formId });
@@ -64,8 +67,6 @@ export default function ApplicationForm() {
   const [getSavedFormData] = useGetSavedFormMutation();
   const [saveFormInDraft] = useSaveFormInDraftMutation();
   const { isApplied } = useApplyBranding({ formId });
-  const isGuestApplicant = user?.role?.name === "guest" || user?.role === "guest";
-
   const handlePrevious = useCallback(() => {
     if (currentStep > 0) setCurrentStep(currentStep - 1);
   }, [currentStep]);
@@ -120,10 +121,6 @@ export default function ApplicationForm() {
     screenName: sectionNames[currentStep] || "Application Form",
     description: `Multi-step application form. Applicant is on step ${currentStep + 1} of ${stepsComps.length}.`,
     aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
-    // Keep the whole stepper manually editable for everyone (including guest applicants)
-    // so all fields — inputs, radios, checkboxes, selects — stay enabled and clickable.
-    // The AI assistant can still fill these fields via the DOM.
-    allowManualEdit: true,
     formRef: stepContainerRef,
     currentState: {
       currentStep,
@@ -144,7 +141,7 @@ export default function ApplicationForm() {
         if (currentStep > 0) setCurrentStep(currentStep - 1);
       },
     },
-    deps: [currentStep, stepsComps.length, sectionNames[currentStep], form?.data?._id, isGuestApplicant],
+    deps: [currentStep, stepsComps.length, sectionNames[currentStep], form?.data?._id],
   });
   const handleSubmit = useCallback(
     async ({ data, name, setLoadingNext }) => {
@@ -269,6 +266,7 @@ export default function ApplicationForm() {
       const companyInformationStep = form?.data?.sections.find((step) => step.key === "company_information");
       const data = [];
       const stepNames = [];
+      const renderedSectionsArr = [];
       const isOwner = user?._id && user?._id === form?.data?.owner;
       // Only sections that map to a renderable step component count towards the stepper.
       // Sections with an unrecognized title are neither rendered nor counted, so
@@ -278,6 +276,7 @@ export default function ApplicationForm() {
         isOwner ? form?.data?.sections : form?.data?.sections?.filter((step) => !step?.isHidden)
       )?.filter((step) => RENDERABLE_SECTION_TITLES.includes(step?.title));
       visibleSections.forEach((step) => {
+        renderedSectionsArr.push(step);
         const sectionDataFromRedux = formData?.[step?.key];
         const commonProps = {
           _id: step._id,
@@ -324,6 +323,7 @@ export default function ApplicationForm() {
 
       setStepsComps(data);
       setSectionNames(stepNames);
+      setRenderedSections(renderedSectionsArr);
     }
   }, [
     currentStep,
@@ -339,6 +339,36 @@ export default function ApplicationForm() {
     saveInProgress,
     user?._id,
   ]);
+  const currentSection = renderedSections[currentStep];
+  const { buttonLabel: downloadLabel, handleDownload, isDownloading } = usePageDownload({
+    pageName: sectionNames[currentStep] || currentSection?.name || "Page",
+    displayHtml: currentSection?.ai_formatting || currentSection?.displayText || "",
+    userName: [user?.firstName, user?.lastName].filter(Boolean).join(" ") || null,
+    userEmail: user?.email || null,
+    signDisplayHtml: currentSection?.signDisplayFormattedText || currentSection?.signFormatedDisplayText || null,
+    getFieldRows: () => {
+      if (!stepContainerRef.current) return [];
+      const rows = [];
+      stepContainerRef.current.querySelectorAll("input, select, textarea").forEach((el) => {
+        if (el.type === "file" || el.type === "hidden") return;
+        const value = el.value?.trim();
+        if (!value) return;
+        const label =
+          document.querySelector(`label[for="${el.id}"]`)?.textContent?.trim() ||
+          el.getAttribute("data-ai-label") ||
+          el.placeholder ||
+          el.name ||
+          "";
+        if (label) rows.push({ label: label.replace(/[*:]+$/, "").trim(), value });
+      });
+      return rows;
+    },
+    // BankInfo stores signature flat (signature.secureUrl); AggrementBlock nests it (signature.value.secureUrl)
+    signatureUrl:
+      formData?.[currentSection?.key]?.signature?.value?.secureUrl ||
+      formData?.[currentSection?.key]?.signature?.secureUrl ||
+      null,
+  });
   if (!isApplied || !form?.data?._id)
     return (
       <>
@@ -353,7 +383,15 @@ export default function ApplicationForm() {
       data-testid="application-form"
       data-ai-loading={!isSavedApiRun ? "page" : undefined}
     >
-      <Stepper steps={sectionNames} currentStep={currentStep} visibleSteps={0} emptyRequiredFields={[]}>
+      <Stepper
+        steps={sectionNames}
+        currentStep={currentStep}
+        visibleSteps={0}
+        emptyRequiredFields={[]}
+        headerActions={
+          <Button variant="secondary" onClick={handleDownload} label={downloadLabel} disabled={isDownloading} />
+        }
+      >
         <div ref={stepContainerRef}>{stepsComps[currentStep]}</div>
       </Stepper>
     </div>

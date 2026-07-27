@@ -3,7 +3,6 @@ import ChatMessage from "../ChatMessage.jsx";
 import ADEPanel from "../ADEPanel.jsx";
 import PanelResizeHandles from "./PanelResizeHandles.jsx";
 import LanguageBanner from "./LanguageBanner.jsx";
-import { AI_CHAT_MODE } from "../constants/aiChatConstants.js";
 
 export default function ChatPanel({
   panelRef,
@@ -163,11 +162,9 @@ export default function ChatPanel({
               }
             }}
             placeholder={
-              AI_CHAT_MODE === "basic"
+              assistantMode === "applicant"
                 ? "Ask me anything about the application…"
-                : assistantMode === "applicant"
-                  ? "Ask for help with any field…"
-                  : "Ask me to change colors, fonts, layout…"
+                : "Ask me to change colors, fonts, layout…"
             }
             rows={1}
             className="flex-1 resize-none rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-200"

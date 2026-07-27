@@ -10,9 +10,7 @@ import { useScreenContext } from "@/hooks/useScreenContext";
 import getEnv from "@/lib/env";
 import {
   executeBrandingAssignment,
-  executeBrandingAssignments,
   getBrandingSettersFromHook,
-  mapHomeBranding,
 } from "@/lib/executeBrandingAssignment";
 import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/authApis";
 import {
@@ -26,7 +24,7 @@ import { MoreVertical, Pencil, Trash } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import DataTable from "react-data-table-component";
 import { FaExchangeAlt } from "react-icons/fa";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -43,8 +41,6 @@ const Brandings = () => {
   const [selectedBranding, setSelectedBranding] = useState(null);
 
   const { data: allFormsData, refetch: formRefetch } = useGetMyAllFormsQuery();
-  const user = useSelector((state) => state.auth.user);
-
   const { data: brandings = [], isLoading: isBrandingsLoading, refetch } = useGetAllBrandingsQuery();
   const [deleteBranding, { isLoading: isDeleting }] = useDeleteSingleBrandingMutation();
   const [addFromBranding] = useAddBrandingInFormMutation();
@@ -275,70 +271,57 @@ const Brandings = () => {
     };
   }, [actionMenu]);
 
-  const brandingListForAi = (brandings?.data || []).map((b) => ({
-    _id: b._id,
-    name: b.name,
-    url: b.url || "",
-    fontFamily: b.fontFamily || "",
-    logoCount: b.logos?.length || 0,
-    colors: b.colors || null,
-  }));
-
-  const availableForms = (allFormsData?.data || []).map((f) => ({
-    _id: f._id,
-    name: f.name,
-    branding: f.branding ? { _id: f.branding._id, name: f.branding.name } : null,
-  }));
-
-  const homeBranding = mapHomeBranding(user);
-
   useScreenContext({
     screenId: "branding-list",
     screenName: "Branding Management",
-    assistantName: "Branding List Assistant",
+    assistantName: "Branding Assistant",
     aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/branding-list-chat`,
-    greeting:
-      "Hi! I'm your **Branding List Assistant**.\n\nI can help you:\n- **Find and describe** branding profiles\n- **Apply branding** to forms and/or the home/website\n- **Open the create page** for a new branding\n- **Open any profile** for editing\n- **Delete** profiles (with confirmation)\n\nWhat would you like to do?",
-    description: "The Branding Management screen lists all branding profiles in the system.",
+    greeting: `Hi! I'm your **Branding Assistant**.\n\nI can help you:\n- **Search** your branding profiles by name, color, font, or URL\n- **Open** a branding for editing\n- **Delete** one or more brandings\n- **Create** a new branding profile\n- **Apply** a branding to application forms or the home page\n\nWhat would you like to do?`,
     currentState: {
-      brandings: brandingListForAi,
-      availableBrandings: brandingListForAi,
-      availableForms,
-      homeBranding,
+      forms: (allFormsData?.data || []).map((f) => ({
+        _id: f._id,
+        name: f.headerText || f.name || "Untitled",
+      })),
+      brandings: (brandings?.data || []).map((b) => ({
+        _id: b._id,
+        name: b.name,
+        url: b.url || "",
+        fontFamily: b.fontFamily || "",
+        logoCount: b.logos?.length || 0,
+        colors: {
+          primary: b.colors?.primary || "",
+          secondary: b.colors?.secondary || "",
+          accent: b.colors?.accent || "",
+          text: b.colors?.text || "",
+          background: b.colors?.background || "",
+        },
+      })),
     },
     actions: {
-      openCreateBranding: () => navigate("/branding/create"),
-      openEditBranding: ({ brandingId }) => navigate(`/branding/single/${brandingId}`),
       deleteBrandings: async ({ brandingIds }) => {
-        for (const id of brandingIds) {
-          await deleteBranding(id).unwrap();
+        const errors = [];
+        for (const brandingId of brandingIds) {
+          try {
+            const res = await deleteBranding(brandingId).unwrap();
+            if (!res?.success) throw new Error(res?.message);
+          } catch {
+            errors.push(brandingId);
+          }
         }
         await refetch();
+        if (errors.length) {
+          toast.error(`Failed to delete ${errors.length} of ${brandingIds.length} brandings`);
+          throw new Error(`Failed to delete ${errors.length} brandings`);
+        }
       },
-      setFormsBranding: async ({ updates }) => {
-        const { message } = await executeBrandingAssignments({
-          updates,
-          addBrandingMutation: addFromBranding,
-          getUserProfile,
-          brandingSetters,
-          dispatchUserRefresh,
-        });
-        await Promise.all([refetch(), formRefetch()]);
-        toast.success(message || "Branding applied successfully");
+      openEditBranding: ({ brandingId }) => {
+        navigate(`/branding/single/${brandingId}`);
       },
-      openApplyBrandingModal: ({ brandingId, formId, applyToHome } = {}) => {
-        if (brandingId) setSelectedBranding(brandingId);
-        if (formId) setSelectedId(formId);
-        if (applyToHome !== undefined) setOnHome(!!applyToHome);
-        setApplyModal(true);
+      openCreateBranding: () => {
+        navigate("/branding/create");
       },
     },
-    deps: {
-      count: brandingListForAi.length,
-      ids: brandingListForAi.map((b) => b._id).join(","),
-      formsCount: availableForms.length,
-      homeBrandingId: homeBranding?._id,
-    },
+    deps: [brandings?.data?.length, allFormsData?.data?.length],
   });
 
   if (isBrandingsLoading) return <CustomLoading />;

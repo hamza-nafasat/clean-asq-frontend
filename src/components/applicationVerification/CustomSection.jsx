@@ -1,3 +1,4 @@
+import DisplayText from "@/components/shared/DisplayText";
 import { FIELD_TYPES } from "@/data/constants";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -382,17 +383,9 @@ function CustomSection({
           <EditSectionDisplayTextFromatingModal step={step} setModal={setUpdateSectionFromatingModal} />
         </Modal>
       )}
-      {step?.ai_formatting && (
+      {(step?.ai_formatting || step?.displayText) && (
         <div className="flex w-full items-end justify-between gap-3">
-          <div
-            className="mt-2 mb-4 w-full"
-            dangerouslySetInnerHTML={{
-              __html: String(step?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
-                if (match.includes("target=")) return match; // avoid duplicates
-                return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-              }),
-            }}
-          />
+          <DisplayText className="mt-2 mb-4 w-full" html={step?.ai_formatting || step?.displayText} />
         </div>
       )}
       {step?.isIdMissionQr && (
@@ -488,11 +481,20 @@ function CustomSection({
       </div>
       <div className="mt-4">
         {isSignature && (
-          <SignatureBox
-            step={step}
-            onSave={signatureUploadHandler}
-            oldSignatureUrl={form?.signature?.value?.secureUrl || ""}
-          />
+          <>
+            {step?.signDisplayFormattedText && (
+              <div
+                className="mb-4"
+                data-ai-display-text
+                dangerouslySetInnerHTML={{ __html: String(step.signDisplayFormattedText) }}
+              />
+            )}
+            <SignatureBox
+              step={step}
+              onSave={signatureUploadHandler}
+              oldSignatureUrl={form?.signature?.value?.secureUrl || ""}
+            />
+          </>
         )}
       </div>
 

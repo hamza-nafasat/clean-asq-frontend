@@ -54,8 +54,6 @@ function CompanyVerification({ formId, brandingName }) {
   const [locationData, setLocationData] = useState({});
   const [isCreator, setIsCreator] = useState(false);
   const [openCompanyVerificationDisplayTextModal, setOpenCompanyVerificationDisplayTextModal] = useState(false);
-  const isGuestApplicant = user?.role?.name === "guest" || user?.role === "guest";
-
   useEffect(() => {
     if (user && formBackendData) {
       setIsCreator(user?._id && user?._id === formBackendData?.data?.owner && user?.role !== "guest");
@@ -165,10 +163,6 @@ function CompanyVerification({ formId, brandingName }) {
       "After all required fields are filled, call goToNextStep to submit and proceed automatically. " +
       'If the applicant says their company has no website, fill field "noWebsite" with value "true" to check the checkbox — this removes the URL requirement.',
     aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
-    // Keep this page manually editable for everyone (including guest applicants) so the
-    // company name / website URL fields and the "no website" checkbox stay enabled and
-    // Enter-to-advance works. The AI assistant can still fill these fields via the DOM.
-    allowManualEdit: true,
     formRef: companyFormRef,
     currentState: {}, // fields discovered from DOM via formRef
     actions: {
@@ -179,7 +173,7 @@ function CompanyVerification({ formId, brandingName }) {
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
       },
     },
-    deps: [form, isGuestApplicant],
+    deps: [form],
   });
 
   useEffect(() => {

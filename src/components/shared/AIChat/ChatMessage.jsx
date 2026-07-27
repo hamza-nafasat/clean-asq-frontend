@@ -1,9 +1,8 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import FormPreview from "./FormPreview";
-import { resolveMessageDirection } from "./utils/detectTextLanguage";
 
-const mdComponents = (dir) => ({
+const mdComponents = {
   table: ({ children }) => (
     <div className="overflow-x-auto my-2">
       <table className="w-full border-collapse text-xs">{children}</table>
@@ -13,18 +12,10 @@ const mdComponents = (dir) => ({
   tbody: ({ children }) => <tbody>{children}</tbody>,
   tr: ({ children }) => <tr className="border-b border-gray-200">{children}</tr>,
   th: ({ children }) => (
-    <th
-      className={`px-2 py-1 font-semibold text-gray-700 border border-gray-200 whitespace-nowrap ${dir === "rtl" ? "text-right" : "text-left"}`}
-    >
-      {children}
-    </th>
+    <th className="px-2 py-1 text-left font-semibold text-gray-700 border border-gray-200 whitespace-nowrap">{children}</th>
   ),
   td: ({ children }) => <td className="px-2 py-1 text-gray-600 border border-gray-200">{children}</td>,
-  p: ({ children }) => <p className="my-1.5 leading-relaxed">{children}</p>,
-  li: ({ children }) => <li className="my-0.5 leading-relaxed">{children}</li>,
-  ul: ({ children }) => <ul className="my-2 list-disc space-y-1 ps-5">{children}</ul>,
-  ol: ({ children }) => <ol className="my-2 list-decimal space-y-1 ps-5">{children}</ol>,
-});
+};
 
 const ColorSwatch = ({ color, label }) => (
   <div className="flex items-center gap-2 text-xs text-gray-600">
@@ -35,26 +26,33 @@ const ColorSwatch = ({ color, label }) => (
 );
 
 const PALETTE_LABELS = {
-  primaryColor: "Primary",
-  secondaryColor: "Secondary",
-  accentColor: "Accent",
-  textColor: "Text",
-  linkColor: "Link",
-  backgroundColor: "Background",
-  headerBackground: "Header BG",
-  footerBackground: "Footer BG",
-  headerText: "Header Text",
-  footerText: "Footer Text",
-  frameColor: "Frame",
-  highlightingColor: "Highlight",
-  buttonTextPrimary: "Button Primary",
-  buttonTextSecondary: "Button Secondary",
-  emailHeaderColor: "Email Header BG",
-  emailHeaderTextColor: "Email Header Text",
-  emailFooterColor: "Email Footer BG",
-  emailFooterTextColor: "Email Footer Text",
-  emailBodyColor: "Email Body BG",
-  emailTextColor: "Email Body Text",
+  headerBackground:       "Header Background",
+  headerText:             "Header Text",
+  primaryColor:           "Primary Button Color",
+  buttonBorderPrimary:    "Primary Button Border Color",
+  buttonTextPrimary:      "Primary Button Text Color",
+  secondaryColor:         "Secondary Button Color",
+  buttonBorderSecondary:  "Secondary Button Border Color",
+  buttonTextSecondary:    "Secondary Button Text Color",
+  accentColor:            "Accent Color",
+  backgroundColor:        "Form Background Color",
+  textColor:              "Form Text Color",
+  linkColor:              "Link Color",
+  frameColor:             "Frame Color",
+  highlightingColor:      "Highlighting Color",
+  footerBackground:       "Footer Background",
+  footerText:             "Footer Text",
+  emailHeaderColor:       "Email Header Background",
+  emailHeaderTextColor:   "Email Header Text Color",
+  emailTextColor:         "Email Body Text Color",
+  emailBodyColor:         "Email Body Background",
+  emailFooterColor:       "Email Footer Background",
+  emailFooterTextColor:   "Email Footer Text Color",
+  aiLaunchButtonColor:    "AI Launch Button Color",
+  aiHeaderColor:          "AI Header Color",
+  aiBannerColor:          "AI Banner Background",
+  aiBannerTextColor:      "AI Banner Text Color",
+  aiSliderColor:          "AI Slider Color",
 };
 
 const handleCsvSave = async (csvDownload) => {
@@ -95,14 +93,13 @@ export default function ChatMessage({
   const isPalette = message.toolCall?.tool === "generateColorPalette";
   const isApply = message.toolCall?.tool === "applyBrandingChanges";
   const isSuggest = message.toolCall?.tool === "suggestColors";
-  const textDir = resolveMessageDirection(message.content, message.lang);
 
   if (isUser) {
     return (
-      <div className={`flex ${textDir === "rtl" ? "justify-start" : "justify-end"}`} data-testid="ai-message-user">
+      <div className="flex justify-end" data-testid="ai-message-user">
         <div
-          className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${textDir === "rtl" ? "rounded-bl-sm text-right" : "rounded-br-sm"}`}
-          style={{ backgroundColor: accentColor, color: accentTextColor, direction: textDir, unicodeBidi: "plaintext" }}
+          className="max-w-[80%] rounded-2xl rounded-br-sm px-3 py-2 text-sm"
+          style={{ backgroundColor: accentColor, color: accentTextColor }}
         >
           {message.content}
         </div>
@@ -113,26 +110,28 @@ export default function ChatMessage({
   const isError = message.content?.trimStart().startsWith("⚠️");
 
   return (
-    <div className={`flex ${textDir === "rtl" ? "justify-end" : "justify-start"}`} data-testid="ai-message-assistant">
+    <div className="flex justify-start" data-testid="ai-message-assistant">
       <div
-        className={`max-w-[90%] rounded-2xl px-3 py-2 text-sm shadow-sm ${textDir === "rtl" ? "rounded-br-sm text-right" : "rounded-bl-sm"} ${isError ? "bg-red-50 border-2 border-red-400 text-red-800" : "bg-white border border-gray-100 text-gray-700"}`}
-        style={{ direction: textDir, unicodeBidi: "plaintext" }}
+        className={`max-w-[90%] rounded-2xl rounded-bl-sm px-3 py-2 text-sm shadow-sm ${isError ? "bg-red-50 border-2 border-red-400 text-red-800" : "bg-white border border-gray-100 text-gray-700"}`}
       >
-        <div
-          className={`prose prose-sm max-w-none prose-p:my-1 prose-headings:my-1 prose-ul:my-1 prose-li:my-0 leading-relaxed ${textDir === "rtl" ? "text-right" : ""}`}
-        >
-          <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents(textDir)}>
+        <div className="prose prose-sm max-w-none prose-p:my-1 prose-headings:my-1 prose-ul:my-1 prose-li:my-0">
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
             {message.content}
           </ReactMarkdown>
         </div>
 
         {/* Applied changes summary */}
         {isApply && message.toolCall?.changes && (
-          <div className="mt-2 flex flex-wrap gap-1">
+          <div className="mt-2 flex flex-col gap-1">
             {Object.entries(message.toolCall.changes)
-              .filter(([k, v]) => /^#/.test(v))
+              .filter(([, v]) => /^#/.test(v))
+              .sort(([a], [b]) => {
+                const order = Object.keys(PALETTE_LABELS);
+                const ai = order.indexOf(a); const bi = order.indexOf(b);
+                return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+              })
               .map(([key, value]) => (
-                <ColorSwatch key={key} color={value} label={PALETTE_LABELS[key]} />
+                <ColorSwatch key={key} color={value} label={PALETTE_LABELS[key] || key} />
               ))}
           </div>
         )}
@@ -202,7 +201,7 @@ export default function ChatMessage({
           <div className="mt-3">
             <div className="grid grid-cols-2 gap-1">
               {Object.entries(message.toolCall.palette)
-                .filter(([k, v]) => /^#/.test(v))
+                .filter(([, v]) => /^#/.test(v))
                 .map(([key, value]) => (
                   <ColorSwatch key={key} color={value} label={PALETTE_LABELS[key]} />
                 ))}

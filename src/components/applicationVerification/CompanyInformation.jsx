@@ -1,3 +1,4 @@
+import DisplayText from "@/components/shared/DisplayText";
 import { FIELD_TYPES } from "@/data/constants";
 import { useFindNaicAndMccMutation, useGetAllSearchStrategiesQuery } from "@/redux/apis/formApis";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary.js";
@@ -41,7 +42,6 @@ function CompanyInformation({
   isSignature,
 }) {
   const prevRef = useRef(null);
-  const containerRef = useRef(null);
   const formContainerRef = useRef(null);
   const submitFromEnterRef = useRef(null);
   const { user } = useSelector((state) => state.auth);
@@ -318,20 +318,6 @@ function CompanyInformation({
     setIsAllRequiredFieldsFilled(isAllRequiredFieldsFilled);
   }, [form, isCreator, isSignature, naicsToMccDetails.NAICS, requiredNames]);
 
-  // for dangerouslySetInnerHTML redirection
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const links = container.querySelectorAll("a");
-    links.forEach((link) => {
-      link.setAttribute("target", "_blank");
-      link.setAttribute("rel", "noopener noreferrer");
-      link.addEventListener("click", (e) => {
-        e.stopPropagation();
-      });
-    });
-  }, [step?.ai_formatting]);
-
   // Focus the first visible text input after the initial render cascade settles.
   // autoFocus fires at commit time (before setForm initialisms form state), so the
   // subsequent re-render can knock focus loose. Two rAF frames land safely after
@@ -427,19 +413,9 @@ function CompanyInformation({
         </div>
       </div>
 
-      {step?.ai_formatting && (
+      {(step?.ai_formatting || step?.displayText) && (
         <div className="mb-4 flex w-full items-end gap-3">
-          <div
-            className="w-full"
-            ref={containerRef}
-            data-ai-display-text
-            dangerouslySetInnerHTML={{
-              __html: String(step?.ai_formatting).replace(/<a(\s+.*?)?>/g, (match) => {
-                if (match.includes("target=")) return match; // avoid duplicates
-                return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-              }),
-            }}
-          />
+          <DisplayText className="w-full" data-ai-display-text html={step?.ai_formatting || step?.displayText} />
         </div>
       )}
 

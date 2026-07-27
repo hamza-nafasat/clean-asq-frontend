@@ -1,3 +1,4 @@
+import DisplayText from "@/components/shared/DisplayText";
 import TextField from "@/components/shared/small/TextField";
 import { FIELD_TYPES } from "@/data/constants";
 import { useGetAllSearchStrategiesQuery, useUpdateFormSectionMutation } from "@/redux/apis/formApis";
@@ -395,17 +396,9 @@ function CompanyOwners({
           )}
         </div>
       </div>
-      {step?.ai_formatting && (
+      {(step?.ai_formatting || step?.displayText) && (
         <div className="mb-4 flex w-full items-end justify-between gap-3">
-          <div
-            data-ai-display-text
-            dangerouslySetInnerHTML={{
-              __html: String(step?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
-                if (match.includes("target=")) return match; // avoid duplicates
-                return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-              }),
-            }}
-          />
+          <DisplayText data-ai-display-text html={step?.ai_formatting || step?.displayText} />
         </div>
       )}
       <div className="mt-5">

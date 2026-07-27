@@ -228,6 +228,16 @@ const formApis = createApi({
       }),
       invalidatesTags: ["Form"],
     }),
+    // add a new section to an existing form
+    // ---------------
+    addFormSection: builder.mutation({
+      query: (data) => ({
+        url: "/add-form-section",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Form"],
+    }),
     // delete a form section
     // ---------------
     deleteFormSection: builder.mutation({
@@ -596,6 +606,7 @@ export const {
   useRemoveSavedFormMutation,
   useGetMyAllDraftsAndSubmittionsQuery,
   useReorderFormSectionsMutation,
+  useAddFormSectionMutation,
   useDeleteFormSectionMutation,
   useUpdateFormSectionMutation,
   useUpdateDeleteCreateFormFieldsMutation,

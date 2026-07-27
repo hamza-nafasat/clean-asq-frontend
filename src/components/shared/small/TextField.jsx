@@ -169,6 +169,7 @@ const TextField = ({
         ) : (
           <input
             name={name}
+            data-ai-has-suggestions={suggestions?.length ? "true" : undefined}
             disabled={disabled}
             placeholder={placeholder}
             autoComplete="off"

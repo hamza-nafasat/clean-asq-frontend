@@ -126,6 +126,9 @@ const ColorPalette = ({ colorPalette, suggestedColors = [] }) => {
 
   const eyedropperSupported = typeof window !== "undefined" && "EyeDropper" in window;
 
+  // When AI suggests colors, merge them into the existing 10 slots by index.
+  // This keeps the palette at exactly 10 swatches — suggested colors simply
+  // replace the formula color for that slot (the user can still adjust via slider/picker).
   useEffect(() => {
     if (!suggestedColors?.length) return;
     const updates = {};
@@ -139,6 +142,8 @@ const ColorPalette = ({ colorPalette, suggestedColors = [] }) => {
 
   const handlePaletteColorClick = (hex) => setPrimaryColor(hex);
 
+  // If the user (or AI) has set a custom picker color for this slot, show that;
+  // otherwise fall back to the formula-computed color.
   const getSliderColor = (index) => {
     if (customPickerColors[index]) return customPickerColors[index];
     return computeSliderColor(index, sliderValues[index] ?? DEFAULT_SLIDERS[index] ?? 50, randomBase);
@@ -180,6 +185,7 @@ const ColorPalette = ({ colorPalette, suggestedColors = [] }) => {
   const handleSliderChange = (index, value) => {
     setSliderValues((prev) => ({ ...prev, [index]: Number(value) }));
     const newColor = computeSliderColor(index, Number(value), randomBase);
+    // Clear any custom/AI color so the swatch reflects the slider position
     setCustomPickerColors((prev) => {
       const next = { ...prev };
       delete next[index];

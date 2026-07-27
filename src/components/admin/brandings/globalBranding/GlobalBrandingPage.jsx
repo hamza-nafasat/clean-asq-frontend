@@ -13,7 +13,8 @@ import {
 } from "@/redux/apis/brandingApis";
 import { userExist } from "@/redux/slices/authSlice";
 import Handlebars from "handlebars";
-import { useEffect, useState } from "react";
+import getEnv from "@/lib/env";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -29,9 +30,7 @@ import { useScreenContext } from "@/hooks/useScreenContext";
 import { useGetMyAllFormsQuery } from "@/redux/apis/formApis";
 import {
   executeBrandingAssignment,
-  executeBrandingAssignments,
   getBrandingSettersFromHook,
-  mapHomeBranding,
 } from "@/lib/executeBrandingAssignment";
 import ManualExtractionModal from "./ManualExtractionModal";
 import ApplyBranding from "./ApplyBranding";
@@ -216,8 +215,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [buttonMaterial, setButtonMaterial] = useState(0);
   const [emailHeaderMaterial, setEmailHeaderMaterial] = useState(0);
   const [emailFooterMaterial, setEmailFooterMaterial] = useState(0);
-  // const [samplePlaying, setSamplePlaying] = useState(false);
-  // const sampleAudioRef = useRef(null);
+  const [samplePlaying, setSamplePlaying] = useState(false);
+  const sampleAudioRef = useRef(null);
 
   const compileHeader = Handlebars.compile(emailHeaderTemplate);
   const compileFooter = Handlebars.compile(emailFooterTemplate);
@@ -376,7 +375,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
 
   const applyExtractedBranding = (data) => {
     if (data?.url) setWebsiteUrl(data.url);
-    if (data?.name & !companyName) setCompanyName(data.name);
+    // Company name is handled by callers — do not overwrite here
     setFontFamily(data?.fontFamily || "");
     setLogos(data?.logos || []);
     setPrimaryColor(data?.colors?.primary);
@@ -386,27 +385,55 @@ const GlobalBrandingPage = ({ brandingId }) => {
     setLinkColor(data?.colors?.link);
     setBackgroundColor(data?.colors?.background);
     setFrameColor(data?.colors?.frame);
-    setHighlightingColor(data?.colors?.highlighting);
+    // Highlighting comes from extraction as rgba(r,g,b,0.20) — convert to hex so
+    // <input type="color"> can display it. BrandingContext re-applies the 0.20 opacity
+    // when writing the CSS variable.
+    const hlRaw = data?.colors?.highlighting;
+    const hlHex = (() => {
+      const m = hlRaw?.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      if (!m) return hlRaw || "#000000";
+      return "#" + [m[1], m[2], m[3]].map((n) => parseInt(n).toString(16).padStart(2, "0")).join("").toUpperCase();
+    })();
+    setHighlightingColor(hlHex);
     setButtonTextPrimary(data?.colors?.buttonTextPrimary);
     setButtonTextSecondary(data?.colors?.buttonTextSecondary);
     if (data?.colors?.buttonBorderPrimary) setButtonBorderPrimary(data.colors.buttonBorderPrimary);
     if (data?.colors?.buttonBorderSecondary) setButtonBorderSecondary(data.colors.buttonBorderSecondary);
-    setHeaderBackground(data?.colors?.headerBackground);
-    setHeaderText(data?.colors?.headerText);
-    setFooterBackground(data?.colors?.footerBackground);
-    setFooterText(data?.colors?.footerText);
-    setEmailHeaderColor(data?.colors?.headerBackground);
-    setEmailHeaderTextColor(data?.colors?.headerText);
-    setEmailFooterColor(data?.colors?.footerBackground);
-    setEmailFooterTextColor(data?.colors?.footerText);
+    if (data?.colors?.headerBackground) setHeaderBackground(data.colors.headerBackground);
+    if (data?.colors?.headerText) setHeaderText(data.colors.headerText);
+    if (data?.colors?.footerBackground) setFooterBackground(data.colors.footerBackground);
+    if (data?.colors?.footerText) setFooterText(data.colors.footerText);
+    if (data?.colors?.headerBackground) setEmailHeaderColor(data.colors.headerBackground);
+    if (data?.colors?.headerText) setEmailHeaderTextColor(data.colors.headerText);
+    if (data?.colors?.footerBackground) setEmailFooterColor(data.colors.footerBackground);
+    if (data?.colors?.footerText) setEmailFooterTextColor(data.colors.footerText);
+    // Auto-assign AI assistant colors from extracted data.
+    // Launch button → most prominent logo color (first logo entry in palette, fallback to header).
+    // Header/bubble + banner → header background color.
+    const firstLogoColor = (() => {
+      const palette = data?.color_palette || [];
+      const logoEntry = palette.find((e) => typeof e === "object" && e?.source?.toLowerCase().includes("logo"));
+      if (logoEntry?.hex) return logoEntry.hex;
+      const first = palette[0];
+      return (typeof first === "string" ? first : first?.hex) || null;
+    })();
+    if (firstLogoColor) setAiLaunchButtonColor(firstLogoColor);
+    else if (data?.colors?.headerBackground) setAiLaunchButtonColor(data.colors.headerBackground);
+    if (data?.colors?.headerBackground) {
+      setAiHeaderColor(data.colors.headerBackground);
+      setAiBannerColor(data.colors.headerBackground);
+    }
+    if (data?.colors?.headerText) setAiBannerTextColor(data.colors.headerText);
     setEmailBodyColor(data?.colors?.background);
     setEmailTextColor(data?.colors?.text);
     if (data?.prominentHeadline) setHeaderHeading(data.prominentHeadline);
     setHeaderAlignment(data?.headerAlignment);
-    setApplicationFooterText(data?.applicationFooterText || " ©{year} Fintainium, All Rights Reserved");
+    setApplicationFooterText(data?.applicationFooterText || "©{year} {company}, All Rights Reserved");
     if (Array.isArray(data?.color_palette)) setColorPalette(data.color_palette);
     if (data?.screenshotUrl) setWebsiteImage(data.screenshotUrl);
     else if (data?.screenshotBase64) setWebsiteImage(`data:image/png;base64,${data.screenshotBase64}`);
+    // Auto-select the best favicon returned by the extraction
+    if (data?.favicon) setFavicon(data.favicon);
   };
 
   const extractBranding = async () => {
@@ -415,8 +442,12 @@ const GlobalBrandingPage = ({ brandingId }) => {
       return;
     }
     try {
+      const existingName = companyName;
       const res = await fetchBranding({ url: websiteUrl }).unwrap();
-      if (res.success) applyExtractedBranding(res.data);
+      if (res.success) {
+        applyExtractedBranding(res.data);
+        if (!existingName && res.data?.name) setCompanyName(res.data.name);
+      }
     } catch (error) {
       console.error("Error extracting branding:", error);
       toast.error(
@@ -577,6 +608,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       if (res?.success) {
         toast.success(res?.message || "Branding created successfully!");
         if (!skipNavigation) navigate("/branding");
+        return res?.data?._id;
       } else {
         toast.error("Failed to create branding. Please try again.");
       }
@@ -772,7 +804,6 @@ const GlobalBrandingPage = ({ brandingId }) => {
             if (userBranding?.aiHeaderColor) setGlobalAiHeaderColor(userBranding.aiHeaderColor);
             if (userBranding?.aiBannerColor) setGlobalAiBannerColor(userBranding.aiBannerColor);
             if (userBranding?.aiBannerTextColor) setGlobalAiBannerTextColor(userBranding.aiBannerTextColor);
-            setGlobalAiUseCustomIcon(userBranding?.aiUseCustomIcon !== false);
             if (userBranding?.favicon !== undefined) setGlobalFavicon(userBranding.favicon);
             if (userBranding?.tabTitle !== undefined) setGlobalTabTitle(userBranding.tabTitle);
             if (userBranding?.headerEffect) setGlobalHeaderEffect(userBranding.headerEffect);
@@ -794,6 +825,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
 
         toast.success(res?.message || "Branding updated successfully!");
         if (!skipNavigation) navigate("/branding");
+        return brandingId;
       } else {
         toast.error("Failed to update branding. Please try again.");
       }
@@ -831,19 +863,15 @@ const GlobalBrandingPage = ({ brandingId }) => {
     name: f.name || f.headerText || "Untitled",
     branding: f.branding ? { _id: f.branding._id || f.branding, name: f.branding.name } : null,
   }));
-  const homeBranding = mapHomeBranding(user);
-
   useScreenContext({
     screenId: brandingId ? `global-branding-${brandingId}` : "global-branding-new",
     screenName: brandingId ? `Global Branding — ${companyName || brandingId}` : "Global Branding (New)",
     assistantName: "Branding Assistant",
-    greeting: `Hi! I'm your **Branding Assistant**.\n\nHere's what I can do:\n- **Edit this branding** — update colors, fonts, header/footer styles, email templates, AI assistant colors, and more\n- **Recommend colors** — suggest a full color palette, match your website's brand, or pull inspiration from any URL\n- **Edit or create logos** — remove backgrounds, recolor elements, change background colors, or generate stylistic variations of any existing logo\n- **Manage the favicon and tab title** — upload a favicon or extract one from your website\n- **Apply branding** — assign this profile to application forms and/or the home/website\n\nWhat would you like to work on?`,
+    greeting: `Hi! I'm your **Branding Assistant**.\n\nHere's what I can do:\n- **Edit this branding** — update colors, fonts, header/footer styles, email templates, AI assistant colors, and more\n- **Recommend colors** — suggest a full color palette, match your website's brand, or pull inspiration from any URL\n- **Edit or create logos** — remove backgrounds, recolor elements, change background colors, or generate stylistic variations of any existing logo\n- **Manage the favicon and tab title** — upload a favicon or extract one from your website\n- **Apply branding to forms** — assign this branding profile to one or more application forms\n\nWhat would you like to work on?`,
     description:
       "The Global Branding screen lets admins configure company branding: colors, fonts, logos, header/footer styles, and email templates. Changes apply live across the entire application.",
     brandingId: brandingId || null,
     forms: _formsList,
-    homeBranding,
-    availableForms: _formsList,
     currentState: {
       primaryColor,
       secondaryColor,
@@ -969,27 +997,49 @@ const GlobalBrandingPage = ({ brandingId }) => {
       },
       saveBranding: () => (brandingId ? updateBrandingHandler(brandingId) : createBrandingHandler()),
       setFormsBranding: async ({ updates }) => {
-        const effectiveId = brandingId;
-        if (!effectiveId) throw new Error("Save the branding profile before applying it");
-        await executeBrandingAssignments({
-          updates: updates.map((u) => ({
-            ...u,
-            brandingId: u.brandingId || effectiveId,
-          })),
-          addBrandingMutation: addBrandingToForm,
-          getUserProfile,
-          brandingSetters: globalBrandingSetters,
-          dispatchUserRefresh,
-        });
-        await refetchAllForms();
+        const errors = [];
+        for (const { formId, brandingId: bId } of updates) {
+          try {
+            await addBrandingToForm({ brandingId: bId, formId, onHome: "no" }).unwrap();
+          } catch {
+            errors.push(formId);
+          }
+        }
+        if (errors.length) throw new Error(`Failed to set branding on ${errors.length} form(s)`);
       },
-      openApplyBrandingModal: ({ formId, applyToHome } = {}) => {
-        if (formId) setApplyFormId(formId);
-        if (applyToHome !== undefined) setApplyOnHome(!!applyToHome);
-        setApplyBrandingModalOpen(true);
+      saveAndApplyBrandingToForms: async ({ formIds, onHome }) => {
+        // Step 1: save (skip auto-navigation so we can apply forms first)
+        const savedId = brandingId
+          ? await updateBrandingHandler(brandingId, true)
+          : await createBrandingHandler(true);
+        if (!savedId) throw new Error("Branding save did not return an ID");
+        // Step 2: apply branding
+        const errors = [];
+        if (onHome) {
+          try {
+            await addBrandingToForm({ brandingId: savedId, onHome: "yes" }).unwrap();
+          } catch {
+            errors.push("website");
+          }
+        }
+        for (const formId of formIds || []) {
+          try {
+            await addBrandingToForm({ brandingId: savedId, formId, onHome: "no" }).unwrap();
+          } catch {
+            errors.push(formId);
+          }
+        }
+        if (errors.length) throw new Error(`Failed to set branding on ${errors.length} target(s)`);
+        // Step 3: navigate to branding management list
+        // Full reload when home branding changed so BrandingContext re-initialises
+        if (onHome) {
+          window.location.href = "/branding";
+        } else {
+          navigate("/branding");
+        }
       },
     },
-    logos: logos.map((l) => l.url || l.preview).filter(Boolean),
+    logos: logos.map((l) => ({ url: l.url || l.preview, isFavicon: !!l.isFavicon })).filter((l) => l.url),
     colorPalette: colorPalette.map((c) => (typeof c === "string" ? c : c?.hex)).filter(Boolean),
     deps: {
       brandingId,
@@ -1041,7 +1091,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       sessionStorage.removeItem("pendingBrandingData");
       if (brandingData) applyExtractedBranding({ ...brandingData, screenshotUrl });
       if (url) setWebsiteUrl(url);
-      if (brandingData?.name) setCompanyName(brandingData.name);
+      if (brandingData?.name && !companyName) setCompanyName(brandingData.name);
     } catch {
       sessionStorage.removeItem("pendingBrandingData");
     }
@@ -1249,46 +1299,45 @@ const GlobalBrandingPage = ({ brandingId }) => {
     user?.branding,
   ]);
 
-  // const playSample = async () => {
-  //   if (sampleAudioRef.current) {
-  //     sampleAudioRef.current.pause();
-  //     0.8;
-  //     sampleAudioRef.current = null;
-  //     setSamplePlaying(false);
-  //     return;
-  //   }
-  //   setSamplePlaying(true);
-  //   try {
-  //     const SERVER_URL = getEnv("SERVER_URL");
-  //     const res = await fetch(`${SERVER_URL}/api/ai/tts`, {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       credentials: "include",
-  //       body: JSON.stringify({
-  //         text: "Hi there! I'm your application assistant. I'm here to help guide you through each step.",
-  //         voice: aiVoice,
-  //       }),
-  //     });
-  //     if (!res.ok) throw new Error("TTS unavailable");
-  //     const blob = await res.blob();
-  //     const url = URL.createObjectURL(blob);
-  //     const audio = new Audio(url);
-  //     sampleAudioRef.current = audio;
-  //     audio.onended = () => {
-  //       setSamplePlaying(false);
-  //       sampleAudioRef.current = null;
-  //       URL.revokeObjectURL(url);
-  //     };
-  //     audio.onerror = () => {
-  //       setSamplePlaying(false);
-  //       sampleAudioRef.current = null;
-  //     };
-  //     audio.play();
-  //   } catch {
-  //     setSamplePlaying(false);
-  //     toast.error("Could not play voice sample. Please try again.");
-  //   }
-  // };
+  const playSample = async () => {
+    if (sampleAudioRef.current) {
+      sampleAudioRef.current.pause();
+      sampleAudioRef.current = null;
+      setSamplePlaying(false);
+      return;
+    }
+    setSamplePlaying(true);
+    try {
+      const SERVER_URL = getEnv("SERVER_URL");
+      const res = await fetch(`${SERVER_URL}/api/ai/tts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          text: "Hi there! I'm your application assistant. I'm here to help guide you through each step.",
+          voice: aiVoice,
+        }),
+      });
+      if (!res.ok) throw new Error("TTS unavailable");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      sampleAudioRef.current = audio;
+      audio.onended = () => {
+        setSamplePlaying(false);
+        sampleAudioRef.current = null;
+        URL.revokeObjectURL(url);
+      };
+      audio.onerror = () => {
+        setSamplePlaying(false);
+        sampleAudioRef.current = null;
+      };
+      audio.play();
+    } catch {
+      setSamplePlaying(false);
+      toast.error("Could not play voice sample. Please try again.");
+    }
+  };
 
   return (
     <div className="mb-6 rounded-xl border border-[#F0F0F0] bg-white px-3 md:px-6">
@@ -1723,7 +1772,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
         <section className="my-6 flex w-full flex-col gap-4">
           <h3 className="border-b-2 text-lg font-semibold text-gray-800">AI Configuration</h3>
 
-          {/* Voice selector 
+          {/* Voice selector */}
           <div className="flex flex-col gap-1 max-w-sm">
             <label className="text-sm font-medium text-gray-700">AI Assistant Voice</label>
             <p className="text-xs text-gray-400">
@@ -1764,7 +1813,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
             </div>
           </div>
 
-           Custom system prompt 
+          {/* Custom system prompt */}
           <div className="flex flex-col gap-1 max-w-2xl">
             <label className="text-sm font-medium text-gray-700">Custom Personality Settings</label>
             <p className="text-xs text-gray-400">
@@ -1779,12 +1828,12 @@ const GlobalBrandingPage = ({ brandingId }) => {
               rows={4}
               className="mt-1 rounded-lg border border-gray-300 bg-[#FAFBFF] px-3 py-2 text-sm text-gray-700 outline-none focus:border-purple-400 resize-y"
             />
-          </div> */}
+          </div>
 
           {/* Custom icon toggle */}
           <div className="flex items-center gap-2">
             <Checkbox
-              label={"  Use custom AI button icon"}
+              label={"Use custom AI button icon"}
               type="checkbox"
               id="aiUseCustomIcon"
               checked={aiUseCustomIcon}

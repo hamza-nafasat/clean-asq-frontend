@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import Button from "./small/Button";
 import { AiHelpModal } from "./small/DynamicField";
 import Modal from "./small/Modal";
+import DocumentModal from "./DocumentModal";
+import { makeDocLinkHandler } from "@/lib/makeDocLinkHandler";
 import { useBranding } from "@/hooks/BrandingContext";
 import { useSelector } from "react-redux";
 
@@ -13,8 +15,10 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
   const [isSaving, setIsSaving] = useState(false);
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const [pendingAiFill, setPendingAiFill] = useState(false);
+  const [openDoc, setOpenDoc] = useState(null); // { url, title } | null
 
   const outerDivRef = useRef(null);
+  const signDisplayTextRef = useRef(null);
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
   const drawing = useRef(false);
@@ -53,6 +57,17 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       ctx.clearRect(0, 0, rect.width, rect.height);
     }
   }, [textColor, oldSignatureUrl]);
+
+  // Intercept link clicks inside display text — open in DocumentModal instead of new tab.
+  // Uses capture phase so we fire before the browser acts on target="_blank".
+  useEffect(() => {
+    const el = signDisplayTextRef.current;
+    if (!el) return;
+    const handler = makeDocLinkHandler(setOpenDoc);
+    el.addEventListener("click", handler, true);
+    return () => el.removeEventListener("click", handler, true);
+  }, [step?.signFormatedDisplayText]);
+
   // ---------- Draw Handlers ----------
   const pointerPos = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
@@ -262,16 +277,17 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
           />
         </Modal>
       )}
+      {openDoc && (
+        <DocumentModal url={openDoc.url} title={openDoc.title} onClose={() => setOpenDoc(null)} />
+      )}
       <div className="flex items-center gap-2">
         {step?.isSignDisplayText && (
           <div className="flex w-full items-end gap-3">
             <div
+              ref={signDisplayTextRef}
               className="w-full"
               dangerouslySetInnerHTML={{
-                __html: String(step?.signFormatedDisplayText || "").replace(/<a(\s+.*?)?>/g, (match) => {
-                  if (match.includes("target=")) return match; // avoid duplicates
-                  return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-                }),
+                __html: String(step?.signFormatedDisplayText || ""),
               }}
             />
           </div>

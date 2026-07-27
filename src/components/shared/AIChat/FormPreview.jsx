@@ -255,7 +255,7 @@ export default function FormPreview({ formName, sections }) {
         <p className="text-[10px] text-gray-500 font-medium">{formName}</p>
       </div>
       <div className="flex flex-col gap-2">
-        {sections.map((section, i) => {
+        {(sections || []).map((section, i) => {
           const t = section.sectionTitle;
           if (t === "otp_blk") return <OtpSection key={i} section={section} />;
           if (t === "company_scraping_blk") return <CompanyScrapingSection key={i} section={section} />;

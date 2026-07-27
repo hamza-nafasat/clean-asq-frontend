@@ -3,12 +3,6 @@ import { discoverFormFields, domFillField } from "../lib/discoverFormFields";
 
 const AIChatContext = createContext(null);
 
-/** Trim oldest turns while keeping the most recent tool chain intact. */
-function trimApiHistory(history, maxTurns = 30) {
-  if (history.length <= maxTurns) return history;
-  return history.slice(-maxTurns);
-}
-
 export const AIChatProvider = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -42,37 +36,6 @@ export const AIChatProvider = ({ children }) => {
   const continuationPendingRef = useRef(false);
   // Stack of reversible AI actions — each entry: { description, revertFn(ctx) }
   const actionLogRef = useRef([]);
-  // Full API conversation (includes hidden auto-guide turns and tool-call chains)
-  const apiHistoryRef = useRef([]);
-  // 1–2 turn snapshot (user + nav assistant) restored after aiEndpoint change.
-  const pendingHandoffHistoryRef = useRef(null);
-
-  const clearApiHistory = useCallback(() => {
-    apiHistoryRef.current = [];
-  }, []);
-
-  const getApiHistory = useCallback(() => [...apiHistoryRef.current], []);
-
-  const appendApiHistory = useCallback((entries) => {
-    const batch = Array.isArray(entries) ? entries : [entries];
-    apiHistoryRef.current = trimApiHistory([...apiHistoryRef.current, ...batch]);
-  }, []);
-
-  const setApiHistory = useCallback((history) => {
-    apiHistoryRef.current = trimApiHistory(Array.isArray(history) ? history : []);
-  }, []);
-
-  /** Queue user + navigation assistant turns to seed API history after aiEndpoint change. */
-  const setPendingHandoffHistory = useCallback((entries) => {
-    if (!entries?.length) {
-      pendingHandoffHistoryRef.current = null;
-      return;
-    }
-    pendingHandoffHistoryRef.current = entries.map((m) => ({
-      role: m.role,
-      content: m.content ?? null,
-    }));
-  }, []);
 
   // Screens call this to register their state + action callbacks.
   // Conversation is preserved across screen changes — no wipe.
@@ -168,24 +131,15 @@ export const AIChatProvider = ({ children }) => {
     const newEndpoint = context?.aiEndpoint || null;
     if (lastEndpointRef.current && newEndpoint && lastEndpointRef.current !== newEndpoint) {
       console.log(
-        `%c[CONTEXT] endpoint changed ${lastEndpointRef.current} → ${newEndpoint} — clearing API history only`,
+        `%c[CONTEXT] endpoint changed ${lastEndpointRef.current} → ${newEndpoint} — clearing messages`,
         "color:#c80; font-weight:bold",
       );
-      clearApiHistory();
-      const handoffSeed = pendingHandoffHistoryRef.current;
-      if (handoffSeed?.length) {
-        apiHistoryRef.current = trimApiHistory([...handoffSeed]);
-        pendingHandoffHistoryRef.current = null;
-        console.log(
-          `%c[CONTEXT] restored navigation handoff seed (${handoffSeed.length} turn(s))`,
-          "color:#16a34a; font-weight:bold",
-        );
-      }
+      setMessages([]);
     }
     if (newEndpoint) lastEndpointRef.current = newEndpoint;
 
     screenContextRef.current = context;
-  }, [clearApiHistory]);
+  }, []);
 
   const unregisterScreenContext = useCallback(() => {
     screenContextRef.current = null;
@@ -205,20 +159,14 @@ export const AIChatProvider = ({ children }) => {
     setMessages((prev) => [...prev, { ...msg, id: Date.now() + Math.random() }]);
   }, []);
 
-  const clearMessages = useCallback(() => {
-    setMessages([]);
-    clearApiHistory();
-    pendingHandoffHistoryRef.current = null;
-  }, [clearApiHistory]);
+  const clearMessages = useCallback(() => setMessages([]), []);
 
   // Full session reset: wipe history, signal widget to reset voice mode.
   // Call this when a fresh application flow begins (clearOnMount).
   const resetSession = useCallback(() => {
     setMessages([]);
-    clearApiHistory();
-    pendingHandoffHistoryRef.current = null;
     setWidgetResetSignal((s) => s + 1);
-  }, [clearApiHistory]);
+  }, []);
 
   const pushRevertable = useCallback((entry) => {
     actionLogRef.current.push(entry);
@@ -271,11 +219,6 @@ export const AIChatProvider = ({ children }) => {
         pendingAutoMessageRef,
         assistantMode,
         setAssistantMode,
-        getApiHistory,
-        appendApiHistory,
-        setApiHistory,
-        clearApiHistory,
-        setPendingHandoffHistory,
       }}
     >
       {children}

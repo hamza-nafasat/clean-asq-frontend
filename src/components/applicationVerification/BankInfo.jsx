@@ -1,3 +1,4 @@
+import DisplayText from "@/components/shared/DisplayText";
 import { FIELD_TYPES } from "@/data/constants";
 import {
   useGetAllSearchStrategiesQuery,
@@ -216,7 +217,9 @@ function BankInfo({
       )}
       <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
         <div className="mb-10 flex items-center justify-between">
-          <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
+          <h3 className="text-textPrimary text-2xl font-semibold" data-ai-display-text>
+            {name}
+          </h3>
           <div className="flex gap-2">
             <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={"Save my progress"} />
             {isCreator && (
@@ -233,16 +236,9 @@ function BankInfo({
             <EditSectionDisplayTextFromatingModal step={step} />
           </Modal>
         )}
-        {step?.ai_formatting && (
+        {(step?.ai_formatting || step?.displayText) && (
           <div className="mb-4 flex w-full items-end justify-between gap-3">
-            <div
-              dangerouslySetInnerHTML={{
-                __html: String(step?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
-                  if (match.includes("target=")) return match; // avoid duplicates
-                  return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-                }),
-              }}
-            />
+            <DisplayText data-ai-display-text html={step?.ai_formatting || step?.displayText} />
           </div>
         )}
 

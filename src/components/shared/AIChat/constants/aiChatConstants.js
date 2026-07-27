@@ -1,18 +1,13 @@
 import getEnv from "../../../../lib/env.js";
 
 export const SERVER_URL = getEnv("SERVER_URL");
-export const AI_CHAT_MODE = import.meta.env.VITE_AI_CHAT_MODE ?? "guided";
 
 export const PANEL_WIDTH = 520;
 export const PANEL_HEIGHT = 700;
 export const PANEL_MIN_WIDTH = 300;
 export const PANEL_MIN_HEIGHT = 380;
 
-export const MAX_API_HISTORY_TURNS = 30;
-
 export const PAGE_ROUTES = {
-  // `home` and `application-forms` are intentional aliases — same route, different page IDs for AI navigation phrasing.
-  home: "/application-forms",
   "application-forms": "/application-forms",
   branding: "/branding",
   "branding-create": "/branding/create",
@@ -26,7 +21,6 @@ export const PAGE_ROUTES = {
 };
 
 export const PAGE_LABELS = {
-  home: "Home",
   "application-forms": "Application Forms",
   branding: "Branding Management",
   "branding-create": "Create New Branding",

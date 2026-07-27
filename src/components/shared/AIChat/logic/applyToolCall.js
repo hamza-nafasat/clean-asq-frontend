@@ -1,45 +1,10 @@
-import { AI_CHAT_MODE, PAGE_LABELS, PAGE_ROUTES, SERVER_URL } from "../constants/aiChatConstants.js";
-import { resolveNavigationHandoff } from "../utils/resolveNavigationHandoff.js";
-import {
-  APPLY_BRANDING_MODAL_DECLINE_MESSAGE,
-  getMistakenBrandingApplyDeclineMessage,
-  shouldBlockMistakenBrandingApply,
-} from "./brandingApplyIntent.js";
-import { resolveNavigationPageFromText } from "./navigationIntent.js";
-import {
-  FORWARD_FORM_DECLINE_MESSAGE,
-  getMistakenViewApplicationMessage,
-  isUnderwritingIntent,
-  shouldBlockMistakenViewApplication,
-} from "./applicationListIntent.js";
-
-const getLastUserMessageText = (history = []) => {
-  for (let i = history.length - 1; i >= 0; i--) {
-    const content = history[i]?.content;
-    if (history[i]?.role === "user" && typeof content === "string") return content;
-  }
-  return "";
-};
-
-const LANG_TAG_RE = /^\[LANG:([a-z]{2})\]\s*/;
-const stripLangTag = (text) => {
-  if (!text) return { text: "", detectedLanguage: null };
-  const m = text.match(LANG_TAG_RE);
-  if (!m) return { text, detectedLanguage: null };
-  return { text: text.slice(m[0].length), detectedLanguage: m[1] };
-};
-
-const isBrandingSaveIntent = (text) =>
-  /\b(save(\s+the)?\s+branding|create(\s+the)?\s+branding|click.*create.*branding|create branding|submit.*branding|now create)\b/i.test(
-    text,
-  );
-
-const isBrandingRefetchIntent = (text) =>
-  /\b(re-?fetch|fetch again|scrape again|update (the )?palette from|pull (colors )?from (the )?website)\b/i.test(text);
+import { PAGE_LABELS, PAGE_ROUTES, SERVER_URL } from "../constants/aiChatConstants.js";
+import { toPreviewSection } from "./formPreviewUtils.js";
 
 /**
  * Creates the tool-call handler with bindings from the chat widget/controller.
- * Body is extracted verbatim from AIChatWidget to keep behavior identical.
+ * Body is transplanted verbatim from the stagging AIChatWidget's applyToolCall
+ * to keep behavior identical, adapted only to read closure state from `bindings`.
  */
 export function createApplyToolCall(bindings) {
   const {
@@ -49,7 +14,6 @@ export function createApplyToolCall(bindings) {
     isVoiceModeRef,
     speak,
     wt,
-    aiCustomPrompt,
     continueAfterToolCall,
     pushRevertable,
     popRevertable,
@@ -60,122 +24,28 @@ export function createApplyToolCall(bindings) {
     confirmedValuesRef,
     signalContinuationPending,
     pendingFormContinuationRef,
-    appendApiHistory,
     dodgeForField,
     scrollToBottom,
-    setPreFillModal,
-    preFillShownRef,
-    setFieldErrorModal,
-    confirmedErrorsRef,
-    pendingFieldErrorRef,
-    blockedClickTargetRef,
-    navTimeoutRef,
-    pendingFollowUpRef,
-    pendingHandoffModeRef,
-    pendingHandoffUserMessageRef,
-    formLanguageRef,
-    setIsOpen,
-    getApiHistory,
-    setPendingHandoffHistory,
     activatedFieldIdRef,
     inputRef,
-    panelRef,
-    homePositionRef,
-    setIntroButtonsDismissed,
-    introButtonsDismissed,
-    pendingAnalysisRef,
-    setOverlayContext,
-    triggerAutoMessage,
+    suppressChatFocusRef,
+    suppressNextScreenGreetingRef,
+    pendingFollowUpRef,
+    navTimeoutRef,
     translationModeRef,
     setTranslationMode,
     tooltipCacheRef,
-    lastDetectedLanguageRef,
+    sendMessageRef,
+    addBrandingToFormGlobal,
   } = bindings;
 
-  function handleNavigateToPage(args) {
-    const { page, reason, followUpTask, handoffMode } = args;
-    const route = PAGE_ROUTES[page];
-    const label = PAGE_LABELS[page] || page;
-    if (!route) return;
-
-    const currentPath = window.location.pathname;
-    const alreadyThere = currentPath === route || (route !== "/" && currentPath.startsWith(`${route}/`));
-
-    if (alreadyThere) {
-      pendingFollowUpRef.current = null;
-      pendingHandoffModeRef.current = null;
-      pendingHandoffUserMessageRef.current = null;
-      if (navTimeoutRef.current) {
-        clearTimeout(navTimeoutRef.current);
-        navTimeoutRef.current = null;
-      }
-      const alreadyThereContent = `You're already on **${label}**. What would you like to do here?`;
-      addMessage({
-        role: "assistant",
-        content: alreadyThereContent,
-      });
-      appendApiHistory({ role: "assistant", content: alreadyThereContent });
-      return;
-    }
-
-    const navContent = `Navigating you to **${label}**. ${reason}`;
-    addMessage({
-      role: "assistant",
-      content: navContent,
-    });
-    appendApiHistory({ role: "assistant", content: navContent });
-
-    pendingHandoffModeRef.current = handoffMode === "greeting" ? "greeting" : "task";
-    const lastUser = [...getApiHistory()].reverse().find((m) => m.role === "user")?.content;
-    pendingHandoffUserMessageRef.current = typeof lastUser === "string" ? lastUser : "";
-    if (followUpTask) {
-      pendingFollowUpRef.current = followUpTask;
-      if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
-      navTimeoutRef.current = setTimeout(() => {
-        pendingFollowUpRef.current = null;
-        pendingHandoffModeRef.current = null;
-        pendingHandoffUserMessageRef.current = null;
-      }, 30000);
-    } else if (handoffMode === "greeting") {
-      pendingFollowUpRef.current = null;
-      if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
-      navTimeoutRef.current = setTimeout(() => {
-        pendingHandoffModeRef.current = null;
-        pendingHandoffUserMessageRef.current = null;
-      }, 30000);
-    }
-
-    setTimeout(() => {
-      // Queue handoff seed immediately before route change (user + nav assistant only).
-      if (setPendingHandoffHistory) {
-        const lastUserTurn = [...getApiHistory()].reverse().find((m) => m.role === "user");
-        if (lastUserTurn && typeof lastUserTurn.content === "string") {
-          const handoffSeed = [
-            { role: "user", content: lastUserTurn.content },
-            { role: "assistant", content: navContent },
-          ];
-          setPendingHandoffHistory(handoffSeed);
-        }
-      }
-      navigate(route);
-    }, 300);
-  }
-
-  async function applyToolCall(tool, args, currentHistory) {
+  const applyToolCall = async (tool, args, currentHistory) => {
     console.log(`%c[TOOL] applyToolCall: ${tool}`, "color:#c0f; font-weight:bold", args);
     const ctx = getScreenContext();
-
-    // Cross-page navigation does not require page-specific actions — only bindings.
-    if (tool === "navigateToPage") {
-      handleNavigateToPage(args);
-      return;
-    }
-
-    if (!ctx?.actions) {
-      return;
-    }
-    const defaultEndpoint =
-      assistantMode === "applicant" ? `${SERVER_URL}/api/ai/applicant-chat` : `${SERVER_URL}/api/ai/branding-chat`;
+    if (!ctx?.actions) return;
+    const defaultEndpoint = assistantMode === "applicant"
+      ? `${SERVER_URL}/api/ai/applicant-chat`
+      : `${SERVER_URL}/api/ai/branding-chat`;
     const chatEndpoint = ctx.aiEndpoint || defaultEndpoint;
 
     if (tool === "revertLastAction") {
@@ -193,57 +63,17 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("revertFailed")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("revertFailed")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
 
     if (tool === "fetchWebsiteBranding") {
-      const { url, intent, companyName: aiProvidedName } = args;
-      const lastUserText = getLastUserMessageText(currentHistory);
-      const paletteExists = (ctx?.colorPalette?.length ?? 0) > 0;
-
-      // Misrouted save/create — user asked to save or click Create, not re-scrape the site.
-      if (isBrandingSaveIntent(lastUserText)) {
-        try {
-          if (ctx.actions.saveBranding) await ctx.actions.saveBranding();
-          const msg = "Branding saved successfully.";
-          addMessage({ role: "assistant", content: msg });
-          if (isVoiceModeRef.current) speak(msg);
-        } catch (err) {
-          const detail = err?.data?.message || err?.message || "";
-          addMessage({
-            role: "assistant",
-            content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-          });
-        }
-        return;
-      }
-
-      // Palette already loaded — skip redundant fetch unless user explicitly asked to re-fetch.
-      if (paletteExists && !isBrandingRefetchIntent(lastUserText)) {
-        const domainInMessage = (() => {
-          try {
-            const host = new URL(url.startsWith("http") ? url : `https://${url}`).hostname.replace(/^www\./, "");
-            return lastUserText.toLowerCase().includes(host.split(".")[0]);
-          } catch {
-            return false;
-          }
-        })();
-        if (!domainInMessage) {
-          addMessage({
-            role: "assistant",
-            content:
-              "The website palette is already loaded. I'll use those colors — tell me if you want to **save** the branding or **tweak** any colors.",
-          });
-          return;
-        }
-      }
-
+      const { url, companyName: aiProvidedName } = args;
       addMessage({ role: "assistant", content: `Fetching **${url}**… this may take a moment.` });
+
+      // ── Step 1: fetch branding data ──────────────────────────────────────────
+      let brandingData, screenshotUrl;
       try {
         const res = await fetch(`${SERVER_URL}/api/ai/fetch-website-branding`, {
           method: "POST",
@@ -253,79 +83,58 @@ export function createApplyToolCall(bindings) {
         });
         const data = await res.json();
         if (!data.success) throw new Error(data.message || "Failed");
+        brandingData = data.brandingData;
+        screenshotUrl = data.screenshotUrl;
+      } catch {
+        addMessage({ role: "assistant", content: `${wt("fetchFailed")} **${url}**. ${wt("tryAgain")}` });
+        return;
+      }
 
-        const { brandingData, screenshotUrl } = data;
+      // ── Step 2: apply extracted branding to the UI ───────────────────────────
+      if (ctx.actions.applyExtractedBranding) {
+        ctx.actions.applyExtractedBranding(brandingData);
+      }
+      if (screenshotUrl && ctx.actions.setWebsiteImage) {
+        ctx.actions.setWebsiteImage(screenshotUrl);
+      }
 
-        if (ctx.actions.applyExtractedBranding) {
-          ctx.actions.applyExtractedBranding(brandingData);
-        }
-        if (screenshotUrl && ctx.actions.setWebsiteImage) {
-          ctx.actions.setWebsiteImage(screenshotUrl);
-        }
-
-        // Auto-fill company name if blank
-        if (!ctx.currentState?.companyName && ctx.actions.companyName) {
-          const nameFromExtracted = brandingData?.name;
+      // Company name resolution (in priority order):
+      // 1. AI was explicitly given a name by the user → always use it
+      // 2. User pre-filled the field before asking AI → preserve it (don't extract)
+      // 3. Field is blank → fill from extraction result, then domain as fallback
+      if (ctx.actions.companyName) {
+        const existingName = ctx.currentState?.companyName;
+        if (aiProvidedName) {
+          ctx.actions.companyName(aiProvidedName);
+        } else if (!existingName) {
           const nameFromDomain = (() => {
             try {
               const hostname = new URL(url.startsWith("http") ? url : `https://${url}`).hostname;
               const base = hostname.replace(/^www\./, "").split(".")[0];
               return base.charAt(0).toUpperCase() + base.slice(1);
-            } catch {
-              return "";
-            }
+            } catch { return ""; }
           })();
-          const nameToUse = aiProvidedName || nameFromExtracted || nameFromDomain;
+          const nameToUse = brandingData?.name || nameFromDomain;
           if (nameToUse) ctx.actions.companyName(nameToUse);
         }
-
-        // Auto-fill website URL if blank
-        if (!ctx.currentState?.websiteUrl && ctx.actions.websiteUrl) {
-          ctx.actions.websiteUrl(url);
-        }
-
-        const imageUrl = screenshotUrl || null;
-        const visionContent = [
-          ...(imageUrl ? [{ type: "image_url", image_url: { url: imageUrl } }] : []),
-          {
-            type: "text",
-            text: `Here is the full-page screenshot and extracted branding data for ${url}:\n\n${JSON.stringify(brandingData, null, 2)}\n\nUser intent: ${intent || "analyze this branding for inspiration"}.\n\nPlease analyze the site's visual design and branding, then respond helpfully to the user's original request.`,
-          },
-        ];
-
-        const followUpHistory = [...currentHistory, { role: "user", content: visionContent }];
-
-        const aiRes = await fetch(chatEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            messages: followUpHistory,
-            context: {
-              screenId: ctx?.screenId,
-              screenName: ctx?.screenName,
-              description: ctx?.description,
-              currentState: ctx?.currentState,
-              logos: ctx?.logos,
-              // Use freshly extracted palette so logo colors are in the system prompt context
-              // before React state has had a chance to propagate applyExtractedBranding
-              colorPalette: brandingData?.color_palette || ctx?.colorPalette || undefined,
-              customPrompt: aiCustomPrompt || undefined,
-            },
-          }),
-        });
-        const aiData = await aiRes.json();
-        if (!aiData.success) throw new Error(aiData.message || "AI request failed");
-
-        if (aiData.type === "tool_call") {
-          await applyToolCall(aiData.tool, aiData.args, followUpHistory);
-        } else {
-          addMessage({ role: "assistant", content: aiData.content });
-          if (isVoiceModeRef.current) speak(aiData.content);
-        }
-      } catch {
-        addMessage({ role: "assistant", content: `${wt("fetchFailed")} **${url}**. ${wt("tryAgain")}` });
+        // else: user pre-filled and AI has no name to offer — leave as-is
       }
+
+      // Auto-fill website URL if blank
+      if (!ctx.currentState?.websiteUrl && ctx.actions.websiteUrl) {
+        ctx.actions.websiteUrl(url);
+      }
+
+      // ── Step 3: Inject a hardcoded confirmation — no AI call ─────────────────
+      // Branding fields are already applied by applyExtractedBranding above.
+      // We do not involve AI here to prevent it from overwriting extracted values.
+      const displayName = brandingData?.name || (() => {
+        try {
+          const hostname = new URL(url.startsWith("http") ? url : `https://${url}`).hostname;
+          return hostname.replace(/^www\./, "").split(".")[0];
+        } catch { return url; }
+      })();
+      addMessage({ role: "assistant", content: `Branding extracted from **${displayName}** and applied. You can review the colors and logos above, or ask me to make any adjustments.` });
       return;
     }
 
@@ -338,10 +147,7 @@ export function createApplyToolCall(bindings) {
         action({ url });
       } else {
         // Screen context doesn't support this tool — inform the user
-        addMessage({
-          role: "assistant",
-          content: "Open the Extract Branding modal and switch to the Manual Extract tab to continue.",
-        });
+        addMessage({ role: "assistant", content: "Open the Extract Branding modal and switch to the Manual Extract tab to continue." });
       }
       return;
     }
@@ -375,9 +181,7 @@ export function createApplyToolCall(bindings) {
           colors.length ? `Colors: ${colors.join(", ")}` : null,
           Object.keys(cssVars).length ? `CSS variables: ${JSON.stringify(cssVars)}` : null,
           logoUrls.length ? `Image URLs: ${logoUrls.join(", ")}` : null,
-        ]
-          .filter(Boolean)
-          .join("\n");
+        ].filter(Boolean).join("\n");
 
         const followUpHistory = [...currentHistory, { role: "user", content: resultText }];
 
@@ -407,11 +211,7 @@ export function createApplyToolCall(bindings) {
           if (isVoiceModeRef.current) speak(aiData.content);
         }
       } catch {
-        addMessage({
-          role: "assistant",
-          content:
-            "I couldn't parse the pasted content. Try pasting just the hex color codes or CSS variables directly.",
-        });
+        addMessage({ role: "assistant", content: "I couldn't parse the pasted content. Try pasting just the hex color codes or CSS variables directly." });
       }
       return;
     }
@@ -420,9 +220,7 @@ export function createApplyToolCall(bindings) {
       const { changes, explanation } = args;
       // Snapshot current values before overwriting
       const snapshot = {};
-      Object.keys(changes).forEach((key) => {
-        snapshot[key] = ctx.currentState?.[key];
-      });
+      Object.keys(changes).forEach((key) => { snapshot[key] = ctx.currentState?.[key]; });
       pushRevertable({
         description: `Applied branding changes (${Object.keys(changes).join(", ")})`,
         revertFn: (freshCtx) => {
@@ -437,15 +235,9 @@ export function createApplyToolCall(bindings) {
       });
       addMessage({ role: "assistant", content: explanation, toolCall: { tool, changes } });
       if (isVoiceModeRef.current) speak(explanation);
-      // Continue so the AI can chain the next step of a compound command (e.g. save, assign to form)
-      await continueAfterToolCall(
-        tool,
-        args,
-        "Branding changes applied to the screen.",
-        currentHistory,
-        chatEndpoint,
-        ctx,
-      );
+      // Continue so the AI can chain the next step of a compound command (e.g. save, assign to form).
+      // Suppress plain text response — explanation was already shown above; only tool calls should proceed.
+      await continueAfterToolCall(tool, args, "Branding changes applied to the screen.", currentHistory, chatEndpoint, ctx, true);
       return;
     }
 
@@ -453,34 +245,10 @@ export function createApplyToolCall(bindings) {
       const { colors, explanation } = args;
       // Populate the Custom Color Palette swatches
       if (ctx.actions.setSuggestedColors) ctx.actions.setSuggestedColors(colors);
-
-      // Auto-apply colors that name a targetProperty (system prompt expects suggest + apply in one step).
-      const changes = {};
-      for (const c of colors || []) {
-        if (c?.targetProperty && c?.hex) changes[c.targetProperty] = c.hex;
-      }
-      if (Object.keys(changes).length > 0) {
-        const snapshot = {};
-        Object.keys(changes).forEach((key) => {
-          snapshot[key] = ctx.currentState?.[key];
-        });
-        pushRevertable({
-          description: `Applied suggested colors (${Object.keys(changes).join(", ")})`,
-          revertFn: (freshCtx) => {
-            Object.entries(snapshot).forEach(([key, val]) => {
-              if (val !== undefined && freshCtx?.actions?.[key]) freshCtx.actions[key](val);
-            });
-          },
-        });
-        Object.entries(changes).forEach(([key, value]) => {
-          const setter = ctx.actions[key];
-          if (setter) setter(value);
-        });
-      }
-
       // Show in-chat preview with color swatches
       addMessage({ role: "assistant", content: explanation, toolCall: { tool: "suggestColors", colors } });
       if (isVoiceModeRef.current) speak(explanation);
+      // suggestColors is end-of-turn — show colors and wait for user confirmation before applying
       return;
     }
 
@@ -499,48 +267,30 @@ export function createApplyToolCall(bindings) {
         if (!data.success) throw new Error(data.message || "Logo edit failed");
         const freshCtx = getScreenContext();
         if (freshCtx?.actions?.addLogo) freshCtx.actions.addLogo(data.url);
-        addMessage({
-          role: "assistant",
-          content:
-            "Done! The modified logo has been added to your available logos — you can now select it from the logo panel.",
-        });
+        addMessage({ role: "assistant", content: "Done! The modified logo has been added to your available logos — you can now select it from the logo panel." });
         if (isVoiceModeRef.current) speak("Done! The modified logo has been added to your available logos.");
       } catch (err) {
-        addMessage({
-          role: "assistant",
-          content: `Sorry, I couldn't edit the logo: ${err.message || "please try again."}`,
-        });
+        addMessage({ role: "assistant", content: `Sorry, I couldn't edit the logo: ${err.message || "please try again."}` });
       } finally {
         setIsLoading(false);
       }
       return;
     }
 
-    if (
-      [
-        "resizeLogo",
-        "cropLogo",
-        "roundLogoCorners",
-        "flattenLogo",
-        "flipLogo",
-        "rotateLogo",
-        "grayscaleLogo",
-        "addLogoPadding",
-        "trimLogo",
-        "removeBackgroundFromLogo",
-      ].includes(tool)
-    ) {
+    if (["resizeLogo", "cropLogo", "roundLogoCorners", "flattenLogo",
+         "flipLogo", "rotateLogo", "grayscaleLogo", "addLogoPadding", "trimLogo",
+         "removeBackgroundFromLogo"].includes(tool)) {
       const { logoUrl, explanation, ...params } = args;
       const ENDPOINT_MAP = {
-        resizeLogo: "logo-resize",
-        cropLogo: "logo-crop",
-        roundLogoCorners: "logo-round-corners",
-        flattenLogo: "logo-flatten",
-        flipLogo: "logo-flip",
-        rotateLogo: "logo-rotate",
-        grayscaleLogo: "logo-grayscale",
-        addLogoPadding: "logo-padding",
-        trimLogo: "logo-trim",
+        resizeLogo:               "logo-resize",
+        cropLogo:                 "logo-crop",
+        roundLogoCorners:         "logo-round-corners",
+        flattenLogo:              "logo-flatten",
+        flipLogo:                 "logo-flip",
+        rotateLogo:               "logo-rotate",
+        grayscaleLogo:            "logo-grayscale",
+        addLogoPadding:           "logo-padding",
+        trimLogo:                 "logo-trim",
         removeBackgroundFromLogo: "logo-remove-background",
       };
       const endpoint = ENDPOINT_MAP[tool];
@@ -560,10 +310,7 @@ export function createApplyToolCall(bindings) {
         addMessage({ role: "assistant", content: "Done! The modified logo has been added to your available logos." });
         if (isVoiceModeRef.current) speak("Done! The modified logo has been added to your available logos.");
       } catch (err) {
-        addMessage({
-          role: "assistant",
-          content: `Sorry, I couldn't process the logo: ${err.message || "please try again."}`,
-        });
+        addMessage({ role: "assistant", content: `Sorry, I couldn't process the logo: ${err.message || "please try again."}` });
       } finally {
         setIsLoading(false);
       }
@@ -574,14 +321,56 @@ export function createApplyToolCall(bindings) {
       const { explanation } = args;
       try {
         if (ctx.actions.saveBranding) await ctx.actions.saveBranding();
-        // Chain a follow-up so the AI can issue a second action (e.g. navigation)
-        await continueAfterToolCall(tool, args, "Branding saved successfully.", currentHistory, chatEndpoint, ctx);
+        // Show the save confirmation immediately — do NOT let the follow-up generate
+        // a plain-text response, which could falsely claim the branding was also applied.
+        addMessage({ role: "assistant", content: explanation });
+        if (isVoiceModeRef.current) speak(explanation);
+        // Chain a follow-up for tool-based actions (e.g. navigation) but suppress text.
+        await continueAfterToolCall(tool, args, "Branding saved successfully.", currentHistory, chatEndpoint, ctx, true);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+      }
+      return;
+    }
+
+    if (tool === "applyBrandingToForms") {
+      const { formIds, onHome, brandingId: argBrandingId, explanation } = args;
+      try {
+        if (ctx.actions.saveAndApplyBrandingToForms) {
+          // On the branding page: save (if needed) + apply + navigate in one atomic operation
+          await ctx.actions.saveAndApplyBrandingToForms({ formIds: formIds || [], onHome: !!onHome });
+        } else if (argBrandingId && ((formIds || []).length > 0 || onHome)) {
+          // Fallback: branding already saved, apply directly via global mutation
+          const errors = [];
+          if (onHome) {
+            try {
+              await addBrandingToFormGlobal({ brandingId: argBrandingId, onHome: "yes" }).unwrap();
+            } catch {
+              errors.push("website");
+            }
+          }
+          for (const formId of (formIds || [])) {
+            try {
+              await addBrandingToFormGlobal({ brandingId: argBrandingId, formId, onHome: "no" }).unwrap();
+            } catch {
+              errors.push(formId);
+            }
+          }
+          if (errors.length) throw new Error(`Failed to set branding on ${errors.length} target(s)`);
+          if (onHome) {
+            window.location.href = "/branding";
+          } else {
+            navigate("/branding");
+          }
+        } else {
+          throw new Error("applyBrandingToForms action not available on this screen");
+        }
+        addMessage({ role: "assistant", content: explanation });
+        if (isVoiceModeRef.current) speak(explanation);
+      } catch (err) {
+        const detail = err?.data?.message || err?.message || "";
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -600,23 +389,25 @@ export function createApplyToolCall(bindings) {
     }
 
     if (tool === "saveEmailTemplate") {
-      const { explanation } = args;
       try {
         if (ctx.actions.saveEmailTemplate) await ctx.actions.saveEmailTemplate();
-        await continueAfterToolCall(
-          tool,
-          args,
-          "Email template saved successfully.",
-          currentHistory,
-          chatEndpoint,
-          ctx,
-        );
+        await continueAfterToolCall(tool, args, "Email template saved successfully.", currentHistory, chatEndpoint, ctx);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+      }
+      return;
+    }
+
+    if (tool === "saveAndAttachToForms") {
+      const { explanation, formIds } = args;
+      try {
+        if (ctx.actions.saveAndAttachToForms) await ctx.actions.saveAndAttachToForms({ formIds });
+        addMessage({ role: "assistant", content: explanation });
+        if (isVoiceModeRef.current) speak(explanation);
+      } catch (err) {
+        const detail = err?.data?.message || err?.message || "";
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -629,10 +420,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -645,10 +433,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -661,10 +446,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -677,10 +459,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -693,10 +472,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -709,10 +485,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -725,10 +498,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -741,10 +511,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -757,10 +524,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -773,10 +537,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -789,10 +550,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -822,10 +580,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -838,10 +593,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -886,31 +638,25 @@ export function createApplyToolCall(bindings) {
     }
 
     if (tool === "createLookup") {
-      const { explanation, ...lookupData } = args;
+      const { explanation: _explanation, ...lookupData } = args;
       try {
         if (ctx.actions.createLookup) await ctx.actions.createLookup(lookupData);
         await continueAfterToolCall(tool, args, "Lookup created successfully.", currentHistory, chatEndpoint, ctx);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
 
     if (tool === "updateLookup") {
-      const { explanation, ...lookupData } = args;
+      const { explanation: _explanation, ...lookupData } = args;
       try {
         if (ctx.actions.updateLookup) await ctx.actions.updateLookup(lookupData);
         await continueAfterToolCall(tool, args, "Lookup updated successfully.", currentHistory, chatEndpoint, ctx);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -923,63 +669,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "viewApplication") {
-      const { explanation, applicationId } = args;
-      const lastUser =
-        getLastUserMessageText(currentHistory) ||
-        getLastUserMessageText(getApiHistory?.() || []);
-
-      if (shouldBlockMistakenViewApplication(lastUser)) {
-        if (isUnderwritingIntent(lastUser) && ctx.actions.openUnderwriting) {
-          ctx.actions.openUnderwriting({ applicationId });
-          const msg =
-            explanation ||
-            "Opening underwriting for this application.";
-          addMessage({ role: "assistant", content: msg });
-          if (isVoiceModeRef.current) speak(msg);
-          return;
-        }
-        const declineMessage =
-          getMistakenViewApplicationMessage(lastUser) || FORWARD_FORM_DECLINE_MESSAGE;
-        addMessage({ role: "assistant", content: declineMessage });
-        if (isVoiceModeRef.current) speak(declineMessage);
-        return;
-      }
-
-      if (ctx.actions.viewApplication) ctx.actions.viewApplication({ applicationId });
-      addMessage({ role: "assistant", content: explanation });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-
-    if (tool === "openUnderwriting") {
-      const { explanation, applicationId } = args;
-      if (ctx.actions.openUnderwriting) ctx.actions.openUnderwriting({ applicationId });
-      addMessage({ role: "assistant", content: explanation });
-      if (isVoiceModeRef.current) speak(explanation);
-      return;
-    }
-
-    if (tool === "deleteApplications") {
-      const { explanation, applicationIds } = args;
-      try {
-        if (ctx.actions.deleteApplications) await ctx.actions.deleteApplications({ applicationIds });
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -987,38 +677,14 @@ export function createApplyToolCall(bindings) {
     if (tool === "openEditBranding") {
       const { explanation, brandingId } = args;
       if (ctx.actions.openEditBranding) ctx.actions.openEditBranding({ brandingId });
-      else if (brandingId) navigate(`/branding/single/${brandingId}`);
       addMessage({ role: "assistant", content: explanation });
       if (isVoiceModeRef.current) speak(explanation);
       return;
     }
 
     if (tool === "openCreateBranding") {
-      const { explanation, fetchUrl } = args;
-      if (fetchUrl) {
-        addMessage({ role: "assistant", content: `Fetching branding from **${fetchUrl}**… this may take a moment.` });
-        try {
-          const res = await fetch(`${SERVER_URL}/api/ai/fetch-website-branding`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ url: fetchUrl }),
-          });
-          const data = await res.json();
-          if (!data.success) throw new Error(data.message || "Failed to fetch branding");
-          const pending = {
-            brandingData: data.brandingData,
-            screenshotUrl: data.screenshotUrl || null,
-            url: fetchUrl,
-          };
-          sessionStorage.setItem("pendingBrandingData", JSON.stringify(pending));
-          pendingAnalysisRef.current = pending;
-        } catch (err) {
-          addMessage({ role: "assistant", content: `${wt("fetchFailed")} **${fetchUrl}**: ${err.message}.` });
-        }
-      }
+      const { explanation } = args;
       if (ctx.actions.openCreateBranding) ctx.actions.openCreateBranding();
-      else navigate("/branding/create");
       addMessage({ role: "assistant", content: explanation });
       if (isVoiceModeRef.current) speak(explanation);
       return;
@@ -1030,19 +696,13 @@ export function createApplyToolCall(bindings) {
       // Guard against stale IDs (e.g. form was renamed/deleted since the last list refresh)
       const knownForms = ctx.currentState?.forms || [];
       if (formId && !knownForms.some((f) => String(f._id) === String(formId))) {
-        const formList = knownForms
-          .map(
-            (f) =>
-              `"${f.name}"${f.headerText && f.headerText !== f.name ? ` (displayed as "${f.headerText}")` : ""} [${f._id}]`,
-          )
-          .join(", ");
+        const formList = knownForms.map((f) =>
+          `"${f.name}"${f.headerText && f.headerText !== f.name ? ` (displayed as "${f.headerText}")` : ""} [${f._id}]`
+        ).join(", ");
         await continueAfterToolCall(
-          tool,
-          args,
+          tool, args,
           `Error: Form ID "${formId}" is not in the current forms list — it may have been deleted or recreated with a new ID. Current forms: ${formList || "none"}. Please use a valid ID from this list.`,
-          currentHistory,
-          chatEndpoint,
-          ctx,
+          currentHistory, chatEndpoint, ctx,
         );
         return;
       }
@@ -1058,7 +718,7 @@ export function createApplyToolCall(bindings) {
     }
 
     if (tool === "cloneFormSettings") {
-      const { sourceFormId, targetFormId, sectionUpdates, fieldUpdates, explanation } = args;
+      const { sourceFormId, targetFormId, sectionUpdates, fieldUpdates } = args;
       const cloneFailures = [];
 
       const targetSections = ctx.currentState?.detailedForm?.sections || [];
@@ -1077,14 +737,10 @@ export function createApplyToolCall(bindings) {
         } else if (sourceBrandingId === targetBrandingId) {
           cloneFailures.push(`**Branding:** already set to "${sourceBrandingName}" — skipped`);
         } else if (ctx.actions.setFormsBranding) {
-          await ctx.actions.setFormsBranding({
-            updates: [{ formId: String(targetFormId), brandingId: sourceBrandingId }],
-          });
+          await ctx.actions.setFormsBranding({ updates: [{ formId: String(targetFormId), brandingId: sourceBrandingId }] });
           cloneFailures.push(`**Branding:** applied "${sourceBrandingName}" ✓`);
         }
-      } catch (err) {
-        cloneFailures.push(`**Branding:** failed — ${err?.message || "unknown error"} ✗`);
-      }
+      } catch (err) { cloneFailures.push(`**Branding:** failed — ${err?.message || "unknown error"} ✗`); }
 
       // Email templates — independent step
       try {
@@ -1096,17 +752,10 @@ export function createApplyToolCall(bindings) {
         } else if (!missingTemplates.length) {
           cloneFailures.push(`**Email templates:** all ${sourceTemplates.length} already attached — skipped`);
         } else if (ctx.actions.attachEmailTemplate) {
-          await ctx.actions.attachEmailTemplate({
-            formId: String(targetFormId),
-            templateIds: missingTemplates.map((t) => String(t._id)),
-          });
-          cloneFailures.push(
-            `**Email templates:** attached ${missingTemplates.map((t) => `"${t.name}"`).join(", ")} ✓`,
-          );
+          await ctx.actions.attachEmailTemplate({ formId: String(targetFormId), templateIds: missingTemplates.map((t) => String(t._id)) });
+          cloneFailures.push(`**Email templates:** attached ${missingTemplates.map((t) => `"${t.name}"`).join(", ")} ✓`);
         }
-      } catch (err) {
-        cloneFailures.push(`**Email templates:** failed — ${err?.message || "unknown error"} ✗`);
-      }
+      } catch (err) { cloneFailures.push(`**Email templates:** failed — ${err?.message || "unknown error"} ✗`); }
 
       // Section updates — filter to valid target IDs and changed values, independent step
       try {
@@ -1114,25 +763,12 @@ export function createApplyToolCall(bindings) {
           const existing = targetSectionMap.get(String(u.sectionId));
           if (!existing) return false;
           const isEmpty = (v) => !v || v === "(not set)";
-          if (u.displayText !== undefined && !isEmpty(u.displayText) && u.displayText !== existing.displayText)
-            return true;
-          if (
-            u.signDisplayText !== undefined &&
-            !isEmpty(u.signDisplayText) &&
-            u.signDisplayText !== (existing.signDisplayText || existing.signFormatedDisplayText)
-          )
-            return true;
-          if (
-            u.aiCustomizablePrompt !== undefined &&
-            !isEmpty(u.aiCustomizablePrompt) &&
-            u.aiCustomizablePrompt !== existing.aiCustomizablePrompt
-          )
-            return true;
-          if (u.aiFormatting !== undefined && !isEmpty(u.aiFormatting) && u.aiFormatting !== existing.ai_formatting)
-            return true;
+          if (u.displayText !== undefined && !isEmpty(u.displayText) && u.displayText !== existing.displayText) return true;
+          if (u.signDisplayText !== undefined && !isEmpty(u.signDisplayText) && u.signDisplayText !== (existing.signDisplayText || existing.signFormatedDisplayText)) return true;
+          if (u.aiCustomizablePrompt !== undefined && !isEmpty(u.aiCustomizablePrompt) && u.aiCustomizablePrompt !== existing.aiCustomizablePrompt) return true;
+          if (u.aiFormatting !== undefined && !isEmpty(u.aiFormatting) && u.aiFormatting !== existing.ai_formatting) return true;
           if (u.isSignAiHelp !== undefined && u.isSignAiHelp !== existing.isSignAiHelp) return true;
-          if (u.signAiPrompt !== undefined && !isEmpty(u.signAiPrompt) && u.signAiPrompt !== existing.signAiPrompt)
-            return true;
+          if (u.signAiPrompt !== undefined && !isEmpty(u.signAiPrompt) && u.signAiPrompt !== existing.signAiPrompt) return true;
           if (u.ownerSuggestions?.length) return true;
           return false;
         });
@@ -1142,9 +778,7 @@ export function createApplyToolCall(bindings) {
         } else {
           cloneFailures.push("**Section settings:** all already matched — skipped");
         }
-      } catch (err) {
-        cloneFailures.push(`**Section settings:** failed — ${err?.message || "unknown error"} ✗`);
-      }
+      } catch (err) { cloneFailures.push(`**Section settings:** failed — ${err?.message || "unknown error"} ✗`); }
 
       // Field updates — independent step
       try {
@@ -1155,34 +789,21 @@ export function createApplyToolCall(bindings) {
         } else {
           cloneFailures.push("**Field settings:** all already matched — skipped");
         }
-      } catch (err) {
-        cloneFailures.push(`**Field settings:** failed — ${err?.message || "unknown error"} ✗`);
-      }
+      } catch (err) { cloneFailures.push(`**Field settings:** failed — ${err?.message || "unknown error"} ✗`); }
 
       // Underwriting rules — independent step (always reported)
       try {
         if (ctx.actions.cloneRules) {
-          const result = await ctx.actions.cloneRules({
-            sourceFormId: String(sourceFormId),
-            targetFormId: String(targetFormId),
-          });
+          const result = await ctx.actions.cloneRules({ sourceFormId: String(sourceFormId), targetFormId: String(targetFormId) });
           if (result.cloned > 0) {
-            cloneFailures.push(
-              `**Underwriting rules:** cloned ${result.cloned} rule(s)${result.skipped ? ` (${result.skipped} already present — skipped)` : ""} ✓`,
-            );
+            cloneFailures.push(`**Underwriting rules:** cloned ${result.cloned} rule(s)${result.skipped ? ` (${result.skipped} already present — skipped)` : ""} ✓`);
           } else if (result.skipped > 0) {
-            cloneFailures.push(
-              `**Underwriting rules:** all ${result.skipped} rule(s) already present on target — skipped ✓`,
-            );
+            cloneFailures.push(`**Underwriting rules:** all ${result.skipped} rule(s) already present on target — skipped ✓`);
           } else {
-            cloneFailures.push(
-              `**Underwriting rules:** no rules were copied — no underwriting rules were found in the source form`,
-            );
+            cloneFailures.push(`**Underwriting rules:** no rules were copied — no underwriting rules were found in the source form`);
           }
         }
-      } catch (err) {
-        cloneFailures.push(`**Underwriting rules:** failed — ${err?.message || "unknown error"} ✗`);
-      }
+      } catch (err) { cloneFailures.push(`**Underwriting rules:** failed — ${err?.message || "unknown error"} ✗`); }
 
       const finalMessage = `Settings clone complete:\n\n${cloneFailures.join("\n")}`;
       addMessage({ role: "assistant", content: finalMessage });
@@ -1211,14 +832,10 @@ export function createApplyToolCall(bindings) {
           } else if (sourceBrandingId === targetBrandingId) {
             cloneResults.push(`**Branding:** already set to "${sourceBrandingName}" — skipped`);
           } else if (ctx.actions.setFormsBranding) {
-            await ctx.actions.setFormsBranding({
-              updates: [{ formId: String(targetFormId), brandingId: sourceBrandingId }],
-            });
+            await ctx.actions.setFormsBranding({ updates: [{ formId: String(targetFormId), brandingId: sourceBrandingId }] });
             cloneResults.push(`**Branding:** applied "${sourceBrandingName}" ✓`);
           }
-        } catch (err) {
-          cloneResults.push(`**Branding:** failed — ${err?.message || "unknown error"} ✗`);
-        }
+        } catch (err) { cloneResults.push(`**Branding:** failed — ${err?.message || "unknown error"} ✗`); }
 
         // Email templates
         try {
@@ -1230,70 +847,66 @@ export function createApplyToolCall(bindings) {
           } else if (!missingTemplates.length) {
             cloneResults.push(`**Email templates:** all ${sourceTemplates.length} already attached — skipped`);
           } else if (ctx.actions.attachEmailTemplate) {
-            await ctx.actions.attachEmailTemplate({
-              formId: String(targetFormId),
-              templateIds: missingTemplates.map((t) => String(t._id)),
-            });
-            cloneResults.push(
-              `**Email templates:** attached ${missingTemplates.map((t) => `"${t.name}"`).join(", ")} ✓`,
-            );
+            await ctx.actions.attachEmailTemplate({ formId: String(targetFormId), templateIds: missingTemplates.map((t) => String(t._id)) });
+            cloneResults.push(`**Email templates:** attached ${missingTemplates.map((t) => `"${t.name}"`).join(", ")} ✓`);
           }
-        } catch (err) {
-          cloneResults.push(`**Email templates:** failed — ${err?.message || "unknown error"} ✗`);
-        }
+        } catch (err) { cloneResults.push(`**Email templates:** failed — ${err?.message || "unknown error"} ✗`); }
       }
 
-      // Section updates — filter to only valid sections in the current detailed form
+      // Section updates — filter to only valid sections in the current detailed form.
+      // Use getScreenContext() fresh here (not the stale ctx captured at applyToolCall start)
+      // so we always see the loaded form even when called from a selectFormForEditing continuation.
+      let validUpdates = [];
       try {
-        const targetSections = ctx.currentState?.detailedForm?.sections || [];
+        const liveCtx = getScreenContext() ?? ctx;
+        const targetSections = liveCtx.currentState?.detailedForm?.sections || [];
         const targetSectionMap = new Map(targetSections.map((s) => [String(s._id), s]));
-        const validUpdates = (updates || []).filter((u) => targetSectionMap.has(String(u.sectionId)));
-        if (validUpdates.length && ctx.actions.updateSectionSettings) {
-          await ctx.actions.updateSectionSettings({ updates: validUpdates });
+        validUpdates = (updates || []).filter((u) => targetSectionMap.has(String(u.sectionId)));
+        console.log("[updateSectionSettings handler] updates:", updates, "targetSections count:", targetSections.length, "validUpdates:", validUpdates, "liveCtx.actions exists?", !!liveCtx.actions?.updateSectionSettings);
+        if (validUpdates.length && liveCtx.actions?.updateSectionSettings) {
+          await liveCtx.actions.updateSectionSettings({ updates: validUpdates });
           const skipped = (updates || []).length - validUpdates.length;
-          cloneResults.push(
-            `**Section settings:** applied ${validUpdates.length} update(s)${skipped ? ` (${skipped} skipped — invalid section ID)` : ""} ✓`,
-          );
+          cloneResults.push(`**Section settings:** applied ${validUpdates.length} update(s)${skipped ? ` (${skipped} skipped — invalid section ID)` : ""} ✓`);
         } else if ((updates || []).length && !validUpdates.length) {
           cloneResults.push(`**Section settings:** skipped — no updates matched valid sections in the current form ✗`);
         }
-      } catch (err) {
-        cloneResults.push(`**Section settings:** failed — ${err?.message || "unknown error"} ✗`);
-      }
+      } catch (err) { cloneResults.push(`**Section settings:** failed — ${err?.message || "unknown error"} ✗`); }
 
       // Underwriting rules — independent step
       if (sourceFormId) {
         const targetFormId = ctx.currentState?.detailedForm?._id;
         try {
           if (targetFormId && ctx.actions.cloneRules) {
-            const result = await ctx.actions.cloneRules({
-              sourceFormId: String(sourceFormId),
-              targetFormId: String(targetFormId),
-            });
+            const result = await ctx.actions.cloneRules({ sourceFormId: String(sourceFormId), targetFormId: String(targetFormId) });
             if (result.cloned > 0) {
-              cloneResults.push(
-                `**Underwriting rules:** cloned ${result.cloned} rule(s)${result.skipped ? ` (${result.skipped} already present — skipped)` : ""} ✓`,
-              );
+              cloneResults.push(`**Underwriting rules:** cloned ${result.cloned} rule(s)${result.skipped ? ` (${result.skipped} already present — skipped)` : ""} ✓`);
             } else if (result.skipped > 0) {
-              cloneResults.push(
-                `**Underwriting rules:** all ${result.skipped} rule(s) already present on target — skipped ✓`,
-              );
+              cloneResults.push(`**Underwriting rules:** all ${result.skipped} rule(s) already present on target — skipped ✓`);
             } else {
-              cloneResults.push(
-                `**Underwriting rules:** no rules were copied — no underwriting rules were found in the source form`,
-              );
+              cloneResults.push(`**Underwriting rules:** no rules were copied — no underwriting rules were found in the source form`);
             }
           }
-        } catch (err) {
-          cloneResults.push(`**Underwriting rules:** failed — ${err?.message || "unknown error"} ✗`);
-        }
+        } catch (err) { cloneResults.push(`**Underwriting rules:** failed — ${err?.message || "unknown error"} ✗`); }
       }
 
       // Pass results to AI continuation so it can incorporate them into its final summary
       const resultSummary = cloneResults.length
-        ? `Completed form-level settings. Results:\n${cloneResults.join("\n")}\n\nNow continue with field updates if any, then produce a final summary that incorporates these results verbatim.`
-        : "Section settings applied to preview. Continue with field updates if any, then summarise.";
+        ? `Completed form-level settings. Results:\n${cloneResults.join("\n")}\n\nNow continue with field updates if any, then produce a final summary that incorporates these results verbatim. End with: "Say **save** to apply these changes to the live form, or **discard** to cancel."`
+        : "Section settings applied to preview. Continue with field updates if any, then summarise what changed. End your response with: \"Say **save** to apply these changes to the live form, or **discard** to cancel.\"";
       await continueAfterToolCall(tool, args, resultSummary, currentHistory, chatEndpoint, ctx);
+      // Auto-inject form preview built locally from ctx (which has previous pending edits applied)
+      // plus the new validUpdates — avoids a React render-timing race on hasPendingEdits.
+      if (validUpdates.length > 0) {
+        const nowCtx = getScreenContext();
+        const baseForm = (nowCtx?.screenId === ctx.screenId ? nowCtx : ctx).currentState?.detailedForm;
+        if (baseForm) {
+          const previewSections = (baseForm.sections || []).map((s) => {
+            const u = validUpdates.find((vu) => String(vu.sectionId) === String(s._id));
+            return toPreviewSection(s, u ? { displayText: u.displayText ?? s.displayText ?? "", signDisplayText: u.signDisplayText ?? s.signDisplayText ?? "", isHidden: u.isHidden ?? s.isHidden ?? false } : {});
+          });
+          addMessage({ role: "assistant", content: "", formPreview: { formName: baseForm.name || baseForm.headerText, sections: previewSections } });
+        }
+      }
       return;
     }
 
@@ -1301,57 +914,71 @@ export function createApplyToolCall(bindings) {
       const { updates } = args;
       try {
         if (ctx.actions.updateFieldSettings) await ctx.actions.updateFieldSettings({ updates });
-        await continueAfterToolCall(
-          tool,
-          args,
-          "Field settings applied to preview.",
-          currentHistory,
-          chatEndpoint,
-          ctx,
-        );
+        await continueAfterToolCall(tool, args, "Field settings applied to preview. Summarise what changed, then end with: \"Say **save** to apply these changes to the live form, or **discard** to cancel.\"", currentHistory, chatEndpoint, ctx);
+        if (updates?.length) {
+          const nowCtx = getScreenContext();
+          const baseForm = (nowCtx?.screenId === ctx.screenId ? nowCtx : ctx).currentState?.detailedForm;
+          if (baseForm) {
+            const previewSections = (baseForm.sections || []).map((s) => {
+              const su = updates.find((u) => String(u.sectionId) === String(s._id));
+              if (!su) return toPreviewSection(s);
+              const mergedFields = (s.fields || []).map((f) => { const fu = (su.fields || []).find((ff) => String(ff.fieldId) === String(f._id)); return fu ? { ...f, ...fu } : f; });
+              return toPreviewSection({ ...s, fields: mergedFields });
+            });
+            addMessage({ role: "assistant", content: "", formPreview: { formName: baseForm.name || baseForm.headerText, sections: previewSections } });
+          }
+        }
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
 
     if (tool === "reorderSections") {
-      const { sectionOrder, explanation } = args;
+      const { sectionOrder } = args;
       try {
+        console.log("[reorderSections handler] sectionOrder:", sectionOrder, "action exists?", !!ctx.actions?.reorderSections);
         if (ctx.actions.reorderSections) ctx.actions.reorderSections({ sectionOrder });
-        await continueAfterToolCall(tool, args, "Sections reordered in preview.", currentHistory, chatEndpoint, ctx);
+        console.log("[reorderSections handler] after action call, will continueAfterToolCall");
+        await continueAfterToolCall(tool, args, "Sections reordered in preview. Summarise what changed, then end with: \"Say **save** to apply these changes to the live form, or **discard** to cancel.\"", currentHistory, chatEndpoint, ctx);
+        if (sectionOrder?.length) {
+          const nowCtx = getScreenContext();
+          const baseForm = (nowCtx?.screenId === ctx.screenId ? nowCtx : ctx).currentState?.detailedForm;
+          if (baseForm) {
+            const orderMap = {}; (sectionOrder || []).forEach((id, i) => { orderMap[String(id)] = i; });
+            const previewSections = [...(baseForm.sections || [])]
+              .sort((a, b) => (orderMap[String(a._id)] ?? 9999) - (orderMap[String(b._id)] ?? 9999))
+              .map((s) => toPreviewSection(s));
+            addMessage({ role: "assistant", content: "", formPreview: { formName: baseForm.name || baseForm.headerText, sections: previewSections } });
+          }
+        }
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
 
     if (tool === "deleteSection") {
-      const { sectionId, explanation } = args;
+      const { sectionId } = args;
       try {
-        if (ctx.actions.deleteSection) ctx.actions.deleteSection({ sectionId });
-        await continueAfterToolCall(
-          tool,
-          args,
-          "Section marked for deletion in preview.",
-          currentHistory,
-          chatEndpoint,
-          ctx,
-        );
+        const liveCtx = getScreenContext() ?? ctx;
+        if (liveCtx.actions?.deleteSection) liveCtx.actions.deleteSection({ sectionId });
+        await continueAfterToolCall(tool, args, "Section marked for deletion in preview. Summarise what changed, then end with: \"Say **save** to apply these changes to the live form, or **discard** to cancel.\"", currentHistory, chatEndpoint, ctx);
+        if (sectionId) {
+          const nowCtx = getScreenContext();
+          const baseForm = (nowCtx?.screenId === ctx.screenId ? nowCtx : ctx).currentState?.detailedForm;
+          if (baseForm) {
+            const previewSections = (baseForm.sections || [])
+              .filter((s) => String(s._id) !== String(sectionId))
+              .map((s) => toPreviewSection(s));
+            addMessage({ role: "assistant", content: "", formPreview: { formName: baseForm.name || baseForm.headerText, sections: previewSections } });
+          }
+        }
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -1359,15 +986,20 @@ export function createApplyToolCall(bindings) {
     if (tool === "saveFormEdits") {
       const { explanation } = args;
       try {
-        if (ctx.actions.saveFormEdits) await ctx.actions.saveFormEdits();
-        addMessage({ role: "assistant", content: explanation || "All changes have been saved to the form." });
-        if (isVoiceModeRef.current) speak(explanation || "All changes have been saved.");
+        console.log("[saveFormEdits handler] ctx.actions.saveFormEdits exists?", !!ctx.actions?.saveFormEdits, "ctx.screenId:", ctx?.screenId);
+        const result = ctx.actions.saveFormEdits ? await ctx.actions.saveFormEdits() : null;
+        console.log("[saveFormEdits handler] result:", result);
+        if (result?.saved === false) {
+          addMessage({ role: "assistant", content: "There are no pending changes to save — your edits may have been lost. Please re-apply the changes and try again." });
+        } else if (result === null) {
+          addMessage({ role: "assistant", content: "Save could not run — the form editor context was not available. Please try again." });
+        } else {
+          addMessage({ role: "assistant", content: explanation || "All changes have been saved to the form." });
+          if (isVoiceModeRef.current) speak(explanation || "All changes have been saved.");
+        }
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `Save failed${detail ? `: ${detail}` : ""}. Some changes may not have been applied.`,
-        });
+        addMessage({ role: "assistant", content: `Save failed${detail ? `: ${detail}` : ""}. Some changes may not have been applied.` });
       }
       return;
     }
@@ -1380,6 +1012,28 @@ export function createApplyToolCall(bindings) {
       return;
     }
 
+    if (tool === "addSection") {
+      try {
+        if (ctx.actions.addSection) await ctx.actions.addSection(args);
+        await continueAfterToolCall(tool, args, "Section created successfully. The form has been reloaded with the new section.", currentHistory, chatEndpoint, ctx);
+      } catch (err) {
+        const detail = err?.data?.message || err?.message || "";
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+      }
+      return;
+    }
+
+    if (tool === "addField") {
+      try {
+        if (ctx.actions.addField) await ctx.actions.addField(args);
+        await continueAfterToolCall(tool, args, "Field created successfully. The form has been reloaded with the new field.", currentHistory, chatEndpoint, ctx);
+      } catch (err) {
+        const detail = err?.data?.message || err?.message || "";
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+      }
+      return;
+    }
+
     if (tool === "updateForms") {
       const { explanation, updates } = args;
       try {
@@ -1388,90 +1042,31 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
-      return;
-    }
-
-    if (tool === "openApplyBrandingModal") {
-      addMessage({ role: "assistant", content: APPLY_BRANDING_MODAL_DECLINE_MESSAGE });
-      if (isVoiceModeRef.current) speak(APPLY_BRANDING_MODAL_DECLINE_MESSAGE);
       return;
     }
 
     if (tool === "setFormsBranding") {
-      const { explanation, updates } = args;
-      const lastUser =
-        getLastUserMessageText(currentHistory) ||
-        getLastUserMessageText(getApiHistory?.() || []);
-      const blockMistaken = shouldBlockMistakenBrandingApply(lastUser);
-
-      if (blockMistaken) {
-        const navPage = resolveNavigationPageFromText(lastUser);
-        if (navPage) {
-          handleNavigateToPage({
-            page: navPage,
-            reason: `Taking you to ${PAGE_LABELS[navPage] || navPage}.`,
-            handoffMode: "greeting",
-          });
-          return;
-        }
-        const declineMessage = getMistakenBrandingApplyDeclineMessage(lastUser);
-        addMessage({ role: "assistant", content: declineMessage });
-        if (isVoiceModeRef.current) speak(declineMessage);
-        return;
-      }
-      const forms = ctx.forms || ctx.currentState?.forms || ctx.currentState?.availableForms || [];
-      const oldHomeBrandingId = ctx.homeBranding?._id ?? ctx.currentState?.homeBranding?._id ?? null;
-      let appliedHome = false;
-
-      const snapshot = updates.map(({ formId, brandingId, applyToHome }) => {
-        if (applyToHome) appliedHome = true;
-        const form = formId ? forms.find((f) => f._id === formId) : null;
-        return {
-          formId,
-          brandingId,
-          applyToHome: !!applyToHome,
-          oldBrandingId: form?.branding?._id ?? null,
-        };
+      const { explanation, updates: rawUpdates } = args;
+      const updates = rawUpdates || [];
+      // Snapshot old branding per affected form before overwriting
+      const forms = ctx.currentState?.forms || [];
+      const snapshot = updates.map(({ formId }) => {
+        const form = forms.find((f) => f._id === formId);
+        return { formId, oldBrandingId: form?.branding?._id ?? null };
       });
-
-      const formCount = snapshot.filter((s) => s.formId).length;
-      const targetDesc = [
-        formCount ? `${formCount} form(s)` : null,
-        appliedHome ? "home/website" : null,
-      ]
-        .filter(Boolean)
-        .join(" and ");
-
       pushRevertable({
-        description: `Applied branding to ${targetDesc || "selected target(s)"}`,
+        description: `Applied branding to ${updates.length} form(s)`,
         revertFn: async (freshCtx) => {
-          const revertUpdates = snapshot
-            .filter((s) => s.formId && s.oldBrandingId !== null)
+          const revertUpdates = snapshot.filter((s) => s.oldBrandingId !== null)
             .map((s) => ({ formId: s.formId, brandingId: s.oldBrandingId }));
-          const skipped = snapshot.filter((s) => s.formId && s.oldBrandingId === null).length;
+          const skipped = snapshot.filter((s) => s.oldBrandingId === null).length;
           if (revertUpdates.length > 0 && freshCtx?.actions?.setFormsBranding) {
             await freshCtx.actions.setFormsBranding({ updates: revertUpdates });
           }
-          if (appliedHome && oldHomeBrandingId && freshCtx?.actions?.setFormsBranding) {
-            await freshCtx.actions.setFormsBranding({
-              updates: [{ brandingId: oldHomeBrandingId, applyToHome: true }],
-            });
-          } else if (appliedHome && !oldHomeBrandingId) {
-            addMessage({
-              role: "assistant",
-              content: "Note: home/website had no prior branding and cannot be automatically cleared.",
-            });
-          }
           if (skipped > 0) {
-            addMessage({
-              role: "assistant",
-              content: `Note: ${skipped} form(s) had no branding set before this change and cannot be automatically reverted to "no branding".`,
-            });
+            addMessage({ role: "assistant", content: `Note: ${skipped} form(s) had no branding set before this change and cannot be automatically reverted to "no branding".` });
           }
         },
       });
@@ -1481,16 +1076,14 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
 
     if (tool === "setFormsLocation") {
-      const { explanation, updates } = args;
+      const { explanation, updates: rawUpdates } = args;
+      const updates = rawUpdates || [];
       // Snapshot old locationStatus per affected form
       const forms = ctx.currentState?.forms || [];
       const snapshot = updates.map(({ formId }) => {
@@ -1512,10 +1105,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -1528,24 +1118,20 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
 
     if (tool === "cloneForm") {
-      const { explanation, sourceFormId, newName } = args;
+      const { sourceFormId, newName } = args;
       try {
         if (ctx.actions.cloneForm) {
           const result = await ctx.actions.cloneForm({ sourceFormId, newName });
           const rulesCloned = result?.rulesCloned ?? 0;
-          const rulesNote =
-            rulesCloned > 0
-              ? `${rulesCloned} underwriting rule(s) cloned ✓`
-              : "No rules were copied — no underwriting rules were found in the source form";
+          const rulesNote = rulesCloned > 0
+            ? `${rulesCloned} underwriting rule(s) cloned ✓`
+            : "No rules were copied — no underwriting rules were found in the source form";
           await continueAfterToolCall(
             tool,
             args,
@@ -1557,10 +1143,7 @@ export function createApplyToolCall(bindings) {
         }
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -1569,20 +1152,10 @@ export function createApplyToolCall(bindings) {
       const { formId, templateIds } = args;
       try {
         if (ctx.actions.attachEmailTemplate) await ctx.actions.attachEmailTemplate({ formId, templateIds });
-        await continueAfterToolCall(
-          tool,
-          args,
-          "Email templates attached successfully.",
-          currentHistory,
-          chatEndpoint,
-          ctx,
-        );
+        await continueAfterToolCall(tool, args, "Email templates attached successfully.", currentHistory, chatEndpoint, ctx);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -1595,26 +1168,102 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
 
     if (tool === "attachTemplateToForms") {
-      const { explanation, formIds } = args;
+      const { explanation, formIds, templateId } = args;
       try {
-        if (ctx.actions.attachToForms) await ctx.actions.attachToForms({ formIds });
+        if (ctx.actions.attachToForms) await ctx.actions.attachToForms({ formIds, templateId });
         addMessage({ role: "assistant", content: explanation });
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+      }
+      return;
+    }
+
+    if (tool === "openTemplate") {
+      const { templateId, mode, explanation } = args;
+      try {
+        suppressNextScreenGreetingRef.current = true;
+        if (ctx.actions.openTemplate) ctx.actions.openTemplate({ templateId, mode: mode || "view" });
+        addMessage({ role: "assistant", content: explanation });
+        if (isVoiceModeRef.current) speak(explanation);
+      } catch (err) {
+        suppressNextScreenGreetingRef.current = false;
+        const detail = err?.message || "";
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+      }
+      return;
+    }
+
+    if (tool === "createTemplate") {
+      const { explanation } = args;
+      suppressNextScreenGreetingRef.current = true;
+      if (ctx.actions.createTemplate) ctx.actions.createTemplate();
+      addMessage({ role: "assistant", content: explanation });
+      if (isVoiceModeRef.current) speak(explanation);
+      return;
+    }
+
+    if (tool === "deleteTemplate") {
+      const { templateId, explanation } = args;
+      try {
+        suppressNextScreenGreetingRef.current = true;
+        if (ctx.actions.deleteTemplate) await ctx.actions.deleteTemplate({ templateId });
+        addMessage({ role: "assistant", content: explanation });
+        if (isVoiceModeRef.current) speak(explanation);
+      } catch (err) {
+        suppressNextScreenGreetingRef.current = false;
+        const detail = err?.data?.message || err?.message || "";
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+      }
+      return;
+    }
+
+    if (tool === "closeTemplate") {
+      const { explanation } = args;
+      suppressNextScreenGreetingRef.current = true;
+      if (ctx.actions.closeTemplate) ctx.actions.closeTemplate();
+      addMessage({ role: "assistant", content: explanation });
+      if (isVoiceModeRef.current) speak(explanation);
+      return;
+    }
+
+    if (tool === "switchTemplate") {
+      const { templateId, mode, explanation } = args;
+      try {
+        suppressNextScreenGreetingRef.current = true;
+        pendingFollowUpRef.current = { content: "The template has been switched. Based on the conversation history, if the user asked you to apply specific changes to this template, apply them now. Otherwise just wait for their next instruction.", silent: true };
+        if (ctx.actions.switchTemplate) ctx.actions.switchTemplate({ templateId, mode: mode || "view" });
+        addMessage({ role: "assistant", content: explanation });
+        if (isVoiceModeRef.current) speak(explanation);
+      } catch (err) {
+        suppressNextScreenGreetingRef.current = false;
+        pendingFollowUpRef.current = null;
+        const detail = err?.message || "";
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+      }
+      return;
+    }
+
+    if (tool === "saveAndOpenTemplate") {
+      const { templateId, mode, explanation } = args;
+      try {
+        suppressNextScreenGreetingRef.current = true;
+        pendingFollowUpRef.current = { content: "The template has been saved and switched. Based on the conversation history, if the user asked you to apply specific changes to this new template, apply them now. Otherwise just wait for their next instruction.", silent: true };
+        if (ctx.actions.saveAndOpenTemplate) await ctx.actions.saveAndOpenTemplate({ templateId, mode: mode || "view" });
+        addMessage({ role: "assistant", content: explanation });
+        if (isVoiceModeRef.current) speak(explanation);
+      } catch (err) {
+        suppressNextScreenGreetingRef.current = false;
+        pendingFollowUpRef.current = null;
+        const detail = err?.data?.message || err?.message || "";
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -1653,9 +1302,7 @@ export function createApplyToolCall(bindings) {
         // isLoading, and React can re-render sendMessageRef with the updated loading state.
         // sendMessage guards with `if (isLoading) return` so calling it synchronously here
         // (while still inside applyToolCall) silently no-ops.
-        setTimeout(() => {
-          if (sendMessageRef.current) sendMessageRef.current(csvMessage);
-        }, 100);
+        setTimeout(() => { if (sendMessageRef.current) sendMessageRef.current(csvMessage); }, 100);
       } catch (err) {
         addMessage({ role: "assistant", content: `Could not read the file: ${err.message}` });
       }
@@ -1682,7 +1329,7 @@ export function createApplyToolCall(bindings) {
             const text = await file.text();
             if (sendMessageRef.current) {
               await sendMessageRef.current(
-                `Here is the CSV I selected as a starting point:\n\n**File:** ${file.name}\n\`\`\`\n${text}\n\`\`\``,
+                `Here is the CSV I selected as a starting point:\n\n**File:** ${file.name}\n\`\`\`\n${text}\n\`\`\``
               );
             }
           } catch {
@@ -1692,6 +1339,27 @@ export function createApplyToolCall(bindings) {
         input.addEventListener("cancel", cleanup);
         input.click();
       }, 100);
+      return;
+    }
+
+    if (tool === "navigateToPage") {
+      const { page, reason, followUpTask } = args;
+      const route = PAGE_ROUTES[page];
+      const label = PAGE_LABELS[page] || page;
+      if (!route) return;
+
+      addMessage({
+        role: "assistant",
+        content: `Navigating you to **${label}**. ${reason}`,
+      });
+
+      // Store follow-up so the screen-change effect can auto-send it
+      pendingFollowUpRef.current = followUpTask;
+      if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
+      // Safety: clear the follow-up after 15 s if the destination page never loads
+      navTimeoutRef.current = setTimeout(() => { pendingFollowUpRef.current = null; }, 15000);
+
+      setTimeout(() => navigate(route), 300);
       return;
     }
 
@@ -1728,12 +1396,8 @@ export function createApplyToolCall(bindings) {
       }
 
       // Normalise phone numbers to E.164 format (+[country][number], digits only)
-      if (
-        fieldMeta?.type === "tel" ||
-        fieldMeta?.type === "phone" ||
-        /phone|mobile|cell/i.test(fieldId) ||
-        /phone|mobile|cell/i.test(fieldMeta?.label || "")
-      ) {
+      if (fieldMeta?.type === "tel" || fieldMeta?.type === "phone" ||
+          /phone|mobile|cell/i.test(fieldId) || /phone|mobile|cell/i.test(fieldMeta?.label || "")) {
         if (value) {
           // Strip everything except digits and a leading +
           let digits = value.replace(/[^\d+]/g, "");
@@ -1741,14 +1405,11 @@ export function createApplyToolCall(bindings) {
           if (!digits.startsWith("+") && !digits.startsWith("00")) {
             const fields = ctx.currentState?.fields || [];
             const countryField = fields.find((f) => /country/i.test(f.label) || /country/i.test(f.id));
-            const stateField = fields.find((f) => /\bstate\b/i.test(f.label) || /\bstate\b/i.test(f.id));
-            const countryVal = (countryField?.value || "").toLowerCase();
-            const stateVal = (stateField?.value || "").toLowerCase();
-            const isUS =
-              /^(us|usa|united states)$/.test(countryVal) ||
-              /^(al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy|dc)$/.test(
-                stateVal,
-              );
+            const stateField  = fields.find((f) => /\bstate\b/i.test(f.label)  || /\bstate\b/i.test(f.id));
+            const countryVal  = (countryField?.value || "").toLowerCase();
+            const stateVal    = (stateField?.value  || "").toLowerCase();
+            const isUS = /^(us|usa|united states)$/.test(countryVal) ||
+              /^(al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy|dc)$/.test(stateVal);
             digits = (isUS || (!countryVal && !stateVal) ? "+1" : "+") + digits;
           } else if (digits.startsWith("00")) {
             digits = "+" + digits.slice(2);
@@ -1756,14 +1417,13 @@ export function createApplyToolCall(bindings) {
           value = digits;
         }
       }
-      console.log(
-        `%c[TOOL:fillField] about to fill — fieldId="${fieldId}" value="${value}" (raw args.value="${args.value}")`,
-        "color:#e05; font-weight:bold",
-      );
+      console.log(`%c[TOOL:fillField] about to fill — fieldId="${fieldId}" value="${value}" (raw args.value="${args.value}")`, "color:#e05; font-weight:bold");
       try {
         if (ctx.actions.fillField) {
           // Dodge panel so user can see the field being filled
-          const fillEl = document.getElementById(fieldId) || document.querySelector(`[name="${CSS.escape(fieldId)}"]`);
+          const fillEl =
+            document.getElementById(fieldId) ||
+            document.querySelector(`[name="${CSS.escape(fieldId)}"]`);
           activatedFieldIdRef.current = fieldId;
           dodgeForField(fillEl);
           await ctx.actions.fillField({ fieldId, value });
@@ -1775,8 +1435,9 @@ export function createApplyToolCall(bindings) {
             ...ctx,
             currentState: {
               ...ctx.currentState,
-              fields:
-                ctx.currentState?.fields?.map((f) => (f.id === fieldId ? { ...f, value, filled: true } : f)) ?? [],
+              fields: ctx.currentState?.fields?.map((f) =>
+                f.id === fieldId ? { ...f, value, filled: true } : f
+              ) ?? [],
             },
           };
           // Build continuation result — tell the AI to advance to the next field in list order.
@@ -1789,14 +1450,15 @@ export function createApplyToolCall(bindings) {
           }
           // Send the function result back so the AI confirms the fill and immediately
           // asks for the next required field without waiting for user input.
-          await continueAfterToolCall(tool, args, fillResultMsg, currentHistory, chatEndpoint, patchedCtx);
+          await continueAfterToolCall(
+            tool, args,
+            fillResultMsg,
+            currentHistory, chatEndpoint, patchedCtx
+          );
         }
       } catch (err) {
         const detail = err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
       }
       return;
     }
@@ -1841,13 +1503,16 @@ export function createApplyToolCall(bindings) {
           ...ctx,
           currentState: {
             ...ctx.currentState,
-            fields:
-              ctx.currentState?.fields?.map((f) =>
-                f.isSignature || f.id === fieldId ? { ...f, value: "signed", filled: true } : f,
-              ) ?? [],
+            fields: ctx.currentState?.fields?.map((f) =>
+              f.isSignature || f.id === fieldId ? { ...f, value: "signed", filled: true } : f
+            ) ?? [],
           },
         };
-        await continueAfterToolCall(tool, args, sigResultMsg, currentHistory, chatEndpoint, patchedCtx);
+        await continueAfterToolCall(
+          tool, args,
+          sigResultMsg,
+          currentHistory, chatEndpoint, patchedCtx
+        );
       } else {
         addMessage({ role: "assistant", content: wt("errorCouldnt") + ". " + wt("tryAgain") });
       }
@@ -1863,21 +1528,15 @@ export function createApplyToolCall(bindings) {
       // Guard: openFieldPanel must never be called for radio or select fields.
       // If the AI does it anyway, send an error back so it corrects itself.
       if (fieldMeta?.type === "radio" || fieldMeta?.type === "select") {
-        const optionsList =
-          Array.isArray(fieldMeta.options) && fieldMeta.options.length
-            ? fieldMeta.options
-                .map((o, i) => `${String.fromCharCode(97 + i)}) ${o.label} [value: ${o.value}]`)
-                .join(", ")
-            : "(no options available)";
+        const optionsList = Array.isArray(fieldMeta.options) && fieldMeta.options.length
+          ? fieldMeta.options.map((o, i) => `${String.fromCharCode(97 + i)}) ${o.label} [value: ${o.value}]`).join(", ")
+          : "(no options available)";
         await continueAfterToolCall(
-          tool,
-          args,
+          tool, args,
           `ERROR: openFieldPanel cannot be used for "${fieldLabel}" because it is a ${fieldMeta.type} field. ` +
-            `You MUST output a chat message listing options instead and wait for the applicant's choice, then call fillField. ` +
-            `Field options: ${optionsList}. Do NOT call openFieldPanel again for this field.`,
-          currentHistory,
-          chatEndpoint,
-          ctx,
+          `You MUST output a chat message listing options instead and wait for the applicant's choice, then call fillField. ` +
+          `Field options: ${optionsList}. Do NOT call openFieldPanel again for this field.`,
+          currentHistory, chatEndpoint, ctx
         );
         return;
       }
@@ -1906,33 +1565,42 @@ export function createApplyToolCall(bindings) {
     }
 
     if (tool === "scrollToField") {
-      const { fieldId } = args;
-      // Always silent — scrollToField never produces a chat message or spoken output.
-      if (ctx.actions.scrollToField) {
+      const { fieldId, explanation } = args;
+      // Scroll into view
+      if (ctx.actions?.scrollToField) {
         ctx.actions.scrollToField({ fieldId });
       } else {
-        const el = document.getElementById(fieldId) || document.querySelector(`[name="${fieldId}"]`);
+        const el = document.getElementById(fieldId) || document.querySelector(`[name="${CSS.escape(fieldId)}"]`);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
       }
-      // Keep focus in the chat input, not on the scrolled-to field.
-      if (assistantMode === "applicant") {
-        setTimeout(() => inputRef.current?.focus(), 50);
+      // Focus the field after the scroll settles so the applicant can start typing immediately.
+      setTimeout(() => {
+        const el =
+          document.getElementById(fieldId) ||
+          document.querySelector(`[name="${CSS.escape(fieldId)}"]`) ||
+          document.querySelector(`[data-ai-id="${CSS.escape(fieldId)}"]`);
+        if (!el || el.getAttribute("data-ai-type") === "sign" || el.type === "hidden") return;
+        if (el.type === "radio") {
+          // Focus first radio in the group
+          const first = document.querySelector(`input[type="radio"][name="${CSS.escape(el.getAttribute("name") || "")}"]`);
+          if (first) first.focus();
+        } else {
+          el.focus();
+        }
+      }, 400);
+      // Show explanation if provided (missing-field walkthrough)
+      if (explanation) {
+        addMessage({ role: "assistant", content: explanation });
+        if (isVoiceModeRef.current) speak(explanation);
       }
-      // Send result back so the AI can continue to the next action (e.g. openFieldPanel).
-      await continueAfterToolCall(
-        tool,
-        args,
-        `Scrolled to field "${fieldId}". Now call openFieldPanel for this field — Data Collection rules apply. Do NOT use activateField or output chat text.`,
-        currentHistory,
-        chatEndpoint,
-        ctx,
-      );
       return;
     }
 
     if (tool === "activateField") {
       const { fieldId, explanation } = args;
-      const el = document.getElementById(fieldId) || document.querySelector(`[name="${CSS.escape(fieldId)}"]`);
+      const el =
+        document.getElementById(fieldId) ||
+        document.querySelector(`[name="${CSS.escape(fieldId)}"]`);
       activatedFieldIdRef.current = fieldId;
       // Always suppress the post-response chat auto-focus, even if the element
       // isn't found yet — we don't want the chat input stealing focus.
@@ -1944,11 +1612,10 @@ export function createApplyToolCall(bindings) {
         setTimeout(() => {
           // Re-look up in case React recreated the element during the wait
           const target =
-            document.getElementById(fieldId) || document.querySelector(`[name="${CSS.escape(fieldId)}"]`) || el;
-          if (!target) {
-            suppressChatFocusRef.current = false;
-            return;
-          }
+            document.getElementById(fieldId) ||
+            document.querySelector(`[name="${CSS.escape(fieldId)}"]`) ||
+            el;
+          if (!target) { suppressChatFocusRef.current = false; return; }
           target.scrollIntoView({ behavior: "instant", block: "center" });
 
           // Only move focus if the user hasn't already navigated to a different form field.
@@ -1957,22 +1624,16 @@ export function createApplyToolCall(bindings) {
           const active = document.activeElement;
           const alreadyOnTarget = active === target;
           const userMovedElsewhere =
-            !alreadyOnTarget &&
-            active &&
-            active !== inputRef.current &&
+            !alreadyOnTarget && active && active !== inputRef.current &&
             ["INPUT", "SELECT", "TEXTAREA"].includes(active.tagName);
           if (!alreadyOnTarget && !userMovedElsewhere) {
             target.focus();
-            try {
-              target.select();
-            } catch (_) {}
+            try { target.select(); } catch { /* ignore */ }
           }
 
           dodgeForField(target);
           // Release the chat-focus suppression shortly after so normal state can resume.
-          setTimeout(() => {
-            suppressChatFocusRef.current = false;
-          }, 400);
+          setTimeout(() => { suppressChatFocusRef.current = false; }, 400);
         }, 400);
       }
       addMessage({ role: "assistant", content: explanation });
@@ -1982,16 +1643,8 @@ export function createApplyToolCall(bindings) {
 
     if (tool === "submitOtpCode") {
       const { otp, email } = args;
-      console.log(
-        "%c[AI:submitOtpCode] tool fired — email=%s otp=%s screenId=%s",
-        "color:#ea580c; font-weight:bold",
-        email,
-        otp,
-        ctx?.screenId,
-      );
-      console.log(
-        "%c[AI:submitOtpCode] context fields=%o  actions=%o",
-        "color:#ea580c",
+      console.log("%c[AI:submitOtpCode] tool fired — email=%s otp=%s screenId=%s", "color:#ea580c; font-weight:bold", email, otp, ctx?.screenId);
+      console.log("%c[AI:submitOtpCode] context fields=%o  actions=%o", "color:#ea580c",
         ctx?.currentState?.fields?.map((f) => ({ id: f.id, value: f.value, filled: f.filled })),
         Object.keys(ctx?.actions || {}),
       );
@@ -2007,11 +1660,7 @@ export function createApplyToolCall(bindings) {
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
         resultSummary = `OTP verification failed${detail ? `: ${detail}` : ""}. Ask the applicant whether they entered the code correctly and invite them to try again.`;
-        console.error(
-          "%c[AI:submitOtpCode] ✗ verification failed — detail=%s",
-          "color:#dc2626; font-weight:bold",
-          detail,
-        );
+        console.error("%c[AI:submitOtpCode] ✗ verification failed — detail=%s", "color:#dc2626; font-weight:bold", detail);
       }
       console.log("%c[AI:submitOtpCode] resultSummary → %s", "color:#ea580c", resultSummary);
       await continueAfterToolCall(tool, args, resultSummary, currentHistory, chatEndpoint, ctx);
@@ -2020,15 +1669,8 @@ export function createApplyToolCall(bindings) {
 
     if (tool === "submitEmailForOtp") {
       const { email } = args;
-      console.log(
-        "%c[AI:submitEmailForOtp] tool fired — email=%s screenId=%s",
-        "color:#ea580c; font-weight:bold",
-        email,
-        ctx?.screenId,
-      );
-      console.log(
-        "%c[AI:submitEmailForOtp] context fields=%o  actions=%o",
-        "color:#ea580c",
+      console.log("%c[AI:submitEmailForOtp] tool fired — email=%s screenId=%s", "color:#ea580c; font-weight:bold", email, ctx?.screenId);
+      console.log("%c[AI:submitEmailForOtp] context fields=%o  actions=%o", "color:#ea580c",
         ctx?.currentState?.fields?.map((f) => ({ id: f.id, value: f.value, filled: f.filled })),
         Object.keys(ctx?.actions || {}),
       );
@@ -2054,39 +1696,29 @@ export function createApplyToolCall(bindings) {
       await new Promise((r) => setTimeout(r, 150));
       const freshCtx = getScreenContext();
       // If the page navigated away (context null or different screenId), the screen-change
-      // effect and autoGuide handle the transition — nothing more needed here.
+      // effect handles the transition — nothing more needed here.
       if (!freshCtx || freshCtx.screenId !== ctx.screenId) return;
       // Build a compact confirmed-values block so the AI can do Step 1 matching on the
       // next page without relying on scanning conversation history.
       const confirmedEntries = Object.entries(confirmedValuesRef.current);
-      const confirmedBlock =
-        confirmedEntries.length > 0
-          ? ` [CONFIRMED THIS SESSION: ${confirmedEntries.map(([k, v]) => `${k}="${v}"`).join(", ")}]`
-          : "";
+      const confirmedBlock = confirmedEntries.length > 0
+        ? ` [CONFIRMED THIS SESSION: ${confirmedEntries.map(([k, v]) => `${k}="${v}"`).join(", ")}]`
+        : "";
       await continueAfterToolCall(
-        tool,
-        args,
+        tool, args,
         `Moved to the next step successfully.${confirmedBlock}`,
-        currentHistory,
-        chatEndpoint,
-        freshCtx,
+        currentHistory, chatEndpoint, freshCtx
       );
       return;
     }
 
     if (tool === "enterTranslationMode") {
       const { language, languageName, explanation } = args;
-      const { text: explanationText, detectedLanguage: taggedLang } = stripLangTag(explanation || "");
-      const mode = {
-        lang: language || taggedLang || "en",
-        langName: languageName || "English",
-      };
+      const mode = { lang: language, langName: languageName };
       translationModeRef.current = mode;
       setTranslationMode(mode);
-      if (lastDetectedLanguageRef) lastDetectedLanguageRef.current = mode.lang;
       tooltipCacheRef.current = {}; // clear cached translations from any previous language
-      addMessage({ role: "assistant", content: explanationText, lang: mode.lang });
-      if (isVoiceModeRef.current && explanationText) speak(explanationText);
+      addMessage({ role: "assistant", content: explanation || "" });
       return;
     }
 
@@ -2096,12 +1728,9 @@ export function createApplyToolCall(bindings) {
       const freshCtx = getScreenContext();
       if (!freshCtx || freshCtx.screenId !== ctx.screenId) return;
       await continueAfterToolCall(
-        tool,
-        args,
+        tool, args,
         "Moved to the previous step successfully.",
-        currentHistory,
-        chatEndpoint,
-        freshCtx,
+        currentHistory, chatEndpoint, freshCtx
       );
       return;
     }
@@ -2116,10 +1745,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `Couldn't create the test case${detail ? `: ${detail}` : ""}. Please try again.`,
-        });
+        addMessage({ role: "assistant", content: `Couldn't create the test case${detail ? `: ${detail}` : ""}. Please try again.` });
       }
       return;
     }
@@ -2132,10 +1758,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `Couldn't update the test case${detail ? `: ${detail}` : ""}. Please try again.`,
-        });
+        addMessage({ role: "assistant", content: `Couldn't update the test case${detail ? `: ${detail}` : ""}. Please try again.` });
       }
       return;
     }
@@ -2148,10 +1771,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `Couldn't delete the test case(s)${detail ? `: ${detail}` : ""}. Please try again.`,
-        });
+        addMessage({ role: "assistant", content: `Couldn't delete the test case(s)${detail ? `: ${detail}` : ""}. Please try again.` });
       }
       return;
     }
@@ -2164,10 +1784,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `Couldn't duplicate the test case${detail ? `: ${detail}` : ""}. Please try again.`,
-        });
+        addMessage({ role: "assistant", content: `Couldn't duplicate the test case${detail ? `: ${detail}` : ""}. Please try again.` });
       }
       return;
     }
@@ -2196,10 +1813,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `Couldn't seed from static files${detail ? `: ${detail}` : ""}. Please try again.`,
-        });
+        addMessage({ role: "assistant", content: `Couldn't seed from static files${detail ? `: ${detail}` : ""}. Please try again.` });
       }
       return;
     }
@@ -2209,16 +1823,8 @@ export function createApplyToolCall(bindings) {
     if (tool === "updateBuilderSteps") {
       const { message, ...stepsData } = args;
       if (ctx.actions.updateBuilderSteps) ctx.actions.updateBuilderSteps(stepsData);
-      addMessage({
-        role: "assistant",
-        content: null,
-        function_call: { name: "updateBuilderSteps", arguments: JSON.stringify(args) },
-      });
-      addMessage({
-        role: "function",
-        name: "updateBuilderSteps",
-        content: `Steps replaced. New step count: ${stepsData.steps?.length ?? 0}.`,
-      });
+      addMessage({ role: "assistant", content: null, function_call: { name: "updateBuilderSteps", arguments: JSON.stringify(args) } });
+      addMessage({ role: "function", name: "updateBuilderSteps", content: `Steps replaced. New step count: ${stepsData.steps?.length ?? 0}.` });
       addMessage({ role: "assistant", content: message });
       if (isVoiceModeRef.current) speak(message);
       return;
@@ -2228,16 +1834,8 @@ export function createApplyToolCall(bindings) {
       const { message, ...stepData } = args;
       if (ctx.actions.addStepToBuilder) ctx.actions.addStepToBuilder(stepData);
       const stepDesc = `${stepData.step?.action || ""}${stepData.step?.selector ? ` ${stepData.step.selector}` : ""}${stepData.step?.value ? ` "${stepData.step.value}"` : ""}`;
-      addMessage({
-        role: "assistant",
-        content: null,
-        function_call: { name: "addStepToBuilder", arguments: JSON.stringify(args) },
-      });
-      addMessage({
-        role: "function",
-        name: "addStepToBuilder",
-        content: `Step confirmed and added: ${stepDesc}. Do NOT add this step again.`,
-      });
+      addMessage({ role: "assistant", content: null, function_call: { name: "addStepToBuilder", arguments: JSON.stringify(args) } });
+      addMessage({ role: "function", name: "addStepToBuilder", content: `Step confirmed and added: ${stepDesc}. Do NOT add this step again.` });
       addMessage({ role: "assistant", content: message });
       if (isVoiceModeRef.current) speak(message);
       return;
@@ -2259,10 +1857,7 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `Couldn't save the demo action${detail ? `: ${detail}` : ""}. Please try again.`,
-        });
+        addMessage({ role: "assistant", content: `Couldn't save the demo action${detail ? `: ${detail}` : ""}. Please try again.` });
       }
       return;
     }
@@ -2282,7 +1877,22 @@ export function createApplyToolCall(bindings) {
       if (isVoiceModeRef.current) speak(explanation);
       return;
     }
-  }
+
+    if (tool === "downloadDocument") {
+      const { explanation } = args;
+      addMessage({ role: "assistant", content: explanation || "Creating your download…" });
+      if (isVoiceModeRef.current) speak(explanation || "Creating your download.");
+      if (ctx.actions.downloadDocument) await ctx.actions.downloadDocument();
+      addMessage({
+        role: "assistant",
+        content:
+          "Your copy of this agreement has been downloaded. " +
+          "If you'd like a combined download that also includes the information you entered on this page, " +
+          "use the **Download** button on the form below.",
+      });
+      return;
+    }
+  };
 
   return applyToolCall;
 }

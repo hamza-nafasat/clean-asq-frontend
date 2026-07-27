@@ -103,6 +103,12 @@ const Email = () => {
   const [menuOpenId, setMenuOpenId] = useState(null);
   const [isReadOnly, setIsReadOnly] = useState(true);
 
+  // Always-current ref — updated on every render so that action closures
+  // (registered in useScreenContext) always read the latest state values
+  // even if they were captured in an earlier render's closure.
+  const latestRef = useRef({ editData, isEdit, viewModalData });
+  latestRef.current = { editData, isEdit, viewModalData };
+
   const [createEmailTemplate] = useCreateEmailTemplateMutation();
   const [updateEmailTemplate] = useUpdateSingleEmailTemplateMutation();
   const [deleteEmailTemplate] = useDeleteSingleEmailTemplateMutation();
@@ -158,12 +164,22 @@ const Email = () => {
       ? `Hi! I can see you have **${editData.templateName || "a template"}** open.\n\nI can help you:\n- **Draft** or rewrite the subject line and body\n- **Proofread and enhance** the existing content\n- **Reformat** for clarity and professionalism\n- **Insert variables** like {{recipientName}} or {{link}} where appropriate\n\nWhat would you like me to do?`
       : `Hi! I'm your email template assistant.\n\nI can help you:\n- **Draft** new email templates from scratch\n- **Proofread and enhance** existing content\n- **Reformat** templates for clarity and professionalism\n\nTo get started, please **open or create an email template** using the list below — I'll be ready to help once you do!`,
     currentState: {
+      screenState: viewModalData?._id ? "edit" : viewModalData ? "create" : "list",
       templateName: editData.templateName,
       emailType: editData.emailType,
       subject: editData.subject,
       body: editData.body,
       isReadOnly,
       availableVariables: sedationKeywords.map((k) => `{{${k}}}`).join(", "),
+      // Templates list — shown when on the list page
+      templates: (templates || []).map((t) => ({
+        _id: t._id,
+        templateName: t.templateName,
+        emailType: t.emailType,
+        subject: t.subject,
+        attachedFormCount: (t.forms || []).length,
+        attachedFormNames: (t.forms || []).map((f) => f.name),
+      })),
       // Derive attached forms from the live query rather than viewModalData so it auto-updates after attach/detach
       attachedForms: viewModalData?._id
         ? (templates?.find((t) => t._id === viewModalData._id)?.forms || []).map((f) => ({ _id: f._id, name: f.name }))
@@ -180,12 +196,58 @@ const Email = () => {
         if (viewModalData?._id) setIsEdit(true);
       },
       saveEmailTemplate: () => handleSave(),
-      attachToForms: async ({ formIds }) => {
-        if (!viewModalData?._id) throw new Error("No template is currently open");
-        await attachEmailTemplate({
-          emailTemplateId: viewModalData._id,
-          formIds,
-        }).unwrap();
+      saveAndAttachToForms: async ({ formIds }) => {
+        // Read from ref so we always get the latest viewModalData._id,
+        // even if this action closure was captured in an earlier render.
+        const id = latestRef.current.viewModalData?._id;
+        if (!id) throw new Error("No template is currently open");
+        await handleSave();
+        await attachEmailTemplate({ emailTemplateId: id, formIds }).unwrap();
+      },
+      attachToForms: async ({ formIds, templateId }) => {
+        const id = templateId || viewModalData?._id;
+        if (!id) throw new Error("No template specified");
+        await attachEmailTemplate({ emailTemplateId: id, formIds }).unwrap();
+      },
+      openTemplate: ({ templateId, mode }) => {
+        const template = (templates || []).find((t) => String(t._id) === String(templateId));
+        if (!template) throw new Error(`Template not found`);
+        if (mode === "edit") {
+          handleEdit(template);
+        } else {
+          handleView(template);
+        }
+      },
+      createTemplate: () => handleCreate(),
+      closeTemplate: () => {
+        setViewModalData(null);
+        setIsEdit(false);
+      },
+      saveAndOpenTemplate: async ({ templateId, mode }) => {
+        await handleSave();
+        const template = (templates || []).find((t) => String(t._id) === String(templateId));
+        if (!template) throw new Error(`Template not found`);
+        if (mode === "edit") {
+          handleEdit(template);
+        } else {
+          handleView(template);
+        }
+      },
+      switchTemplate: ({ templateId, mode }) => {
+        const template = (templates || []).find((t) => String(t._id) === String(templateId));
+        if (!template) throw new Error(`Template not found`);
+        setViewModalData(null);
+        setIsEdit(false);
+        if (mode === "edit") {
+          handleEdit(template);
+        } else {
+          handleView(template);
+        }
+      },
+      deleteTemplate: async ({ templateId }) => {
+        const template = (templates || []).find((t) => String(t._id) === String(templateId));
+        if (!template) throw new Error(`Template not found`);
+        await deleteEmailTemplate({ emailTemplateId: templateId }).unwrap();
       },
     },
     deps: {
@@ -194,6 +256,7 @@ const Email = () => {
       subject: editData.subject,
       body: editData.body,
       templateName: editData.templateName,
+      templatesCount: templates?.length,
       attachedFormCount: viewModalData?._id
         ? (templates?.find((t) => t._id === viewModalData._id)?.forms || []).length
         : 0,
@@ -205,15 +268,18 @@ const Email = () => {
   };
 
   const handleSave = async () => {
-    console.log("Saved Data:", editData);
+    // Always read from the ref so we get the latest editData/isEdit/viewModalData,
+    // not whatever was captured in the closure when this function was defined.
+    const { editData: data, isEdit: edit, viewModalData: vmd } = latestRef.current;
+    console.log("Saved Data:", data);
 
     try {
-      const res = isEdit
+      const res = edit
         ? await updateEmailTemplate({
-            id: viewModalData?._id,
-            ...editData,
+            id: vmd?._id,
+            ...data,
           }).unwrap()
-        : await createEmailTemplate(editData).unwrap();
+        : await createEmailTemplate(data).unwrap();
 
       if (res?.success) {
         toast.success(res.message);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Button from "../shared/small/Button";
 
-const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequiredFields = [] }) => {
+const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequiredFields = [], headerActions }) => {
   const [visibleStepRange, setVisibleStepRange] = useState({ start: 0, end: visibleSteps });
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const totalSteps = steps.length;
@@ -101,6 +101,9 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
           );
         })}
       </div>
+
+      {/* Optional actions rendered between step nav and content (e.g. Download button) */}
+      {headerActions && <div className="flex justify-end mb-2">{headerActions}</div>}
 
       {/* Step Content */}
       <div className="h-[calc(100vh-420px)] overflow-y-auto">{children}</div>

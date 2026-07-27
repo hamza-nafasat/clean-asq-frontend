@@ -300,11 +300,6 @@ const SelectInputType = ({ field, className, form, setForm, onChange }) => {
               </option>
             ))}
           </select>
-          {aiHelp && (
-            <div className="flex items-center">
-              <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
-            </div>
-          )}
         </div>
       </div>
     </>
@@ -362,11 +357,6 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
             />
           </div>
         ))}
-        {aiHelp && (
-          <div className="ml-auto flex items-center">
-            <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
-          </div>
-        )}
       </div>
     </div>
   );
@@ -401,11 +391,6 @@ const RadioInputType = ({ field, className, form, setForm, onChange, disabled = 
         <h4 className="text-textPrimary min-w-50 text-base font-medium lg:text-lg">
           {label}:{required ? "*" : ""}
         </h4>
-        {aiHelp && (
-          <div className="justify-end items-center ml-auto flex">
-            <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
-          </div>
-        )}
       </div>
       <div className="border-b-2 py-2">
         <div className={`grid grid-cols-${optionColumnCount} gap-4 p-0`}>
@@ -487,11 +472,6 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
               </h4>
             )}
           </div>
-          {aiHelp && (
-            <div className="mt-8 flex items-center">
-              <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
-            </div>
-          )}
         </div>
       </div>
       <div className="flex w-full gap-2 px-6">
@@ -593,11 +573,6 @@ const RangeInputType = ({ field, className, form, setForm }) => {
             }`}
             onChange={onRangeChange}
           />
-          {aiHelp && (
-            <div className="flex items-center">
-              <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -1009,11 +984,6 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                 </div>
               )}
             </div>
-            {aiHelp && (
-              <div className="mt-8 flex items-center">
-                <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
-              </div>
-            )}
           </section>
         </article>
       </div>
@@ -1152,11 +1122,6 @@ const FileInputType = ({ field, className, form, setForm }) => {
 
           {previewUrl && <img src={previewUrl} alt="Preview" className="mt-3 max-h-40 rounded border" />}
         </div>
-        {aiHelp && (
-          <div className="flex items-center">
-            <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
-          </div>
-        )}
       </div>
     </div>
   );
@@ -1294,11 +1259,6 @@ export const SimpleRadioInputType = ({ field, className, form, setForm, onChange
         <h4 className="text-textPrimary min-w-50 text-base font-medium lg:text-lg">
           {label}:{required ? "*" : ""}
         </h4>
-        {aiHelp && (
-          <div className="justify-end items-center ml-auto flex">
-            <Button label="Help" className="max-h-fit! text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
-          </div>
-        )}
       </div>
       <div className="border-b-2 py-2">
         <div className="grid grid-cols-3 gap-4 p-0">
