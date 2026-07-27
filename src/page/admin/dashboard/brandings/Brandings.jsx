@@ -280,7 +280,7 @@ const Brandings = () => {
     currentState: {
       forms: (allFormsData?.data || []).map((f) => ({
         _id: f._id,
-        name: f.headerText || f.name || "Untitled",
+        name: f.name || f.headerText || "Untitled",
       })),
       brandings: (brandings?.data || []).map((b) => ({
         _id: b._id,

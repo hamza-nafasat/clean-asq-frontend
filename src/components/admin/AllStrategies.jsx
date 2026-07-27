@@ -62,7 +62,7 @@ function AllStrategies() {
           })),
           forms: (s.forms || []).map((f) => ({
             _id: f._id,
-            name: f.headerText || f.name,
+            name: f.name || f.headerText,
             isStale: !f._id || !activeFormIds.has(String(f._id)),
           })),
         };
@@ -74,7 +74,7 @@ function AllStrategies() {
         extractAs: l.extractAs,
         isActive: l.isActive,
       })),
-      availableForms: (formData?.data || []).map((f) => ({ _id: f._id, name: f.headerText || f.name })),
+      availableForms: (formData?.data || []).map((f) => ({ _id: f._id, name: f.name || f.headerText })),
     },
     actions: {
       createStrategy: async ({ name, searchStrategyIds, formIds }) => {
@@ -230,10 +230,10 @@ function AllStrategies() {
               className="text-amber-600"
               title="This form no longer exists — the strategy has a stale reference"
             >
-              {item?.headerText || item?.name || "(deleted)"} ⚠
+              {item?.name || item?.headerText || "(deleted)"} ⚠
             </span>
           ) : (
-            <span key={i}>{item?.headerText || item?.name}</span>
+            <span key={i}>{item?.name || item?.headerText}</span>
           );
         });
         if (!parts.length) return <span className="text-gray-400">—</span>;

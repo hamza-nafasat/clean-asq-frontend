@@ -125,7 +125,12 @@ export default function SingleApplication() {
   // Download button — shown only when idMissionFormRef is mounted (IDMission details stage).
   // getHasFields returns false when the ref is null (QR / OTP stages), so shouldShow auto-toggles
   // without any hardcoded stage checks.
-  const { buttonLabel: downloadLabel, shouldShow: showDownload, handleDownload, isDownloading } = usePageDownload({
+  const {
+    buttonLabel: downloadLabel,
+    shouldShow: showDownload,
+    handleDownload,
+    isDownloading,
+  } = usePageDownload({
     pageName: idMissionSection?.name || "Identity Verification",
     displayHtml: form?.data?.idMissionDataDisplayFormatedText || "",
     userName: [user?.firstName, user?.lastName].filter(Boolean).join(" ") || null,
@@ -803,7 +808,7 @@ export default function SingleApplication() {
   // add footer and header text in state
   useEffect(() => {
     const { footerText, headerText, name, headerTextSize } = form?.data || {};
-    if (footerText || headerText || name || headerTextSize) {
+    if (footerText || name || headerText || headerTextSize) {
       dispatch(updateFormHeaderAndFooter({ headerText, footerText, headerTextSize }));
     }
     return () => {
