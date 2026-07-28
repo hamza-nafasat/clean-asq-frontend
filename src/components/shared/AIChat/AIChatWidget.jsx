@@ -283,7 +283,7 @@ export default function AIChatWidget() {
     const checkAndFlag = (el) => {
       if (!el || el === inputRef.current) return false;
       if (!["INPUT", "SELECT", "TEXTAREA"].includes(el.tagName)) return false;
-      if (el.type === "password") return false;
+      if (el.type === "password" || el.type === "checkbox" || el.type === "radio") return false;
       if (el.closest?.("[data-ai-type='sign']")) return false;
 
       const rawValue = el.value?.trim();
@@ -302,6 +302,14 @@ export default function AIChatWidget() {
 
       const fieldLabel = meta?.label || fieldId;
       const fieldType  = meta?.type  || el.type || "text";
+
+      // Company verification: "This company has no website" means skip website URL checks
+      const noWebsiteEl =
+        document.getElementById("noWebsite") || document.querySelector('input[name="noWebsite"]');
+      if (noWebsiteEl?.checked) {
+        const idLabel = `${fieldId} ${fieldLabel}`.toLowerCase();
+        if (/(website|web\s*site|\burl\b|homepage|domain|company-url)/.test(idLabel)) return false;
+      }
 
       const confirmed = confirmedErrorsRef.current[fieldId];
       if (confirmed instanceof Set && confirmed.has(rawValue)) return false;
@@ -331,8 +339,20 @@ export default function AIChatWidget() {
       return true;
     };
 
+    // When the applicant clicks the "no website" checkbox/label, the URL field's
+    // focusout fires before the checkbox is checked — skip validating that blur.
+    let skipNextWebsiteFocusOut = false;
+    const isNoWebsiteControl = (node) =>
+      !!node?.closest?.(
+        '#noWebsite, input[name="noWebsite"], [data-testid="company-no-website-checkbox"], label[for="noWebsite"]',
+      );
+
     const onCaptureMouseDown = (e) => {
       if (e.target.closest("[data-field-error-modal]")) return;
+      if (isNoWebsiteControl(e.target)) {
+        skipNextWebsiteFocusOut = true;
+        return;
+      }
       const actionEl = e.target.closest("button, a, input[type='submit'], [role='button']");
       if (!actionEl) return;
       const focused = document.activeElement;
@@ -343,6 +363,13 @@ export default function AIChatWidget() {
     };
 
     const onFocusOut = (e) => {
+      if (skipNextWebsiteFocusOut) {
+        skipNextWebsiteFocusOut = false;
+        const leaving = `${e.target?.id || ""} ${e.target?.name || ""} ${e.target?.getAttribute?.("data-testid") || ""}`.toLowerCase();
+        if (/(website|web\s*site|\burl\b|homepage|domain|company-url)/.test(leaving)) return;
+      }
+      const next = e.relatedTarget;
+      if (isNoWebsiteControl(next)) return;
       checkAndFlag(e.target);
     };
 

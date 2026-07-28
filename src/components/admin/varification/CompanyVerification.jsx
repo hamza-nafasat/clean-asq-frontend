@@ -312,7 +312,10 @@ function CompanyVerification({ formId, brandingName }) {
               name={"noWebsite"}
               data-testid="company-no-website-checkbox"
               checked={form.noWebsite}
-              onChange={(e) => setForm({ ...form, noWebsite: e.target.checked })}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setForm({ ...form, noWebsite: checked, ...(checked ? { url: "" } : {}) });
+              }}
             />
             {apisRes?.companyVerify?.confidenceScore && apisRes?.companyVerify?.verificationStatus && (
               <div className="flex w-44 items-center gap-2 rounded-2xl border p-2 py-1">

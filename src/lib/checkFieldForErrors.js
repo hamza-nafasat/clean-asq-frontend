@@ -49,7 +49,10 @@ export function checkFieldForErrors(fieldId, fieldLabel, fieldType, value) {
   const isEmailField   = type === "email" || matchesAny(["email", "e-mail", "e_mail"]);
   const isPhoneField   = type === "tel"   || matchesAny(["phone", "mobile", "cell", "fax", "telephone"]);
   const isDateField    = type === "date"  || matchesAny(["date", "dob", "birth", "expir", "issued", "issue date", "effective"]);
-  const isURLField     = type === "url"   || matchesAny(["website", "web site", "url", "site", "domain", "homepage"]);
+  const isURLField     = type === "url"   || (
+    matchesAny(["website", "web site", "url", "site", "domain", "homepage"]) &&
+    !matchesAny(["no website", "has no website", "without a website", "without website"])
+  );
   const isNameField    =
     !isEmailField && !isPhoneField && !isDateField && !isURLField &&
     matchesAny(["first name", "last name", "full name", "middle name", "given name", "surname", "fname", "lname", "fullname"]);
