@@ -57,10 +57,10 @@ export const BrandingProvider = ({ children }) => {
   const [aiBannerTextColor, setAiBannerTextColor] = useState("");
   const [aiUseCustomIcon, setAiUseCustomIcon] = useState(true);
   const [aiSliderColor, setAiSliderColor] = useState("");
-  const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState("");
-  const [termsOfServiceUrl, setTermsOfServiceUrl] = useState("");
+  const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState("https://fintainium.com/pp/");
+  const [termsOfServiceUrl, setTermsOfServiceUrl] = useState("https://fintainium.com/t&c/");
   const [favicon, setFavicon] = useState("");
-  const [tabTitle, setTabTitle] = useState("");
+  const [tabTitle, setTabTitle] = useState("Online-application");
   const [headerEffect, setHeaderEffect] = useState("none");
   const [footerEffect, setFooterEffect] = useState("none");
   const [emailHeaderEffect, setEmailHeaderEffect] = useState("none");
@@ -99,16 +99,16 @@ export const BrandingProvider = ({ children }) => {
       setAppLogoMaxWidth(savedBranding.appLogoMaxWidth || 300);
       setAppLogoMaxHeight(savedBranding.appLogoMaxHeight || 100);
       if (savedBranding.aiVoice) setAiVoice(savedBranding.aiVoice);
-      if (savedBranding.aiCustomPrompt !== undefined) setAiCustomPrompt(savedBranding.aiCustomPrompt);
+      if (savedBranding.aiCustomPrompt) setAiCustomPrompt(savedBranding.aiCustomPrompt);
       if (savedBranding.aiLaunchButtonColor) setAiLaunchButtonColor(savedBranding.aiLaunchButtonColor);
       if (savedBranding.aiHeaderColor) setAiHeaderColor(savedBranding.aiHeaderColor);
       if (savedBranding.aiBannerColor) setAiBannerColor(savedBranding.aiBannerColor);
       if (savedBranding.aiBannerTextColor) setAiBannerTextColor(savedBranding.aiBannerTextColor);
-      if (savedBranding.aiUseCustomIcon !== undefined) setAiUseCustomIcon(savedBranding.aiUseCustomIcon !== false);
+      if (savedBranding.aiUseCustomIcon) setAiUseCustomIcon(savedBranding.aiUseCustomIcon !== false);
       if (savedBranding.aiSliderColor) setAiSliderColor(savedBranding.aiSliderColor);
-      if (savedBranding.privacyPolicyUrl !== undefined) setPrivacyPolicyUrl(savedBranding.privacyPolicyUrl);
-      if (savedBranding.termsOfServiceUrl !== undefined) setTermsOfServiceUrl(savedBranding.termsOfServiceUrl);
-      if (savedBranding.favicon !== undefined) {
+      if (savedBranding.privacyPolicyUrl) setPrivacyPolicyUrl(savedBranding.privacyPolicyUrl);
+      if (savedBranding.termsOfServiceUrl) setTermsOfServiceUrl(savedBranding.termsOfServiceUrl);
+      if (savedBranding.favicon) {
         setFavicon(savedBranding.favicon);
         // Apply immediately to avoid flash — don't wait for the CSS-variables effect
         if (savedBranding.favicon) {
