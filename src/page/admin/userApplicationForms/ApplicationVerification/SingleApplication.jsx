@@ -36,9 +36,70 @@ import { Autocomplete } from "@react-google-maps/api";
 import { unwrapResult } from "@reduxjs/toolkit";
 import DOMPurify from "dompurify";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+
+/** Safe date normalize — IDMission may send DD/MM/YYYY or already-ISO values. */
+function safeFormatData(date) {
+  if (!date || typeof date !== "string") return "";
+  try {
+    if (date.includes("/")) return formatData(date);
+    // Already YYYY-MM-DD (or similar) — pass through
+    if (/^\d{4}-\d{2}-\d{2}/.test(date)) return date.slice(0, 10);
+    return date;
+  } catch {
+    return "";
+  }
+}
+
+/** Map IDMission webhook Form_Data into the local details-form shape. */
+function mapWebhookToIdMissionData(f, { emailFallback = "", createdAt } = {}) {
+  return {
+    name: {
+      name: "name",
+      value: makeCompleteName(f?.First_Name, f?.Middle_Name, f?.Last_Name, f?.FullName, f?.Name),
+    },
+    email: { name: "email", value: f?.Email || emailFallback || "" },
+    idNumber: { name: "idNumber", value: f?.ID_Number || "" },
+    idIssuer: {
+      name: "idIssuer",
+      value: f?.ID_State ? f?.ID_State + f?.Issuing_Country : f?.Issuing_Country || "",
+    },
+    idType: { name: "idType", value: f?.DocumentType || "" },
+    idExpiryDate: {
+      name: "idExpiryDate",
+      value: f?.Expiration_Date ? safeFormatData(f?.Expiration_Date) : "",
+    },
+    streetAddress: {
+      name: "streetAddress",
+      value: `${f?.ParsedAddressStreetNumber || ""} ${f?.ParsedAddressStreetName || ""}`.trim(),
+    },
+    phoneNumber: { name: "phoneNumber", value: f?.PhoneNumber || "" },
+    zipCode: { name: "zipCode", value: f?.ParsedAddressPostalCode || "" },
+    dateOfBirth: {
+      name: "dateOfBirth",
+      value: f?.Date_of_Birth ? safeFormatData(f?.Date_of_Birth) : "",
+    },
+    country: { name: "country", value: f?.Issuing_Country || "" },
+    issueDate: {
+      name: "issueDate",
+      value: f?.Issue_Date ? safeFormatData(f?.Issue_Date) : "",
+    },
+    companyTitle: { name: "companyTitle", value: "" },
+    state: { name: "state", value: f?.ParsedAddressProvince || "" },
+    city: { name: "city", value: f?.ParsedAddressMunicipality || "" },
+    data: { name: "data", value: f || "null" },
+    createdAt: createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/** True when webhook/draft mapping has identity fields worth showing. */
+function hasUsableIdMissionData(mapped) {
+  return !!(mapped?.name?.value || mapped?.idNumber?.value);
+}
 
 export default function SingleApplication() {
   const navigate = useNavigate();
@@ -56,6 +117,8 @@ export default function SingleApplication() {
   const [otpSent, setOtpSent] = useState(false);
   const [isIdMissionProcessing, setIsIdMissionProcessing] = useState(false);
   const [idMissionVerified, setIdMissionVerified] = useState(false);
+  // Only reveal the details form after data is committed (avoids empty→fill flash).
+  const [idMissionDetailsReady, setIdMissionDetailsReady] = useState(false);
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [submiting, setSubmiting] = useState(false);
   const [emailVerifiedLoading, setEmailVerifiedLoading] = useState(false);
@@ -102,8 +165,21 @@ export default function SingleApplication() {
   const idMissionFormRef = useRef(null); // used by DOM field discovery
   const initialDataLoadRef = useRef(null); // tracks the in-flight getSavedFormDataAndSaveInRedux promise
   const navigatingAwayRef = useRef(false); // set true before navigate() to suppress idmission-qr stage during the outbound render
+  // Once webhook/scan data is applied, draft hydrate must not overwrite it with empty values.
+  const idMissionScanAppliedRef = useRef(false);
+  // Manual entry may show an intentionally empty form; scan path must not.
+  const idMissionManualEntryRef = useRef(false);
   const hasFocusedDetailsRef = useRef(false);
   const submitFromEnterRef = useRef(null);
+  // Stable refs so socket listeners are registered once (profile sync must not rebind/off them).
+  const userRef = useRef(user);
+  const dispatchRef = useRef(dispatch);
+  const getUserProfileRef = useRef(getUserProfile);
+  const updateMyProfileRef = useRef(updateMyProfile);
+  userRef.current = user;
+  dispatchRef.current = dispatch;
+  getUserProfileRef.current = getUserProfile;
+  updateMyProfileRef.current = updateMyProfile;
 
   // ─── Render-level state snapshot ────────────────────────────────────────────
   // Fires on every render so we can trace what changed.
@@ -349,37 +425,46 @@ export default function SingleApplication() {
           );
           const action = await dispatch(addSavedFormData(savedData || []));
           unwrapResult(action);
-          setIdMissionVerifiedData({
-            name: { name: "name", value: formDataOfIdMission?.name?.value || "" },
-            // Priority: (1) fresh OTP email from this session, (2) previously-saved draft
-            // email (also OTP-verified), (3) user?.email — safe here because after OTP
-            // verification the user is logged in AS the OTP email, so user?.email === OTP email.
-            // We never reach this fallback chain before emailVerified is true.
-            email: { name: "email", value: email || formDataOfIdMission?.email?.value || user?.email || "" },
-            idNumber: { name: "idNumber", value: formDataOfIdMission?.idNumber?.value || "" },
-            idIssuer: { name: "idIssuer", value: formDataOfIdMission?.idIssuer?.value || "" },
-            idType: { name: "idType", value: formDataOfIdMission?.idType?.value || "" },
-            idExpiryDate: { name: "idExpiryDate", value: formDataOfIdMission?.idExpiryDate?.value || "" },
-            streetAddress: { name: "streetAddress", value: formDataOfIdMission?.streetAddress?.value || "" },
-            address2: { name: "address2", value: formDataOfIdMission?.address2?.value || "" },
-            phoneNumber: { name: "phoneNumber", value: formDataOfIdMission?.phoneNumber?.value || "" },
-            zipCode: { name: "zipCode", value: formDataOfIdMission?.zipCode?.value || "" },
-            dateOfBirth: { name: "dateOfBirth", value: formDataOfIdMission?.dateOfBirth?.value || "" },
-            country: { name: "country", value: formDataOfIdMission?.country?.value || "" },
-            issueDate: { name: "issueDate", value: formDataOfIdMission?.issueDate?.value || "" },
-            companyTitle: { name: "companyTitle", value: formDataOfIdMission?.companyTitle?.value || "" },
-            state: { name: "state", value: formDataOfIdMission?.state?.value || "" },
-            city: { name: "city", value: formDataOfIdMission?.city?.value || "" },
-            signature: { name: "signature", value: formDataOfIdMission?.signature?.value || "" },
-            createdAt: formDataOfIdMission?.createdAt || new Date().toISOString(),
-            updatedAt: formDataOfIdMission?.updatedAt || new Date().toISOString(),
-          });
+          // Don't clobber fields that were just filled from an IDMission webhook/scan.
+          if (idMissionScanAppliedRef.current) {
+            console.log(
+              "%c[SA:getSavedForm] skip setIdMissionVerifiedData — scan data already applied",
+              "color:#7c3aed",
+            );
+          } else {
+            setIdMissionVerifiedData({
+              name: { name: "name", value: formDataOfIdMission?.name?.value || "" },
+              // Priority: (1) fresh OTP email from this session, (2) previously-saved draft
+              // email (also OTP-verified), (3) user?.email — safe here because after OTP
+              // verification the user is logged in AS the OTP email, so user?.email === OTP email.
+              // We never reach this fallback chain before emailVerified is true.
+              email: { name: "email", value: email || formDataOfIdMission?.email?.value || user?.email || "" },
+              idNumber: { name: "idNumber", value: formDataOfIdMission?.idNumber?.value || "" },
+              idIssuer: { name: "idIssuer", value: formDataOfIdMission?.idIssuer?.value || "" },
+              idType: { name: "idType", value: formDataOfIdMission?.idType?.value || "" },
+              idExpiryDate: { name: "idExpiryDate", value: formDataOfIdMission?.idExpiryDate?.value || "" },
+              streetAddress: { name: "streetAddress", value: formDataOfIdMission?.streetAddress?.value || "" },
+              address2: { name: "address2", value: formDataOfIdMission?.address2?.value || "" },
+              phoneNumber: { name: "phoneNumber", value: formDataOfIdMission?.phoneNumber?.value || "" },
+              zipCode: { name: "zipCode", value: formDataOfIdMission?.zipCode?.value || "" },
+              dateOfBirth: { name: "dateOfBirth", value: formDataOfIdMission?.dateOfBirth?.value || "" },
+              country: { name: "country", value: formDataOfIdMission?.country?.value || "" },
+              issueDate: { name: "issueDate", value: formDataOfIdMission?.issueDate?.value || "" },
+              companyTitle: { name: "companyTitle", value: formDataOfIdMission?.companyTitle?.value || "" },
+              state: { name: "state", value: formDataOfIdMission?.state?.value || "" },
+              city: { name: "city", value: formDataOfIdMission?.city?.value || "" },
+              signature: { name: "signature", value: formDataOfIdMission?.signature?.value || "" },
+              createdAt: formDataOfIdMission?.createdAt || new Date().toISOString(),
+              updatedAt: formDataOfIdMission?.updatedAt || new Date().toISOString(),
+            });
+          }
           if (formDataOfIdMission?.name?.value && savedData?.company_lookup_data) {
             console.log(
               "%c[SA:getSavedForm] → idMissionVerified=true + openRedirectModal (name+lookup both present)",
               "color:#7c3aed",
             );
             setIdMissionVerified(true);
+            setIdMissionDetailsReady(true);
             setOpenRedirectModal(true);
           } else if (!skipRedirectOnError && !savedData?.company_lookup_data) {
             // Draft exists but company lookup hasn't completed yet — send to company page.
@@ -415,10 +500,12 @@ export default function SingleApplication() {
               "%c[SA:getSavedForm] catch: Form Not Saved in draft + skipRedirectOnError → pre-filling email only",
               "color:#ea580c",
             );
-            setIdMissionVerifiedData((prev) => ({
-              ...prev,
-              email: { name: "email", value: prev.email?.value || email || user?.email || "" },
-            }));
+            if (!idMissionScanAppliedRef.current) {
+              setIdMissionVerifiedData((prev) => ({
+                ...prev,
+                email: { name: "email", value: prev.email?.value || email || user?.email || "" },
+              }));
+            }
             return;
           }
           console.log(
@@ -767,8 +854,11 @@ export default function SingleApplication() {
   }, [dispatch, email, formId, form?.data?.branding?.name, getUserProfile, navigate, otp, verifyEmail]);
 
   const getQrLinkOnEmailVerified = useCallback(() => {
-    if (emailVerified && formData && formData?.idMission) {
-      const formDataOfIdMission = formData?.idMission;
+    // Only auto-jump to details when draft actually has identity data — an empty
+    // `formData.idMission` object must NOT open a blank details form.
+    const formDataOfIdMission = formData?.idMission;
+    const draftHasIdentity = !!(formDataOfIdMission?.name?.value || formDataOfIdMission?.idNumber?.value);
+    if (emailVerified && draftHasIdentity && !idMissionScanAppliedRef.current) {
       setIdMissionVerifiedData({
         name: { name: "name", value: formDataOfIdMission?.name?.value || "" },
         email: { name: "email", value: formDataOfIdMission?.email?.value || user?.email || "" },
@@ -794,6 +884,7 @@ export default function SingleApplication() {
         updatedAt: formDataOfIdMission?.updatedAt || new Date().toISOString(),
       });
       setIdMissionVerified(true);
+      setIdMissionDetailsReady(true);
       setOpenRedirectModal(true);
     }
     if (!qrCode && !webLink) {
@@ -876,52 +967,59 @@ export default function SingleApplication() {
       .catch(() => dispatch(userNotExist()));
   }, [getUserProfile, dispatch]);
 
-  // check and get socket events
+  // Socket listeners once on mount. Intermediate IDMission webhooks (no Form_Status /
+  // not Approved) used to call reveal with empty Form_Data → blank details page, then
+  // the Approved webhook filled fields ~1–2s later. Only reveal when mapping is usable.
   useEffect(() => {
-    // Setup listener ONCE when component mounts
-    // start id mission
-    socket.on("idMission_processing_started", () => {
-      setIsIdMissionProcessing(true);
-    });
-    // id mission verified success fully
-    socket.on("idMission_verified", async (data) => {
-      const f = data?.Form_Data;
-
-      // 1) Fill the UI immediately from the webhook payload
-      setIsIdMissionProcessing(false);
-      setIdMissionVerifiedData({
-        name: {
-          name: "name",
-          value: makeCompleteName(f?.First_Name, f?.Middle_Name, f?.Last_Name, f?.FullName, f?.Name),
-        },
-        email: { name: "email", value: f?.Email || user?.email || "" },
-        idNumber: { name: "idNumber", value: f?.ID_Number || "" },
-        idIssuer: {
-          name: "idIssuer",
-          value: f?.ID_State ? f?.ID_State + f?.Issuing_Country : f?.Issuing_Country || "",
-        },
-        idType: { name: "idType", value: f?.DocumentType || "" },
-        idExpiryDate: { name: "idExpiryDate", value: f?.Expiration_Date ? formatData(f?.Expiration_Date) : "" },
-        streetAddress: {
-          name: "streetAddress",
-          value: (f?.ParsedAddressStreetNumber || "") + " " + (f?.ParsedAddressStreetName || ""),
-        },
-        phoneNumber: { name: "phoneNumber", value: f?.PhoneNumber || "" },
-        zipCode: { name: "zipCode", value: f?.ParsedAddressPostalCode || "" },
-        dateOfBirth: { name: "dateOfBirth", value: f?.Date_of_Birth ? formatData(f?.Date_of_Birth) : "" },
-        country: { name: "country", value: f?.Issuing_Country || "" },
-        issueDate: { name: "issueDate", value: f?.Issue_Date ? formatData(f?.Issue_Date) : "" },
-        companyTitle: { name: "companyTitle", value: "" },
-        state: { name: "state", value: f?.ParsedAddressProvince || "" },
-        city: { name: "city", value: f?.ParsedAddressMunicipality || "" },
-        data: { name: "data", value: f || "null" },
-        createdAt: idMissionVerifiedData?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+    const revealDetailsWithData = (mapped) => {
+      if (!hasUsableIdMissionData(mapped)) {
+        console.log(
+          "%c[SA:socket] skip reveal — mapped payload has no name/idNumber (likely intermediate webhook)",
+          "color:#ea580c; font-weight:bold",
+          mapped,
+        );
+        return false;
+      }
+      idMissionScanAppliedRef.current = true;
+      idMissionManualEntryRef.current = false;
+      // Commit data + flags + leave loading in ONE paint so the first details frame is filled.
+      flushSync(() => {
+        setIdMissionVerifiedData((prev) => ({
+          ...prev,
+          ...mapped,
+          email: {
+            name: "email",
+            value: mapped?.email?.value || prev?.email?.value || userRef.current?.email || "",
+          },
+          signature: mapped?.signature ?? prev?.signature,
+          roleFillingForCompany: mapped?.roleFillingForCompany ?? prev?.roleFillingForCompany,
+          address2: mapped?.address2 ?? prev?.address2,
+        }));
+        setIdMissionVerified(true);
+        setIdMissionDetailsReady(true);
+        setIsIdMissionProcessing(false);
       });
-      setIdMissionVerified(true);
+      return true;
+    };
 
-      // 2) Sync profile in the background — does NOT block the form
-      if (user?._id && f?.FullName) {
+    const onProcessingStarted = () => {
+      setIsIdMissionProcessing(true);
+    };
+
+    const onVerified = async (data) => {
+      const f = data?.Form_Data;
+      const mapped = mapWebhookToIdMissionData(f, {
+        emailFallback: userRef.current?.email || "",
+      });
+      const revealed = revealDetailsWithData(mapped);
+      if (!revealed) {
+        // Keep spinner up — a later Approved payload with fields should follow.
+        setIsIdMissionProcessing(true);
+        return;
+      }
+
+      const currentUser = userRef.current;
+      if (currentUser?._id && f?.FullName) {
         try {
           let firstName = "";
           let middleName = "";
@@ -934,159 +1032,81 @@ export default function SingleApplication() {
             firstName = f?.First_Name || f?.FullName?.split(" ")?.[0] || "";
             lastName = f?.Last_Name || f?.FullName?.split(" ")?.[1] || "";
           }
-          const res = await updateMyProfile({ _id: user?._id, firstName, middleName, lastName }).unwrap();
+          const res = await updateMyProfileRef
+            .current({ _id: currentUser._id, firstName, middleName, lastName })
+            .unwrap();
           if (res?.success) {
-            const r = await getUserProfile();
-            if (r?.data?.success) dispatch(userExist(r.data.data));
+            const r = await getUserProfileRef.current();
+            if (r?.data?.success) dispatchRef.current(userExist(r.data.data));
           }
         } catch (e) {
           console.error("profile sync failed", e);
         }
       }
-    });
-    // id mission failed
-    socket.on("idMission_failed", async (data) => {
-      const action = await dispatch(
-        updateFormState({
-          data: {
-            idMissionVerification: "failed",
-            verificationStatus: data?.Form_Status || "rejected",
-            idMissionData: data,
-          },
-          name: "idMission",
-        }),
-      );
+    };
 
-      // console.log('You are verified successfully', data);
-      setIsIdMissionProcessing(false);
-      const formDataOfIdMission = data?.Form_Data;
-
-      setIdMissionVerifiedData({
-        name: {
-          name: "name",
-          value: makeCompleteName(
-            formDataOfIdMission?.First_Name,
-            formDataOfIdMission?.Middle_Name,
-            formDataOfIdMission?.Last_Name,
-            formDataOfIdMission?.FullName,
-            formDataOfIdMission?.Name,
-          ),
-        },
-        email: { name: "email", value: formDataOfIdMission?.Email || user?.email || "" },
-        idNumber: { name: "idNumber", value: formDataOfIdMission?.ID_Number || "" },
-        idIssuer: {
-          name: "idIssuer",
-          value: formDataOfIdMission?.ID_State
-            ? formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country
-            : formDataOfIdMission?.Issuing_Country || "",
-        },
-        idType: { name: "idType", value: formDataOfIdMission?.DocumentType || "" },
-        idExpiryDate: {
-          name: "idExpiryDate",
-          value: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : "",
-        },
-        streetAddress: {
-          name: "streetAddress",
-          value: formDataOfIdMission?.ParsedAddressStreetNumber + formDataOfIdMission?.ParsedAddressStreetName || "",
-        },
-        phoneNumber: { name: "phoneNumber", value: formDataOfIdMission?.PhoneNumber || "" },
-        zipCode: { name: "zipCode", value: formDataOfIdMission?.ParsedAddressPostalCode || "" },
-        dateOfBirth: {
-          name: "dateOfBirth",
-          value: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : "",
-        },
-        country: { name: "country", value: formDataOfIdMission?.Issuing_Country || "" },
-        issueDate: {
-          name: "issueDate",
-          value: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : "",
-        },
-        companyTitle: { name: "companyTitle", value: "" },
-        state: { name: "state", value: formDataOfIdMission?.ParsedAddressProvince || "" },
-        city: { name: "city", value: formDataOfIdMission?.ParsedAddressMunicipality || "" },
-        data: { name: "data", value: formDataOfIdMission || "null" },
-        createdAt: idMissionVerifiedData?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+    const onFailed = async (data) => {
+      const mapped = mapWebhookToIdMissionData(data?.Form_Data, {
+        emailFallback: userRef.current?.email || "",
       });
-      unwrapResult(action);
-      setIsIdMissionProcessing(false);
-      setIdMissionVerified(true);
-    });
-    socket.on("idMission_other", async (data) => {
-      const action = await dispatch(
-        updateFormState({
-          data: {
-            value: {
+      // Only open details if we extracted something usable; otherwise stay on loading/QR.
+      revealDetailsWithData(mapped);
+      try {
+        const action = await dispatchRef.current(
+          updateFormState({
+            data: {
               idMissionVerification: "failed",
               verificationStatus: data?.Form_Status || "rejected",
               idMissionData: data,
             },
-          },
-          name: "idMission",
-        }),
-      );
-
-      setIsIdMissionProcessing(false);
-      const formDataOfIdMission = data?.Form_Data;
-
-      setIdMissionVerifiedData({
-        name: {
-          name: "name",
-          value: makeCompleteName(
-            formDataOfIdMission?.First_Name,
-            formDataOfIdMission?.Middle_Name,
-            formDataOfIdMission?.Last_Name,
-            formDataOfIdMission?.FullName,
-            formDataOfIdMission?.Name,
-          ),
-        },
-        email: { name: "email", value: formDataOfIdMission?.Email || user?.email || "" },
-        idNumber: { name: "idNumber", value: formDataOfIdMission?.ID_Number || "" },
-        idIssuer: {
-          name: "idIssuer",
-          value: formDataOfIdMission?.ID_State
-            ? formDataOfIdMission?.ID_State + formDataOfIdMission?.Issuing_Country
-            : formDataOfIdMission?.Issuing_Country || "",
-        },
-        idType: { name: "idType", value: formDataOfIdMission?.DocumentType || "" },
-        idExpiryDate: {
-          name: "idExpiryDate",
-          value: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : "",
-        },
-        streetAddress: {
-          name: "streetAddress",
-          value: formDataOfIdMission?.ParsedAddressStreetNumber + formDataOfIdMission?.ParsedAddressStreetName || "",
-        },
-        phoneNumber: { name: "phoneNumber", value: formDataOfIdMission?.PhoneNumber || "" },
-        zipCode: { name: "zipCode", value: formDataOfIdMission?.ParsedAddressPostalCode || "" },
-        dateOfBirth: {
-          name: "dateOfBirth",
-          value: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : "",
-        },
-        country: { name: "country", value: formDataOfIdMission?.Issuing_Country || "" },
-        issueDate: {
-          name: "issueDate",
-          value: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : "",
-        },
-        companyTitle: { name: "companyTitle", value: "" },
-        state: { name: "state", value: formDataOfIdMission?.ParsedAddressProvince || "" },
-        city: { name: "city", value: formDataOfIdMission?.ParsedAddressMunicipality || "" },
-        data: { name: "data", value: formDataOfIdMission || "null" },
-        createdAt: idMissionVerifiedData?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      unwrapResult(action);
-      // toast.error("you id didn't approved please try again");
-      setIsIdMissionProcessing(false);
-      setIdMissionVerified(true);
-    });
-    // Cleanup listener when component unmounts
-    return () => {
-      socket.off("idMission_processing_started");
-      socket.off("idMission_verified");
-      socket.off("idMission_failed");
-      socket.off("idMission_other");
+            name: "idMission",
+          }),
+        );
+        unwrapResult(action);
+      } catch (e) {
+        console.error("idMission_failed redux sync failed", e);
+      }
     };
-  }, [dispatch, getUserProfile, idMissionVerifiedData?.createdAt, updateMyProfile, user?._id, user?.email]);
+
+    const onOther = async (data) => {
+      const mapped = mapWebhookToIdMissionData(data?.Form_Data, {
+        emailFallback: userRef.current?.email || "",
+      });
+      // Intermediate / unknown-status webhooks often have empty Form_Data.
+      // Do NOT flip to the details page until we have real fields.
+      const revealed = revealDetailsWithData(mapped);
+      if (!revealed) return;
+      try {
+        const action = await dispatchRef.current(
+          updateFormState({
+            data: {
+              value: {
+                idMissionVerification: "failed",
+                verificationStatus: data?.Form_Status || "rejected",
+                idMissionData: data,
+              },
+            },
+            name: "idMission",
+          }),
+        );
+        unwrapResult(action);
+      } catch (e) {
+        console.error("idMission_other redux sync failed", e);
+      }
+    };
+
+    socket.on("idMission_processing_started", onProcessingStarted);
+    socket.on("idMission_verified", onVerified);
+    socket.on("idMission_failed", onFailed);
+    socket.on("idMission_other", onOther);
+
+    return () => {
+      socket.off("idMission_processing_started", onProcessingStarted);
+      socket.off("idMission_verified", onVerified);
+      socket.off("idMission_failed", onFailed);
+      socket.off("idMission_other", onOther);
+    };
+  }, []);
 
   // check validations
   useEffect(() => {
@@ -1183,6 +1203,7 @@ export default function SingleApplication() {
           />
         </Modal>
       )}
+
       {showSignatureModal && (
         <Modal onClose={() => setShowSignatureModal(false)}>
           <SignatureCustomization
@@ -1264,7 +1285,14 @@ export default function SingleApplication() {
             </div>
           </Modal>
         </>
-      ) : isIdMissionProcessing ? (
+      ) : isIdMissionProcessing ||
+        (idMissionVerified &&
+          !(
+            idMissionDetailsReady &&
+            (idMissionManualEntryRef.current ||
+              !!idMissionVerifiedData?.name?.value ||
+              !!idMissionVerifiedData?.idNumber?.value)
+          )) ? (
         <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
       ) : (
         <div className="mt-14 h-full overflow-auto text-center" data-testid="single-application">
@@ -1419,7 +1447,10 @@ export default function SingleApplication() {
                 <Button
                   onClick={async () => {
                     if (initialDataLoadRef.current) await initialDataLoadRef.current;
+                    // Manual entry: reveal details even if draft fields are empty
+                    idMissionManualEntryRef.current = true;
                     setIdMissionVerified(true);
+                    setIdMissionDetailsReady(true);
                   }}
                   className="w-full max-w-57.5"
                   variant="secondary"
@@ -1769,16 +1800,20 @@ export default function SingleApplication() {
                   </div>
                   <div className="flex w-full flex-col">
                     <div className="my-4 flex w-full justify-between gap-2">
-                      {(form?.data?.idMissionSignDisplayFormatedText || form?.data?.idMissionSignDisplayText) && (
+                      {(form?.data?.idMissionSignDisplayFormatedText ||
+                        form?.data?.idMissionSignDisplayText ||
+                        idMissionSection?.signDisplayFormattedText ||
+                        idMissionSection?.signDisplayText) && (
                         <div className="flex items-end gap-3">
                           <div
-                            // className="flex flex-1 items-end gap-3"
                             className="w-full"
                             data-ai-display-text
                             dangerouslySetInnerHTML={{
                               __html: String(
                                 form?.data?.idMissionSignDisplayFormatedText ||
                                   form?.data?.idMissionSignDisplayText ||
+                                  idMissionSection?.signDisplayFormattedText ||
+                                  idMissionSection?.signDisplayText ||
                                   "",
                               ).replace(/<a(\s+.*?)?>/g, (match) => {
                                 if (match.includes("target=")) return match; // avoid duplicates
