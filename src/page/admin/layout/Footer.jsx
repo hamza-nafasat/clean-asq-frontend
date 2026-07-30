@@ -3,8 +3,14 @@ import { useBranding } from "@/hooks/BrandingContext";
 import { useState } from "react";
 
 function Footer() {
-  const { applicationFooterText, applicationFooterTextSize, appFooterPadding, privacyPolicyUrl, termsOfServiceUrl } =
-    useBranding();
+  const {
+    applicationFooterText,
+    applicationFooterTextSize,
+    appFooterPadding,
+    privacyPolicyUrl,
+    termsOfServiceUrl,
+    name,
+  } = useBranding();
 
   const [openDoc, setOpenDoc] = useState(null);
 
@@ -19,7 +25,7 @@ function Footer() {
       >
         {/* Footer text */}
         <div className="text-footer-text font-semibold" style={{ fontSize: `${applicationFooterTextSize || 16}px` }}>
-          {(applicationFooterText || "").replace("{year}", new Date().getFullYear())}
+          {(applicationFooterText || "").replace("{year}", new Date().getFullYear()).replace("{company}", name)}
         </div>
 
         {/* Links */}
