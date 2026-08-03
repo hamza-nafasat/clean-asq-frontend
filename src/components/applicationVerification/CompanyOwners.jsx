@@ -4,6 +4,7 @@ import { FIELD_TYPES } from "@/data/constants";
 import { useEnterToNextField } from "@/hooks/useEnterToNextField";
 import { useGetAllSearchStrategiesQuery, useUpdateFormSectionMutation } from "@/redux/apis/formApis";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
+import { getSignatureUrl, isSignatureComplete, normalizeSignature } from "@/utils/signatureShape";
 import { X } from "lucide-react";
 import { Autocomplete } from "@react-google-maps/api";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -231,14 +232,9 @@ function CompanyOwners({
     // 1) Build the “canonical” shape for this form
     const initialForm = {};
     formFields.forEach((field) => {
-      if (
-        field.type === "block" &&
-        field.name === "additional_owner" &&
-        !otherOwnersStateUniqueId &&
-        !otherOwnersStateName
-      ) {
-        setOtherOwnersStateUniqueId(field?.uniqueId);
-        setOtherOwnersStateName(field?.name);
+      if (field.type === "block" && field.name === "additional_owner") {
+        if (!otherOwnersStateUniqueId) setOtherOwnersStateUniqueId(field?.uniqueId);
+        if (!otherOwnersStateName) setOtherOwnersStateName(field?.name);
         const initialState = {
           name: "",
           email: "",
@@ -264,39 +260,15 @@ function CompanyOwners({
           name: field.name,
           value: reduxData?.[field?.uniqueId]?.value || "",
         };
-        // setOtherOwnersStateName('');
       }
     });
     if (isSignature) {
-      const isSignatureExistingData = {};
-      if (reduxData?.signature?.value?.publicId)
-        isSignatureExistingData.publicId = reduxData?.signature?.value?.publicId;
-      if (reduxData?.signature?.value?.secureUrl)
-        isSignatureExistingData.secureUrl = reduxData?.signature?.value?.secureUrl;
-      if (reduxData?.signature?.value?.resourceType)
-        isSignatureExistingData.resourceType = reduxData?.signature?.value?.resourceType;
-      initialForm.signature = {
-        name: "signature",
-        value: isSignatureExistingData?.publicId
-          ? isSignatureExistingData
-          : { publicId: "", secureUrl: "", resourceType: "" },
-      };
+      initialForm.signature = normalizeSignature(reduxData?.signature);
     }
 
-    // 2) Figure out what to add…
-    const toAdd = Object.fromEntries(Object.entries(initialForm).filter(([key]) => !(key in form)));
-    // 3) …and what to remove
-    const toRemoveKeys = Object.keys(form).filter((key) => !(key in initialForm));
-    // 4) If there’s nothing to do, bail out
-    if (Object.keys(toAdd).length === 0 && toRemoveKeys.length === 0) return;
-    // 5) Apply both additions and deletions in one go
-    setForm((prev) => {
-      // Start with everything that *should* stay
-      const cleaned = Object.fromEntries(Object.entries(prev).filter(([key]) => !toRemoveKeys.includes(key)));
-      // Then merge in any brand-new keys
-      return { ...cleaned, ...toAdd };
-    });
-  }, [form, formFields, isSignature, otherOwnersStateUniqueId, otherOwnersStateName, reduxData]);
+    // Always hydrate from redux so reopen after Save/Next restores filled fields + signature
+    setForm(initialForm);
+  }, [formFields, isSignature, otherOwnersStateUniqueId, otherOwnersStateName, reduxData]);
 
   // create fields for this section and also for customization
   useEffect(() => {
@@ -331,30 +303,21 @@ function CompanyOwners({
       return true;
     });
 
-    // check signature done
-    let isSignatureDone = true;
-    if (isSignature) {
-      let dataOfSign = form?.["signature"]?.value;
-      if (!dataOfSign?.value?.publicId || !dataOfSign?.value?.secureUrl || !dataOfSign?.value?.resourceType) {
-        isSignatureDone = false;
-      }
-    }
+    const isSignatureDone = !isSignature || isSignatureComplete(form?.signature);
     if (!allFilled || !isSignatureDone) setSubmitButtonText("Some Required Fields are Missing");
 
     // if additional owner field exist check email validation
     let isEmailVAlidated = true;
-    // ToDo fix this
-    // if (additionOwnersGet25OrMore && form?.additional_owner?.length) {
-    //   isEmailVAlidated =
-    //     Array.isArray(form?.additional_owner) &&
-    //     form?.additional_owner.some(
-    //       (item) => item?.email?.toString().trim() !== "" && validateEmail(item?.email?.toString().trim()),
-    //     );
-    // }
 
     // Logic for is one operator exist or not
     let isOperatorExist = false;
-    if ((additionOwnersGet25OrMore && form.additional_owner?.length) || applicantIsAlsoPrimaryOperator) {
+    const additionalOwnersList = otherOwnersStateUniqueId
+      ? form?.[otherOwnersStateUniqueId]?.value
+      : form?.additional_owner?.value || form?.additional_owner;
+    if (
+      (additionOwnersGet25OrMore && Array.isArray(additionalOwnersList) && additionalOwnersList.length > 0) ||
+      applicantIsAlsoPrimaryOperator
+    ) {
       isOperatorExist = true;
     }
     const idMissionField = formData?.idMission?.roleFillingForCompany;
@@ -364,7 +327,14 @@ function CompanyOwners({
     if (!isOperatorExist) setSubmitButtonText("At least one primary operator required");
     // console.log('allied operator exist isemailvalidated', allFilled, isOperatorExist, isEmailVAlidated);
     setIsAllRequiredFieldsFilled(allFilled && isOperatorExist && isEmailVAlidated && isSignatureDone);
-  }, [form, formData?.idMission?.roleFillingForCompany, isCreator, isSignature, requiredNames]);
+  }, [
+    form,
+    formData?.idMission?.roleFillingForCompany,
+    isCreator,
+    isSignature,
+    otherOwnersStateUniqueId,
+    requiredNames,
+  ]);
 
   submitFromEnterRef.current = () => {
     if (!isAllRequiredFieldsFilled || loadingNext) return;
@@ -728,7 +698,7 @@ function CompanyOwners({
                 <SignatureBox
                   onSave={signatureUploadHandler}
                   step={step}
-                  oldSignatureUrl={form?.signature?.value?.secureUrl || ""}
+                  oldSignatureUrl={getSignatureUrl(form?.signature)}
                 />
               )}
             </div>

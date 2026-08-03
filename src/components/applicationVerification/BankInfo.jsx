@@ -7,6 +7,7 @@ import {
   useUpdateFormSectionMutation,
 } from "@/redux/apis/formApis";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
+import { getSignatureUrl, isSignatureComplete, normalizeSignature } from "@/utils/signatureShape";
 import { CheckCircle, X, XCircle } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -99,7 +100,7 @@ function BankInfo({
       if (!file) return toast.error("Please select a file");
 
       if (file) {
-        const oldSign = form?.["signature"]?.value;
+        const oldSign = normalizeSignature(form?.signature).value;
         if (oldSign?.publicId) {
           const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
           if (!result) return toast.error("File Not Deleted Please Try Again");
@@ -162,15 +163,10 @@ function BankInfo({
       setForm(initialForm);
     }
     if (isSignature) {
-      const isSignatureExistingData = {};
-      if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
-      if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
-      if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
+      // Accept flat or nested draft signatures; always store nested for display/validation
       setForm((prev) => ({
         ...prev,
-        ["signature"]: isSignatureExistingData?.publicId
-          ? isSignatureExistingData
-          : { publicId: "", secureUrl: "", resourceType: "" },
+        signature: normalizeSignature(reduxData?.signature),
       }));
     }
   }, [fields, isSignature, name, reduxData]);
@@ -198,13 +194,7 @@ function BankInfo({
       return true;
     });
 
-    let isSignatureDone = true;
-    if (isSignature) {
-      let dataOfSign = form?.["signature"];
-      if (!dataOfSign?.publicId || !dataOfSign?.secureUrl || !dataOfSign?.resourceType) {
-        isSignatureDone = false;
-      }
-    }
+    const isSignatureDone = !isSignature || isSignatureComplete(form?.signature);
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
   }, [form, isCreator, isSignature, requiredNames]);
 
@@ -433,7 +423,7 @@ function BankInfo({
             <SignatureBox
               step={step}
               onSave={signatureUploadHandler}
-              oldSignatureUrl={form?.signature?.value?.secureUrl || ""}
+              oldSignatureUrl={getSignatureUrl(form?.signature)}
             />
           )}
         </div>

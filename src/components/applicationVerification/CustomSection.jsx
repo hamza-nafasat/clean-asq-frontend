@@ -2,6 +2,7 @@ import DisplayText from "@/components/shared/DisplayText";
 import { FIELD_TYPES } from "@/data/constants";
 import { useEnterToNextField } from "@/hooks/useEnterToNextField";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
+import { getSignatureUrl, isSignatureComplete, normalizeFieldEntry, normalizeSignature } from "@/utils/signatureShape";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
@@ -119,27 +120,15 @@ function CustomSection({
         const finalValue =
           idMissionValue !== undefined
             ? { name: field?.name, value: idMissionValue }
-            : (reduxData?.[field?.uniqueId] ?? "");
+            : normalizeFieldEntry(reduxData?.[field?.uniqueId], field?.name);
         formFields[field?.uniqueId] = finalValue;
       });
       setForm(formFields);
     }
     if (isSignature) {
-      const isSignatureExistingData = {};
-      if (reduxData?.signature?.value?.publicId)
-        isSignatureExistingData.publicId = reduxData?.signature?.value?.publicId;
-      if (reduxData?.signature?.value?.secureUrl)
-        isSignatureExistingData.secureUrl = reduxData?.signature?.value?.secureUrl;
-      if (reduxData?.signature?.value?.resourceType)
-        isSignatureExistingData.resourceType = reduxData?.signature?.value?.resourceType;
       setForm((prev) => ({
         ...prev,
-        ["signature"]: {
-          name: "signature",
-          value: isSignatureExistingData?.publicId
-            ? isSignatureExistingData
-            : { publicId: "", secureUrl: "", resourceType: "" },
-        },
+        signature: normalizeSignature(reduxData?.signature),
       }));
     }
   }, [fields, idMissionVerifiedData, isSignature, reduxData]);
@@ -166,13 +155,7 @@ function CustomSection({
       return true;
     });
 
-    let isSignatureDone = true;
-    if (isSignature) {
-      let dataOfSign = form?.["signature"]?.value;
-      if (!dataOfSign?.publicId || !dataOfSign?.secureUrl || !dataOfSign?.resourceType) {
-        isSignatureDone = false;
-      }
-    }
+    const isSignatureDone = !isSignature || isSignatureComplete(form?.signature);
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
   }, [form, isCreator, isSignature, requiredNames]);
   useEffect(() => {
@@ -507,7 +490,7 @@ function CustomSection({
             <SignatureBox
               step={step}
               onSave={signatureUploadHandler}
-              oldSignatureUrl={form?.signature?.value?.secureUrl || ""}
+              oldSignatureUrl={getSignatureUrl(form?.signature)}
             />
           </>
         )}

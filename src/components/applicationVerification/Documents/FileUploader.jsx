@@ -1,12 +1,26 @@
-import React, { useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { PiFileArrowUpFill } from "react-icons/pi";
 import { CgSoftwareUpload } from "react-icons/cg";
 import Button from "@/components/shared/small/Button";
 
-const FileUploader = ({ label = "", accept = ".pdf,image/*,.csv", onFileSelect = () => {} }) => {
+const FileUploader = ({
+  label = "",
+  accept = ".pdf,image/*,.csv",
+  onFileSelect = () => {},
+  existingUrl = "",
+}) => {
   const [fileName, setFileName] = useState("");
   const [previewUrl, setPreviewUrl] = useState(null);
   const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (!existingUrl || fileName) return;
+    const nameFromUrl = existingUrl.split("/").pop()?.split("?")[0] || "Uploaded file";
+    setFileName(decodeURIComponent(nameFromUrl));
+    if (/\.(jpg|jpeg|png|gif|webp)$/i.test(existingUrl) || existingUrl.includes("/image/")) {
+      setPreviewUrl(existingUrl);
+    }
+  }, [existingUrl, fileName]);
 
   const isCSV = (file) => file.name.toLowerCase().endsWith(".csv");
   const handleFile = (file) => {
@@ -60,7 +74,17 @@ const FileUploader = ({ label = "", accept = ".pdf,image/*,.csv", onFileSelect =
         <input ref={inputRef} type="file" accept={accept} onChange={handleFileChange} className="hidden" />
       </div>
 
-      {fileName && <div className="mt-2 text-sm text-gray-700">Selected: {fileName}</div>}
+      {fileName && (
+        <div className="mt-2 text-sm text-gray-700">
+          {existingUrl && !previewUrl ? (
+            <a href={existingUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+              Selected: {fileName}
+            </a>
+          ) : (
+            <>Selected: {fileName}</>
+          )}
+        </div>
+      )}
 
       {previewUrl && <img src={previewUrl} alt="Preview" className="mt-3 max-h-40 rounded border" />}
     </div>

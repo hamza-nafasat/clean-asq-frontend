@@ -2,6 +2,12 @@ import DisplayText from "@/components/shared/DisplayText";
 import { useEnterToNextField } from "@/hooks/useEnterToNextField";
 import { useFormateTextInMarkDownMutation, useUpdateFormSectionMutation } from "@/redux/apis/formApis";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
+import {
+  getSignatureUrl,
+  isSignatureComplete,
+  normalizeFieldEntry,
+  normalizeSignature,
+} from "@/utils/signatureShape";
 import DOMPurify from "dompurify";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -30,6 +36,7 @@ function Documents({
   step,
   isSignature,
   companyInformationStep,
+  saveInProgress,
 }) {
   const { formData } = useSelector((state) => state.form);
   const { user } = useSelector((state) => state.auth);
@@ -53,13 +60,14 @@ function Documents({
   const isCreator = user?._id && user?._id === step?.owner && user?.role !== "guest";
 
   const isAllRequiredFilled = useMemo(() => {
-    const oldFileData = form?.[fileFieldUniqueId];
-    const sign = isSignature ? form?.["signature"]?.value?.publicId : true;
-    if (isCreator) {
-      return true;
-    } else {
-      return !!((file || urls.length || (oldFileData?.publicId && oldFileData?.secureUrl)) && sign);
-    }
+    const oldFileData = form?.[fileFieldUniqueId]?.value || form?.[fileFieldUniqueId];
+    const hasFile =
+      !!file ||
+      urls.length > 0 ||
+      !!(oldFileData?.publicId && oldFileData?.secureUrl);
+    const signOk = !isSignature || isSignatureComplete(form?.signature);
+    if (isCreator) return true;
+    return hasFile && signOk;
   }, [file, fileFieldUniqueId, form, isCreator, isSignature, urls.length]);
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
@@ -104,8 +112,8 @@ function Documents({
   const updateFileDataHandler = async () => {
     try {
       setLoadingNext(true);
-      if (!fileFieldName) return toast.error("Please refresh the page once and try again");
-      const oldFileData = form?.[fileFieldName];
+      if (!fileFieldUniqueId) return toast.error("Please refresh the page once and try again");
+      const oldFileData = form?.[fileFieldUniqueId]?.value || form?.[fileFieldUniqueId];
       // check something exist urls or oldFile
       if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl) && !isCreator) {
         return toast.error("Please select a file or Enter a URL");
@@ -118,7 +126,14 @@ function Documents({
         }
         const result = await uploadImageOnCloudinary(file);
         if (!result.publicId || !result.secureUrl) return toast.error("File Not Uploaded Please Try Again");
-        handleNext({ data: { ...form, [fileFieldName]: result }, name: sectionKey, setLoadingNext });
+        handleNext({
+          data: {
+            ...form,
+            [fileFieldUniqueId]: { name: fileFieldName, value: result },
+          },
+          name: sectionKey,
+          setLoadingNext,
+        });
       } else {
         handleNext({ data: { ...form }, name: sectionKey, setLoadingNext });
       }
@@ -131,7 +146,7 @@ function Documents({
   };
   const submitFileDataHandler = async () => {
     if (!fileFieldName || !fileFieldUniqueId) return toast.error("Please refresh the page once and try again");
-    const oldFileData = form?.[fileFieldUniqueId];
+    const oldFileData = form?.[fileFieldUniqueId]?.value || form?.[fileFieldUniqueId];
     // check something exist urls or oldFile
     if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl)) {
       return toast.error("Please select a file or Enter a URL");
@@ -145,7 +160,7 @@ function Documents({
       const result = await uploadImageOnCloudinary(file);
       if (!result.publicId || !result.secureUrl) return toast.error("File Not Uploaded Please Try Again");
       handleSubmit({
-        data: { ...form, [fileFieldName]: { name: fileFieldName, value: result } },
+        data: { ...form, [fileFieldUniqueId]: { name: fileFieldName, value: result } },
         name: sectionKey,
         setLoadingNext,
       });
@@ -187,26 +202,14 @@ function Documents({
           setFileFieldName(field?.name);
           setFileFieldUniqueId(field?.uniqueId);
         }
-        initialForm[field?.uniqueId] = reduxData?.[field?.uniqueId] ? reduxData?.[field?.uniqueId] || "" : "";
+        initialForm[field?.uniqueId] = normalizeFieldEntry(reduxData?.[field?.uniqueId], field?.name);
       });
       setForm(initialForm);
     }
     if (isSignature) {
-      const isSignatureExistingData = {};
-      if (reduxData?.signature?.value?.publicId)
-        isSignatureExistingData.publicId = reduxData?.signature?.value?.publicId;
-      if (reduxData?.signature?.value?.secureUrl)
-        isSignatureExistingData.secureUrl = reduxData?.signature?.value?.secureUrl;
-      if (reduxData?.signature?.value?.resourceType)
-        isSignatureExistingData.resourceType = reduxData?.signature?.value?.resourceType;
       setForm((prev) => ({
         ...prev,
-        ["signature"]: {
-          name: "signature",
-          value: isSignatureExistingData?.publicId
-            ? isSignatureExistingData
-            : { publicId: "", secureUrl: "", resourceType: "" },
-        },
+        signature: normalizeSignature(reduxData?.signature),
       }));
     }
   }, [fields, isSignature, reduxData]);
@@ -215,8 +218,10 @@ function Documents({
     const articleOfIncorporationUrlsFieldUniqueId = Object.keys(form)?.find((key) =>
       key?.includes("article_of_incorporation_urls"),
     );
-    if (form?.[articleOfIncorporationUrlsFieldUniqueId])
-      setUrls(form?.[articleOfIncorporationUrlsFieldUniqueId]?.split(",") || []);
+    const urlsRaw =
+      form?.[articleOfIncorporationUrlsFieldUniqueId]?.value ?? form?.[articleOfIncorporationUrlsFieldUniqueId];
+    if (typeof urlsRaw === "string" && urlsRaw.trim()) setUrls(urlsRaw.split(",").map((u) => u.trim()).filter(Boolean));
+    else if (Array.isArray(urlsRaw)) setUrls(urlsRaw);
     else setUrls([]);
   }, [form]);
 
@@ -238,13 +243,18 @@ function Documents({
           <h1 className="text-textPrimary text-2xl font-semibold" data-ai-display-text>
             {name}
           </h1>
-          {isCreator && (
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={"Customize"} />
-              <Button onClick={() => setAiPromptModal(true)} label={"Customize Prompt"} />
-              <Button onClick={() => setUpdateSectionFromatingModal(true)} label={"Update Display Text"} />
-            </div>
-          )}
+          <div className="flex gap-2">
+            {saveInProgress && (
+              <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={"Save my progress"} />
+            )}
+            {isCreator && (
+              <>
+                <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={"Customize"} />
+                <Button onClick={() => setAiPromptModal(true)} label={"Customize Prompt"} />
+                <Button onClick={() => setUpdateSectionFromatingModal(true)} label={"Update Display Text"} />
+              </>
+            )}
+          </div>
         </div>
         {(step?.ai_formatting || step?.displayText) && (
           <div className="mb-4 w-full">
@@ -329,7 +339,16 @@ function Documents({
                     <DisplayText className="w-full" data-ai-display-text html={field?.ai_formatting} />
                   </div>
                 )}
-                <FileUploader label={field?.label} file={file} onFileSelect={setFile} />
+                <FileUploader
+                  label={field?.label}
+                  file={file}
+                  onFileSelect={setFile}
+                  existingUrl={
+                    form?.[field?.uniqueId]?.value?.secureUrl ||
+                    form?.[field?.uniqueId]?.secureUrl ||
+                    ""
+                  }
+                />
               </div>
             );
           } else {
@@ -375,7 +394,7 @@ function Documents({
           <SignatureBox
             step={step}
             onSave={signatureUploadHandler}
-            oldSignatureUrl={form?.signature?.value?.secureUrl || ""}
+            oldSignatureUrl={getSignatureUrl(form?.signature)}
           />
         )}
       </div>

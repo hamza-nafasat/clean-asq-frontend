@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CgSpinner } from "react-icons/cg";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { getSignatureUrl, isSignatureComplete, normalizeSignature } from "@/utils/signatureShape";
 import { naicsToMcc } from "../../../public/NAICStoMCC.js";
 import SignatureBox from "../shared/SignatureBox.jsx";
 import Button from "../shared/small/Button.jsx";
@@ -255,24 +256,25 @@ function CompanyInformation({
     // }
 
     if (isSignature) {
-      const isSignatureExistingData = {};
-      if (reduxData?.signature?.value?.publicId)
-        isSignatureExistingData.publicId = reduxData?.signature?.value?.publicId;
-      if (reduxData?.signature?.value?.secureUrl)
-        isSignatureExistingData.secureUrl = reduxData?.signature?.value?.secureUrl;
-      if (reduxData?.signature?.value?.resourceType)
-        isSignatureExistingData.resourceType = reduxData?.signature?.value?.resourceType;
       setForm((prev) => ({
         ...prev,
-        ["signature"]: {
-          name: "signature",
-          value: isSignatureExistingData?.publicId
-            ? isSignatureExistingData
-            : { publicId: "", secureUrl: "", resourceType: "" },
-        },
+        signature: normalizeSignature(reduxData?.signature),
       }));
     }
   }, [fields, formData?.company_lookup_data, isSignature, reduxData]);
+
+  // Keep NAICS in sync when draft/redux loads after mount
+  useEffect(() => {
+    if (!reduxData?.naics) return;
+    setNaicsToMccDetails((prev) => {
+      if (prev?.NAICS) return prev;
+      return {
+        NAICS: reduxData.naics.NAICS || "",
+        NAICS_Description: reduxData.naics.NAICS_Description || "",
+        MCC: reduxData.naics.MCC || "",
+      };
+    });
+  }, [reduxData?.naics]);
 
   // checking is all required fields are filled or not
   // ---------------------------------------------------
@@ -283,7 +285,6 @@ function CompanyInformation({
     }
     const allFilled = requiredNames.every((name) => {
       const val = form[name.uniqueId]?.value;
-      console.log("name", name, "val", val);
       if (val == null) return false;
       if (typeof val === "string") return val.trim() !== "";
       if (Array.isArray(val))
@@ -305,16 +306,7 @@ function CompanyInformation({
       isCompanyStockSymbol = false;
       if (form?.["stocksymbol"]?.value) isCompanyStockSymbol = true;
     }
-    // check signature done
-    let isSignatureDone = true;
-    if (isSignature) {
-      let dataOfSign = form?.["signature"];
-      if (!dataOfSign?.publicId || !dataOfSign?.secureUrl || !dataOfSign?.resourceType) {
-        isSignatureDone = false;
-      }
-    }
-
-    console.log(allFilled, isNaicsFilled, isCompanyStockSymbol, isSignatureDone);
+    const isSignatureDone = !isSignature || isSignatureComplete(form?.signature);
     const isAllRequiredFieldsFilled = allFilled && isNaicsFilled && isCompanyStockSymbol && isSignatureDone;
     setIsAllRequiredFieldsFilled(isAllRequiredFieldsFilled);
   }, [form, isCreator, isSignature, naicsToMccDetails.NAICS, requiredNames]);
@@ -559,7 +551,7 @@ function CompanyInformation({
               <SignatureBox
                 onSave={signatureUploadHandler}
                 step={step}
-                oldSignatureUrl={form?.signature?.value?.secureUrl || ""}
+                oldSignatureUrl={getSignatureUrl(form?.signature)}
               />
             )}
           </div>

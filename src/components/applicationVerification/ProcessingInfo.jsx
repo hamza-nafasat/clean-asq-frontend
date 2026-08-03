@@ -18,6 +18,7 @@ import Modal from "../shared/small/Modal";
 import CustomizationFieldsModal from "./companyInfo/CustomizationFieldsModal";
 import SignatureBox from "../shared/SignatureBox";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
+import { getSignatureUrl, isSignatureComplete, normalizeSignature } from "@/utils/signatureShape";
 import { toast } from "react-toastify";
 
 function ProcessingInfo({
@@ -87,28 +88,19 @@ function ProcessingInfo({
         if (field?.conditional_fields?.length > 0) {
           field?.conditional_fields?.forEach((cf) => {
             const fieldName = `${field.uniqueId}/${cf?.name}`;
-            initialForm[fieldName] = reduxData ? reduxData[fieldName]?.value || "" : "";
+            initialForm[fieldName] = {
+              name: cf?.name || fieldName,
+              value: reduxData?.[fieldName]?.value ?? "",
+            };
           });
         }
       });
       setForm(initialForm);
     }
     if (isSignature) {
-      const isSignatureExistingData = {};
-      if (reduxData?.signature?.value?.publicId)
-        isSignatureExistingData.publicId = reduxData?.signature?.value?.publicId;
-      if (reduxData?.signature?.value?.secureUrl)
-        isSignatureExistingData.secureUrl = reduxData?.signature?.value?.secureUrl;
-      if (reduxData?.signature?.value?.resourceType)
-        isSignatureExistingData.resourceType = reduxData?.signature?.value?.resourceType;
       setForm((prev) => ({
         ...prev,
-        ["signature"]: {
-          name: "signature",
-          value: isSignatureExistingData?.publicId
-            ? isSignatureExistingData
-            : { publicId: "", secureUrl: "", resourceType: "" },
-        },
+        signature: normalizeSignature(reduxData?.signature),
       }));
     }
   }, [fields, isSignature, name, reduxData]);
@@ -126,9 +118,11 @@ function ProcessingInfo({
         if (!val) return false;
         let allConditionalComplete = true;
         const conditionalFieldsKeys = Object.keys(form).filter((key) => key?.includes(`${uniqueId}/`));
-        conditionalFieldsKeys.some((innerName) => {
-          const innerVal = form[innerName];
-          if (!innerVal) allConditionalComplete = false;
+        conditionalFieldsKeys.forEach((innerName) => {
+          const innerVal = form[innerName]?.value ?? form[innerName];
+          if (innerVal == null || (typeof innerVal === "string" && innerVal.trim() === "")) {
+            allConditionalComplete = false;
+          }
         });
         if (!allConditionalComplete) return false;
         if (val == null) return false;
@@ -142,9 +136,11 @@ function ProcessingInfo({
         if (!val) return false;
         let allConditionalComplete = true;
         const conditionalFieldsKeys = Object.keys(form).filter((key) => key?.includes(`${uniqueId}/`));
-        conditionalFieldsKeys.some((innerName) => {
-          const innerVal = form[innerName];
-          if (!innerVal) allConditionalComplete = false;
+        conditionalFieldsKeys.forEach((innerName) => {
+          const innerVal = form[innerName]?.value ?? form[innerName];
+          if (innerVal == null || (typeof innerVal === "string" && innerVal.trim() === "")) {
+            allConditionalComplete = false;
+          }
         });
         if (!allConditionalComplete) return false;
         if (val == null) return false;
@@ -153,13 +149,7 @@ function ProcessingInfo({
       });
     }
 
-    let isSignatureDone = true;
-    if (isSignature) {
-      let dataOfSign = form?.["signature"];
-      if (!dataOfSign?.publicId || !dataOfSign?.secureUrl || !dataOfSign?.resourceType) {
-        isSignatureDone = false;
-      }
-    }
+    const isSignatureDone = !isSignature || isSignatureComplete(form?.signature);
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
   }, [allNames, form, isCreator, isSignature, requiredNames]);
 
@@ -267,7 +257,7 @@ function ProcessingInfo({
           <SignatureBox
             step={step}
             onSave={signatureUploadHandler}
-            oldSignatureUrl={form?.signature?.value?.secureUrl || ""}
+            oldSignatureUrl={getSignatureUrl(form?.signature)}
           />
         )}
       </div>

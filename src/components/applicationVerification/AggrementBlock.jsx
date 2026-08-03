@@ -2,6 +2,7 @@ import { useEnterToNextField } from "@/hooks/useEnterToNextField";
 import { makeDocLinkHandler } from "@/lib/makeDocLinkHandler";
 import { updateFormState } from "@/redux/slices/formSlice";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
+import { getSignatureUrl, isSignatureComplete, normalizeFieldEntry, normalizeSignature } from "@/utils/signatureShape";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -31,6 +32,7 @@ function AggrementBlock({
 }) {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { formData } = useSelector((state) => state.form);
   const formContainerRef = useRef(null);
   const submitFromEnterRef = useRef(null);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
@@ -51,7 +53,7 @@ function AggrementBlock({
     try {
       if (!file) return toast.error("Please select a file");
       if (file) {
-        const oldSign = form?.["signature"]?.value;
+        const oldSign = normalizeSignature(form?.signature).value;
         if (oldSign?.publicId) {
           const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
           if (!result) return toast.error("File Not Deleted Please Try Again");
@@ -59,12 +61,13 @@ function AggrementBlock({
         const res = await uploadImageOnCloudinary(file);
         if (!res.publicId || !res.secureUrl || !res.resourceType)
           return toast.error("File Not Uploaded Please Try Again");
-        const action = await dispatch(
-          updateFormState({ data: { signature: { name: "signature", value: res } }, name: sectionKey }),
-        );
+        const signature = { name: "signature", value: res };
+        // Merge into existing section so signature-only save does not wipe fields
+        const mergedSection = { ...(formData?.[sectionKey] || {}), ...form, signature };
+        const action = await dispatch(updateFormState({ data: mergedSection, name: sectionKey }));
         unwrapResult(action);
-        setForm((prev) => ({ ...prev, signature: { name: "signature", value: res } }));
-        await saveInProgress({ data: { signature: { name: "signature", value: res } }, name: sectionKey });
+        setForm((prev) => ({ ...prev, signature }));
+        await saveInProgress({ data: { signature }, name: sectionKey });
         toast.success("Signature uploaded successfully");
       }
     } catch (error) {
@@ -78,26 +81,17 @@ function AggrementBlock({
     const formFields = {};
     if (fields?.length) {
       fields?.forEach((field) => {
-        formFields[field?.name] = reduxData?.[field?.name] || "";
+        formFields[field?.uniqueId] = normalizeFieldEntry(
+          reduxData?.[field?.uniqueId] ?? reduxData?.[field?.name],
+          field?.name,
+        );
       });
       setForm(formFields);
     }
     if (isSignature) {
-      const isSignatureExistingData = {};
-      if (reduxData?.signature?.value?.publicId)
-        isSignatureExistingData.publicId = reduxData?.signature?.value?.publicId;
-      if (reduxData?.signature?.value?.secureUrl)
-        isSignatureExistingData.secureUrl = reduxData?.signature?.value?.secureUrl;
-      if (reduxData?.signature?.value?.resourceType)
-        isSignatureExistingData.resourceType = reduxData?.signature?.value?.resourceType;
       setForm((prev) => ({
         ...prev,
-        ["signature"]: {
-          name: "signature",
-          value: isSignatureExistingData?.publicId
-            ? isSignatureExistingData
-            : { publicId: "", secureUrl: "", resourceType: "" },
-        },
+        signature: normalizeSignature(reduxData?.signature),
       }));
     }
   }, [fields, isSignature, reduxData]);
@@ -123,13 +117,7 @@ function AggrementBlock({
       if (typeof val === "object") return Object.values(val).every((v) => v?.toString().trim() !== "");
       return true;
     });
-    let isSignatureDone = true;
-    if (isSignature) {
-      let dataOfSign = form?.["signature"]?.value || {};
-      if (!dataOfSign?.publicId || !dataOfSign?.secureUrl || !dataOfSign?.resourceType) {
-        isSignatureDone = false;
-      }
-    }
+    const isSignatureDone = !isSignature || isSignatureComplete(form?.signature);
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
   }, [form, isCreator, isSignature, requiredNames]);
 
@@ -272,7 +260,7 @@ function AggrementBlock({
             <SignatureBox
               step={step}
               onSave={signatureUploadHandler}
-              oldSignatureUrl={form?.signature?.value?.secureUrl || ""}
+              oldSignatureUrl={getSignatureUrl(form?.signature)}
             />
           </>
         )}

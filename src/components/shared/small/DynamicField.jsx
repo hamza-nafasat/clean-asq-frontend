@@ -1,7 +1,7 @@
 import { useBranding } from "@/hooks/BrandingContext";
 import { useFormateTextInMarkDownMutation } from "@/redux/apis/formApis";
 import DOMPurify from "dompurify";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { IoEyeOffSharp } from "react-icons/io5";
 import { RxEyeOpen } from "react-icons/rx";
 import { PiFileArrowUpFill } from "react-icons/pi";
@@ -1002,8 +1002,21 @@ const FileInputType = ({ field, className, form, setForm }) => {
     if (value === undefined || value === null) return true;
     if (typeof value === "string") return value.trim() === "";
     if (Array.isArray(value)) return value.length === 0;
+    if (typeof value === "object") return !(value.secureUrl || value.publicId || value.file);
     return false;
   };
+
+  // Restore previously uploaded file preview from draft
+  useEffect(() => {
+    const existing = form?.[uniqueId]?.value;
+    const url = existing?.secureUrl;
+    if (!url || fileName) return;
+    const nameFromUrl = url.split("/").pop()?.split("?")[0] || "Uploaded file";
+    setFileName(decodeURIComponent(nameFromUrl));
+    if (existing?.resourceType === "image" || /\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+      setPreviewUrl(url);
+    }
+  }, [form, uniqueId, fileName]);
 
   const fileHandler = (file) => {
     if (!file) return;

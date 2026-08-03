@@ -204,15 +204,18 @@ export default function ApplicationForm() {
       try {
         if (data && name) {
           const updatedData = await uploadFilesAndReplace(data);
-          // check if not createdAt and updatedAt fields in data then add them
-          const oldData = formData?.[name];
-          updatedData.updatedAt = new Date().toISOString();
-          if (!updatedData.createdAt && !oldData?.createdAt) {
-            updatedData.createdAt = new Date().toISOString();
+          // Merge into existing section so partial saves (e.g. signature-only) don't wipe fields
+          const oldData = formData?.[name] || {};
+          const merged = { ...oldData, ...updatedData };
+          merged.updatedAt = new Date().toISOString();
+          if (!merged.createdAt && !oldData?.createdAt) {
+            merged.createdAt = new Date().toISOString();
           } else if (oldData?.createdAt) {
-            updatedData.createdAt = oldData?.createdAt;
+            merged.createdAt = oldData.createdAt;
+          } else if (updatedData.createdAt) {
+            merged.createdAt = updatedData.createdAt;
           } else {
-            updatedData.createdAt = new Date().toISOString();
+            merged.createdAt = new Date().toISOString();
           }
           const updatedBy = {
             _id: user?._id,
@@ -220,19 +223,24 @@ export default function ApplicationForm() {
             name: user?.firstName + " " + user?.lastName,
             role: user?.role?.name,
           };
-          updatedData.updatedBy = updatedBy;
+          merged.updatedBy = updatedBy;
           const res = await saveFormInDraft({
             formId: form?.data?._id,
-            formData: { ...formData, [name]: updatedData },
+            formData: { ...formData, [name]: merged },
           }).unwrap();
-          if (res.success) toast.success(res.message);
+          if (res.success) {
+            // Keep Redux in sync so reopen / step remount hydrates filled fields
+            const action = await dispatch(updateFormState({ data: merged, name }));
+            unwrapResult(action);
+            toast.success(res.message);
+          }
         }
       } catch (error) {
         console.log("error while saving form in draft", error);
         toast.error(error?.data?.message || "Error while saving form in draft");
       }
     },
-    [form?.data?._id, formData, saveFormInDraft, user],
+    [dispatch, form?.data?._id, formData, saveFormInDraft, user],
   );
 
   useEffect(() => {
