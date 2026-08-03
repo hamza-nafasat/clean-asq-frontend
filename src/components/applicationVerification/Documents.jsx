@@ -1,8 +1,9 @@
 import DisplayText from "@/components/shared/DisplayText";
+import { useEnterToNextField } from "@/hooks/useEnterToNextField";
 import { useFormateTextInMarkDownMutation, useUpdateFormSectionMutation } from "@/redux/apis/formApis";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
 import DOMPurify from "dompurify";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import SignatureBox from "../shared/SignatureBox";
@@ -32,6 +33,8 @@ function Documents({
 }) {
   const { formData } = useSelector((state) => state.form);
   const { user } = useSelector((state) => state.auth);
+  const formContainerRef = useRef(null);
+  const submitFromEnterRef = useRef(null);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const [file, setFile] = useState(null);
   const [fileFieldName, setFileFieldName] = useState("");
@@ -217,8 +220,19 @@ function Documents({
     else setUrls([]);
   }, [form]);
 
+  submitFromEnterRef.current = () => {
+    if (loadingNext || !isAllRequiredFilled) return;
+    if (currentStep < totalSteps - 1) {
+      updateFileDataHandler();
+    } else {
+      submitFileDataHandler();
+    }
+  };
+
+  useEnterToNextField(formContainerRef, { onLastFieldRef: submitFromEnterRef });
+
   return (
-    <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
+    <div ref={formContainerRef} className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h1 className="text-textPrimary text-2xl font-semibold" data-ai-display-text>

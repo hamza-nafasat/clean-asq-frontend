@@ -1,6 +1,7 @@
 import DisplayText from "@/components/shared/DisplayText";
 import { FIELD_TYPES } from "@/data/constants";
-import { useEffect, useMemo, useState } from "react";
+import { useEnterToNextField } from "@/hooks/useEnterToNextField";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import Button from "../shared/small/Button";
 import {
@@ -37,6 +38,8 @@ function ProcessingInfo({
   isSignature,
 }) {
   const { user } = useSelector((state) => state.auth);
+  const formContainerRef = useRef(null);
+  const submitFromEnterRef = useRef(null);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const [form, setForm] = useState({});
   const [loadingNext, setLoadingNext] = useState(false);
@@ -159,8 +162,20 @@ function ProcessingInfo({
     }
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
   }, [allNames, form, isCreator, isSignature, requiredNames]);
+
+  submitFromEnterRef.current = () => {
+    if (!isAllRequiredFieldsFilled || loadingNext) return;
+    if (currentStep < totalSteps - 1) {
+      handleNext({ data: form, name: sectionKey, setLoadingNext });
+    } else {
+      handleSubmit({ data: form, name: sectionKey, setLoadingNext });
+    }
+  };
+
+  useEnterToNextField(formContainerRef, { onLastFieldRef: submitFromEnterRef });
+
   return (
-    <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
+    <div ref={formContainerRef} className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold" data-ai-display-text>
           {name}

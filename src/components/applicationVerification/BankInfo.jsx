@@ -1,5 +1,6 @@
 import DisplayText from "@/components/shared/DisplayText";
 import { FIELD_TYPES } from "@/data/constants";
+import { useEnterToNextField } from "@/hooks/useEnterToNextField";
 import {
   useGetAllSearchStrategiesQuery,
   useGetBankLookupMutation,
@@ -7,7 +8,7 @@ import {
 } from "@/redux/apis/formApis";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
 import { CheckCircle, X, XCircle } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import SignatureBox from "../shared/SignatureBox";
@@ -45,6 +46,10 @@ function BankInfo({
 }) {
   const { user } = useSelector((state) => state.auth);
   const { formData } = useSelector((state) => state?.form);
+  const formContainerRef = useRef(null);
+  const submitFromEnterRef = useRef(null);
+  const onSpecialEnterRef = useRef(null);
+  const lookupTriggerRef = useRef(null);
 
   const [ownersFromLookup, setOwnersFromLookup] = useState([]);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
@@ -203,6 +208,38 @@ function BankInfo({
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
   }, [form, isCreator, isSignature, requiredNames]);
 
+  lookupTriggerRef.current = () => {
+    const routingFieldDef = fields.find((f) => f.name === "bank_routing_number");
+    if (routingFieldDef && form[routingFieldDef.uniqueId]?.value) {
+      getLookupRoutingHandler(form[routingFieldDef.uniqueId].value);
+    }
+  };
+
+  submitFromEnterRef.current = () => {
+    if (!isAllRequiredFieldsFilled || loadingNext || (!accMatch && !isCreator)) return;
+    if (currentStep < totalSteps - 1) {
+      handleNext({ data: form, name: sectionKey, setLoadingNext });
+    } else {
+      handleSubmit({ data: form, name: sectionKey, setLoadingNext });
+    }
+  };
+
+  // Enter on routing triggers lookup; other fields advance / submit on last.
+  onSpecialEnterRef.current = (active, e) => {
+    const bankField = active.closest("[data-bank-field]")?.dataset?.bankField;
+    if (bankField === "routing") {
+      e.preventDefault();
+      lookupTriggerRef.current?.();
+      return true;
+    }
+    return false;
+  };
+
+  useEnterToNextField(formContainerRef, {
+    onLastFieldRef: submitFromEnterRef,
+    onSpecialEnterRef,
+  });
+
   return (
     <>
       {ownerSuggesstionsModal && (
@@ -215,7 +252,7 @@ function BankInfo({
           />
         </Modal>
       )}
-      <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
+      <div ref={formContainerRef} className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
         <div className="mb-10 flex items-center justify-between">
           <h3 className="text-textPrimary text-2xl font-semibold" data-ai-display-text>
             {name}
@@ -246,7 +283,7 @@ function BankInfo({
           fields.map((field, index) => {
             if (field.name === "bank_routing_number") {
               return (
-                <div key={index}>
+                <div key={index} data-bank-field="routing">
                   <div className="mt-4 flex items-center gap-2">
                     <OtherInputType
                       field={field}
@@ -270,6 +307,20 @@ function BankInfo({
                     />
                   </div>
                   {error && <p className="text-red-500">{error}</p>}
+                </div>
+              );
+            }
+
+            if (field.name === "bank_account_number") {
+              return (
+                <div key={index} className="mt-4" data-bank-field="account">
+                  <OtherInputType
+                    field={field}
+                    placeholder={field.placeholder}
+                    form={form}
+                    setForm={setForm}
+                    className={""}
+                  />
                 </div>
               );
             }

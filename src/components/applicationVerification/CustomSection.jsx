@@ -1,7 +1,8 @@
 import DisplayText from "@/components/shared/DisplayText";
 import { FIELD_TYPES } from "@/data/constants";
+import { useEnterToNextField } from "@/hooks/useEnterToNextField";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import SignatureBox from "../shared/SignatureBox";
@@ -41,6 +42,8 @@ function CustomSection({
   isSignature,
 }) {
   const { user } = useSelector((state) => state.auth);
+  const formContainerRef = useRef(null);
+  const submitFromEnterRef = useRef(null);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const [form, setForm] = useState({});
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
@@ -362,8 +365,20 @@ function CustomSection({
       socket.off("idMission_other");
     };
   }, [idMissionVerifiedData?.createdAt, sectionKey, user?.email]);
+
+  submitFromEnterRef.current = () => {
+    if (!isAllRequiredFieldsFilled || loadingNext) return;
+    if (currentStep < totalSteps - 1) {
+      handleNext({ data: form, name: sectionKey, setLoadingNext });
+    } else {
+      handleSubmit({ data: form, name: sectionKey, setLoadingNext });
+    }
+  };
+
+  useEnterToNextField(formContainerRef, { onLastFieldRef: submitFromEnterRef });
+
   return (
-    <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
+    <div ref={formContainerRef} className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
         <div className="flex gap-2"></div>

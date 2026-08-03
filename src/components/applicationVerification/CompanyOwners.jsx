@@ -1,6 +1,7 @@
 import DisplayText from "@/components/shared/DisplayText";
 import TextField from "@/components/shared/small/TextField";
 import { FIELD_TYPES } from "@/data/constants";
+import { useEnterToNextField } from "@/hooks/useEnterToNextField";
 import { useGetAllSearchStrategiesQuery, useUpdateFormSectionMutation } from "@/redux/apis/formApis";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
 import { X } from "lucide-react";
@@ -77,6 +78,8 @@ function CompanyOwners({
   isSignature,
 }) {
   const { user } = useSelector((state) => state.auth);
+  const formContainerRef = useRef(null);
+  const submitFromEnterRef = useRef(null);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const { formData } = useSelector((state) => state?.form);
   const [ownersFromLookup, setOwnersFromLookup] = useState([]);
@@ -363,8 +366,19 @@ function CompanyOwners({
     setIsAllRequiredFieldsFilled(allFilled && isOperatorExist && isEmailVAlidated && isSignatureDone);
   }, [form, formData?.idMission?.roleFillingForCompany, isCreator, isSignature, requiredNames]);
 
+  submitFromEnterRef.current = () => {
+    if (!isAllRequiredFieldsFilled || loadingNext) return;
+    if (currentStep < totalSteps - 1) {
+      handleNext({ data: form, name: sectionKey, setLoadingNext });
+    } else {
+      handleSubmit({ data: form, name: sectionKey, setLoadingNext });
+    }
+  };
+
+  useEnterToNextField(formContainerRef, { onLastFieldRef: submitFromEnterRef });
+
   return (
-    <div className="h-full w-full overflow-auto">
+    <div ref={formContainerRef} className="h-full w-full overflow-auto">
       {updateSectionFromatingModal && (
         <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
           <EditSectionDisplayTextFromatingModal step={step} />

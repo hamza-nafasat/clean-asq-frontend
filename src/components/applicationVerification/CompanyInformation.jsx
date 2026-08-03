@@ -1,5 +1,6 @@
 import DisplayText from "@/components/shared/DisplayText";
 import { FIELD_TYPES } from "@/data/constants";
+import { useEnterToNextField } from "@/hooks/useEnterToNextField";
 import { useFindNaicAndMccMutation, useGetAllSearchStrategiesQuery } from "@/redux/apis/formApis";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary.js";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -353,32 +354,11 @@ function CompanyInformation({
     }
   };
 
-  // Enter key inside any text input: advance to the next input, or trigger
-  // Next/Submit from the last one. Excludes the NAICS input (has its own logic).
-  // Skips if the event was already handled by a child (e.g. suggestion dropdown).
-  useEffect(() => {
-    const container = formContainerRef.current;
-    if (!container) return;
-    const handler = (e) => {
-      if (e.key !== "Enter" || e.defaultPrevented) return;
-      if (!container.contains(document.activeElement)) return;
-      if (document.activeElement?.id === "naics-code") return;
-      if (document.activeElement?.tagName?.toLowerCase() !== "input") return;
-      const inputs = Array.from(
-        container.querySelectorAll("input:not([disabled]):not([readonly]):not(#naics-code)"),
-      ).filter((el) => el.offsetParent !== null);
-      const idx = inputs.indexOf(document.activeElement);
-      if (idx === -1) return;
-      e.preventDefault();
-      if (idx < inputs.length - 1) {
-        inputs[idx + 1].focus();
-      } else {
-        submitFromEnterRef.current?.();
-      }
-    };
-    container.addEventListener("keydown", handler);
-    return () => container.removeEventListener("keydown", handler);
-  }, []);
+  // Enter → next field (NAICS has its own Enter logic via excludeIds).
+  useEnterToNextField(formContainerRef, {
+    onLastFieldRef: submitFromEnterRef,
+    excludeIds: ["naics-code"],
+  });
 
   const checkNaicsPosition = () => {
     if (!naicsInputRef.current) return;

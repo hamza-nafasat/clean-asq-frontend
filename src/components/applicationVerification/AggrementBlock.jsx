@@ -1,3 +1,5 @@
+import { useEnterToNextField } from "@/hooks/useEnterToNextField";
+import { makeDocLinkHandler } from "@/lib/makeDocLinkHandler";
 import { updateFormState } from "@/redux/slices/formSlice";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
 import { unwrapResult } from "@reduxjs/toolkit";
@@ -9,7 +11,6 @@ import SignatureBox from "../shared/SignatureBox";
 import Button from "../shared/small/Button";
 import { EditSectionDisplayTextFromatingModal } from "../shared/small/EditSectionDisplayTextFromatingModal";
 import Modal from "../shared/small/Modal";
-import { makeDocLinkHandler } from "@/lib/makeDocLinkHandler";
 import CustomizationFieldsModal from "./companyInfo/CustomizationFieldsModal";
 
 function AggrementBlock({
@@ -30,6 +31,8 @@ function AggrementBlock({
 }) {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const formContainerRef = useRef(null);
+  const submitFromEnterRef = useRef(null);
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const [form, setForm] = useState({});
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
@@ -147,8 +150,19 @@ function AggrementBlock({
     return () => el.removeEventListener("click", handler, true);
   }, [step?.signDisplayFormattedText]);
 
+  submitFromEnterRef.current = () => {
+    if (loadingNext) return;
+    if (currentStep < totalSteps - 1) {
+      handleNext({ data: form, name: sectionKey, setLoadingNext });
+    } else if (isAllRequiredFieldsFilled) {
+      handleSubmit({ data: form, name: sectionKey, setLoadingNext });
+    }
+  };
+
+  useEnterToNextField(formContainerRef, { onLastFieldRef: submitFromEnterRef });
+
   return (
-    <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
+    <div ref={formContainerRef} className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       {openDoc && (
         <DocumentModal url={openDoc.url} title={openDoc.title} onClose={() => setOpenDoc(null)} />
       )}
