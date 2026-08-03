@@ -259,12 +259,25 @@ export default function SingleApplication() {
     }
   };
 
+  // Prefill modal keys off screenId + live formRef DOM. Only enter "idmission-details"
+  // when the details form is actually painted — otherwise prefill settles on 0 fields
+  // during the loading gate and never retries (client test: Fail no modal shows).
+  const idMissionDetailsVisible =
+    !!idMissionVerified &&
+    !!idMissionDetailsReady &&
+    !isIdMissionProcessing &&
+    (idMissionManualEntryRef.current ||
+      !!idMissionVerifiedData?.name?.value ||
+      !!idMissionVerifiedData?.idNumber?.value);
+
   const aiStage =
     !emailVerified || emailVerifiedLoading || navigatingAwayRef.current
       ? "email"
       : !idMissionVerified
         ? "idmission-qr"
-        : "idmission-details";
+        : !idMissionDetailsVisible
+          ? "idmission-loading"
+          : "idmission-details";
 
   useApplicantScreenContext(
     {
@@ -274,13 +287,17 @@ export default function SingleApplication() {
           ? "Email Verification"
           : aiStage === "idmission-qr"
             ? "Identity Verification — QR Code"
-            : "Identity Verification — Personal Details",
+            : aiStage === "idmission-loading"
+              ? "Identity Verification — Loading Details"
+              : "Identity Verification — Personal Details",
       description:
         aiStage === "email"
           ? "The applicant must verify their email address. They enter their email, receive a one-time passcode (OTP), and enter it to confirm."
           : aiStage === "idmission-qr"
             ? "The applicant scans a QR code (or uses a web link) with their phone to complete photo ID verification through IDMission. No form fields to fill at this step — they must use the QR code or web link."
-            : 'The applicant completes their personal details and adds their signature to proceed. Some fields may already be filled from identity verification — present those pre-filled values to the applicant for confirmation before moving on to empty fields. For the roleFillingForCompany field, valid values are: "both" (operator and primary contact), "primaryContact" (primary contact only), or "primaryOperatorAndController" (C-level executive or owner). Present these as readable choices to the applicant.',
+            : aiStage === "idmission-loading"
+              ? "Identity verification data is loading. Wait until personal details appear before confirming pre-filled values."
+              : 'The applicant completes their personal details and adds their signature to proceed. Some fields may already be filled from identity verification — present those pre-filled values to the applicant for confirmation before moving on to empty fields. For the roleFillingForCompany field, valid values are: "both" (operator and primary contact), "primaryContact" (primary contact only), or "primaryOperatorAndController" (C-level executive or owner). Present these as readable choices to the applicant.',
       aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
       formRef: aiStage === "idmission-details" ? idMissionFormRef : null,
       currentState: {
@@ -309,6 +326,9 @@ export default function SingleApplication() {
         }),
         ...(aiStage === "idmission-qr" && {
           webLinkAvailable: !!webLink,
+          fields: [],
+        }),
+        ...(aiStage === "idmission-loading" && {
           fields: [],
         }),
         // Fields are discovered from the live DOM via formRef — no hardcoded list needed.
@@ -358,7 +378,16 @@ export default function SingleApplication() {
           },
         }),
       },
-      deps: [aiStage, email, otp, webLink, idMissionVerifiedData],
+      deps: [
+        aiStage,
+        email,
+        otp,
+        webLink,
+        idMissionDetailsReady,
+        idMissionDetailsVisible,
+        idMissionVerifiedData,
+        isIdMissionProcessing,
+      ],
     },
     { clearOnMount: !emailVerified, autoOpen: false },
   );

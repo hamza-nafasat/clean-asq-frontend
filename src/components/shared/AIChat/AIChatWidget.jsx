@@ -445,10 +445,12 @@ export default function AIChatWidget() {
 
     const tryFire = (reason) => {
       if (cancelled) return;
-      cancelled = true;
 
       const ctx = getScreenContext();
-      if (!ctx || ctx.screenId !== screenId) return;
+      if (!ctx || ctx.screenId !== screenId) {
+        cancelled = true;
+        return;
+      }
 
       const container = ctx.formRef?.current ?? null;
       const fields = getLiveFields(ctx);
@@ -463,8 +465,14 @@ export default function AIChatWidget() {
 
       const allPreFilled = [...preFilled, ...loadingPlaceholders];
 
-      if (allPreFilled.length < 3) return;
+      if (allPreFilled.length < 3) {
+        // formRef registered but not mounted yet (e.g. late paint) — keep polling until cap
+        if (reason !== "cap" && !!ctx.formRef && !container) return;
+        cancelled = true;
+        return;
+      }
 
+      cancelled = true;
       preFillShownRef.current.add(screenId);
 
       const remaining = fields.filter(
