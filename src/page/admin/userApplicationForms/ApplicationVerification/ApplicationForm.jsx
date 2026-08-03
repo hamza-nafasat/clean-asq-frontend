@@ -363,11 +363,17 @@ export default function ApplicationForm() {
       });
       return rows;
     },
-    // BankInfo stores signature flat (signature.secureUrl); AggrementBlock nests it (signature.value.secureUrl)
-    signatureUrl:
-      formData?.[currentSection?.key]?.signature?.value?.secureUrl ||
-      formData?.[currentSection?.key]?.signature?.secureUrl ||
-      null,
+    // Read signature at download click time from the live page:
+    // SignatureBox gets oldSignatureUrl={form?.signature?.value?.secureUrl} and exposes it as data-signature-url.
+    // Fallback to Redux if the section was already saved.
+    signatureUrl: () => {
+      const fromPage = stepContainerRef.current
+        ?.querySelector("[data-signature-url]")
+        ?.getAttribute("data-signature-url");
+      if (fromPage) return fromPage;
+      const section = formData?.[currentSection?.key];
+      return section?.signature?.value?.secureUrl || section?.signature?.secureUrl || null;
+    },
   });
   if (!isApplied || !form?.data?._id)
     return (

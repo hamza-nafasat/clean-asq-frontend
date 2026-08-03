@@ -253,6 +253,8 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
         "data-ai-label": "Authorized Signature",
         "data-ai-required": "true",
         "data-ai-value": oldSignatureUrl ? "signed" : "",
+        // Mirrors form.signature.value.secureUrl so page-download can find it at click time
+        "data-signature-url": oldSignatureUrl || "",
         "data-ai-text": (() => {
           const strip = (v) =>
             String(v || "")

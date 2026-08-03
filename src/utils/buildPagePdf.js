@@ -27,11 +27,42 @@ function htmlToNodes(html, baseStyle = "body") {
 
 /**
  * Converts an image URL to a base64 data URI so pdfMake can embed it.
- * Returns null on failure (signature will be omitted rather than crash).
+ * Prefers Image+canvas (Cloudinary CORS, same as SignatureBox), then fetch.
+ * Returns null on failure (signature omitted rather than crash).
  */
 async function imageUrlToDataUri(url) {
+  if (!url) return null;
+
   try {
-    const res = await fetch(url);
+    const dataUri = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          if (!canvas.width || !canvas.height) {
+            reject(new Error("empty image"));
+            return;
+          }
+          canvas.getContext("2d").drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.onerror = () => reject(new Error("image load failed"));
+      img.src = url;
+    });
+    if (dataUri) return dataUri;
+  } catch {
+    // fall through to fetch
+  }
+
+  try {
+    const res = await fetch(url, { mode: "cors", credentials: "omit" });
+    if (!res.ok) return null;
     const blob = await res.blob();
     return await new Promise((resolve, reject) => {
       const reader = new FileReader();

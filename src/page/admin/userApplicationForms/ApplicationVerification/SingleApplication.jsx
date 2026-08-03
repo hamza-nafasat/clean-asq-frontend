@@ -198,9 +198,7 @@ export default function SingleApplication() {
 
   const idMissionSection = form?.data?.sections?.find((sec) => sec?.title?.toLowerCase() == "id_verification_blk");
 
-  // Download button — shown only when idMissionFormRef is mounted (IDMission details stage).
-  // getHasFields returns false when the ref is null (QR / OTP stages), so shouldShow auto-toggles
-  // without any hardcoded stage checks.
+  // Download on ID Mission details only (stage flags — not form ref during first paint).
   const {
     buttonLabel: downloadLabel,
     shouldShow: showDownload,
@@ -217,11 +215,7 @@ export default function SingleApplication() {
       idMissionSection?.signDisplayFormattedText ||
       idMissionSection?.signDisplayText ||
       null,
-    getHasFields: () => {
-      const el = idMissionFormRef.current;
-      if (!el) return false;
-      return el.querySelectorAll("input:not([type=hidden]):not([type=file]), select, textarea").length > 0;
-    },
+    getHasFields: () => !!(idMissionVerified && idMissionDetailsReady),
     getFieldRows: () => {
       if (!idMissionFormRef.current) return [];
       const rows = [];
@@ -238,7 +232,8 @@ export default function SingleApplication() {
         });
       return rows;
     },
-    signatureUrl: idMissionVerifiedData?.signature?.value?.secureUrl || null,
+    // Same shape as stepper: form.signature.value.secureUrl (local ID Mission state)
+    signatureUrl: () => idMissionVerifiedData?.signature?.value?.secureUrl || null,
   });
   const handleSignature = async (file, setIsSaving) => {
     try {

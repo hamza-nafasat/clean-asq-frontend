@@ -14,7 +14,8 @@ const SERVER_URL = getEnv("SERVER_URL");
  * @param {string}   opts.pageName       - Display name of the section (used as PDF title)
  * @param {string}   opts.displayHtml    - The section's rendered display text HTML (ai_formatting || displayText)
  * @param {Function} opts.getFieldRows   - Returns [{label, value}] for the current form state
- * @param {string}   [opts.signatureUrl] - URL of uploaded signature image (if any)
+ * @param {string|Function} [opts.signatureUrl] - Cloudinary URL, or getter called at download time
+ *   (prefer getter so form.signature.value.secureUrl is read after the user signs)
  * @param {Function} [opts.getHasFields] - Optional: returns true if the current view has meaningful
  *                                         data-entry fields. When omitted the button always shows.
  *                                         Return false to hide the button (e.g. when a DOM ref is null).
@@ -35,6 +36,11 @@ export function usePageDownload({ pageName, displayHtml, getFieldRows, signature
   const shouldShow = hasAgreements || hasFields;
 
   const buttonLabel = isDownloading ? "Downloading…" : "Download this page";
+
+  const resolveSignatureUrl = () => {
+    if (typeof signatureUrl === "function") return signatureUrl() || null;
+    return signatureUrl || null;
+  };
 
   const handleDownload = async () => {
     if (isDownloading) return;
@@ -75,10 +81,14 @@ export function usePageDownload({ pageName, displayHtml, getFieldRows, signature
         }),
       );
 
+      // Resolve signature at click time — same source as form?.signature?.value?.secureUrl
+      // on the current step (via SignatureBox data-signature-url / local state getter).
+      const liveSignatureUrl = resolveSignatureUrl();
+
       await buildPagePdf({
         pageName,
         fieldRows: getFieldRows(),
-        signatureUrl: signatureUrl || null,
+        signatureUrl: liveSignatureUrl,
         agreements,
         userName: userName || null,
         userEmail: userEmail || null,
