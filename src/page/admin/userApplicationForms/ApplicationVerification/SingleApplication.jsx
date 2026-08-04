@@ -1686,7 +1686,7 @@ export default function SingleApplication() {
                         address2: { name: "address2", value: e.target.value },
                       })
                     }
-                    label="Address 2 (Apt, Suite, Unit)"
+                    label="Address 2 (Apt, Suite, Unit):*"
                     placeholder="Apt, Suite, Unit, Floor, etc."
                     className={"max-w-100!"}
                   />
@@ -1718,7 +1718,7 @@ export default function SingleApplication() {
                         zipCode: { name: "zipCode", value: e.target.value },
                       })
                     }
-                    label="Zip or Postal Code"
+                    label="Zip or Postal Code:*"
                     placeholder="e.g. 90210"
                     className={"max-w-100!"}
                   />
