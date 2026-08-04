@@ -2,12 +2,7 @@ import DisplayText from "@/components/shared/DisplayText";
 import { useEnterToNextField } from "@/hooks/useEnterToNextField";
 import { useFormateTextInMarkDownMutation, useUpdateFormSectionMutation } from "@/redux/apis/formApis";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
-import {
-  getSignatureUrl,
-  isSignatureComplete,
-  normalizeFieldEntry,
-  normalizeSignature,
-} from "@/utils/signatureShape";
+import { getSignatureUrl, isSignatureComplete, normalizeFieldEntry, normalizeSignature } from "@/utils/signatureShape";
 import DOMPurify from "dompurify";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -56,19 +51,45 @@ function Documents({
   const [showRequiredDocs, setShowRequiredDocs] = useState(true);
   const [urls, setUrls] = useState([]);
   const [aiPromptModal, setAiPromptModal] = useState(false);
+  const [isAllRequiredFilled, setIsAllRequiredFilled] = useState(false);
 
   const isCreator = user?._id && user?._id === step?.owner && user?.role !== "guest";
 
-  const isAllRequiredFilled = useMemo(() => {
-    const oldFileData = form?.[fileFieldUniqueId]?.value || form?.[fileFieldUniqueId];
-    const hasFile =
-      !!file ||
-      urls.length > 0 ||
-      !!(oldFileData?.publicId && oldFileData?.secureUrl);
-    const signOk = !isSignature || isSignatureComplete(form?.signature);
-    if (isCreator) return true;
-    return hasFile && signOk;
-  }, [file, fileFieldUniqueId, form, isCreator, isSignature, urls.length]);
+  const requiredNames = useMemo(
+    () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId, type: f.type })),
+    [fields],
+  );
+
+  // Same gate as other stepper pages: block Next until required fields (+ signature) are filled.
+  // Creators can always continue.
+  useEffect(() => {
+    if (isCreator) {
+      setIsAllRequiredFilled(true);
+      return;
+    }
+
+    const allFilled = requiredNames.every(({ uniqueId, type }) => {
+      if (type === "file") {
+        const oldFileData = form?.[uniqueId]?.value || form?.[uniqueId];
+        const hasFile = !!file || urls.length > 0 || !!(oldFileData?.publicId && oldFileData?.secureUrl);
+        return hasFile;
+      }
+      const val = form[uniqueId]?.value;
+      if (val == null) return false;
+      if (typeof val === "string") return val.trim() !== "";
+      if (Array.isArray(val)) return val.length > 0;
+      if (typeof val === "object") {
+        // Cloudinary / nested file object
+        if (val.publicId && val.secureUrl) return true;
+        return Object.values(val).every((v) => v?.toString().trim() !== "");
+      }
+      return true;
+    });
+
+    const isSignatureDone = !isSignature || isSignatureComplete(form?.signature);
+    setIsAllRequiredFilled(allFilled && isSignatureDone);
+  }, [file, form, isCreator, isSignature, requiredNames, urls.length]);
+
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
       if (!file) return toast.error("Please select a file");
@@ -111,6 +132,9 @@ function Documents({
   // handle next and submit functions
   const updateFileDataHandler = async () => {
     try {
+      if (!isCreator && !isAllRequiredFilled) {
+        return toast.error("Please fill all required fields");
+      }
       setLoadingNext(true);
       if (!fileFieldUniqueId) return toast.error("Please refresh the page once and try again");
       const oldFileData = form?.[fileFieldUniqueId]?.value || form?.[fileFieldUniqueId];
@@ -145,10 +169,13 @@ function Documents({
     }
   };
   const submitFileDataHandler = async () => {
+    if (!isCreator && !isAllRequiredFilled) {
+      return toast.error("Please fill all required fields");
+    }
     if (!fileFieldName || !fileFieldUniqueId) return toast.error("Please refresh the page once and try again");
     const oldFileData = form?.[fileFieldUniqueId]?.value || form?.[fileFieldUniqueId];
     // check something exist urls or oldFile
-    if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl)) {
+    if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl) && !isCreator) {
       return toast.error("Please select a file or Enter a URL");
     }
     // if file or if urls
@@ -220,7 +247,13 @@ function Documents({
     );
     const urlsRaw =
       form?.[articleOfIncorporationUrlsFieldUniqueId]?.value ?? form?.[articleOfIncorporationUrlsFieldUniqueId];
-    if (typeof urlsRaw === "string" && urlsRaw.trim()) setUrls(urlsRaw.split(",").map((u) => u.trim()).filter(Boolean));
+    if (typeof urlsRaw === "string" && urlsRaw.trim())
+      setUrls(
+        urlsRaw
+          .split(",")
+          .map((u) => u.trim())
+          .filter(Boolean),
+      );
     else if (Array.isArray(urlsRaw)) setUrls(urlsRaw);
     else setUrls([]);
   }, [form]);
@@ -343,11 +376,7 @@ function Documents({
                   label={field?.label}
                   file={file}
                   onFileSelect={setFile}
-                  existingUrl={
-                    form?.[field?.uniqueId]?.value?.secureUrl ||
-                    form?.[field?.uniqueId]?.secureUrl ||
-                    ""
-                  }
+                  existingUrl={form?.[field?.uniqueId]?.value?.secureUrl || form?.[field?.uniqueId]?.secureUrl || ""}
                 />
               </div>
             );
@@ -414,9 +443,9 @@ function Documents({
             />
           ) : (
             <Button
-              disabled={formLoading || loadingNext}
-              className={`${(formLoading || loadingNext) && "pinter-events-none cursor-not-allowed opacity-20"}`}
-              label={"Submit"}
+              disabled={formLoading || loadingNext || !isAllRequiredFilled}
+              className={`${(formLoading || loadingNext || !isAllRequiredFilled) && "pinter-events-none cursor-not-allowed opacity-20"}`}
+              label={isAllRequiredFilled ? "Submit" : "Some fields are missing"}
               data-testid="form-submit-btn"
               onClick={submitFileDataHandler}
             />

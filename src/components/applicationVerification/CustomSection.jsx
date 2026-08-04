@@ -75,7 +75,7 @@ function CustomSection({
   });
   // console.log("idMissionVerifiedData", idMissionVerifiedData);
   const requiredNames = useMemo(
-    () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
+    () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId, type: f.type })),
     [fields],
   );
   const isCreator = user?._id && user?._id === step?.owner && user?.role !== "guest";
@@ -133,14 +133,20 @@ function CustomSection({
     }
   }, [fields, idMissionVerifiedData, isSignature, reduxData]);
 
+  // Same gate as other stepper pages: block Next until required fields (+ signature) are filled.
+  // Creators can always continue.
   useEffect(() => {
     if (isCreator) {
       setIsAllRequiredFieldsFilled(true);
       return;
     }
-    const allFilled = requiredNames.every(({ uniqueId }) => {
+    const allFilled = requiredNames.every(({ uniqueId, type }) => {
       const val = form[uniqueId]?.value;
       if (val == null) return false;
+      if (type === FIELD_TYPES.FILE || type === "file") {
+        if (val?.file instanceof File) return true;
+        return !!(val?.publicId && val?.secureUrl);
+      }
       if (typeof val === "string") return val.trim() !== "";
       if (Array.isArray(val))
         return (
@@ -151,7 +157,10 @@ function CustomSection({
               : item?.toString().trim() !== "",
           )
         );
-      if (typeof val === "object") return Object.values(val).every((v) => v?.toString().trim() !== "");
+      if (typeof val === "object") {
+        if (val.publicId && val.secureUrl) return true;
+        return Object.values(val).every((v) => v?.toString().trim() !== "");
+      }
       return true;
     });
 
@@ -502,16 +511,25 @@ function CustomSection({
           {currentStep > 0 && <Button variant="secondary" label={"Previous"} onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
             <Button
-              disabled={!isAllRequiredFieldsFilled}
+              disabled={!isAllRequiredFieldsFilled || loadingNext}
+              className={`${!isAllRequiredFieldsFilled || loadingNext ? "pointer-events-none cursor-not-allowed opacity-20" : ""}`}
               label={!isAllRequiredFieldsFilled ? "Some required fields are missing" : "Next"}
-              onClick={() => handleNext({ data: form, name: sectionKey, setLoadingNext })}
+              data-testid="form-next-btn"
+              onClick={() => {
+                if (!isCreator && !isAllRequiredFieldsFilled) return;
+                handleNext({ data: form, name: sectionKey, setLoadingNext });
+              }}
             />
           ) : (
             <Button
               disabled={!isAllRequiredFieldsFilled || loadingNext}
-              className={`${!isAllRequiredFieldsFilled || loadingNext ? "pointer-events-none cursor-not-allowed opacity-20" : "opacity-100"}`}
+              className={`${!isAllRequiredFieldsFilled || loadingNext ? "pointer-events-none cursor-not-allowed opacity-20" : ""}`}
               label={!isAllRequiredFieldsFilled ? "Some required fields are missing" : "Submit"}
-              onClick={() => handleSubmit({ data: form, name: sectionKey, setLoadingNext })}
+              data-testid="form-submit-btn"
+              onClick={() => {
+                if (!isCreator && !isAllRequiredFieldsFilled) return;
+                handleSubmit({ data: form, name: sectionKey, setLoadingNext });
+              }}
             />
           )}
         </div>

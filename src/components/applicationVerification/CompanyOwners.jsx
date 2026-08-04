@@ -266,8 +266,18 @@ function CompanyOwners({
       initialForm.signature = normalizeSignature(reduxData?.signature);
     }
 
-    // Always hydrate from redux so reopen after Save/Next restores filled fields + signature
-    setForm(initialForm);
+    // First mount / remount: form is empty → take full redux hydrate (draft restore).
+    // After that: only add/remove keys — never overwrite local edits (that made fields uneditable).
+    setForm((prev) => {
+      if (!prev || Object.keys(prev).length === 0) return initialForm;
+
+      const toAdd = Object.fromEntries(Object.entries(initialForm).filter(([key]) => !(key in prev)));
+      const toRemoveKeys = Object.keys(prev).filter((key) => !(key in initialForm));
+      if (Object.keys(toAdd).length === 0 && toRemoveKeys.length === 0) return prev;
+
+      const cleaned = Object.fromEntries(Object.entries(prev).filter(([key]) => !toRemoveKeys.includes(key)));
+      return { ...cleaned, ...toAdd };
+    });
   }, [formFields, isSignature, otherOwnersStateUniqueId, otherOwnersStateName, reduxData]);
 
   // create fields for this section and also for customization
@@ -320,12 +330,12 @@ function CompanyOwners({
     ) {
       isOperatorExist = true;
     }
-    const idMissionField = formData?.idMission?.roleFillingForCompany;
-    if (idMissionField == "primaryOperatorAndController" || idMissionField?.value == "both") {
+    const idMissionRole =
+      formData?.idMission?.roleFillingForCompany?.value || formData?.idMission?.roleFillingForCompany;
+    if (idMissionRole === "primaryOperatorAndController" || idMissionRole === "both") {
       isOperatorExist = true;
     }
     if (!isOperatorExist) setSubmitButtonText("At least one primary operator required");
-    // console.log('allied operator exist isemailvalidated', allFilled, isOperatorExist, isEmailVAlidated);
     setIsAllRequiredFieldsFilled(allFilled && isOperatorExist && isEmailVAlidated && isSignatureDone);
   }, [
     form,
@@ -541,7 +551,10 @@ function CompanyOwners({
                               groupName={`role_${index}`}
                               form={{ role }}
                               onChange={(e) =>
-                                handleChangeOnOtherOwnersData({ target: { name: "role", value: e.target.value } }, index)
+                                handleChangeOnOtherOwnersData(
+                                  { target: { name: "role", value: e.target.value } },
+                                  index,
+                                )
                               }
                             />
                             <SimpleRadioInputType
