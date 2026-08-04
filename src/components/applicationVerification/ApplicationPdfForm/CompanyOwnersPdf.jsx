@@ -217,9 +217,7 @@ function CompanyOwnersPdf({
 
     // 2) Figure out what to add…
     const sectionData = formInnerData?.[sectionKey] ?? {};
-    const toAdd = Object.fromEntries(
-      Object.entries(initialForm).filter(([key]) => !(key in sectionData)),
-    );
+    const toAdd = Object.fromEntries(Object.entries(initialForm).filter(([key]) => !(key in sectionData)));
     // 3) …and what to remove
     const toRemoveKeys = Object.keys(sectionData).filter((key) => !(key in initialForm));
     // 4) If there’s nothing to do, bail out
@@ -409,6 +407,7 @@ function CompanyOwnersPdf({
                         <div className="wrap flex w-full min-w-100 flex-col gap-3">
                           <div className="relative flex w-full gap-4">
                             <TextField
+                              disabled={true}
                               label="Owner or primary operator name"
                               name="name"
                               value={name}
@@ -435,6 +434,7 @@ function CompanyOwnersPdf({
                             )}
                             <TextField
                               name="email"
+                              disabled={true}
                               label="Email Address"
                               type="email"
                               value={email}
@@ -455,6 +455,7 @@ function CompanyOwnersPdf({
                                 required: true,
                               }}
                               form={{ role }}
+                              disabled={true}
                               onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                             />
                             <SimpleRadioInputType
@@ -468,6 +469,7 @@ function CompanyOwnersPdf({
                                 required: true,
                               }}
                               form={{ have_detail }}
+                              disabled={true}
                               onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                             />
                           </div>
@@ -476,6 +478,7 @@ function CompanyOwnersPdf({
                             <div className="flex w-full gap-4">
                               <TextField
                                 name="job_title"
+                                disabled={true}
                                 label="Job Title"
                                 value={job_title}
                                 onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
@@ -488,6 +491,7 @@ function CompanyOwnersPdf({
                               <div className="flex flex-wrap gap-4">
                                 <TextField
                                   name="phone"
+                                  disabled={true}
                                   label="Phone Number"
                                   type="text"
                                   formatting="3,3,4"
@@ -497,6 +501,7 @@ function CompanyOwnersPdf({
                                 />
                                 <TextField
                                   name="ssn"
+                                  disabled={true}
                                   label="Social Security Number"
                                   formatting="3,2,4"
                                   value={ssn}
@@ -506,6 +511,7 @@ function CompanyOwnersPdf({
                                 />
                                 <TextField
                                   name="address"
+                                  disabled={true}
                                   label="Address"
                                   value={address}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
@@ -513,6 +519,7 @@ function CompanyOwnersPdf({
                                 />
                                 <TextField
                                   name="percentage"
+                                  disabled={true}
                                   label="Ownership Percentage"
                                   value={percentage}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
@@ -520,6 +527,7 @@ function CompanyOwnersPdf({
                                 />
                                 <TextField
                                   name="date_of_birth"
+                                  disabled={true}
                                   label="Date of Birth"
                                   value={date_of_birth}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
@@ -528,6 +536,7 @@ function CompanyOwnersPdf({
 
                                 <TextField
                                   name="driver_license_issuer_state"
+                                  disabled={true}
                                   label="driver’s license issuer (state)"
                                   value={driver_license_issuer_state}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
@@ -535,6 +544,7 @@ function CompanyOwnersPdf({
                                 />
                                 <TextField
                                   name="driver_license_number"
+                                  disabled={true}
                                   label="Driver’s License Number"
                                   value={driver_license_number}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
@@ -550,7 +560,6 @@ function CompanyOwnersPdf({
                 )}
               </div>
             ) : null}
-
             <div className="">
               {isSignature && (
                 <SignatureBox

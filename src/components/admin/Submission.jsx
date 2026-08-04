@@ -25,16 +25,17 @@ function Submission({ forms }) {
   const [allBeneficials, setAllBeneficials] = useState([]);
 
   const { emailVerified } = useSelector((state) => state.form);
+  const [isLoadingPdf, setIsLoadingPdf] = useState(false);
   const navigate = useNavigate();
   const { logo } = useBranding();
   const { user } = useSelector((state) => state.auth);
   const [getSavedFormData] = useGetSavedFormMutation();
-  const [generatePdfForm, { isLoading }] = useGeneratePdfFormMutation();
+  const [generatePdfForm] = useGeneratePdfFormMutation();
 
   const handleDownload = async (formId, userId) => {
     try {
+      setIsLoadingPdf(formId);
       const blob = await generatePdfForm({ _id: formId, userId }).unwrap();
-
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -43,6 +44,8 @@ function Submission({ forms }) {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.log("PDF download failed", err);
+    } finally {
+      setIsLoadingPdf(false);
     }
   };
 
@@ -105,7 +108,7 @@ function Submission({ forms }) {
             return (
               <div
                 key={index}
-                className="relative flex min-w-0 flex-col rounded-xl border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
+                className="relative flex min-w-0 flex-col h-full w-full rounded-xl border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
               >
                 {/* add three dot in right corner  */}
                 <div
@@ -136,13 +139,15 @@ function Submission({ forms }) {
                   </div>
                 )}
 
-                <img
-                  src={form?.branding?.selectedLogo || logo}
-                  width={100}
-                  height={100}
-                  alt="logo"
-                  referrerPolicy="no-referrer"
-                />
+                <div className="min-w-25 min-h-25 flex items-center justify-start">
+                  <img
+                    src={form?.branding?.selectedLogo || logo}
+                    width={100}
+                    height={100}
+                    alt="logo"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
                   <span className="text-gray-500">Application Name: {form?.name}</span>
                   <span className="text-gray-500">Sections: {form?.sections?.length}</span>
@@ -159,8 +164,8 @@ function Submission({ forms }) {
                   <span className="text-gray-500">Total Beneficial owners: {totalBeneficialOwners?.length}</span>
                   <span className="text-gray-500">Filled Beneficial owners: {filledBeneficialOwners?.length}</span>
                 </div>
-                <div className="mt-3 flex h-full w-full flex-col items-start justify-between gap-3 md:mt-6 md:flex-row md:gap-4">
-                  <Button
+                <div className="mt-3 flex h-full w-full flex-col items-start justify-between gap-3 md:mt-6 md:flex-row md:gap-4 self-end">
+                  {/* <Button
                     label="Update Submission"
                     onClick={() => getSavedData(form?._id, form?.branding?.name)}
                     className="self-end"
@@ -176,14 +181,14 @@ function Submission({ forms }) {
                     onMouseLeave={(e) => {
                       e.currentTarget.style.opacity = "1";
                     }}
-                  />
+                  /> */}
                   <Button
                     label="Download PDF"
-                    icon={isLoading && CgSpinner}
+                    icon={isLoadingPdf === form?._id && CgSpinner}
                     cnLeft={`animate-spin h-5 w-5`}
-                    disabled={isLoading}
+                    disabled={isLoadingPdf === form?._id}
                     onClick={() => handleDownload(form?._id, user?._id)}
-                    className={`${isLoading ? "cursor-not-allowed opacity-30" : ""}`}
+                    className={`${isLoadingPdf === form?._id ? "cursor-not-allowed opacity-30" : ""}`}
                     style={{
                       backgroundColor: colors?.primary,
                       borderColor: colors?.primary,
