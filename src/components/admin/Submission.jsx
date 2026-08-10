@@ -2,15 +2,11 @@ import { useBranding } from "@/hooks/BrandingContext";
 import {
   useApplicantGiveSpecialAccessToBeneficialOwnerMutation,
   useGeneratePdfFormMutation,
-  useGetSavedFormMutation,
 } from "@/redux/apis/formApis";
-import { addSavedFormData, updateEmailVerified } from "@/redux/slices/formSlice";
-import { unwrapResult } from "@reduxjs/toolkit";
 import { useEffect, useState } from "react";
 import { CgSpinner } from "react-icons/cg";
 import { CiMenuKebab } from "react-icons/ci";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Button from "../shared/small/Button";
 import CustomizableSelect from "../shared/small/CustomizeableSelect";
@@ -18,18 +14,14 @@ import Modal from "../shared/small/Modal";
 import TextField from "../shared/small/TextField";
 
 function Submission({ forms }) {
-  const dispatch = useDispatch();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedForm, setSelectedForm] = useState(null);
   const [openSpecialAccessModal, setOpenSpecialAccessModal] = useState(false);
   const [allBeneficials, setAllBeneficials] = useState([]);
 
-  const { emailVerified } = useSelector((state) => state.form);
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
-  const navigate = useNavigate();
   const { logo } = useBranding();
   const { user } = useSelector((state) => state.auth);
-  const [getSavedFormData] = useGetSavedFormMutation();
   const [generatePdfForm] = useGeneratePdfFormMutation();
 
   const handleDownload = async (formId, userId) => {
@@ -49,28 +41,28 @@ function Submission({ forms }) {
     }
   };
 
-  const getSavedData = async (formId, brandingName) => {
-    try {
-      if (!emailVerified) dispatch(updateEmailVerified(true));
-      const res = await getSavedFormData({ formId: formId }).unwrap();
-      if (res.success) {
-        const savedData = res?.data?.savedData || [];
-        const action = await dispatch(addSavedFormData(savedData || []));
-        unwrapResult(action);
-        if (!savedData?.company_lookup_data) {
-          console.log("saved data is ,", savedData);
-          return navigate(`/verification?formid=${formId}`);
-        } else {
-          return navigate(`/application-form/${brandingName}/${formId}`);
-        }
-      } else {
-        return navigate(`/verification?formid=${formId}`);
-      }
-    } catch (error) {
-      console.log("error while getting saved data", error);
-      return navigate(`/verification?formid=${formId}`);
-    }
-  };
+  // const getSavedData = async (formId, brandingName) => {
+  //   try {
+  //     if (!emailVerified) dispatch(updateEmailVerified(true));
+  //     const res = await getSavedFormData({ formId: formId }).unwrap();
+  //     if (res.success) {
+  //       const savedData = res?.data?.savedData || [];
+  //       const action = await dispatch(addSavedFormData(savedData || []));
+  //       unwrapResult(action);
+  //       if (!savedData?.company_lookup_data) {
+  //         console.log("saved data is ,", savedData);
+  //         return navigate(`/verification?formid=${formId}`);
+  //       } else {
+  //         return navigate(`/application-form/${brandingName}/${formId}`);
+  //       }
+  //     } else {
+  //       return navigate(`/verification?formid=${formId}`);
+  //     }
+  //   } catch (error) {
+  //     console.log("error while getting saved data", error);
+  //     return navigate(`/verification?formid=${formId}`);
+  //   }
+  // };
 
   useEffect(() => {
     const handleClickOutside = (event) => {

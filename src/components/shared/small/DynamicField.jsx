@@ -189,19 +189,8 @@ const DynamicField = ({ cn, field, className = "", form, placeholder, value, set
 };
 
 const SelectInputType = ({ field, className, form, setForm, onChange }) => {
-  const {
-    label,
-    options,
-    name,
-    required,
-    uniqueId,
-    placeholder,
-    aiHelp,
-    aiPrompt,
-    aiResponse,
-    isDisplayText,
-    ai_formatting,
-  } = field;
+  const { label, options, name, required, uniqueId, placeholder, aiPrompt, aiResponse, isDisplayText, ai_formatting } =
+    field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const selectMouseDownRef = useRef(false);
   const selectTabPressedRef = useRef(false);
@@ -307,8 +296,7 @@ const SelectInputType = ({ field, className, form, setForm, onChange }) => {
 };
 
 const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
-  const { label, options, name, uniqueId, required, aiHelp, aiPrompt, aiResponse, isDisplayText, ai_formatting } =
-    field;
+  const { label, options, name, uniqueId, required, aiPrompt, aiResponse, isDisplayText, ai_formatting } = field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const multiCheckBoxHandler = (e) => {
     if (form[name]?.includes(e.target.value)) {
@@ -363,8 +351,7 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
 };
 
 const RadioInputType = ({ field, className, form, setForm, onChange, disabled = false, optionColumnCount = 3 }) => {
-  const { label, options, name, uniqueId, required, aiHelp, aiPrompt, aiResponse, isDisplayText, ai_formatting } =
-    field;
+  const { label, options, name, uniqueId, required, aiPrompt, aiResponse, isDisplayText, ai_formatting } = field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const radioHandler = (option) => setForm({ ...form, [uniqueId]: { name: name, value: option.value } });
   return (
@@ -419,18 +406,8 @@ const RadioInputType = ({ field, className, form, setForm, onChange, disabled = 
 };
 
 const CheckboxInputType = ({ field, className, form, setForm }) => {
-  const {
-    label,
-    name,
-    uniqueId,
-    required,
-    aiHelp,
-    aiPrompt,
-    aiResponse,
-    isDisplayText,
-    ai_formatting,
-    conditional_fields,
-  } = field;
+  const { label, name, uniqueId, required, aiPrompt, aiResponse, isDisplayText, ai_formatting, conditional_fields } =
+    field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
 
   const singleCheckBoxHandler = (e) => setForm({ ...form, [uniqueId]: { name: name, value: e.target.checked } });
@@ -507,7 +484,6 @@ const RangeInputType = ({ field, className, form, setForm }) => {
     required,
     minValue = 0,
     maxValue = 100,
-    aiHelp,
     aiPrompt,
     aiResponse,
     isDisplayText,
@@ -596,7 +572,6 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
     formatting,
     placeholder,
     isMasked,
-    aiHelp,
     aiPrompt,
     aiResponse,
     isDisplayText,
@@ -612,6 +587,8 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
   if (isSSN) formatting = "3,2,4";
   const isPhone = name.toLowerCase().includes("phone");
   if (isPhone) formatting = "3,3,4";
+  const isTaxId = name.toLowerCase().includes("tax");
+  if (isTaxId) formatting = "3,2,4";
 
   const inputRef = useRef(null);
   const [showMasked, setShowMasked] = useState(isMasked ? true : false);
@@ -624,11 +601,11 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
   // so the AI's focusin listener can provide guidance for the next field.
   const focusNext = (el) => {
     if (!el) return;
-    const focusables = Array.from(
+    const focusable = Array.from(
       document.querySelectorAll("input:not([disabled]), select:not([disabled]), textarea:not([disabled])"),
     ).filter((f) => f.offsetParent !== null && f.tabIndex !== -1);
-    const idx = focusables.indexOf(el);
-    if (idx >= 0 && idx + 1 < focusables.length) focusables[idx + 1].focus();
+    const idx = focusable.indexOf(el);
+    if (idx >= 0 && idx + 1 < focusable.length) focusable[idx + 1].focus();
   };
 
   const limitByFormat = (value, format) => {
@@ -992,7 +969,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
 };
 
 const FileInputType = ({ field, className, form, setForm }) => {
-  const { label, name, uniqueId, required, aiHelp, aiPrompt, aiResponse, isDisplayText, ai_formatting } = field;
+  const { label, name, uniqueId, required, aiPrompt, aiResponse, isDisplayText, ai_formatting } = field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const [fileName, setFileName] = useState("");
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -1241,7 +1218,7 @@ export {
 export default DynamicField;
 
 export const SimpleRadioInputType = ({ field, className, form, setForm, onChange, disabled = false, groupName }) => {
-  const { label, options, name, required, aiHelp, aiPrompt, aiResponse, isDisplayText, ai_formatting } = field;
+  const { label, options, name, required, aiPrompt, aiResponse, isDisplayText, ai_formatting } = field;
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const radioHandler = (option) => setForm({ ...form, [name]: option.value });
   // DOM name used for native radio grouping. Defaults to the state key, but callers rendering

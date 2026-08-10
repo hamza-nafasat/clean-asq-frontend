@@ -1,9 +1,9 @@
-import ApplicationsCard from '@/components/admin/ApplicationsCard';
-import React from 'react';
+import ApplicationsCard from "@/components/admin/ApplicationsCard";
+import React from "react";
 
 function ApplicationForms() {
   return (
-    <div>
+    <div className="min-h-full min-w-full">
       <ApplicationsCard />
     </div>
   );
