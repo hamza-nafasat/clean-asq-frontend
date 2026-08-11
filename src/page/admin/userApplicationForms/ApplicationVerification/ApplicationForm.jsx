@@ -353,7 +353,7 @@ export default function ApplicationForm() {
     displayHtml: currentSection?.ai_formatting || currentSection?.displayText || "",
     userName: [user?.firstName, user?.lastName].filter(Boolean).join(" ") || null,
     userEmail: user?.email || null,
-    signDisplayHtml: currentSection?.signDisplayFormattedText || currentSection?.signFormatedDisplayText || null,
+    signDisplayHtml: currentSection?.signDisplayFormattedText || null,
     getFieldRows: () => {
       if (!stepContainerRef.current) return [];
       const rows = [];

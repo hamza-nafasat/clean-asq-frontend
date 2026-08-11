@@ -764,7 +764,7 @@ export function createApplyToolCall(bindings) {
           if (!existing) return false;
           const isEmpty = (v) => !v || v === "(not set)";
           if (u.displayText !== undefined && !isEmpty(u.displayText) && u.displayText !== existing.displayText) return true;
-          if (u.signDisplayText !== undefined && !isEmpty(u.signDisplayText) && u.signDisplayText !== (existing.signDisplayText || existing.signFormatedDisplayText)) return true;
+          if (u.signDisplayText !== undefined && !isEmpty(u.signDisplayText) && u.signDisplayText !== (existing.signDisplayText || existing.signDisplayFormattedText)) return true;
           if (u.aiCustomizablePrompt !== undefined && !isEmpty(u.aiCustomizablePrompt) && u.aiCustomizablePrompt !== existing.aiCustomizablePrompt) return true;
           if (u.aiFormatting !== undefined && !isEmpty(u.aiFormatting) && u.aiFormatting !== existing.ai_formatting) return true;
           if (u.isSignAiHelp !== undefined && u.isSignAiHelp !== existing.isSignAiHelp) return true;

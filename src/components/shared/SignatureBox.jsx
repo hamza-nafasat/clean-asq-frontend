@@ -66,7 +66,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
     const handler = makeDocLinkHandler(setOpenDoc);
     el.addEventListener("click", handler, true);
     return () => el.removeEventListener("click", handler, true);
-  }, [step?.signFormatedDisplayText]);
+  }, [step?.signDisplayFormattedText]);
 
   // ---------- Draw Handlers ----------
   const pointerPos = (e) => {
@@ -261,11 +261,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
               .replace(/<[^>]*>/g, " ")
               .replace(/\s+/g, " ")
               .trim();
-          return (
-            strip(step?.signDisplayFormattedText) ||
-            strip(step?.signFormatedDisplayText) ||
-            strip(step?.ai_formatting)
-          ).slice(0, 500);
+          return (strip(step?.signDisplayFormattedText) || strip(step?.ai_formatting)).slice(0, 500);
         })(),
         tabIndex: 0,
       })}
@@ -289,7 +285,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
               ref={signDisplayTextRef}
               className="w-full"
               dangerouslySetInnerHTML={{
-                __html: String(step?.signFormatedDisplayText || ""),
+                __html: String(step?.signDisplayFormattedText || ""),
               }}
             />
           </div>

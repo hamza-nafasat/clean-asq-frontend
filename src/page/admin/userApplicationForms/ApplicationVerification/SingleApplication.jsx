@@ -1139,6 +1139,10 @@ export default function SingleApplication() {
   // check validations
   useEffect(() => {
     const allFilled = Object.keys(idMissionVerifiedData).every((name) => {
+      if (name === "address2") return true;
+      if (name == "signature") {
+        return idMissionVerifiedData[name]?.value?.secureUrl;
+      }
       const val = idMissionVerifiedData[name];
       if (val == null) return false;
       if (typeof val === "string") return val.trim() !== "";
@@ -1686,7 +1690,7 @@ export default function SingleApplication() {
                         address2: { name: "address2", value: e.target.value },
                       })
                     }
-                    label="Address 2 (Apt, Suite, Unit):*"
+                    label="Address 2 (Apt, Suite, Unit):"
                     placeholder="Apt, Suite, Unit, Floor, etc."
                     className={"max-w-100!"}
                   />
@@ -1928,8 +1932,8 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
     isSignature: section?.isSignature || false,
     isSignDisplayText: section?.isSignDisplayText || false,
     signDisplayText: section?.signDisplayText || "",
-    signFormatedDisplayText: section?.signDisplayFormattedText || "",
-    formatingAiInstruction: section?.signDisplayFormattingTextInstructions || "",
+    signDisplayFormattedText: section?.signDisplayFormattedText || "",
+    formatingAiInstruction: section?.signDisplayTextFormattingInstructions || "",
   });
 
   const handleUpdateSectionForSignature = async () => {
@@ -1940,8 +1944,8 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
           isSignature: signatureData.isSignature,
           isSignDisplayText: signatureData.isSignDisplayText,
           signDisplayText: signatureData.signDisplayText,
-          signDisplayFormattedText: signatureData.signFormatedDisplayText,
-          signDisplayFormattingTextInstructions: signatureData.formatingAiInstruction,
+          signDisplayFormattedText: signatureData.signDisplayFormattedText,
+          signDisplayTextFormattingInstructions: signatureData.formatingAiInstruction,
         },
       }).unwrap();
       if (res.success) {
@@ -1966,7 +1970,7 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
       }).unwrap();
       if (res.success) {
         let html = DOMPurify.sanitize(res.data);
-        setSignatureData((prev) => ({ ...prev, signFormatedDisplayText: html }));
+        setSignatureData((prev) => ({ ...prev, signDisplayFormattedText: html }));
       }
     } catch (err) {
       console.error(err);
@@ -1996,12 +2000,12 @@ const SignatureCustomization = ({ section, formRefetch, setShowSignatureModal })
         <div className="flex justify-end">
           <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={"Format Text"} />
         </div>
-        {signatureData?.signFormatedDisplayText && (
+        {signatureData?.signDisplayFormattedText && (
           <div
             className="w-full"
             data-ai-display-text
             dangerouslySetInnerHTML={{
-              __html: String(signatureData?.signFormatedDisplayText || "").replace(/<a(\s+.*?)?>/g, (match) => {
+              __html: String(signatureData?.signDisplayFormattedText || "").replace(/<a(\s+.*?)?>/g, (match) => {
                 if (match.includes("target=")) return match; // avoid duplicates
                 return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
               }),

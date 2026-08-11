@@ -117,9 +117,10 @@ function AggrementBlock({
       if (typeof val === "object") return Object.values(val).every((v) => v?.toString().trim() !== "");
       return true;
     });
-    const isSignatureDone = !isSignature || isSignatureComplete(form?.signature);
+    const isSignatureDone = isSignature && isSignatureComplete(form?.signature);
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
   }, [form, isCreator, isSignature, requiredNames]);
+  console.log("isAllRequiredFieldsFilled", isAllRequiredFieldsFilled);
 
   // Intercept link clicks inside display text — open in DocumentModal instead of new tab.
   useEffect(() => {
@@ -151,9 +152,7 @@ function AggrementBlock({
 
   return (
     <div ref={formContainerRef} className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
-      {openDoc && (
-        <DocumentModal url={openDoc.url} title={openDoc.title} onClose={() => setOpenDoc(null)} />
-      )}
+      {openDoc && <DocumentModal url={openDoc.url} title={openDoc.title} onClose={() => setOpenDoc(null)} />}
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold" data-ai-display-text>
           {name}
@@ -272,8 +271,8 @@ function AggrementBlock({
           {currentStep > 0 && <Button variant="secondary" label={"Previous"} onClick={handlePrevious} />}
           {currentStep < totalSteps - 1 ? (
             <Button
-              disabled={loadingNext}
-              label={"Next"}
+              disabled={loadingNext || !isAllRequiredFieldsFilled}
+              label={!isAllRequiredFieldsFilled ? "Some required fields are missing" : "Next"}
               onClick={() => handleNext({ data: form, name: sectionKey, setLoadingNext })}
             />
           ) : (

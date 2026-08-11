@@ -19,12 +19,13 @@ import Modal from "../../shared/small/Modal";
 import { SimpleRadioInputType } from "@/components/shared/small/DynamicField";
 
 const ssnField = {
-  label: "What is your Social Security Number?",
+  label: "What is your Social Security, Tax, or National ID Number?",
   name: "rolling_owner_ssn",
   uniqueId: "rolling_owner_ssn",
   required: true,
   aiHelp: false,
-  isMasked: true,
+  formatting: "3,2,4",
+  isMasked: false,
   type: "text",
 };
 const areUAnOwnerField = {
@@ -505,7 +506,7 @@ function CompanyOwnersPdf({
                                   label="Social Security Number"
                                   formatting="3,2,4"
                                   value={ssn}
-                                  isMasked={true}
+                                  isMasked={false}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                                   className={"max-w-[30%]  min-w-100"}
                                 />

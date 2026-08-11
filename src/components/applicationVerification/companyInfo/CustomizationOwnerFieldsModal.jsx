@@ -22,11 +22,11 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
     isSignature: section?.isSignature || false,
     isSignDisplayText: section?.isSignDisplayText || false,
     isSignAiHelp: section?.isSignAiHelp || false,
-    signFormatedDisplayText: section?.signFormatedDisplayText || "",
+    signDisplayFormattedText: section?.signDisplayFormattedText || "",
     signDisplayText: section?.signDisplayText || "",
     signAiPrompt: section?.signAiPrompt || "",
     signAiResponse: section?.signAiResponse || "",
-    formatingAiInstruction: section?.signatureTextFormattingInstructions || "",
+    formatingAiInstruction: section?.signDisplayTextFormattingInstructions || "",
   });
   const [formateTextInMarkDown, { isLoading: isFormating }] = useFormateTextInMarkDownMutation();
 
@@ -40,10 +40,10 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
           isSignDisplayText: signatureData.isSignDisplayText,
           isSignAiHelp: signatureData.isSignAiHelp,
           signDisplayText: signatureData.signDisplayText,
-          signFormatedDisplayText: signatureData.signFormatedDisplayText,
+          signDisplayFormattedText: signatureData.signDisplayFormattedText,
           signAiPrompt: signatureData.signAiPrompt,
           signAiResponse: signatureData.signAiResponse,
-          signatureTextFormattingInstructions: signatureData.formatingAiInstruction,
+          signDisplayTextFormattingInstructions: signatureData.formatingAiInstruction,
         },
       }).unwrap();
       if (res.success) {
@@ -69,7 +69,7 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
       }).unwrap();
       if (res.success) {
         let html = DOMPurify.sanitize(res.data);
-        setSignatureData((prev) => ({ ...prev, signFormatedDisplayText: html }));
+        setSignatureData((prev) => ({ ...prev, signDisplayFormattedText: html }));
       }
     } catch (err) {
       console.error(err);
@@ -223,11 +223,11 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
                 Format Text
               </Button>
             </div>
-            {signatureData?.signFormatedDisplayText && (
+            {signatureData?.signDisplayFormattedText && (
               <div
                 className="h-full p-4"
                 dangerouslySetInnerHTML={{
-                  __html: String(signatureData?.signFormatedDisplayText || "").replace(/<a(\s+.*?)?>/g, (match) => {
+                  __html: String(signatureData?.signDisplayFormattedText || "").replace(/<a(\s+.*?)?>/g, (match) => {
                     if (match.includes("target=")) return match; // avoid duplicates
                     return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
                   }),

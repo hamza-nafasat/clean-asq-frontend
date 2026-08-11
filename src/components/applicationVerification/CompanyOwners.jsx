@@ -603,7 +603,7 @@ function CompanyOwners({
 
                           {have_detail == "yes" && (
                             <div className="flex w-full flex-col gap-4">
-                              <div className="flex flex-wrap gap-4">
+                              <div className="grid grid-cols-3 gap-4">
                                 <TextField
                                   name="ssn"
                                   label="Social Security, Tax, or National ID Number"
@@ -612,7 +612,7 @@ function CompanyOwners({
                                   formatting="3,2,4"
                                   isMasked={true}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"max-w-[30%]  min-w-100"}
+                                  className={"w-full"}
                                 />
                                 <Autocomplete
                                   onLoad={onLoadAddress(index)}
@@ -621,7 +621,7 @@ function CompanyOwners({
                                     types: ["address"],
                                     fields: ["formatted_address"],
                                   }}
-                                  className="max-w-[50%]  min-w-100 w-full"
+                                  className="w-full"
                                 >
                                   <TextField
                                     name="address"
@@ -653,7 +653,7 @@ function CompanyOwners({
                                       index,
                                     );
                                   }}
-                                  className={"max-w-[15%] min-w-37.5"}
+                                  className={"w-full"}
                                 />
                                 <TextField
                                   name="date_of_birth"
@@ -661,7 +661,7 @@ function CompanyOwners({
                                   label="Date of Birth"
                                   value={date_of_birth}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"max-w-[30%]  min-w-100"}
+                                  className={"w-full"}
                                 />
 
                                 <TextField
@@ -671,7 +671,7 @@ function CompanyOwners({
                                   value={driver_license_issuer_state}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
                                   suggestions={STATE_SUGGESTIONS}
-                                  className={"max-w-[30%]  min-w-100"}
+                                  className={"w-full"}
                                 />
                                 <TextField
                                   name="driver_license_number"
@@ -679,7 +679,7 @@ function CompanyOwners({
                                   placeholder="As it appears on your ID"
                                   value={driver_license_number}
                                   onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"max-w-[30%]  min-w-100"}
+                                  className={"w-full"}
                                 />
                               </div>
                             </div>

@@ -482,6 +482,7 @@ const FileInputType = ({ field, className, form, setForm, sectionKey }) => {
             <Button
               label="Download"
               variant="secondary"
+              className="mt-4 w-full"
               onClick={() => window.open(form?.[uniqueId]?.value?.secureUrl, "_blank")}
             />
           )}

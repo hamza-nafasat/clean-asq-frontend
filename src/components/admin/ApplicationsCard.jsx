@@ -331,7 +331,7 @@ export default function ApplicationsCard() {
                   isBlock: s.isBlock || false,
                   isSignature: s.isSignature || false,
                   displayText: s.displayText || "",
-                  signDisplayText: s.signDisplayText || s.signFormatedDisplayText || "",
+                  signDisplayText: s.signDisplayText || s.signDisplayFormattedText || "",
                   aiCustomizablePrompt: s.aiCustomizablePrompt || "",
                   ai_formatting: s.ai_formatting || "",
                   isSignAiHelp: s.isSignAiHelp || false,
@@ -1128,23 +1128,23 @@ export default function ApplicationsCard() {
 
       {/* Cards */}
       {forms?.data?.length > 0 ? (
-        forms?.data?.map((form, index) => {
-          const colors = form?.branding?.colors;
-          const formButtonEffect = form?.branding?.buttonEffect || "none";
-          const formButtonMaterial = form?.branding?.buttonMaterial ?? 0;
-          const formButtonAngle = parseEffectState(formButtonEffect).angle;
-          const formButtonGloss = materialToGloss(formButtonMaterial, formButtonAngle);
-          const formButtonShadow = effectToBoxShadow(formButtonEffect) || "none";
-          const formButtonBg = formButtonGloss
-            ? `${formButtonGloss}, ${colors?.primary || "#066969"}`
-            : colors?.primary || undefined;
+        <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 w-full ">
+          {forms?.data?.map((form, index) => {
+            const colors = form?.branding?.colors;
+            const formButtonEffect = form?.branding?.buttonEffect || "none";
+            const formButtonMaterial = form?.branding?.buttonMaterial ?? 0;
+            const formButtonAngle = parseEffectState(formButtonEffect).angle;
+            const formButtonGloss = materialToGloss(formButtonMaterial, formButtonAngle);
+            const formButtonShadow = effectToBoxShadow(formButtonEffect) || "none";
+            const formButtonBg = formButtonGloss
+              ? `${formButtonGloss}, ${colors?.primary || "#066969"}`
+              : colors?.primary || undefined;
 
-          return (
-            <div
-              key={index}
-              className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
-            >
-              <div className="relative flex min-w-0 flex-col rounded-xl border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6">
+            return (
+              <div
+                key={index}
+                className="relative flex min-w-0 flex-col rounded-xl border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
+              >
                 <div className="flex justify-between">
                   <div
                     className="flex h-25 max-h-25 w-62.5 max-w-62.5 items-center justify-center rounded-lg px-3"
@@ -1270,12 +1270,11 @@ export default function ApplicationsCard() {
                   />
                 </div>
               </div>
-            </div>
-          );
-        })
+            );
+          })}
+        </div>
       ) : (
-        // no data found
-        <div className="flex h-full w-full justify-center">
+        <div className="flex w-full justify-center">
           <p className="text-gray-500 font-bold text-2xl">No data found</p>
         </div>
       )}
