@@ -157,7 +157,7 @@ export default function SingleApplication() {
     dateOfBirth: { name: "dateOfBirth", value: "" },
     zipCode: { name: "zipCode", value: "" },
     country: { name: "country", value: "" },
-    roleFillingForCompany: { name: "roleFillingForCompany", value: "both" },
+    roleFillingForCompany: { name: "roleFillingForCompany", value: "primaryOperatorAndController" },
     signature: { name: "signature", value: { secureUrl: "", publicId: "", resourceType: "" } },
     data: { name: "data", value: "null" },
   });
@@ -480,7 +480,7 @@ export default function SingleApplication() {
               signature: { name: "signature", value: formDataOfIdMission?.signature?.value || "" },
               roleFillingForCompany: {
                 name: "roleFillingForCompany",
-                value: formDataOfIdMission?.roleFillingForCompany?.value || "both",
+                value: formDataOfIdMission?.roleFillingForCompany?.value || "primaryOperatorAndController",
               },
               createdAt: formDataOfIdMission?.createdAt || new Date().toISOString(),
               updatedAt: formDataOfIdMission?.updatedAt || new Date().toISOString(),
@@ -906,7 +906,7 @@ export default function SingleApplication() {
         signature: { name: "signature", value: formDataOfIdMission?.signature?.value || "" },
         roleFillingForCompany: {
           name: "roleFillingForCompany",
-          value: formDataOfIdMission?.roleFillingForCompany?.value || "both",
+          value: formDataOfIdMission?.roleFillingForCompany?.value || "primaryOperatorAndController",
         },
         createdAt: formDataOfIdMission?.createdAt || new Date().toISOString(),
         updatedAt: formDataOfIdMission?.updatedAt || new Date().toISOString(),
