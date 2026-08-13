@@ -539,8 +539,8 @@ function CompanyInformation({
                   >
                     <div className="font-medium">{item["NAICS Code"]}</div>
                     <div className="text-sm text-gray-600">{item["NAICS Description"]}</div>
-                    <div className="text-sm text-gray-400">{item["MCC Code"]}</div>
-                    <div className="text-sm text-gray-400">{item["MCC Description"]}</div>
+                    {/* <div className="text-sm text-gray-400">{item["MCC Code"]}</div>
+                    <div className="text-sm text-gray-400">{item["MCC Description"]}</div> */}
                   </div>
                 ))}
               </div>
@@ -642,7 +642,7 @@ const NAICSModal = ({ naicsApiData, setNaicsApiData, setNaicsToMccDetails, setSh
             placeholder={"NAICS Code and Description"}
             type={"text"}
             readOnly
-            value={`${naicsApiData?.bestMatch?.naics ? naicsApiData?.bestMatch?.naics + " ," : ""} ${naicsApiData?.bestMatch?.naicsDescription || ""} ${naicsApiData?.bestMatch?.mcc ? " , " + naicsApiData?.bestMatch?.mcc : ""} ${naicsApiData?.bestMatch?.mccDescription ? " , " + naicsApiData?.bestMatch?.mccDescription : ""}`}
+            value={`${naicsApiData?.bestMatch?.naics ? naicsApiData?.bestMatch?.naics + " ," : ""} ${naicsApiData?.bestMatch?.naicsDescription || ""}`}
             className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base`}
           />
         </div>
@@ -656,8 +656,8 @@ const NAICSModal = ({ naicsApiData, setNaicsApiData, setNaicsToMccDetails, setSh
                 placeholder="NAICS Code and Description"
                 type="text"
                 readOnly
-                value={`${match?.naics}, ${match?.naicsDescription} ${match?.mcc ? `, ${match?.mcc} , ${match?.mccDescription}` : ""}`}
-                title={`${match?.naics}, ${match?.naicsDescription} ${match?.mcc ? `, ${match?.mcc} , ${match?.mccDescription}` : ""}`}
+                value={`${match?.naics}, ${match?.naicsDescription}`}
+                title={`${match?.naics}, ${match?.naicsDescription}`}
                 className={`border-frameColor h-11.25 w-full cursor-pointer rounded-lg bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base`}
               />
             </button>
