@@ -936,7 +936,7 @@ export default function ApplicationsCard() {
   if (isLoadingForms) return <CustomLoading />;
 
   return (
-    <div className="bg-backgroundColor h-full w-full rounded-md p-5 shadow" data-testid="forms-page">
+    <div className="bg-backgroundColor  rounded-md p-5 shadow" data-testid="forms-page">
       {/* modal for delete form */}
       <ConfirmationModal
         isOpen={!!deleteConfirmation}
@@ -1127,9 +1127,9 @@ export default function ApplicationsCard() {
       </div>
 
       {/* Cards */}
-      {forms?.data?.length > 0 ? (
-        <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 w-full ">
-          {forms?.data?.map((form, index) => {
+      <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 w-full ">
+        {forms?.data?.length > 0 ? (
+          forms?.data?.map((form, index) => {
             const colors = form?.branding?.colors;
             const formButtonEffect = form?.branding?.buttonEffect || "none";
             const formButtonMaterial = form?.branding?.buttonMaterial ?? 0;
@@ -1271,13 +1271,13 @@ export default function ApplicationsCard() {
                 </div>
               </div>
             );
-          })}
-        </div>
-      ) : (
-        <div className="flex w-full justify-center">
-          <p className="text-gray-500 font-bold text-2xl">No data found</p>
-        </div>
-      )}
+          })
+        ) : (
+          <div className="flex w-full justify-center">
+            <p className="text-gray-500 font-bold text-2xl">No data found</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -68,11 +68,11 @@ function ProcessingInfoPdf({ name, fields, step, isSignature, formInnerData, set
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
       </div>
-      {step?.ai_formatting && (
+      {(step?.ai_formatting || step?.displayText) && (
         <div className="mb-4 flex w-full items-end justify-between gap-3">
           <div
             dangerouslySetInnerHTML={{
-              __html: step?.ai_formatting,
+              __html: step?.ai_formatting || step?.displayText,
             }}
           />
         </div>

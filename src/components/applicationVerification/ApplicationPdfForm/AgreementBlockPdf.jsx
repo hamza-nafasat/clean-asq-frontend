@@ -5,16 +5,7 @@ import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import SignatureBox from "../../shared/SignatureBox";
 
-function AggrementBlockPdf({
-  name,
-  title,
-  saveInProgress,
-  step,
-  isSignature,
-  formInnerData,
-  setFormInnerData,
-  sectionKey,
-}) {
+function AggrementBlockPdf({ name, step, isSignature, formInnerData, setFormInnerData, sectionKey }) {
   const dispatch = useDispatch();
 
   const signatureUploadHandler = async (file, setIsSaving) => {
@@ -30,14 +21,13 @@ function AggrementBlockPdf({
         if (!res.publicId || !res.secureUrl || !res.resourceType)
           return toast.error("File Not Uploaded Please Try Again");
         const action = await dispatch(
-          updateFormState({ data: { signature: { name: "signature", value: res } }, name: title }),
+          updateFormState({ data: { signature: { name: "signature", value: res } }, name: sectionKey }),
         );
         unwrapResult(action);
         setFormInnerData((prev) => ({
           ...prev,
           [sectionKey]: { ...prev?.[sectionKey], signature: { name: "signature", value: res } },
         }));
-        await saveInProgress({ data: { signature: { name: "signature", value: res } }, name: title });
         toast.success("Signature uploaded successfully");
       }
     } catch (error) {
@@ -47,28 +37,6 @@ function AggrementBlockPdf({
     }
   };
 
-  // useEffect(() => {
-  //   const formFields = {};
-  //   if (fields?.length) {
-  //     fields?.forEach(field => {
-  //       formFields[field?.name] = reduxData?.[field?.name] || '';
-  //     });
-  //     setForm(formFields);
-  //   }
-  //   if (isSignature) {
-  //     const isSignatureExistingData = {};
-  //     if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
-  //     if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
-  //     if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
-  //     setForm(prev => ({
-  //       ...prev,
-  //       ['signature']: isSignatureExistingData?.publicId
-  //         ? isSignatureExistingData
-  //         : { publicId: '', secureUrl: '', resourceType: '' },
-  //     }));
-  //   }
-  // }, [fields, isSignature, reduxData]);
-
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
@@ -76,13 +44,13 @@ function AggrementBlockPdf({
         <div className="flex gap-2"></div>
       </div>
 
-      {step?.ai_formatting && (
+      {(step?.ai_formatting || step?.displayText) && (
         <div className="mb-4 flex w-full items-end justify-between gap-3">
           <div
             className="mt-2 w-full"
             dangerouslySetInnerHTML={{
-              __html: String(step?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
-                if (match.includes("target=")) return match; // avoid duplicates
+              __html: String(step?.ai_formatting || step?.displayText || "").replace(/<a(\s+.*?)?>/g, (match) => {
+                if (match.includes("target=")) return match;
                 return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
               }),
             }}
@@ -92,12 +60,22 @@ function AggrementBlockPdf({
 
       <div className="mt-4">
         {isSignature && (
-          <SignatureBox
-            step={step}
-            onSave={signatureUploadHandler}
-            oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.value?.secureUrl || ""}
-            isPdf={true}
-          />
+          <>
+            {step?.signDisplayFormattedText && (
+              <div
+                className="mb-4"
+                dangerouslySetInnerHTML={{
+                  __html: String(step.signDisplayFormattedText),
+                }}
+              />
+            )}
+            <SignatureBox
+              step={step}
+              onSave={signatureUploadHandler}
+              oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.value?.secureUrl || ""}
+              isPdf={true}
+            />
+          </>
         )}
       </div>
     </div>

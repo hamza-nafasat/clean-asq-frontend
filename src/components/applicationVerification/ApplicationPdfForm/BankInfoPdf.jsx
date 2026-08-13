@@ -1,9 +1,13 @@
 import { FIELD_TYPES } from "@/data/constants";
+import { useGetBankLookupMutation } from "@/redux/apis/formApis";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
 import { CheckCircle, XCircle } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import SignatureBox from "../../shared/SignatureBox";
+import Button from "../../shared/small/Button";
+import Modal from "../../shared/small/Modal";
 import {
   CheckboxInputType,
   FileInputType,
@@ -15,14 +19,18 @@ import {
 } from "./shared/DynamicFieldForPdf";
 
 function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormInnerData, sectionKey }) {
+  const { formData, isDisabledAllFields } = useSelector((state) => state?.form);
   const [error] = useState(null);
+  const [accMatch, setAccMatch] = useState(false);
+  const [ownersFromLookup, setOwnersFromLookup] = useState([]);
+  const [bankModal, setBankModal] = useState(null);
+  const [getBankLookup, { isLoading }] = useGetBankLookupMutation();
 
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
       if (!file) return toast.error("Please select a file");
 
       if (file) {
-        // const oldSign = form?.['signature'];
         const oldSign = formInnerData?.[sectionKey]?.["signature"]?.value;
         if (oldSign?.publicId) {
           const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
@@ -32,7 +40,6 @@ function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormIn
         if (!res.publicId || !res.secureUrl || !res.resourceType) {
           return toast.error("File Not Uploaded Please Try Again");
         }
-        // setForm(prev => ({ ...prev, signature: res }));
         setFormInnerData((prev) => ({
           ...prev,
           [sectionKey]: { ...prev?.[sectionKey], signature: { name: "signature", value: res } },
@@ -46,38 +53,74 @@ function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormIn
     }
   };
 
-  // useEffect(() => {
-  //   if (fields && fields.length > 0) {
-  //     const initialForm = {};
-  //     fields.forEach(field => {
-  //       initialForm[field.name] = reduxData ? reduxData[field.name] || '' : '';
-  //     });
-  //     setForm(initialForm);
-  //   }
-  //   if (isSignature) {
-  //     const isSignatureExistingData = {};
-  //     if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
-  //     if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
-  //     if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
-  //     setForm(prev => ({
-  //       ...prev,
-  //       ['signature']: isSignatureExistingData?.publicId
-  //         ? isSignatureExistingData
-  //         : { publicId: '', secureUrl: '', resourceType: '' },
-  //     }));
-  //   }
-  // }, [fields, isSignature, name, reduxData]);
+  const getLookupRoutingHandler = async (routing) => {
+    try {
+      const res = await getBankLookup(routing).unwrap();
+      if (res.success && Array.isArray(res?.data?.bankDetailsList) && res?.data?.bankDetailsList?.length > 0) {
+        setBankModal(res?.data?.bankDetailsList?.[0]);
+      } else {
+        setBankModal(null);
+        toast.error(
+          "we’re unable to verify this routing number, if you are sure it’s correct please continue. Otherwise correct any errors before moving forward.",
+        );
+      }
+    } catch (error) {
+      console.log("error while getting bank lookup", error);
+      setBankModal(null);
+      toast.error(
+        "we’re unable to verify this routing number, if you are sure it’s correct please continue. Otherwise correct any errors before moving forward.",
+      );
+    }
+  };
+
+  // add owners for account holder suggestions
+  useEffect(() => {
+    if (formData) {
+      const lookupData = formData?.company_lookup_data;
+      const searchField = step?.ownerSuggesstions || ["founders"];
+      const founders = [];
+      searchField.forEach((field) => {
+        let data = lookupData?.find((item) => item?.name == field)?.result;
+        if (Array.isArray(data) && typeof data === "object") {
+          founders.push(...data);
+        } else if (typeof data === "string") {
+          founders.push(data);
+        } else if (typeof data === "number") {
+          founders.push(data);
+        }
+      });
+      if (founders?.length) {
+        const uniqueFounders = founders.filter((item, index) => founders.indexOf(item) === index);
+        setOwnersFromLookup(uniqueFounders);
+      } else {
+        setOwnersFromLookup([]);
+      }
+    }
+  }, [formData, step?.ownerSuggesstions]);
+
+  useEffect(() => {
+    const section = formInnerData?.[sectionKey] || {};
+    const findBankAccountNumberUniqueId = fields.find((field) => field.name === "bank_account_number")?.uniqueId;
+    const findConfirmBankAccountNumberUniqueId = fields.find(
+      (field) => field.name === "confirm_bank_account_number",
+    )?.uniqueId;
+    const isMatch =
+      section[findBankAccountNumberUniqueId]?.value &&
+      section[findConfirmBankAccountNumberUniqueId]?.value &&
+      section[findBankAccountNumberUniqueId]?.value === section[findConfirmBankAccountNumberUniqueId]?.value;
+    setAccMatch(isMatch);
+  }, [formInnerData, fields, sectionKey]);
 
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
       </div>
-      {step?.ai_formatting && (
+      {(step?.ai_formatting || step?.displayText) && (
         <div className="mb-4 flex w-full items-end justify-between gap-3">
           <div
             dangerouslySetInnerHTML={{
-              __html: step?.ai_formatting,
+              __html: step?.ai_formatting || step?.displayText,
             }}
           />
         </div>
@@ -97,6 +140,18 @@ function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormIn
                     sectionKey={sectionKey}
                     className="flex-1"
                   />
+                  {!isDisabledAllFields && (
+                    <Button
+                      label={isLoading ? "Looking Up..." : "Look Up"}
+                      className="mt-8"
+                      onClick={async () => {
+                        const routingValue = formInnerData?.[sectionKey]?.[field?.uniqueId]?.value;
+                        if (routingValue) {
+                          getLookupRoutingHandler(routingValue);
+                        }
+                      }}
+                    />
+                  )}
                 </div>
                 {error && <p className="text-red-500">{error}</p>}
               </div>
@@ -104,9 +159,6 @@ function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormIn
           }
 
           if (field.name === "confirm_bank_account_number") {
-            const isMatch =
-              formInnerData?.[sectionKey]?.bank_account_number &&
-              formInnerData?.[sectionKey]?.[field.name] === formInnerData?.[sectionKey]?.bank_account_number;
             return (
               <div key={index} className="relative mt-4">
                 <OtherInputType
@@ -119,9 +171,9 @@ function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormIn
                   isConfirmField
                 />
                 <div className="mt-2 flex items-center gap-2">
-                  {formInnerData?.[sectionKey]?.[field.name] && (
+                  {formInnerData?.[sectionKey]?.[field?.uniqueId]?.value && (
                     <span className="">
-                      {isMatch ? (
+                      {accMatch ? (
                         <CheckCircle className="h-5 w-5 text-green-500" />
                       ) : (
                         <XCircle className="h-5 w-5 text-red-500" />
@@ -139,6 +191,7 @@ function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormIn
               <div key={index} className="relative mt-4">
                 <OtherInputType
                   field={field}
+                  suggestions={ownersFromLookup}
                   placeholder={field.placeholder}
                   form={formInnerData?.[sectionKey]}
                   setForm={setFormInnerData}
@@ -252,6 +305,56 @@ function BankInfoPdf({ name, fields, step, isSignature, formInnerData, setFormIn
           />
         )}
       </div>
+
+      {bankModal && (
+        <Modal title={"Bank for your routing number "} isOpen={!!bankModal} onClose={() => setBankModal(null)}>
+          {bankModal?.bankName ? (
+            <>
+              <p className="mb-6 leading-relaxed text-gray-600">
+                That routing number belongs to{" "}
+                <span className="font-semibold text-gray-900">{bankModal.bankName}</span>. Is this the bank you
+                intended to enter?
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="secondary"
+                  label="No"
+                  onClick={() => setBankModal(null)}
+                  className="rounded-lg px-4 py-2"
+                />
+                <Button
+                  label="Yes"
+                  onClick={() => {
+                    setFormInnerData((prev) => {
+                      const section = prev?.[sectionKey] || {};
+                      const bankNameId = Object.keys(section).find((key) => section[key]?.name === "bank_name");
+                      if (!bankNameId) return prev;
+                      return {
+                        ...prev,
+                        [sectionKey]: {
+                          ...section,
+                          [bankNameId]: { name: "bank_name", value: bankModal.bankName },
+                        },
+                      };
+                    });
+                    setBankModal(null);
+                  }}
+                  className="rounded-lg px-4 py-2"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="mb-3 text-xl font-semibold text-red-600">
+                We could not identify a bank with this routing number. Please double-check the number or try again.
+              </h2>
+              <div className="flex justify-end">
+                <Button label="Close" onClick={() => setBankModal(null)} className="rounded-lg px-4 py-2" />
+              </div>
+            </>
+          )}
+        </Modal>
+      )}
     </div>
   );
 }

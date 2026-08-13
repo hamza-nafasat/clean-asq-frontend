@@ -1,16 +1,9 @@
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
-import { useState } from "react";
-import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import SignatureBox from "../../shared/SignatureBox";
-import Button from "../../shared/small/Button";
-import { OtherInputType } from "./shared/DynamicFieldForPdf";
+import { FileInputType, OtherInputType } from "./shared/DynamicFieldForPdf";
 
 function DocumentsPdf({ name, fields, step, isSignature, formInnerData, setFormInnerData, sectionKey }) {
-  const { formData } = useSelector((state) => state.form);
-  const [showRequiredDocs, setShowRequiredDocs] = useState(true);
-  // const [urls, setUrls] = useState([]);
-
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
       if (!file) return toast.error("Please select a file");
@@ -25,7 +18,6 @@ function DocumentsPdf({ name, fields, step, isSignature, formInnerData, setFormI
         if (!res.publicId || !res.secureUrl || !res.resourceType) {
           return toast.error("File Not Uploaded Please Try Again");
         }
-        // setForm(prev => ({ ...prev, signature: res }));
         setFormInnerData((prev) => ({
           ...prev,
           [sectionKey]: { ...prev?.[sectionKey], signature: { name: "signature", value: res } },
@@ -38,11 +30,6 @@ function DocumentsPdf({ name, fields, step, isSignature, formInnerData, setFormI
       if (setIsSaving) setIsSaving(false);
     }
   };
-  // useEffect(() => {
-  //   if (formData?.[step?.title]?.article_of_incorporation_urls)
-  //     setUrls(formData?.[step?.title]?.article_of_incorporation_urls?.split(',') || []);
-  //   else setUrls([]);
-  // }, [form.article_of_incorporation_urls, formData, step?.title]);
 
   return (
     <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
@@ -50,18 +37,9 @@ function DocumentsPdf({ name, fields, step, isSignature, formInnerData, setFormI
         <div className="flex items-center justify-between">
           <h1 className="text-textPrimary text-2xl font-semibold">{name}</h1>
         </div>
-        {step?.ai_formatting && (
+        {(step?.ai_formatting || step?.displayText) && (
           <div className="mb-4 w-full">
-            <div dangerouslySetInnerHTML={{ __html: step.ai_formatting }} />
-          </div>
-        )}
-
-        {/* Show required documents section */}
-
-        {/* Custom AI help section */}
-        {!showRequiredDocs && (
-          <div className="mb-4 flex justify-end">
-            <Button variant="outline" onClick={() => setShowRequiredDocs(true)} label="Show Required Documents" />
+            <div dangerouslySetInnerHTML={{ __html: step?.ai_formatting || step?.displayText }} />
           </div>
         )}
       </div>
@@ -70,20 +48,8 @@ function DocumentsPdf({ name, fields, step, isSignature, formInnerData, setFormI
           if (field.type === "file") {
             return (
               <div className="flex w-full flex-col gap-4 p-6" key={index}>
-                {formData?.[step?.title]?.[`${field?.name}`]?.secureUrl && (
-                  <div className="flex-col items-center justify-center">
-                    <h3 className="text-lg font-semibold text-gray-800">Uploaded file Url</h3>
-                    <p>{formData?.[step?.title]?.[`${field?.name}`]?.secureUrl}</p>
-                  </div>
-                )}
-              </div>
-            );
-          } else {
-            return (
-              <div key={index} className="mt-4">
-                <OtherInputType
+                <FileInputType
                   field={field}
-                  placeholder={field.placeholder}
                   form={formInnerData?.[sectionKey]}
                   setForm={setFormInnerData}
                   sectionKey={sectionKey}
@@ -92,31 +58,20 @@ function DocumentsPdf({ name, fields, step, isSignature, formInnerData, setFormI
               </div>
             );
           }
+          return (
+            <div key={index} className="mt-4">
+              <OtherInputType
+                field={field}
+                placeholder={field.placeholder}
+                form={formInnerData?.[sectionKey]}
+                setForm={setFormInnerData}
+                sectionKey={sectionKey}
+                className={""}
+              />
+            </div>
+          );
         })}
       </div>
-      {/* {urls?.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold text-gray-800">Uploaded URLs Preview</h3>
-          <div className="mt-4 grid gap-3">
-            {urls?.map((url, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3 shadow-sm transition hover:shadow-md"
-              >
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="truncate text-sm font-medium text-blue-600 hover:underline"
-                  title={url}
-                >
-                  {url}
-                </a>
-              </div>
-            ))}
-          </div>
-        </div>
-      )} */}
       <div className="mt-4">
         {isSignature && (
           <SignatureBox

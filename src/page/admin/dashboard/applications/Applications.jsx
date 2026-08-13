@@ -189,7 +189,7 @@ export const SpecialAccessModal = ({ formId, setModal, submittedFormId }) => {
     return <CustomLoading />;
   }
   return (
-    <div className="flex items-center justify-center min-h-[400px] p-4">
+    <div className="flex items-center justify-center min-h-100 p-4">
       <div className="flex w-full max-w-2xl flex-col gap-6">
         {/* Heading */}
         <h3 className="text-center text-lg font-semibold text-gray-800">Forward a form </h3>

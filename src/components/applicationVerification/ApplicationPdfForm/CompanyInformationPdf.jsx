@@ -1,14 +1,15 @@
-//
-
 import { naicsToMcc } from "../../../../public/NAICStoMCC.js";
 import { FIELD_TYPES } from "@/data/constants";
-import { useFindNaicAndMccMutation, useGetAllSearchStrategiesQuery } from "@/redux/apis/formApis";
+import { STATE_SUGGESTIONS } from "@/constants/constants.js";
+import { useFindNaicAndMccMutation } from "@/redux/apis/formApis";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary.js";
 import { useEffect, useRef, useState } from "react";
+import { CgSpinner } from "react-icons/cg";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import SignatureBox from "../../shared/SignatureBox";
 import Button from "../../shared/small/Button";
+import TextField from "../../shared/small/TextField.jsx";
 import {
   CheckboxInputType,
   FileInputType,
@@ -18,14 +19,9 @@ import {
   RangeInputType,
   SelectInputType,
 } from "./shared/DynamicFieldForPdf";
-import { EditSectionDisplayTextFromatingModal } from "../../shared/small/EditSectionDisplayTextFromatingModal.jsx";
 import Modal from "../../shared/small/Modal.jsx";
-// import CustomizationFieldsModal from './companyInfo/CustomizationFieldsModal.jsx';
-import CustomizationFieldsModal from "../companyInfo/CustomizationFieldsModal";
 
 function CompanyInformationPdf({
-  formRefetch,
-  _id,
   name,
   reduxData,
   fields,
@@ -36,8 +32,7 @@ function CompanyInformationPdf({
   setFormInnerData,
 }) {
   const prevRef = useRef(null);
-  const { formData } = useSelector((state) => state?.form);
-  const [customizeModal, setCustomizeModal] = useState(false);
+  const { formData, isDisabledAllFields } = useSelector((state) => state?.form);
   const [naicsToMccDetails, setNaicsToMccDetails] = useState({
     NAICS: reduxData?.naics?.NAICS || "",
     NAICS_Description: reduxData?.naics?.NAICS_Description || "",
@@ -48,10 +43,8 @@ function CompanyInformationPdf({
   const [naicsSuggestions, setNaicsSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const naicsInputRef = useRef(null);
+  const [naicsLoading, setNaicsLoading] = useState(false);
   const [findNaicsToMccDetails] = useFindNaicAndMccMutation();
-  const [strategyKeys, setStrategyKeys] = useState([]);
-  const { data: strategyKeysData } = useGetAllSearchStrategiesQuery();
-  const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
 
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
@@ -66,7 +59,6 @@ function CompanyInformationPdf({
         if (!res.publicId || !res.secureUrl || !res.resourceType) {
           return toast.error("File Not Uploaded Please Try Again");
         }
-        // setForm((prev) => ({ ...prev, signature: res }));
         setFormInnerData((prev) => ({
           ...prev,
           [sectionKey]: { ...prev?.[sectionKey], signature: { name: "signature", value: res } },
@@ -80,34 +72,45 @@ function CompanyInformationPdf({
     }
   };
 
-  // Filter NAICS codes based on input
+  const findNaicsHandler = async () => {
+    const description = Object.values(formInnerData?.[sectionKey] || {}).find(
+      (v) => v?.name === "companydescription",
+    )?.value;
+    if (!description) return toast.error("Please enter a description first");
+    try {
+      setNaicsLoading(true);
+      const res = await findNaicsToMccDetails({ description }).unwrap();
+      if (res.success) {
+        setNaicsApiData(res?.data);
+        setShowNaicsToMccDetails(true);
+      }
+    } catch (error) {
+      console.log("Error finding NAICS:", error);
+      toast.error(error?.data?.message || "Failed to find NAICS code");
+    } finally {
+      setNaicsLoading(false);
+    }
+  };
+
   const handleNaicsInputChange = (e) => {
     const value = e.target.value;
     setNaicsToMccDetails((prev) => ({
       ...prev,
       NAICS: value,
-      NAICS_Description: "", // Clear description when manually typing
+      NAICS_Description: "",
       MCC: "",
       MCC_Description: "",
     }));
 
     if (value.length > 0) {
-      // First, find all NAICS codes that start with the entered number
       const startsWithNumber = naicsToMcc.filter((item) => item["NAICS Code"].startsWith(value));
-
-      // Then find descriptions containing the value (case insensitive)
       const containsInDescription = naicsToMcc.filter(
         (item) =>
           !item["NAICS Code"].startsWith(value) &&
           item["NAICS Description"].toLowerCase().includes(value.toLowerCase()),
       );
-
-      // Combine both, with exact matches first, then description matches
       const allMatches = [...startsWithNumber, ...containsInDescription];
-
-      // Show more results (up to 20) for better discovery
       const filtered = allMatches.slice(0, 20);
-
       setNaicsSuggestions(filtered);
       setShowSuggestions(filtered.length > 0);
     } else {
@@ -115,9 +118,8 @@ function CompanyInformationPdf({
     }
   };
 
-  // Handle selection from suggestions
   const handleSelectNaics = (item) => {
-    const formattedValue = `${item["NAICS Code"]}, ${item["NAICS Description"]}`;
+    const formattedValue = `${item["NAICS Code"]}, ${item["NAICS Description"]} ${item["MCC Code"] ? `, ${item["MCC Code"]}` : ""} ${item["MCC Description"] ? `, ${item["MCC Description"]}` : ""}`;
     setNaicsToMccDetails({
       NAICS: formattedValue,
       NAICS_Description: item["NAICS Description"],
@@ -127,16 +129,29 @@ function CompanyInformationPdf({
     setShowSuggestions(false);
   };
 
+  // Sync naics into formInnerData[sectionKey]
   useEffect(() => {
-    if (strategyKeysData?.data) {
-      setStrategyKeys(strategyKeysData?.data?.map((item) => item?.searchObjectKey));
-    }
-  }, [strategyKeysData]);
+    setFormInnerData((prev) => ({
+      ...prev,
+      [sectionKey]: { ...prev?.[sectionKey], naics: naicsToMccDetails },
+    }));
+  }, [naicsToMccDetails, sectionKey, setFormInnerData]);
+
+  useEffect(() => {
+    if (!reduxData?.naics) return;
+    setNaicsToMccDetails((prev) => {
+      if (prev?.NAICS) return prev;
+      return {
+        NAICS: reduxData.naics.NAICS || "",
+        NAICS_Description: reduxData.naics.NAICS_Description || "",
+        MCC: reduxData.naics.MCC || "",
+      };
+    });
+  }, [reduxData?.naics]);
 
   useEffect(() => {
     const prev = prevRef.current;
     const curr = formData?.company_lookup_data;
-    // Compare actual values, not just reference
     if (JSON.stringify(prev) === JSON.stringify(curr)) return;
     prevRef.current = curr;
     if (!curr) return;
@@ -145,9 +160,9 @@ function CompanyInformationPdf({
       if (naicsToMccDetails?.NAICS) return;
       if (!description) return;
       try {
+        setNaicsLoading(true);
         const res = await findNaicsToMccDetails({ description }).unwrap();
         if (res.success) {
-          console.log("i am called baby");
           const bestMatch = res.data.bestMatch;
           setNaicsToMccDetails({
             NAICS: `${bestMatch.naics}, ${bestMatch.naicsDescription}`,
@@ -156,11 +171,12 @@ function CompanyInformationPdf({
         }
       } catch (err) {
         toast.error(err?.data?.message || "Failed to find NAICS code");
+      } finally {
+        setNaicsLoading(false);
       }
     })();
   }, [findNaicsToMccDetails, formData?.company_lookup_data, naicsToMccDetails?.NAICS]);
 
-  // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (naicsInputRef.current && !naicsInputRef.current.contains(event.target)) setShowSuggestions(false);
@@ -171,57 +187,18 @@ function CompanyInformationPdf({
     };
   }, []);
 
-  // useEffect(() => {
-  //   if (fields && fields.length > 0) {
-  //     const lookupData = formData?.company_lookup_data;
-  //     const initialForm = {};
-  //     let isDateField = false;
-  //     fields.forEach((field) => {
-  //       let fieldValueFromLookupData = lookupData?.find((item) => {
-  //         const fieldName = field?.name?.trim()?.toLowerCase();
-  //         const itemName = item?.name?.trim()?.toLowerCase();
-  //         if (itemName == fieldName && itemName?.includes("date")) isDateField = true;
-  //         return fieldName === itemName;
-  //       })?.result;
-  //       if (isDateField) {
-  //         let formatedData = fieldValueFromLookupData
-  //           ? new Date(fieldValueFromLookupData)?.toISOString()?.split("T")?.[0]
-  //           : "";
-  //         isDateField = false;
-  //         initialForm[field.name] = reduxData?.[field?.name] || formatedData || "";
-  //       } else {
-  //         initialForm[field.name] = reduxData?.[field?.name] || fieldValueFromLookupData || "";
-  //       }
-  //     });
-  //     setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], ...initialForm } }));
-  //   }
-  //   if (isSignature) {
-  //     const isSignatureExistingData = {};
-  //     if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
-  //     if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
-  //     if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
-  //     setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], signature: isSignatureExistingData?.publicId ? isSignatureExistingData : { publicId: "", secureUrl: "", resourceType: "" } } }));
-  //   }
-  // }, [fields, formData?.company_lookup_data, isSignature, reduxData, sectionKey, setFormInnerData]);
-
   return (
     <div className="mt-14 h-full overflow-auto">
-      {updateSectionFromatingModal && (
-        <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
-          <EditSectionDisplayTextFromatingModal step={step} />
-        </Modal>
-      )}
-
       <div className="mb-10 flex items-center justify-between">
         <p className="text-textPrimary text-2xl font-semibold">{name}</p>
       </div>
 
-      {step?.ai_formatting && (
+      {(step?.ai_formatting || step?.displayText) && (
         <div className="mb-4 flex items-end gap-3">
           <div
             dangerouslySetInnerHTML={{
-              __html: String(step?.ai_formatting).replace(/<a(\s+.*?)?>/g, (match) => {
-                if (match.includes("target=")) return match; // avoid duplicates
+              __html: String(step?.ai_formatting || step?.displayText).replace(/<a(\s+.*?)?>/g, (match) => {
+                if (match.includes("target=")) return match;
                 return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
               }),
             }}
@@ -310,6 +287,35 @@ function CompanyInformationPdf({
               </div>
             );
           }
+          if (field.name?.toLowerCase().includes("incorp")) {
+            return (
+              <div key={index} className="mt-4">
+                {field.label && (
+                  <h4 className="text-textPrimary text-base font-medium lg:text-lg">
+                    {field.label}:{field.required ? "*" : ""}
+                  </h4>
+                )}
+                <TextField
+                  name={field.name}
+                  placeholder={field.placeholder}
+                  value={formInnerData?.[sectionKey]?.[field.uniqueId]?.value || ""}
+                  disabled={isDisabledAllFields}
+                  onChange={(e) =>
+                    setFormInnerData((prev) => ({
+                      ...prev,
+                      [sectionKey]: {
+                        ...prev?.[sectionKey],
+                        [field.uniqueId]: { name: field.name, value: e.target.value },
+                      },
+                    }))
+                  }
+                  required={field.required}
+                  suggestions={STATE_SUGGESTIONS}
+                  className="mt-2"
+                />
+              </div>
+            );
+          }
           return (
             <div key={index} className="mt-4">
               <OtherInputType
@@ -323,7 +329,6 @@ function CompanyInformationPdf({
             </div>
           );
         })}
-      {/* NAICS to MCC SECTION  */}
       {naicsApiData?.bestMatch?.naics && showNaicsToMccDetails && (
         <Modal isOpen={showNaicsToMccDetails} onClose={() => setShowNaicsToMccDetails(false)}>
           <NAICSModal
@@ -341,16 +346,29 @@ function CompanyInformationPdf({
           <div className="relative w-full" ref={naicsInputRef}>
             <div className="flex w-full gap-4">
               <input
+                id="naics-code"
+                name="naics-code"
                 placeholder="Type NAICS code or description..."
                 type="text"
                 value={naicsToMccDetails.NAICS}
-                className="border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base"
+                disabled={isDisabledAllFields}
+                className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${isDisabledAllFields ? "opacity-70 cursor-not-allowed" : ""}`}
                 onChange={handleNaicsInputChange}
                 onFocus={() => (naicsToMccDetails.NAICS ? setShowSuggestions(true) : setShowSuggestions(false))}
               />
+              {!isDisabledAllFields && (
+                <Button
+                  label={`Find NAICS`}
+                  className={`text-nowrap ${naicsLoading && "pointer-events-none opacity-30"}`}
+                  disabled={naicsLoading}
+                  onClick={findNaicsHandler}
+                  icon={naicsLoading && CgSpinner}
+                  cnLeft={"animate-spin h-5 w-5"}
+                />
+              )}
             </div>
-            {showSuggestions && (
-              <div className="rounded-m absolute z-10 mt-1 max-h-80 w-full overflow-y-auto">
+            {showSuggestions && !isDisabledAllFields && (
+              <div className="rounded-m absolute z-10 mt-1 max-h-80 w-full overflow-y-auto border border-gray-200 bg-white shadow-lg">
                 {naicsSuggestions.map((item, index) => (
                   <div
                     key={index}
@@ -359,6 +377,8 @@ function CompanyInformationPdf({
                   >
                     <div className="font-medium">{item["NAICS Code"]}</div>
                     <div className="text-sm text-gray-600">{item["NAICS Description"]}</div>
+                    <div className="text-sm text-gray-400">{item["MCC Code"]}</div>
+                    <div className="text-sm text-gray-400">{item["MCC Description"]}</div>
                   </div>
                 ))}
               </div>
@@ -376,20 +396,6 @@ function CompanyInformationPdf({
           </div>
         </div>
       </div>
-
-      {customizeModal && (
-        <Modal onClose={() => setCustomizeModal(false)}>
-          <CustomizationFieldsModal
-            suggestions={strategyKeys}
-            sectionId={_id}
-            fields={fields}
-            formRefetch={formRefetch}
-            isSignature={isSignature}
-            section={step}
-            onClose={() => setCustomizeModal(false)}
-          />
-        </Modal>
-      )}
     </div>
   );
 }
@@ -425,7 +431,7 @@ const NAICSModal = ({ naicsApiData, setNaicsApiData, setNaicsToMccDetails, setSh
             placeholder={"NAICS Code and Description"}
             type={"text"}
             readOnly
-            value={`${naicsApiData?.bestMatch?.naics ? naicsApiData?.bestMatch?.naics + " ," : ""} ${naicsApiData?.bestMatch?.naicsDescription || ""}`}
+            value={`${naicsApiData?.bestMatch?.naics ? naicsApiData?.bestMatch?.naics + " ," : ""} ${naicsApiData?.bestMatch?.naicsDescription || ""} ${naicsApiData?.bestMatch?.mcc ? " , " + naicsApiData?.bestMatch?.mcc : ""} ${naicsApiData?.bestMatch?.mccDescription ? " , " + naicsApiData?.bestMatch?.mccDescription : ""}`}
             className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base`}
           />
         </div>
@@ -436,11 +442,12 @@ const NAICSModal = ({ naicsApiData, setNaicsApiData, setNaicsToMccDetails, setSh
           {naicsApiData?.otherMatches?.map((match, i) => (
             <button className="cursor-pointer" key={i} onClick={() => handlerOnClickOnOtherMatches(i)}>
               <input
-                placeholder={"NAICS Code and Description"}
-                type={"text"}
+                placeholder="NAICS Code and Description"
+                type="text"
                 readOnly
-                value={`${match?.naics}, ${match?.naicsDescription}`}
-                className={`border-frameColor h-11.25 w-full cursor-pointer! rounded-lg bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base`}
+                value={`${match?.naics}, ${match?.naicsDescription} ${match?.mcc ? `, ${match?.mcc} , ${match?.mccDescription}` : ""}`}
+                title={`${match?.naics}, ${match?.naicsDescription} ${match?.mcc ? `, ${match?.mcc} , ${match?.mccDescription}` : ""}`}
+                className={`border-frameColor h-11.25 w-full cursor-pointer rounded-lg bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base`}
               />
             </button>
           ))}

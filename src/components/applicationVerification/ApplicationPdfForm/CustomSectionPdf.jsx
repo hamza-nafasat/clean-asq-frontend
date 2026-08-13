@@ -39,23 +39,6 @@ function CustomSectionPdf({ fields, name, step, isSignature, formInnerData, setF
     }
   };
 
-  // useEffect(() => {
-  //   const formFields = {};
-  //   if (fields?.length) {
-  //     fields?.forEach(field => {
-  //       formFields[field?.name] = reduxData?.[field?.name] || '';
-  //     });
-  //     setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], ...formFields } }));
-  //   }
-  //   if (isSignature) {
-  //     const isSignatureExistingData = {};
-  //     if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
-  //     if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
-  //     if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
-  //     setFormInnerData(prev => ({ ...prev, [sectionKey]: { ...prev?.[sectionKey], signature: isSignatureExistingData?.publicId ? isSignatureExistingData : { publicId: '', secureUrl: '', resourceType: '' } } }));
-  //   }
-  // }, [fields, isSignature, reduxData, sectionKey, setFormInnerData]);
-
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
@@ -63,12 +46,12 @@ function CustomSectionPdf({ fields, name, step, isSignature, formInnerData, setF
         <div className="flex gap-2"></div>
       </div>
 
-      {step?.ai_formatting && (
+      {(step?.ai_formatting || step?.displayText) && (
         <div className="flex w-full items-end justify-between gap-3">
           <div
             className="mt-2 mb-4 w-full"
             dangerouslySetInnerHTML={{
-              __html: step?.ai_formatting,
+              __html: step?.ai_formatting || step?.displayText,
             }}
           />
         </div>
@@ -93,19 +76,6 @@ function CustomSectionPdf({ fields, name, step, isSignature, formInnerData, setF
             return (
               <div key={index} className="mt-4">
                 <MultiCheckboxInputType
-                  field={field}
-                  form={formInnerData?.[sectionKey]}
-                  setForm={setFormInnerData}
-                  sectionKey={sectionKey}
-                  className={""}
-                />
-              </div>
-            );
-          }
-          if (field.type === FIELD_TYPES.FILE) {
-            return (
-              <div key={index} className="mt-4">
-                <FileInputType
                   field={field}
                   form={formInnerData?.[sectionKey]}
                   setForm={setFormInnerData}
@@ -184,12 +154,20 @@ function CustomSectionPdf({ fields, name, step, isSignature, formInnerData, setF
       </div>
       <div className="mt-4">
         {isSignature && (
-          <SignatureBox
-            step={step}
-            isPdf={true}
-            onSave={signatureUploadHandler}
-            oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.value?.secureUrl || ""}
-          />
+          <>
+            {step?.signDisplayFormattedText && (
+              <div
+                className="mb-4"
+                dangerouslySetInnerHTML={{ __html: String(step.signDisplayFormattedText) }}
+              />
+            )}
+            <SignatureBox
+              step={step}
+              isPdf={true}
+              onSave={signatureUploadHandler}
+              oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.value?.secureUrl || ""}
+            />
+          </>
         )}
       </div>
     </div>

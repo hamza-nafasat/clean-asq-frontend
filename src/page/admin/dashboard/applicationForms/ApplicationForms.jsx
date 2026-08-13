@@ -3,7 +3,7 @@ import React from "react";
 
 function ApplicationForms() {
   return (
-    <div className="min-h-full min-w-full">
+    <div className="">
       <ApplicationsCard />
     </div>
   );

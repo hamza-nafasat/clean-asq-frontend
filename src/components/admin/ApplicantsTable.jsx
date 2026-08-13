@@ -58,7 +58,7 @@ const APPLICANT_TABLE_COLUMNS = [
       <CopyPasteTooltip
         id={row?.user?.role?.name}
         label={
-          <span className="text-accent w-[130px] rounded-sm bg-gray-100 px-2.5 py-[3px] text-center text-xs font-bold capitalize">
+          <span className="text-accent w-32.5 rounded-sm bg-gray-100 px-2.5 py-0.75 text-center text-xs font-bold capitalize">
             {row?.user?.role?.name}
           </span>
         }
@@ -100,7 +100,7 @@ const APPLICANT_TABLE_COLUMNS = [
         id={row?.status}
         label={
           <span
-            className={`w-[100px] rounded-sm px-2.5 py-[3px] text-center font-bold capitalize ${
+            className={`w-25 rounded-sm px-2.5 py-0.75 text-center font-bold capitalize ${
               row.status === APPLICANT_STATUS.APPROVED ? "bg-[#34C7591A] text-[#34C759]" : ""
             } ${row.status === APPLICANT_STATUS.REJECTED ? "bg-[#FF3B301A] text-[#FF3B30]" : ""} ${
               row.status === APPLICANT_STATUS.PENDING ? "bg-yellow-100 text-yellow-800" : ""

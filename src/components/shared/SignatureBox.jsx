@@ -290,7 +290,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
             />
           </div>
         )}
-        {step?.isSignAiHelp && (
+        {!isPdf && step?.isSignAiHelp && (
           <div className="flex items-center justify-end">
             <Button label="AI Help" className="max-h-fit text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
           </div>
