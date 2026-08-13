@@ -51,6 +51,8 @@ export default function ChatPanel({
         height: panelHeight,
         top: position.top,
         left: position.left,
+        maxWidth: `calc(100vw - ${Math.max(0, position.left)}px - 8px)`,
+        maxHeight: `calc(100dvh - ${Math.max(0, position.top)}px - 8px)`,
         background: "#fff",
         fontFamily: fontFamily ? `var(--font-${fontFamily.toLowerCase()})` : undefined,
         transition:
@@ -63,7 +65,7 @@ export default function ChatPanel({
 
       <div
         onMouseDown={onHeaderMouseDown}
-        className="flex items-center justify-between px-4 py-3 select-none"
+        className="flex shrink-0 items-center justify-between px-4 py-3 select-none"
         style={{ backgroundColor: effectiveHeaderColor, cursor: "grab" }}
       >
         <div className="flex items-center gap-2">
@@ -99,7 +101,7 @@ export default function ChatPanel({
       <div
         ref={messagesContainerRef}
         data-testid="ai-messages"
-        className="flex-1 overflow-y-auto p-4 space-y-3"
+        className="min-h-0 flex-1 overflow-y-auto p-4 space-y-3"
         style={{ backgroundColor: "#f8f9ff" }}
       >
         {messages
@@ -143,7 +145,7 @@ export default function ChatPanel({
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="border-t border-gray-100 bg-white px-3 pt-2 pb-3">
+      <div className="shrink-0 border-t border-gray-100 bg-white px-3 pt-2 pb-3">
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}

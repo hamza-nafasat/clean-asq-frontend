@@ -3,7 +3,7 @@ import { LANGUAGES } from "../constants/languages.js";
 export default function LanguageBanner({ bannerIdx, bannerFading, effectiveBannerColor, effectiveBannerText }) {
   return (
     <div
-      className="flex items-center px-3 py-2 border-b"
+      className="flex shrink-0 items-center px-3 py-2 border-b"
       style={{ backgroundColor: effectiveBannerColor, borderColor: "rgba(0,0,0,0.1)" }}
     >
       <span

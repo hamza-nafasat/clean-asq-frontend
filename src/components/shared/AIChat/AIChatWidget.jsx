@@ -8,7 +8,9 @@ import { discoverFormFields } from "../../../lib/discoverFormFields";
 import { UseAIChat } from "@/context/AiChatContext";
 import { buildChatPayload } from "./utils/buildChatPayload.js";
 import {
+  clampPanelToViewport,
   contrastingIconColor,
+  getOpenPanelLayout,
   PANEL_HEIGHT,
   PANEL_MIN_HEIGHT,
   PANEL_MIN_WIDTH,
@@ -142,20 +144,15 @@ export default function AIChatWidget() {
   }, [pathname]);
 
   // Draggable position — updated when the panel opens to sit below the measured header
-  const [position, setPosition] = useState({
-    top: 80,
-    left: Math.max(0, window.innerWidth - PANEL_WIDTH - 24),
+  const [position, setPosition] = useState(() => {
+    const layout = getOpenPanelLayout({ headerBottom: 80 });
+    return { top: layout.top, left: layout.left };
   });
-  const [panelWidth, setPanelWidth] = useState(PANEL_WIDTH);
-  const [panelHeight, setPanelHeight] = useState(PANEL_HEIGHT);
+  const [panelWidth, setPanelWidth] = useState(() => getOpenPanelLayout({ headerBottom: 80 }).width);
+  const [panelHeight, setPanelHeight] = useState(() => getOpenPanelLayout({ headerBottom: 80 }).height);
   const dragRef = useRef({ isDragging: false, startX: 0, startY: 0, startLeft: 0, startTop: 0 });
   const resizeRef = useRef({ isResizing: false, edge: "", startX: 0, startY: 0, startW: 0, startH: 0, startLeft: 0, startTop: 0 });
-  const panelTargetRef = useRef({
-    top: 80,
-    left: Math.max(0, window.innerWidth - PANEL_WIDTH - 24),
-    width: PANEL_WIDTH,
-    height: PANEL_HEIGHT,
-  });
+  const panelTargetRef = useRef(getOpenPanelLayout({ headerBottom: 80 }));
 
   // Refs kept current every render — safe to read inside callbacks/effects
   const pendingFormContinuationRef = useRef(null); // stores { toolArgs, history } while waiting for form data to load
@@ -655,9 +652,11 @@ export default function AIChatWidget() {
       if (dragRef.current.isDragging) {
         const dx = e.clientX - dragRef.current.startX;
         const dy = e.clientY - dragRef.current.startY;
-        const newTop = Math.max(0, dragRef.current.startTop + dy);
         const cur = panelTargetRef.current;
-        const newLeft = Math.max(0, Math.min(window.innerWidth - (cur.width ?? PANEL_WIDTH), dragRef.current.startLeft + dx));
+        const panelH = cur.height ?? PANEL_HEIGHT;
+        const panelW = cur.width ?? PANEL_WIDTH;
+        const newTop = Math.max(0, Math.min(window.innerHeight - panelH, dragRef.current.startTop + dy));
+        const newLeft = Math.max(0, Math.min(window.innerWidth - panelW, dragRef.current.startLeft + dx));
         panelTargetRef.current = { ...cur, top: newTop, left: newLeft };
         setPosition({ top: newTop, left: newLeft });
       }
@@ -767,21 +766,45 @@ export default function AIChatWidget() {
     return typeof val === "function" ? val(...args) : val;
   };
 
-  // When the panel opens in applicant mode, reposition to the bottom-right.
-  useEffect(() => {
-    if (!isOpen || assistantMode !== "applicant") return;
-    const M = 8;
-    const availH = window.innerHeight - headerBottom - M;
-    const initH = Math.max(PANEL_MIN_HEIGHT, Math.min(PANEL_HEIGHT, availH));
-    const availW = window.innerWidth - M * 2;
-    const initW = Math.max(PANEL_MIN_WIDTH, Math.min(PANEL_WIDTH, availW));
-    const initTop = window.innerHeight - initH - M;
-    const initLeft = Math.max(M, window.innerWidth - initW - M);
-    panelTargetRef.current = { top: initTop, left: initLeft, width: initW, height: initH };
-    setPanelWidth(initW);
-    setPanelHeight(initH);
-    setPosition({ top: initTop, left: initLeft });
+  // Fit the panel to the viewport whenever it opens so the input stays on screen.
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    const layout = getOpenPanelLayout({
+      anchor: assistantMode === "applicant" ? "bottom-right" : "top-right",
+      headerBottom,
+    });
+    panelTargetRef.current = layout;
+    setPanelWidth(layout.width);
+    setPanelHeight(layout.height);
+    setPosition({ top: layout.top, left: layout.left });
   }, [isOpen, assistantMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep the open panel inside the viewport if the window or mobile chrome resizes.
+  useEffect(() => {
+    if (!isOpen) return;
+    const clampOpenPanel = () => {
+      const cur = panelTargetRef.current;
+      const next = clampPanelToViewport(cur);
+      if (
+        next.top === cur.top &&
+        next.left === cur.left &&
+        next.width === cur.width &&
+        next.height === cur.height
+      ) {
+        return;
+      }
+      panelTargetRef.current = next;
+      setPanelWidth(next.width);
+      setPanelHeight(next.height);
+      setPosition({ top: next.top, left: next.left });
+    };
+    window.addEventListener("resize", clampOpenPanel);
+    window.visualViewport?.addEventListener("resize", clampOpenPanel);
+    return () => {
+      window.removeEventListener("resize", clampOpenPanel);
+      window.visualViewport?.removeEventListener("resize", clampOpenPanel);
+    };
+  }, [isOpen]);
 
   // Close the widget when genuinely navigating back to admin pages.
   const WIDGET_CLOSED_KEY = "ai-widget-user-closed";
@@ -1736,12 +1759,14 @@ export default function AIChatWidget() {
   const handleOpenFab = () => {
     // Applicant manually reopening — clear the "user closed" flag so it auto-opens again going forward
     sessionStorage.removeItem(WIDGET_CLOSED_KEY);
-    const _t = headerBottom;
-    const _l = Math.max(0, window.innerWidth - PANEL_WIDTH - 24);
-    panelTargetRef.current = { top: _t, left: _l, width: PANEL_WIDTH, height: PANEL_HEIGHT };
-    setPanelWidth(PANEL_WIDTH);
-    setPanelHeight(PANEL_HEIGHT);
-    setPosition({ top: _t, left: _l });
+    const layout = getOpenPanelLayout({
+      anchor: assistantMode === "applicant" ? "bottom-right" : "top-right",
+      headerBottom,
+    });
+    panelTargetRef.current = layout;
+    setPanelWidth(layout.width);
+    setPanelHeight(layout.height);
+    setPosition({ top: layout.top, left: layout.left });
     setIsOpen(true);
   };
 
