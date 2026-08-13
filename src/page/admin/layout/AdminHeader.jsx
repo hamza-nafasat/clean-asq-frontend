@@ -394,30 +394,21 @@ const Profile = ({ isGuest, setIsProfileOpen }) => {
   };
   return (
     <div className="w-full">
-      {isGuest ? (
+      {isGuest && (
         <Link
           onClick={() => setIsProfileOpen(false)}
           to="/submission"
-          className="flex items-center justify-between gap-4 rounded-t-md border-b bg-white px-2 py-2 hover:bg-[#b6feef]"
+          className="flex items-center justify-between gap-4 rounded-md border bg-white px-2 py-2 hover:bg-[#b6feef] "
         >
           <h6 className="text-textPrimary text-xs font-medium">My Applications</h6>
           <Applications fontSize={18} className="text-primary" />
-        </Link>
-      ) : (
-        <Link
-          onClick={() => setIsProfileOpen(false)}
-          to="/profile"
-          className="flex items-center justify-between gap-4 rounded-t-md border-b bg-white px-2 py-2 hover:bg-[#b6feef]"
-        >
-          <h6 className="text-headerText text-xs font-medium">My Profile</h6>
-          <IoChevronForwardOutline fontSize={18} />
         </Link>
       )}
 
       <div
         data-testid="logout-button"
         onClick={logoutHandler}
-        className={`flex cursor-pointer items-center justify-between gap-4 rounded-b-md bg-white px-2 py-2 hover:bg-[#b6feef] ${isLoading ? "cursor-not-allowed opacity-50" : ""}`}
+        className={`flex cursor-pointer items-center justify-between gap-4 rounded-b-md bg-white px-2 py-2 hover:bg-[#b6feef] ${isLoading ? "cursor-not-allowed opacity-50" : ""} ${isGuest ? "rounded-b-md" : "rounded-md"}`}
       >
         <h6 className={`text-[13px] font-medium`}>Logout</h6>
         <IoLogOutOutline fontSize={18} />

@@ -31,6 +31,7 @@ import { userExist, userNotExist } from "./redux/slices/authSlice";
 import { detectVPN } from "./utils/vpnDetection";
 import ManageRules from "./components/admin/ManageRules";
 import { DemoSessionProvider } from "./hooks/DemoSessionContext";
+import RoleRedirect from "./components/RoleRedirect";
 
 const Brandings = lazy(() => import("./page/admin/dashboard/brandings/Brandings"));
 const CreateBranding = lazy(() => import("./page/admin/dashboard/brandings/CreateBranding"));
@@ -218,7 +219,7 @@ function App() {
             </Route>
 
             {/* Fallback */}
-            {/* <Route path="*" element={<RoleRedirect user={user} />} /> */}
+            <Route path="*" element={<RoleRedirect user={user} />} />
           </Routes>
         </Suspense>
         <ToastContainer autoClose={3000} />
