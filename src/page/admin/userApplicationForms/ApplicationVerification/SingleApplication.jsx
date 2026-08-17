@@ -835,12 +835,6 @@ export default function SingleApplication() {
   );
   const sentOtpForEmail = useCallback(async () => {
     try {
-      console.log(
-        "%c[SA:sentOtpForEmail] called — email=%s formId=%s",
-        "color:#16a34a; font-weight:bold",
-        email,
-        formId,
-      );
       if (!email) return toast.error("Please enter your email");
       const res = await sendOtp({ email, formId }).unwrap();
       if (res.success) {
@@ -849,7 +843,6 @@ export default function SingleApplication() {
       }
     } catch (error) {
       console.log("Error sending OTP:", error);
-      console.error("%c[SA:sentOtpForEmail] ERROR", "color:#dc2626; font-weight:bold", error);
       toast.error(error?.data?.message || "Failed to send OTP");
     }
   }, [email, formId, sendOtp]);

@@ -41,29 +41,6 @@ function Submission({ forms }) {
     }
   };
 
-  // const getSavedData = async (formId, brandingName) => {
-  //   try {
-  //     if (!emailVerified) dispatch(updateEmailVerified(true));
-  //     const res = await getSavedFormData({ formId: formId }).unwrap();
-  //     if (res.success) {
-  //       const savedData = res?.data?.savedData || [];
-  //       const action = await dispatch(addSavedFormData(savedData || []));
-  //       unwrapResult(action);
-  //       if (!savedData?.company_lookup_data) {
-  //         console.log("saved data is ,", savedData);
-  //         return navigate(`/verification?formid=${formId}`);
-  //       } else {
-  //         return navigate(`/application-form/${brandingName}/${formId}`);
-  //       }
-  //     } else {
-  //       return navigate(`/verification?formid=${formId}`);
-  //     }
-  //   } catch (error) {
-  //     console.log("error while getting saved data", error);
-  //     return navigate(`/verification?formid=${formId}`);
-  //   }
-  // };
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isMenuOpen && !event.target.closest(".menu-container")) {
@@ -89,6 +66,7 @@ function Submission({ forms }) {
       <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
         {forms?.length > 0 ? (
           forms?.map((form, index) => {
+            console.log("form", form);
             const colors = form?.branding?.colors;
             const additionalOwnerKey = Object.keys(form?.submitData?.beneficial_information)?.find(
               (key) => form?.submitData?.beneficial_information?.[key]?.name == "additional_owner",
