@@ -4,8 +4,8 @@ import CustomizableSelect from "@/components/shared/small/CustomizeableSelect";
 import Modal from "@/components/shared/small/Modal";
 import TextField from "@/components/shared/small/TextField";
 import {
-  useDeleteSingleSubmitFormMutation,
-  useGetAllSubmitFormsQuery,
+  useDeleteSingleSubmitOrDraftFormMutation,
+  useGetAllSubmitOrDraftFormsQuery,
   useGetSingleFormQueryQuery,
   useGetSubmittedFormUsersQuery,
   useGiveSpecialAccessToUserMutation,
@@ -16,8 +16,8 @@ import { ApplicationPdfViewCommonProps } from "../../userApplicationForms/Applic
 // import Modal from '@/components/admin/shared/Modal';
 
 function Applications() {
-  const { data, isLoading: isLoadingForm, refetch } = useGetAllSubmitFormsQuery();
-  const [deleteSubmitForm] = useDeleteSingleSubmitFormMutation();
+  const { data, isLoading: isLoadingForm, refetch } = useGetAllSubmitOrDraftFormsQuery();
+  const [deleteSubmitForm, { isLoading: isLoadingDelete }] = useDeleteSingleSubmitOrDraftFormMutation();
 
   const [applicants, setApplicants] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,34 +29,26 @@ function Applications() {
   const [filters, setFilters] = useState({
     dateRange: { start: "", end: "" },
     status: "",
+    type: "",
   });
   const handleViewApplicant = useCallback((row) => {
     setPdfData(row);
     setIsModalOpen(true);
   }, []);
 
-  const deleteApplicationsByIds = useCallback(
-    async (applicationIds) => {
-      for (const id of applicationIds) {
-        const res = await deleteSubmitForm({ _id: id }).unwrap();
-        if (!res?.success) throw new Error(res?.message || "Failed to delete application");
-      }
-      await refetch();
-    },
-    [deleteSubmitForm, refetch],
-  );
-
   const handleDeleteApplication = useCallback(
-    async (id) => {
+    async ({ id, type }) => {
       setIsLoading(true);
       try {
-        await deleteApplicationsByIds([id]);
-        toast.success("Application deleted");
+        const res = await deleteSubmitForm({ _id: id, type }).unwrap();
+        if (!res?.success) throw new Error(res?.message || "Failed to delete application");
+        toast.success(res?.message || "Application deleted successfully");
+        await refetch();
       } finally {
         setIsLoading(false);
       }
     },
-    [deleteApplicationsByIds],
+    [deleteSubmitForm, refetch],
   );
 
   const handleFilterChange = useCallback((name, value) => {
@@ -91,6 +83,7 @@ function Applications() {
             isLoading={isLoading}
             onView={handleViewApplicant}
             onDeleteApplication={handleDeleteApplication}
+            isLoadingDelete={isLoadingDelete}
             filters={filters}
             onFilterChange={handleFilterChange}
           />

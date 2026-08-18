@@ -464,23 +464,23 @@ const formApis = createApi({
 
     // submit form crud
     // ============================
-    getAllSubmitForms: builder.query({
+    getAllSubmitOrDraftForms: builder.query({
       query: () => ({
-        url: "/all-submit",
+        url: "/all-submit-or-draft",
         method: "GET",
       }),
       providesTags: ["SubmitForm"],
     }),
     getSingleSubmitFormQuery: builder.query({
       query: (data) => ({
-        url: `single-submit/${data?._id}`,
+        url: `single-submit-or-draft/${data?._id}`,
         method: "GET",
       }),
       providesTags: ["SubmitForm"],
     }),
-    deleteSingleSubmitForm: builder.mutation({
-      query: (data) => ({
-        url: `single-submit/${data?._id}`,
+    deleteSingleSubmitOrDraftForm: builder.mutation({
+      query: ({ _id, type }) => ({
+        url: `single-submit-or-draft/${_id}?type=${type}`,
         method: "Delete",
       }),
       invalidatesTags: ["SubmitForm"],
@@ -630,9 +630,9 @@ export const {
   useCompanyLookupMutation,
   useFindNaicAndMccMutation,
   useDetectVpnMutation,
-  useGetAllSubmitFormsQuery,
+  useGetAllSubmitOrDraftFormsQuery,
   useGetSingleSubmitFormQueryQuery,
-  useDeleteSingleSubmitFormMutation,
+  useDeleteSingleSubmitOrDraftFormMutation,
   // form rules
   useCreateFormRuleMutation,
   useCloneFormRulesMutation,

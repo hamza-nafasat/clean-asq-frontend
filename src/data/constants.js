@@ -5,6 +5,10 @@ export const APPLICANT_STATUS = {
   REJECTED: "rejected",
 };
 
+export const APPLICANT_TYPE = {
+  SUBMITTED: "submitted",
+  DRAFT: "draft",
+};
 export const FIELD_TYPES = {
   TEXT: "text",
   DATE: "date",

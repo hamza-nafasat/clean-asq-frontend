@@ -1,5 +1,4 @@
-import { APPLICANT_STATUS } from "@/data/constants";
-import { useDeleteSingleSubmitFormMutation } from "@/redux/apis/formApis";
+import { APPLICANT_STATUS, APPLICANT_TYPE } from "@/data/constants";
 import { ArrowRight, Eye, History, MoreVertical, Pencil, Trash, UserIcon } from "lucide-react";
 import PropTypes from "prop-types";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -95,28 +94,41 @@ const APPLICANT_TABLE_COLUMNS = [
     selector: (row) => row?.status,
     sortable: true,
     width: "150px",
-    cell: (row) => (
-      <CopyPasteTooltip
-        id={row?.status}
-        label={
-          <span
-            className={`w-25 rounded-sm px-2.5 py-0.75 text-center font-bold capitalize ${
-              row.status === APPLICANT_STATUS.APPROVED ? "bg-[#34C7591A] text-[#34C759]" : ""
-            } ${row.status === APPLICANT_STATUS.REJECTED ? "bg-[#FF3B301A] text-[#FF3B30]" : ""} ${
-              row.status === APPLICANT_STATUS.PENDING ? "bg-yellow-100 text-yellow-800" : ""
-            } ${row.status === APPLICANT_STATUS.REVIEWING ? "bg-blue-100 text-blue-500" : ""}`}
-          >
-            {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
-          </span>
-        }
-      />
-    ),
+    cell: (row) =>
+      row?.type === APPLICANT_TYPE.SUBMITTED ? (
+        <CopyPasteTooltip
+          id={row?.status}
+          label={
+            <span
+              className={`w-25 rounded-sm px-2.5 py-0.75 text-center font-bold capitalize ${
+                row.status === APPLICANT_STATUS.APPROVED ? "bg-[#34C7591A] text-[#34C759]" : ""
+              } ${row.status === APPLICANT_STATUS.REJECTED ? "bg-[#FF3B301A] text-[#FF3B30]" : ""} ${
+                row.status === APPLICANT_STATUS.PENDING ? "bg-yellow-100 text-yellow-800" : ""
+              } ${row.status === APPLICANT_STATUS.REVIEWING ? "bg-blue-100 text-blue-500" : ""}`}
+            >
+              {row?.status?.charAt(0)?.toUpperCase() + row?.status?.slice(1)}
+            </span>
+          }
+        />
+      ) : (
+        <CopyPasteTooltip
+          id={"Draft"}
+          label={
+            <span
+              className={`w-25 rounded-sm px-2.5 py-0.75 text-center font-bold capitalize ${"bg-yellow-100 text-yellow-800"}`}
+            >
+              Draft
+            </span>
+          }
+        />
+      ),
   },
 ];
 
 const ApplicantsTable = ({
   applicants,
   isLoading,
+  isLoadingDelete,
   onView,
   onDeleteApplication,
   filters,
@@ -131,35 +143,24 @@ const ApplicantsTable = ({
   const [searchTerm, setSearchTerm] = React.useState("");
   const [editModalData, setEditModalData] = useState(null);
   const [formErrors, setFormErrors] = useState({});
-  const [deleteSubmitForm, { isLoading: isLoadingDelete }] = useDeleteSingleSubmitFormMutation();
-  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState({ id: null, type: null });
   const actionMenuRefs = useRef(new Map());
 
   const { user } = useSelector((state) => state.auth);
   const hasUnderwritingPermission = checkPermission(user, webPermissions.underwriting);
   // Get unique clients for quick filters
-  const uniqueClients = useMemo(() => {
-    return [...new Set(applicants.map((applicant) => applicant?.user?.role?.name))];
-  }, [applicants]);
 
   const handleDeleteApplicant = useCallback(async () => {
     try {
-      if (!deleteConfirmation) return;
-      if (onDeleteApplication) {
-        await onDeleteApplication(deleteConfirmation);
-      } else {
-        const res = await deleteSubmitForm({ _id: deleteConfirmation }).unwrap();
-        if (res.success) {
-          toast.success(res?.message);
-        }
-      }
-      setDeleteConfirmation(null);
+      if (!deleteConfirmation?.id || !deleteConfirmation?.type) return;
+      await onDeleteApplication(deleteConfirmation);
+      setDeleteConfirmation({ id: null, type: null });
       setActionMenu(null);
     } catch (error) {
       console.error("Error deleting application:", error);
       toast.error(error?.data?.message || error?.message || "Failed to delete application");
     }
-  }, [deleteConfirmation, deleteSubmitForm, onDeleteApplication]);
+  }, [deleteConfirmation, onDeleteApplication]);
 
   // Handle search
   const handleSearch = useCallback((value) => {
@@ -231,21 +232,35 @@ const ApplicantsTable = ({
 
   const filteredApplicants = useMemo(() => {
     setIsApplicantsLoading(true);
-    return applicants.filter((applicant) => {
+    return applicants?.filter((applicant) => {
       const matchesDateRange =
-        (!filters.dateRange.start || applicant?.createdAt >= filters.dateRange.start) &&
-        (!filters.dateRange.end || applicant?.createdAt <= filters.dateRange.end);
+        (!filters?.dateRange?.start || applicant?.createdAt >= filters?.dateRange?.start) &&
+        (!filters?.dateRange?.end || applicant?.createdAt <= filters?.dateRange?.end);
       const matchesStatus = !filters?.status || applicant?.status === filters?.status;
       const matchesSearch =
-        !searchTerm || applicant?.user?.tole?.name?.toLowerCase().includes(searchTerm?.toLowerCase());
+        !searchTerm || applicant?.user?.role?.name?.toLowerCase()?.includes(searchTerm?.toLowerCase() || "");
       const name = applicant?.user?.firstName + " " + applicant?.user?.lastName;
-      const matchesName = !filters?.name || name?.toLowerCase().includes(filters.name.toLowerCase());
+      const matchesName = !filters?.name || name?.toLowerCase()?.includes(filters?.name?.toLowerCase() || "");
+      const matchesType = !filters?.type || applicant?.type === filters?.type;
       setIsApplicantsLoading(false);
-      return matchesDateRange && matchesStatus && matchesSearch && matchesName;
+      return matchesDateRange && matchesStatus && matchesSearch && matchesName && matchesType;
     });
   }, [applicants, filters, searchTerm]);
 
-  const ButtonsForThreeDot = useMemo(
+  const ButtonsForThreeDotDraft = useMemo(
+    () => [
+      {
+        name: "Delete",
+        icon: <Trash size={16} className="mr-2" />,
+        onClick: (row) => {
+          setDeleteConfirmation({ id: row?._id, type: row?.type });
+          setActionMenu(null);
+        },
+      },
+    ],
+    [],
+  );
+  const ButtonsForThreeDotSubmitted = useMemo(
     () => [
       {
         name: "View Pdf",
@@ -259,7 +274,8 @@ const ApplicantsTable = ({
         name: "Delete",
         icon: <Trash size={16} className="mr-2" />,
         onClick: (row) => {
-          setDeleteConfirmation(row?._id);
+          setDeleteConfirmation({ id: row?._id, type: row?.type });
+          setActionMenu(null);
         },
       },
       {
@@ -315,13 +331,20 @@ const ApplicantsTable = ({
               >
                 <MoreVertical size={18} />
               </button>
-              {actionMenu === row._id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
+              {actionMenu === row._id && (
+                <ThreeDotEditViewDelete
+                  buttons={
+                    row?.type === APPLICANT_TYPE.SUBMITTED ? ButtonsForThreeDotSubmitted : ButtonsForThreeDotDraft
+                  }
+                  row={row}
+                />
+              )}
             </div>
           );
         },
       },
     ],
-    [ButtonsForThreeDot, actionMenu],
+    [ButtonsForThreeDotDraft, ButtonsForThreeDotSubmitted, actionMenu],
   );
 
   // Handle click outside for action menu
@@ -347,19 +370,29 @@ const ApplicantsTable = ({
 
   return (
     <div>
-      <ApplicantSearch onSearch={handleSearch} clients={uniqueClients} />
-
-      <div className="mt-14 mb-4   grid grid-cols-12 gap-4">
-        <div className="col-span-12 md:col-span-4">
+      <div className="mt-14 mb-4 flex items-center justify-between gap-4">
+        <div className="w-full">
           <TextField
-            label={"Search by Name"}
+            label={"Name"}
             type="text"
             value={filters.name || ""}
             onChange={(e) => onFilterChange("name", e.target.value)}
             placeholder="Enter name to search..."
           />
         </div>
-        <div className="col-span-12 md:col-span-4">
+        <div className="w-full">
+          <TextField
+            label={"Role"}
+            type="text"
+            value={searchTerm || ""}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder="Enter name to search..."
+          />
+        </div>
+      </div>
+
+      <div className="mb-4 flex items-center justify-between md:flex-nowrap flex-wrap gap-4">
+        <div className="w-full min-w-50">
           <label className="text-textPrimary text-sm lg:text-base">Status</label>
           <select
             value={filters.status}
@@ -374,7 +407,22 @@ const ApplicantsTable = ({
             ))}
           </select>
         </div>
-        <div className="col-span-12 md:col-span-4">
+        <div className="w-full min-w-50">
+          <label className="text-textPrimary text-sm lg:text-base">Type</label>
+          <select
+            value={filters.type}
+            onChange={(e) => onFilterChange("type", e.target.value)}
+            className="border-frameColor mt-2 h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base"
+          >
+            <option value="">All Types</option>
+            {Object.values(APPLICANT_TYPE).map((status) => (
+              <option key={status} value={status}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="w-full min-w-50">
           <div className="grid grid-cols-2 gap-2">
             <TextField
               label={"Start Date "}
@@ -464,8 +512,8 @@ const ApplicantsTable = ({
         </Modal>
       )}
       <ConfirmationModal
-        isOpen={deleteConfirmation}
-        onClose={() => setDeleteConfirmation(null)}
+        isOpen={deleteConfirmation?.id && deleteConfirmation?.type}
+        onClose={() => setDeleteConfirmation({ id: null, type: null })}
         onConfirm={handleDeleteApplicant}
         title="Delete Submit Form"
         message={`Are you sure you want to delete this submit form?`}

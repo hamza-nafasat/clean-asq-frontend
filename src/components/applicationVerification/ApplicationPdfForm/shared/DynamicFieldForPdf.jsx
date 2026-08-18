@@ -424,7 +424,7 @@ const OtherInputType = ({
   const isPhone = name.toLowerCase().includes("phone");
   if (isPhone) formatting = "3,3,4";
   const isTaxId = name.toLowerCase().includes("tax");
-  if (isTaxId) formatting = "3,2,4";
+  if (isTaxId) formatting = "2,7";
 
   const inputRef = useRef(null);
   const [autocomplete, setAutocomplete] = useState(null);

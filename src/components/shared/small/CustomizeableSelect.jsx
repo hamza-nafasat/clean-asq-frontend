@@ -76,7 +76,7 @@ const CustomizableSelect = ({
       {label && <label className={`mb-2 block text-sm font-medium text-[#11111199] ${labelCs}`}>{label}</label>}
       <button
         type="button"
-        className="flex items-center justify-between gap-[5px] rounded-[10px] border border-[#54545499] px-5 py-3 text-sm text-[#54545499] shadow-sm md:text-base"
+        className="flex items-center justify-between gap-1.25 rounded-[10px] border border-[#54545499] px-5 py-3 text-sm text-[#54545499] shadow-sm md:text-base"
         onClick={() => setIsOpen(!isOpen)}
         style={{ width: width || "100%" }}
       >
