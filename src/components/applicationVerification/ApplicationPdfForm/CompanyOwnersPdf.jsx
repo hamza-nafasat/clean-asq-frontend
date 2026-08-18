@@ -160,22 +160,34 @@ function CompanyOwnersPdf({
   };
 
   useEffect(() => {
-    const idMissionData = formData?.idMission;
-    const idMissionField = idMissionData?.roleFillingForCompany?.value;
-    let baseFields = [...fields];
+    const idMissionData = formData?.idMission || formInnerData?.idMission;
+    const idMissionField = idMissionData?.roleFillingForCompany?.value || idMissionData?.roleFillingForCompany;
+    const submittedSection = formInnerData?.[sectionKey] || {};
+    const isAlsoOwner = submittedSection?.rolling_owner_is_also_owner?.value;
+    const schemaFields = Array.isArray(fields) ? [...fields] : [];
+    let baseFields = schemaFields;
+
     if (idMissionField == "primaryOperatorAndController" || idMissionField == "both") {
-      baseFields = [ssnField, areUAnOwnerField, ...baseFields];
-      if (formInnerData?.[sectionKey]?.rolling_owner_is_also_owner?.value == "yes") {
-        baseFields = [ssnField, areUAnOwnerField, ownerPercentageField, ...fields];
-      }
+      baseFields =
+        isAlsoOwner == "yes"
+          ? [ssnField, areUAnOwnerField, ownerPercentageField, ...schemaFields]
+          : [ssnField, areUAnOwnerField, ...schemaFields];
     } else if (idMissionField == "primaryContact") {
-      baseFields = [areUAnOwnerField, ...baseFields];
-      if (formInnerData?.[sectionKey]?.rolling_owner_is_also_owner?.value == "yes") {
-        baseFields = [areUAnOwnerField, ssnField, ownerPercentageField, ...fields];
-      }
+      baseFields =
+        isAlsoOwner == "yes"
+          ? [areUAnOwnerField, ssnField, ownerPercentageField, ...schemaFields]
+          : [areUAnOwnerField, ...schemaFields];
+    } else {
+      // Submitted values still need to render if idMission is not in redux yet.
+      const extras = [];
+      if (submittedSection?.rolling_owner_ssn) extras.push(ssnField);
+      if (submittedSection?.rolling_owner_is_also_owner) extras.push(areUAnOwnerField);
+      if (isAlsoOwner == "yes" || submittedSection?.rolling_owner_percentage) extras.push(ownerPercentageField);
+      if (extras.length) baseFields = [...extras, ...schemaFields];
     }
+
     setFormFields(baseFields);
-  }, [blocks, fields, formInnerData, formData?.idMission, sectionKey]);
+  }, [fields, formInnerData, formData?.idMission, sectionKey]);
 
   // add owners for suggestions
   useEffect(() => {
@@ -255,15 +267,11 @@ function CompanyOwnersPdf({
 
     const sectionData = formInnerData?.[sectionKey] ?? {};
     const toAdd = Object.fromEntries(Object.entries(initialForm).filter(([key]) => !(key in sectionData)));
-    const toRemoveKeys = Object.keys(sectionData).filter((key) => !(key in initialForm));
-    if (Object.keys(toAdd).length === 0 && toRemoveKeys.length === 0) return;
-    setFormInnerData((prev) => {
-      const sectionPrevData = prev?.[sectionKey] ?? {};
-      const cleaned = Object.fromEntries(
-        Object.entries(sectionPrevData).filter(([key]) => !toRemoveKeys.includes(key)),
-      );
-      return { ...prev, [sectionKey]: { ...cleaned, ...toAdd } };
-    });
+    if (Object.keys(toAdd).length === 0) return;
+    setFormInnerData((prev) => ({
+      ...prev,
+      [sectionKey]: { ...(prev?.[sectionKey] ?? {}), ...toAdd },
+    }));
   }, [
     formFields,
     formInnerData,
@@ -274,12 +282,6 @@ function CompanyOwnersPdf({
     sectionKey,
     setFormInnerData,
   ]);
-
-  useEffect(() => {
-    if (fields && fields.length > 0) {
-      setFormFields([...fields]);
-    }
-  }, [fields]);
 
   const sectionForm = formInnerData?.[sectionKey] || {};
   const additionalOwnersYes =
