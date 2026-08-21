@@ -3,7 +3,7 @@ import { useLogoutMutation } from "@/redux/apis/authApis";
 import { userNotExist } from "@/redux/slices/authSlice";
 import { useEffect, useRef, useState } from "react";
 import { HiChevronDown } from "react-icons/hi";
-import { IoChevronForwardOutline, IoLogOutOutline, IoPersonOutline } from "react-icons/io5";
+import { IoChevronForwardOutline, IoLockClosedOutline, IoLogOutOutline, IoPersonOutline } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom"; // or 'next/link' if using Next.js
 import { toast } from "react-toastify";
@@ -14,20 +14,6 @@ import { useBranding } from "@/hooks/BrandingContext";
 import { HiMenu } from "react-icons/hi";
 import { UseAIChat } from "@/context/AiChatContext";
 
-// Returns black or white — whichever has higher WCAG contrast ratio against the given hex color.
-const contrastColor = (hex = "#000000") => {
-  const h = (hex || "").replace("#", "");
-  if (h.length < 6) return "#000000";
-  const toLinear = (c) => {
-    const s = c / 255;
-    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-  };
-  const r = toLinear(parseInt(h.slice(0, 2), 16));
-  const g = toLinear(parseInt(h.slice(2, 4), 16));
-  const b = toLinear(parseInt(h.slice(4, 6), 16));
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.179 ? "#000000" : "#ffffff";
-};
-
 function AdminHeader({ setSidebarOpen }) {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
@@ -36,9 +22,6 @@ function AdminHeader({ setSidebarOpen }) {
   const profileRef = useRef(null);
   const { logo, headerAlignment, appHeaderPadding, appLogoMaxWidth, appLogoMaxHeight } = useBranding();
   const [loadingTime, setLoadingTime] = useState(500);
-
-  // const { headerBackground } = useBranding();
-  // const textOnHeader = contrastColor(headerBackground);
 
   const profileOpenHandler = () => setIsProfileOpen((prev) => !prev);
   const isGuest = !user?._id || user?.role?.name == "guest";
@@ -110,8 +93,6 @@ const GuestHeader = ({
   appLogoMaxWidth,
   appLogoMaxHeight,
 }) => {
-  const { headerBackground } = useBranding();
-  const textOnHeader = contrastColor(headerBackground);
   return (
     <div
       className="bg-header flex min-h-20 items-center justify-between gap-8 rounded-md shadow"
@@ -123,14 +104,16 @@ const GuestHeader = ({
           {/* left side  */}
           {headerAlignment == "left" ? (
             <div className={`my-4 flex w-75 items-center`}>
-              <img
-                onClick={handleLogoClick}
-                src={logo || ""}
-                alt="Logo"
-                className="w-auto object-contain cursor-pointer"
-                style={{ maxWidth: `${appLogoMaxWidth ?? 300}px`, maxHeight: `${appLogoMaxHeight ?? 100}px` }}
-                referrerPolicy="no-referrer"
-              />
+              {logo && (
+                <img
+                  onClick={handleLogoClick}
+                  src={logo || ""}
+                  alt="Logo"
+                  className="w-auto object-contain cursor-pointer"
+                  style={{ maxWidth: `${appLogoMaxWidth ?? 300}px`, maxHeight: `${appLogoMaxHeight ?? 100}px` }}
+                  referrerPolicy="no-referrer"
+                />
+              )}
             </div>
           ) : (
             <div className="flex w-75 items-center gap-4 px-6 py-2">
@@ -192,12 +175,10 @@ const GuestHeader = ({
                     />
 
                     <div>
-                      <h6 className="text-sm font-semibold" style={{ color: textOnHeader }}>
+                      <h6 className="text-sm font-semibold text-header-text">
                         {user?.firstName} {user?.middleName ? user?.middleName + " " : ""} {user?.lastName}
                       </h6>
-                      <p className="text-xs opacity-75" style={{ color: textOnHeader }}>
-                        {user?.email}
-                      </p>
+                      <p className="text-xs opacity-75 text-header-text">{user?.email}</p>
                     </div>
                   </div>
 
@@ -220,14 +201,16 @@ const GuestHeader = ({
             </div>
           ) : (
             <div className={`my-4 flex w-75 items-center`}>
-              <img
-                onClick={handleLogoClick}
-                src={logo || ""}
-                alt="Logo"
-                className="w-auto object-contain cursor-pointer"
-                style={{ maxWidth: `${appLogoMaxWidth ?? 300}px`, maxHeight: `${appLogoMaxHeight ?? 100}px` }}
-                referrerPolicy="no-referrer"
-              />
+              {logo && (
+                <img
+                  onClick={handleLogoClick}
+                  src={logo || ""}
+                  alt="Logo"
+                  className="w-auto object-contain cursor-pointer"
+                  style={{ maxWidth: `${appLogoMaxWidth ?? 300}px`, maxHeight: `${appLogoMaxHeight ?? 100}px` }}
+                  referrerPolicy="no-referrer"
+                />
+              )}
             </div>
           )}
         </>
@@ -238,14 +221,16 @@ const GuestHeader = ({
           <div className={`flex w-75 items-center gap-4 rounded-bl-[20px] px-6 py-2`}></div>
           {/* center side  */}
           <div className={`my-4 flex max-w-3xl flex-col items-center`}>
-            <img
-              onClick={handleLogoClick}
-              src={logo || ""}
-              alt="Logo"
-              className="w-auto object-contain cursor-pointer"
-              style={{ maxWidth: `${appLogoMaxWidth ?? 300}px`, maxHeight: `${appLogoMaxHeight ?? 100}px` }}
-              referrerPolicy="no-referrer"
-            />
+            {logo && (
+              <img
+                onClick={handleLogoClick}
+                src={logo || ""}
+                alt="Logo"
+                className="w-auto object-contain cursor-pointer"
+                style={{ maxWidth: `${appLogoMaxWidth ?? 300}px`, maxHeight: `${appLogoMaxHeight ?? 100}px` }}
+                referrerPolicy="no-referrer"
+              />
+            )}
             <h6 className="font-semibold text-header-text" style={{ fontSize: `${formHeaderTextSize || 24}px` }}>
               {formHeaderText}
             </h6>
@@ -411,6 +396,18 @@ const Profile = ({ isGuest, setIsProfileOpen }) => {
           <IoPersonOutline fontSize={18} />
         </Link>
       )}
+
+      <div
+        data-testid="my-profile-button"
+        onClick={() => {
+          setIsProfileOpen?.(false);
+          navigate("/my-profile");
+        }}
+        className={`flex cursor-pointer items-center justify-between gap-4 rounded-b-md bg-white px-2 py-2 hover:bg-[#b6feef] ${isLoading ? "cursor-not-allowed opacity-50" : ""}`}
+      >
+        <h6 className="text-[13px] font-medium">My Profile</h6>
+        <IoPersonOutline fontSize={18} />
+      </div>
 
       <div
         data-testid="logout-button"

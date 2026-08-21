@@ -1,8 +1,10 @@
 import Button from "@/components/shared/small/Button";
 import TextField from "@/components/shared/small/TextField";
+import { useUpdateMyProfileMutation } from "@/redux/apis/authApis";
+import { userExist } from "@/redux/slices/authSlice";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { HiOutlineCamera, HiOutlineUserCircle } from "react-icons/hi";
-import { useSelector } from "react-redux";
+import { HiOutlineCamera } from "react-icons/hi";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
 const EMPTY_PROFILE = {
@@ -32,17 +34,20 @@ const buildProfileFromUser = (user) => ({
 });
 
 const MyProfile = () => {
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const fileInputRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
   const [profile, setProfile] = useState(EMPTY_PROFILE);
   const [backupProfile, setBackupProfile] = useState(EMPTY_PROFILE);
+  const [imageFile, setImageFile] = useState(null);
+  const [updateMyProfile, { isLoading: isUpdating }] = useUpdateMyProfileMutation();
 
   useEffect(() => {
     const next = buildProfileFromUser(user);
     setProfile(next);
     setBackupProfile(next);
+    setImageFile(null);
   }, [user]);
 
   const displayName = useMemo(() => {
@@ -67,6 +72,7 @@ const MyProfile = () => {
 
   const handleCancel = () => {
     setProfile(backupProfile);
+    setImageFile(null);
     setIsEditing(false);
   };
 
@@ -78,6 +84,7 @@ const MyProfile = () => {
       return;
     }
     const previewUrl = URL.createObjectURL(file);
+    setImageFile(file);
     setProfile((prev) => ({ ...prev, imageUrl: previewUrl }));
   };
 
@@ -90,17 +97,26 @@ const MyProfile = () => {
     }
 
     try {
-      setIsUpdating(true);
-      // Frontend-only for now — wire updateMyProfile API later
-      await new Promise((resolve) => setTimeout(resolve, 400));
-      setBackupProfile(profile);
-      setIsEditing(false);
-      toast.success("Profile updated successfully");
+      const formData = new FormData();
+      formData.append("firstName", profile.firstName.trim());
+      formData.append("middleName", profile.middleName?.trim() || "");
+      formData.append("lastName", profile.lastName?.trim() || "");
+      formData.append("contact", profile.contact || "");
+      formData.append("address", profile.address || "");
+      formData.append("state", profile.state || "");
+      formData.append("country", profile.country || "");
+      if (imageFile) formData.append("file", imageFile);
+
+      const res = await updateMyProfile(formData).unwrap();
+      if (res.success) {
+        if (res.data) dispatch(userExist(res.data));
+        setIsEditing(false);
+        setImageFile(null);
+        toast.success(res.message || "Profile updated successfully");
+      }
     } catch (error) {
       console.log("error while updating profile", error);
-      toast.error("Error while updating profile");
-    } finally {
-      setIsUpdating(false);
+      toast.error(error?.data?.message || "Error while updating profile");
     }
   };
 
@@ -110,7 +126,7 @@ const MyProfile = () => {
         <div>
           <h1 className="text-textPrimary text-3xl font-bold">My Profile</h1>
           <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            View your account details. Click Edit to update your personal information.
+            View your account details. Click Edit to update your personal information. Email and role stay read-only.
           </p>
         </div>
 
@@ -147,8 +163,8 @@ const MyProfile = () => {
           <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center">
             <div className="relative">
               <div className="border-secondary/20 h-28 w-28 overflow-hidden rounded-full border-4 bg-white shadow-md">
-                {profile?.image?.secureUrl ? (
-                  <img src={profile?.image?.secureUrl} alt={displayName} className="h-full w-full object-cover" />
+                {profile.imageUrl ? (
+                  <img src={profile.imageUrl} alt={displayName} className="h-full w-full object-cover" />
                 ) : (
                   <div className="bg-secondary/10 text-secondary flex h-full w-full items-center justify-center text-3xl font-bold">
                     {initials}
@@ -181,9 +197,9 @@ const MyProfile = () => {
               <div className="mb-1 flex items-center justify-center gap-2 sm:justify-start">
                 <h2 className="text-textPrimary text-2xl font-semibold">{displayName}</h2>
               </div>
-              <p className="text-sm text-gray-500">{profile?.email || "No email"}</p>
+              <p className="text-sm text-gray-500">{profile.email || "No email"}</p>
               <span className="bg-secondary/10 text-secondary mt-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold capitalize">
-                {profile?.role || "No role"}
+                {profile.role || "No role"}
               </span>
             </div>
           </div>
@@ -200,7 +216,7 @@ const MyProfile = () => {
                 placeholder="Enter first name"
                 required
                 disabled={!isEditing}
-                value={profile?.firstName}
+                value={profile.firstName}
                 onChange={handleChange}
               />
               <TextField
@@ -209,7 +225,7 @@ const MyProfile = () => {
                 label="Middle Name"
                 placeholder="Enter middle name"
                 disabled={!isEditing}
-                value={profile?.middleName}
+                value={profile.middleName}
                 onChange={handleChange}
               />
               <TextField
@@ -218,7 +234,7 @@ const MyProfile = () => {
                 label="Last Name"
                 placeholder="Enter last name"
                 disabled={!isEditing}
-                value={profile?.lastName}
+                value={profile.lastName}
                 onChange={handleChange}
               />
               <TextField
@@ -228,7 +244,7 @@ const MyProfile = () => {
                 label="Email"
                 placeholder="Email address"
                 disabled
-                value={profile?.email}
+                value={profile.email}
                 onChange={handleChange}
               />
               <TextField
@@ -237,7 +253,7 @@ const MyProfile = () => {
                 label="Role"
                 placeholder="Role"
                 disabled
-                value={profile?.role}
+                value={profile.role}
                 onChange={handleChange}
               />
               <TextField
@@ -247,7 +263,7 @@ const MyProfile = () => {
                 placeholder="Enter contact number"
                 type="tel"
                 disabled={!isEditing}
-                value={profile?.contact}
+                value={profile.contact}
                 onChange={handleChange}
               />
             </div>
@@ -263,7 +279,7 @@ const MyProfile = () => {
                   label="Address"
                   placeholder="Enter address"
                   disabled={!isEditing}
-                  value={profile?.address}
+                  value={profile.address}
                   onChange={handleChange}
                 />
               </div>
@@ -273,7 +289,7 @@ const MyProfile = () => {
                 label="State"
                 placeholder="Enter state"
                 disabled={!isEditing}
-                value={profile?.state}
+                value={profile.state}
                 onChange={handleChange}
               />
               <TextField
@@ -282,7 +298,7 @@ const MyProfile = () => {
                 label="Country"
                 placeholder="Enter country"
                 disabled={!isEditing}
-                value={profile?.country}
+                value={profile.country}
                 onChange={handleChange}
               />
             </div>

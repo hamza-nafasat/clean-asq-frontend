@@ -147,11 +147,12 @@ const Login = () => {
           <div>
             <TextField
               borderAndBgChangeIfEmpty={false}
-              type="password"
+              type="text"
               name="password"
               label="Password"
               autoComplete="current-password"
               required
+              isMasked
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />

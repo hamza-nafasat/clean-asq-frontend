@@ -206,6 +206,7 @@ function App() {
               <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
               <Route path="verification" element={<Verification />} />
               <Route path="submission" element={<DraftSubmission />} />
+              <Route path="my-profile" element={<MyProfile />} />
             </Route>
             {/* non authentic routes */}
             <Route element={<ProtectedRoute user={!user} redirect={isGuest ? "/submission" : "/application-forms"} />}>
@@ -237,7 +238,6 @@ function App() {
                 <Route path="verification-test" element={<VerificationTest />} />
                 <Route path="strategies" element={<Strategies />} />
                 <Route path="email" element={<Email />} />
-                <Route path="my-profile" element={<MyProfile />} />
               </Route>
 
               {/*all User Forms or application layout  , with out sidebar */}

@@ -1,5 +1,6 @@
 import Button from "@/components/shared/small/Button";
 import TextField from "@/components/shared/small/TextField";
+import { useForgetPasswordMutation } from "@/redux/apis/authApis";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -7,7 +8,7 @@ import { toast } from "react-toastify";
 const ForgetPassword = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [forgetPassword, { isLoading }] = useForgetPasswordMutation();
 
   const forgetPasswordHandler = async (e) => {
     e.preventDefault();
@@ -19,14 +20,13 @@ const ForgetPassword = () => {
     }
 
     try {
-      setIsSubmitting(true);
-      // TODO: call forget-password API when available
-      navigate("/reset-mail-sent", { state: { email: trimmedEmail } });
+      const res = await forgetPassword({ email: trimmedEmail }).unwrap();
+      if (res.success) {
+        navigate("/reset-mail-sent", { state: { email: trimmedEmail } });
+      }
     } catch (error) {
       console.log("error while requesting password reset", error);
       toast.error(error?.data?.message || "Error while requesting password reset");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -62,8 +62,8 @@ const ForgetPassword = () => {
           </div>
 
           <Button
-            disabled={isSubmitting}
-            loading={isSubmitting}
+            disabled={isLoading}
+            loading={isLoading}
             type="submit"
             label="Forget Password"
             className="hover:bg-primary! text-textPrimary border-secondary! w-full rounded-[20px]! border!"

@@ -1,25 +1,28 @@
 import Button from "@/components/shared/small/Button";
 import TextField from "@/components/shared/small/TextField";
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useResetPasswordMutation } from "@/redux/apis/authApis";
+import { useMemo, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = useMemo(() => searchParams.get("token") || "", [searchParams]);
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resetPassword, { isLoading }] = useResetPasswordMutation();
 
   const resetPasswordHandler = async (e) => {
     e.preventDefault();
 
-    if (!newPassword.trim() || !confirmNewPassword.trim()) {
-      toast.error("Please fill in both password fields");
+    if (!token) {
+      toast.error("Reset token is missing. Please open the link from your email.");
       return;
     }
 
-    if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters");
+    if (!newPassword.trim() || !confirmNewPassword.trim()) {
+      toast.error("Please fill in both password fields");
       return;
     }
 
@@ -29,14 +32,17 @@ const ResetPassword = () => {
     }
 
     try {
-      setIsSubmitting(true);
-      // TODO: call reset-password API when available
-      navigate("/reset-password-successfully");
+      const res = await resetPassword({
+        token,
+        newPassword,
+        confirmNewPassword,
+      }).unwrap();
+      if (res.success) {
+        navigate("/reset-password-successfully");
+      }
     } catch (error) {
       console.log("error while resetting password", error);
       toast.error(error?.data?.message || "Error while resetting password");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -55,6 +61,12 @@ const ResetPassword = () => {
         <h2 className="mb-2 text-2xl font-bold">Create a new password</h2>
         <p className="mb-6 text-sm text-gray-500">Your new password must be different from previous passwords.</p>
 
+        {!token && (
+          <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+            This reset link is missing a token. Please use the link from your email.
+          </p>
+        )}
+
         <form className="space-y-6" onSubmit={resetPasswordHandler}>
           <div>
             <TextField
@@ -65,7 +77,6 @@ const ResetPassword = () => {
               label="New Password"
               placeholder="Enter new password"
               autoComplete="new-password"
-              minLength={8}
               required
               isMasked
               value={newPassword}
@@ -82,7 +93,6 @@ const ResetPassword = () => {
               label="Confirm New Password"
               placeholder="Confirm new password"
               autoComplete="new-password"
-              minLength={8}
               required
               isMasked
               value={confirmNewPassword}
@@ -91,8 +101,8 @@ const ResetPassword = () => {
           </div>
 
           <Button
-            disabled={isSubmitting}
-            loading={isSubmitting}
+            disabled={isLoading || !token}
+            loading={isLoading}
             type="submit"
             label="Reset Password"
             className="hover:bg-primary! text-textPrimary border-secondary! w-full rounded-[20px]! border!"
