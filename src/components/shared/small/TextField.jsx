@@ -46,6 +46,7 @@ const TextField = ({
   labelCs = "",
   textAreaHeight = "45px",
   placeholder,
+  borderAndBgChangeIfEmpty = true,
   ...rest
 }) => {
   const [showMasked, setShowMasked] = useState(isMasked);
@@ -111,7 +112,7 @@ const TextField = ({
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
             className={`${cn} relative min-h-[${textAreaHeight}]! w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:text-base $ ${
               leftIcon ? "pl-10" : ""
-            } ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
+            } ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf && borderAndBgChangeIfEmpty ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
             {...rest}
           />
 
@@ -160,7 +161,7 @@ const TextField = ({
                 leftIcon ? "pl-10" : ""
               } ${rightIcon ? "pr-10" : ""} ${
                 required && (!value || !isValidPhoneNumber(value)) ? "border-red-500 border-2" : "border-frameColor"
-              } ${!value && required && !isPdf ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
+              } ${!value && required && !isPdf && borderAndBgChangeIfEmpty ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
             />
 
             {/* Validation */}
@@ -185,7 +186,7 @@ const TextField = ({
               }
               onChange?.({ target: { name, value: val } });
             }}
-            className={`${cn} relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${leftIcon ? "pl-10" : ""} ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""} `}
+            className={`${cn} relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${leftIcon ? "pl-10" : ""} ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf && borderAndBgChangeIfEmpty ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""} `}
             {...rest}
           />
         )}
