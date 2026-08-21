@@ -3,45 +3,63 @@ import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { SubmissionSuccessPage } from "./components/LoadingWithTimerAfterSubmission";
-import ProtectedRoute from "./components/ProtectedRoute";
-import CustomLoading from "./components/shared/small/CustomLoading";
+import { DemoSessionProvider } from "./hooks/DemoSessionContext";
 import { useBranding } from "./hooks/BrandingContext";
 import { socket } from "./main";
-import AdminDashboard from "./page/admin/dashboard";
-import AdminAllUsers from "./page/admin/dashboard/admin-dashboard/AdminAllUsers";
-import ApplicationForms from "./page/admin/dashboard/applicationForms/ApplicationForms";
-import Applications from "./page/admin/dashboard/applications/Applications";
-import DraftSubmission from "./page/admin/dashboard/draftSubmission/DraftSubmission";
-import Email from "./page/admin/dashboard/email/Email";
-import FormStrategies from "./page/admin/dashboard/formStrategies/FormStrategies";
-import AllRoles from "./page/admin/dashboard/role/AllRoles";
-import Strategies from "./page/admin/dashboard/strategies/Strategies";
-import OnBoarding from "./page/admin/dashboard/underwriting/underwriting";
-import Verification from "./page/admin/dashboard/varification/Varification";
-import VerificationTest from "./page/admin/dashboard/varification/VerficationTest";
-import UserApplicationForms from "./page/admin/userApplicationForms";
-import AdditionalOwnersForm from "./page/admin/userApplicationForms/ApplicationVerification/AdditionalOwnersForm";
-import ApplicationForm from "./page/admin/userApplicationForms/ApplicationVerification/ApplicationForm";
-import ApplicationPdfView from "./page/admin/userApplicationForms/ApplicationVerification/ApplicationPdfView";
-import SingleApplication from "./page/admin/userApplicationForms/ApplicationVerification/SingleApplication";
-import FormHiddenSection from "./page/admin/userApplicationForms/Hidden/HIdden";
 import { useGetMyProfileFirstTimeMutation } from "./redux/apis/authApis";
 import { userExist, userNotExist } from "./redux/slices/authSlice";
 import { detectVPN } from "./utils/vpnDetection";
-import ManageRules from "./components/admin/ManageRules";
-import { DemoSessionProvider } from "./hooks/DemoSessionContext";
-import RoleRedirect from "./components/RoleRedirect";
 
-const Brandings = lazy(() => import("./page/admin/dashboard/brandings/Brandings"));
-const CreateBranding = lazy(() => import("./page/admin/dashboard/brandings/CreateBranding"));
+import ProtectedRoute from "./components/ProtectedRoute";
+import CustomLoading from "./components/shared/small/CustomLoading";
+// Auth pages
+
 const Login = lazy(() => import("./page/auth/Login"));
 const Otp = lazy(() => import("./page/auth/Otp"));
 const ForgetPassword = lazy(() => import("./page/auth/ForgetPassword"));
 const ResetPassword = lazy(() => import("./page/auth/ResetPassword"));
 const ResetMailSent = lazy(() => import("./page/auth/ResetMailSent"));
 const ResetPasswordSuccessfully = lazy(() => import("./page/auth/ResetPasswordSuccessfully"));
+
+// Layouts
+const AdminDashboard = lazy(() => import("./page/admin/dashboard"));
+const UserApplicationForms = lazy(() => import("./page/admin/userApplicationForms"));
+
+// Public / shared application routes
+const SingleApplication = lazy(
+  () => import("./page/admin/userApplicationForms/ApplicationVerification/SingleApplication"),
+);
+const FormHiddenSection = lazy(() => import("./page/admin/userApplicationForms/Hidden/HIdden"));
+const ManageRules = lazy(() => import("./components/admin/ManageRules"));
+const AdditionalOwnersForm = lazy(
+  () => import("./page/admin/userApplicationForms/ApplicationVerification/AdditionalOwnersForm"),
+);
+const SubmissionSuccessPage = lazy(() =>
+  import("./components/LoadingWithTimerAfterSubmission").then((module) => ({
+    default: module.SubmissionSuccessPage,
+  })),
+);
+const ApplicationForm = lazy(() => import("./page/admin/userApplicationForms/ApplicationVerification/ApplicationForm"));
+const ApplicationPdfView = lazy(
+  () => import("./page/admin/userApplicationForms/ApplicationVerification/ApplicationPdfView"),
+);
+const Verification = lazy(() => import("./page/admin/dashboard/varification/Varification"));
+const DraftSubmission = lazy(() => import("./page/admin/dashboard/draftSubmission/DraftSubmission"));
+
+// Authenticated admin routes
+const AllRoles = lazy(() => import("./page/admin/dashboard/role/AllRoles"));
+const AdminAllUsers = lazy(() => import("./page/admin/dashboard/admin-dashboard/AdminAllUsers"));
+const ApplicationForms = lazy(() => import("./page/admin/dashboard/applicationForms/ApplicationForms"));
+const Applications = lazy(() => import("./page/admin/dashboard/applications/Applications"));
+const OnBoarding = lazy(() => import("./page/admin/dashboard/underwriting/underwriting"));
+const Brandings = lazy(() => import("./page/admin/dashboard/brandings/Brandings"));
+const CreateBranding = lazy(() => import("./page/admin/dashboard/brandings/CreateBranding"));
+const FormStrategies = lazy(() => import("./page/admin/dashboard/formStrategies/FormStrategies"));
+const VerificationTest = lazy(() => import("./page/admin/dashboard/varification/VerficationTest"));
+const Strategies = lazy(() => import("./page/admin/dashboard/strategies/Strategies"));
+const Email = lazy(() => import("./page/admin/dashboard/email/Email"));
 const MyProfile = lazy(() => import("./page/admin/dashboard/myProfile/MyProfile"));
+const RoleRedirect = lazy(() => import("./components/RoleRedirect"));
 
 function App() {
   const dispatch = useDispatch();
