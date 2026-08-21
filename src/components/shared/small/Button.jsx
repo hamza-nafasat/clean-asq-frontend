@@ -16,19 +16,19 @@ const Button = ({
   ...props
 }) => {
   const baseClasses = `
-    cursor-pointer rounded-[4px] border-2 px-[14px] py-[4px]
+    cursor-pointer rounded-[4px] px-[14px] py-[4px]
     font-medium transition-all duration-300
-    flex items-center justify-center gap-2
+    flex border-none items-center justify-center gap-2
   `;
 
   const variantClasses = {
     primary: `
-      btn-branded-primary bg-[var(--primary)] border-[var(--primary)] text-buttonTextPrimary
-      hover:brightness-110 hover:border-[var(--primary)]
+      btn-branded-primary bg-[var(--primary)] text-buttonTextPrimary
+      hover:brightness-110 
     `,
     secondary: `
-      bg-[var(--secondary)] border-[var(--secondary)] text-buttonTextSecondary
-      hover:brightness-110 hover:border-[var(--secondary)]
+      bg-[var(--secondary)]  text-buttonTextSecondary
+      hover:brightness-110 
     `,
   };
 

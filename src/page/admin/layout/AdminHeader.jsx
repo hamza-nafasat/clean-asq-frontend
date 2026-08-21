@@ -3,7 +3,7 @@ import { useLogoutMutation } from "@/redux/apis/authApis";
 import { userNotExist } from "@/redux/slices/authSlice";
 import { useEffect, useRef, useState } from "react";
 import { HiChevronDown } from "react-icons/hi";
-import { IoChevronForwardOutline, IoLogOutOutline } from "react-icons/io5";
+import { IoChevronForwardOutline, IoLogOutOutline, IoPersonOutline } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom"; // or 'next/link' if using Next.js
 import { toast } from "react-toastify";
@@ -65,6 +65,7 @@ function AdminHeader({ setSidebarOpen }) {
       profileOpenHandler={profileOpenHandler}
       profileRef={profileRef}
       isProfileOpen={isProfileOpen}
+      setIsProfileOpen={setIsProfileOpen}
       isGuest={isGuest}
       handleLogoClick={handleLogoClick}
       logo={logo}
@@ -81,10 +82,12 @@ function AdminHeader({ setSidebarOpen }) {
       profileOpenHandler={profileOpenHandler}
       profileRef={profileRef}
       isProfileOpen={isProfileOpen}
+      setIsProfileOpen={setIsProfileOpen}
       isGuest={isGuest}
       handleLogoClick={handleLogoClick}
       logo={logo}
       setSidebarOpen={setSidebarOpen}
+      formHeaderTextSize={formHeaderTextSize}
     />
   );
 }
@@ -141,12 +144,10 @@ const GuestHeader = ({
                     />
 
                     <div>
-                      <h6 className="text-sm font-semibold" style={{ color: textOnHeader }}>
+                      <h6 className="text-sm font-semibold text-header-text">
                         {user?.firstName} {user?.middleName ? user?.middleName + " " : ""} {user?.lastName}
                       </h6>
-                      <p className="text-xs opacity-75" style={{ color: textOnHeader }}>
-                        {user?.email}
-                      </p>
+                      <p className="text-xs opacity-75 text-header-text">{user?.email}</p>
                     </div>
                   </div>
 
@@ -262,12 +263,10 @@ const GuestHeader = ({
                   />
 
                   <div>
-                    <h6 className="text-sm font-semibold" style={{ color: textOnHeader }}>
+                    <h6 className="text-sm font-semibold text-header-text">
                       {user?.firstName} {user?.middleName ? user?.middleName + " " : ""} {user?.lastName}
                     </h6>
-                    <p className="text-xs opacity-75" style={{ color: textOnHeader }}>
-                      {user?.email}
-                    </p>
+                    <p className="text-xs opacity-75 text-header-text">{user?.email}</p>
                   </div>
                 </div>
 
@@ -305,14 +304,12 @@ const UserHeader = ({
   formHeaderText,
   formHeaderTextSize,
 }) => {
-  const { headerBackground } = useBranding();
-  const textOnHeader = contrastColor(headerBackground);
   return (
     <div className="bg-header flex min-h-20 items-center justify-between gap-8 rounded-md p-2 shadow">
       {/* Hamburger Icon (mobile only) */}
       <div className="flex items-center gap-2">
         <button className="rounded-md p-2 hover:bg-gray-100 lg:hidden" onClick={() => setSidebarOpen(true)}>
-          <HiMenu size={24} style={{ color: textOnHeader }} />
+          <HiMenu className="text-header-text" size={24} />
         </button>
         <h1 className="text-header-text text-lg font-semibold">
           Welcome {user?.firstName} {user?.lastName}
@@ -341,12 +338,10 @@ const UserHeader = ({
               />
 
               <div>
-                <h6 className="text-sm font-semibold" style={{ color: textOnHeader }}>
+                <h6 className="text-sm font-semibold text-header-text">
                   {user?.firstName} {user?.middleName ? user?.middleName + " " : ""} {user?.lastName}
                 </h6>
-                <p className="text-xs opacity-75" style={{ color: textOnHeader }}>
-                  {user?.email}
-                </p>
+                <p className="text-xs opacity-75 text-header-text">{user?.email}</p>
               </div>
             </div>
 
@@ -362,7 +357,7 @@ const UserHeader = ({
             <div
               className={`custom-scroll absolute top-11.25 right-0 z-350 w-37.5 rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? "opacity-100" : "invisible opacity-0"}`}
             >
-              <Profile isGuest={isGuest} setIsProfileOpen={setIsProfileOpen} />
+              {isProfileOpen && <Profile isGuest={isGuest} setIsProfileOpen={setIsProfileOpen} />}
             </div>
           </div>
         </div>
@@ -396,21 +391,33 @@ const Profile = ({ isGuest, setIsProfileOpen }) => {
     <div className="w-full">
       {isGuest && (
         <Link
-          onClick={() => setIsProfileOpen(false)}
+          onClick={() => setIsProfileOpen?.(false)}
           to="/submission"
-          className="flex items-center justify-between gap-4 rounded-md border bg-white px-2 py-2 hover:bg-[#b6feef] "
+          className="flex items-center justify-between gap-4 rounded-t-md border bg-white px-2 py-2 hover:bg-[#b6feef]"
         >
           <h6 className="text-textPrimary text-xs font-medium">My Applications</h6>
           <Applications fontSize={18} className="text-primary" />
         </Link>
       )}
 
+      {!isGuest && (
+        <Link
+          data-testid="my-profile-button"
+          to="/my-profile"
+          onClick={() => setIsProfileOpen?.(false)}
+          className="flex cursor-pointer items-center justify-between gap-4 rounded-t-md bg-white px-2 py-2 hover:bg-[#b6feef]"
+        >
+          <h6 className="text-[13px] font-medium">My Profile</h6>
+          <IoPersonOutline fontSize={18} />
+        </Link>
+      )}
+
       <div
         data-testid="logout-button"
         onClick={logoutHandler}
-        className={`flex cursor-pointer items-center justify-between gap-4 rounded-b-md bg-white px-2 py-2 hover:bg-[#b6feef] ${isLoading ? "cursor-not-allowed opacity-50" : ""} ${isGuest ? "rounded-b-md" : "rounded-md"}`}
+        className={`flex cursor-pointer items-center justify-between gap-4 rounded-b-md bg-white px-2 py-2 hover:bg-[#b6feef] ${isLoading ? "cursor-not-allowed opacity-50" : ""}`}
       >
-        <h6 className={`text-[13px] font-medium`}>Logout</h6>
+        <h6 className="text-[13px] font-medium">Logout</h6>
         <IoLogOutOutline fontSize={18} />
       </div>
     </div>

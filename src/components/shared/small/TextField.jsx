@@ -54,7 +54,7 @@ const TextField = ({
 
   const inputVal = String(value ?? "").toLowerCase();
 
-  const isPhone = name?.toLowerCase().includes("phone");
+  const isPhone = type === "tel" || name?.toLowerCase().includes("phone");
   const isSSN = name?.toLowerCase().includes("ssn");
 
   const filteredSuggestions = Array.isArray(suggestions)
@@ -75,9 +75,7 @@ const TextField = ({
 
   const getDisplayValue = (value) => {
     if (!value) return "";
-
     if (isSSN && formatting === "3,2,4") return formatSSN(String(value));
-
     return value;
   };
 
@@ -144,9 +142,15 @@ const TextField = ({
         {isPhone ? (
           <div className="relative">
             <PhoneInput
-              numberInputProps={{ style: { outline: "none" } }}
+              numberInputProps={{
+                style: { outline: "none" },
+                required: required || undefined,
+                disabled,
+                name,
+              }}
               international
               defaultCountry="US"
+              disabled={disabled}
               placeholder={placeholder || "Enter phone number"}
               value={value || ""}
               onChange={(val) => {
@@ -160,11 +164,10 @@ const TextField = ({
               className={`${cn} relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${
                 leftIcon ? "pl-10" : ""
               } ${rightIcon ? "pr-10" : ""} ${
-                required && (!value || !isValidPhoneNumber(value)) ? "border-red-500 border-2" : "border-frameColor"
+                required && value && !isValidPhoneNumber(value) ? "border-red-500 border-2" : "border-frameColor"
               } ${!value && required && !isPdf && borderAndBgChangeIfEmpty ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
             />
 
-            {/* Validation */}
             {value && !isValidPhoneNumber(value) && <p className="mt-1 text-sm text-red-500">Invalid phone number</p>}
           </div>
         ) : (
@@ -200,12 +203,10 @@ const TextField = ({
                   key={index}
                   className="h-full cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-black"
                   onClick={() => {
-                    console.log("suggestion is", suggestion);
                     onChange({ target: { name, value: suggestion } });
                     setShowSuggestions(false);
                   }}
                   onMouseDown={() => {
-                    console.log("suggestion is", suggestion);
                     onChange({ target: { name, value: suggestion } });
                     setShowSuggestions(false);
                   }}

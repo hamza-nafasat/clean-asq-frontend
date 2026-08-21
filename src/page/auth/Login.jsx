@@ -7,6 +7,7 @@ import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import TextField from "../../components/shared/small/TextField";
 import { UseAIChat } from "@/context/AiChatContext";
+import { Link } from "react-router-dom";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -117,34 +118,55 @@ const Login = () => {
         <h1 className="mb-8 text-4xl font-bold">
           Welcome <span className="text-secondary">Back</span>
         </h1>
-        <p className="mb-8 max-w-md text-lg font-semibold text-gray-500">
-          Sign in to your account to manage your giveaways, view analytics, and grow your email list.
+        <p className="mb-4 max-w-md text-lg font-semibold text-gray-500">
+          Sign in to build application forms, manage branding, review submissions, and keep your onboarding workflows
+          moving.
         </p>
       </div>
 
       {/* Right Side */}
       <div className="flex w-full max-w-md flex-col justify-center rounded-xl bg-white p-10 shadow-2xl md:w-1/2">
         <h2 className="mb-2 text-2xl font-bold">Sign in to your account</h2>
+        <p className="mb-6 text-sm text-gray-500">
+          Enter your email and password to access your dashboard and continue managing applications.
+        </p>
 
-        <form className="space-y-6" action="#" method="POST">
+        <form className="space-y-3" onSubmit={loginHandler}>
           <div>
-            <TextField type="email" label="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <TextField
+              borderAndBgChangeIfEmpty={false}
+              type="email"
+              name="email"
+              label="Email address"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
           <div>
             <TextField
+              borderAndBgChangeIfEmpty={false}
               type="password"
+              name="password"
               label="Password"
+              autoComplete="current-password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+          <div className="text-right">
+            <Link className="text-textPrimary! hover:underline!" to="/forget-password">
+              Forget password
+            </Link>
+          </div>
 
           <Button
             disabled={isLoading}
-            onClick={loginHandler}
             type="submit"
             label="Sign in"
-            className="hover:bg-secondary! text-secondary border-secondary! w-full rounded-[20px]! border! bg-blue-600 hover:text-white!"
+            className="hover:bg-primary! text-textPrimary border-secondary! w-full rounded-[20px]! border!"
           />
         </form>
       </div>

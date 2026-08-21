@@ -37,6 +37,11 @@ const Brandings = lazy(() => import("./page/admin/dashboard/brandings/Brandings"
 const CreateBranding = lazy(() => import("./page/admin/dashboard/brandings/CreateBranding"));
 const Login = lazy(() => import("./page/auth/Login"));
 const Otp = lazy(() => import("./page/auth/Otp"));
+const ForgetPassword = lazy(() => import("./page/auth/ForgetPassword"));
+const ResetPassword = lazy(() => import("./page/auth/ResetPassword"));
+const ResetMailSent = lazy(() => import("./page/auth/ResetMailSent"));
+const ResetPasswordSuccessfully = lazy(() => import("./page/auth/ResetPasswordSuccessfully"));
+const MyProfile = lazy(() => import("./page/admin/dashboard/myProfile/MyProfile"));
 
 function App() {
   const dispatch = useDispatch();
@@ -188,6 +193,10 @@ function App() {
             <Route element={<ProtectedRoute user={!user} redirect={isGuest ? "/submission" : "/application-forms"} />}>
               <Route path="/login" element={<Login />} />
               <Route path="/otp" element={<Otp />} />
+              <Route path="/forget-password" element={<ForgetPassword />} />
+              <Route path="/reset-mail-sent" element={<ResetMailSent />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/reset-password-successfully" element={<ResetPasswordSuccessfully />} />
             </Route>
 
             {/* authentic routes admin only */}
@@ -210,6 +219,7 @@ function App() {
                 <Route path="verification-test" element={<VerificationTest />} />
                 <Route path="strategies" element={<Strategies />} />
                 <Route path="email" element={<Email />} />
+                <Route path="my-profile" element={<MyProfile />} />
               </Route>
 
               {/*all User Forms or application layout  , with out sidebar */}
