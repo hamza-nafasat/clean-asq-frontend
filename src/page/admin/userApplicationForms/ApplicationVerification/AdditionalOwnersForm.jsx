@@ -36,8 +36,6 @@ const AdditionalOwnersForm = () => {
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const [updateMyProfile] = useUpdateMyProfileMutation();
 
-  console.log("data", data);
-
   const updateBeneficialOwnersHandler = async (e) => {
     e.preventDefault();
 

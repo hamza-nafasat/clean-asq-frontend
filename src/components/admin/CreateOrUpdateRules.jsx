@@ -22,7 +22,7 @@ const CATEGORY_OPTIONS = [
   { label: "Update Status", value: "update_status" },
 ];
 const RECIPIENT_EMAIL_OPTIONS = [
-  { label: "Beneficial Owners", value: "beneficial_owners" },
+  { label: "Beneficial Owners", value: "beneficial_owners_key" },
   { label: "Applicant", value: "applicant" },
   { label: "All", value: "all" },
 ];

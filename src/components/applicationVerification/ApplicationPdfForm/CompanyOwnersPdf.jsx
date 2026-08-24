@@ -1,5 +1,5 @@
 import TextField from "@/components/shared/small/TextField";
-import { FIELD_TYPES } from "@/data/constants";
+import { FIELD_TYPES, formFieldsStaticKeys } from "@/data/constants";
 import { STATE_SUGGESTIONS } from "@/constants/constants";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
 import { Autocomplete } from "@react-google-maps/api";
@@ -51,17 +51,7 @@ const ownerPercentageField = {
   type: "range",
 };
 
-function CompanyOwnersPdf({
-  name,
-  reduxData,
-  fields,
-  blocks,
-  step,
-  isSignature,
-  formInnerData,
-  setFormInnerData,
-  sectionKey,
-}) {
+function CompanyOwnersPdf({ name, reduxData, fields, step, isSignature, formInnerData, setFormInnerData, sectionKey }) {
   const { formData, isDisabledAllFields } = useSelector((state) => state?.form);
   const [ownersFromLookup, setOwnersFromLookup] = useState([]);
   const [filteredOwners, setFilteredOwners] = useState([]);
@@ -219,7 +209,7 @@ function CompanyOwnersPdf({
     if (!formFields?.length) return;
     const initialForm = {};
     formFields.forEach((field) => {
-      if (field.type === "block" && field.name === "additional_owner") {
+      if (field.type === "block" && field.name === formFieldsStaticKeys.additional_owners_key) {
         if (!otherOwnersStateUniqueId) setOtherOwnersStateUniqueId(field?.uniqueId);
         if (!otherOwnersStateName) setOtherOwnersStateName(field?.name);
         const initialState = {
@@ -236,7 +226,7 @@ function CompanyOwnersPdf({
           driver_license_issuer: "",
           driver_license_issuer_state: "",
           driver_license_number: "",
-          IsCompleted: false,
+          isCompleted: false,
         };
         initialForm[field.uniqueId] = {
           name: field.name,
@@ -286,7 +276,9 @@ function CompanyOwnersPdf({
   const sectionForm = formInnerData?.[sectionKey] || {};
   const additionalOwnersYes =
     sectionForm?.[
-      Object.keys(sectionForm)?.find((objKey) => sectionForm[objKey]?.name === "additional_owners_own_25_percent_or_more")
+      Object.keys(sectionForm)?.find(
+        (objKey) => sectionForm[objKey]?.name === "additional_owners_own_25_percent_or_more",
+      )
     ]?.value === "yes";
 
   return (

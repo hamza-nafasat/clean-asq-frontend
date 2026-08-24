@@ -424,3 +424,44 @@ export const MAJOR_CITIES = [
   "Bundaberg",
   "Hervey Bay",
 ];
+
+export const formKeys = {
+  beneficial_owners_key: "beneficial_information", // beneficial owners section key which is section for form
+  additional_owners_hidden_section_key: "additional_owners_information", // additional owners info section key which is hidden section
+  company_lookup_data: "company_lookup_data", // company lookup data section key
+};
+
+export const formFieldsStaticKeys = {
+  additional_owners_key: "additional_owners", //static key for additional owners field which is inside beneficial owners page
+};
+
+export const idMissionFields = {
+  name: "idMissionName",
+  email: "idMissionEmail",
+  job_title: "idMissionCompanyTitle",
+  phone: "idMissionPhoneNumber",
+  address: "idMissionStreetAddress",
+  date_of_birth: "idMissionDateOfBirth",
+  id_number: "idMissionIdNumber",
+  id_type: "idMissionIdType",
+  id_issuer: "idMissionIdIssuer",
+  issue_date: "idMissionIssueDate",
+};
+
+export const additionalOwnersFields = {
+  name: "",
+  email: "",
+  role: "",
+  job_title: "",
+  have_detail: "",
+  phone: "",
+  ssn: "",
+  address: "",
+  percentage: "",
+  date_of_birth: "",
+  id_number: "",
+  id_type: "",
+  id_issuer: "",
+  id_issuer_date: "",
+  isCompleted: false,
+};

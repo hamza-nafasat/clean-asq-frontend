@@ -200,7 +200,6 @@ function App() {
             <Route path="/" element={<AdminDashboard />}>
               <Route path="application-form/:brandingName/:formId" element={<SingleApplication />} />
               <Route path="hidden/:formId/:sectionKey" element={<FormHiddenSection />} />
-              <Route path="manage-rules/:formId" element={<ManageRules />} />
               <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
               <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
               <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
@@ -226,6 +225,7 @@ function App() {
               <Route path="/" element={<AdminDashboard />}>
                 <Route index element={<Navigate to="application-forms" replace />} />
                 {/* HIDDEN FORM SECTION */}
+                <Route path="manage-rules/:formId" element={<ManageRules />} />
                 <Route path="all-roles" element={<AllRoles />} />
                 <Route path="all-users" element={<AdminAllUsers />} />
                 <Route path="application-forms" element={<ApplicationForms />} />

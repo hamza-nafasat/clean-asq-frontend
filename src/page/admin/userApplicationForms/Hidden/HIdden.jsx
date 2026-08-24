@@ -14,6 +14,7 @@ import { EditSectionDisplayTextFromatingModal } from "@/components/shared/small/
 import { LoadingWithTimer } from "@/components/shared/small/LoadingWithTimer";
 import Modal from "@/components/shared/small/Modal.jsx";
 import { FIELD_TYPES } from "@/data/constants";
+import useApplyBranding from "@/hooks/useApplyBranding";
 import { uploadFilesAndReplace } from "@/lib/utils";
 import { socket } from "@/main";
 import { useGetSpecialAccessOfSectionQuery, useSubmitSpecialAccessFormMutation } from "@/redux/apis/formApis";
@@ -31,16 +32,14 @@ function FormHiddenSection() {
   const accessToken = useSearchParams()?.[0]?.get("token");
   const sectionKey = params.sectionKey?.toLowerCase();
   const [isLoading, setIsLoading] = useState(false);
+  useApplyBranding({ formId });
   const { user } = useSelector((state) => state.auth);
   const {
     data: formData,
     refetch: formRefetch,
     isLoading: isLoadingFormData,
     error: formError,
-  } = useGetSpecialAccessOfSectionQuery(
-    { formId, token: accessToken, sectionKey },
-    { skip: !formId || !accessToken || !sectionKey },
-  );
+  } = useGetSpecialAccessOfSectionQuery({ formId, token: accessToken, sectionKey }, { skip: !formId || !sectionKey });
   const [customizeModal, setCustomizeModal] = useState(false);
   const [form, setForm] = useState({});
   const [section, setSection] = useState({});
@@ -48,6 +47,7 @@ function FormHiddenSection() {
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const [submitSpecialAccessForm, { isLoading: isSubmittingSpecialAccessForm }] = useSubmitSpecialAccessFormMutation();
 
+  const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [qrCode, setQrCode] = useState("");
   const [getQrAndWebLinkLoading, setGetQrAndWebLinkLoading] = useState(false);
   const [isIdMissionProcessing, setIsIdMissionProcessing] = useState(false);
@@ -71,7 +71,8 @@ function FormHiddenSection() {
     idMissionRoleFillingForCompany: { name: "idMissionRoleFillingForCompany", value: "" },
     idMissionData: { name: "idMissionData", value: "null" },
   });
-
+  console.log("idMissionVerifiedData", section?.fields);
+  const requiredFieldsNames = section?.fields?.filter((field) => field?.required).map((field) => field?.name);
   const isCreator = user?._id && user?._id === formData?.data?.owner && user?.role !== "guest";
 
   const getQrAndWebLink = useCallback(async () => {
@@ -322,6 +323,13 @@ function FormHiddenSection() {
     };
   }, [idMissionVerifiedData?.createdAt, sectionKey, user?.email]);
 
+  useEffect(() => {
+    if (requiredFieldsNames?.length) {
+      const isAllRequiredFieldsFilled = requiredFieldsNames?.every((field) => idMissionVerifiedData?.[field]?.value);
+      setIsAllRequiredFieldsFilled(isAllRequiredFieldsFilled);
+    }
+  }, [requiredFieldsNames, idMissionVerifiedData]);
+
   if (isLoading || isLoadingFormData) return <CustomLoading />;
   return (
     <div className="mt-14 h-full overflow-auto">
@@ -453,10 +461,10 @@ function FormHiddenSection() {
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
         <Button
-          className={`${isSubmittingSpecialAccessForm ? "pinter-events-none opacity-50" : ""} cursor-not-allowed`}
-          disabled={isSubmittingSpecialAccessForm}
+          className={`${isSubmittingSpecialAccessForm || !isAllRequiredFieldsFilled ? "pinter-events-none opacity-50" : ""} cursor-not-allowed`}
+          disabled={isSubmittingSpecialAccessForm || !isAllRequiredFieldsFilled}
           onClick={handleSubmitSpecialAccessForm}
-          label={"Submit"}
+          label={isAllRequiredFieldsFilled ? "Submit" : "Fill All Required Fields"}
         />
       </div>
       {customizeModal && (

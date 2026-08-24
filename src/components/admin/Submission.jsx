@@ -12,6 +12,7 @@ import Button from "../shared/small/Button";
 import CustomizableSelect from "../shared/small/CustomizeableSelect";
 import Modal from "../shared/small/Modal";
 import TextField from "../shared/small/TextField";
+import { formFieldsStaticKeys, formKeys } from "@/data/constants";
 
 function Submission({ forms }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -68,13 +69,15 @@ function Submission({ forms }) {
           forms?.map((form, index) => {
             console.log("form", form);
             const colors = form?.branding?.colors;
-            const additionalOwnerKey = Object.keys(form?.submitData?.beneficial_information)?.find(
-              (key) => form?.submitData?.beneficial_information?.[key]?.name == "additional_owner",
+            const additionalOwnerKey = Object.keys(form?.submitData?.[formKeys.beneficial_owners_key])?.find(
+              (key) =>
+                form?.submitData?.[formKeys.beneficial_owners_key]?.[key]?.name ==
+                formFieldsStaticKeys.additional_owners_key,
             );
-            const totalBeneficialOwners = form?.submitData?.beneficial_information?.[additionalOwnerKey]?.value?.filter(
-              (item) => item?.email,
-            );
-            const filledBeneficialOwners = totalBeneficialOwners?.filter((item) => item?.IsCompleted);
+            const totalBeneficialOwners = form?.submitData?.[formKeys.beneficial_owners_key]?.[
+              additionalOwnerKey
+            ]?.value?.filter((item) => item?.email);
+            const filledBeneficialOwners = totalBeneficialOwners?.filter((item) => item?.isCompleted);
             return (
               <div
                 key={index}

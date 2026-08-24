@@ -46,6 +46,7 @@ import Modal from "../shared/small/Modal";
 import TextField from "../shared/small/TextField";
 import ApplyBranding from "./brandings/globalBranding/ApplyBranding";
 import { LocationModalComponent } from "./varification/LocationStatusModal";
+import { formKeys } from "@/data/constants";
 
 const SERVER_URL = getEnv("SERVER_URL");
 
@@ -1168,7 +1169,17 @@ export default function ApplicationsCard() {
                         <MoreVertical size={18} />
                       </button>
                       {actionMenu === form?._id && (
-                        <div ref={buttonRef} className="absolute right-0 mt-2 w-40 rounded border bg-white shadow-lg">
+                        <div ref={buttonRef} className="absolute right-0 mt-2 w-50 rounded border bg-white shadow-lg">
+                          {/* customize beneficial owners page button
+                           */}
+                          <button
+                            className="block w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer"
+                            onClick={() => {
+                              navigate(`/hidden/${form?._id}/${formKeys.additional_owners_hidden_section_key}`);
+                            }}
+                          >
+                            Additional Owners
+                          </button>
                           <button
                             className="block w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer"
                             onClick={() => {
