@@ -13,6 +13,7 @@ import ApplicantSearch from "./ApplicantSearch";
 import { useSelector } from "react-redux";
 import checkPermission, { webPermissions } from "@/utils/checkPermission";
 import CopyPasteTooltip from "../shared/small/CopyPasteTooltip";
+import CustomLoading from "../shared/small/CustomLoading";
 // Table columns configuration
 
 const APPLICANT_TABLE_COLUMNS = [
@@ -231,19 +232,26 @@ const ApplicantsTable = ({
   }, []);
 
   const filteredApplicants = useMemo(() => {
-    setIsApplicantsLoading(true);
     return applicants?.filter((applicant) => {
-      const matchesDateRange =
-        (!filters?.dateRange?.start || applicant?.createdAt >= filters?.dateRange?.start) &&
-        (!filters?.dateRange?.end || applicant?.createdAt <= filters?.dateRange?.end);
-      const matchesStatus = !filters?.status || applicant?.status === filters?.status;
-      const matchesSearch =
-        !searchTerm || applicant?.user?.role?.name?.toLowerCase()?.includes(searchTerm?.toLowerCase() || "");
-      const name = applicant?.user?.firstName + " " + applicant?.user?.lastName;
-      const matchesName = !filters?.name || name?.toLowerCase()?.includes(filters?.name?.toLowerCase() || "");
-      const matchesType = !filters?.type || applicant?.type === filters?.type;
-      setIsApplicantsLoading(false);
-      return matchesDateRange && matchesStatus && matchesSearch && matchesName && matchesType;
+      try {
+        setIsApplicantsLoading(true);
+        const matchesDateRange =
+          (!filters?.dateRange?.start || applicant?.createdAt >= filters?.dateRange?.start) &&
+          (!filters?.dateRange?.end || applicant?.createdAt <= filters?.dateRange?.end);
+        const matchesStatus = !filters?.status || applicant?.status === filters?.status;
+        const matchesSearch =
+          !searchTerm || applicant?.user?.role?.name?.toLowerCase()?.includes(searchTerm?.toLowerCase() || "");
+        const name = applicant?.user?.firstName + " " + applicant?.user?.lastName;
+        const matchesName = !filters?.name || name?.toLowerCase()?.includes(filters?.name?.toLowerCase() || "");
+        const matchesType = !filters?.type || applicant?.type === filters?.type;
+        return matchesDateRange && matchesStatus && matchesSearch && matchesName && matchesType;
+      } catch (error) {
+        console.error("Error filtering applicants:", error);
+        toast.error(error?.data?.message || error?.message || "Failed to filter applicants");
+        return [];
+      } finally {
+        setIsApplicantsLoading(false);
+      }
     });
   }, [applicants, filters, searchTerm]);
 
@@ -254,6 +262,13 @@ const ApplicantsTable = ({
         icon: <Trash size={16} className="mr-2" />,
         onClick: (row) => {
           setDeleteConfirmation({ id: row?._id, type: row?.type });
+          setActionMenu(null);
+        },
+      },
+      {
+        name: "Continue",
+        icon: <ArrowRight size={16} className="mr-2" />,
+        onClick: (row) => {
           setActionMenu(null);
         },
       },
@@ -446,8 +461,13 @@ const ApplicantsTable = ({
         <DataTable
           columns={columns}
           data={filteredApplicants}
-          progressPending={isApplicantsLoading}
-          noDataComponent="No applicants found"
+          progressPending={isLoading || isApplicantsLoading}
+          noDataComponent={
+            <div className="flex items-center justify-center h-full flex-col gap-2 p-10">
+              <h3 className="text-textPrimary text-xl font-bold">No applicants found</h3>
+            </div>
+          }
+          progressPendingMessage={<CustomLoading className="w-10 h-10" />}
           highlightOnHover
           fixedHeader
           persistTableHead

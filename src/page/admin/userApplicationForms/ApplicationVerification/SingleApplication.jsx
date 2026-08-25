@@ -162,16 +162,13 @@ export default function SingleApplication() {
     data: { name: "data", value: "null" },
   });
   const autocompleteRef = useRef(null);
-  const idMissionFormRef = useRef(null); // used by DOM field discovery
-  const initialDataLoadRef = useRef(null); // tracks the in-flight getSavedFormDataAndSaveInRedux promise
-  const navigatingAwayRef = useRef(false); // set true before navigate() to suppress idmission-qr stage during the outbound render
-  // Once webhook/scan data is applied, draft hydrate must not overwrite it with empty values.
+  const idMissionFormRef = useRef(null);
+  const initialDataLoadRef = useRef(null);
+  const navigatingAwayRef = useRef(false);
   const idMissionScanAppliedRef = useRef(false);
-  // Manual entry may show an intentionally empty form; scan path must not.
   const idMissionManualEntryRef = useRef(false);
   const hasFocusedDetailsRef = useRef(false);
   const submitFromEnterRef = useRef(null);
-  // Stable refs so socket listeners are registered once (profile sync must not rebind/off them).
   const userRef = useRef(user);
   const dispatchRef = useRef(dispatch);
   const getUserProfileRef = useRef(getUserProfile);
@@ -181,8 +178,6 @@ export default function SingleApplication() {
   getUserProfileRef.current = getUserProfile;
   updateMyProfileRef.current = updateMyProfile;
 
-  // ─── Render-level state snapshot ────────────────────────────────────────────
-  // Fires on every render so we can trace what changed.
   const aiStageForLog =
     !emailVerified || emailVerifiedLoading ? "email" : !idMissionVerified ? "idmission-qr" : "idmission-details";
   console.log(
@@ -198,7 +193,6 @@ export default function SingleApplication() {
 
   const idMissionSection = form?.data?.sections?.find((sec) => sec?.title?.toLowerCase() == "id_verification_blk");
 
-  // Download on ID Mission details only (stage flags — not form ref during first paint).
   const {
     buttonLabel: downloadLabel,
     shouldShow: showDownload,

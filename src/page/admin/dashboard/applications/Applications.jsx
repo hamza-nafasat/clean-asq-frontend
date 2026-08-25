@@ -80,7 +80,7 @@ function Applications() {
             setSelectedFormId={setSelectedFormId}
             setOpenSpecialAccess={setOpenSpecialAccess}
             applicants={applicants}
-            isLoading={isLoading}
+            isLoading={isLoading || isLoadingForm}
             onView={handleViewApplicant}
             onDeleteApplication={handleDeleteApplication}
             isLoadingDelete={isLoadingDelete}
