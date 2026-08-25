@@ -385,7 +385,7 @@ const Profile = ({ isGuest, setIsProfileOpen }) => {
         </Link>
       )}
 
-      {!isGuest && (
+      {/* {!isGuest && (
         <Link
           data-testid="my-profile-button"
           to="/my-profile"
@@ -395,7 +395,7 @@ const Profile = ({ isGuest, setIsProfileOpen }) => {
           <h6 className="text-[13px] font-medium">My Profile</h6>
           <IoPersonOutline fontSize={18} />
         </Link>
-      )}
+      )} */}
 
       <div
         data-testid="my-profile-button"

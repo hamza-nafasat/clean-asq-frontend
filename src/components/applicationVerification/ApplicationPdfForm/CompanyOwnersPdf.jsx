@@ -1,9 +1,9 @@
 import TextField from "@/components/shared/small/TextField";
-import { FIELD_TYPES, formFieldsStaticKeys } from "@/data/constants";
+import { additionalOwnersFields, FIELD_TYPES, formFieldsStaticKeys } from "@/data/constants";
 import { STATE_SUGGESTIONS } from "@/constants/constants";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
 import { Autocomplete } from "@react-google-maps/api";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GoPlus } from "react-icons/go";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
@@ -19,6 +19,17 @@ import {
   SelectInputType,
 } from "./shared/DynamicFieldForPdf";
 import { SimpleRadioInputType } from "@/components/shared/small/DynamicField";
+
+const makeRowId = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `row_${Math.random().toString(36).slice(2)}${Date.now()}`;
+
+const makeBlankOwner = () =>
+  Object.keys(additionalOwnersFields).reduce((acc, key) => {
+    acc[key] = "";
+    return acc;
+  }, {});
 
 const ssnField = {
   label: "What is your Social Security, Tax, or National ID Number?",
@@ -53,33 +64,168 @@ const ownerPercentageField = {
 
 function CompanyOwnersPdf({ name, reduxData, fields, step, isSignature, formInnerData, setFormInnerData, sectionKey }) {
   const { formData, isDisabledAllFields } = useSelector((state) => state?.form);
+  const addressAutocompleteRefs = useRef({});
+
   const [ownersFromLookup, setOwnersFromLookup] = useState([]);
   const [filteredOwners, setFilteredOwners] = useState([]);
-  const [otherOwnersStateName, setOtherOwnersStateName] = useState("");
-  const [otherOwnersStateUniqueId, setOtherOwnersStateUniqueId] = useState("");
-  const [formFields, setFormFields] = useState([]);
-  const addressAutocompleteRefs = useRef({});
+  const [suggestFor, setSuggestFor] = useState(null);
+  const [rowIds, setRowIds] = useState([]);
+
+  const ownersBlock = useMemo(
+    () => fields?.find((f) => f.type === "block" && f.name === formFieldsStaticKeys.additional_owners_key),
+    [fields],
+  );
+  const otherOwnersStateUniqueId = ownersBlock?.uniqueId || "";
+  const otherOwnersStateName = ownersBlock?.name || "";
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const sectionForm = formInnerData?.[sectionKey] ?? {};
+
+  const owners = useMemo(
+    () => sectionForm?.[otherOwnersStateUniqueId]?.value || [],
+    [otherOwnersStateUniqueId, sectionForm],
+  );
+
+  useEffect(() => {
+    setRowIds((prev) => {
+      if (prev.length === owners.length) return prev;
+      if (prev.length < owners.length) {
+        return [...prev, ...Array.from({ length: owners.length - prev.length }, makeRowId)];
+      }
+      return prev.slice(0, owners.length);
+    });
+  }, [owners.length]);
+
+  const rowKeyAt = (index) => rowIds[index] ?? `idx_${index}`;
+
+  const idMissionData = formData?.idMission || formInnerData?.idMission;
+  const idMissionRoleValue = idMissionData?.roleFillingForCompany?.value || idMissionData?.roleFillingForCompany;
+  const isRollingOwner = sectionForm?.rolling_owner_is_also_owner?.value === "yes";
+
+  const formFields = useMemo(() => {
+    const base = Array.isArray(fields) ? fields : [];
+
+    if (idMissionRoleValue === "primaryOperatorAndController" || idMissionRoleValue === "both") {
+      return isRollingOwner
+        ? [ssnField, areUAnOwnerField, ownerPercentageField, ...base]
+        : [ssnField, areUAnOwnerField, ...base];
+    }
+    if (idMissionRoleValue === "primaryContact") {
+      return isRollingOwner ? [areUAnOwnerField, ssnField, ownerPercentageField, ...base] : [areUAnOwnerField, ...base];
+    }
+
+    // Submitted values still need to render if idMission is not in redux yet.
+    const extras = [];
+    if (sectionForm?.rolling_owner_ssn) extras.push(ssnField);
+    if (sectionForm?.rolling_owner_is_also_owner) extras.push(areUAnOwnerField);
+    if (isRollingOwner || sectionForm?.rolling_owner_percentage) extras.push(ownerPercentageField);
+    return extras.length ? [...extras, ...base] : [...base];
+  }, [fields, idMissionRoleValue, isRollingOwner, sectionForm]);
+
+  const getOwnerVal = useCallback((owner, key) => owner?.[key] ?? "", []);
+
+  const handleChangeOnOtherOwnersData = useCallback(
+    (e, index, isFilter = false) => {
+      const fieldKey = e.target.name;
+      const value = e.target.value;
+
+      if (fieldKey === "name") {
+        setFilteredOwners(
+          value ? ownersFromLookup.filter((o) => String(o).toLowerCase().includes(value.toLowerCase())) : [],
+        );
+        setSuggestFor(value ? index : null);
+      }
+
+      setFormInnerData((prev) => {
+        const updatedOwners = [...(prev?.[sectionKey]?.[otherOwnersStateUniqueId]?.value || [])];
+        updatedOwners[index] = { ...updatedOwners[index], [fieldKey]: value };
+        return {
+          ...prev,
+          [sectionKey]: {
+            ...prev?.[sectionKey],
+            [otherOwnersStateUniqueId]: { name: otherOwnersStateName, value: updatedOwners },
+          },
+        };
+      });
+
+      if (isFilter) {
+        setFilteredOwners([]);
+        setSuggestFor(null);
+      }
+    },
+    [ownersFromLookup, otherOwnersStateUniqueId, otherOwnersStateName, sectionKey, setFormInnerData],
+  );
+
+  const setOwnerVal = useCallback(
+    (key, value, index, isFilter = false) =>
+      handleChangeOnOtherOwnersData({ target: { name: key, value } }, index, isFilter),
+    [handleChangeOnOtherOwnersData],
+  );
+
+  const handleRemoveOtherOwnersData = useCallback(
+    (index) => {
+      const removedKey = rowIds[index];
+      if (removedKey) delete addressAutocompleteRefs.current[removedKey];
+
+      setFormInnerData((prev) => {
+        const updatedOwners = [...(prev?.[sectionKey]?.[otherOwnersStateUniqueId]?.value || [])];
+        updatedOwners.splice(index, 1);
+        return {
+          ...prev,
+          [sectionKey]: {
+            ...prev?.[sectionKey],
+            [otherOwnersStateUniqueId]: { name: otherOwnersStateName, value: updatedOwners },
+          },
+        };
+      });
+      setRowIds((prev) => prev.filter((_, i) => i !== index));
+      setFilteredOwners([]);
+      setSuggestFor(null);
+    },
+    [rowIds, otherOwnersStateUniqueId, otherOwnersStateName, sectionKey, setFormInnerData],
+  );
+
+  const handleAddOwner = useCallback(() => {
+    setFormInnerData((prev) => ({
+      ...prev,
+      [sectionKey]: {
+        ...prev?.[sectionKey],
+        [otherOwnersStateUniqueId]: {
+          name: otherOwnersStateName,
+          value: [...(prev?.[sectionKey]?.[otherOwnersStateUniqueId]?.value || []), makeBlankOwner()],
+        },
+      },
+    }));
+    setRowIds((prev) => [...prev, makeRowId()]);
+  }, [otherOwnersStateUniqueId, otherOwnersStateName, sectionKey, setFormInnerData]);
+
+  const onLoadAddress = (rowKey) => (autocomplete) => {
+    addressAutocompleteRefs.current[rowKey] = autocomplete;
+  };
+  const onPlaceChangedAddress = (rowKey, index) => () => {
+    const place = addressAutocompleteRefs.current[rowKey]?.getPlace();
+    if (!place?.formatted_address) return;
+    setOwnerVal("address", place.formatted_address, index);
+  };
 
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
       if (!file) return toast.error("Please select a file");
 
-      if (file) {
-        const oldSign = formInnerData?.[sectionKey]?.["signature"]?.value;
-        if (oldSign?.publicId) {
-          const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
-          if (!result) return toast.error("File Not Deleted Please Try Again");
-        }
-        const res = await uploadImageOnCloudinary(file);
-        if (!res.publicId || !res.secureUrl || !res.resourceType) {
-          return toast.error("File Not Uploaded Please Try Again");
-        }
-        setFormInnerData((prev) => ({
-          ...prev,
-          [sectionKey]: { ...prev?.[sectionKey], signature: { name: "signature", value: res } },
-        }));
-        toast.success("Signature uploaded successfully");
+      const oldSign = formInnerData?.[sectionKey]?.signature?.value;
+      if (oldSign?.publicId) {
+        const result = await deleteImageFromCloudinary(oldSign.publicId, oldSign.resourceType);
+        if (!result) return toast.error("File Not Deleted Please Try Again");
       }
+      const res = await uploadImageOnCloudinary(file);
+      if (!res.publicId || !res.secureUrl || !res.resourceType) {
+        return toast.error("File Not Uploaded Please Try Again");
+      }
+      setFormInnerData((prev) => ({
+        ...prev,
+        [sectionKey]: { ...prev?.[sectionKey], signature: { name: "signature", value: res } },
+      }));
+      toast.success("Signature uploaded successfully");
     } catch (error) {
       console.log("error while uploading signature", error);
     } finally {
@@ -87,150 +233,29 @@ function CompanyOwnersPdf({ name, reduxData, fields, step, isSignature, formInne
     }
   };
 
-  const onLoadAddress = (index) => (autocomplete) => {
-    addressAutocompleteRefs.current[index] = autocomplete;
-  };
-  const onPlaceChangedAddress = (index) => () => {
-    const place = addressAutocompleteRefs.current[index]?.getPlace();
-    if (!place?.formatted_address) return;
-    handleChangeOnOtherOwnersData({ target: { name: "address", value: place.formatted_address } }, index);
-  };
-
-  const handleChangeOnOtherOwnersData = (e, index, isFilter = false) => {
-    if (e.target.name == "name") {
-      if (e.target.value) {
-        setFilteredOwners(
-          ownersFromLookup.filter((owner) => owner.toLowerCase().includes(e.target.value.toLowerCase())),
-        );
-      } else {
-        setFilteredOwners([]);
-      }
-    }
-    const updatedOwners = [...(formInnerData?.[sectionKey]?.[otherOwnersStateUniqueId]?.value || [])];
-    updatedOwners[index] = {
-      ...updatedOwners[index],
-      [e.target.name]: e.target.value,
-    };
-    setFormInnerData((prev) => ({
-      ...prev,
-      [sectionKey]: {
-        ...prev?.[sectionKey],
-        [otherOwnersStateUniqueId]: { name: otherOwnersStateName, value: updatedOwners },
-      },
-    }));
-    if (isFilter) setFilteredOwners([]);
-  };
-
-  const handleRemoveOtherOwnersData = (index) => {
-    const updatedOwners = [...(formInnerData?.[sectionKey]?.[otherOwnersStateUniqueId]?.value || [])];
-    updatedOwners.splice(index, 1);
-    setFormInnerData((prev) => ({
-      ...prev,
-      [sectionKey]: {
-        ...prev?.[sectionKey],
-        [otherOwnersStateUniqueId]: { name: otherOwnersStateName, value: updatedOwners },
-      },
-    }));
-  };
-
-  const handleAddOwner = () => {
-    setFormInnerData((prev) => ({
-      ...prev,
-      [sectionKey]: {
-        ...prev?.[sectionKey],
-        [otherOwnersStateUniqueId]: {
-          name: otherOwnersStateName,
-          value: [
-            ...(prev?.[sectionKey]?.[otherOwnersStateUniqueId]?.value || []),
-            { name: "", email: "", ssn: "", percentage: "" },
-          ],
-        },
-      },
-    }));
-  };
-
   useEffect(() => {
-    const idMissionData = formData?.idMission || formInnerData?.idMission;
-    const idMissionField = idMissionData?.roleFillingForCompany?.value || idMissionData?.roleFillingForCompany;
-    const submittedSection = formInnerData?.[sectionKey] || {};
-    const isAlsoOwner = submittedSection?.rolling_owner_is_also_owner?.value;
-    const schemaFields = Array.isArray(fields) ? [...fields] : [];
-    let baseFields = schemaFields;
-
-    if (idMissionField == "primaryOperatorAndController" || idMissionField == "both") {
-      baseFields =
-        isAlsoOwner == "yes"
-          ? [ssnField, areUAnOwnerField, ownerPercentageField, ...schemaFields]
-          : [ssnField, areUAnOwnerField, ...schemaFields];
-    } else if (idMissionField == "primaryContact") {
-      baseFields =
-        isAlsoOwner == "yes"
-          ? [areUAnOwnerField, ssnField, ownerPercentageField, ...schemaFields]
-          : [areUAnOwnerField, ...schemaFields];
-    } else {
-      // Submitted values still need to render if idMission is not in redux yet.
-      const extras = [];
-      if (submittedSection?.rolling_owner_ssn) extras.push(ssnField);
-      if (submittedSection?.rolling_owner_is_also_owner) extras.push(areUAnOwnerField);
-      if (isAlsoOwner == "yes" || submittedSection?.rolling_owner_percentage) extras.push(ownerPercentageField);
-      if (extras.length) baseFields = [...extras, ...schemaFields];
-    }
-
-    setFormFields(baseFields);
-  }, [fields, formInnerData, formData?.idMission, sectionKey]);
-
-  // add owners for suggestions
-  useEffect(() => {
-    if (formData) {
-      const lookupData = formData?.company_lookup_data;
-      const searchField = step?.ownerSuggesstions || ["founders"];
-      const founders = [];
-      searchField.forEach((field) => {
-        let data = lookupData?.find((item) => item?.name == field)?.result;
-        if (Array.isArray(data) && typeof data === "object") {
-          founders.push(...data);
-        } else if (typeof data === "string") {
-          founders.push(data);
-        } else if (typeof data === "number") {
-          founders.push(data);
-        }
-      });
-      if (founders?.length) {
-        const uniqueFounders = founders.filter((item, index) => founders.indexOf(item) === index);
-        setOwnersFromLookup(uniqueFounders);
-      } else {
-        setOwnersFromLookup([]);
-      }
-    }
+    if (!formData) return;
+    const lookupData = formData?.company_lookup_data;
+    const searchField = step?.ownerSuggesstions || ["founders"];
+    const founders = [];
+    searchField.forEach((field) => {
+      const data = lookupData?.find((item) => item?.name === field)?.result;
+      if (Array.isArray(data)) founders.push(...data);
+      else if (typeof data === "string" || typeof data === "number") founders.push(data);
+    });
+    setOwnersFromLookup(founders.length ? [...new Set(founders)] : []);
   }, [formData, step?.ownerSuggesstions]);
 
-  // making form states according changing fields
   useEffect(() => {
     if (!formFields?.length) return;
+
     const initialForm = {};
     formFields.forEach((field) => {
       if (field.type === "block" && field.name === formFieldsStaticKeys.additional_owners_key) {
-        if (!otherOwnersStateUniqueId) setOtherOwnersStateUniqueId(field?.uniqueId);
-        if (!otherOwnersStateName) setOtherOwnersStateName(field?.name);
-        const initialState = {
-          name: "",
-          email: "",
-          role: "",
-          job_title: "",
-          have_detail: "",
-          phone: "",
-          ssn: "",
-          address: "",
-          percentage: "",
-          date_of_birth: "",
-          driver_license_issuer: "",
-          driver_license_issuer_state: "",
-          driver_license_number: "",
-          isCompleted: false,
-        };
+        const saved = reduxData?.[field?.uniqueId]?.value;
         initialForm[field.uniqueId] = {
           name: field.name,
-          value: reduxData?.[field?.uniqueId]?.value || [initialState],
+          value: Array.isArray(saved) && saved.length ? saved : [makeBlankOwner()],
         };
       } else {
         initialForm[field.uniqueId] = {
@@ -239,6 +264,7 @@ function CompanyOwnersPdf({ name, reduxData, fields, step, isSignature, formInne
         };
       }
     });
+
     if (isSignature) {
       const isSignatureExistingData = {};
       if (reduxData?.signature?.value?.publicId)
@@ -262,19 +288,9 @@ function CompanyOwnersPdf({ name, reduxData, fields, step, isSignature, formInne
       ...prev,
       [sectionKey]: { ...(prev?.[sectionKey] ?? {}), ...toAdd },
     }));
-  }, [
-    formFields,
-    formInnerData,
-    isSignature,
-    otherOwnersStateName,
-    otherOwnersStateUniqueId,
-    reduxData,
-    sectionKey,
-    setFormInnerData,
-  ]);
+  }, [formFields, formInnerData, isSignature, reduxData, sectionKey, setFormInnerData]);
 
-  const sectionForm = formInnerData?.[sectionKey] || {};
-  const additionalOwnersYes =
+  const showAdditionalOwners =
     sectionForm?.[
       Object.keys(sectionForm)?.find(
         (objKey) => sectionForm[objKey]?.name === "additional_owners_own_25_percent_or_more",
@@ -300,344 +316,285 @@ function CompanyOwnersPdf({ name, reduxData, fields, step, isSignature, formInne
           <div className="rounded-xl border border-[#F0F0F0] p-4">
             {formFields?.map((field, index) => {
               if (field.name === "main_owner_own_25_percent_or_more" || field.type === "block") return null;
-              if (field.type === FIELD_TYPES.SELECT) {
+
+              const key = field.uniqueId || index;
+              const common = {
+                field,
+                form: formInnerData?.[sectionKey],
+                setForm: setFormInnerData,
+                sectionKey,
+                className: "",
+              };
+
+              if (field.type === FIELD_TYPES.SELECT)
                 return (
-                  <div key={index} className="mt-4">
-                    <SelectInputType
-                      field={field}
-                      form={formInnerData?.[sectionKey]}
-                      setForm={setFormInnerData}
-                      sectionKey={sectionKey}
-                      className={""}
-                    />
+                  <div key={key} className="mt-4">
+                    <SelectInputType {...common} />
                   </div>
                 );
-              }
-              if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
+              if (field.type === FIELD_TYPES.MULTI_CHECKBOX)
                 return (
-                  <div key={index} className="mt-4">
-                    <MultiCheckboxInputType
-                      field={field}
-                      form={formInnerData?.[sectionKey]}
-                      setForm={setFormInnerData}
-                      sectionKey={sectionKey}
-                      className={""}
-                    />
+                  <div key={key} className="mt-4">
+                    <MultiCheckboxInputType {...common} />
                   </div>
                 );
-              }
-              if (field.type === FIELD_TYPES.RADIO) {
+              if (field.type === FIELD_TYPES.RADIO)
                 return (
-                  <div key={index} className="mt-4">
-                    <RadioInputType
-                      field={field}
-                      form={formInnerData?.[sectionKey]}
-                      setForm={setFormInnerData}
-                      sectionKey={sectionKey}
-                      className={""}
-                    />
+                  <div key={key} className="mt-4">
+                    <RadioInputType {...common} />
                   </div>
                 );
-              }
-              if (field.type === FIELD_TYPES.FILE) {
+              if (field.type === FIELD_TYPES.FILE)
                 return (
-                  <div key={index} className="mt-4">
-                    <FileInputType
-                      field={field}
-                      form={formInnerData?.[sectionKey]}
-                      setForm={setFormInnerData}
-                      sectionKey={sectionKey}
-                      className={""}
-                    />
+                  <div key={key} className="mt-4">
+                    <FileInputType {...common} />
                   </div>
                 );
-              }
-              if (field.type === FIELD_TYPES.RANGE) {
+              if (field.type === FIELD_TYPES.RANGE)
                 return (
-                  <div key={index} className="mt-4">
-                    <RangeInputType
-                      field={field}
-                      form={formInnerData?.[sectionKey]}
-                      setForm={setFormInnerData}
-                      sectionKey={sectionKey}
-                      className={""}
-                    />
+                  <div key={key} className="mt-4">
+                    <RangeInputType {...common} />
                   </div>
                 );
-              }
-              if (field.type === FIELD_TYPES.CHECKBOX) {
+              if (field.type === FIELD_TYPES.CHECKBOX)
                 return (
-                  <div key={index} className="mt-4">
-                    <CheckboxInputType
-                      field={field}
-                      placeholder={field.placeholder}
-                      form={formInnerData?.[sectionKey]}
-                      setForm={setFormInnerData}
-                      sectionKey={sectionKey}
-                      className={""}
-                    />
+                  <div key={key} className="mt-4">
+                    <CheckboxInputType {...common} placeholder={field.placeholder} />
                   </div>
                 );
-              }
+
               return (
-                <div key={index} className="mt-4">
-                  <OtherInputType
-                    field={field}
-                    placeholder={field.placeholder}
-                    form={formInnerData?.[sectionKey]}
-                    setForm={setFormInnerData}
-                    sectionKey={sectionKey}
-                    className={""}
-                  />
+                <div key={key} className="mt-4">
+                  <OtherInputType {...common} placeholder={field.placeholder} />
                 </div>
               );
             })}
 
-            {additionalOwnersYes ? (
+            {showAdditionalOwners ? (
               <div className="flex flex-col gap-3">
-                {formInnerData?.[sectionKey]?.[otherOwnersStateUniqueId]?.value?.map(
-                  (
-                    {
-                      name,
-                      email,
-                      ssn,
-                      role,
-                      job_title,
-                      have_detail,
-                      address,
-                      phone,
-                      percentage,
-                      date_of_birth,
-                      driver_license_issuer_state,
-                      driver_license_number,
-                    },
-                    index,
-                  ) => {
-                    return (
-                      <div
-                        key={index}
-                        className="mt-3 flex min-w-full flex-col items-center justify-between gap-4 border-2 border-[#066969] p-4 md:flex-row"
-                      >
-                        <div className="wrap flex w-full min-w-100 flex-col gap-3">
-                          <div className="relative flex w-full gap-4">
-                            <TextField
-                              disabled={isDisabledAllFields}
-                              label="Owner or primary operator name"
-                              name="name"
-                              placeholder="First name, middle name (optional), last name"
-                              value={name}
-                              onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                            />
-                            {filteredOwners?.length > 0 && (
-                              <ul className="absolute top-20 mt-1 w-full max-w-100 rounded border bg-white shadow">
-                                {filteredOwners.map((ownerName, i) => (
-                                  <li
-                                    key={i}
-                                    onClick={() =>
-                                      handleChangeOnOtherOwnersData(
-                                        { target: { name: "name", value: ownerName } },
-                                        index,
-                                        true,
-                                      )
-                                    }
-                                    className="cursor-pointer px-2 py-1 hover:bg-gray-200"
-                                  >
-                                    {ownerName}
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                            <TextField
-                              name="email"
-                              disabled={isDisabledAllFields}
-                              label="Email Address"
-                              type="email"
-                              placeholder="e.g. john.doe@email.com"
-                              value={email}
-                              required
-                              onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                            />
-                            <TextField
-                              name="phone"
-                              disabled={isDisabledAllFields}
-                              label="Phone Number"
-                              formatting={"3,3,4"}
-                              type="text"
-                              placeholder="e.g. 555-867-5309"
-                              value={phone}
-                              onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                              className={"max-w-[30%] min-w-100"}
-                            />
-                          </div>
-                          <div className="flex w-full gap-4">
-                            <SimpleRadioInputType
-                              field={{
-                                label: "Role",
-                                name: "role",
-                                options: [
-                                  { label: "Primary Operator", value: "primary_operator" },
-                                  { label: "Beneficial Owner", value: "beneficial_owner" },
-                                  { label: "Both", value: "both" },
-                                ],
-                                required: true,
-                              }}
-                              groupName={`role_${index}`}
-                              form={{ role }}
-                              disabled={isDisabledAllFields}
-                              onChange={(e) =>
-                                handleChangeOnOtherOwnersData(
-                                  { target: { name: "role", value: e.target.value } },
-                                  index,
-                                )
-                              }
-                            />
-                            <SimpleRadioInputType
-                              field={{
-                                label: (
-                                  <span className="inline-flex items-center gap-1">
-                                    Do you have full information for this person?
-                                    <span className="group relative inline-flex items-center">
-                                      <span className="cursor-help text-gray-400 text-sm">ⓘ</span>
-                                      <span className="invisible group-hover:visible absolute left-5 top-0 z-50 w-72 rounded bg-gray-800 p-2 text-xs font-normal text-white shadow-lg">
-                                        "Full information" includes: Social Security, Tax, or National ID number · Home
-                                        address · Date of birth · Ownership percentage · Government-issued ID number and
-                                        issuer
-                                      </span>
+                {owners.map((owner, index) => {
+                  const rowKey = rowKeyAt(index);
+
+                  const ownerName = getOwnerVal(owner, "name");
+                  const email = getOwnerVal(owner, "email");
+                  const ssn = getOwnerVal(owner, "ssn");
+                  const role = getOwnerVal(owner, "role");
+                  const job_title = getOwnerVal(owner, "job_title");
+                  const have_detail = getOwnerVal(owner, "have_detail");
+                  const address = getOwnerVal(owner, "address");
+                  const phone = getOwnerVal(owner, "phone");
+                  const percentage = String(getOwnerVal(owner, "percentage"));
+                  const date_of_birth = getOwnerVal(owner, "date_of_birth");
+                  const id_number = getOwnerVal(owner, "id_number") || getOwnerVal(owner, "driver_license_number");
+                  const id_issuer =
+                    getOwnerVal(owner, "id_issuer") || getOwnerVal(owner, "driver_license_issuer_state");
+
+                  return (
+                    <div
+                      key={rowKey}
+                      className="mt-3 flex min-w-full flex-col items-center justify-between gap-4 border-2 border-[#066969] p-4 md:flex-row"
+                    >
+                      <div className="wrap flex w-full min-w-100 flex-col gap-3">
+                        <div className="relative flex w-full gap-4">
+                          <TextField
+                            disabled={isDisabledAllFields}
+                            label="Owner or primary operator name"
+                            name="name"
+                            placeholder="First name, middle name (optional), last name"
+                            value={ownerName}
+                            onChange={(e) => setOwnerVal("name", e.target.value, index)}
+                          />
+                          {suggestFor === index && filteredOwners?.length > 0 && (
+                            <ul className="absolute top-20 z-40 mt-1 w-full max-w-100 rounded border bg-white shadow">
+                              {filteredOwners.map((suggestion, i) => (
+                                <li
+                                  key={i}
+                                  onClick={() => setOwnerVal("name", suggestion, index, true)}
+                                  className="cursor-pointer px-2 py-1 hover:bg-gray-200"
+                                >
+                                  {suggestion}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                          <TextField
+                            name="email"
+                            disabled={isDisabledAllFields}
+                            label="Email Address"
+                            type="email"
+                            placeholder="e.g. john.doe@email.com"
+                            value={email}
+                            required
+                            onChange={(e) => setOwnerVal("email", e.target.value, index)}
+                          />
+                          <TextField
+                            name="phone"
+                            disabled={isDisabledAllFields}
+                            label="Phone Number"
+                            formatting={"3,3,4"}
+                            type="text"
+                            placeholder="e.g. 555-867-5309"
+                            value={phone}
+                            onChange={(e) => setOwnerVal("phone", e.target.value, index)}
+                            className={"max-w-[30%] min-w-100"}
+                          />
+                        </div>
+
+                        <div className="flex w-full gap-4">
+                          <SimpleRadioInputType
+                            field={{
+                              label: "Role",
+                              name: "role",
+                              options: [
+                                { label: "Primary Operator", value: "primary_operator" },
+                                { label: "Beneficial Owner", value: "beneficial_owner" },
+                                { label: "Both", value: "both" },
+                              ],
+                              required: true,
+                            }}
+                            groupName={`role_${rowKey}`}
+                            form={{ role }}
+                            disabled={isDisabledAllFields}
+                            onChange={(e) => setOwnerVal("role", e.target.value, index)}
+                          />
+                          <SimpleRadioInputType
+                            field={{
+                              label: (
+                                <span className="inline-flex items-center gap-1">
+                                  Do you have full information for this person?
+                                  <span className="group relative inline-flex items-center">
+                                    <span className="cursor-help text-sm text-gray-400">ⓘ</span>
+                                    <span className="invisible absolute left-5 top-0 z-50 w-72 rounded bg-gray-800 p-2 text-xs font-normal text-white shadow-lg group-hover:visible">
+                                      "Full information" includes: Social Security, Tax, or National ID number · Home
+                                      address · Date of birth · Ownership percentage · Government-issued ID number and
+                                      issuer
                                     </span>
                                   </span>
-                                ),
-                                name: "have_detail",
-                                options: [
-                                  { label: "No", value: "no" },
-                                  { label: "Yes", value: "yes" },
-                                ],
-                                required: true,
-                              }}
-                              groupName={`have_detail_${index}`}
-                              form={{ have_detail }}
+                                </span>
+                              ),
+                              name: "have_detail",
+                              options: [
+                                { label: "No", value: "no" },
+                                { label: "Yes", value: "yes" },
+                              ],
+                              required: true,
+                            }}
+                            groupName={`have_detail_${rowKey}`}
+                            form={{ have_detail }}
+                            disabled={isDisabledAllFields}
+                            onChange={(e) => setOwnerVal("have_detail", e.target.value, index)}
+                          />
+                        </div>
+
+                        {(role === "primary_operator" || role === "both") && (
+                          <div className="flex w-full gap-4">
+                            <TextField
+                              name="job_title"
                               disabled={isDisabledAllFields}
-                              onChange={(e) =>
-                                handleChangeOnOtherOwnersData(
-                                  { target: { name: "have_detail", value: e.target.value } },
-                                  index,
-                                )
-                              }
+                              label="Job Title"
+                              value={job_title}
+                              onChange={(e) => setOwnerVal("job_title", e.target.value, index)}
                             />
                           </div>
+                        )}
 
-                          {(role === "primary_operator" || role === "both") && (
-                            <div className="flex w-full gap-4">
+                        {have_detail === "yes" && (
+                          <div className="flex w-full flex-col gap-4">
+                            <div className="grid grid-cols-3 gap-4">
                               <TextField
-                                name="job_title"
+                                name="ssn"
                                 disabled={isDisabledAllFields}
-                                label="Job Title"
-                                value={job_title}
-                                onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
+                                label="Social Security, Tax, or National ID Number"
+                                placeholder="e.g. 123-45-6789"
+                                value={ssn}
+                                formatting="3,2,4"
+                                isMasked={false}
+                                onChange={(e) => setOwnerVal("ssn", e.target.value, index)}
+                                className={"w-full"}
+                              />
+
+                              <Autocomplete
+                                onLoad={onLoadAddress(rowKey)}
+                                onPlaceChanged={onPlaceChangedAddress(rowKey, index)}
+                                options={{ types: ["address"], fields: ["formatted_address"] }}
+                                className="w-full"
+                              >
+                                <TextField
+                                  name="address"
+                                  disabled={isDisabledAllFields}
+                                  label="Address"
+                                  value={address}
+                                  onChange={(e) => setOwnerVal("address", e.target.value, index)}
+                                  className={"w-full!"}
+                                />
+                              </Autocomplete>
+
+                              <TextField
+                                name="percentage"
+                                disabled={isDisabledAllFields}
+                                label="Ownership Percentage"
+                                placeholder="e.g. 25"
+                                value={percentage.replace(/%$/, "")}
+                                rightIcon={<span className="select-none font-medium text-gray-600">%</span>}
+                                onChange={(e) => {
+                                  const raw = e.target.value.replace(/[^0-9.]/g, "");
+                                  if (raw === "" || raw === ".") {
+                                    setOwnerVal("percentage", raw, index);
+                                    return;
+                                  }
+                                  const num = Math.min(100, Math.max(0, parseFloat(raw) || 0));
+                                  setOwnerVal("percentage", raw.endsWith(".") ? `${num}.` : `${num}%`, index);
+                                }}
+                                className={"w-full"}
+                              />
+
+                              <TextField
+                                name="date_of_birth"
+                                type="date"
+                                disabled={isDisabledAllFields}
+                                label="Date of Birth"
+                                value={date_of_birth}
+                                onChange={(e) => setOwnerVal("date_of_birth", e.target.value, index)}
+                                className={"w-full"}
+                              />
+
+                              <TextField
+                                name="id_issuer"
+                                disabled={isDisabledAllFields}
+                                label="ID Issuer"
+                                placeholder="State/Province or Country"
+                                value={id_issuer}
+                                onChange={(e) => setOwnerVal("id_issuer", e.target.value, index)}
+                                suggestions={STATE_SUGGESTIONS}
+                                className={"w-full"}
+                              />
+
+                              <TextField
+                                name="id_number"
+                                disabled={isDisabledAllFields}
+                                label="ID Number"
+                                placeholder="As it appears on your ID"
+                                value={id_number}
+                                onChange={(e) => setOwnerVal("id_number", e.target.value, index)}
+                                className={"w-full"}
                               />
                             </div>
-                          )}
+                          </div>
+                        )}
 
-                          {have_detail == "yes" && (
-                            <div className="flex w-full flex-col gap-4">
-                              <div className="grid grid-cols-3 gap-4">
-                                <TextField
-                                  name="ssn"
-                                  disabled={isDisabledAllFields}
-                                  label="Social Security, Tax, or National ID Number"
-                                  placeholder="e.g. 123-45-6789"
-                                  value={ssn}
-                                  formatting="3,2,4"
-                                  isMasked={false}
-                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"w-full"}
-                                />
-                                <Autocomplete
-                                  onLoad={onLoadAddress(index)}
-                                  onPlaceChanged={onPlaceChangedAddress(index)}
-                                  options={{
-                                    types: ["address"],
-                                    fields: ["formatted_address"],
-                                  }}
-                                  className="w-full"
-                                >
-                                  <TextField
-                                    name="address"
-                                    disabled={isDisabledAllFields}
-                                    label="Address"
-                                    value={address}
-                                    onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                    className={"w-full!"}
-                                  />
-                                </Autocomplete>
-                                <TextField
-                                  name="percentage"
-                                  disabled={isDisabledAllFields}
-                                  label="Ownership Percentage"
-                                  placeholder="e.g. 25"
-                                  value={(percentage || "").replace(/%$/, "")}
-                                  rightIcon={<span className="select-none font-medium text-gray-600">%</span>}
-                                  onChange={(e) => {
-                                    const raw = e.target.value.replace(/[^0-9.]/g, "");
-                                    if (raw === "" || raw === ".") {
-                                      handleChangeOnOtherOwnersData(
-                                        { target: { name: "percentage", value: raw } },
-                                        index,
-                                      );
-                                      return;
-                                    }
-                                    const num = Math.min(100, Math.max(0, parseFloat(raw) || 0));
-                                    const formatted = raw.endsWith(".") ? `${num}.` : `${num}%`;
-                                    handleChangeOnOtherOwnersData(
-                                      { target: { name: "percentage", value: formatted } },
-                                      index,
-                                    );
-                                  }}
-                                  className={"w-full"}
-                                />
-                                <TextField
-                                  name="date_of_birth"
-                                  type="date"
-                                  disabled={isDisabledAllFields}
-                                  label="Date of Birth"
-                                  value={date_of_birth}
-                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"w-full"}
-                                />
-                                <TextField
-                                  name="driver_license_issuer_state"
-                                  disabled={isDisabledAllFields}
-                                  label="ID Issuer"
-                                  placeholder="State/Province or Country"
-                                  value={driver_license_issuer_state}
-                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  suggestions={STATE_SUGGESTIONS}
-                                  className={"w-full"}
-                                />
-                                <TextField
-                                  name="driver_license_number"
-                                  disabled={isDisabledAllFields}
-                                  label="ID Number"
-                                  placeholder="As it appears on your ID"
-                                  value={driver_license_number}
-                                  onChange={(e) => handleChangeOnOtherOwnersData(e, index)}
-                                  className={"w-full"}
-                                />
-                              </div>
-                            </div>
-                          )}
-                          {!isDisabledAllFields && (
-                            <Button
-                              onClick={() => handleRemoveOtherOwnersData(index)}
-                              className="max-w-fit! self-end py-2.5!"
-                              variant="secondary"
-                              label="Remove"
-                            />
-                          )}
-                        </div>
+                        {!isDisabledAllFields && (
+                          <Button
+                            onClick={() => handleRemoveOtherOwnersData(index)}
+                            className="max-w-fit! self-end py-2.5!"
+                            variant="secondary"
+                            label="Remove"
+                          />
+                        )}
                       </div>
-                    );
-                  },
-                )}
+                    </div>
+                  );
+                })}
+
                 {!isDisabledAllFields && (
                   <div className="flex w-full justify-end">
                     <Button
@@ -650,7 +607,8 @@ function CompanyOwnersPdf({ name, reduxData, fields, step, isSignature, formInne
                 )}
               </div>
             ) : null}
-            <div className="">
+
+            <div>
               {isSignature && (
                 <SignatureBox
                   onSave={signatureUploadHandler}

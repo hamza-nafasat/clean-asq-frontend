@@ -8,14 +8,34 @@ import "react-phone-number-input/style.css";
 // FORMAT UTILITIES
 // ----------------------
 
-const formatSSN = (raw) => {
-  const numeric = raw.replace(/\D/g, "").slice(0, 9);
+const getFormatParts = (format) =>
+  String(format || "")
+    .split(",")
+    .map((n) => parseInt(n.trim(), 10))
+    .filter((n) => Number.isFinite(n) && n > 0);
+
+const getMaxDigitsFromFormat = (format) => getFormatParts(format).reduce((a, b) => a + b, 0);
+
+const limitByFormat = (value, format) => {
+  const maxDigits = getMaxDigitsFromFormat(format);
+  const digits = String(value || "").replace(/\D/g, "");
+  if (!maxDigits) return digits;
+  return digits.slice(0, maxDigits);
+};
+
+const formatByParts = (raw, format) => {
+  const parts = getFormatParts(format);
+  if (!parts.length) return String(raw || "");
+  const maxDigits = parts.reduce((a, b) => a + b, 0);
+  const digits = String(raw || "").replace(/\D/g, "").slice(0, maxDigits);
   let out = "";
-
-  if (numeric.length > 0) out += numeric.slice(0, 3);
-  if (numeric.length > 3) out += "-" + numeric.slice(3, 5);
-  if (numeric.length > 5) out += "-" + numeric.slice(5);
-
+  let start = 0;
+  for (let i = 0; i < parts.length; i++) {
+    if (start >= digits.length) break;
+    out += digits.slice(start, start + parts[i]);
+    start += parts[i];
+    if (i < parts.length - 1 && start < digits.length) out += "-";
+  }
   return out;
 };
 // -------------------------
@@ -56,6 +76,10 @@ const TextField = ({
 
   const isPhone = type === "tel" || name?.toLowerCase().includes("phone");
   const isSSN = name?.toLowerCase().includes("ssn");
+  const isTaxId = name?.toLowerCase().includes("tax");
+  let effectiveFormatting = formatting;
+  if (isSSN) effectiveFormatting = "3,2,4";
+  if (isTaxId) effectiveFormatting = "2,7";
 
   const filteredSuggestions = Array.isArray(suggestions)
     ? suggestions.filter((s) => s.toLowerCase().includes(inputVal))
@@ -75,7 +99,9 @@ const TextField = ({
 
   const getDisplayValue = (value) => {
     if (!value) return "";
-    if (isSSN && formatting === "3,2,4") return formatSSN(String(value));
+    if (effectiveFormatting && type !== "date" && !isPhone) {
+      return formatByParts(String(value), effectiveFormatting);
+    }
     return value;
   };
 
@@ -149,6 +175,7 @@ const TextField = ({
                 name,
               }}
               international
+              limitMaxLength
               defaultCountry="US"
               disabled={disabled}
               placeholder={placeholder || "Enter phone number"}
@@ -182,11 +209,11 @@ const TextField = ({
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
             onChange={(e) => {
-              let val = type === "date" ? normalizeDate(e.target.value) : e.target.value;
-              // SSN HANDLING
-              if (isSSN && formatting === "3,2,4") {
-                val = val.replace(/\D/g, "").slice(0, 9);
+              let val = e.target.value;
+              if (effectiveFormatting && type !== "date" && !isPhone) {
+                val = limitByFormat(val, effectiveFormatting);
               }
+              if (type === "date") val = normalizeDate(val);
               onChange?.({ target: { name, value: val } });
             }}
             className={`${cn} relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${leftIcon ? "pl-10" : ""} ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf && borderAndBgChangeIfEmpty ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""} `}

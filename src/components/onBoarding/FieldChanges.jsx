@@ -1,6 +1,5 @@
 const FieldChanges = ({ selectedVersion }) => {
   const diffs = selectedVersion?.diff || [];
-
   if (!diffs.length) {
     return (
       <div className="w-full rounded-xl border border-gray-200 bg-white p-6 text-center">
@@ -52,14 +51,14 @@ const FieldChanges = ({ selectedVersion }) => {
                   <div className="rounded-xl border border-red-200 bg-red-50 p-4">
                     <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-red-700">Previous Value</p>
 
-                    <div className="max-h-[300px] overflow-auto rounded-lg bg-white p-3 text-sm text-gray-800">
+                    <div className="max-h-75 overflow-auto rounded-lg bg-white p-3 text-sm text-gray-800">
                       <pre className="whitespace-pre-wrap wrap-break-word font-mono">{formatValue(item?.oldValue)}</pre>
                     </div>
                   </div>
                   {/* New */}
                   <div className="rounded-xl border border-green-200 bg-green-50 p-4">
                     <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-green-700">New Value</p>
-                    <div className="max-h-[300px] overflow-auto rounded-lg bg-white p-3 text-sm text-gray-800">
+                    <div className="max-h-75 overflow-auto rounded-lg bg-white p-3 text-sm text-gray-800">
                       <pre className="whitespace-pre-wrap wrap-break-word font-mono">{formatValue(item?.newValue)}</pre>
                     </div>
                   </div>

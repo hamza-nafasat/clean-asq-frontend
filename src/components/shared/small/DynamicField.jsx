@@ -583,10 +583,9 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
   if (fieldSuggestions) fieldSuggestions = fieldSuggestions.split(",");
 
   // Auto formatting overrides
+  const isPhone = name.toLowerCase().includes("phone");
   const isSSN = name.includes("ssn");
   if (isSSN) formatting = "3,2,4";
-  const isPhone = name.toLowerCase().includes("phone");
-  if (isPhone) formatting = "3,3,4";
   const isTaxId = name.toLowerCase().includes("tax");
   if (isTaxId) formatting = "2,7";
 
@@ -608,13 +607,18 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
     if (idx >= 0 && idx + 1 < focusable.length) focusable[idx + 1].focus();
   };
 
-  const limitByFormat = (value, format) => {
-    const maxDigits = format
+  const getFormatParts = (format) =>
+    String(format || "")
       .split(",")
       .map((n) => parseInt(n.trim(), 10))
-      .reduce((a, b) => a + b, 0);
+      .filter((n) => Number.isFinite(n) && n > 0);
 
-    const digits = value.replace(/\D/g, "");
+  const getMaxDigitsFromFormat = (format) => getFormatParts(format).reduce((a, b) => a + b, 0);
+
+  const limitByFormat = (value, format) => {
+    const maxDigits = getMaxDigitsFromFormat(format);
+    const digits = String(value || "").replace(/\D/g, "");
+    if (!maxDigits) return digits;
     return digits.slice(0, maxDigits);
   };
 
@@ -640,17 +644,18 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
 
     if (type === "date") return formatDate(value);
 
-    const format = formatting?.split(",");
+    const format = getFormatParts(formatting);
     // --------------------------
     //      NORMAL FORMATTING
     // --------------------------
-    if (format && Array.isArray(format) && format.length > 0) {
-      const digits = value.toString().replace(/\D/g, "");
+    if (format.length > 0) {
+      const maxDigits = format.reduce((a, b) => a + b, 0);
+      const digits = value.toString().replace(/\D/g, "").slice(0, maxDigits);
       let formatted = "";
       let start = 0;
 
       for (let i = 0; i < format.length; i++) {
-        const len = parseInt(format[i], 10);
+        const len = format[i];
         if (start >= digits.length) break;
 
         const part = digits.substr(start, len);
@@ -662,7 +667,6 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
         }
       }
 
-      if (start < digits.length) formatted += "-" + digits.substr(start);
       return formatted;
     }
 
@@ -782,6 +786,7 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                     <div>
                       <PhoneInput
                         international
+                        limitMaxLength
                         numberInputProps={{
                           style: { outline: "none" },
                           required: required || undefined,
@@ -827,13 +832,10 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                       value={getDisplayValue(type, form?.[uniqueId]?.value)}
                       onChange={(e) => {
                         let val = e.target.value;
-                        // ==========================
-                        //      SSN RAW DIGITS
-                        // ==========================
-                        if (isSSN) {
-                          let digits = val.replace(/\D/g, "");
-                          digits = limitByFormat(digits, "3,2,4"); // 9 digits total
-                          val = digits;
+                        // Digit formats (ssn 3,2,4 / tax 2,7 / custom 2,2,3):
+                        // store raw digits only and hard-stop at format max length.
+                        if (formatting && type !== "date" && !isPhone) {
+                          val = limitByFormat(val, formatting);
                         }
                         const normalized = type === "date" ? normalizeDate(val) : val;
                         setForm((prev) => ({

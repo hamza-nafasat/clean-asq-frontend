@@ -520,7 +520,7 @@ const ApplicantsTable = ({
         isLoading={isLoadingDelete}
         confirmButtonText="Delete"
         confirmButtonClassName="bg-red-500 border-none hover:bg-red-600 text-white"
-        cancelButtonText="Cancer"
+        cancelButtonText="Cancel"
       />
     </div>
   );

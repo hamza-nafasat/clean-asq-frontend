@@ -440,13 +440,18 @@ const OtherInputType = ({
     if (idx >= 0 && idx + 1 < focusable.length) focusable[idx + 1].focus();
   };
 
-  const limitByFormat = (value, format) => {
-    const maxDigits = format
+  const getFormatParts = (format) =>
+    String(format || "")
       .split(",")
       .map((n) => parseInt(n.trim(), 10))
-      .reduce((a, b) => a + b, 0);
+      .filter((n) => Number.isFinite(n) && n > 0);
 
-    const digits = value.replace(/\D/g, "");
+  const getMaxDigitsFromFormat = (format) => getFormatParts(format).reduce((a, b) => a + b, 0);
+
+  const limitByFormat = (value, format) => {
+    const maxDigits = getMaxDigitsFromFormat(format);
+    const digits = String(value || "").replace(/\D/g, "");
+    if (!maxDigits) return digits;
     return digits.slice(0, maxDigits);
   };
 
@@ -467,14 +472,15 @@ const OtherInputType = ({
 
     if (type === "date") return formatDate(value);
 
-    const format = formatting?.split(",");
-    if (format && Array.isArray(format) && format.length > 0) {
-      const digits = value.toString().replace(/\D/g, "");
+    const format = getFormatParts(formatting);
+    if (format.length > 0) {
+      const maxDigits = format.reduce((a, b) => a + b, 0);
+      const digits = value.toString().replace(/\D/g, "").slice(0, maxDigits);
       let formatted = "";
       let start = 0;
 
       for (let i = 0; i < format.length; i++) {
-        const len = parseInt(format[i], 10);
+        const len = format[i];
         if (start >= digits.length) break;
 
         const part = digits.substr(start, len);
@@ -486,7 +492,6 @@ const OtherInputType = ({
         }
       }
 
-      if (start < digits.length) formatted += "-" + digits.substr(start);
       return formatted;
     }
 
@@ -592,6 +597,7 @@ const OtherInputType = ({
                     <div>
                       <PhoneInput
                         international
+                        limitMaxLength
                         disabled={isDisabledAllFields}
                         numberInputProps={{
                           style: { outline: "none" },
@@ -628,10 +634,8 @@ const OtherInputType = ({
                       value={getDisplayValue(type, form?.[uniqueId]?.value)}
                       onChange={(e) => {
                         let val = e.target.value;
-                        if (isSSN) {
-                          let digits = val.replace(/\D/g, "");
-                          digits = limitByFormat(digits, "3,2,4");
-                          val = digits;
+                        if (formatting && type !== "date" && !isPhone) {
+                          val = limitByFormat(val, formatting);
                         }
                         const normalized = type === "date" ? normalizeDate(val) : val;
                         updateFieldValue(normalized);

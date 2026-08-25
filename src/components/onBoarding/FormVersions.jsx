@@ -22,37 +22,33 @@ const ColumnsForFormVersions = () => [
         second: "2-digit",
       }),
     sortable: true,
-    width: "200px",
+    wrap: true,
   },
   {
     name: "User Name",
     selector: (row) => `${row?.actor?.name}`,
     sortable: true,
-    width: "180px",
   },
   {
     name: "email",
     selector: (row) => `${row?.actor?.email}`,
     sortable: true,
-    width: "250px",
+    wrap: true,
   },
   {
     name: "Role",
     selector: (row) => `${row?.actor?.role}`,
     sortable: true,
-    width: "100px",
   },
   {
     name: "Form Name",
     selector: (row) => row?.form?.name,
     sortable: true,
-    width: "250px",
   },
   {
     name: "Version",
     selector: (row) => row?.version,
     sortable: true,
-    width: "120px",
   },
   {
     name: "Fields Changed",
@@ -127,7 +123,7 @@ const FormVersions = ({ submittedFormId, submitForm }) => {
   );
 
   return (
-    <div>
+    <div className="w-full overflow-x-auto">
       {fieldChanges && (
         <Modal
           title="Field Changes"
@@ -141,7 +137,7 @@ const FormVersions = ({ submittedFormId, submitForm }) => {
       )}
       {viewDetailsModal && (
         <Modal
-          width="min-w-[80vw] max-w-2xl"
+          width="min-w-[75vw] max-w-2xl"
           title="Version Details"
           isOpen={viewDetailsModal}
           onClose={() => {
@@ -154,18 +150,20 @@ const FormVersions = ({ submittedFormId, submitForm }) => {
           <ViewDetailsModal key={selectedVersion?._id} selectedVersion={selectedVersion} submitForm={submitForm} />
         </Modal>
       )}
-      <DataTable
-        progressPending={isLoadingVersioning}
-        data={versioning?.data || []}
-        columns={columns}
-        customStyles={tableStyles}
-        highlightOnHover
-        fixedHeader
-        persistTableHead
-        responsive
-        noDataComponent="No History found"
-        className="rounded-t-xl!"
-      />
+      <div className="w-full overflow-x-auto">
+        <DataTable
+          progressPending={isLoadingVersioning}
+          data={versioning?.data || []}
+          columns={columns}
+          customStyles={tableStyles}
+          highlightOnHover
+          fixedHeader
+          persistTableHead
+          responsive
+          noDataComponent="No History found"
+          className="rounded-t-xl!"
+        />
+      </div>
     </div>
   );
 };
