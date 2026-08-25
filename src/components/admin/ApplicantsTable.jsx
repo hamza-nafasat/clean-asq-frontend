@@ -10,7 +10,10 @@ import Modal from "../shared/Modal";
 import TextField from "../shared/small/TextField";
 import { ThreeDotEditViewDelete } from "../shared/ThreeDotViewEditDelete";
 import ApplicantSearch from "./ApplicantSearch";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { useGetSavedFormMutation } from "@/redux/apis/formApis";
+import { addSavedFormData, updateEmailVerified } from "@/redux/slices/formSlice";
+import { unwrapResult } from "@reduxjs/toolkit";
 import checkPermission, { webPermissions } from "@/utils/checkPermission";
 import CopyPasteTooltip from "../shared/small/CopyPasteTooltip";
 import CustomLoading from "../shared/small/CustomLoading";
@@ -28,7 +31,6 @@ const APPLICANT_TABLE_COLUMNS = [
     name: "Name",
     selector: (row) => `${row?.user?.firstName} ${row?.user?.lastName}`,
     sortable: true,
-    width: "200px",
     cell: (row) => (
       <CopyPasteTooltip
         id={`${row?.user?.firstName} ${row?.user?.lastName}`}
@@ -40,14 +42,13 @@ const APPLICANT_TABLE_COLUMNS = [
     name: "Application",
     selector: (row) => row?.form?.name || "N/A",
     sortable: true,
-    width: "250px",
     cell: (row) => <CopyPasteTooltip id={row?.form?.name || "N/A"} label={row?.form?.name || "N/A"} />,
   },
   {
     name: "Email",
     selector: (row) => row?.user?.email,
     sortable: true,
-    width: "320px",
+    wrap: true,
     cell: (row) => <CopyPasteTooltip id={row?.user?.email} label={row?.user?.email} />,
   },
   {
@@ -77,7 +78,6 @@ const APPLICANT_TABLE_COLUMNS = [
         second: "2-digit",
       }),
     sortable: true,
-    width: "200px",
     cell: (row) => {
       const formatted = new Date(row?.updatedAt || "").toLocaleString("en-US", {
         year: "numeric",
@@ -94,7 +94,6 @@ const APPLICANT_TABLE_COLUMNS = [
     name: "Status",
     selector: (row) => row?.status,
     sortable: true,
-    width: "150px",
     cell: (row) =>
       row?.type === APPLICANT_TYPE.SUBMITTED ? (
         <CopyPasteTooltip
@@ -148,7 +147,35 @@ const ApplicantsTable = ({
   const actionMenuRefs = useRef(new Map());
 
   const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const [getSavedFormData] = useGetSavedFormMutation();
   const hasUnderwritingPermission = checkPermission(user, webPermissions.underwriting);
+
+  // Resume a specific draft: hydrate Redux from that draft, then continue where the
+  // applicant left off (company step if lookup isn't done, otherwise the form itself).
+  const continueDraftHandler = useCallback(
+    async (row) => {
+      const formId = row?.form?._id || row?.form;
+      const draftId = row?._id;
+      const brandingName = row?.form?.branding?.name;
+      try {
+        dispatch(updateEmailVerified(true));
+        const res = await getSavedFormData({ formId, draftId }).unwrap();
+        const savedData = res?.data?.savedData || {};
+        const action = await dispatch(addSavedFormData(savedData));
+        unwrapResult(action);
+        const brandingQuery = brandingName ? `&brandingName=${brandingName}` : "";
+        if (!savedData?.company_lookup_data) {
+          return navigate(`/verification?formid=${formId}${brandingQuery}&draftId=${draftId}`);
+        }
+        return navigate(`/application-form/${brandingName}/${formId}?draftId=${draftId}`);
+      } catch (error) {
+        console.log("error while resuming draft", error);
+        return navigate(`/verification?formid=${formId}&draftId=${draftId}`);
+      }
+    },
+    [dispatch, getSavedFormData, navigate],
+  );
   // Get unique clients for quick filters
 
   const handleDeleteApplicant = useCallback(async () => {
@@ -270,10 +297,11 @@ const ApplicantsTable = ({
         icon: <ArrowRight size={16} className="mr-2" />,
         onClick: (row) => {
           setActionMenu(null);
+          continueDraftHandler(row);
         },
       },
     ],
-    [],
+    [continueDraftHandler],
   );
   const ButtonsForThreeDotSubmitted = useMemo(
     () => [

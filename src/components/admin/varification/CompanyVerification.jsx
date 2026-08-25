@@ -31,7 +31,7 @@ const columns = [
   { name: "Result", grow: 2, wrap: true, selector: (row) => row.result },
 ];
 
-function CompanyVerification({ formId, brandingName }) {
+function CompanyVerification({ formId, brandingName, draftId }) {
   const companyFormRef = useRef(null);
   const hasFocusedRef = useRef(false);
   const dispatch = useDispatch();
@@ -76,7 +76,7 @@ function CompanyVerification({ formId, brandingName }) {
   const handleSubmit = async () => {
     try {
       if (form?.noWebsite) {
-        return navigate(`/application-form/${brandingName}/${formId}`);
+        return navigate(`/application-form/${brandingName}/${formId}${draftId ? `?draftId=${draftId}` : ""}`);
       } else {
         if (!form?.name || !form?.url) return toast.error("Please fill all fields");
         setLoading(true);
@@ -87,8 +87,13 @@ function CompanyVerification({ formId, brandingName }) {
           setApisRes((prev) => ({ ...prev, companyVerify: companyVerifyRes?.data }));
           toast.success("Company verified successfully");
           setLoading(false);
-          companyLookup();
-          return navigate(`/application-form/${brandingName}/${formId}`);
+          // The lookup save creates the draft; carry its id forward so the rest of the
+          // flow (IDMission + stepper) writes to this same draft.
+          const newDraftId = await companyLookup();
+          const effectiveDraftId = draftId || newDraftId;
+          return navigate(
+            `/application-form/${brandingName}/${formId}${effectiveDraftId ? `?draftId=${effectiveDraftId}` : ""}`,
+          );
         } else {
           toast.error("Company verification failed, please try again");
         }
@@ -106,16 +111,17 @@ function CompanyVerification({ formId, brandingName }) {
       try {
         const formDataInRedux = { ...formData, [name]: data };
         // console.log('save in progress', formDataInRedux);
-        const res = await saveFormInDraft({ formId: formId, formData: formDataInRedux }).unwrap();
+        const res = await saveFormInDraft({ formId: formId, draftId, formData: formDataInRedux }).unwrap();
         if (res.success) {
           console.log("form saved in draft successfully");
         }
+        return res;
       } catch (error) {
         console.log("error while saving form in draft", error);
         toast.error(error?.data?.message || "Error while saving form in draft");
       }
     },
-    [formData, formId, saveFormInDraft],
+    [formData, formId, draftId, saveFormInDraft],
   );
 
   const companyLookup = async () => {
@@ -145,8 +151,10 @@ function CompanyVerification({ formId, brandingName }) {
         setLookupDataForTable(totalLookupData);
         dispatch(addLookupData(totalLookupData));
         dispatch(updateFormState({ data: totalLookupData, name: "company_lookup_data" }));
-        await saveInProgress({ data: totalLookupData, name: "company_lookup_data" });
+        // This first save creates the draft (when none exists yet) and returns its id.
+        const saveRes = await saveInProgress({ data: totalLookupData, name: "company_lookup_data" });
         toast.success("Company lookup successfully completed");
+        return saveRes?.data?.draftId;
       }
     } catch (error) {
       console.log("Error lookup company:", error);
@@ -373,7 +381,7 @@ function CompanyVerification({ formId, brandingName }) {
         {isCreator && (
           <Button
             onClick={() => {
-              return navigate(`/application-form/${brandingName}/${formId}`);
+              return navigate(`/application-form/${brandingName}/${formId}${draftId ? `?draftId=${draftId}` : ""}`);
             }}
             label={"Skip"}
           />

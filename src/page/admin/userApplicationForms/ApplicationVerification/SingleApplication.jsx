@@ -38,7 +38,7 @@ import DOMPurify from "dompurify";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 /** Safe date normalize — IDMission may send DD/MM/YYYY or already-ISO values. */
@@ -105,6 +105,10 @@ export default function SingleApplication() {
   const navigate = useNavigate();
   const params = useParams();
   const formId = params.formId;
+  const [searchParams] = useSearchParams();
+  // Specific draft being started/resumed. Threaded through the whole applicant flow
+  // so each application maps to its own draft (multiple drafts per form supported).
+  const draftId = searchParams.get("draftId");
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { emailVerified } = useSelector((state) => state.form);
@@ -418,13 +422,29 @@ export default function SingleApplication() {
   const getSavedFormDataAndSaveInRedux = useCallback(
     async ({ skipRedirectOnError = false } = {}) => {
       console.log(
-        "%c[SA:getSavedForm] called — skipRedirectOnError=%s formId=%s",
+        "%c[SA:getSavedForm] called — skipRedirectOnError=%s formId=%s draftId=%s",
         "color:#7c3aed; font-weight:bold",
         skipRedirectOnError,
         formId,
+        draftId,
       );
+      // Fresh start (Start Application / direct route) has no draftId — don't fetch
+      // or create a draft here. The draft is created when company lookup saves.
+      if (!draftId) {
+        if (skipRedirectOnError) {
+          if (!idMissionScanAppliedRef.current) {
+            setIdMissionVerifiedData((prev) => ({
+              ...prev,
+              email: { name: "email", value: prev.email?.value || email || user?.email || "" },
+            }));
+          }
+          return;
+        }
+        navigatingAwayRef.current = true;
+        return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
+      }
       try {
-        const res = await getSavedFormData({ formId: formId }).unwrap();
+        const res = await getSavedFormData({ formId: formId, draftId }).unwrap();
         console.log(
           "%c[SA:getSavedForm] API response — success=%s keys=%o",
           "color:#7c3aed",
@@ -497,7 +517,9 @@ export default function SingleApplication() {
               "color:#7c3aed",
             );
             navigatingAwayRef.current = true;
-            return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
+            return navigate(
+              `/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}${draftId ? `&draftId=${draftId}` : ""}`,
+            );
           } else {
             // User is staying on the QR / manual-entry step — fetch QR now (first time we know it's needed).
             console.log(
@@ -535,13 +557,25 @@ export default function SingleApplication() {
             "color:#ea580c",
           );
           navigatingAwayRef.current = true;
-          return navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
+          return navigate(
+            `/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}${draftId ? `&draftId=${draftId}` : ""}`,
+          );
         }
         console.error("%c[SA:getSavedForm] ERROR", "color:#dc2626; font-weight:bold", error);
         // toast.error(error?.data?.message || 'Error while getting saved form data');
       }
     },
-    [dispatch, email, form?.data?.branding?.name, formId, getQrAndWebLink, getSavedFormData, navigate, user?.email],
+    [
+      dispatch,
+      email,
+      form?.data?.branding?.name,
+      formId,
+      draftId,
+      getQrAndWebLink,
+      getSavedFormData,
+      navigate,
+      user?.email,
+    ],
   );
 
   // functions for autocomplete
@@ -772,15 +806,27 @@ export default function SingleApplication() {
         };
         const res = await saveFormInDraft({
           formId: formId,
+          draftId,
           formData: { ...formDataInRedux },
         }).unwrap();
         if (res.success) toast.success(res.message);
+        return res;
       } catch (error) {
         console.log("error while saving form in draft", error);
         toast.error(error?.data?.message || "Error while saving form in draft");
       }
     },
-    [formData, formId, saveFormInDraft, user?._id, user?.email, user?.firstName, user?.lastName, user?.role?.name],
+    [
+      formData,
+      formId,
+      draftId,
+      saveFormInDraft,
+      user?._id,
+      user?.email,
+      user?.firstName,
+      user?.lastName,
+      user?.role?.name,
+    ],
   );
 
   const submitIdMissionData = useCallback(
@@ -794,7 +840,7 @@ export default function SingleApplication() {
         }
         const action = await dispatch(updateFormState({ data: idMissionVerifiedData, name: "idMission" }));
         unwrapResult(action);
-        await saveInProgress({
+        const saveRes = await saveInProgress({
           data: {
             ...idMissionVerifiedData,
             updatedBy: {
@@ -806,8 +852,11 @@ export default function SingleApplication() {
           },
           name: "idMission",
         });
+        // If the draft was only created just now (e.g. a no-website flow with no lookup),
+        // carry its id into the stepper so it keeps writing to the same draft.
+        const effectiveDraftId = draftId || saveRes?.data?.draftId;
         dispatch(updateEmailVerified(false));
-        return navigate(`/singleform/stepper/${formId}`);
+        return navigate(`/singleform/stepper/${formId}${effectiveDraftId ? `?draftId=${effectiveDraftId}` : ""}`);
       } catch (error) {
         console.log("error while saving form in draft", error);
       } finally {
@@ -816,6 +865,7 @@ export default function SingleApplication() {
     },
     [
       dispatch,
+      draftId,
       formId,
       idMissionVerifiedData,
       navigate,
@@ -858,7 +908,9 @@ export default function SingleApplication() {
         // Once that page is completed it redirects back to /application-form/... where
         // this screen (with emailVerified=true) fetches the IDMission QR code.
         navigatingAwayRef.current = true;
-        navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
+        navigate(
+          `/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}${draftId ? `&draftId=${draftId}` : ""}`,
+        );
       }
     } catch (error) {
       console.log("Error sending OTP:", error);
@@ -866,7 +918,7 @@ export default function SingleApplication() {
     } finally {
       setLoadingForValidatingOtp(false);
     }
-  }, [dispatch, email, formId, form?.data?.branding?.name, getUserProfile, navigate, otp, verifyEmail]);
+  }, [dispatch, email, formId, draftId, form?.data?.branding?.name, getUserProfile, navigate, otp, verifyEmail]);
 
   const getQrLinkOnEmailVerified = useCallback(() => {
     // Only auto-jump to details when draft actually has identity data — an empty
@@ -1401,11 +1453,13 @@ export default function SingleApplication() {
                       />
                     </div>
                   )}
-                  {isCreator && (
+                  {user?._id && (
                     <Button
                       onClick={() => {
                         dispatch(updateEmailVerified(true));
-                        navigate(`/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}`);
+                        navigate(
+                          `/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}${draftId ? `&draftId=${draftId}` : ""}`,
+                        );
                       }}
                       className="w-full max-w-162.5"
                       variant="secondary"

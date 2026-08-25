@@ -1,11 +1,14 @@
 import { useBranding } from "@/hooks/BrandingContext";
-import { FaCheck } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import Button from "../shared/small/Button";
-import { useDispatch, useSelector } from "react-redux";
 import { addSavedFormData, updateEmailVerified } from "@/redux/slices/formSlice";
-import { unwrapResult } from "@reduxjs/toolkit";
 import { useGetSavedFormMutation, useRemoveSavedFormMutation } from "@/redux/apis/formApis";
+import { unwrapResult } from "@reduxjs/toolkit";
+import { useState } from "react";
+import { FaCheck } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import ConfirmationModal from "../shared/ConfirmationModal";
+import Button from "../shared/small/Button";
 
 function Draft({ forms }) {
   const dispatch = useDispatch();
@@ -13,38 +16,41 @@ function Draft({ forms }) {
   const navigate = useNavigate();
   const { logo } = useBranding();
   const [getSavedFormData] = useGetSavedFormMutation();
-  const [removeSavedForm] = useRemoveSavedFormMutation();
+  const [removeSavedForm, { isLoading: isDeleting }] = useRemoveSavedFormMutation();
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const getSavedData = async (formId, brandingName) => {
+  const getSavedData = async (formId, brandingName, draftId) => {
     try {
       if (!emailVerified) dispatch(updateEmailVerified(true));
-      const res = await getSavedFormData({ formId: formId }).unwrap();
+      const res = await getSavedFormData({ formId: formId, draftId }).unwrap();
       if (res.success) {
         const savedData = res?.data?.savedData || [];
         const action = await dispatch(addSavedFormData(savedData || []));
         unwrapResult(action);
+        const draftQuery = draftId ? `&draftId=${draftId}` : "";
         if (!savedData?.company_lookup_data) {
-          console.log("saved data is ,", savedData);
-          return navigate(`/verification?formid=${formId}`);
+          return navigate(`/verification?formid=${formId}${draftQuery}`);
         } else {
-          return navigate(`/application-form/${brandingName}/${formId}`);
+          return navigate(`/application-form/${brandingName}/${formId}${draftId ? `?draftId=${draftId}` : ""}`);
         }
       } else {
-        return navigate(`/verification?formid=${formId}`);
+        return navigate(`/verification?formid=${formId}${draftId ? `&draftId=${draftId}` : ""}`);
       }
     } catch (error) {
       console.log("error while getting saved data", error);
-      return navigate(`/verification?formid=${formId}`);
+      return navigate(`/verification?formid=${formId}${draftId ? `&draftId=${draftId}` : ""}`);
     }
   };
 
-  const startOverHandler = async (formId, brandingName) => {
+  const deleteDraftHandler = async () => {
+    if (!deleteTarget) return;
     try {
-      const res = await removeSavedForm({ formId: formId }).unwrap();
-      if (res.success) await getSavedData(formId, brandingName);
+      const res = await removeSavedForm({ formId: deleteTarget.formId, draftId: deleteTarget.draftId }).unwrap();
+      if (res.success) toast.success(res.message || "Draft deleted successfully");
+      setDeleteTarget(null);
     } catch (error) {
-      console.log("error while getting saved data", error);
-      return navigate(`/verification?formid=${formId}`);
+      console.log("error while deleting draft", error);
+      toast.error(error?.data?.message || "Failed to delete draft");
     }
   };
   return (
@@ -55,7 +61,7 @@ function Draft({ forms }) {
 
           return (
             <div
-              key={index}
+              key={form?.draftId || form?._id || index}
               className="relative flex min-w-0 flex-col rounded-xl border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
             >
               <img
@@ -102,8 +108,8 @@ function Draft({ forms }) {
               </div>
               <div className="mt-3 flex w-full flex-col items-start justify-end gap-3 md:mt-6 md:flex-row md:gap-4">
                 <Button
-                  label="Start Over"
-                  onClick={() => startOverHandler(form?._id, form?.branding?.name)}
+                  label="Delete"
+                  onClick={() => setDeleteTarget({ formId: form?._id, draftId: form?.draftId, name: form?.name })}
                   style={{
                     backgroundColor: colors?.primary,
                     borderColor: colors?.primary,
@@ -119,7 +125,7 @@ function Draft({ forms }) {
                 />
                 <Button
                   label="Resume"
-                  onClick={() => getSavedData(form?._id, form?.branding?.name)}
+                  onClick={() => getSavedData(form?._id, form?.branding?.name, form?.draftId)}
                   style={{
                     backgroundColor: colors?.primary,
                     borderColor: colors?.primary,
@@ -140,6 +146,17 @@ function Draft({ forms }) {
       ) : (
         <div className="items-cetner col-span-full flex justify-center">No draft found</div>
       )}
+      <ConfirmationModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={deleteDraftHandler}
+        title="Delete Draft"
+        message={`Are you sure you want to delete${deleteTarget?.name ? ` “${deleteTarget.name}”` : " this draft"}? This cannot be undone.`}
+        isLoading={isDeleting}
+        confirmButtonText="Delete"
+        confirmButtonClassName="bg-red-500 border-none hover:bg-red-600 text-white"
+        cancelButtonText="Cancel"
+      />
     </div>
   );
 }

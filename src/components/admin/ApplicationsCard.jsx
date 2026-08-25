@@ -38,6 +38,7 @@ import { CiSearch } from "react-icons/ci";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { userExist, userNotExist } from "@/redux/slices/authSlice";
+import { clearSavedFormData } from "@/redux/slices/formSlice";
 import FileUploader from "../applicationVerification/Documents/FileUploader";
 import ConfirmationModal from "../shared/ConfirmationModal";
 import Button from "../shared/small/Button";
@@ -1263,7 +1264,10 @@ export default function ApplicationsCard() {
                 <div className="mt-3 flex h-full w-full flex-col items-start justify-between gap-3 md:mt-6 md:flex-row md:gap-4">
                   <Button
                     label="Start Application"
-                    onClick={() => navigate(`/application-form/${form?.branding?.name}/${form?._id}`)}
+                    onClick={() => {
+                      dispatch(clearSavedFormData());
+                      navigate(`/application-form/${form?.branding?.name}/${form?._id}`);
+                    }}
                     className="self-end"
                     style={{
                       background: formButtonBg,

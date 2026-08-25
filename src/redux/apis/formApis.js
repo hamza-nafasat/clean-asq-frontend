@@ -171,8 +171,8 @@ const formApis = createApi({
     // get saved form
     // ---------------
     getSavedForm: builder.mutation({
-      query: ({ formId }) => ({
-        url: `/get-saved/${formId}`,
+      query: ({ formId, draftId }) => ({
+        url: `/get-saved/${formId}${draftId ? `?draftId=${draftId}` : ""}`,
         method: "GET",
       }),
       invalidatesTags: ["SubmitForm"],
@@ -201,8 +201,8 @@ const formApis = createApi({
     // remove saved form
     // ---------------
     removeSavedForm: builder.mutation({
-      query: ({ formId }) => ({
-        url: `/remove-saved/${formId}`,
+      query: ({ formId, draftId }) => ({
+        url: `/remove-saved/${formId}${draftId ? `?draftId=${draftId}` : ""}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Form"],

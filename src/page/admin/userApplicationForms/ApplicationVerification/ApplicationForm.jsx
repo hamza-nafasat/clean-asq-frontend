@@ -48,6 +48,7 @@ export default function ApplicationForm() {
   const stepContainerRef = useRef(null);
   const queryParams = new URLSearchParams(window.location.search);
   const step = queryParams.get("step");
+  const draftId = queryParams.get("draftId");
 
   const { user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
@@ -96,6 +97,7 @@ export default function ApplicationForm() {
           // Update Redux state
           const res = await saveFormInDraft({
             formId: form?.data?._id,
+            draftId,
             formData: { ...formData, [name]: updatedData },
           }).unwrap();
 
@@ -113,7 +115,7 @@ export default function ApplicationForm() {
         setLoadingNext(false);
       }
     },
-    [currentStep, dispatch, form?.data?._id, stepsComps.length, formData, saveFormInDraft, user],
+    [currentStep, dispatch, form?.data?._id, draftId, stepsComps.length, formData, saveFormInDraft, user],
   );
 
   useApplicantScreenContext({
@@ -170,6 +172,7 @@ export default function ApplicationForm() {
           // Save form draft (non-file data only)
           const res = await formSubmit({
             formId: form?.data?._id,
+            draftId,
             formData: { ...formData, [name]: updatedData },
           }).unwrap();
           if (res.success) {
@@ -189,6 +192,7 @@ export default function ApplicationForm() {
     [
       dispatch,
       form?.data?._id,
+      draftId,
       formData,
       formSubmit,
       navigate,
@@ -226,6 +230,7 @@ export default function ApplicationForm() {
           merged.updatedBy = updatedBy;
           const res = await saveFormInDraft({
             formId: form?.data?._id,
+            draftId,
             formData: { ...formData, [name]: merged },
           }).unwrap();
           if (res.success) {
@@ -240,19 +245,24 @@ export default function ApplicationForm() {
         toast.error(error?.data?.message || "Error while saving form in draft");
       }
     },
-    [dispatch, form?.data?._id, formData, saveFormInDraft, user],
+    [dispatch, form?.data?._id, draftId, formData, saveFormInDraft, user],
   );
 
   useEffect(() => {
-    // get saved data if exist
+    // Resume only when Continue passed a draftId. A fresh start has no draft yet —
+    // it is created later when company lookup saves.
     if (form?.data?.sections && form?.data?.sections?.length > 0) {
-      getSavedFormData({ formId: form?.data?._id })
-        .then((res) => {
-          const data = res?.data?.data?.savedData;
-          dispatch(setIdMissionData(data?.idMission));
-          if (data) dispatch(addSavedFormData(data));
-        })
-        .finally(() => setIsSavedApiRun(true));
+      if (!draftId) {
+        setIsSavedApiRun(true);
+      } else {
+        getSavedFormData({ formId: form?.data?._id, draftId })
+          .then((res) => {
+            const data = res?.data?.data?.savedData;
+            dispatch(setIdMissionData(data?.idMission));
+            if (data) dispatch(addSavedFormData(data));
+          })
+          .finally(() => setIsSavedApiRun(true));
+      }
     }
     // add footer and header text in state
     if (form?.data?.footerText || form?.data?.headerText || form?.data?.name) {
@@ -267,7 +277,7 @@ export default function ApplicationForm() {
     return () => {
       dispatch(updateFormHeaderAndFooter({ headerText: "", footerText: "All rights reserved" }));
     };
-  }, [dispatch, form, getSavedFormData]);
+  }, [dispatch, form, draftId, getSavedFormData]);
 
   useEffect(() => {
     if (form?.data?.sections && form?.data?.sections?.length > 0 && isSavedApiRun) {
@@ -390,7 +400,8 @@ export default function ApplicationForm() {
         <CustomLoading />
       </>
     );
-  if (!user?._id) return navigate(`/application-form/${form?.data?.branding?.name}/${formId}`);
+  if (!user?._id)
+    return navigate(`/application-form/${form?.data?.branding?.name}/${formId}${draftId ? `?draftId=${draftId}` : ""}`);
   return (
     <div
       className="bg-backgroundColor h-full w-full overflow-hidden rounded-[10px] px-6 py-6"
