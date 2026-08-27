@@ -25,6 +25,7 @@ import { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutat
 import { userExist, userNotExist } from "@/redux/slices/authSlice";
 import {
   addSavedFormData,
+  setCurrentDraftId,
   updateEmailVerified,
   updateFormHeaderAndFooter,
   updateFormState,
@@ -108,10 +109,11 @@ export default function SingleApplication() {
   const [searchParams] = useSearchParams();
   // Specific draft being started/resumed. Threaded through the whole applicant flow
   // so each application maps to its own draft (multiple drafts per form supported).
-  const draftId = searchParams.get("draftId");
+  const urlDraftId = searchParams.get("draftId");
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { emailVerified } = useSelector((state) => state.form);
+  const { emailVerified, currentDraftId, formData } = useSelector((state) => state.form);
+  const draftId = urlDraftId || currentDraftId;
   const [webLink, setWebLink] = useState(null);
   const [qrCode, setQrCode] = useState("");
   const [qrFetchError, setQrFetchError] = useState(false);
@@ -134,7 +136,6 @@ export default function SingleApplication() {
   const [updateMyProfile] = useUpdateMyProfileMutation();
   const { data: form, refetch: formRefetch, isLoading: isFormLoading } = useGetSingleFormQueryQuery({ _id: formId });
   const [getSavedFormData] = useGetSavedFormMutation();
-  const { formData } = useSelector((state) => state?.form);
   const [saveFormInDraft] = useSaveFormInDraftMutation();
   const [openRedirectModal, setOpenRedirectModal] = useState(false);
   const { isApplied, isApplying } = useApplyBranding({ formId: formId });
@@ -463,6 +464,7 @@ export default function SingleApplication() {
           );
           const action = await dispatch(addSavedFormData(savedData || []));
           unwrapResult(action);
+          if (res?.data?._id) dispatch(setCurrentDraftId(res.data._id));
           // Don't clobber fields that were just filled from an IDMission webhook/scan.
           if (idMissionScanAppliedRef.current) {
             console.log(
@@ -809,7 +811,10 @@ export default function SingleApplication() {
           draftId,
           formData: { ...formDataInRedux },
         }).unwrap();
-        if (res.success) toast.success(res.message);
+        if (res.success) {
+          if (res?.data?.draftId) dispatch(setCurrentDraftId(res.data.draftId));
+          toast.success(res.message);
+        }
         return res;
       } catch (error) {
         console.log("error while saving form in draft", error);
@@ -820,6 +825,7 @@ export default function SingleApplication() {
       formData,
       formId,
       draftId,
+      dispatch,
       saveFormInDraft,
       user?._id,
       user?.email,
@@ -855,6 +861,7 @@ export default function SingleApplication() {
         // If the draft was only created just now (e.g. a no-website flow with no lookup),
         // carry its id into the stepper so it keeps writing to the same draft.
         const effectiveDraftId = draftId || saveRes?.data?.draftId;
+        if (effectiveDraftId) dispatch(setCurrentDraftId(effectiveDraftId));
         dispatch(updateEmailVerified(false));
         return navigate(`/singleform/stepper/${formId}${effectiveDraftId ? `?draftId=${effectiveDraftId}` : ""}`);
       } catch (error) {
@@ -1348,7 +1355,7 @@ export default function SingleApplication() {
                   onClick={() => {
                     setOpenRedirectModal(false);
                     dispatch(updateEmailVerified(false));
-                    navigate(`/singleform/stepper/${formId}`);
+                    navigate(`/singleform/stepper/${formId}${draftId ? `?draftId=${draftId}` : ""}`);
                   }}
                   label="Continue to Next"
                 />
@@ -1941,7 +1948,7 @@ export default function SingleApplication() {
                   {isCreator && (
                     <Button
                       onClick={() => {
-                        navigate(`/singleform/stepper/${formId}`);
+                        navigate(`/singleform/stepper/${formId}${draftId ? `?draftId=${draftId}` : ""}`);
                       }}
                       className="mt-4"
                       variant="secondary"

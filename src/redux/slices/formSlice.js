@@ -4,6 +4,7 @@ const formSlice = createSlice({
   name: "form",
   initialState: {
     formData: {},
+    currentDraftId: null,
     emailVerified: false,
     formHeaderText: "",
     formFooterText: "",
@@ -22,6 +23,9 @@ const formSlice = createSlice({
     addSavedFormData: (state, action) => {
       state.formData = action.payload;
     },
+    setCurrentDraftId: (state, action) => {
+      state.currentDraftId = action.payload || null;
+    },
     updateFormHeaderAndFooter: (state, action) => {
       state.formHeaderText = action.payload.headerText;
       state.formFooterText = action.payload.footerText;
@@ -32,6 +36,7 @@ const formSlice = createSlice({
     },
     clearSavedFormData: (state) => {
       state.formData = {};
+      state.currentDraftId = null;
     },
   },
 });
@@ -40,6 +45,7 @@ export const {
   updateFormState,
   updateEmailVerified,
   addSavedFormData,
+  setCurrentDraftId,
   updateFormHeaderAndFooter,
   updateIsDisabledAllFields,
   clearSavedFormData,

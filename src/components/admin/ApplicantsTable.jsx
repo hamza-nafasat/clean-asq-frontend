@@ -12,7 +12,7 @@ import { ThreeDotEditViewDelete } from "../shared/ThreeDotViewEditDelete";
 import ApplicantSearch from "./ApplicantSearch";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetSavedFormMutation } from "@/redux/apis/formApis";
-import { addSavedFormData, updateEmailVerified } from "@/redux/slices/formSlice";
+import { addSavedFormData, setCurrentDraftId, updateEmailVerified } from "@/redux/slices/formSlice";
 import { unwrapResult } from "@reduxjs/toolkit";
 import checkPermission, { webPermissions } from "@/utils/checkPermission";
 import CopyPasteTooltip from "../shared/small/CopyPasteTooltip";
@@ -160,6 +160,7 @@ const ApplicantsTable = ({
       const brandingName = row?.form?.branding?.name;
       try {
         dispatch(updateEmailVerified(true));
+        dispatch(setCurrentDraftId(draftId));
         const res = await getSavedFormData({ formId, draftId }).unwrap();
         const savedData = res?.data?.savedData || {};
         const action = await dispatch(addSavedFormData(savedData));

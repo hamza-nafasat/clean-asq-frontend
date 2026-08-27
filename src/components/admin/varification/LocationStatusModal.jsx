@@ -18,6 +18,7 @@ export default function LocationStatusModal({
   formId,
   navigate,
   brandingName,
+  draftId,
 }) {
   const [captchaVerified, setCaptchaVerified] = useState(false);
   const dispatch = useDispatch();
@@ -29,7 +30,7 @@ export default function LocationStatusModal({
 
   const onBackHandler = () => {
     dispatch(updateEmailVerified(false));
-    navigate(`/application-form/${brandingName}/${formId}`);
+    navigate(`/application-form/${brandingName}/${formId}${draftId ? `?draftId=${draftId}` : ""}`);
   };
 
   return (

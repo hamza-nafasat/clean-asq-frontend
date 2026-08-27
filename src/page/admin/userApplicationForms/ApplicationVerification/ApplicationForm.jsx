@@ -19,6 +19,7 @@ import { setIdMissionData } from "@/redux/slices/authSlice";
 import {
   addSavedFormData,
   clearSavedFormData,
+  setCurrentDraftId,
   updateFormHeaderAndFooter,
   updateFormState,
 } from "@/redux/slices/formSlice";
@@ -48,14 +49,15 @@ export default function ApplicationForm() {
   const stepContainerRef = useRef(null);
   const queryParams = new URLSearchParams(window.location.search);
   const step = queryParams.get("step");
-  const draftId = queryParams.get("draftId");
+  const urlDraftId = queryParams.get("draftId");
 
   const { user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const params = useParams();
   const formId = params.formId;
   const dispatch = useDispatch();
-  const { formData } = useSelector((state) => state?.form);
+  const { formData, currentDraftId } = useSelector((state) => state?.form);
+  const draftId = urlDraftId || currentDraftId;
 
   const [currentStep, setCurrentStep] = useState(step ? parseInt(step) : 0);
   const [sectionNames, setSectionNames] = useState([]);
@@ -68,6 +70,17 @@ export default function ApplicationForm() {
   const [getSavedFormData] = useGetSavedFormMutation();
   const [saveFormInDraft] = useSaveFormInDraftMutation();
   const { isApplied } = useApplyBranding({ formId });
+  const rememberDraftId = useCallback(
+    (id) => {
+      if (!id) return;
+      dispatch(setCurrentDraftId(id));
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("draftId") === String(id)) return;
+      params.set("draftId", id);
+      navigate(`${window.location.pathname}?${params.toString()}`, { replace: true });
+    },
+    [dispatch, navigate],
+  );
   const handlePrevious = useCallback(() => {
     if (currentStep > 0) setCurrentStep(currentStep - 1);
   }, [currentStep]);
@@ -102,6 +115,7 @@ export default function ApplicationForm() {
           }).unwrap();
 
           if (res.success) {
+            rememberDraftId(res?.data?.draftId);
             const action = await dispatch(updateFormState({ data: updatedData, name }));
             unwrapResult(action);
           }
@@ -115,7 +129,7 @@ export default function ApplicationForm() {
         setLoadingNext(false);
       }
     },
-    [currentStep, dispatch, form?.data?._id, draftId, stepsComps.length, formData, saveFormInDraft, user],
+    [currentStep, dispatch, form?.data?._id, draftId, rememberDraftId, stepsComps.length, formData, saveFormInDraft, user],
   );
 
   useApplicantScreenContext({
@@ -234,6 +248,7 @@ export default function ApplicationForm() {
             formData: { ...formData, [name]: merged },
           }).unwrap();
           if (res.success) {
+            rememberDraftId(res?.data?.draftId);
             // Keep Redux in sync so reopen / step remount hydrates filled fields
             const action = await dispatch(updateFormState({ data: merged, name }));
             unwrapResult(action);
@@ -245,7 +260,7 @@ export default function ApplicationForm() {
         toast.error(error?.data?.message || "Error while saving form in draft");
       }
     },
-    [dispatch, form?.data?._id, draftId, formData, saveFormInDraft, user],
+    [dispatch, form?.data?._id, draftId, formData, rememberDraftId, saveFormInDraft, user],
   );
 
   useEffect(() => {

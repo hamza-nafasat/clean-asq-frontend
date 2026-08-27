@@ -1,5 +1,5 @@
 import { useBranding } from "@/hooks/BrandingContext";
-import { addSavedFormData, updateEmailVerified } from "@/redux/slices/formSlice";
+import { addSavedFormData, setCurrentDraftId, updateEmailVerified } from "@/redux/slices/formSlice";
 import { useGetSavedFormMutation, useRemoveSavedFormMutation } from "@/redux/apis/formApis";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { useState } from "react";
@@ -22,6 +22,7 @@ function Draft({ forms }) {
   const getSavedData = async (formId, brandingName, draftId) => {
     try {
       if (!emailVerified) dispatch(updateEmailVerified(true));
+      if (draftId) dispatch(setCurrentDraftId(draftId));
       const res = await getSavedFormData({ formId: formId, draftId }).unwrap();
       if (res.success) {
         const savedData = res?.data?.savedData || [];

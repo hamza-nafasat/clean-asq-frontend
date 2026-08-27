@@ -14,7 +14,7 @@ import {
   useUpdateFormMutation,
 } from "@/redux/apis/formApis";
 import { addLookupData } from "@/redux/slices/companySlice";
-import { updateFormHeaderAndFooter, updateFormState } from "@/redux/slices/formSlice";
+import { updateFormHeaderAndFooter, updateFormState, setCurrentDraftId } from "@/redux/slices/formSlice";
 import DOMPurify from "dompurify";
 import { useCallback, useEffect, useRef, useState } from "react";
 import DataTable from "react-data-table-component";
@@ -47,9 +47,10 @@ function CompanyVerification({ formId, brandingName, draftId }) {
   const [lookupCompany, { isLoading: lookupCompanyLoading }] = useCompanyLookupMutation();
   const { primaryColor, textColor, backgroundColor, secondaryColor, logo } = useBranding();
   const tableStyles = getVerificationTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
-  const { formData } = useSelector((state) => state?.form);
+  const { formData, currentDraftId } = useSelector((state) => state?.form);
+  const activeDraftId = draftId || currentDraftId;
   const { data: formBackendData, isLoading, refetch } = useGetSingleFormQueryQuery({ _id: formId });
-  const [saveFormInDraft] = useSaveFormInDraftMutation();
+  const [saveFormInDraft, { isLoading: isSavingFormInDraft }] = useSaveFormInDraftMutation();
   const [locationStatusModal, setLocationStatusModal] = useState(false);
   const [locationData, setLocationData] = useState({});
   const [isCreator, setIsCreator] = useState(false);
@@ -73,10 +74,31 @@ function CompanyVerification({ formId, brandingName, draftId }) {
     };
   }, [dispatch, formBackendData, user]);
 
+  const goToApplicationWithDraft = useCallback(
+    async ({ createIfMissing = false } = {}) => {
+      let id = activeDraftId;
+      try {
+        // Complete OR skip: the first visit to this page creates the draft. Later
+        // saves (IDMission + stepper) reuse this same id until the form is submitted.
+        if (!id && createIfMissing) {
+          const res = await saveFormInDraft({ formId, formData: formData || {} }).unwrap();
+          id = res?.data?.draftId;
+        }
+        if (id) dispatch(setCurrentDraftId(id));
+        return navigate(`/application-form/${brandingName}/${formId}${id ? `?draftId=${id}` : ""}`);
+      } catch (error) {
+        console.log("error while creating draft", error);
+        toast.error(error?.data?.message || "Failed to save draft");
+        return navigate(`/application-form/${brandingName}/${formId}${id ? `?draftId=${id}` : ""}`);
+      }
+    },
+    [activeDraftId, brandingName, dispatch, formData, formId, navigate, saveFormInDraft],
+  );
+
   const handleSubmit = async () => {
     try {
       if (form?.noWebsite) {
-        return navigate(`/application-form/${brandingName}/${formId}${draftId ? `?draftId=${draftId}` : ""}`);
+        return goToApplicationWithDraft({ createIfMissing: true });
       } else {
         if (!form?.name || !form?.url) return toast.error("Please fill all fields");
         setLoading(true);
@@ -87,13 +109,10 @@ function CompanyVerification({ formId, brandingName, draftId }) {
           setApisRes((prev) => ({ ...prev, companyVerify: companyVerifyRes?.data }));
           toast.success("Company verified successfully");
           setLoading(false);
-          // The lookup save creates the draft; carry its id forward so the rest of the
-          // flow (IDMission + stepper) writes to this same draft.
           const newDraftId = await companyLookup();
-          const effectiveDraftId = draftId || newDraftId;
-          return navigate(
-            `/application-form/${brandingName}/${formId}${effectiveDraftId ? `?draftId=${effectiveDraftId}` : ""}`,
-          );
+          const id = activeDraftId || newDraftId;
+          if (id) dispatch(setCurrentDraftId(id));
+          return navigate(`/application-form/${brandingName}/${formId}${id ? `?draftId=${id}` : ""}`);
         } else {
           toast.error("Company verification failed, please try again");
         }
@@ -111,8 +130,13 @@ function CompanyVerification({ formId, brandingName, draftId }) {
       try {
         const formDataInRedux = { ...formData, [name]: data };
         // console.log('save in progress', formDataInRedux);
-        const res = await saveFormInDraft({ formId: formId, draftId, formData: formDataInRedux }).unwrap();
+        const res = await saveFormInDraft({
+          formId: formId,
+          draftId: activeDraftId,
+          formData: formDataInRedux,
+        }).unwrap();
         if (res.success) {
+          if (res?.data?.draftId) dispatch(setCurrentDraftId(res.data.draftId));
           console.log("form saved in draft successfully");
         }
         return res;
@@ -121,7 +145,7 @@ function CompanyVerification({ formId, brandingName, draftId }) {
         toast.error(error?.data?.message || "Error while saving form in draft");
       }
     },
-    [formData, formId, draftId, saveFormInDraft],
+    [formData, formId, activeDraftId, saveFormInDraft, dispatch],
   );
 
   const companyLookup = async () => {
@@ -242,6 +266,7 @@ function CompanyVerification({ formId, brandingName, draftId }) {
             formId={formId}
             navigate={navigate}
             brandingName={formBackendData?.branding?.name}
+            draftId={activeDraftId}
           />
         )}
         <div ref={companyFormRef} className="border-frameColor w-full rounded-md border p-4">
@@ -343,8 +368,8 @@ function CompanyVerification({ formId, brandingName, draftId }) {
                 label="Continue"
                 onClick={handleSubmit}
                 data-testid="company-verification-continue-btn"
-                disabled={loading}
-                className={` ${loading && "pointer-events-auto cursor-not-allowed opacity-20"}`}
+                disabled={loading || isSavingFormInDraft}
+                className={` ${(loading || isSavingFormInDraft) && "pointer-events-auto cursor-not-allowed opacity-20"}`}
               />
             </div>
           </div>
@@ -380,9 +405,8 @@ function CompanyVerification({ formId, brandingName, draftId }) {
 
         {isCreator && (
           <Button
-            onClick={() => {
-              return navigate(`/application-form/${brandingName}/${formId}${draftId ? `?draftId=${draftId}` : ""}`);
-            }}
+            disabled={isSavingFormInDraft}
+            onClick={() => goToApplicationWithDraft({ createIfMissing: true })}
             label={"Skip"}
           />
         )}
