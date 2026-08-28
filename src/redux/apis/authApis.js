@@ -62,6 +62,16 @@ const authApis = createApi({
       }),
     }),
 
+    // update my password
+    // ------------------
+    updateMyPassword: builder.mutation({
+      query: (data) => ({
+        url: "/me/password",
+        method: "PUT",
+        body: data,
+      }),
+    }),
+
     // logout
     // ------
     logout: builder.mutation({
@@ -80,6 +90,7 @@ export const {
   useGetMyProfileQuery,
   useLogoutMutation,
   useUpdateMyProfileMutation,
+  useUpdateMyPasswordMutation,
   useGetMyProfileFirstTimeMutation,
 } = authApis;
 export default authApis;
