@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { IoEyeOffSharp } from "react-icons/io5";
 import { RxEyeOpen } from "react-icons/rx";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
@@ -38,6 +38,15 @@ const formatByParts = (raw, format) => {
   }
   return out;
 };
+
+const focusNextField = (el) => {
+  if (!el) return;
+  const focusable = Array.from(
+    document.querySelectorAll("input:not([disabled]), select:not([disabled]), textarea:not([disabled])"),
+  ).filter((f) => f.offsetParent !== null && f.tabIndex !== -1);
+  const idx = focusable.indexOf(el);
+  if (idx >= 0 && idx + 1 < focusable.length) focusable[idx + 1].focus();
+};
 // -------------------------
 // COMPONENT
 // -------------------------
@@ -71,6 +80,8 @@ const TextField = ({
 }) => {
   const [showMasked, setShowMasked] = useState(isMasked);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionIndex, setSuggestionIndex] = useState(-1);
+  const inputRef = useRef(null);
 
   const inputVal = String(value ?? "").toLowerCase();
 
@@ -199,6 +210,7 @@ const TextField = ({
           </div>
         ) : (
           <input
+            ref={inputRef}
             name={name}
             data-ai-has-suggestions={suggestions?.length ? "true" : undefined}
             disabled={disabled}
@@ -206,18 +218,45 @@ const TextField = ({
             autoComplete="off"
             type={showMasked ? "password" : type}
             value={type === "date" ? formatDate(value) : getDisplayValue(value)}
+            className={`${cn} relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${leftIcon ? "pl-10" : ""} ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf && borderAndBgChangeIfEmpty ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""} `}
+            {...rest}
             onFocus={() => setShowSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+            onBlur={() =>
+              setTimeout(() => {
+                setShowSuggestions(false);
+                setSuggestionIndex(-1);
+              }, 150)
+            }
             onChange={(e) => {
               let val = e.target.value;
               if (effectiveFormatting && type !== "date" && !isPhone) {
                 val = limitByFormat(val, effectiveFormatting);
               }
               if (type === "date") val = normalizeDate(val);
+              setSuggestionIndex(-1);
               onChange?.({ target: { name, value: val } });
             }}
-            className={`${cn} relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${leftIcon ? "pl-10" : ""} ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf && borderAndBgChangeIfEmpty ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""} `}
-            {...rest}
+            onKeyDown={(e) => {
+              if (!showSuggestions || !filteredSuggestions.length) return;
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setSuggestionIndex((i) => Math.min(i + 1, filteredSuggestions.length - 1));
+              } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setSuggestionIndex((i) => Math.max(i - 1, 0));
+              } else if ((e.key === "Enter" || e.key === "Tab") && suggestionIndex >= 0) {
+                const picked = filteredSuggestions[suggestionIndex];
+                if (!picked) return;
+                if (e.key === "Enter") e.preventDefault();
+                onChange?.({ target: { name, value: picked } });
+                setShowSuggestions(false);
+                setSuggestionIndex(-1);
+                if (e.key === "Enter") setTimeout(() => focusNextField(inputRef.current), 0);
+              } else if (e.key === "Escape") {
+                setShowSuggestions(false);
+                setSuggestionIndex(-1);
+              }
+            }}
           />
         )}
 
@@ -228,14 +267,16 @@ const TextField = ({
               {filteredSuggestions.map((suggestion, index) => (
                 <li
                   key={index}
-                  className="h-full cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-black"
-                  onClick={() => {
-                    onChange({ target: { name, value: suggestion } });
+                  className={`h-full cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-black ${
+                    suggestionIndex === index ? "bg-gray-100 font-medium text-black" : ""
+                  }`}
+                  onMouseEnter={() => setSuggestionIndex(index)}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    onChange?.({ target: { name, value: suggestion } });
                     setShowSuggestions(false);
-                  }}
-                  onMouseDown={() => {
-                    onChange({ target: { name, value: suggestion } });
-                    setShowSuggestions(false);
+                    setSuggestionIndex(-1);
+                    setTimeout(() => focusNextField(inputRef.current), 0);
                   }}
                 >
                   {suggestion}
