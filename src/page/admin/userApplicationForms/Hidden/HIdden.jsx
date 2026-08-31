@@ -71,8 +71,8 @@ function FormHiddenSection() {
     idMissionRoleFillingForCompany: { name: "idMissionRoleFillingForCompany", value: "" },
     idMissionData: { name: "idMissionData", value: "null" },
   });
-  console.log("idMissionVerifiedData", section?.fields);
-  const requiredFieldsNames = section?.fields?.filter((field) => field?.required).map((field) => field?.name);
+  console.log("idMissionVerifiedData", form);
+  const requiredFieldsUniqueIds = section?.fields?.filter((field) => field?.required).map((field) => field?.uniqueId);
   const isCreator = user?._id && user?._id === formData?.data?.owner && user?.role !== "guest";
 
   const getQrAndWebLink = useCallback(async () => {
@@ -324,11 +324,15 @@ function FormHiddenSection() {
   }, [idMissionVerifiedData?.createdAt, sectionKey, user?.email]);
 
   useEffect(() => {
-    if (requiredFieldsNames?.length) {
-      const isAllRequiredFieldsFilled = requiredFieldsNames?.every((field) => idMissionVerifiedData?.[field]?.value);
+    if (requiredFieldsUniqueIds?.length) {
+      const isAllRequiredFieldsFilled = requiredFieldsUniqueIds?.every((field) => form?.[field]?.value);
+      // console that field which isn't filled
+      const notFilledFields = requiredFieldsUniqueIds?.filter((field) => !form?.[field]?.value);
+      console.log("notFilledFields", notFilledFields);
+      console.log("isAllRequiredFieldsFilled", isAllRequiredFieldsFilled);
       setIsAllRequiredFieldsFilled(isAllRequiredFieldsFilled);
     }
-  }, [requiredFieldsNames, idMissionVerifiedData]);
+  }, [requiredFieldsUniqueIds, form]);
 
   if (isLoading || isLoadingFormData) return <CustomLoading />;
   return (
