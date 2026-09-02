@@ -63,6 +63,8 @@ function BankInfo({
   const [error] = useState(null);
   const [bankModal, setBankModal] = useState(null);
   const [ownerSuggesstionsModal, setOwnerSuggesstionsModal] = useState(false);
+  const bankModalRef = useRef(null);
+  bankModalRef.current = bankModal;
 
   const requiredNames = useMemo(
     () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
@@ -198,6 +200,33 @@ function BankInfo({
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
   }, [form, isCreator, isSignature, requiredNames]);
 
+  const confirmBankLookup = () => {
+    const modal = bankModalRef.current;
+    if (!modal?.bankName) {
+      setBankModal(null);
+      return;
+    }
+    setForm((prev) => {
+      const bankNameId = Object.keys(prev).find((key) => prev[key]?.name === "bank_name");
+      if (!bankNameId) return prev;
+      return { ...prev, [bankNameId]: { name: "bank_name", value: modal.bankName } };
+    });
+    setBankModal(null);
+  };
+
+  useEffect(() => {
+    if (!bankModal) return;
+    const onKeyDown = (e) => {
+      if (e.key !== "Enter" || e.repeat) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (bankModal.bankName) confirmBankLookup();
+      else setBankModal(null);
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [bankModal]);
+
   lookupTriggerRef.current = () => {
     const routingFieldDef = fields.find((f) => f.name === "bank_routing_number");
     if (routingFieldDef && form[routingFieldDef.uniqueId]?.value) {
@@ -214,8 +243,13 @@ function BankInfo({
     }
   };
 
-  // Enter on routing triggers lookup; other fields advance / submit on last.
+  // Enter on routing triggers lookup; if the confirm modal is open, Enter means Yes.
   onSpecialEnterRef.current = (active, e) => {
+    if (bankModalRef.current) {
+      e.preventDefault();
+      confirmBankLookup();
+      return true;
+    }
     const bankField = active.closest("[data-bank-field]")?.dataset?.bankField;
     if (bankField === "routing") {
       e.preventDefault();
@@ -482,14 +516,8 @@ function BankInfo({
                   />
                   <Button
                     label="Yes"
-                    onClick={() => {
-                      setForm((prev) => {
-                        const bankNameId = Object.keys(prev).find((key) => prev[key]?.name === "bank_name");
-                        console.log("bankNameId is", bankNameId);
-                        return { ...prev, [bankNameId]: { name: "bank_name", value: bankModal.bankName } };
-                      });
-                      setBankModal(null);
-                    }}
+                    data-testid="bank-lookup-yes-btn"
+                    onClick={confirmBankLookup}
                     className="rounded-lg px-4 py-2"
                   />
                 </div>
