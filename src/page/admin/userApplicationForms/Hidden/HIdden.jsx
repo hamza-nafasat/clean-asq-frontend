@@ -71,7 +71,6 @@ function FormHiddenSection() {
     idMissionRoleFillingForCompany: { name: "idMissionRoleFillingForCompany", value: "" },
     idMissionData: { name: "idMissionData", value: "null" },
   });
-  console.log("idMissionVerifiedData", form);
   const requiredFieldsUniqueIds = section?.fields?.filter((field) => field?.required).map((field) => field?.uniqueId);
   const isCreator = user?._id && user?._id === formData?.data?.owner && user?.role !== "guest";
 
