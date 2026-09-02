@@ -1,4 +1,21 @@
 /**
+ * Locate a form field by AI id, HTML id, or name.
+ * @param {Element|null} containerEl
+ * @param {string} fieldId
+ * @returns {Element|null}
+ */
+export const findAiFieldEl = (containerEl, fieldId) => {
+  if (!fieldId) return null;
+  const escaped = CSS.escape(fieldId);
+  const root = containerEl || document;
+  return (
+    root.querySelector(`[data-ai-id="${escaped}"]`) ||
+    root.querySelector(`#${escaped}`) ||
+    root.querySelector(`[name="${escaped}"]`)
+  );
+};
+
+/**
  * Fill a form field by finding it in the DOM and triggering its existing
  * React onChange handler via a native event — no per-form wiring needed.
  *
@@ -16,13 +33,10 @@ export const domFillField = (containerEl, fieldId, value) => {
   if (!containerEl || !fieldId) return false;
 
   // Signature markers are never fillable
-  const aiMarker = containerEl.querySelector(`[data-ai-id="${fieldId}"]`);
+  const aiMarker = findAiFieldEl(containerEl, fieldId);
   if (aiMarker?.getAttribute("data-ai-type") === "sign") return false;
 
-  // Locate the input — prefer id match, fall back to name
-  const el =
-    containerEl.querySelector(`#${CSS.escape(fieldId)}`) ||
-    containerEl.querySelector(`[name="${CSS.escape(fieldId)}"]`);
+  const el = findAiFieldEl(containerEl, fieldId);
 
   if (!el) return false;
   if (el.getAttribute("data-ai-type") === "sign") return false;
@@ -32,7 +46,15 @@ export const domFillField = (containerEl, fieldId, value) => {
     // Use the browser's native click() so the full click→change cycle fires
     // and React's event delegation picks it up correctly (programmatic
     // `change` events alone are not reliably processed in React 19).
-    const target = containerEl.querySelector(`input[name="${CSS.escape(fieldId)}"][value="${CSS.escape(value)}"]`);
+    const escapedValue = CSS.escape(String(value));
+    const escapedId = CSS.escape(fieldId);
+    const groupName = el.getAttribute("name");
+    const target =
+      containerEl.querySelector(`input[type="radio"][data-ai-id="${escapedId}"][value="${escapedValue}"]`) ||
+      (groupName
+        ? containerEl.querySelector(`input[type="radio"][name="${CSS.escape(groupName)}"][value="${escapedValue}"]`)
+        : null) ||
+      containerEl.querySelector(`input[type="radio"][name="${escapedId}"][value="${escapedValue}"]`);
     if (!target) return false;
     // In maxHelp mode all form inputs are disabled. Temporarily enable the
     // target radio so the click event fires and React's onChange handler runs.
@@ -173,7 +195,7 @@ export const discoverFormFields = (containerEl, { silent = false } = {}) => {
       });
       const required = el.hasAttribute("required") || el.getAttribute("data-ai-required") === "true";
       results.push({
-        id: groupId,
+        id: rawId,
         label,
         type: "radio",
         value,

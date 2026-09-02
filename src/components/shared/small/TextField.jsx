@@ -76,6 +76,7 @@ const TextField = ({
   textAreaHeight = "45px",
   placeholder,
   borderAndBgChangeIfEmpty = true,
+  id,
   ...rest
 }) => {
   const [showMasked, setShowMasked] = useState(isMasked);
@@ -140,6 +141,8 @@ const TextField = ({
             cols={cols}
             placeholder={placeholder}
             name={name}
+            id={id}
+            data-ai-id={rest["data-ai-id"] || id}
             disabled={disabled}
             value={type === "date" ? formatDate(value) : value}
             autoComplete="off"
@@ -183,7 +186,9 @@ const TextField = ({
                 style: { outline: "none" },
                 required: required || undefined,
                 disabled,
+                id,
                 name,
+                "data-ai-id": rest["data-ai-id"] || id,
               }}
               international
               limitMaxLength
@@ -211,6 +216,8 @@ const TextField = ({
         ) : (
           <input
             ref={inputRef}
+            id={id}
+            data-ai-id={rest["data-ai-id"] || id}
             name={name}
             data-ai-has-suggestions={suggestions?.length ? "true" : undefined}
             disabled={disabled}

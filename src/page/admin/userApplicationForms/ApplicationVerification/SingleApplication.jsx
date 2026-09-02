@@ -11,6 +11,7 @@ import { useApplicantScreenContext } from "@/hooks/useApplicantScreenContext";
 import useApplyBranding from "@/hooks/useApplyBranding";
 import { usePageDownload } from "@/hooks/usePageDownload";
 import getEnv from "@/lib/env";
+import { findAiFieldEl } from "@/lib/discoverFormFields";
 import { socket } from "@/main";
 import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from "@/redux/apis/authApis";
 import {
@@ -334,7 +335,7 @@ export default function SingleApplication() {
       },
       actions: {
         scrollToField: ({ fieldId }) => {
-          const el = document.getElementById(fieldId) || document.querySelector(`[name="${fieldId}"]`);
+          const el = findAiFieldEl(idMissionFormRef.current, fieldId) || findAiFieldEl(document, fieldId);
           if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
         },
         ...(aiStage === "email" && {

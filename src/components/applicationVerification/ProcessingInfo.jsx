@@ -265,12 +265,15 @@ function ProcessingInfo({
       {/* next Previous buttons  */}
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
-          {currentStep > 0 && <Button variant="secondary" label={"Previous"} onClick={handlePrevious} />}
+          {currentStep > 0 && (
+            <Button variant="secondary" label={"Previous"} onClick={handlePrevious} data-testid="form-back-btn" />
+          )}
           {currentStep < totalSteps - 1 ? (
             <Button
               className={`${(!isAllRequiredFieldsFilled || loadingNext) && "pointer-events-none cursor-not-allowed opacity-20"}`}
               disabled={!isAllRequiredFieldsFilled || loadingNext}
               label={isAllRequiredFieldsFilled ? "Next" : "Some Required Fields are Missing"}
+              data-testid="form-next-btn"
               onClick={() => handleNext({ data: form, name: sectionKey, setLoadingNext })}
             />
           ) : (

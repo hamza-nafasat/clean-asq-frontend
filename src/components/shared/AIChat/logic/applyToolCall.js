@@ -1,4 +1,6 @@
+import { findAiFieldEl } from "@/lib/discoverFormFields.js";
 import { PAGE_LABELS, PAGE_ROUTES, SERVER_URL } from "../constants/aiChatConstants.js";
+
 import { toPreviewSection } from "./formPreviewUtils.js";
 
 /**
@@ -43,9 +45,8 @@ export function createApplyToolCall(bindings) {
     console.log(`%c[TOOL] applyToolCall: ${tool}`, "color:#c0f; font-weight:bold", args);
     const ctx = getScreenContext();
     if (!ctx?.actions) return;
-    const defaultEndpoint = assistantMode === "applicant"
-      ? `${SERVER_URL}/api/ai/applicant-chat`
-      : `${SERVER_URL}/api/ai/branding-chat`;
+    const defaultEndpoint =
+      assistantMode === "applicant" ? `${SERVER_URL}/api/ai/applicant-chat` : `${SERVER_URL}/api/ai/branding-chat`;
     const chatEndpoint = ctx.aiEndpoint || defaultEndpoint;
 
     if (tool === "revertLastAction") {
@@ -63,7 +64,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("revertFailed")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("revertFailed")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -112,7 +116,9 @@ export function createApplyToolCall(bindings) {
               const hostname = new URL(url.startsWith("http") ? url : `https://${url}`).hostname;
               const base = hostname.replace(/^www\./, "").split(".")[0];
               return base.charAt(0).toUpperCase() + base.slice(1);
-            } catch { return ""; }
+            } catch {
+              return "";
+            }
           })();
           const nameToUse = brandingData?.name || nameFromDomain;
           if (nameToUse) ctx.actions.companyName(nameToUse);
@@ -128,13 +134,20 @@ export function createApplyToolCall(bindings) {
       // ── Step 3: Inject a hardcoded confirmation — no AI call ─────────────────
       // Branding fields are already applied by applyExtractedBranding above.
       // We do not involve AI here to prevent it from overwriting extracted values.
-      const displayName = brandingData?.name || (() => {
-        try {
-          const hostname = new URL(url.startsWith("http") ? url : `https://${url}`).hostname;
-          return hostname.replace(/^www\./, "").split(".")[0];
-        } catch { return url; }
-      })();
-      addMessage({ role: "assistant", content: `Branding extracted from **${displayName}** and applied. You can review the colors and logos above, or ask me to make any adjustments.` });
+      const displayName =
+        brandingData?.name ||
+        (() => {
+          try {
+            const hostname = new URL(url.startsWith("http") ? url : `https://${url}`).hostname;
+            return hostname.replace(/^www\./, "").split(".")[0];
+          } catch {
+            return url;
+          }
+        })();
+      addMessage({
+        role: "assistant",
+        content: `Branding extracted from **${displayName}** and applied. You can review the colors and logos above, or ask me to make any adjustments.`,
+      });
       return;
     }
 
@@ -147,7 +160,10 @@ export function createApplyToolCall(bindings) {
         action({ url });
       } else {
         // Screen context doesn't support this tool — inform the user
-        addMessage({ role: "assistant", content: "Open the Extract Branding modal and switch to the Manual Extract tab to continue." });
+        addMessage({
+          role: "assistant",
+          content: "Open the Extract Branding modal and switch to the Manual Extract tab to continue.",
+        });
       }
       return;
     }
@@ -181,7 +197,9 @@ export function createApplyToolCall(bindings) {
           colors.length ? `Colors: ${colors.join(", ")}` : null,
           Object.keys(cssVars).length ? `CSS variables: ${JSON.stringify(cssVars)}` : null,
           logoUrls.length ? `Image URLs: ${logoUrls.join(", ")}` : null,
-        ].filter(Boolean).join("\n");
+        ]
+          .filter(Boolean)
+          .join("\n");
 
         const followUpHistory = [...currentHistory, { role: "user", content: resultText }];
 
@@ -211,7 +229,11 @@ export function createApplyToolCall(bindings) {
           if (isVoiceModeRef.current) speak(aiData.content);
         }
       } catch {
-        addMessage({ role: "assistant", content: "I couldn't parse the pasted content. Try pasting just the hex color codes or CSS variables directly." });
+        addMessage({
+          role: "assistant",
+          content:
+            "I couldn't parse the pasted content. Try pasting just the hex color codes or CSS variables directly.",
+        });
       }
       return;
     }
@@ -220,7 +242,9 @@ export function createApplyToolCall(bindings) {
       const { changes, explanation } = args;
       // Snapshot current values before overwriting
       const snapshot = {};
-      Object.keys(changes).forEach((key) => { snapshot[key] = ctx.currentState?.[key]; });
+      Object.keys(changes).forEach((key) => {
+        snapshot[key] = ctx.currentState?.[key];
+      });
       pushRevertable({
         description: `Applied branding changes (${Object.keys(changes).join(", ")})`,
         revertFn: (freshCtx) => {
@@ -237,7 +261,15 @@ export function createApplyToolCall(bindings) {
       if (isVoiceModeRef.current) speak(explanation);
       // Continue so the AI can chain the next step of a compound command (e.g. save, assign to form).
       // Suppress plain text response — explanation was already shown above; only tool calls should proceed.
-      await continueAfterToolCall(tool, args, "Branding changes applied to the screen.", currentHistory, chatEndpoint, ctx, true);
+      await continueAfterToolCall(
+        tool,
+        args,
+        "Branding changes applied to the screen.",
+        currentHistory,
+        chatEndpoint,
+        ctx,
+        true,
+      );
       return;
     }
 
@@ -267,30 +299,48 @@ export function createApplyToolCall(bindings) {
         if (!data.success) throw new Error(data.message || "Logo edit failed");
         const freshCtx = getScreenContext();
         if (freshCtx?.actions?.addLogo) freshCtx.actions.addLogo(data.url);
-        addMessage({ role: "assistant", content: "Done! The modified logo has been added to your available logos — you can now select it from the logo panel." });
+        addMessage({
+          role: "assistant",
+          content:
+            "Done! The modified logo has been added to your available logos — you can now select it from the logo panel.",
+        });
         if (isVoiceModeRef.current) speak("Done! The modified logo has been added to your available logos.");
       } catch (err) {
-        addMessage({ role: "assistant", content: `Sorry, I couldn't edit the logo: ${err.message || "please try again."}` });
+        addMessage({
+          role: "assistant",
+          content: `Sorry, I couldn't edit the logo: ${err.message || "please try again."}`,
+        });
       } finally {
         setIsLoading(false);
       }
       return;
     }
 
-    if (["resizeLogo", "cropLogo", "roundLogoCorners", "flattenLogo",
-         "flipLogo", "rotateLogo", "grayscaleLogo", "addLogoPadding", "trimLogo",
-         "removeBackgroundFromLogo"].includes(tool)) {
+    if (
+      [
+        "resizeLogo",
+        "cropLogo",
+        "roundLogoCorners",
+        "flattenLogo",
+        "flipLogo",
+        "rotateLogo",
+        "grayscaleLogo",
+        "addLogoPadding",
+        "trimLogo",
+        "removeBackgroundFromLogo",
+      ].includes(tool)
+    ) {
       const { logoUrl, explanation, ...params } = args;
       const ENDPOINT_MAP = {
-        resizeLogo:               "logo-resize",
-        cropLogo:                 "logo-crop",
-        roundLogoCorners:         "logo-round-corners",
-        flattenLogo:              "logo-flatten",
-        flipLogo:                 "logo-flip",
-        rotateLogo:               "logo-rotate",
-        grayscaleLogo:            "logo-grayscale",
-        addLogoPadding:           "logo-padding",
-        trimLogo:                 "logo-trim",
+        resizeLogo: "logo-resize",
+        cropLogo: "logo-crop",
+        roundLogoCorners: "logo-round-corners",
+        flattenLogo: "logo-flatten",
+        flipLogo: "logo-flip",
+        rotateLogo: "logo-rotate",
+        grayscaleLogo: "logo-grayscale",
+        addLogoPadding: "logo-padding",
+        trimLogo: "logo-trim",
         removeBackgroundFromLogo: "logo-remove-background",
       };
       const endpoint = ENDPOINT_MAP[tool];
@@ -310,7 +360,10 @@ export function createApplyToolCall(bindings) {
         addMessage({ role: "assistant", content: "Done! The modified logo has been added to your available logos." });
         if (isVoiceModeRef.current) speak("Done! The modified logo has been added to your available logos.");
       } catch (err) {
-        addMessage({ role: "assistant", content: `Sorry, I couldn't process the logo: ${err.message || "please try again."}` });
+        addMessage({
+          role: "assistant",
+          content: `Sorry, I couldn't process the logo: ${err.message || "please try again."}`,
+        });
       } finally {
         setIsLoading(false);
       }
@@ -326,10 +379,21 @@ export function createApplyToolCall(bindings) {
         addMessage({ role: "assistant", content: explanation });
         if (isVoiceModeRef.current) speak(explanation);
         // Chain a follow-up for tool-based actions (e.g. navigation) but suppress text.
-        await continueAfterToolCall(tool, args, "Branding saved successfully.", currentHistory, chatEndpoint, ctx, true);
+        await continueAfterToolCall(
+          tool,
+          args,
+          "Branding saved successfully.",
+          currentHistory,
+          chatEndpoint,
+          ctx,
+          true,
+        );
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -350,7 +414,7 @@ export function createApplyToolCall(bindings) {
               errors.push("website");
             }
           }
-          for (const formId of (formIds || [])) {
+          for (const formId of formIds || []) {
             try {
               await addBrandingToFormGlobal({ brandingId: argBrandingId, formId, onHome: "no" }).unwrap();
             } catch {
@@ -370,7 +434,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -391,10 +458,20 @@ export function createApplyToolCall(bindings) {
     if (tool === "saveEmailTemplate") {
       try {
         if (ctx.actions.saveEmailTemplate) await ctx.actions.saveEmailTemplate();
-        await continueAfterToolCall(tool, args, "Email template saved successfully.", currentHistory, chatEndpoint, ctx);
+        await continueAfterToolCall(
+          tool,
+          args,
+          "Email template saved successfully.",
+          currentHistory,
+          chatEndpoint,
+          ctx,
+        );
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -407,7 +484,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -420,7 +500,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -433,7 +516,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -446,7 +532,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -459,7 +548,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -472,7 +564,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -485,7 +580,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -498,7 +596,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -511,7 +612,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -524,7 +628,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -537,7 +644,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -550,7 +660,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -580,7 +693,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -593,7 +709,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -644,7 +763,10 @@ export function createApplyToolCall(bindings) {
         await continueAfterToolCall(tool, args, "Lookup created successfully.", currentHistory, chatEndpoint, ctx);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -656,7 +778,10 @@ export function createApplyToolCall(bindings) {
         await continueAfterToolCall(tool, args, "Lookup updated successfully.", currentHistory, chatEndpoint, ctx);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -669,7 +794,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -696,13 +824,19 @@ export function createApplyToolCall(bindings) {
       // Guard against stale IDs (e.g. form was renamed/deleted since the last list refresh)
       const knownForms = ctx.currentState?.forms || [];
       if (formId && !knownForms.some((f) => String(f._id) === String(formId))) {
-        const formList = knownForms.map((f) =>
-          `"${f.name}"${f.headerText && f.headerText !== f.name ? ` (displayed as "${f.headerText}")` : ""} [${f._id}]`
-        ).join(", ");
+        const formList = knownForms
+          .map(
+            (f) =>
+              `"${f.name}"${f.headerText && f.headerText !== f.name ? ` (displayed as "${f.headerText}")` : ""} [${f._id}]`,
+          )
+          .join(", ");
         await continueAfterToolCall(
-          tool, args,
+          tool,
+          args,
           `Error: Form ID "${formId}" is not in the current forms list — it may have been deleted or recreated with a new ID. Current forms: ${formList || "none"}. Please use a valid ID from this list.`,
-          currentHistory, chatEndpoint, ctx,
+          currentHistory,
+          chatEndpoint,
+          ctx,
         );
         return;
       }
@@ -737,10 +871,14 @@ export function createApplyToolCall(bindings) {
         } else if (sourceBrandingId === targetBrandingId) {
           cloneFailures.push(`**Branding:** already set to "${sourceBrandingName}" — skipped`);
         } else if (ctx.actions.setFormsBranding) {
-          await ctx.actions.setFormsBranding({ updates: [{ formId: String(targetFormId), brandingId: sourceBrandingId }] });
+          await ctx.actions.setFormsBranding({
+            updates: [{ formId: String(targetFormId), brandingId: sourceBrandingId }],
+          });
           cloneFailures.push(`**Branding:** applied "${sourceBrandingName}" ✓`);
         }
-      } catch (err) { cloneFailures.push(`**Branding:** failed — ${err?.message || "unknown error"} ✗`); }
+      } catch (err) {
+        cloneFailures.push(`**Branding:** failed — ${err?.message || "unknown error"} ✗`);
+      }
 
       // Email templates — independent step
       try {
@@ -752,10 +890,17 @@ export function createApplyToolCall(bindings) {
         } else if (!missingTemplates.length) {
           cloneFailures.push(`**Email templates:** all ${sourceTemplates.length} already attached — skipped`);
         } else if (ctx.actions.attachEmailTemplate) {
-          await ctx.actions.attachEmailTemplate({ formId: String(targetFormId), templateIds: missingTemplates.map((t) => String(t._id)) });
-          cloneFailures.push(`**Email templates:** attached ${missingTemplates.map((t) => `"${t.name}"`).join(", ")} ✓`);
+          await ctx.actions.attachEmailTemplate({
+            formId: String(targetFormId),
+            templateIds: missingTemplates.map((t) => String(t._id)),
+          });
+          cloneFailures.push(
+            `**Email templates:** attached ${missingTemplates.map((t) => `"${t.name}"`).join(", ")} ✓`,
+          );
         }
-      } catch (err) { cloneFailures.push(`**Email templates:** failed — ${err?.message || "unknown error"} ✗`); }
+      } catch (err) {
+        cloneFailures.push(`**Email templates:** failed — ${err?.message || "unknown error"} ✗`);
+      }
 
       // Section updates — filter to valid target IDs and changed values, independent step
       try {
@@ -763,12 +908,25 @@ export function createApplyToolCall(bindings) {
           const existing = targetSectionMap.get(String(u.sectionId));
           if (!existing) return false;
           const isEmpty = (v) => !v || v === "(not set)";
-          if (u.displayText !== undefined && !isEmpty(u.displayText) && u.displayText !== existing.displayText) return true;
-          if (u.signDisplayText !== undefined && !isEmpty(u.signDisplayText) && u.signDisplayText !== (existing.signDisplayText || existing.signDisplayFormattedText)) return true;
-          if (u.aiCustomizablePrompt !== undefined && !isEmpty(u.aiCustomizablePrompt) && u.aiCustomizablePrompt !== existing.aiCustomizablePrompt) return true;
-          if (u.aiFormatting !== undefined && !isEmpty(u.aiFormatting) && u.aiFormatting !== existing.ai_formatting) return true;
+          if (u.displayText !== undefined && !isEmpty(u.displayText) && u.displayText !== existing.displayText)
+            return true;
+          if (
+            u.signDisplayText !== undefined &&
+            !isEmpty(u.signDisplayText) &&
+            u.signDisplayText !== (existing.signDisplayText || existing.signDisplayFormattedText)
+          )
+            return true;
+          if (
+            u.aiCustomizablePrompt !== undefined &&
+            !isEmpty(u.aiCustomizablePrompt) &&
+            u.aiCustomizablePrompt !== existing.aiCustomizablePrompt
+          )
+            return true;
+          if (u.aiFormatting !== undefined && !isEmpty(u.aiFormatting) && u.aiFormatting !== existing.ai_formatting)
+            return true;
           if (u.isSignAiHelp !== undefined && u.isSignAiHelp !== existing.isSignAiHelp) return true;
-          if (u.signAiPrompt !== undefined && !isEmpty(u.signAiPrompt) && u.signAiPrompt !== existing.signAiPrompt) return true;
+          if (u.signAiPrompt !== undefined && !isEmpty(u.signAiPrompt) && u.signAiPrompt !== existing.signAiPrompt)
+            return true;
           if (u.ownerSuggestions?.length) return true;
           return false;
         });
@@ -778,7 +936,9 @@ export function createApplyToolCall(bindings) {
         } else {
           cloneFailures.push("**Section settings:** all already matched — skipped");
         }
-      } catch (err) { cloneFailures.push(`**Section settings:** failed — ${err?.message || "unknown error"} ✗`); }
+      } catch (err) {
+        cloneFailures.push(`**Section settings:** failed — ${err?.message || "unknown error"} ✗`);
+      }
 
       // Field updates — independent step
       try {
@@ -789,21 +949,34 @@ export function createApplyToolCall(bindings) {
         } else {
           cloneFailures.push("**Field settings:** all already matched — skipped");
         }
-      } catch (err) { cloneFailures.push(`**Field settings:** failed — ${err?.message || "unknown error"} ✗`); }
+      } catch (err) {
+        cloneFailures.push(`**Field settings:** failed — ${err?.message || "unknown error"} ✗`);
+      }
 
       // Underwriting rules — independent step (always reported)
       try {
         if (ctx.actions.cloneRules) {
-          const result = await ctx.actions.cloneRules({ sourceFormId: String(sourceFormId), targetFormId: String(targetFormId) });
+          const result = await ctx.actions.cloneRules({
+            sourceFormId: String(sourceFormId),
+            targetFormId: String(targetFormId),
+          });
           if (result.cloned > 0) {
-            cloneFailures.push(`**Underwriting rules:** cloned ${result.cloned} rule(s)${result.skipped ? ` (${result.skipped} already present — skipped)` : ""} ✓`);
+            cloneFailures.push(
+              `**Underwriting rules:** cloned ${result.cloned} rule(s)${result.skipped ? ` (${result.skipped} already present — skipped)` : ""} ✓`,
+            );
           } else if (result.skipped > 0) {
-            cloneFailures.push(`**Underwriting rules:** all ${result.skipped} rule(s) already present on target — skipped ✓`);
+            cloneFailures.push(
+              `**Underwriting rules:** all ${result.skipped} rule(s) already present on target — skipped ✓`,
+            );
           } else {
-            cloneFailures.push(`**Underwriting rules:** no rules were copied — no underwriting rules were found in the source form`);
+            cloneFailures.push(
+              `**Underwriting rules:** no rules were copied — no underwriting rules were found in the source form`,
+            );
           }
         }
-      } catch (err) { cloneFailures.push(`**Underwriting rules:** failed — ${err?.message || "unknown error"} ✗`); }
+      } catch (err) {
+        cloneFailures.push(`**Underwriting rules:** failed — ${err?.message || "unknown error"} ✗`);
+      }
 
       const finalMessage = `Settings clone complete:\n\n${cloneFailures.join("\n")}`;
       addMessage({ role: "assistant", content: finalMessage });
@@ -832,10 +1005,14 @@ export function createApplyToolCall(bindings) {
           } else if (sourceBrandingId === targetBrandingId) {
             cloneResults.push(`**Branding:** already set to "${sourceBrandingName}" — skipped`);
           } else if (ctx.actions.setFormsBranding) {
-            await ctx.actions.setFormsBranding({ updates: [{ formId: String(targetFormId), brandingId: sourceBrandingId }] });
+            await ctx.actions.setFormsBranding({
+              updates: [{ formId: String(targetFormId), brandingId: sourceBrandingId }],
+            });
             cloneResults.push(`**Branding:** applied "${sourceBrandingName}" ✓`);
           }
-        } catch (err) { cloneResults.push(`**Branding:** failed — ${err?.message || "unknown error"} ✗`); }
+        } catch (err) {
+          cloneResults.push(`**Branding:** failed — ${err?.message || "unknown error"} ✗`);
+        }
 
         // Email templates
         try {
@@ -847,10 +1024,17 @@ export function createApplyToolCall(bindings) {
           } else if (!missingTemplates.length) {
             cloneResults.push(`**Email templates:** all ${sourceTemplates.length} already attached — skipped`);
           } else if (ctx.actions.attachEmailTemplate) {
-            await ctx.actions.attachEmailTemplate({ formId: String(targetFormId), templateIds: missingTemplates.map((t) => String(t._id)) });
-            cloneResults.push(`**Email templates:** attached ${missingTemplates.map((t) => `"${t.name}"`).join(", ")} ✓`);
+            await ctx.actions.attachEmailTemplate({
+              formId: String(targetFormId),
+              templateIds: missingTemplates.map((t) => String(t._id)),
+            });
+            cloneResults.push(
+              `**Email templates:** attached ${missingTemplates.map((t) => `"${t.name}"`).join(", ")} ✓`,
+            );
           }
-        } catch (err) { cloneResults.push(`**Email templates:** failed — ${err?.message || "unknown error"} ✗`); }
+        } catch (err) {
+          cloneResults.push(`**Email templates:** failed — ${err?.message || "unknown error"} ✗`);
+        }
       }
 
       // Section updates — filter to only valid sections in the current detailed form.
@@ -862,37 +1046,61 @@ export function createApplyToolCall(bindings) {
         const targetSections = liveCtx.currentState?.detailedForm?.sections || [];
         const targetSectionMap = new Map(targetSections.map((s) => [String(s._id), s]));
         validUpdates = (updates || []).filter((u) => targetSectionMap.has(String(u.sectionId)));
-        console.log("[updateSectionSettings handler] updates:", updates, "targetSections count:", targetSections.length, "validUpdates:", validUpdates, "liveCtx.actions exists?", !!liveCtx.actions?.updateSectionSettings);
+        console.log(
+          "[updateSectionSettings handler] updates:",
+          updates,
+          "targetSections count:",
+          targetSections.length,
+          "validUpdates:",
+          validUpdates,
+          "liveCtx.actions exists?",
+          !!liveCtx.actions?.updateSectionSettings,
+        );
         if (validUpdates.length && liveCtx.actions?.updateSectionSettings) {
           await liveCtx.actions.updateSectionSettings({ updates: validUpdates });
           const skipped = (updates || []).length - validUpdates.length;
-          cloneResults.push(`**Section settings:** applied ${validUpdates.length} update(s)${skipped ? ` (${skipped} skipped — invalid section ID)` : ""} ✓`);
+          cloneResults.push(
+            `**Section settings:** applied ${validUpdates.length} update(s)${skipped ? ` (${skipped} skipped — invalid section ID)` : ""} ✓`,
+          );
         } else if ((updates || []).length && !validUpdates.length) {
           cloneResults.push(`**Section settings:** skipped — no updates matched valid sections in the current form ✗`);
         }
-      } catch (err) { cloneResults.push(`**Section settings:** failed — ${err?.message || "unknown error"} ✗`); }
+      } catch (err) {
+        cloneResults.push(`**Section settings:** failed — ${err?.message || "unknown error"} ✗`);
+      }
 
       // Underwriting rules — independent step
       if (sourceFormId) {
         const targetFormId = ctx.currentState?.detailedForm?._id;
         try {
           if (targetFormId && ctx.actions.cloneRules) {
-            const result = await ctx.actions.cloneRules({ sourceFormId: String(sourceFormId), targetFormId: String(targetFormId) });
+            const result = await ctx.actions.cloneRules({
+              sourceFormId: String(sourceFormId),
+              targetFormId: String(targetFormId),
+            });
             if (result.cloned > 0) {
-              cloneResults.push(`**Underwriting rules:** cloned ${result.cloned} rule(s)${result.skipped ? ` (${result.skipped} already present — skipped)` : ""} ✓`);
+              cloneResults.push(
+                `**Underwriting rules:** cloned ${result.cloned} rule(s)${result.skipped ? ` (${result.skipped} already present — skipped)` : ""} ✓`,
+              );
             } else if (result.skipped > 0) {
-              cloneResults.push(`**Underwriting rules:** all ${result.skipped} rule(s) already present on target — skipped ✓`);
+              cloneResults.push(
+                `**Underwriting rules:** all ${result.skipped} rule(s) already present on target — skipped ✓`,
+              );
             } else {
-              cloneResults.push(`**Underwriting rules:** no rules were copied — no underwriting rules were found in the source form`);
+              cloneResults.push(
+                `**Underwriting rules:** no rules were copied — no underwriting rules were found in the source form`,
+              );
             }
           }
-        } catch (err) { cloneResults.push(`**Underwriting rules:** failed — ${err?.message || "unknown error"} ✗`); }
+        } catch (err) {
+          cloneResults.push(`**Underwriting rules:** failed — ${err?.message || "unknown error"} ✗`);
+        }
       }
 
       // Pass results to AI continuation so it can incorporate them into its final summary
       const resultSummary = cloneResults.length
         ? `Completed form-level settings. Results:\n${cloneResults.join("\n")}\n\nNow continue with field updates if any, then produce a final summary that incorporates these results verbatim. End with: "Say **save** to apply these changes to the live form, or **discard** to cancel."`
-        : "Section settings applied to preview. Continue with field updates if any, then summarise what changed. End your response with: \"Say **save** to apply these changes to the live form, or **discard** to cancel.\"";
+        : 'Section settings applied to preview. Continue with field updates if any, then summarise what changed. End your response with: "Say **save** to apply these changes to the live form, or **discard** to cancel."';
       await continueAfterToolCall(tool, args, resultSummary, currentHistory, chatEndpoint, ctx);
       // Auto-inject form preview built locally from ctx (which has previous pending edits applied)
       // plus the new validUpdates — avoids a React render-timing race on hasPendingEdits.
@@ -902,9 +1110,22 @@ export function createApplyToolCall(bindings) {
         if (baseForm) {
           const previewSections = (baseForm.sections || []).map((s) => {
             const u = validUpdates.find((vu) => String(vu.sectionId) === String(s._id));
-            return toPreviewSection(s, u ? { displayText: u.displayText ?? s.displayText ?? "", signDisplayText: u.signDisplayText ?? s.signDisplayText ?? "", isHidden: u.isHidden ?? s.isHidden ?? false } : {});
+            return toPreviewSection(
+              s,
+              u
+                ? {
+                    displayText: u.displayText ?? s.displayText ?? "",
+                    signDisplayText: u.signDisplayText ?? s.signDisplayText ?? "",
+                    isHidden: u.isHidden ?? s.isHidden ?? false,
+                  }
+                : {},
+            );
           });
-          addMessage({ role: "assistant", content: "", formPreview: { formName: baseForm.name || baseForm.headerText, sections: previewSections } });
+          addMessage({
+            role: "assistant",
+            content: "",
+            formPreview: { formName: baseForm.name || baseForm.headerText, sections: previewSections },
+          });
         }
       }
       return;
@@ -914,7 +1135,14 @@ export function createApplyToolCall(bindings) {
       const { updates } = args;
       try {
         if (ctx.actions.updateFieldSettings) await ctx.actions.updateFieldSettings({ updates });
-        await continueAfterToolCall(tool, args, "Field settings applied to preview. Summarise what changed, then end with: \"Say **save** to apply these changes to the live form, or **discard** to cancel.\"", currentHistory, chatEndpoint, ctx);
+        await continueAfterToolCall(
+          tool,
+          args,
+          'Field settings applied to preview. Summarise what changed, then end with: "Say **save** to apply these changes to the live form, or **discard** to cancel."',
+          currentHistory,
+          chatEndpoint,
+          ctx,
+        );
         if (updates?.length) {
           const nowCtx = getScreenContext();
           const baseForm = (nowCtx?.screenId === ctx.screenId ? nowCtx : ctx).currentState?.detailedForm;
@@ -922,15 +1150,25 @@ export function createApplyToolCall(bindings) {
             const previewSections = (baseForm.sections || []).map((s) => {
               const su = updates.find((u) => String(u.sectionId) === String(s._id));
               if (!su) return toPreviewSection(s);
-              const mergedFields = (s.fields || []).map((f) => { const fu = (su.fields || []).find((ff) => String(ff.fieldId) === String(f._id)); return fu ? { ...f, ...fu } : f; });
+              const mergedFields = (s.fields || []).map((f) => {
+                const fu = (su.fields || []).find((ff) => String(ff.fieldId) === String(f._id));
+                return fu ? { ...f, ...fu } : f;
+              });
               return toPreviewSection({ ...s, fields: mergedFields });
             });
-            addMessage({ role: "assistant", content: "", formPreview: { formName: baseForm.name || baseForm.headerText, sections: previewSections } });
+            addMessage({
+              role: "assistant",
+              content: "",
+              formPreview: { formName: baseForm.name || baseForm.headerText, sections: previewSections },
+            });
           }
         }
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -938,24 +1176,46 @@ export function createApplyToolCall(bindings) {
     if (tool === "reorderSections") {
       const { sectionOrder } = args;
       try {
-        console.log("[reorderSections handler] sectionOrder:", sectionOrder, "action exists?", !!ctx.actions?.reorderSections);
+        console.log(
+          "[reorderSections handler] sectionOrder:",
+          sectionOrder,
+          "action exists?",
+          !!ctx.actions?.reorderSections,
+        );
         if (ctx.actions.reorderSections) ctx.actions.reorderSections({ sectionOrder });
         console.log("[reorderSections handler] after action call, will continueAfterToolCall");
-        await continueAfterToolCall(tool, args, "Sections reordered in preview. Summarise what changed, then end with: \"Say **save** to apply these changes to the live form, or **discard** to cancel.\"", currentHistory, chatEndpoint, ctx);
+        await continueAfterToolCall(
+          tool,
+          args,
+          'Sections reordered in preview. Summarise what changed, then end with: "Say **save** to apply these changes to the live form, or **discard** to cancel."',
+          currentHistory,
+          chatEndpoint,
+          ctx,
+        );
         if (sectionOrder?.length) {
           const nowCtx = getScreenContext();
           const baseForm = (nowCtx?.screenId === ctx.screenId ? nowCtx : ctx).currentState?.detailedForm;
           if (baseForm) {
-            const orderMap = {}; (sectionOrder || []).forEach((id, i) => { orderMap[String(id)] = i; });
+            const orderMap = {};
+            (sectionOrder || []).forEach((id, i) => {
+              orderMap[String(id)] = i;
+            });
             const previewSections = [...(baseForm.sections || [])]
               .sort((a, b) => (orderMap[String(a._id)] ?? 9999) - (orderMap[String(b._id)] ?? 9999))
               .map((s) => toPreviewSection(s));
-            addMessage({ role: "assistant", content: "", formPreview: { formName: baseForm.name || baseForm.headerText, sections: previewSections } });
+            addMessage({
+              role: "assistant",
+              content: "",
+              formPreview: { formName: baseForm.name || baseForm.headerText, sections: previewSections },
+            });
           }
         }
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -965,7 +1225,14 @@ export function createApplyToolCall(bindings) {
       try {
         const liveCtx = getScreenContext() ?? ctx;
         if (liveCtx.actions?.deleteSection) liveCtx.actions.deleteSection({ sectionId });
-        await continueAfterToolCall(tool, args, "Section marked for deletion in preview. Summarise what changed, then end with: \"Say **save** to apply these changes to the live form, or **discard** to cancel.\"", currentHistory, chatEndpoint, ctx);
+        await continueAfterToolCall(
+          tool,
+          args,
+          'Section marked for deletion in preview. Summarise what changed, then end with: "Say **save** to apply these changes to the live form, or **discard** to cancel."',
+          currentHistory,
+          chatEndpoint,
+          ctx,
+        );
         if (sectionId) {
           const nowCtx = getScreenContext();
           const baseForm = (nowCtx?.screenId === ctx.screenId ? nowCtx : ctx).currentState?.detailedForm;
@@ -973,12 +1240,19 @@ export function createApplyToolCall(bindings) {
             const previewSections = (baseForm.sections || [])
               .filter((s) => String(s._id) !== String(sectionId))
               .map((s) => toPreviewSection(s));
-            addMessage({ role: "assistant", content: "", formPreview: { formName: baseForm.name || baseForm.headerText, sections: previewSections } });
+            addMessage({
+              role: "assistant",
+              content: "",
+              formPreview: { formName: baseForm.name || baseForm.headerText, sections: previewSections },
+            });
           }
         }
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -986,20 +1260,35 @@ export function createApplyToolCall(bindings) {
     if (tool === "saveFormEdits") {
       const { explanation } = args;
       try {
-        console.log("[saveFormEdits handler] ctx.actions.saveFormEdits exists?", !!ctx.actions?.saveFormEdits, "ctx.screenId:", ctx?.screenId);
+        console.log(
+          "[saveFormEdits handler] ctx.actions.saveFormEdits exists?",
+          !!ctx.actions?.saveFormEdits,
+          "ctx.screenId:",
+          ctx?.screenId,
+        );
         const result = ctx.actions.saveFormEdits ? await ctx.actions.saveFormEdits() : null;
         console.log("[saveFormEdits handler] result:", result);
         if (result?.saved === false) {
-          addMessage({ role: "assistant", content: "There are no pending changes to save — your edits may have been lost. Please re-apply the changes and try again." });
+          addMessage({
+            role: "assistant",
+            content:
+              "There are no pending changes to save — your edits may have been lost. Please re-apply the changes and try again.",
+          });
         } else if (result === null) {
-          addMessage({ role: "assistant", content: "Save could not run — the form editor context was not available. Please try again." });
+          addMessage({
+            role: "assistant",
+            content: "Save could not run — the form editor context was not available. Please try again.",
+          });
         } else {
           addMessage({ role: "assistant", content: explanation || "All changes have been saved to the form." });
           if (isVoiceModeRef.current) speak(explanation || "All changes have been saved.");
         }
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `Save failed${detail ? `: ${detail}` : ""}. Some changes may not have been applied.` });
+        addMessage({
+          role: "assistant",
+          content: `Save failed${detail ? `: ${detail}` : ""}. Some changes may not have been applied.`,
+        });
       }
       return;
     }
@@ -1015,10 +1304,20 @@ export function createApplyToolCall(bindings) {
     if (tool === "addSection") {
       try {
         if (ctx.actions.addSection) await ctx.actions.addSection(args);
-        await continueAfterToolCall(tool, args, "Section created successfully. The form has been reloaded with the new section.", currentHistory, chatEndpoint, ctx);
+        await continueAfterToolCall(
+          tool,
+          args,
+          "Section created successfully. The form has been reloaded with the new section.",
+          currentHistory,
+          chatEndpoint,
+          ctx,
+        );
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -1026,10 +1325,20 @@ export function createApplyToolCall(bindings) {
     if (tool === "addField") {
       try {
         if (ctx.actions.addField) await ctx.actions.addField(args);
-        await continueAfterToolCall(tool, args, "Field created successfully. The form has been reloaded with the new field.", currentHistory, chatEndpoint, ctx);
+        await continueAfterToolCall(
+          tool,
+          args,
+          "Field created successfully. The form has been reloaded with the new field.",
+          currentHistory,
+          chatEndpoint,
+          ctx,
+        );
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -1042,7 +1351,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -1059,14 +1371,18 @@ export function createApplyToolCall(bindings) {
       pushRevertable({
         description: `Applied branding to ${updates.length} form(s)`,
         revertFn: async (freshCtx) => {
-          const revertUpdates = snapshot.filter((s) => s.oldBrandingId !== null)
+          const revertUpdates = snapshot
+            .filter((s) => s.oldBrandingId !== null)
             .map((s) => ({ formId: s.formId, brandingId: s.oldBrandingId }));
           const skipped = snapshot.filter((s) => s.oldBrandingId === null).length;
           if (revertUpdates.length > 0 && freshCtx?.actions?.setFormsBranding) {
             await freshCtx.actions.setFormsBranding({ updates: revertUpdates });
           }
           if (skipped > 0) {
-            addMessage({ role: "assistant", content: `Note: ${skipped} form(s) had no branding set before this change and cannot be automatically reverted to "no branding".` });
+            addMessage({
+              role: "assistant",
+              content: `Note: ${skipped} form(s) had no branding set before this change and cannot be automatically reverted to "no branding".`,
+            });
           }
         },
       });
@@ -1076,7 +1392,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -1105,7 +1424,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -1118,7 +1440,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -1129,9 +1454,10 @@ export function createApplyToolCall(bindings) {
         if (ctx.actions.cloneForm) {
           const result = await ctx.actions.cloneForm({ sourceFormId, newName });
           const rulesCloned = result?.rulesCloned ?? 0;
-          const rulesNote = rulesCloned > 0
-            ? `${rulesCloned} underwriting rule(s) cloned ✓`
-            : "No rules were copied — no underwriting rules were found in the source form";
+          const rulesNote =
+            rulesCloned > 0
+              ? `${rulesCloned} underwriting rule(s) cloned ✓`
+              : "No rules were copied — no underwriting rules were found in the source form";
           await continueAfterToolCall(
             tool,
             args,
@@ -1143,7 +1469,10 @@ export function createApplyToolCall(bindings) {
         }
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -1152,10 +1481,20 @@ export function createApplyToolCall(bindings) {
       const { formId, templateIds } = args;
       try {
         if (ctx.actions.attachEmailTemplate) await ctx.actions.attachEmailTemplate({ formId, templateIds });
-        await continueAfterToolCall(tool, args, "Email templates attached successfully.", currentHistory, chatEndpoint, ctx);
+        await continueAfterToolCall(
+          tool,
+          args,
+          "Email templates attached successfully.",
+          currentHistory,
+          chatEndpoint,
+          ctx,
+        );
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -1168,7 +1507,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -1181,7 +1523,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -1196,7 +1541,10 @@ export function createApplyToolCall(bindings) {
       } catch (err) {
         suppressNextScreenGreetingRef.current = false;
         const detail = err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -1220,7 +1568,10 @@ export function createApplyToolCall(bindings) {
       } catch (err) {
         suppressNextScreenGreetingRef.current = false;
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -1238,7 +1589,11 @@ export function createApplyToolCall(bindings) {
       const { templateId, mode, explanation } = args;
       try {
         suppressNextScreenGreetingRef.current = true;
-        pendingFollowUpRef.current = { content: "The template has been switched. Based on the conversation history, if the user asked you to apply specific changes to this template, apply them now. Otherwise just wait for their next instruction.", silent: true };
+        pendingFollowUpRef.current = {
+          content:
+            "The template has been switched. Based on the conversation history, if the user asked you to apply specific changes to this template, apply them now. Otherwise just wait for their next instruction.",
+          silent: true,
+        };
         if (ctx.actions.switchTemplate) ctx.actions.switchTemplate({ templateId, mode: mode || "view" });
         addMessage({ role: "assistant", content: explanation });
         if (isVoiceModeRef.current) speak(explanation);
@@ -1246,7 +1601,10 @@ export function createApplyToolCall(bindings) {
         suppressNextScreenGreetingRef.current = false;
         pendingFollowUpRef.current = null;
         const detail = err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -1255,15 +1613,23 @@ export function createApplyToolCall(bindings) {
       const { templateId, mode, explanation } = args;
       try {
         suppressNextScreenGreetingRef.current = true;
-        pendingFollowUpRef.current = { content: "The template has been saved and switched. Based on the conversation history, if the user asked you to apply specific changes to this new template, apply them now. Otherwise just wait for their next instruction.", silent: true };
-        if (ctx.actions.saveAndOpenTemplate) await ctx.actions.saveAndOpenTemplate({ templateId, mode: mode || "view" });
+        pendingFollowUpRef.current = {
+          content:
+            "The template has been saved and switched. Based on the conversation history, if the user asked you to apply specific changes to this new template, apply them now. Otherwise just wait for their next instruction.",
+          silent: true,
+        };
+        if (ctx.actions.saveAndOpenTemplate)
+          await ctx.actions.saveAndOpenTemplate({ templateId, mode: mode || "view" });
         addMessage({ role: "assistant", content: explanation });
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         suppressNextScreenGreetingRef.current = false;
         pendingFollowUpRef.current = null;
         const detail = err?.data?.message || err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -1302,7 +1668,9 @@ export function createApplyToolCall(bindings) {
         // isLoading, and React can re-render sendMessageRef with the updated loading state.
         // sendMessage guards with `if (isLoading) return` so calling it synchronously here
         // (while still inside applyToolCall) silently no-ops.
-        setTimeout(() => { if (sendMessageRef.current) sendMessageRef.current(csvMessage); }, 100);
+        setTimeout(() => {
+          if (sendMessageRef.current) sendMessageRef.current(csvMessage);
+        }, 100);
       } catch (err) {
         addMessage({ role: "assistant", content: `Could not read the file: ${err.message}` });
       }
@@ -1329,7 +1697,7 @@ export function createApplyToolCall(bindings) {
             const text = await file.text();
             if (sendMessageRef.current) {
               await sendMessageRef.current(
-                `Here is the CSV I selected as a starting point:\n\n**File:** ${file.name}\n\`\`\`\n${text}\n\`\`\``
+                `Here is the CSV I selected as a starting point:\n\n**File:** ${file.name}\n\`\`\`\n${text}\n\`\`\``,
               );
             }
           } catch {
@@ -1357,7 +1725,9 @@ export function createApplyToolCall(bindings) {
       pendingFollowUpRef.current = followUpTask;
       if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
       // Safety: clear the follow-up after 15 s if the destination page never loads
-      navTimeoutRef.current = setTimeout(() => { pendingFollowUpRef.current = null; }, 15000);
+      navTimeoutRef.current = setTimeout(() => {
+        pendingFollowUpRef.current = null;
+      }, 15000);
 
       setTimeout(() => navigate(route), 300);
       return;
@@ -1396,8 +1766,12 @@ export function createApplyToolCall(bindings) {
       }
 
       // Normalise phone numbers to E.164 format (+[country][number], digits only)
-      if (fieldMeta?.type === "tel" || fieldMeta?.type === "phone" ||
-          /phone|mobile|cell/i.test(fieldId) || /phone|mobile|cell/i.test(fieldMeta?.label || "")) {
+      if (
+        fieldMeta?.type === "tel" ||
+        fieldMeta?.type === "phone" ||
+        /phone|mobile|cell/i.test(fieldId) ||
+        /phone|mobile|cell/i.test(fieldMeta?.label || "")
+      ) {
         if (value) {
           // Strip everything except digits and a leading +
           let digits = value.replace(/[^\d+]/g, "");
@@ -1405,11 +1779,14 @@ export function createApplyToolCall(bindings) {
           if (!digits.startsWith("+") && !digits.startsWith("00")) {
             const fields = ctx.currentState?.fields || [];
             const countryField = fields.find((f) => /country/i.test(f.label) || /country/i.test(f.id));
-            const stateField  = fields.find((f) => /\bstate\b/i.test(f.label)  || /\bstate\b/i.test(f.id));
-            const countryVal  = (countryField?.value || "").toLowerCase();
-            const stateVal    = (stateField?.value  || "").toLowerCase();
-            const isUS = /^(us|usa|united states)$/.test(countryVal) ||
-              /^(al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy|dc)$/.test(stateVal);
+            const stateField = fields.find((f) => /\bstate\b/i.test(f.label) || /\bstate\b/i.test(f.id));
+            const countryVal = (countryField?.value || "").toLowerCase();
+            const stateVal = (stateField?.value || "").toLowerCase();
+            const isUS =
+              /^(us|usa|united states)$/.test(countryVal) ||
+              /^(al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy|dc)$/.test(
+                stateVal,
+              );
             digits = (isUS || (!countryVal && !stateVal) ? "+1" : "+") + digits;
           } else if (digits.startsWith("00")) {
             digits = "+" + digits.slice(2);
@@ -1417,13 +1794,14 @@ export function createApplyToolCall(bindings) {
           value = digits;
         }
       }
-      console.log(`%c[TOOL:fillField] about to fill — fieldId="${fieldId}" value="${value}" (raw args.value="${args.value}")`, "color:#e05; font-weight:bold");
+      console.log(
+        `%c[TOOL:fillField] about to fill — fieldId="${fieldId}" value="${value}" (raw args.value="${args.value}")`,
+        "color:#e05; font-weight:bold",
+      );
       try {
         if (ctx.actions.fillField) {
           // Dodge panel so user can see the field being filled
-          const fillEl =
-            document.getElementById(fieldId) ||
-            document.querySelector(`[name="${CSS.escape(fieldId)}"]`);
+          const fillEl = findAiFieldEl(document, fieldId);
           activatedFieldIdRef.current = fieldId;
           dodgeForField(fillEl);
           await ctx.actions.fillField({ fieldId, value });
@@ -1435,9 +1813,8 @@ export function createApplyToolCall(bindings) {
             ...ctx,
             currentState: {
               ...ctx.currentState,
-              fields: ctx.currentState?.fields?.map((f) =>
-                f.id === fieldId ? { ...f, value, filled: true } : f
-              ) ?? [],
+              fields:
+                ctx.currentState?.fields?.map((f) => (f.id === fieldId ? { ...f, value, filled: true } : f)) ?? [],
             },
           };
           // Build continuation result — tell the AI to advance to the next field in list order.
@@ -1450,15 +1827,14 @@ export function createApplyToolCall(bindings) {
           }
           // Send the function result back so the AI confirms the fill and immediately
           // asks for the next required field without waiting for user input.
-          await continueAfterToolCall(
-            tool, args,
-            fillResultMsg,
-            currentHistory, chatEndpoint, patchedCtx
-          );
+          await continueAfterToolCall(tool, args, fillResultMsg, currentHistory, chatEndpoint, patchedCtx);
         }
       } catch (err) {
         const detail = err?.message || "";
-        addMessage({ role: "assistant", content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}` });
+        addMessage({
+          role: "assistant",
+          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
+        });
       }
       return;
     }
@@ -1503,16 +1879,13 @@ export function createApplyToolCall(bindings) {
           ...ctx,
           currentState: {
             ...ctx.currentState,
-            fields: ctx.currentState?.fields?.map((f) =>
-              f.isSignature || f.id === fieldId ? { ...f, value: "signed", filled: true } : f
-            ) ?? [],
+            fields:
+              ctx.currentState?.fields?.map((f) =>
+                f.isSignature || f.id === fieldId ? { ...f, value: "signed", filled: true } : f,
+              ) ?? [],
           },
         };
-        await continueAfterToolCall(
-          tool, args,
-          sigResultMsg,
-          currentHistory, chatEndpoint, patchedCtx
-        );
+        await continueAfterToolCall(tool, args, sigResultMsg, currentHistory, chatEndpoint, patchedCtx);
       } else {
         addMessage({ role: "assistant", content: wt("errorCouldnt") + ". " + wt("tryAgain") });
       }
@@ -1528,15 +1901,21 @@ export function createApplyToolCall(bindings) {
       // Guard: openFieldPanel must never be called for radio or select fields.
       // If the AI does it anyway, send an error back so it corrects itself.
       if (fieldMeta?.type === "radio" || fieldMeta?.type === "select") {
-        const optionsList = Array.isArray(fieldMeta.options) && fieldMeta.options.length
-          ? fieldMeta.options.map((o, i) => `${String.fromCharCode(97 + i)}) ${o.label} [value: ${o.value}]`).join(", ")
-          : "(no options available)";
+        const optionsList =
+          Array.isArray(fieldMeta.options) && fieldMeta.options.length
+            ? fieldMeta.options
+                .map((o, i) => `${String.fromCharCode(97 + i)}) ${o.label} [value: ${o.value}]`)
+                .join(", ")
+            : "(no options available)";
         await continueAfterToolCall(
-          tool, args,
+          tool,
+          args,
           `ERROR: openFieldPanel cannot be used for "${fieldLabel}" because it is a ${fieldMeta.type} field. ` +
-          `You MUST output a chat message listing options instead and wait for the applicant's choice, then call fillField. ` +
-          `Field options: ${optionsList}. Do NOT call openFieldPanel again for this field.`,
-          currentHistory, chatEndpoint, ctx
+            `You MUST output a chat message listing options instead and wait for the applicant's choice, then call fillField. ` +
+            `Field options: ${optionsList}. Do NOT call openFieldPanel again for this field.`,
+          currentHistory,
+          chatEndpoint,
+          ctx,
         );
         return;
       }
@@ -1554,10 +1933,7 @@ export function createApplyToolCall(bindings) {
       setTimeout(() => scrollToBottom(), 100);
 
       // Dodge toward the target field so the panel doesn't cover it
-      const targetEl =
-        document.getElementById(fieldId) ||
-        document.querySelector(`[name="${CSS.escape(fieldId)}"]`) ||
-        document.querySelector(`[data-ai-id="${CSS.escape(fieldId)}"]`);
+      const targetEl = findAiFieldEl(document, fieldId);
       if (targetEl) setTimeout(() => dodgeForField(targetEl), 200);
 
       setAdePanel({ fieldId, fieldLabel, fieldMode, required: fieldMeta?.required ?? true });
@@ -1570,19 +1946,18 @@ export function createApplyToolCall(bindings) {
       if (ctx.actions?.scrollToField) {
         ctx.actions.scrollToField({ fieldId });
       } else {
-        const el = document.getElementById(fieldId) || document.querySelector(`[name="${CSS.escape(fieldId)}"]`);
+        const el = findAiFieldEl(document, fieldId);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
       }
       // Focus the field after the scroll settles so the applicant can start typing immediately.
       setTimeout(() => {
-        const el =
-          document.getElementById(fieldId) ||
-          document.querySelector(`[name="${CSS.escape(fieldId)}"]`) ||
-          document.querySelector(`[data-ai-id="${CSS.escape(fieldId)}"]`);
+        const el = findAiFieldEl(document, fieldId);
         if (!el || el.getAttribute("data-ai-type") === "sign" || el.type === "hidden") return;
         if (el.type === "radio") {
           // Focus first radio in the group
-          const first = document.querySelector(`input[type="radio"][name="${CSS.escape(el.getAttribute("name") || "")}"]`);
+          const first = document.querySelector(
+            `input[type="radio"][name="${CSS.escape(el.getAttribute("name") || "")}"]`,
+          );
           if (first) first.focus();
         } else {
           el.focus();
@@ -1598,9 +1973,7 @@ export function createApplyToolCall(bindings) {
 
     if (tool === "activateField") {
       const { fieldId, explanation } = args;
-      const el =
-        document.getElementById(fieldId) ||
-        document.querySelector(`[name="${CSS.escape(fieldId)}"]`);
+      const el = findAiFieldEl(document, fieldId);
       activatedFieldIdRef.current = fieldId;
       // Always suppress the post-response chat auto-focus, even if the element
       // isn't found yet — we don't want the chat input stealing focus.
@@ -1611,11 +1984,11 @@ export function createApplyToolCall(bindings) {
         // dodge the panel if it overlaps, then focus.
         setTimeout(() => {
           // Re-look up in case React recreated the element during the wait
-          const target =
-            document.getElementById(fieldId) ||
-            document.querySelector(`[name="${CSS.escape(fieldId)}"]`) ||
-            el;
-          if (!target) { suppressChatFocusRef.current = false; return; }
+          const target = findAiFieldEl(document, fieldId) || el;
+          if (!target) {
+            suppressChatFocusRef.current = false;
+            return;
+          }
           target.scrollIntoView({ behavior: "instant", block: "center" });
 
           // Only move focus if the user hasn't already navigated to a different form field.
@@ -1624,16 +1997,24 @@ export function createApplyToolCall(bindings) {
           const active = document.activeElement;
           const alreadyOnTarget = active === target;
           const userMovedElsewhere =
-            !alreadyOnTarget && active && active !== inputRef.current &&
+            !alreadyOnTarget &&
+            active &&
+            active !== inputRef.current &&
             ["INPUT", "SELECT", "TEXTAREA"].includes(active.tagName);
           if (!alreadyOnTarget && !userMovedElsewhere) {
             target.focus();
-            try { target.select(); } catch { /* ignore */ }
+            try {
+              target.select();
+            } catch {
+              /* ignore */
+            }
           }
 
           dodgeForField(target);
           // Release the chat-focus suppression shortly after so normal state can resume.
-          setTimeout(() => { suppressChatFocusRef.current = false; }, 400);
+          setTimeout(() => {
+            suppressChatFocusRef.current = false;
+          }, 400);
         }, 400);
       }
       addMessage({ role: "assistant", content: explanation });
@@ -1643,8 +2024,16 @@ export function createApplyToolCall(bindings) {
 
     if (tool === "submitOtpCode") {
       const { otp, email } = args;
-      console.log("%c[AI:submitOtpCode] tool fired — email=%s otp=%s screenId=%s", "color:#ea580c; font-weight:bold", email, otp, ctx?.screenId);
-      console.log("%c[AI:submitOtpCode] context fields=%o  actions=%o", "color:#ea580c",
+      console.log(
+        "%c[AI:submitOtpCode] tool fired — email=%s otp=%s screenId=%s",
+        "color:#ea580c; font-weight:bold",
+        email,
+        otp,
+        ctx?.screenId,
+      );
+      console.log(
+        "%c[AI:submitOtpCode] context fields=%o  actions=%o",
+        "color:#ea580c",
         ctx?.currentState?.fields?.map((f) => ({ id: f.id, value: f.value, filled: f.filled })),
         Object.keys(ctx?.actions || {}),
       );
@@ -1660,7 +2049,11 @@ export function createApplyToolCall(bindings) {
       } catch (err) {
         const detail = err?.data?.message || err?.message || "";
         resultSummary = `OTP verification failed${detail ? `: ${detail}` : ""}. Ask the applicant whether they entered the code correctly and invite them to try again.`;
-        console.error("%c[AI:submitOtpCode] ✗ verification failed — detail=%s", "color:#dc2626; font-weight:bold", detail);
+        console.error(
+          "%c[AI:submitOtpCode] ✗ verification failed — detail=%s",
+          "color:#dc2626; font-weight:bold",
+          detail,
+        );
       }
       console.log("%c[AI:submitOtpCode] resultSummary → %s", "color:#ea580c", resultSummary);
       await continueAfterToolCall(tool, args, resultSummary, currentHistory, chatEndpoint, ctx);
@@ -1669,8 +2062,15 @@ export function createApplyToolCall(bindings) {
 
     if (tool === "submitEmailForOtp") {
       const { email } = args;
-      console.log("%c[AI:submitEmailForOtp] tool fired — email=%s screenId=%s", "color:#ea580c; font-weight:bold", email, ctx?.screenId);
-      console.log("%c[AI:submitEmailForOtp] context fields=%o  actions=%o", "color:#ea580c",
+      console.log(
+        "%c[AI:submitEmailForOtp] tool fired — email=%s screenId=%s",
+        "color:#ea580c; font-weight:bold",
+        email,
+        ctx?.screenId,
+      );
+      console.log(
+        "%c[AI:submitEmailForOtp] context fields=%o  actions=%o",
+        "color:#ea580c",
         ctx?.currentState?.fields?.map((f) => ({ id: f.id, value: f.value, filled: f.filled })),
         Object.keys(ctx?.actions || {}),
       );
@@ -1701,13 +2101,17 @@ export function createApplyToolCall(bindings) {
       // Build a compact confirmed-values block so the AI can do Step 1 matching on the
       // next page without relying on scanning conversation history.
       const confirmedEntries = Object.entries(confirmedValuesRef.current);
-      const confirmedBlock = confirmedEntries.length > 0
-        ? ` [CONFIRMED THIS SESSION: ${confirmedEntries.map(([k, v]) => `${k}="${v}"`).join(", ")}]`
-        : "";
+      const confirmedBlock =
+        confirmedEntries.length > 0
+          ? ` [CONFIRMED THIS SESSION: ${confirmedEntries.map(([k, v]) => `${k}="${v}"`).join(", ")}]`
+          : "";
       await continueAfterToolCall(
-        tool, args,
+        tool,
+        args,
         `Moved to the next step successfully.${confirmedBlock}`,
-        currentHistory, chatEndpoint, freshCtx
+        currentHistory,
+        chatEndpoint,
+        freshCtx,
       );
       return;
     }
@@ -1728,9 +2132,12 @@ export function createApplyToolCall(bindings) {
       const freshCtx = getScreenContext();
       if (!freshCtx || freshCtx.screenId !== ctx.screenId) return;
       await continueAfterToolCall(
-        tool, args,
+        tool,
+        args,
         "Moved to the previous step successfully.",
-        currentHistory, chatEndpoint, freshCtx
+        currentHistory,
+        chatEndpoint,
+        freshCtx,
       );
       return;
     }
@@ -1745,7 +2152,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.message || "";
-        addMessage({ role: "assistant", content: `Couldn't create the test case${detail ? `: ${detail}` : ""}. Please try again.` });
+        addMessage({
+          role: "assistant",
+          content: `Couldn't create the test case${detail ? `: ${detail}` : ""}. Please try again.`,
+        });
       }
       return;
     }
@@ -1758,7 +2168,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.message || "";
-        addMessage({ role: "assistant", content: `Couldn't update the test case${detail ? `: ${detail}` : ""}. Please try again.` });
+        addMessage({
+          role: "assistant",
+          content: `Couldn't update the test case${detail ? `: ${detail}` : ""}. Please try again.`,
+        });
       }
       return;
     }
@@ -1771,7 +2184,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.message || "";
-        addMessage({ role: "assistant", content: `Couldn't delete the test case(s)${detail ? `: ${detail}` : ""}. Please try again.` });
+        addMessage({
+          role: "assistant",
+          content: `Couldn't delete the test case(s)${detail ? `: ${detail}` : ""}. Please try again.`,
+        });
       }
       return;
     }
@@ -1784,7 +2200,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.message || "";
-        addMessage({ role: "assistant", content: `Couldn't duplicate the test case${detail ? `: ${detail}` : ""}. Please try again.` });
+        addMessage({
+          role: "assistant",
+          content: `Couldn't duplicate the test case${detail ? `: ${detail}` : ""}. Please try again.`,
+        });
       }
       return;
     }
@@ -1813,7 +2232,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.message || "";
-        addMessage({ role: "assistant", content: `Couldn't seed from static files${detail ? `: ${detail}` : ""}. Please try again.` });
+        addMessage({
+          role: "assistant",
+          content: `Couldn't seed from static files${detail ? `: ${detail}` : ""}. Please try again.`,
+        });
       }
       return;
     }
@@ -1823,8 +2245,16 @@ export function createApplyToolCall(bindings) {
     if (tool === "updateBuilderSteps") {
       const { message, ...stepsData } = args;
       if (ctx.actions.updateBuilderSteps) ctx.actions.updateBuilderSteps(stepsData);
-      addMessage({ role: "assistant", content: null, function_call: { name: "updateBuilderSteps", arguments: JSON.stringify(args) } });
-      addMessage({ role: "function", name: "updateBuilderSteps", content: `Steps replaced. New step count: ${stepsData.steps?.length ?? 0}.` });
+      addMessage({
+        role: "assistant",
+        content: null,
+        function_call: { name: "updateBuilderSteps", arguments: JSON.stringify(args) },
+      });
+      addMessage({
+        role: "function",
+        name: "updateBuilderSteps",
+        content: `Steps replaced. New step count: ${stepsData.steps?.length ?? 0}.`,
+      });
       addMessage({ role: "assistant", content: message });
       if (isVoiceModeRef.current) speak(message);
       return;
@@ -1834,8 +2264,16 @@ export function createApplyToolCall(bindings) {
       const { message, ...stepData } = args;
       if (ctx.actions.addStepToBuilder) ctx.actions.addStepToBuilder(stepData);
       const stepDesc = `${stepData.step?.action || ""}${stepData.step?.selector ? ` ${stepData.step.selector}` : ""}${stepData.step?.value ? ` "${stepData.step.value}"` : ""}`;
-      addMessage({ role: "assistant", content: null, function_call: { name: "addStepToBuilder", arguments: JSON.stringify(args) } });
-      addMessage({ role: "function", name: "addStepToBuilder", content: `Step confirmed and added: ${stepDesc}. Do NOT add this step again.` });
+      addMessage({
+        role: "assistant",
+        content: null,
+        function_call: { name: "addStepToBuilder", arguments: JSON.stringify(args) },
+      });
+      addMessage({
+        role: "function",
+        name: "addStepToBuilder",
+        content: `Step confirmed and added: ${stepDesc}. Do NOT add this step again.`,
+      });
       addMessage({ role: "assistant", content: message });
       if (isVoiceModeRef.current) speak(message);
       return;
@@ -1857,7 +2295,10 @@ export function createApplyToolCall(bindings) {
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {
         const detail = err?.message || "";
-        addMessage({ role: "assistant", content: `Couldn't save the demo action${detail ? `: ${detail}` : ""}. Please try again.` });
+        addMessage({
+          role: "assistant",
+          content: `Couldn't save the demo action${detail ? `: ${detail}` : ""}. Please try again.`,
+        });
       }
       return;
     }

@@ -28,10 +28,7 @@ import Checkbox from "@/components/shared/small/Checkbox";
 import { RiSparkling2Line } from "react-icons/ri";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import { useGetMyAllFormsQuery } from "@/redux/apis/formApis";
-import {
-  executeBrandingAssignment,
-  getBrandingSettersFromHook,
-} from "@/lib/executeBrandingAssignment";
+import { executeBrandingAssignment, getBrandingSettersFromHook } from "@/lib/executeBrandingAssignment";
 import ManualExtractionModal from "./ManualExtractionModal";
 import ApplyBranding from "./ApplyBranding";
 import ConfirmationModal from "@/components/shared/ConfirmationModal";
@@ -149,7 +146,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [footerBackground, setFooterBackground] = useState("#000000");
   const [footerText, setFooterText] = useState("#000000");
   const [frameColor, setFrameColor] = useState("#000000");
-  const [applicationFooterText, setApplicationFooterText] = useState(" ©{year} Fintainium, All Rights Reserved");
+  const [applicationFooterText, setApplicationFooterText] = useState(" ©{year} {Company}, All Rights Reserved");
   const [applicationFooterTextSize, setApplicationFooterTextSize] = useState(16);
   const [appHeaderPadding, setAppHeaderPadding] = useState(8);
   const [appFooterPadding, setAppFooterPadding] = useState(16);
@@ -192,8 +189,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [appLogoMaxHeight, setAppLogoMaxHeight] = useState(100);
   const [emailLogoMaxWidth, setEmailLogoMaxWidth] = useState(300);
   const [emailLogoMaxHeight, setEmailLogoMaxHeight] = useState(100);
-  const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState("");
-  const [termsOfServiceUrl, setTermsOfServiceUrl] = useState("");
+  const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState(getEnv("VITE_PRIVACY_POLICY_URL"));
+  const [termsOfServiceUrl, setTermsOfServiceUrl] = useState(getEnv("VITE_TERMS_OF_SERVICE_URL"));
   const [senderEmail, setSenderEmail] = useState("");
   const [replyToEmail, setReplyToEmail] = useState("");
   const [aiVoice, setAiVoice] = useState("nova");
@@ -204,7 +201,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [aiBannerTextColor, setAiBannerTextColor] = useState("");
   const [aiUseCustomIcon, setAiUseCustomIcon] = useState(true);
   const [favicon, setFavicon] = useState("");
-  const [tabTitle, setTabTitle] = useState("");
+  const [tabTitle, setTabTitle] = useState("Online-Application");
   const [headerEffect, setHeaderEffect] = useState("none");
   const [footerEffect, setFooterEffect] = useState("none");
   const [emailHeaderEffect, setEmailHeaderEffect] = useState("none");
@@ -392,7 +389,13 @@ const GlobalBrandingPage = ({ brandingId }) => {
     const hlHex = (() => {
       const m = hlRaw?.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
       if (!m) return hlRaw || "#000000";
-      return "#" + [m[1], m[2], m[3]].map((n) => parseInt(n).toString(16).padStart(2, "0")).join("").toUpperCase();
+      return (
+        "#" +
+        [m[1], m[2], m[3]]
+          .map((n) => parseInt(n).toString(16).padStart(2, "0"))
+          .join("")
+          .toUpperCase()
+      );
     })();
     setHighlightingColor(hlHex);
     setButtonTextPrimary(data?.colors?.buttonTextPrimary);
@@ -1009,9 +1012,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       },
       saveAndApplyBrandingToForms: async ({ formIds, onHome }) => {
         // Step 1: save (skip auto-navigation so we can apply forms first)
-        const savedId = brandingId
-          ? await updateBrandingHandler(brandingId, true)
-          : await createBrandingHandler(true);
+        const savedId = brandingId ? await updateBrandingHandler(brandingId, true) : await createBrandingHandler(true);
         if (!savedId) throw new Error("Branding save did not return an ID");
         // Step 2: apply branding
         const errors = [];

@@ -164,6 +164,19 @@ const BrandElementAssignment = ({
     });
   };
 
+  const insertCompany = () => {
+    const input = footerTextRef.current;
+    if (!input) return;
+    const start = input.selectionStart ?? applicationFooterText.length;
+    const end = input.selectionEnd ?? applicationFooterText.length;
+    const next = applicationFooterText.slice(0, start) + "{Company}" + applicationFooterText.slice(end);
+    setApplicationFooterText(next);
+    requestAnimationFrame(() => {
+      input.focus();
+      input.setSelectionRange(start + 9, start + 9);
+    });
+  };
+
   return (
     <div className="mt-6">
       <h2 className="mb-4 text-xl font-semibold text-gray-800">Assign Brand Element</h2>
@@ -435,13 +448,22 @@ const BrandElementAssignment = ({
             onChange={(e) => setApplicationFooterTextSize(Number(e.target.value))}
           />
         </div>
-        <Button
-          type="button"
-          onClick={insertYear}
-          className="mt-1 self-start rounded-md border  px-2.5 py-1"
-          title="Insert current-year wildcard at cursor"
-          label={"+ &#123;year&#125;"}
-        />
+        <div className="flex gap-2 items-center">
+          <Button
+            type="button"
+            onClick={insertYear}
+            className="mt-1 self-start rounded-md border  px-2.5 py-1"
+            title="Insert current year wildcard at cursor"
+            label={"+ {Year}"}
+          />
+          <Button
+            type="button"
+            onClick={insertCompany}
+            className="mt-1 self-start rounded-md border  px-2.5 py-1"
+            title="Insert company name wildcard at cursor"
+            label={"+ {Company}"}
+          />
+        </div>
         <div className="mt-3 grid gap-x-6 gap-y-1" style={{ gridTemplateColumns: "1fr 1fr" }}>
           <TextField
             label={"Privacy Policy URL"}

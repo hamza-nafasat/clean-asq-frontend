@@ -255,6 +255,9 @@ const SelectInputType = ({ field, className, form, setForm, onChange }) => {
         <div className="flex w-full gap-2">
           <select
             name={name}
+            id={uniqueId}
+            data-ai-id={uniqueId}
+            data-ai-label={label || undefined}
             value={displayValue}
             required={required}
             className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${!displayValue && required ? "bg-highlighting" : ""}`}
@@ -336,6 +339,9 @@ const MultiCheckboxInputType = ({ field, className, form, setForm }) => {
             </label>
             <input
               id={`${uniqueId}-option-${index}`}
+              name={name}
+              data-ai-id={uniqueId}
+              data-ai-label={label || undefined}
               type={"checkbox"}
               value={option?.value}
               checked={form[uniqueId]?.value?.includes(option?.value)}
@@ -386,6 +392,8 @@ const RadioInputType = ({ field, className, form, setForm, onChange, disabled = 
               <input
                 disabled={disabled}
                 name={name}
+                data-ai-id={uniqueId}
+                data-ai-label={label || undefined}
                 type={"radio"}
                 id={option.value + index + name}
                 value={option.value}
@@ -436,7 +444,10 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
           <div className="flex items-center gap-4 px-2">
             <input
               type={"checkbox"}
+              id={uniqueId}
               name={name}
+              data-ai-id={uniqueId}
+              data-ai-label={label || undefined}
               required={required}
               value={form[uniqueId]?.value}
               checked={form[uniqueId]?.value}
@@ -458,6 +469,8 @@ const CheckboxInputType = ({ field, className, form, setForm }) => {
               return (
                 <div className="flex w-full flex-col gap-2" key={index}>
                   <TextField
+                    id={fieldName}
+                    data-ai-id={fieldName}
                     value={form?.[fieldName]?.value}
                     type={f?.type}
                     label={f?.label}
@@ -540,6 +553,10 @@ const RangeInputType = ({ field, className, form, setForm }) => {
         />
         <div className="flex w-full gap-2">
           <input
+            id={uniqueId}
+            name={name}
+            data-ai-id={uniqueId}
+            data-ai-label={label || undefined}
             type="number"
             value={Number(form[uniqueId]?.value) || 0}
             className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${className} ${
@@ -719,7 +736,9 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                 <div className="relative">
                   <textarea
                     ref={inputRef}
+                    id={uniqueId}
                     name={name}
+                    data-ai-id={uniqueId}
                     data-ai-label={label || undefined}
                     placeholder={placeholder}
                     required={required || undefined}
@@ -759,7 +778,9 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                     >
                       <input
                         ref={inputRef}
+                        id={uniqueId}
                         name={name}
+                        data-ai-id={uniqueId}
                         data-ai-label={label || undefined}
                         placeholder={placeholder}
                         type={type}
@@ -790,6 +811,9 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                         numberInputProps={{
                           style: { outline: "none" },
                           required: required || undefined,
+                          id: uniqueId,
+                          name,
+                          "data-ai-id": uniqueId,
                           "data-ai-label": label || undefined,
                         }}
                         defaultCountry="US"
@@ -823,7 +847,9 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
                   ) : (
                     <input
                       ref={inputRef}
+                      id={uniqueId}
                       name={name}
+                      data-ai-id={uniqueId}
                       data-ai-label={label || undefined}
                       placeholder={placeholder}
                       type={(isMasked || isSSN) && type !== "date" ? "text" : type}
@@ -1259,6 +1285,8 @@ export const SimpleRadioInputType = ({ field, className, form, setForm, onChange
               <input
                 disabled={disabled}
                 name={radioGroupName}
+                data-ai-id={field.uniqueId || radioGroupName}
+                data-ai-label={typeof label === "string" ? label : name}
                 type={"radio"}
                 id={option.value + index + radioGroupName}
                 value={option.value}

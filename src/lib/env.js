@@ -5,6 +5,8 @@ const config = Object.freeze({
   VITE_RECAPTCHA_SITE_KEY: import.meta.env.VITE_RECAPTCHA_SITE_KEY,
   VITE_RECAPTCHA_SITE_SECRET: import.meta.env.VITE_RECAPTCHA_SITE_SECRET,
   GOOGLE_MAPS_API_KEY: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+  VITE_PRIVACY_POLICY_URL: import.meta.env.VITE_PRIVACY_POLICY_URL,
+  VITE_TERMS_OF_SERVICE_URL: import.meta.env.VITE_TERMS_OF_SERVICE_URL,
 });
 
 const getEnv = (key) => {

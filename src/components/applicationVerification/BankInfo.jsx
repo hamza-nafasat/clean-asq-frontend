@@ -233,7 +233,7 @@ function BankInfo({
   return (
     <>
       {ownerSuggesstionsModal && (
-        <Modal title="Owners Suggesstions" onClose={() => setOwnerSuggesstionsModal(false)}>
+        <Modal title="Owners Suggestions" onClose={() => setOwnerSuggesstionsModal(false)}>
           <OwnerSuggesstionsModal
             selectedSuggesstions={step?.ownerSuggesstions}
             sectionId={step?._id}
@@ -252,7 +252,7 @@ function BankInfo({
             {isCreator && (
               <>
                 <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={"Customize"} />
-                <Button onClick={() => setOwnerSuggesstionsModal(true)} label={"Owners Suggesstions"} />
+                <Button onClick={() => setOwnerSuggesstionsModal(true)} label={"Owners Suggestions"} />
                 <Button onClick={() => setUpdateSectionFromatingModal(true)} label={"Update Display Text"} />
               </>
             )}
@@ -430,7 +430,9 @@ function BankInfo({
 
         <div className="flex justify-end gap-4 p-4">
           <div className="mt-8 flex justify-end gap-5">
-            {currentStep > 0 && <Button variant="secondary" label={"Previous"} onClick={handlePrevious} />}
+            {currentStep > 0 && (
+              <Button variant="secondary" label={"Previous"} onClick={handlePrevious} data-testid="form-back-btn" />
+            )}
             {currentStep < totalSteps - 1 ? (
               <Button
                 onClick={() => handleNext({ data: form, name: sectionKey, setLoadingNext })}
@@ -439,6 +441,7 @@ function BankInfo({
                 label={
                   !isAllRequiredFieldsFilled || (!accMatch && !isCreator) ? "Some Required Fields are Missing" : "Next"
                 }
+                data-testid="form-next-btn"
               />
             ) : (
               <Button

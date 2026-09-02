@@ -30,6 +30,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Stepper from "../../../../components/Stepper/Stepper";
 import { uploadFilesAndReplace } from "@/lib/utils";
+import { findAiFieldEl } from "@/lib/discoverFormFields";
 import { useApplicantScreenContext } from "@/hooks/useApplicantScreenContext";
 import getEnv from "@/lib/env";
 
@@ -77,9 +78,10 @@ export default function ApplicationForm() {
       const params = new URLSearchParams(window.location.search);
       if (params.get("draftId") === String(id)) return;
       params.set("draftId", id);
-      navigate(`${window.location.pathname}?${params.toString()}`, { replace: true });
+      const search = params.toString();
+      window.history.replaceState(null, "", `${window.location.pathname}${search ? `?${search}` : ""}`);
     },
-    [dispatch, navigate],
+    [dispatch],
   );
   const handlePrevious = useCallback(() => {
     if (currentStep > 0) setCurrentStep(currentStep - 1);
@@ -147,14 +149,17 @@ export default function ApplicationForm() {
     },
     actions: {
       scrollToField: ({ fieldId }) => {
-        const el = document.getElementById(fieldId) || document.querySelector(`[name="${fieldId}"]`);
+        const el = findAiFieldEl(stepContainerRef.current, fieldId);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
       },
       goToNextStep: () => {
-        if (currentStep < stepsComps.length - 1) setCurrentStep(currentStep + 1);
+        const nextBtn = stepContainerRef.current?.querySelector('[data-testid="form-next-btn"]');
+        if (nextBtn && !nextBtn.disabled) nextBtn.click();
       },
       goToPrevStep: () => {
-        if (currentStep > 0) setCurrentStep(currentStep - 1);
+        const backBtn = stepContainerRef.current?.querySelector('[data-testid="form-back-btn"]');
+        if (backBtn && !backBtn.disabled) backBtn.click();
+        else if (currentStep > 0) setCurrentStep(currentStep - 1);
       },
     },
     deps: [currentStep, stepsComps.length, sectionNames[currentStep], form?.data?._id],
