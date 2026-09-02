@@ -244,25 +244,31 @@ const TextField = ({
               onChange?.({ target: { name, value: val } });
             }}
             onKeyDown={(e) => {
-              if (!showSuggestions || !filteredSuggestions.length) return;
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                setSuggestionIndex((i) => Math.min(i + 1, filteredSuggestions.length - 1));
-              } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                setSuggestionIndex((i) => Math.max(i - 1, 0));
-              } else if ((e.key === "Enter" || e.key === "Tab") && suggestionIndex >= 0) {
-                const picked = filteredSuggestions[suggestionIndex];
-                if (!picked) return;
-                if (e.key === "Enter") e.preventDefault();
-                onChange?.({ target: { name, value: picked } });
-                setShowSuggestions(false);
-                setSuggestionIndex(-1);
-                if (e.key === "Enter") setTimeout(() => focusNextField(inputRef.current), 0);
-              } else if (e.key === "Escape") {
-                setShowSuggestions(false);
-                setSuggestionIndex(-1);
+              if (showSuggestions && filteredSuggestions.length) {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setSuggestionIndex((i) => Math.min(i + 1, filteredSuggestions.length - 1));
+                  return;
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setSuggestionIndex((i) => Math.max(i - 1, 0));
+                  return;
+                } else if ((e.key === "Enter" || e.key === "Tab") && suggestionIndex >= 0) {
+                  const picked = filteredSuggestions[suggestionIndex];
+                  if (!picked) return;
+                  if (e.key === "Enter") e.preventDefault();
+                  onChange?.({ target: { name, value: picked } });
+                  setShowSuggestions(false);
+                  setSuggestionIndex(-1);
+                  if (e.key === "Enter") setTimeout(() => focusNextField(inputRef.current), 0);
+                  return;
+                } else if (e.key === "Escape") {
+                  setShowSuggestions(false);
+                  setSuggestionIndex(-1);
+                  return;
+                }
               }
+              rest.onKeyDown?.(e);
             }}
           />
         )}
