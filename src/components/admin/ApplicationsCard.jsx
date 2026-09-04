@@ -1173,14 +1173,14 @@ export default function ApplicationsCard() {
                         <div ref={buttonRef} className="absolute right-0 mt-2 w-50 rounded border bg-white shadow-lg">
                           {/* customize beneficial owners page button
                            */}
-                          <button
+                          {/* <button
                             className="block w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer"
                             onClick={() => {
                               navigate(`/hidden/${form?._id}/${formKeys.additional_owners_hidden_section_key}`);
                             }}
                           >
                             Additional Owners
-                          </button>
+                          </button> */}
                           <button
                             className="block w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer"
                             onClick={() => {

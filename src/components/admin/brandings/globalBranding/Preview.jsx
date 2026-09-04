@@ -24,6 +24,8 @@ const Preview = ({
   footerBackground,
   footerText,
   headerAlignment,
+  appLogoMaxWidth,
+  appLogoMaxHeight,
 }) => {
   const dispatch = useDispatch();
   const [copied, setCopied] = useState(false);
@@ -79,7 +81,12 @@ const Preview = ({
                 src={selectedLogo}
                 alt="logo"
                 referrerPolicy="no-referrer"
-                style={{ maxHeight: 48, maxWidth: 180, objectFit: "contain" }}
+                style={{
+                  maxWidth: appLogoMaxWidth || 300,
+                  maxHeight: appLogoMaxHeight || 100,
+                  objectFit: "contain",
+                  display: "block",
+                }}
               />
             ) : (
               <span style={{ fontWeight: 600, fontSize: 18 }}>{companyName || "Company Name"}</span>
