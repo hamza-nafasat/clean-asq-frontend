@@ -1,21 +1,16 @@
 import { useEffect, useRef } from "react";
 
-/**
- * Enter in a text-like input focuses the next visible text input in `containerRef`.
- * On the last input, calls `onLastFieldRef.current?.()`.
- *
- * Skips radio/checkbox/file/hidden, respects `e.defaultPrevented` (suggestion dropdowns),
- * and leaves Google Places autocomplete alone while its dropdown is open.
- *
- * @param {React.RefObject<HTMLElement|null>} containerRef
- * @param {{
- *   onLastFieldRef?: React.MutableRefObject<(() => void) | null | undefined>,
- *   excludeIds?: string[],
- *   onSpecialEnterRef?: React.MutableRefObject<((active: Element, e: KeyboardEvent) => boolean) | null | undefined>,
- * }} [options]
- */
+const NEVER_IN_SEQUENCE = ["radio", "hidden", "file", "button", "submit"];
+
+export const isEnterSequenceType = (type, includeCheckboxes = false) => {
+  const t = type || "text";
+  if (NEVER_IN_SEQUENCE.includes(t)) return false;
+  if (t === "checkbox") return Boolean(includeCheckboxes);
+  return true;
+};
+
 export function useEnterToNextField(containerRef, options = {}) {
-  const { excludeIds = [], onLastFieldRef, onSpecialEnterRef } = options;
+  const { excludeIds = [], onLastFieldRef, onSpecialEnterRef, includeCheckboxes = false } = options;
   const excludeIdsRef = useRef(excludeIds);
   excludeIdsRef.current = excludeIds;
 
@@ -28,10 +23,7 @@ export function useEnterToNextField(containerRef, options = {}) {
       const active = document.activeElement;
       if (!active || !container.contains(active)) return;
       if (active.tagName?.toLowerCase() !== "input") return;
-      const type = active.type || "text";
-      if (type === "radio" || type === "checkbox" || type === "hidden" || type === "file" || type === "button" || type === "submit") {
-        return;
-      }
+      if (!isEnterSequenceType(active.type, includeCheckboxes)) return;
       if (active.disabled || active.readOnly) return;
       if (excludeIdsRef.current.includes(active.id)) return;
 
@@ -50,8 +42,7 @@ export function useEnterToNextField(containerRef, options = {}) {
       ).filter(
         (el) =>
           el.offsetParent !== null &&
-          el.type !== "radio" &&
-          el.type !== "checkbox" &&
+          isEnterSequenceType(el.type, includeCheckboxes) &&
           !excludeIdsRef.current.includes(el.id),
       );
 
@@ -67,7 +58,5 @@ export function useEnterToNextField(containerRef, options = {}) {
 
     container.addEventListener("keydown", handler);
     return () => container.removeEventListener("keydown", handler);
-    // Refs are stable; re-bind only if the container node identity changes via remount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [containerRef, includeCheckboxes, onLastFieldRef, onSpecialEnterRef]);
 }

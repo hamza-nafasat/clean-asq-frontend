@@ -20,7 +20,7 @@ function AllSubmissionDraft({ forms }) {
       {drafts.length > 0 && (
         <section>
           <div className="mb-3">
-            <h2 className="text-textPrimary text-lg font-semibold">In progress</h2>
+            <h2 className="text-textPrimary text-lg font-semibold">Drafts</h2>
             <p className="text-sm text-gray-500">Applications you started but have not submitted yet.</p>
           </div>
           <Draft forms={drafts} />

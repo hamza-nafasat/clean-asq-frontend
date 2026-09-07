@@ -185,7 +185,10 @@ function CompanyVerification({ formId, brandingName, draftId }) {
     handleSubmit();
   };
 
-  useEnterToNextField(companyFormRef, { onLastFieldRef: submitFromEnterRef });
+  useEnterToNextField(companyFormRef, {
+    onLastFieldRef: submitFromEnterRef,
+    includeCheckboxes: true,
+  });
 
   // Register this page with the AI applicant assistant
   useApplicantScreenContext({

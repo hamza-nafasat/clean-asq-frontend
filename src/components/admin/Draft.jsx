@@ -1,9 +1,9 @@
-import { useBranding } from "@/hooks/BrandingContext";
+import ApplicationStatusBadge from "@/components/shared/small/ApplicationStatusBadge";
+import { APPLICATION_STATUS } from "@/lib/applicationStatus";
 import { addSavedFormData, setCurrentDraftId, updateEmailVerified } from "@/redux/slices/formSlice";
 import { useGetSavedFormMutation, useRemoveSavedFormMutation } from "@/redux/apis/formApis";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { useState } from "react";
-import { FaCheck } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -14,7 +14,6 @@ function Draft({ forms }) {
   const dispatch = useDispatch();
   const { emailVerified } = useSelector((state) => state.form);
   const navigate = useNavigate();
-  const { logo } = useBranding();
   const [getSavedFormData] = useGetSavedFormMutation();
   const [removeSavedForm, { isLoading: isDeleting }] = useRemoveSavedFormMutation();
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -55,7 +54,7 @@ function Draft({ forms }) {
     }
   };
   return (
-    <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
       {forms?.length > 0 ? (
         forms?.map((form, index) => {
           const colors = form?.branding?.colors;
@@ -63,53 +62,47 @@ function Draft({ forms }) {
           return (
             <div
               key={form?.draftId || form?._id || index}
-              className="relative flex min-w-0 flex-col rounded-xl border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
+              className="relative flex h-full w-full min-w-0 flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition duration-300 hover:border-gray-300 hover:shadow-md md:p-5"
             >
-              <img
-                src={form?.branding?.selectedLogo || logo}
-                width={50}
-                height={50}
-                alt="logo"
-                referrerPolicy="no-referrer"
-              />
-
-              {/* Menu icon */}
-              <div className="absolute top-3 right-3 cursor-pointer sm:top-4 sm:right-4">{/* <CiMenuKebab /> */}</div>
-              <div className="flex items-start gap-2 md:gap-4">
-                {/* <CardIcon /> */}
+              {/* Header: title block on the left, status on the right */}
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <h2 className="text-base leading-tight font-bold wrap-break-word text-gray-700 sm:text-lg md:text-2xl">
-                      {form?.name}
-                    </h2>
-                  </div>
-                  <div className="mt-1 truncate text-xs text-gray-500 sm:text-sm">Created from CSV import</div>
+                  {/* truncate + title: long names stay on one line and reveal in full on hover */}
+                  <h2
+                    title={form?.name}
+                    className="truncate text-base leading-tight font-bold text-gray-800 sm:text-lg"
+                  >
+                    {form?.name}
+                  </h2>
+                  <p className="mt-1 truncate text-xs text-gray-500">
+                    Started{" "}
+                    {new Date(form?.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </p>
                 </div>
+                <ApplicationStatusBadge status={APPLICATION_STATUS.draft} />
               </div>
-              <div className="mt-3 space-y-1 text-sm text-gray-700 md:mt-3 md:text-base">
-                <div className="flex items-center gap-1 md:gap-2">
-                  <FaCheck className="text-primary" />
-                  <span>{form?.sections?.length} form sections</span>
-                </div>{" "}
-                <div className="flex items-center gap-1 md:gap-2">
-                  <FaCheck className="text-primary" />
-                  <span>AI-assisted completion available</span>
+              {/* Details - same label/value grid as the submitted card, so both
+                  lists line up when they sit together on the page. The section
+                  count and the date used to be repeated three and two times. */}
+              <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                <div className="min-w-0">
+                  <dt className="text-xs text-gray-500">Sections</dt>
+                  <dd className="font-medium text-gray-800">{form?.sections?.length ?? 0}</dd>
                 </div>
-              </div>
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
-                <span className="text-gray-500">Applicants: {form?.sections?.length}</span>
-                <span className="text-gray-500">
-                  Created:{" "}
-                  {new Date(form?.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </span>
-              </div>
-              <div className="mt-3 flex w-full flex-col items-start justify-end gap-3 md:mt-6 md:flex-row md:gap-4">
+                <div className="min-w-0">
+                  <dt className="text-xs text-gray-500">Assistance</dt>
+                  <dd className="truncate font-medium text-gray-800">AI-assisted completion</dd>
+                </div>
+              </dl>
+
+              <div className="mt-auto flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
                 <Button
                   label="Delete"
+                  className="w-full sm:w-auto"
                   onClick={() => setDeleteTarget({ formId: form?._id, draftId: form?.draftId, name: form?.name })}
                   style={{
                     backgroundColor: colors?.primary,
@@ -126,6 +119,7 @@ function Draft({ forms }) {
                 />
                 <Button
                   label="Resume"
+                  className="w-full sm:w-auto"
                   onClick={() => getSavedData(form?._id, form?.branding?.name, form?.draftId)}
                   style={{
                     backgroundColor: colors?.primary,

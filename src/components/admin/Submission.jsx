@@ -1,4 +1,5 @@
-import { useBranding } from "@/hooks/BrandingContext";
+import ApplicationStatusBadge from "@/components/shared/small/ApplicationStatusBadge";
+import { APPLICATION_STATUS } from "@/lib/applicationStatus";
 import {
   useApplicantGiveSpecialAccessToBeneficialOwnerMutation,
   useGeneratePdfFormMutation,
@@ -21,7 +22,6 @@ function Submission({ forms }) {
   const [allBeneficials, setAllBeneficials] = useState([]);
 
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
-  const { logo } = useBranding();
   const { user } = useSelector((state) => state.auth);
   const [generatePdfForm] = useGeneratePdfFormMutation();
 
@@ -64,7 +64,7 @@ function Submission({ forms }) {
           />
         </Modal>
       )}
-      <div className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
         {forms?.length > 0 ? (
           forms?.map((form, index) => {
             console.log("form", form);
@@ -81,87 +81,89 @@ function Submission({ forms }) {
             return (
               <div
                 key={index}
-                className="relative flex min-w-0 flex-col h-full w-full rounded-xl border bg-white p-3 shadow-md transition duration-300 hover:shadow-md sm:p-4 md:p-6"
+                className="relative flex h-full w-full min-w-0 flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition duration-300 hover:border-gray-300 hover:shadow-md md:p-5"
               >
-                {/* add three dot in right corner  */}
-                <div
-                  className="absolute top-3 right-3 cursor-pointer sm:top-4 sm:right-4 menu-container"
-                  onClick={() => {
-                    setIsMenuOpen(!isMenuOpen);
-                    setSelectedForm(form?._id);
-                  }}
-                >
-                  {<CiMenuKebab />}
-                </div>
-
-                {isMenuOpen && selectedForm === form?._id && (
-                  <div className="absolute top-10 right-0 w-50 rounded border space-y-2 bg-white shadow-lg p-2">
-                    <Button
-                      label="Forward Beneficial"
-                      variant="icon"
-                      className="text-sm w-full p-2"
-                      onClick={() => {
-                        setOpenSpecialAccessModal(true);
-                        const beneficialMailsAndNames = totalBeneficialOwners?.map((item) => ({
-                          value: item?.email,
-                          option: `${item?.name}`,
-                        }));
-                        setAllBeneficials(beneficialMailsAndNames);
-                      }}
-                    />
+                {/* Header: title block on the left, status + menu on the right */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    {/* truncate + title: long names stay on one line and reveal in full on hover */}
+                    <h2
+                      title={form?.name}
+                      className="truncate text-base leading-tight font-bold text-gray-800 sm:text-lg"
+                    >
+                      {form?.name}
+                    </h2>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Submitted{" "}
+                      {new Date(form?.createdAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </p>
                   </div>
-                )}
 
-                <div className="min-w-25 min-h-25 flex items-center justify-start">
-                  <img
-                    src={form?.branding?.selectedLogo || logo}
-                    width={100}
-                    height={100}
-                    alt="logo"
-                    referrerPolicy="no-referrer"
-                  />
+                  <div className="flex shrink-0 items-center gap-2">
+                    <ApplicationStatusBadge status={APPLICATION_STATUS.submitted} />
+
+                    <div className="menu-container relative">
+                      <button
+                        type="button"
+                        aria-label="Application actions"
+                        className="rounded-md p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+                        onClick={() => {
+                          setIsMenuOpen(!isMenuOpen);
+                          setSelectedForm(form?._id);
+                        }}
+                      >
+                        <CiMenuKebab />
+                      </button>
+
+                      {isMenuOpen && selectedForm === form?._id && (
+                        <div className="absolute top-9 right-0 z-10 w-52 rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg">
+                          <Button
+                            label="Forward Beneficial"
+                            variant="icon"
+                            className="w-full p-2 text-sm"
+                            onClick={() => {
+                              setOpenSpecialAccessModal(true);
+                              const beneficialMailsAndNames = totalBeneficialOwners?.map((item) => ({
+                                value: item?.email,
+                                option: `${item?.name}`,
+                              }));
+                              setAllBeneficials(beneficialMailsAndNames);
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
-                  <span className="text-gray-500">Application Name: {form?.name}</span>
-                  <span className="text-gray-500">Sections: {form?.sections?.length}</span>
-                  <span className="text-gray-500">
-                    Created:{" "}
-                    {new Date(form?.createdAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
-                  <span className="text-gray-500">Total Beneficial owners: {totalBeneficialOwners?.length}</span>
-                  <span className="text-gray-500">Filled Beneficial owners: {filledBeneficialOwners?.length}</span>
-                </div>
-                <div className="mt-3 flex h-full w-full flex-col items-start justify-between gap-3 md:mt-6 md:flex-row md:gap-4 self-end">
-                  {/* <Button
-                    label="Update Submission"
-                    onClick={() => getSavedData(form?._id, form?.branding?.name)}
-                    className="self-end"
-                    style={{
-                      backgroundColor: colors?.primary,
-                      borderColor: colors?.primary,
-                      color: colors?.buttonTextPrimary,
-                      transition: "all 0.3s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.opacity = "0.6";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.opacity = "1";
-                    }}
-                  /> */}
+
+                {/* Details - a label/value grid keeps values aligned across cards */}
+                <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                  <div className="min-w-0">
+                    <dt className="text-xs text-gray-500">Sections</dt>
+                    <dd className="font-medium text-gray-800">{form?.sections?.length ?? 0}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-xs text-gray-500">Beneficial owners</dt>
+                    <dd className="font-medium text-gray-800">
+                      {filledBeneficialOwners?.length ?? 0} of {totalBeneficialOwners?.length ?? 0} completed
+                    </dd>
+                  </div>
+                </dl>
+
+                {/* Footer - mt-auto pins the buttons to the bottom so every card
+                    in the grid lines its actions up, whatever the content height */}
+                <div className="mt-auto flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
                   <Button
                     label="Download PDF"
                     icon={isLoadingPdf === form?._id && CgSpinner}
                     cnLeft={`animate-spin h-5 w-5`}
                     disabled={isLoadingPdf === form?._id}
                     onClick={() => handleDownload(form?._id, user?._id)}
-                    className={`${isLoadingPdf === form?._id ? "cursor-not-allowed opacity-30" : ""}`}
+                    className={`w-full sm:w-auto ${isLoadingPdf === form?._id ? "cursor-not-allowed opacity-30" : ""}`}
                     style={{
                       backgroundColor: colors?.primary,
                       borderColor: colors?.primary,
