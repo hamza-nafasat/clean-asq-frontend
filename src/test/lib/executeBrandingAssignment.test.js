@@ -1,8 +1,13 @@
+/**
+ * Module:  lib
+ * Unit:    src/lib/executeBrandingAssignment.js
+ * Covers:  applying a saved branding to forms and to the home page.
+ */
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { executeBrandingAssignment } from "./executeBrandingAssignment.js";
+import { executeBrandingAssignment } from "../../lib/executeBrandingAssignment.js";
 
-describe("executeBrandingAssignment", () => {
+describe("lib · executeBrandingAssignment", () => {
   it("unwraps RTK mutation trigger once (not pre-unwrapped)", async () => {
     let called = false;
     const addBrandingMutation = (args) => {

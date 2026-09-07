@@ -11,6 +11,7 @@ import CompanyInformationPdf from "@/components/applicationVerification/Applicat
 import CompanyOwnersPdf from "@/components/applicationVerification/ApplicationPdfForm/CompanyOwnersPdf";
 import CustomSectionPdf from "@/components/applicationVerification/ApplicationPdfForm/CustomSectionPdf";
 import DocumentsPdf from "@/components/applicationVerification/ApplicationPdfForm/DocumentsPdf";
+import { sectionsForPdf } from "@/lib/sectionCompletion";
 import ProcessingInfoPdf from "@/components/applicationVerification/ApplicationPdfForm/ProcessingInfoPdf";
 import Button from "@/components/shared/small/Button";
 import { useBranding } from "@/hooks/BrandingContext";
@@ -202,7 +203,7 @@ export const ApplicationPdfViewCommonProps = ({
           formInnerData={formInnerData}
           setFormInnerData={setFormInnerData}
         />
-        {form?.data?.sections?.map((section, index) => {
+        {sectionsForPdf(form?.data?.sections, formInnerData).map((section, index) => {
           const sectionData = formInnerData?.[section?.key];
 
           const commonProps = {
