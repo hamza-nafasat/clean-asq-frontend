@@ -1,4 +1,5 @@
 import DocumentModal from "@/components/shared/DocumentModal";
+import { renderFooterText } from "@/lib/footerWildcards";
 import { useBranding } from "@/hooks/BrandingContext";
 import { useState } from "react";
 
@@ -25,7 +26,7 @@ function Footer() {
       >
         {/* Footer text */}
         <div className="text-footer-text font-semibold" style={{ fontSize: `${applicationFooterTextSize || 16}px` }}>
-          {(applicationFooterText || "").replace("{year}", new Date().getFullYear()).replace("{company}", name)}
+          {renderFooterText(applicationFooterText, name)}
         </div>
 
         {/* Links */}

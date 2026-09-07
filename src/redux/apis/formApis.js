@@ -135,6 +135,7 @@ const formApis = createApi({
         url: `/special-access-of-section/${formId}?token=${token}&sectionKey=${sectionKey}`,
         method: "GET",
       }),
+      providesTags: ["Form"],
     }),
     // get special access of section
     // ---------------

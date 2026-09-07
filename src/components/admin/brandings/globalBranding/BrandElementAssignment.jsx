@@ -1,3 +1,4 @@
+import { FOOTER_WILDCARDS } from "@/lib/footerWildcards";
 import Button from "@/components/shared/small/Button";
 import CustomizableSelect from "@/components/shared/small/CustomizeableSelect";
 import { useEffect, useRef, useState } from "react";
@@ -150,32 +151,22 @@ const BrandElementAssignment = ({
   setButtonMaterial,
 }) => {
   const footerTextRef = useRef(null);
-
-  const insertYear = () => {
+  const insertWildcard = (token) => {
     const input = footerTextRef.current;
     if (!input) return;
     const start = input.selectionStart ?? applicationFooterText.length;
     const end = input.selectionEnd ?? applicationFooterText.length;
-    const next = applicationFooterText.slice(0, start) + "{year}" + applicationFooterText.slice(end);
+    const next = applicationFooterText.slice(0, start) + token + applicationFooterText.slice(end);
     setApplicationFooterText(next);
+    const caret = start + token.length;
     requestAnimationFrame(() => {
       input.focus();
-      input.setSelectionRange(start + 6, start + 6);
+      input.setSelectionRange(caret, caret);
     });
   };
 
-  const insertCompany = () => {
-    const input = footerTextRef.current;
-    if (!input) return;
-    const start = input.selectionStart ?? applicationFooterText.length;
-    const end = input.selectionEnd ?? applicationFooterText.length;
-    const next = applicationFooterText.slice(0, start) + "{Company}" + applicationFooterText.slice(end);
-    setApplicationFooterText(next);
-    requestAnimationFrame(() => {
-      input.focus();
-      input.setSelectionRange(start + 9, start + 9);
-    });
-  };
+  const insertYear = () => insertWildcard(FOOTER_WILDCARDS.year);
+  const insertCompany = () => insertWildcard(FOOTER_WILDCARDS.company);
 
   return (
     <div className="mt-6">

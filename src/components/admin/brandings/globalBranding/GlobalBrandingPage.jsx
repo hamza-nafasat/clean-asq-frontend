@@ -146,7 +146,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
   const [footerBackground, setFooterBackground] = useState("#000000");
   const [footerText, setFooterText] = useState("#000000");
   const [frameColor, setFrameColor] = useState("#000000");
-  const [applicationFooterText, setApplicationFooterText] = useState(" ©{year} {Company}, All Rights Reserved");
+  const [applicationFooterText, setApplicationFooterText] = useState(" ©{year} {company}, All Rights Reserved");
   const [applicationFooterTextSize, setApplicationFooterTextSize] = useState(16);
   const [appHeaderPadding, setAppHeaderPadding] = useState(8);
   const [appFooterPadding, setAppFooterPadding] = useState(16);

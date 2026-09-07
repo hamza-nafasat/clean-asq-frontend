@@ -267,7 +267,7 @@ function BankInfo({
   return (
     <>
       {ownerSuggesstionsModal && (
-        <Modal title="Owners Suggestions" onClose={() => setOwnerSuggesstionsModal(false)}>
+        <Modal title="Owner's Suggestions" onClose={() => setOwnerSuggesstionsModal(false)}>
           <OwnerSuggesstionsModal
             selectedSuggesstions={step?.ownerSuggesstions}
             sectionId={step?._id}
@@ -286,7 +286,7 @@ function BankInfo({
             {isCreator && (
               <>
                 <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={"Customize"} />
-                <Button onClick={() => setOwnerSuggesstionsModal(true)} label={"Owners Suggestions"} />
+                <Button onClick={() => setOwnerSuggesstionsModal(true)} label={"Owner's Suggestions"} />
                 <Button onClick={() => setUpdateSectionFromatingModal(true)} label={"Update Display Text"} />
               </>
             )}
