@@ -390,7 +390,7 @@ const RadioInputType = ({ field, className, form, setForm, onChange, disabled = 
           {options?.map((option, index) => (
             <div key={index} className="flex items-center gap-2 p-2 text-start">
               <input
-                disabled={disabled}
+                disabled={disabled || option?.disabled}
                 name={name}
                 data-ai-id={uniqueId}
                 data-ai-label={label || undefined}
@@ -398,11 +398,14 @@ const RadioInputType = ({ field, className, form, setForm, onChange, disabled = 
                 id={option.value + index + name}
                 value={option.value}
                 checked={form[uniqueId]?.value === option.value}
-                className={` h-5! w-5! text-textPrimary accent-primary ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
+                className={` h-5! w-5! text-textPrimary accent-primary ${disabled || option?.disabled ? "opacity-70 cursor-not-allowed" : ""}`}
                 required={required}
                 onChange={onChange ? onChange : () => radioHandler(option)}
               />
-              <label htmlFor={option.value + index + name} className="text-textPrimary text-base">
+              <label
+                htmlFor={option.value + index + name}
+                className={`text-base ${disabled || option?.disabled ? "cursor-not-allowed text-gray-400" : "text-textPrimary"}`}
+              >
                 {option?.label}
               </label>
             </div>

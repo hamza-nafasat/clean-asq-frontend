@@ -68,9 +68,16 @@ function CompanyInformation({
   const [strategyKeys, setStrategyKeys] = useState([]);
   const { data: strategyKeysData } = useGetAllSearchStrategiesQuery();
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
+  const companyHasNoWebsite = formData?.company_has_no_website === true;
+
+  const effectiveFields = useMemo(
+    () => (fields || []).map((f) => (companyHasNoWebsite && f?.name === "website_url" ? { ...f, required: false } : f)),
+    [fields, companyHasNoWebsite],
+  );
+
   const requiredNames = useMemo(
-    () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
-    [fields],
+    () => effectiveFields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
+    [effectiveFields],
   );
 
   const isCreator = user?._id && user?._id === step?.owner && user?.role !== "guest";
@@ -391,8 +398,8 @@ function CompanyInformation({
         </div>
       )}
 
-      {fields?.length > 0 &&
-        fields.map((field, index) => {
+      {effectiveFields?.length > 0 &&
+        effectiveFields.map((field, index) => {
           if (field.type === FIELD_TYPES.SELECT) {
             return (
               <div key={index} className="mt-4">

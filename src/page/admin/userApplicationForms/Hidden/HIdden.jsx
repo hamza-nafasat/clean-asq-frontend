@@ -185,12 +185,12 @@ function FormHiddenSection() {
         },
         idMissionPhoneNumber: { name: "idMissionPhoneNumber", value: formDataOfIdMission?.PhoneNumber || "" },
         idMissionZipCode: { name: "idMissionZipCode", value: formDataOfIdMission?.ParsedAddressPostalCode || "" },
-        dateOfBirth: {
+        idMissionDateOfBirth: {
           name: "idMissionDateOfBirth",
           value: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : "",
         },
         idMissionCountry: { name: "idMissionCountry", value: formDataOfIdMission?.Issuing_Country || "" },
-        issueDate: {
+        idMissionIssueDate: {
           name: "idMissionIssueDate",
           value: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : "",
         },
@@ -230,7 +230,7 @@ function FormHiddenSection() {
             : formDataOfIdMission?.Issuing_Country || "",
         },
         idMissionIdType: { name: "idMissionIdType", value: formDataOfIdMission?.DocumentType || "" },
-        idExpiryDate: {
+        idMissionIdExpiryDate: {
           name: "idMissionIdExpiryDate",
           value: formDataOfIdMission?.Expiration_Date ? formatData(formDataOfIdMission?.Expiration_Date) : "",
         },
@@ -245,7 +245,7 @@ function FormHiddenSection() {
           value: formDataOfIdMission?.Date_of_Birth ? formatData(formDataOfIdMission?.Date_of_Birth) : "",
         },
         idMissionCountry: { name: "idMissionCountry", value: formDataOfIdMission?.Issuing_Country || "" },
-        issueDate: {
+        idMissionIssueDate: {
           name: "idMissionIssueDate",
           value: formDataOfIdMission?.Issue_Date ? formatData(formDataOfIdMission?.Issue_Date) : "",
         },

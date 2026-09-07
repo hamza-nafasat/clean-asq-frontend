@@ -147,7 +147,7 @@ export const ApplicationPdfViewCommonProps = ({
             <img
               src={logo || ""}
               alt="Logo"
-              className={`object-contain ${"h-15 w-15"} }`}
+              className="h-12 w-auto max-w-55 object-contain"
               referrerPolicy="no-referrer"
             />
             <h1 className="text-2xl font-semibold text-gray-800">{form?.data?.name}</h1>

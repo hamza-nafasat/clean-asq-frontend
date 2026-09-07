@@ -504,17 +504,10 @@ export default function SingleApplication() {
             });
           }
           if (formDataOfIdMission?.name?.value && savedData?.company_lookup_data) {
-            console.log(
-              "%c[SA:getSavedForm] → idMissionVerified=true + openRedirectModal (name+lookup both present)",
-              "color:#7c3aed",
-            );
+            console.log("%c[SA:getSavedForm] → idMissionVerified=true (name+lookup both present)", "color:#7c3aed");
             setIdMissionVerified(true);
             setIdMissionDetailsReady(true);
-            setOpenRedirectModal(true);
           } else if (!skipRedirectOnError && !savedData?.company_lookup_data) {
-            // Draft exists but company lookup hasn't completed yet — send to company page.
-            // Only redirect on the post-OTP path (skipRedirectOnError=false); on the remount
-            // path the lookup may still be running in the background, so we wait.
             console.log(
               "%c[SA:getSavedForm] → navigating to /verification (no company_lookup_data, skipRedirectOnError=false)",
               "color:#7c3aed",
@@ -524,7 +517,6 @@ export default function SingleApplication() {
               `/verification?formid=${formId}&brandingName=${form?.data?.branding?.name}${draftId ? `&draftId=${draftId}` : ""}`,
             );
           } else {
-            // User is staying on the QR / manual-entry step — fetch QR now (first time we know it's needed).
             console.log(
               "%c[SA:getSavedForm] → no navigation (skipRedirectOnError=%s name=%s lookup=%s) — fetching QR",
               "color:#7c3aed",
@@ -1461,7 +1453,7 @@ export default function SingleApplication() {
                       />
                     </div>
                   )}
-                  {user?._id && (
+                  {isCreator && (
                     <Button
                       onClick={() => {
                         dispatch(updateEmailVerified(true));

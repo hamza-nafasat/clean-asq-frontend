@@ -337,6 +337,8 @@ function CompanyVerification({ formId, brandingName, draftId }) {
                   onChange={(e) => {
                     const checked = e.target.checked;
                     setForm({ ...form, noWebsite: checked, ...(checked ? { url: "" } : {}) });
+
+                    dispatch(updateFormState({ data: checked, name: "company_has_no_website" }));
                   }}
                 />
                 {apisRes?.companyVerify?.confidenceScore && apisRes?.companyVerify?.verificationStatus && (

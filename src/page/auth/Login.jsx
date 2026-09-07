@@ -159,7 +159,7 @@ const Login = () => {
           </div>
           <div className="text-right">
             <Link className="text-textPrimary! hover:underline!" to="/forget-password">
-              Forget password
+              Forgot Password
             </Link>
           </div>
 

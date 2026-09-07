@@ -34,7 +34,7 @@ const ForgetPassword = () => {
     <div className="montserrat-font flex h-screen w-full flex-col items-center justify-center gap-4 bg-white md:flex-row">
       <div className="mt-20 hidden h-full flex-col justify-center md:mt-1 md:flex">
         <h1 className="mb-8 text-4xl font-bold">
-          Forget <span className="text-secondary">Password</span>
+          Forgot <span className="text-secondary">Password</span>
         </h1>
         <p className="mb-8 max-w-md text-lg font-semibold text-gray-500">
           Enter the email address associated with your account and we will send you a link to reset your password.
@@ -65,7 +65,7 @@ const ForgetPassword = () => {
             disabled={isLoading}
             loading={isLoading}
             type="submit"
-            label="Forget Password"
+            label="Submit"
             className="hover:bg-primary! text-textPrimary border-secondary! w-full rounded-[20px]! border!"
           />
 

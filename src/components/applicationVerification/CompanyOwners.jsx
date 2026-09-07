@@ -139,9 +139,17 @@ function CompanyOwners({
   const idMissionRoleValue =
     formData?.idMission?.roleFillingForCompany?.value || formData?.idMission?.roleFillingForCompany;
   const isRollingOwner = form?.rolling_owner_is_also_owner?.value === "yes";
+  const mustHaveOtherOperators = idMissionRoleValue === "primaryContact";
 
   const formFields = useMemo(() => {
-    const base = Array.isArray(fields) ? fields : [];
+    const base = (Array.isArray(fields) ? fields : []).map((f) => {
+      if (!mustHaveOtherOperators) return f;
+      if (!f?.name?.includes("additional_owners_own_25_percent_or_more")) return f;
+      return {
+        ...f,
+        options: (f.options || []).map((o) => (o.value === "no" ? { ...o, disabled: true } : o)),
+      };
+    });
     if (idMissionRoleValue === "primaryOperatorAndController" || idMissionRoleValue === "both") {
       return isRollingOwner
         ? [ssnField, areUAnOwnerField, ownerPercentageField, ...base]
@@ -151,7 +159,7 @@ function CompanyOwners({
       return isRollingOwner ? [areUAnOwnerField, ssnField, ownerPercentageField, ...base] : [areUAnOwnerField, ...base];
     }
     return [...base];
-  }, [fields, idMissionRoleValue, isRollingOwner]);
+  }, [fields, idMissionRoleValue, isRollingOwner, mustHaveOtherOperators]);
 
   const requiredNames = useMemo(
     () => formFields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
@@ -313,6 +321,15 @@ function CompanyOwners({
       return { ...cleaned, ...toAdd };
     });
   }, [formFields, isSignature, reduxData]);
+  useEffect(() => {
+    if (!mustHaveOtherOperators) return;
+    const key = Object.keys(form).find((k) => k?.includes("additional_owners_own_25_percent_or_more"));
+    if (!key || form[key]?.value) return;
+    setForm((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], value: "yes" },
+    }));
+  }, [mustHaveOtherOperators, form]);
 
   // ── required-field / operator validation ──────────────────────────────────
   useEffect(() => {

@@ -1,3 +1,4 @@
+import { safeImageUrl } from "@/lib/safeImageUrl";
 import Button from "@/components/shared/small/Button";
 import TextField from "@/components/shared/small/TextField";
 import { useBranding } from "@/hooks/BrandingContext";
@@ -47,9 +48,9 @@ const emailHeaderTemplate = `
           
           <!-- Logo -->
           <tr>
-            <td align={{headerAlignment}} style="padding: {{emailHeaderPadding}}px 20px 20px 20px; color: {{emailHeaderTextColor}};">
+            <td align="{{headerAlignment}}" style="padding: {{emailHeaderPadding}}px 20px 20px 20px; color: {{emailHeaderTextColor}};">
               <img
-                src="{{logo}}"
+                src="{{{logo}}}"
                 alt="{{companyName}}"
                 style="max-width: {{emailLogoMaxWidth}}px; max-height: {{emailLogoMaxHeight}}px; object-fit: contain; display: block;"
               />
@@ -1237,7 +1238,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       headerAlignment,
       emailHeaderTextColor,
       emailFooterTextColor,
-      logo: selectedEmailLogo || selectedLogo,
+
+      logo: safeImageUrl(selectedEmailLogo || selectedLogo),
       headerHeadingSize,
       headerDescriptionSize,
       footerHeadingSize,

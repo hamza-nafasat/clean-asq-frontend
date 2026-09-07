@@ -78,7 +78,7 @@ const ResetMailSent = () => {
           <Button
             type="button"
             variant="secondary"
-            label="Back to Forget Password"
+            label="Back to Forgot Password"
             onClick={() => navigate("/forget-password")}
             className="w-full rounded-[20px]!"
           />
