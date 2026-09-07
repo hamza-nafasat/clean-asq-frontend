@@ -70,13 +70,16 @@ describe("Part 5 · applicant flow fixes", () => {
   describe("[QA 5.13] other-operators question", () => {
     const src = read("components/applicationVerification/CompanyOwners.jsx");
 
-    it('disables "No" when the applicant is only the primary contact', () => {
-      assert.match(src, /mustHaveOtherOperators = idMissionRoleValue === "primaryContact"/);
+    it('disables the "No" option when another operator is mandatory', () => {
+      // The decision itself is unit-tested in lib/ownerOperatorRules; here we
+      // only check the screen applies it to the option list.
+      assert.match(src, /requiresOtherOperators\(idMissionRoleValue\)/);
       assert.match(src, /o\.value === "no" \? \{ \.\.\.o, disabled: true \}/);
     });
 
-    it('pre-selects "Yes" without overwriting a saved answer', () => {
-      assert.match(src, /if \(!key \|\| form\[key\]\?\.value\) return;/);
+    it("resolves the stored answer through the shared rule", () => {
+      assert.match(src, /resolveOtherOperatorsAnswer\(current, mustHaveOtherOperators\)/);
+      assert.match(src, /if \(resolved === current\) return;/, "must not write when nothing changes");
     });
 
     it("radio options support being disabled individually", () => {
@@ -91,8 +94,20 @@ describe("Part 5 · applicant flow fixes", () => {
     const src = read("page/admin/userApplicationForms/ApplicationVerification/ApplicationPdfView.jsx");
 
     it("keeps its aspect ratio instead of being forced square", () => {
-      assert.match(src, /className="h-12 w-auto max-w-\[220px\] object-contain"/);
-      assert.ok(!/h-15 w-15/.test(src), "fixed square squashed non-square logos");
+      const logoImg = src.slice(src.indexOf('alt="Logo"') - 200, src.indexOf('alt="Logo"') + 200);
+      // Assert the behaviour, not the exact utility syntax: height is pinned,
+      // width follows the aspect ratio, and it is capped so a wide logo cannot
+      // push the title off the header.
+      assert.match(logoImg, /\bh-\d/, "height must be constrained");
+      assert.match(logoImg, /\bw-auto\b/, "width must follow the aspect ratio");
+      assert.match(logoImg, /\bmax-w-/, "width must still be capped");
+      assert.match(logoImg, /object-contain/);
+    });
+
+    it("no longer forces the logo into a fixed square", () => {
+      assert.ok(!/h-15 w-15/.test(src), "a fixed square squashed every non-square logo");
+      assert.ok(!/\}`\}/.test(src.slice(src.indexOf('alt="Logo"'), src.indexOf('alt="Logo"') + 200)),
+        "stray brace in the className must stay removed");
     });
   });
 
