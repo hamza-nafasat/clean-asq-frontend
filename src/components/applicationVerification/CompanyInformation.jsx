@@ -500,8 +500,19 @@ function CompanyInformation({
           />
         </Modal>
       )}
+      <div className="flex w-full  flex-col items-end">
+        <Button
+          label={`Find NAICS`}
+          className={`text-nowrap ${naicsLoading && "pointer-events-none opacity-30"}`}
+          disabled={naicsLoading}
+          onClick={findNaicsHandler}
+          icon={naicsLoading && CgSpinner}
+          cnLeft={"animate-spin h-5 w-5"}
+        />
+      </div>
       <div className="mt-6 flex w-full flex-col items-start">
         <h4 className="text-textPrimary text-base font-medium lg:text-lg">NAICS Code and Description</h4>
+
         <div className="mt-2 flex w-full flex-col gap-4">
           <div className="relative w-full" ref={naicsInputRef}>
             <div className="flex w-full gap-4">
@@ -524,14 +535,6 @@ function CompanyInformation({
                   checkNaicsPosition();
                   naicsToMccDetails.NAICS ? setShowSuggestions(true) : setShowSuggestions(false);
                 }}
-              />
-              <Button
-                label={`Find NAICS`}
-                className={`text-nowrap ${naicsLoading && "pointer-events-none opacity-30"}`}
-                disabled={naicsLoading}
-                onClick={findNaicsHandler}
-                icon={naicsLoading && CgSpinner}
-                cnLeft={"animate-spin h-5 w-5"}
               />
             </div>
             {showSuggestions && (

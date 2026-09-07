@@ -1,3 +1,5 @@
+import { findFieldKeyByName } from "@/lib/formFieldLookup";
+import { requiresOtherOperators, resolveOtherOperatorsAnswer } from "@/lib/ownerOperatorRules";
 import DisplayText from "@/components/shared/DisplayText";
 import TextField from "@/components/shared/small/TextField";
 import { additionalOwnersFields, FIELD_TYPES, formFieldsStaticKeys } from "@/data/constants";
@@ -139,7 +141,7 @@ function CompanyOwners({
   const idMissionRoleValue =
     formData?.idMission?.roleFillingForCompany?.value || formData?.idMission?.roleFillingForCompany;
   const isRollingOwner = form?.rolling_owner_is_also_owner?.value === "yes";
-  const mustHaveOtherOperators = idMissionRoleValue === "primaryContact";
+  const mustHaveOtherOperators = requiresOtherOperators(idMissionRoleValue);
 
   const formFields = useMemo(() => {
     const base = (Array.isArray(fields) ? fields : []).map((f) => {
@@ -323,11 +325,14 @@ function CompanyOwners({
   }, [formFields, isSignature, reduxData]);
   useEffect(() => {
     if (!mustHaveOtherOperators) return;
-    const key = Object.keys(form).find((k) => k?.includes("additional_owners_own_25_percent_or_more"));
-    if (!key || form[key]?.value) return;
+    const key = findFieldKeyByName(form, "additional_owners_own_25_percent_or_more");
+    if (!key) return;
+    const current = form[key]?.value;
+    const resolved = resolveOtherOperatorsAnswer(current, mustHaveOtherOperators);
+    if (resolved === current) return;
     setForm((prev) => ({
       ...prev,
-      [key]: { ...prev[key], value: "yes" },
+      [key]: { ...prev[key], value: resolved },
     }));
   }, [mustHaveOtherOperators, form]);
 
@@ -339,10 +344,10 @@ function CompanyOwners({
       return;
     }
 
-    const get25Key = Object.keys(form).find((key) => key?.includes("additional_owners_own_25_percent_or_more"));
+    const get25Key = findFieldKeyByName(form, "additional_owners_own_25_percent_or_more");
     const additionOwnersGet25OrMore = get25Key ? form?.[get25Key]?.value === "yes" : false;
 
-    const rollingOwnerKey = Object.keys(form).find((key) => key?.includes("rolling_owner_is_also_owner"));
+    const rollingOwnerKey = findFieldKeyByName(form, "rolling_owner_is_also_owner");
     const applicantIsAlsoPrimaryOperator = rollingOwnerKey ? form?.[rollingOwnerKey]?.value === "yes" : false;
 
     const allFilled = requiredNames.every(({ uniqueId }) => {
@@ -432,7 +437,6 @@ function CompanyOwners({
           <div className="rounded-xl border border-[#F0F0F0] p-4">
             {formFields?.map((field, index) => {
               if (field.name === "main_owner_own_25_percent_or_more" || field.type === "block") return null;
-
               const key = field.uniqueId || index;
               const common = { field, form, setForm, className: "" };
 
