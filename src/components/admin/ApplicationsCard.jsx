@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/apiError";
 import { UseAIChat } from "@/context/AiChatContext";
 import { useBranding } from "@/hooks/BrandingContext";
 import { useScreenContext } from "@/hooks/useScreenContext";
@@ -47,7 +48,6 @@ import Modal from "../shared/small/Modal";
 import TextField from "../shared/small/TextField";
 import ApplyBranding from "./brandings/globalBranding/ApplyBranding";
 import { LocationModalComponent } from "./varification/LocationStatusModal";
-import { formKeys } from "@/data/constants";
 
 const SERVER_URL = getEnv("SERVER_URL");
 
@@ -524,7 +524,7 @@ export default function ApplicationsCard() {
             const res = await deleteFormSectionMutation({ sectionId }).unwrap();
             if (!res?.success) throw new Error(res?.message);
           } catch (err) {
-            errors.push(`Delete section: ${err?.data?.message || err?.message}`);
+            errors.push(`Delete section: ${apiErrorMessage(err)}`);
           }
         }
 
@@ -544,7 +544,7 @@ export default function ApplicationsCard() {
             if (!res?.success) throw new Error(res?.message);
           } catch (err) {
             console.error("[saveFormEdits] reorder error:", err);
-            errors.push(`Reorder: ${err?.data?.message || err?.message}`);
+            errors.push(`Reorder: ${apiErrorMessage(err)}`);
           }
         }
 
@@ -643,7 +643,7 @@ export default function ApplicationsCard() {
             if (!res?.success) throw new Error(res?.message);
           } catch (err) {
             console.error("[saveFormEdits] section update error:", err);
-            errors.push(`Section ${sectionId}: ${err?.data?.message || err?.message}`);
+            errors.push(`Section ${sectionId}: ${apiErrorMessage(err)}`);
           }
         }
 
@@ -672,7 +672,7 @@ export default function ApplicationsCard() {
             const res = await updateDeleteCreateFormFields({ sectionId, fieldsData }).unwrap();
             if (!res?.success) throw new Error(res?.message);
           } catch (err) {
-            errors.push(`Fields ${sectionId}: ${err?.data?.message || err?.message}`);
+            errors.push(`Fields ${sectionId}: ${apiErrorMessage(err)}`);
           }
         }
 
