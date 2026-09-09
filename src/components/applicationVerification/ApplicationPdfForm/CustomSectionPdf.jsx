@@ -1,4 +1,5 @@
-import { FIELD_TYPES } from "@/data/constants";
+import { FIELD_TYPES, formKeys } from "@/data/constants";
+import { sectionEntries } from "@/lib/sectionCompletion";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
 import { toast } from "react-toastify";
 import SignatureBox from "../../shared/SignatureBox";
@@ -12,7 +13,15 @@ import {
   SelectInputType,
 } from "./shared/DynamicFieldForPdf";
 
+const MULTI_ENTRY_SECTION_KEYS = new Set([formKeys.additional_owners_hidden_section_key]);
+const entryLabel = (entry, ordinal) => {
+  return `Owner ${ordinal}`;
+};
+
 function CustomSectionPdf({ fields, name, step, isSignature, formInnerData, setFormInnerData, sectionKey }) {
+  const sectionData = formInnerData?.[sectionKey];
+  const isMultiEntry = MULTI_ENTRY_SECTION_KEYS.has(sectionKey) && Array.isArray(sectionData);
+
   const signatureUploadHandler = async (file, setIsSaving) => {
     try {
       if (!file) return toast.error("Please select a file");
@@ -39,6 +48,77 @@ function CustomSectionPdf({ fields, name, step, isSignature, formInnerData, setF
     }
   };
 
+  const scopedSetter = (entryIndex) => (updater) =>
+    setFormInnerData((prev) => {
+      const list = Array.isArray(prev?.[sectionKey]) ? prev[sectionKey] : [];
+      const draft = { [sectionKey]: list[entryIndex] ?? {} };
+      const next = typeof updater === "function" ? updater(draft) : updater;
+      return {
+        ...prev,
+        [sectionKey]: list.map((entry, i) => (i === entryIndex ? (next?.[sectionKey] ?? {}) : entry)),
+      };
+    });
+
+  const renderFields = (form, setForm, keyPrefix) => (
+    <div className="mt-6 flex flex-col gap-4">
+      {fields?.map((field, index) => {
+        const key = `${keyPrefix}-${index}`;
+        if (field.name === "main_owner_own_25_percent_or_more" || field.type === "block") return null;
+        const shared = { field, form, setForm, sectionKey, className: "" };
+
+        if (field.type === FIELD_TYPES.SELECT) {
+          return (
+            <div key={key} className="mt-4">
+              <SelectInputType {...shared} />
+            </div>
+          );
+        }
+        if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
+          return (
+            <div key={key} className="mt-4">
+              <MultiCheckboxInputType {...shared} />
+            </div>
+          );
+        }
+        if (field.type === FIELD_TYPES.FILE) {
+          return (
+            <div key={key} className="mt-4">
+              <FileInputType {...shared} />
+            </div>
+          );
+        }
+        if (field.type === FIELD_TYPES.RADIO) {
+          return (
+            <div key={key} className="mt-4">
+              <RadioInputType {...shared} />
+            </div>
+          );
+        }
+        if (field.type === FIELD_TYPES.RANGE) {
+          return (
+            <div key={key} className="mt-4">
+              <RangeInputType {...shared} />
+            </div>
+          );
+        }
+        if (field.type === FIELD_TYPES.CHECKBOX) {
+          return (
+            <div key={key} className="mt-4">
+              <CheckboxInputType {...shared} placeholder={field.placeholder} />
+            </div>
+          );
+        }
+        return (
+          <div key={key} className="mt-4">
+            <OtherInputType {...shared} placeholder={field.placeholder} />
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  const entries = isMultiEntry ? sectionEntries(sectionData) : [];
+
   return (
     <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
       <div className="mb-10 flex items-center justify-between">
@@ -56,120 +136,36 @@ function CustomSectionPdf({ fields, name, step, isSignature, formInnerData, setF
           />
         </div>
       )}
-      <div className="mt-6 flex flex-col gap-4">
-        {fields?.map((field, index) => {
-          if (field.name === "main_owner_own_25_percent_or_more" || field.type === "block") return null;
-          if (field.type === FIELD_TYPES.SELECT) {
-            return (
-              <div key={index} className="mt-4">
-                <SelectInputType
-                  field={field}
-                  form={formInnerData?.[sectionKey]}
-                  setForm={setFormInnerData}
-                  sectionKey={sectionKey}
-                  className={""}
+
+      {isMultiEntry ? (
+        <div className="flex flex-col gap-8">
+          {entries.map(({ entry, index }, ordinal) => (
+            <section key={index} className="rounded-lg border border-gray-200 p-5">
+              <h4 className="text-textPrimary border-b pb-2 text-lg font-semibold">{entryLabel(entry, ordinal + 1)}</h4>
+              {renderFields(entry, scopedSetter(index), `entry-${index}`)}
+            </section>
+          ))}
+        </div>
+      ) : (
+        <>
+          {renderFields(sectionData, setFormInnerData, "single")}
+          <div className="mt-4">
+            {isSignature && (
+              <>
+                {step?.signDisplayFormattedText && (
+                  <div className="mb-4" dangerouslySetInnerHTML={{ __html: String(step.signDisplayFormattedText) }} />
+                )}
+                <SignatureBox
+                  step={step}
+                  isPdf={true}
+                  onSave={signatureUploadHandler}
+                  oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.value?.secureUrl || ""}
                 />
-              </div>
-            );
-          }
-          if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
-            return (
-              <div key={index} className="mt-4">
-                <MultiCheckboxInputType
-                  field={field}
-                  form={formInnerData?.[sectionKey]}
-                  setForm={setFormInnerData}
-                  sectionKey={sectionKey}
-                  className={""}
-                />
-              </div>
-            );
-          }
-          if (field.type === FIELD_TYPES.FILE) {
-            return (
-              <div key={index} className="mt-4">
-                <FileInputType
-                  field={field}
-                  form={formInnerData?.[sectionKey]}
-                  setForm={setFormInnerData}
-                  sectionKey={sectionKey}
-                  className={""}
-                />
-              </div>
-            );
-          }
-          if (field.type === FIELD_TYPES.RADIO) {
-            return (
-              <div key={index} className="mt-4">
-                <RadioInputType
-                  field={field}
-                  form={formInnerData?.[sectionKey]}
-                  setForm={setFormInnerData}
-                  sectionKey={sectionKey}
-                  className={""}
-                />
-              </div>
-            );
-          }
-          if (field.type === FIELD_TYPES.RANGE) {
-            return (
-              <div key={index} className="mt-4">
-                <RangeInputType
-                  field={field}
-                  form={formInnerData?.[sectionKey]}
-                  setForm={setFormInnerData}
-                  sectionKey={sectionKey}
-                  className={""}
-                />
-              </div>
-            );
-          }
-          if (field.type === FIELD_TYPES.CHECKBOX) {
-            return (
-              <div key={index} className="mt-4">
-                <CheckboxInputType
-                  field={field}
-                  placeholder={field.placeholder}
-                  form={formInnerData?.[sectionKey]}
-                  setForm={setFormInnerData}
-                  sectionKey={sectionKey}
-                  className={""}
-                />
-              </div>
-            );
-          }
-          return (
-            <div key={index} className="mt-4">
-              <OtherInputType
-                field={field}
-                placeholder={field.placeholder}
-                form={formInnerData?.[sectionKey]}
-                setForm={setFormInnerData}
-                sectionKey={sectionKey}
-                className={""}
-              />
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-4">
-        {isSignature && (
-          <>
-            {step?.signDisplayFormattedText && (
-              <div
-                className="mb-4"
-                dangerouslySetInnerHTML={{ __html: String(step.signDisplayFormattedText) }}
-              />
+              </>
             )}
-            <SignatureBox
-              step={step}
-              isPdf={true}
-              onSave={signatureUploadHandler}
-              oldSignatureUrl={formInnerData?.[sectionKey]?.signature?.value?.secureUrl || ""}
-            />
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

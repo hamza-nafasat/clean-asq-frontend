@@ -10,7 +10,14 @@ export const hasFieldValue = (value) => {
 
 export const sectionHasData = (sectionData) => {
   if (!sectionData || typeof sectionData !== "object") return false;
+  if (Array.isArray(sectionData)) return sectionData.some((entry) => sectionHasData(entry));
   return Object.values(sectionData).some((field) => hasFieldValue(field?.value));
+};
+
+export const sectionEntries = (sectionData) => {
+  if (!sectionData || typeof sectionData !== "object") return [];
+  if (!Array.isArray(sectionData)) return sectionHasData(sectionData) ? [{ entry: sectionData, index: null }] : [];
+  return sectionData.map((entry, index) => ({ entry, index })).filter(({ entry }) => sectionHasData(entry));
 };
 
 export const sectionsForPdf = (sections, formInnerData) =>

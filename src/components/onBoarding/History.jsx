@@ -16,32 +16,31 @@ const columns = () => [
         second: "2-digit",
       }),
     sortable: true,
-    width: "200px",
+    wrap: true,
   },
   {
     name: "User",
     selector: (row) => `${row?.email}`,
     sortable: true,
-    width: "270px",
+    wrap: true,
   },
   {
     name: "User Type",
     selector: (row) => `${row?.role}`,
     sortable: true,
-    width: "130px",
+    wrap: true,
   },
-
   {
     name: "Section",
     selector: (row) => row?.sectionKey,
     sortable: true,
-    width: "200px",
+    wrap: true,
   },
   {
     name: "Action/Status",
     selector: (row) => row?.status,
     sortable: true,
-    width: "200px",
+    wrap: true,
   },
   {
     name: "Comment/Details",

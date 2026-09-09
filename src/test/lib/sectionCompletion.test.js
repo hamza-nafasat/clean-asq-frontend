@@ -6,7 +6,7 @@
  */
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { hasFieldValue, sectionHasData, sectionsForPdf } from "../../lib/sectionCompletion.js";
+import { hasFieldValue, sectionEntries, sectionHasData, sectionsForPdf } from "../../lib/sectionCompletion.js";
 
 const SECTIONS = [
   { key: "company_information", title: "company_information_blk", isHidden: false },
@@ -74,6 +74,82 @@ describe("lib · sectionCompletion", () => {
     it("returns an empty list when sections or data are missing", () => {
       assert.deepEqual(sectionsForPdf(undefined, undefined), []);
       assert.deepEqual(sectionsForPdf(null, null), []);
+    });
+  });
+});
+
+/**
+ * Multi-entry sections: additional_owners_information stores an ARRAY of field
+ * maps, one per invited owner, instead of a single flat map.
+ */
+describe("lib · sectionCompletion · multi-entry sections", () => {
+  const owner = (name, email) => ({
+    u1: field("idMissionName", name),
+    u2: field("idMissionEmail", email),
+  });
+  const blankOwner = { u1: field("idMissionName", ""), u2: field("idMissionEmail", "  ") };
+
+  describe("sectionHasData() on an array", () => {
+    it("reports an array of blank entries as empty", () => {
+      assert.equal(sectionHasData([blankOwner, blankOwner]), false);
+    });
+
+    it("reports the section as filled when any one owner has data", () => {
+      assert.equal(sectionHasData([blankOwner, owner("Jane Doe", "")]), true);
+    });
+
+    it("treats an empty array as no data", () => {
+      assert.equal(sectionHasData([]), false);
+    });
+  });
+
+  describe("sectionEntries()", () => {
+    it("wraps a flat section as a single entry with no index", () => {
+      const flat = { u1: field("legal_name", "Acme") };
+      assert.deepEqual(sectionEntries(flat), [{ entry: flat, index: null }]);
+    });
+
+    it("returns nothing for a flat section with no answers", () => {
+      assert.deepEqual(sectionEntries({ u1: field("legal_name", "") }), []);
+    });
+
+    it("returns one entry per owner that has data", () => {
+      const a = owner("Jane Doe", "jane@x.com");
+      const b = owner("Sam Roe", "sam@x.com");
+      assert.deepEqual(sectionEntries([a, b]), [
+        { entry: a, index: 0 },
+        { entry: b, index: 1 },
+      ]);
+    });
+
+    it("drops blank owners but keeps the original index of the survivors", () => {
+      const real = owner("Jane Doe", "jane@x.com");
+      const result = sectionEntries([blankOwner, real, blankOwner]);
+      assert.equal(result.length, 1);
+      assert.equal(result[0].index, 1, "index must point at the slot in the stored array");
+    });
+
+    it("returns nothing for missing or non-object data", () => {
+      for (const bad of [null, undefined, "", 7]) {
+        assert.deepEqual(sectionEntries(bad), []);
+      }
+    });
+  });
+
+  describe("sectionsForPdf() with an array section", () => {
+    const SECTIONS_MULTI = [
+      { key: "company_information", title: "company_information_blk", isHidden: false },
+      { key: "additional_owners_information", title: "custom_section", isHidden: true },
+    ];
+    const keys = (data) => sectionsForPdf(SECTIONS_MULTI, data).map((s) => s.key);
+
+    it("excludes the section when every owner entry is blank", () => {
+      assert.deepEqual(keys({ additional_owners_information: [blankOwner] }), ["company_information"]);
+    });
+
+    it("includes the section when at least one owner was completed", () => {
+      const data = { additional_owners_information: [blankOwner, owner("Jane Doe", "jane@x.com")] };
+      assert.ok(keys(data).includes("additional_owners_information"));
     });
   });
 });
