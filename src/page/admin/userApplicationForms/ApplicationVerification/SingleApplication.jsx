@@ -835,6 +835,7 @@ export default function SingleApplication() {
       setSubmiting(true);
       try {
         if (!idMissionVerifiedData?.signature?.value?.publicId && !idMissionVerifiedData?.signature?.value?.secureUrl) {
+          setSubmiting(false);
           return toast.error("You must save your signature before taking the next step.");
         }
         const action = await dispatch(updateFormState({ data: idMissionVerifiedData, name: "idMission" }));
@@ -859,7 +860,6 @@ export default function SingleApplication() {
         return navigate(`/singleform/stepper/${formId}${effectiveDraftId ? `?draftId=${effectiveDraftId}` : ""}`);
       } catch (error) {
         console.log("error while saving form in draft", error);
-      } finally {
         setSubmiting(false);
       }
     },
@@ -1366,7 +1366,7 @@ export default function SingleApplication() {
           )) ? (
         <LoadingWithTimer setIsProcessing={setIsIdMissionProcessing} />
       ) : (
-        <div className="mt-14 h-full overflow-auto text-center" data-testid="single-application">
+        <div className="mt-14 text-center" data-testid="single-application">
           {showDownload && (
             <div className="flex justify-end mb-2 px-2">
               <Button variant="secondary" onClick={handleDownload} label={downloadLabel} disabled={isDownloading} />

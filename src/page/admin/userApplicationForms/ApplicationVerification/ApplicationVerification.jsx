@@ -57,7 +57,7 @@ export default function ApplicationVerification() {
   );
 
   return (
-    <div className="h-full rounded-[10px] bg-white px-6 py-6">
+    <div className="rounded-[10px] bg-white px-6 py-6">
       {/* Stepper Component */}
       <Stepper
         steps={steps}

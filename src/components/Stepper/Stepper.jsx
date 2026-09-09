@@ -106,7 +106,7 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
       {headerActions && <div className="flex justify-end mb-2">{headerActions}</div>}
 
       {/* Step Content */}
-      <div className="h-[calc(100vh-420px)] overflow-y-auto">{children}</div>
+      <div>{children}</div>
     </div>
   );
 };

@@ -424,7 +424,7 @@ export default function ApplicationForm() {
     return navigate(`/application-form/${form?.data?.branding?.name}/${formId}${draftId ? `?draftId=${draftId}` : ""}`);
   return (
     <div
-      className="bg-backgroundColor h-full w-full overflow-hidden rounded-[10px] px-6 py-6"
+      className="bg-backgroundColor w-full rounded-[10px] px-6 py-6"
       data-testid="application-form"
       data-ai-loading={!isSavedApiRun ? "page" : undefined}
     >

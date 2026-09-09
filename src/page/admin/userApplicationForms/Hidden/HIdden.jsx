@@ -335,7 +335,7 @@ function FormHiddenSection() {
 
   if (isLoading || isLoadingFormData) return <CustomLoading />;
   return (
-    <div className="mt-14 h-full overflow-auto">
+    <div className="mt-14">
       {updateSectionFromatingModal && (
         <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
           <EditSectionDisplayTextFromatingModal step={section} setModal={setUpdateSectionFromatingModal} />
@@ -360,8 +360,7 @@ function FormHiddenSection() {
           <div
             className="w-full"
             ref={containerRef}
-            dangerouslySetIn
-            nerHTML={{
+            dangerouslySetInnerHTML={{
               __html: String(section?.ai_formatting).replace(/<a(\s+.*?)?>/g, (match) => {
                 if (match.includes("target=")) return match;
                 return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
