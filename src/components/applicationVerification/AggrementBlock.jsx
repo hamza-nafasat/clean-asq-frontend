@@ -170,7 +170,7 @@ function AggrementBlock({
       </div>
       {updateSectionFromatingModal && (
         <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
-          <EditSectionDisplayTextFromatingModal step={step} />
+          <EditSectionDisplayTextFromatingModal step={step} setModal={setUpdateSectionFromatingModal} />
         </Modal>
       )}
 

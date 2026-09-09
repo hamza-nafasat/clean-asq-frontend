@@ -396,7 +396,7 @@ function CompanyOwners({
     <div ref={formContainerRef} className="h-full w-full overflow-auto">
       {updateSectionFromatingModal && (
         <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
-          <EditSectionDisplayTextFromatingModal step={step} />
+          <EditSectionDisplayTextFromatingModal setModal={setUpdateSectionFromatingModal} step={step} />
         </Modal>
       )}
       {ownerSuggesstionsModal && (

@@ -294,7 +294,7 @@ function BankInfo({
         </div>
         {updateSectionFromatingModal && (
           <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
-            <EditSectionDisplayTextFromatingModal step={step} />
+            <EditSectionDisplayTextFromatingModal step={step} setModal={setUpdateSectionFromatingModal} />
           </Modal>
         )}
         {(step?.ai_formatting || step?.displayText) && (
