@@ -695,12 +695,16 @@ function CompanyOwners({
                           </div>
                         )}
 
-                        <Button
-                          onClick={() => handleRemoveOtherOwnersData(index)}
-                          className="max-w-fit! self-end py-2.5!"
-                          variant="secondary"
-                          label="Remove"
-                        />
+                        <div className="flex gap-2 self-end">
+                          {/* Saves the section's progress, so an owner's details survive leaving the page. */}
+                          <Button onClick={onSaveProgress} className="max-w-fit! py-2.5!" label="Save Owner" />
+                          <Button
+                            onClick={() => handleRemoveOtherOwnersData(index)}
+                            className="max-w-fit! py-2.5!"
+                            variant="secondary"
+                            label="Remove"
+                          />
+                        </div>
                       </div>
                     </div>
                   );

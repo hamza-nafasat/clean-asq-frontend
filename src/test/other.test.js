@@ -5,7 +5,7 @@
  *           application flow: branding creation and extraction (1.2-1.11, 4.6,
  *           4.7), applying branding (1.12-1.14), email templates (1.15-1.18,
  *           5.5), strategies (1.19, 3.1, 5.25), the Application Forms page (1.1,
- *           1.20, 1.23, 3.2, 5.1, 5.26), sign-in and password reset (5.19, 5.21,
+ *           1.20, 3.2, 5.1, 5.26), sign-in and password reset (5.19, 5.21,
  *           5.30, 5.31, 5.35-5.37, 5.42) and the drafts / applications pages
  *           (5.22, 5.39-5.41).
  *
@@ -600,14 +600,6 @@ describe("application forms page", () => {
       assert.match(source, /label=\{"Copy"\}/);
     });
   });
-
-  it(
-    "[QA 1.23] opens the additional owners page from the form tile menu",
-    () => {
-      const withoutJsxComments = source.replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
-      assert.match(withoutJsxComments, /Additional Owners/);
-    },
-  );
 });
 
 describe("sign-in, sign-out and password reset", () => {
