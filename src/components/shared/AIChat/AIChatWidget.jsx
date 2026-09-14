@@ -159,6 +159,12 @@ export default function AIChatWidget() {
   const pendingFollowUpRef = useRef(null);   // task auto-sent after AI-triggered navigation
   const navTimeoutRef = useRef(null);        // clears stale follow-up if page never loads
   const prevScreenIdRef = useRef(null);
+  // screenId the transcript last told the AI about. Can lag behind the live screen while the
+  // panel is closed; syncConversationWithScreen() closes that gap on reopen / before sending.
+  const lastAnnouncedScreenIdRef = useRef(null);
+  // Live mirror of isOpen for timers that outlive the render that scheduled them.
+  const isOpenRef = useRef(isOpen);
+  isOpenRef.current = isOpen;
   const suppressNextScreenGreetingRef = useRef(false); // set by tool calls that handle their own transition message
   const initialGreetingShownRef = useRef(false); // prevents double-greeting when endpoint change clears messages mid-session
   // Tracks the most recently detected language (from AI [LANG:xx] tags) for widget string translation
@@ -191,6 +197,7 @@ export default function AIChatWidget() {
     lastDetectedLanguageRef.current = null;
     // Allow the greeting to re-fire for the new session
     initialGreetingShownRef.current = false;
+    lastAnnouncedScreenIdRef.current = null;
   }, [widgetResetSignal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-send a queued message (e.g. from clicking "Build live action" on the demo page)
@@ -966,7 +973,54 @@ export default function AIChatWidget() {
       addMessage({ role: "assistant", content });
     }
     initialGreetingShownRef.current = true;
+    lastAnnouncedScreenIdRef.current = ctx?.screenId ?? null;
   }, [isOpen, messages.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Transcript line that tells the AI (and the user) which screen is now active.
+  // `resumed` = the screen changed while the panel was closed, so the AI missed the transition.
+  const buildScreenAnnouncement = (ctx, { resumed = false } = {}) => {
+    const screenName = ctx?.screenName || ctx?.screenId || "this screen";
+    const state = ctx?.currentState;
+    const stepStr = state?.currentStep != null
+      ? ` — Step ${state.currentStep + 1} of ${state.totalSteps}`
+      : "";
+
+    if (!resumed) {
+      return assistantMode === "applicant"
+        ? `You're now on **${screenName}**${stepStr}. Feel free to ask me anything about this step.`
+        : ctx?.greeting || `I'm now on **${screenName}**. What would you like to do?`;
+    }
+
+    // TODO(human): return the announcement for a screen change that happened while the panel was closed.
+  };
+
+  // Brings the transcript up to date with the live screen. Returns the message it appended
+  // (so sendMessage can include it in the history it is about to send) or null.
+  const syncConversationWithScreen = () => {
+    const ctx = getScreenContext();
+    const screenId = ctx?.screenId;
+    if (!screenId) return null; // between pages — the next registration triggers the screen-change effect
+    if (lastAnnouncedScreenIdRef.current === null) {
+      // Conversation hasn't anchored to any screen yet: the greeting / first message covers it.
+      lastAnnouncedScreenIdRef.current = screenId;
+      return null;
+    }
+    if (lastAnnouncedScreenIdRef.current === screenId) return null;
+
+    lastAnnouncedScreenIdRef.current = screenId;
+    const content = buildScreenAnnouncement(ctx, { resumed: true });
+    if (!content) return null;
+    const msg = { role: "assistant", content };
+    addMessage(msg);
+    if (assistantMode === "applicant") announceScreen(ctx.screenName || screenId);
+    return msg;
+  };
+
+  // Reopening the panel after navigating while it was closed: announce where the user is now.
+  // Declared after the greeting effect so a first-open greeting anchors the screen first.
+  useEffect(() => {
+    if (isOpen) syncConversationWithScreen();
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // When the active screen changes: append a new greeting + run any pending follow-up.
   useEffect(() => {
@@ -978,28 +1032,27 @@ export default function AIChatWidget() {
 
     if (isScreenChange) {
       const ctx = getScreenContext();
-      const screenName = ctx?.screenName || currentScreenId;
 
       if (assistantMode === "applicant") {
+        // Closed: leave lastAnnouncedScreenIdRef stale on purpose — the reopen sync announces it.
         if (!isOpen) return;
         const guardedScreenId = ctx?.screenId || currentScreenId;
         setTimeout(() => {
           const reCheckCtx = getScreenContext();
           if (!reCheckCtx || reCheckCtx.screenId !== guardedScreenId) return;
-          if (!isOpen) return;
-          const stepStr = reCheckCtx?.currentState?.currentStep != null
-            ? ` — Step ${reCheckCtx.currentState.currentStep + 1} of ${reCheckCtx.currentState.totalSteps}`
-            : "";
-          addMessage({ role: "assistant", content: `You're now on **${screenName}**${stepStr}. Feel free to ask me anything about this step.` });
-          announceScreen(screenName);
+          if (!isOpenRef.current) return;
+          // A send/reopen within the delay may have already announced this screen.
+          if (lastAnnouncedScreenIdRef.current === guardedScreenId) return;
+          lastAnnouncedScreenIdRef.current = guardedScreenId;
+          addMessage({ role: "assistant", content: buildScreenAnnouncement(reCheckCtx) });
+          announceScreen(reCheckCtx.screenName || guardedScreenId);
         }, 600);
       } else {
+        lastAnnouncedScreenIdRef.current = currentScreenId;
         if (suppressNextScreenGreetingRef.current) {
           suppressNextScreenGreetingRef.current = false;
         } else {
-          const greeting = ctx?.greeting ||
-            `I'm now on **${screenName}**. What would you like to do?`;
-          addMessage({ role: "assistant", content: greeting });
+          addMessage({ role: "assistant", content: buildScreenAnnouncement(ctx) });
         }
       }
       // If we arrived here via an AI navigateToPage or template-switch tool call, auto-send the follow-up task.
@@ -1678,6 +1731,11 @@ export default function AIChatWidget() {
     if (!content || isLoading) return;
     if (!silent) setInput("");
 
+    // Guarantee the history marks any screen change the transcript hasn't acknowledged yet
+    // (e.g. a send that races the 600ms screen-change announcement). `messages` below is this
+    // render's snapshot, so the appended announcement is spliced into the history explicitly.
+    const syncMsg = syncConversationWithScreen();
+
     const userMsg = { role: "user", content };
     if (!silent) addMessage(userMsg);
     setIsLoading(true);
@@ -1687,7 +1745,7 @@ export default function AIChatWidget() {
       ? `${SERVER_URL}/api/ai/applicant-chat`
       : `${SERVER_URL}/api/ai/branding-chat`;
     const chatEndpoint = ctx?.aiEndpoint || defaultEndpoint;
-    const history = [...messages, userMsg]
+    const history = [...messages, ...(syncMsg ? [syncMsg] : []), userMsg]
       // Drop visual-only assistant messages (formPreview bubbles with empty content) —
       // Bedrock rejects { text: "" } content blocks, and they carry no AI context value.
       .filter((m) => m.role !== "assistant" || m.content || m.function_call)
