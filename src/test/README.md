@@ -19,6 +19,14 @@ src/test/
 npm test    # all three files
 ```
 
+`reporter.mjs` (not a test file) formats the output: one `✔ passed` line per
+passing test, the real error and throwing line for a failing one, console output
+only for files that had a failure, and a closing summary - total, passed, failed,
+open (todo), skipped and not completed (timed out or cancelled) - followed by a
+"Needs attention" list and `RESULT: PASSED` / `RESULT: FAILED`. The exit code is
+still set by `node:test` (1 on any failure). Keep it identical to
+`backend/src/test/reporter.mjs`.
+
 ## Which file a test belongs in
 
 - **ai** - the behaviour belongs to the AI assistant widget, or to a Part 4
