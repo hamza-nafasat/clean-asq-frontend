@@ -656,7 +656,6 @@ describe("stepper · IDMission identity verification", () => {
 
   it(
     "[QA 3.20] marks Zip or Postal Code as required so it is highlighted too",
-    { todo: 'open: the zipCode input is labelled "Zip or Postal Code:*" but has no required prop' },
     () => {
       assert.match(around(src, 'id="zipCode"', 300, 500), /\brequired\b/);
     },
@@ -712,7 +711,6 @@ describe("stepper · IDMission identity verification", () => {
     "[QA 5.33] restoring a draft renders the completed screen without the completed-step dialog",
     // The previous version of this test only scanned the file up to the saved-form
     // log line, so it passed while the restore effect below still opened the dialog.
-    { todo: "open: the draft-restore effect still calls setOpenRedirectModal(true)" },
     () => {
       const restore = between(
         src,
@@ -725,7 +723,6 @@ describe("stepper · IDMission identity verification", () => {
 
   it(
     "[QA 5.10] does not bounce back to IDMission while the signed-in user is still loading",
-    { todo: "open (suspected cause): the stepper navigates back during render when user._id is not loaded yet" },
     () => {
       assert.ok(
         !/if \(!user\?\._id\)\s*\n\s*return navigate\(`\/application-form\//.test(read(SCREENS.stepper)),
@@ -808,7 +805,6 @@ describe("stepper · company information", () => {
 
   it(
     "[QA 2.22 / 3.30] selects a typed NAICS suggestion with the arrow keys and Enter/Tab",
-    { todo: "open: the naics-code input only supports mouse selection" },
     () => {
       assert.match(around(src, 'id="naics-code"', 200, 1200), /onKeyDown/);
     },
@@ -816,7 +812,6 @@ describe("stepper · company information", () => {
 
   it(
     '[QA 5.11] renders "Find NAICS" next to the business description field',
-    { todo: "open: the button renders after the whole field list, above the NAICS heading" },
     () => {
       // The description is rendered inside the field list; the button must be too.
       const mapStart = src.indexOf("effectiveFields.map(");
@@ -827,8 +822,12 @@ describe("stepper · company information", () => {
         if (src[i] === "(") depth++;
         else if (src[i] === ")" && --depth === 0) { mapEnd = i; break; }
       }
-      const button = src.indexOf("label={`Find NAICS`}");
-      assert.ok(button > mapStart && button < mapEnd, "Find NAICS renders after the field list, away from the description");
+      const fieldList = src.slice(mapStart, mapEnd);
+      assert.ok(
+        fieldList.includes('field.name === "companydescription" && renderFindNaicsButton()'),
+        "Find NAICS must render with the business description field",
+      );
+      assert.match(src, /\{!hasDescriptionField && renderFindNaicsButton\(\)\}/, "forms without a description still need the button");
     },
   );
 
@@ -856,7 +855,6 @@ describe("stepper · company information", () => {
 
     it(
       "masks all but the last 4 digits",
-      { todo: "open: masked values are replaced by one * per character, hiding the last 4 too" },
       () => {
         assert.ok(!/"\*"\.repeat\(value\.toString\(\)\.length\)/.test(dynamicField));
       },
@@ -900,7 +898,6 @@ describe("stepper · ownership", () => {
 
   it(
     "[QA 5.13] keeps Next disabled while any added owner is missing required details",
-    { todo: "open: per-owner validation only checks the email address" },
     () => {
       const validation = between(src, "const allFilled", "let isOperatorExist");
       assert.match(validation, /getOwnerVal\(o, "(name|role)"\)/);
@@ -909,7 +906,6 @@ describe("stepper · ownership", () => {
 
   it(
     '[QA 5.14] requires at least one owner with the "primary operator" or "both" role before Next',
-    { todo: "open: isOperatorExist is true for any owner, regardless of role" },
     () => {
       // The applicant's own role is already checked; an ADDED owner's role is not.
       const rule = between(src, "let isOperatorExist", "At least one primary operator required");
@@ -919,7 +915,6 @@ describe("stepper · ownership", () => {
 
   it(
     '[QA 5.14] offers a "Save owner" button next to "Remove"',
-    { todo: "open: each owner row only has a Remove button" },
     () => {
       assert.match(around(src, 'label="Remove"', 600, 200), /label="Save Owner"/i);
     },
@@ -1141,9 +1136,14 @@ describe("stepper · hidden beneficial-owner form", () => {
 
   it(
     "[QA 5.44] sends a beneficial owner from Drafts and Submissions to the form they must complete",
-    { todo: "open: resuming only routes to verification or IDMission, never to the hidden owner form" },
     () => {
-      assert.match(read("components/admin/Draft.jsx"), /navigate\(`\/hidden\//);
+      // Pending invitations come back with the drafts and link straight to the hidden owner form.
+      assert.match(read("page/admin/dashboard/draftSubmission/DraftSubmission.jsx"), /invitations=\{data\?\.data\?\.pendingOwnerForms\}/);
+      assert.match(read("components/admin/AllSubmissionDraft.jsx"), /<OwnerInvitations invitations=\{invitations\} \/>/);
+      assert.match(
+        read("components/admin/OwnerInvitations.jsx"),
+        /navigate\(`\/hidden\/\$\{invite\.formId\}\/\$\{invite\.sectionKey\}\?token=/,
+      );
     },
   );
 });
@@ -1151,7 +1151,6 @@ describe("stepper · hidden beneficial-owner form", () => {
 describe("stepper · page layout", () => {
   it(
     "[QA 5.11 / 5.13] keeps Previous/Next reachable - steps do not nest their own scroll container",
-    { todo: "open (suspected cause): step roots add overflow-auto inside the dashboard's scroller" },
     () => {
       assert.ok(!/className="mt-14 h-full overflow-auto"/.test(read(SCREENS.companyInformation)));
       assert.ok(!/className="h-full w-full overflow-auto"/.test(read(SCREENS.companyOwners)));

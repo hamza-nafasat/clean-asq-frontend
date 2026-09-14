@@ -660,7 +660,11 @@ const OtherInputType = ({ field, className, form, setForm, isConfirmField, sugge
   const getDisplayValue = (type, value) => {
     if (!value) return "";
 
-    if (showMasked && isMasked) return "*".repeat(value.toString().length);
+    if (showMasked && isMasked) {
+      // Keep the last 4 visible so the applicant can confirm the number without revealing it.
+      const raw = value.toString();
+      return raw.length > 4 ? `${"*".repeat(raw.length - 4)}${raw.slice(-4)}` : "*".repeat(raw.length);
+    }
 
     if (type === "date") return formatDate(value);
 

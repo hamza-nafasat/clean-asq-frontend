@@ -991,7 +991,11 @@ export default function AIChatWidget() {
         : ctx?.greeting || `I'm now on **${screenName}**. What would you like to do?`;
     }
 
-    // TODO(human): return the announcement for a screen change that happened while the panel was closed.
+    // The AI missed this transition, so say so explicitly: it tells the model that
+    // anything discussed earlier in the transcript belongs to the previous screen.
+    return assistantMode === "applicant"
+      ? `While this chat was closed you moved to **${screenName}**${stepStr}. I'm now looking at this page — feel free to ask me anything about it.`
+      : `While this chat was closed you moved to **${screenName}**. I'm now working with this page — what would you like to do?`;
   };
 
   // Brings the transcript up to date with the live screen. Returns the message it appended

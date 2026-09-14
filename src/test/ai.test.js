@@ -439,7 +439,6 @@ describe("components/shared/AIChat · AIChatWidget · [QA 3.9] screen awareness 
 
   it(
     "[QA 3.9] writes an announcement for a screen change that happened while the panel was closed",
-    { todo: "open: buildScreenAnnouncement's `resumed` branch is still TODO(human)" },
     () => {
       const builder = blockOf(widget, "const buildScreenAnnouncement = (");
       const resumedBranch = builder.slice(builder.indexOf("if (!resumed) {"));
@@ -478,7 +477,6 @@ describe("components/shared/AIChat · aiChatConstants · navigation contract", (
 
   it(
     "[QA 4.4 / 4.13] routes every navigation destination to a real page",
-    { todo: 'open: PAGE_ROUTES sends "testing" to /testing, which App.jsx never routes' },
     () => {
       const app = read("App.jsx");
       const paths = [...blockOf(constants, "export const PAGE_ROUTES = {").matchAll(/: "\/([^"]+)"/g)].map((m) => m[1]);
@@ -528,7 +526,6 @@ describe("components/shared/AIChat · translation mode", () => {
 
   it(
     "[QA 3.13] tells the assistant about manual ID entry on the QR screen",
-    { todo: "open: the idmission-qr screen description says the applicant 'must use the QR code or web link'" },
     () => {
       const sa = read("page/admin/userApplicationForms/ApplicationVerification/SingleApplication.jsx");
       const qrDescription = sa.slice(sa.indexOf('? "The applicant scans a QR code'), sa.indexOf('aiStage === "idmission-loading"', sa.indexOf('? "The applicant scans a QR code')));
@@ -661,7 +658,6 @@ describe("components/shared/AIChat · applyToolCall · AI-mode admin flows", () 
 
     it(
       "[QA 4.4] hands extracted branding to the create page it navigates to",
-      { todo: 'open: GlobalBrandingPage reads sessionStorage "pendingBrandingData" but nothing writes it' },
       () => {
         const writers = [tools, brandingPage, read("page/admin/dashboard/brandings/Brandings.jsx")];
         assert.ok(writers.some((s) => /sessionStorage\.setItem\("pendingBrandingData"/.test(s)));
@@ -744,13 +740,10 @@ describe("components/shared/AIChat · applyToolCall · AI-mode admin flows", () 
     });
   });
 
-  it(
-    "[QA 2.43] offers Preview AI Context when creating a rule",
-    { todo: "open: ManageRules has no Preview AI Context action" },
-    () => {
-      assert.match(read("components/admin/ManageRules.jsx"), /Preview AI Context/i);
-    },
-  );
+  it("[QA 2.43] offers Preview AI Context when creating or editing a rule", () => {
+    // The toggle lives in the rule editor that Manage Rules opens.
+    assert.match(read("components/admin/CreateOrUpdateRules.jsx"), /"Hide Ai Context" : "Preview Ai Context"/);
+  });
 });
 
 const { apiErrorMessage } = await import("../lib/apiError.js");

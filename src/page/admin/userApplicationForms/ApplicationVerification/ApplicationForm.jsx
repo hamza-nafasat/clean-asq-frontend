@@ -413,15 +413,23 @@ export default function ApplicationForm() {
       return section?.signature?.value?.secureUrl || section?.signature?.secureUrl || null;
     },
   });
-  if (!isApplied || !form?.data?._id)
+  // Redirect from an effect, never during render: navigating while rendering can fire
+  // more than once and flash the previous screen before the stepper settles.
+  const mustVerifyFirst = isApplied && !!form?.data?._id && !user?._id;
+  useEffect(() => {
+    if (!mustVerifyFirst) return;
+    navigate(`/application-form/${form?.data?.branding?.name}/${formId}${draftId ? `?draftId=${draftId}` : ""}`, {
+      replace: true,
+    });
+  }, [mustVerifyFirst, navigate, form?.data?.branding?.name, formId, draftId]);
+
+  if (!isApplied || !form?.data?._id || mustVerifyFirst)
     return (
       <>
         <div data-ai-loading="page" style={{ display: "none" }} />
         <CustomLoading />
       </>
     );
-  if (!user?._id)
-    return navigate(`/application-form/${form?.data?.branding?.name}/${formId}${draftId ? `?draftId=${draftId}` : ""}`);
   return (
     <div
       className="bg-backgroundColor w-full rounded-[10px] px-6 py-6"

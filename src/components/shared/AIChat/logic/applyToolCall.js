@@ -95,9 +95,19 @@ export function createApplyToolCall(bindings) {
       }
 
       // ── Step 2: apply extracted branding to the UI ───────────────────────────
-      if (ctx.actions.applyExtractedBranding) {
-        ctx.actions.applyExtractedBranding(brandingData);
+      // Not on a branding editor (e.g. the branding list): hand the extraction to the
+      // create page, which applies "pendingBrandingData" once when it mounts.
+      if (!ctx.actions.applyExtractedBranding) {
+        sessionStorage.setItem("pendingBrandingData", JSON.stringify({ brandingData, screenshotUrl, url }));
+        suppressNextScreenGreetingRef.current = true;
+        addMessage({
+          role: "assistant",
+          content: `Branding extracted from **${brandingData?.name || url}**. Opening **Create Branding** with it applied.`,
+        });
+        navigate(PAGE_ROUTES["branding-create"]);
+        return;
       }
+      ctx.actions.applyExtractedBranding(brandingData);
       if (screenshotUrl && ctx.actions.setWebsiteImage) {
         ctx.actions.setWebsiteImage(screenshotUrl);
       }

@@ -304,7 +304,6 @@ describe("lib · brandedButtonStyle", () => {
 
   it(
     "[QA 1.4] picks black text on a light background",
-    { todo: "open: readableTextOn() returns white for every background, ignoring luminance" },
     () => {
       assert.equal(readableTextOn("#ffff00"), "#000000");
       assert.equal(brandedButtonStyle({ primary: "#ffffff", buttonTextPrimary: "#ffffff" }).color, "#000000");
@@ -433,7 +432,6 @@ describe("config · branding defaults", () => {
 
     it(
       "keeps the default when editing a branding saved without a tab title",
-      { todo: 'open: editing sets the tab title to "" when the saved branding has none' },
       () => {
         assert.ok(!brandingPage.includes('setTabTitle(singleBranding.tabTitle || "");'));
       },
@@ -506,7 +504,6 @@ describe("branding · create and extract", () => {
 
     it(
       "defaults the assistant header and banner to the application header colour",
-      { todo: "open: without extraction they fall back to accent / secondary colours instead of the header background" },
       () => {
         assert.match(brandingPage, /aiHeaderColor \|\| headerBackground/);
         assert.match(brandingPage, /aiBannerColor \|\| headerBackground/);
@@ -606,7 +603,6 @@ describe("application forms page", () => {
 
   it(
     "[QA 1.23] opens the additional owners page from the form tile menu",
-    { todo: "open: the Additional Owners menu item is commented out" },
     () => {
       const withoutJsxComments = source.replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
       assert.match(withoutJsxComments, /Additional Owners/);

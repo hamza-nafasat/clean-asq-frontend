@@ -1,4 +1,5 @@
 import Draft from "./Draft";
+import OwnerInvitations from "./OwnerInvitations";
 import Submission from "./Submission";
 
 function AllSubmissionDraft({ forms, invitations = [] }) {
@@ -15,6 +16,16 @@ function AllSubmissionDraft({ forms, invitations = [] }) {
             Once you start an application it will appear here, whether it is finished or not.
           </p>
         </div>
+      )}
+
+      {invitations.length > 0 && (
+        <section>
+          <div className="mb-3">
+            <h2 className="text-textPrimary text-lg font-semibold">Waiting for your details</h2>
+            <p className="text-sm text-gray-500">Applications where you were added as an owner or operator.</p>
+          </div>
+          <OwnerInvitations invitations={invitations} />
+        </section>
       )}
 
       {drafts.length > 0 && (

@@ -8,7 +8,7 @@ function DraftSubmission() {
   if (isLoading) return <CustomLoading />;
   return (
     <div>
-      <AllSubmissionDraft forms={data?.data} />
+      <AllSubmissionDraft forms={data?.data} invitations={data?.data?.pendingOwnerForms} />
     </div>
   );
 }

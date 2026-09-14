@@ -21,7 +21,11 @@ export const relativeLuminance = (hex) => {
 
 export const readableTextOn = (backgroundHex) => {
   if (!isUsableColor(backgroundHex)) return "#ffffff";
-  return "#ffffff";
+  // Pick whichever of white or black has the higher WCAG contrast ratio against the background.
+  const luminance = relativeLuminance(backgroundHex);
+  const contrastWithWhite = 1.05 / (luminance + 0.05);
+  const contrastWithBlack = (luminance + 0.05) / 0.05;
+  return contrastWithBlack > contrastWithWhite ? "#000000" : "#ffffff";
 };
 
 export const brandedButtonStyle = (colors) => {

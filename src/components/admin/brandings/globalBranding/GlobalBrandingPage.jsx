@@ -586,9 +586,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append("aiVoice", aiVoice);
     formData.append("aiCustomPrompt", aiCustomPrompt);
     formData.append("aiLaunchButtonColor", aiLaunchButtonColor || accentColor);
-    formData.append("aiHeaderColor", aiHeaderColor || accentColor);
-    formData.append("aiBannerColor", aiBannerColor || secondaryColor);
-    formData.append("aiBannerTextColor", aiBannerTextColor || buttonTextSecondary);
+    formData.append("aiHeaderColor", aiHeaderColor || headerBackground);
+    formData.append("aiBannerColor", aiBannerColor || headerBackground);
+    formData.append("aiBannerTextColor", aiBannerTextColor || headerText);
     formData.append("aiUseCustomIcon", String(aiUseCustomIcon));
     formData.append("favicon", favicon);
     formData.append("tabTitle", tabTitle);
@@ -733,9 +733,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
     formData.append("aiVoice", aiVoice);
     formData.append("aiCustomPrompt", aiCustomPrompt);
     formData.append("aiLaunchButtonColor", aiLaunchButtonColor || accentColor);
-    formData.append("aiHeaderColor", aiHeaderColor || accentColor);
-    formData.append("aiBannerColor", aiBannerColor || secondaryColor);
-    formData.append("aiBannerTextColor", aiBannerTextColor || buttonTextSecondary);
+    formData.append("aiHeaderColor", aiHeaderColor || headerBackground);
+    formData.append("aiBannerColor", aiBannerColor || headerBackground);
+    formData.append("aiBannerTextColor", aiBannerTextColor || headerText);
     formData.append("aiUseCustomIcon", String(aiUseCustomIcon));
     formData.append("favicon", favicon);
     formData.append("tabTitle", tabTitle);
@@ -979,6 +979,7 @@ const GlobalBrandingPage = ({ brandingId }) => {
       termsOfServiceUrl: setTermsOfServiceUrl,
       favicon: setFavicon,
       tabTitle: setTabTitle,
+      selectedLogo: setSelectedLogo,
       headerEffect: setHeaderEffect,
       footerEffect: setFooterEffect,
       emailHeaderEffect: setEmailHeaderEffect,
@@ -1175,8 +1176,8 @@ const GlobalBrandingPage = ({ brandingId }) => {
       setAiUseCustomIcon(singleBranding.aiUseCustomIcon !== false);
       setFavicon(singleBranding.favicon || "");
       setGlobalFavicon(singleBranding.favicon || "");
-      setTabTitle(singleBranding.tabTitle || "");
-      setGlobalTabTitle(singleBranding.tabTitle || "");
+      setTabTitle(singleBranding.tabTitle || "Online-Application");
+      setGlobalTabTitle(singleBranding.tabTitle || "Online-Application");
       if (singleBranding.headerEffect) setHeaderEffect(singleBranding.headerEffect);
       if (singleBranding.footerEffect) setFooterEffect(singleBranding.footerEffect);
       if (singleBranding.emailHeaderEffect) setEmailHeaderEffect(singleBranding.emailHeaderEffect);
@@ -1864,21 +1865,21 @@ const GlobalBrandingPage = ({ brandingId }) => {
                   image={image}
                   setImage={setImage}
                   label="Header / Bubble"
-                  color={aiHeaderColor || accentColor}
+                  color={aiHeaderColor || headerBackground}
                   setColor={setAiHeaderColor}
                 />
                 <ColorInput
                   image={image}
                   setImage={setImage}
                   label="Banner Background"
-                  color={aiBannerColor || secondaryColor}
+                  color={aiBannerColor || headerBackground}
                   setColor={setAiBannerColor}
                 />
                 <ColorInput
                   image={image}
                   setImage={setImage}
                   label="Banner Text"
-                  color={aiBannerTextColor || buttonTextSecondary}
+                  color={aiBannerTextColor || headerText}
                   setColor={setAiBannerTextColor}
                 />
               </div>
@@ -1904,9 +1905,9 @@ const GlobalBrandingPage = ({ brandingId }) => {
             {/* Live widget preview */}
             {(() => {
               const previewLaunch = aiLaunchButtonColor || accentColor;
-              const previewHeader = aiHeaderColor || accentColor;
-              const previewBanner = aiBannerColor || secondaryColor;
-              const previewBannerT = aiBannerTextColor || buttonTextSecondary;
+              const previewHeader = aiHeaderColor || headerBackground;
+              const previewBanner = aiBannerColor || headerBackground;
+              const previewBannerT = aiBannerTextColor || headerText;
               const contrastColor = (hex = "#000") => {
                 const h = hex.replace("#", "");
                 if (h.length < 6) return "#ffffff";

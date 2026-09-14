@@ -294,7 +294,7 @@ export default function SingleApplication() {
         aiStage === "email"
           ? "The applicant must verify their email address. They enter their email, receive a one-time passcode (OTP), and enter it to confirm."
           : aiStage === "idmission-qr"
-            ? "The applicant scans a QR code (or uses a web link) with their phone to complete photo ID verification through IDMission. No form fields to fill at this step — they must use the QR code or web link."
+            ? "The applicant scans a QR code (or uses a web link) with their phone to complete photo ID verification through IDMission. No form fields to fill at this step. If they cannot scan, they can click 'Enter ID Details Manually' to type their ID details instead."
             : aiStage === "idmission-loading"
               ? "Identity verification data is loading. Wait until personal details appear before confirming pre-filled values."
               : 'The applicant completes their personal details and adds their signature to proceed. Some fields may already be filled from identity verification — present those pre-filled values to the applicant for confirmation before moving on to empty fields. For the roleFillingForCompany field, valid values are: "both" (operator and primary contact), "primaryContact" (primary contact only), or "primaryOperatorAndController" (C-level executive or owner). Present these as readable choices to the applicant.',
@@ -952,7 +952,8 @@ export default function SingleApplication() {
       });
       setIdMissionVerified(true);
       setIdMissionDetailsReady(true);
-      setOpenRedirectModal(true);
+      // Restoring a draft renders the completed details screen directly - no
+      // "You've completed this step" dialog in front of it.
     }
     if (!qrCode && !webLink) {
       setQrLoading(true);
@@ -1756,6 +1757,7 @@ export default function SingleApplication() {
                     id="zipCode"
                     name="zipCode"
                     type="text"
+                    required
                     value={idMissionVerifiedData?.zipCode?.value || ""}
                     onChange={(e) =>
                       setIdMissionVerifiedData({

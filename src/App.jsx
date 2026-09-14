@@ -58,6 +58,7 @@ const FormStrategies = lazy(() => import("./page/admin/dashboard/formStrategies/
 const VerificationTest = lazy(() => import("./page/admin/dashboard/varification/VerficationTest"));
 const Strategies = lazy(() => import("./page/admin/dashboard/strategies/Strategies"));
 const Email = lazy(() => import("./page/admin/dashboard/email/Email"));
+const Testing = lazy(() => import("./page/admin/dashboard/testing/Testing"));
 const MyProfile = lazy(() => import("./page/admin/dashboard/myProfile/MyProfile"));
 const RoleRedirect = lazy(() => import("./components/RoleRedirect"));
 
@@ -238,6 +239,7 @@ function App() {
                 <Route path="verification-test" element={<VerificationTest />} />
                 <Route path="strategies" element={<Strategies />} />
                 <Route path="email" element={<Email />} />
+                <Route path="testing" element={<Testing />} />
               </Route>
 
               {/*all User Forms or application layout  , with out sidebar */}

@@ -61,6 +61,7 @@ function CompanyInformation({
   const [naicsApiData, setNaicsApiData] = useState({ bestMatch: {}, otherMatches: [] });
   const [naicsSuggestions, setNaicsSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [naicsHighlight, setNaicsHighlight] = useState(-1); // suggestion selected with the arrow keys
   const naicsInputRef = useRef(null);
   const [naicsLoading, setNaicsLoading] = useState(false);
   const [naicsSuggestionsAbove, setNaicsSuggestionsAbove] = useState(false);
@@ -156,6 +157,7 @@ function CompanyInformation({
     } else {
       setShowSuggestions(false);
     }
+    setNaicsHighlight(-1);
   };
 
   // Handle selection from suggestions
@@ -168,6 +170,7 @@ function CompanyInformation({
       MCC_Description: item["MCC Description"] || "",
     });
     setShowSuggestions(false);
+    setNaicsHighlight(-1);
   };
 
   useEffect(() => {
@@ -365,8 +368,41 @@ function CompanyInformation({
     setNaicsSuggestionsAbove(window.innerHeight - rect.bottom < 350);
   };
 
+  // Arrow keys move through the NAICS suggestions; Enter or Tab picks the highlighted one.
+  const handleNaicsKeyDown = (e) => {
+    if (!showSuggestions || naicsSuggestions.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setNaicsHighlight((i) => Math.min(i + 1, naicsSuggestions.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setNaicsHighlight((i) => Math.max(i - 1, 0));
+    } else if ((e.key === "Enter" || e.key === "Tab") && naicsHighlight >= 0) {
+      e.preventDefault();
+      handleSelectNaics(naicsSuggestions[naicsHighlight]);
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+    }
+  };
+
+  // "Find NAICS" reads the business description, so it sits right under that field.
+  // Forms without a description field still get the button after the field list.
+  const hasDescriptionField = effectiveFields?.some((f) => f.name === "companydescription");
+  const renderFindNaicsButton = () => (
+    <div className="mt-2 flex w-full flex-col items-end">
+      <Button
+        label={`Find NAICS`}
+        className={`text-nowrap ${naicsLoading && "pointer-events-none opacity-30"}`}
+        disabled={naicsLoading}
+        onClick={findNaicsHandler}
+        icon={naicsLoading && CgSpinner}
+        cnLeft={"animate-spin h-5 w-5"}
+      />
+    </div>
+  );
+
   return (
-    <div ref={formContainerRef} className="mt-14 h-full overflow-auto">
+    <div ref={formContainerRef} className="mt-14 h-full">
       {updateSectionFromatingModal && (
         <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
           <EditSectionDisplayTextFromatingModal step={step} setModal={setUpdateSectionFromatingModal} />
@@ -485,6 +521,7 @@ function CompanyInformation({
                 setForm={setForm}
                 className={""}
               />
+              {field.name === "companydescription" && renderFindNaicsButton()}
             </div>
           );
         })}
@@ -500,16 +537,7 @@ function CompanyInformation({
           />
         </Modal>
       )}
-      <div className="flex w-full  flex-col items-end">
-        <Button
-          label={`Find NAICS`}
-          className={`text-nowrap ${naicsLoading && "pointer-events-none opacity-30"}`}
-          disabled={naicsLoading}
-          onClick={findNaicsHandler}
-          icon={naicsLoading && CgSpinner}
-          cnLeft={"animate-spin h-5 w-5"}
-        />
-      </div>
+      {!hasDescriptionField && renderFindNaicsButton()}
       <div className="mt-6 flex w-full flex-col items-start">
         <h4 className="text-textPrimary text-base font-medium lg:text-lg">NAICS Code and Description</h4>
 
@@ -522,6 +550,7 @@ function CompanyInformation({
                 placeholder="Type NAICS code or description..."
                 type="text"
                 value={naicsToMccDetails.NAICS}
+                onKeyDown={handleNaicsKeyDown}
                 className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${!naicsToMccDetails.NAICS ? "bg-highlighting border-accent! border-2" : ""}`}
                 data-ai-has-suggestions="true"
                 data-ai-required="true"
@@ -544,7 +573,8 @@ function CompanyInformation({
                 {naicsSuggestions.map((item, index) => (
                   <div
                     key={index}
-                    className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                    className={`cursor-pointer px-4 py-2 hover:bg-gray-100 ${index === naicsHighlight ? "bg-gray-100" : ""}`}
+                    onMouseEnter={() => setNaicsHighlight(index)}
                     onClick={() => handleSelectNaics(item)}
                   >
                     <div className="font-medium">{item["NAICS Code"]}</div>

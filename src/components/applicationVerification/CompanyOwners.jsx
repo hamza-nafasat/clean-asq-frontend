@@ -359,6 +359,13 @@ function CompanyOwners({
 
     const isSignatureDone = !isSignature || isSignatureComplete(form?.signature);
 
+    // Every added owner needs a name, email, role and the "full information" answer.
+    const isOwnerComplete = (o) =>
+      [getOwnerVal(o, "name"), getOwnerVal(o, "email"), getOwnerVal(o, "role"), getOwnerVal(o, "have_detail")].every(
+        (v) => String(v).trim() !== "",
+      );
+    const areOwnersComplete = !additionOwnersGet25OrMore || owners.every(isOwnerComplete);
+
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isEmailValidated =
       !additionOwnersGet25OrMore ||
@@ -366,18 +373,22 @@ function CompanyOwners({
       owners.every((o) => emailRe.test(String(getOwnerVal(o, "email")).toLowerCase()));
 
     let isOperatorExist = false;
-    if ((additionOwnersGet25OrMore && owners.length > 0) || applicantIsAlsoPrimaryOperator) {
-      isOperatorExist = true;
-    }
+    // An added owner only counts as an operator when their role says so.
+    const hasOperatorOwner = owners.some((o) => ["primary_operator", "both"].includes(getOwnerVal(o, "role")));
+    if (additionOwnersGet25OrMore && hasOperatorOwner) isOperatorExist = true;
     if (idMissionRoleValue === "primaryOperatorAndController" || idMissionRoleValue === "both") {
       isOperatorExist = true;
     }
+    // No IDMission role recorded (e.g. an older draft): fall back to the applicant's own ownership answer.
+    if (!idMissionRoleValue && applicantIsAlsoPrimaryOperator) isOperatorExist = true;
 
-    if (!allFilled || !isSignatureDone) setSubmitButtonText("Some Required Fields are Missing");
+    if (!allFilled || !isSignatureDone || !areOwnersComplete) setSubmitButtonText("Some Required Fields are Missing");
     else if (!isEmailValidated) setSubmitButtonText("A valid email is required for every owner");
     else if (!isOperatorExist) setSubmitButtonText("At least one primary operator required");
 
-    setIsAllRequiredFieldsFilled(allFilled && isOperatorExist && isEmailValidated && isSignatureDone);
+    setIsAllRequiredFieldsFilled(
+      allFilled && areOwnersComplete && isOperatorExist && isEmailValidated && isSignatureDone,
+    );
   }, [form, owners, idMissionRoleValue, isCreator, isSignature, requiredNames, getOwnerVal]);
 
   submitFromEnterRef.current = () => {
@@ -393,7 +404,7 @@ function CompanyOwners({
       ?.value === "yes";
 
   return (
-    <div ref={formContainerRef} className="h-full w-full overflow-auto">
+    <div ref={formContainerRef} className="h-full w-full">
       {updateSectionFromatingModal && (
         <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
           <EditSectionDisplayTextFromatingModal setModal={setUpdateSectionFromatingModal} step={step} />
@@ -433,7 +444,7 @@ function CompanyOwners({
       )}
 
       <div className="mt-5">
-        <div className="h-full overflow-auto pb-3">
+        <div className="pb-3">
           <div className="rounded-xl border border-[#F0F0F0] p-4">
             {formFields?.map((field, index) => {
               if (field.name === "main_owner_own_25_percent_or_more" || field.type === "block") return null;
@@ -512,6 +523,7 @@ function CompanyOwners({
                           <TextField
                             label="Owner or primary operator name"
                             name="name"
+                            required
                             placeholder="First name, middle name (optional), last name"
                             value={ownerName}
                             onChange={(e) => setOwnerVal("name", e.target.value, index)}
