@@ -24,22 +24,22 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-import { hasFieldValue, sectionEntries, sectionHasData, sectionsForPdf } from "../lib/sectionCompletion.js";
+import { hasFieldValue, sectionEntries, sectionHasData, sectionsForPdf } from "../utils/sectionCompletion.js";
 import {
   PRIMARY_CONTACT_ONLY,
   requiresOtherOperators,
   resolveOtherOperatorsAnswer,
-} from "../lib/ownerOperatorRules.js";
-import { findFieldKeyByName, getFieldValueByName } from "../lib/formFieldLookup.js";
+} from "../modules/applicant/utils/applicant.utils4.js";
+import { findFieldKeyByName, getFieldValueByName } from "../modules/applicant/utils/applicant.utils3.js";
 import { isEnterSequenceType } from "../hooks/useEnterToNextField.js";
-import { makeDocLinkHandler } from "../lib/makeDocLinkHandler.js";
+import { makeDocLinkHandler } from "../utils/makeDocLinkHandler.js";
 import {
   getSignatureUrl,
   isSignatureComplete,
   normalizeFieldEntry,
   normalizeSignature,
 } from "../utils/signatureShape.js";
-import { formatData, makeCompleteName } from "../utils/idMissionMapingUtils.js";
+import { formatData, makeCompleteName } from "../modules/applicant/utils/applicant.utils2.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (p) => readFileSync(path.join(root, "src", p), "utf8");
@@ -61,21 +61,21 @@ const around = (source, marker, before = 400, after = 400) => {
 };
 
 const SCREENS = {
-  singleApplication: "page/admin/userApplicationForms/ApplicationVerification/SingleApplication.jsx",
-  stepper: "page/admin/userApplicationForms/ApplicationVerification/ApplicationForm.jsx",
-  pdfView: "page/admin/userApplicationForms/ApplicationVerification/ApplicationPdfView.jsx",
-  hidden: "page/admin/userApplicationForms/Hidden/HIdden.jsx",
-  companyVerification: "components/admin/varification/CompanyVerification.jsx",
-  companyInformation: "components/applicationVerification/CompanyInformation.jsx",
-  companyOwners: "components/applicationVerification/CompanyOwners.jsx",
-  bankInfo: "components/applicationVerification/BankInfo.jsx",
-  customSection: "components/applicationVerification/CustomSection.jsx",
-  processingInfo: "components/applicationVerification/ProcessingInfo.jsx",
-  agreement: "components/applicationVerification/AggrementBlock.jsx",
-  documents: "components/applicationVerification/Documents.jsx",
-  dynamicField: "components/shared/small/DynamicField.jsx",
-  textField: "components/shared/small/TextField.jsx",
-  submission: "components/LoadingWithTimerAfterSubmission.jsx",
+  singleApplication: "modules/applicant/pages/SingleApplication.jsx",
+  stepper: "modules/applicant/pages/ApplicationForm.jsx",
+  pdfView: "components/global/ApplicationPdfView.jsx",
+  hidden: "modules/applicant/pages/HiddenSection.jsx",
+  companyVerification: "modules/applicant/components/ApplicantCompanyLookup.jsx",
+  companyInformation: "modules/applicant/components/ApplicantCompanyInformation.jsx",
+  companyOwners: "modules/applicant/components/ApplicantCompanyOwners.jsx",
+  bankInfo: "modules/applicant/components/ApplicantBankInfo.jsx",
+  customSection: "modules/applicant/components/ApplicantCustomSection.jsx",
+  processingInfo: "modules/applicant/components/ApplicantProcessingInfo.jsx",
+  agreement: "modules/applicant/components/ApplicantAgreementBlock.jsx",
+  documents: "modules/applicant/components/ApplicantDocuments.jsx",
+  dynamicField: "components/global/DynamicField.jsx",
+  textField: "components/shared/TextField.jsx",
+  submission: "modules/applicant/pages/SubmissionSuccess.jsx",
 };
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -550,11 +550,11 @@ describe("lib · makeDocLinkHandler · makeDocLinkHandler()", () => {
 
 describe("stepper · application header", () => {
   it("[QA 2.3 / 3.4] stores the configured header text size", () => {
-    assert.match(read("redux/slices/formSlice.js"), /state\.formHeaderTextSize = action\.payload\.headerTextSize;/);
+    assert.match(read("redux/slices/form.slice.js"), /state\.formHeaderTextSize = action\.payload\.headerTextSize;/);
   });
 
   it("[QA 2.3 / 3.4] renders the header text at the configured size", () => {
-    assert.match(read("page/admin/layout/AdminHeader.jsx"), /fontSize: `\$\{formHeaderTextSize \|\| 24\}px`/);
+    assert.match(read("components/layouts/Header.jsx"), /fontSize: `\$\{formHeaderTextSize \|\| 24\}px`/);
   });
 
   it("[QA 2.3 / 3.4] every application screen publishes the form's header settings", () => {
@@ -591,7 +591,7 @@ describe("stepper · OTP email verification", () => {
     });
 
     it("excludes guest users from isCreator", () => {
-      assert.match(src, /const isCreator = user\?\._id && user\?\._id == form\?\.data\?\.owner && user\?\.role !== "guest";/);
+      assert.match(src, /const isCreator = user\?\._id && user\?\._id == form\?\.data\?\.owner && isNotGuestRoleValue\(user\);/);
     });
   });
 });
@@ -1018,7 +1018,7 @@ describe("stepper · display text", () => {
    * feeding the page provided no tags, so the screen kept stale data.
    */
   describe("redux/apis · formApis · [QA 1.25] cache tags", () => {
-    const source = read("redux/apis/formApis.js");
+    const source = read("redux/apis/form.apis.js");
     const endpointBlock = (name) => {
       const start = source.indexOf(`${name}: builder.`);
       assert.notEqual(start, -1, `endpoint ${name} not found`);
@@ -1060,11 +1060,11 @@ describe("stepper · download this page", () => {
 
   it("[QA 2.6 / 3.40] pulls agreement documents linked from the page's display text", () => {
     assert.match(read("hooks/usePageDownload.js"), /extractHttpLinks\(displayHtml\)/);
-    assert.match(read("utils/buildPagePdf.js"), /Agreement: \$\{agreement\.title \|\| agreement\.url\}/);
+    assert.match(read("lib/pdf.js"), /Agreement: \$\{agreement\.title \|\| agreement\.url\}/);
   });
 
   it("[QA 3.36 / 3.40] stamps the PDF with the download time and who completed it", () => {
-    const pdf = read("utils/buildPagePdf.js");
+    const pdf = read("lib/pdf.js");
     assert.match(pdf, /Downloaded: \$\{timestamp\}/);
     assert.match(pdf, /Completed by: /);
   });
@@ -1121,7 +1121,7 @@ describe("stepper · [QA 5.23] application PDF header logo", () => {
 
 describe("stepper · customize form", () => {
   it("[QA 4.16] opens the Customize dialog and saves the form", () => {
-    const src = read("components/applicationVerification/companyInfo/CustomizationFieldsModal.jsx");
+    const src = read("modules/applicant/components/ApplicantCustomizeFieldsModal.jsx");
     assert.match(src, /saveFormHandler\(fieldsData\)/);
     assert.match(src, /Save Form/);
   });
@@ -1138,10 +1138,10 @@ describe("stepper · hidden beneficial-owner form", () => {
     "[QA 5.44] sends a beneficial owner from Drafts and Submissions to the form they must complete",
     () => {
       // Pending invitations come back with the drafts and link straight to the hidden owner form.
-      assert.match(read("page/admin/dashboard/draftSubmission/DraftSubmission.jsx"), /invitations=\{data\?\.data\?\.pendingOwnerForms\}/);
-      assert.match(read("components/admin/AllSubmissionDraft.jsx"), /<OwnerInvitations invitations=\{invitations\} \/>/);
+      assert.match(read("modules/my-applications/pages/MyApplications.jsx"), /invitations=\{data\?\.data\?\.pendingOwnerForms\}/);
+      assert.match(read("modules/my-applications/components/MyApplicationsTabs.jsx"), /<OwnerInvitations invitations=\{invitations\} \/>/);
       assert.match(
-        read("components/admin/OwnerInvitations.jsx"),
+        read("modules/my-applications/components/MyApplicationsOwnerInvitations.jsx"),
         /navigate\(`\/hidden\/\$\{invite\.formId\}\/\$\{invite\.sectionKey\}\?token=/,
       );
     },

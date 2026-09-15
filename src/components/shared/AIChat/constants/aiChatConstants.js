@@ -1,4 +1,4 @@
-import getEnv from "../../../../lib/env.js";
+import getEnv from "@/utils/env.js";
 
 export const SERVER_URL = getEnv("SERVER_URL");
 

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAddBrandingInFormMutation } from "../../../redux/apis/brandingApis";
-import { useBranding } from "../../../hooks/BrandingContext";
-import { checkFieldForErrors } from "../../../lib/checkFieldForErrors";
-import { discoverFormFields } from "../../../lib/discoverFormFields";
-import { UseAIChat } from "@/context/AiChatContext";
+import { useAddBrandingInFormMutation } from "@/redux/apis/branding.apis";
+import useBranding from "@/hooks/useBranding";
+import { checkFieldForErrors } from "@/utils/checkFieldForErrors";
+import { discoverFormFields } from "@/utils/discoverFormFields";
+import useAiChat from "@/hooks/useAiChat";
 import { buildChatPayload } from "./utils/buildChatPayload.js";
 import {
   clampPanelToViewport,
@@ -44,7 +44,7 @@ export default function AIChatWidget() {
     autoMessageSignal,
     pendingAutoMessageRef,
     assistantMode,
-  } = UseAIChat();
+  } = useAiChat();
   // Logging wrapper — every setIsOpen call is traced so we can see who's opening the widget.
   const setIsOpen = useCallback(
     (val) => {

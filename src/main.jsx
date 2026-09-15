@@ -2,45 +2,31 @@ import { LoadScript } from "@react-google-maps/api";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
-import { io } from "socket.io-client";
+import store from "@/redux/store";
+import ErrorBoundary from "@/components/global/ErrorBoundary";
+import AIChatWidget from "@/components/shared/AIChat/AIChatWidget";
+import getEnv from "@/utils/env";
 import App from "./App";
-import { AIChatProvider } from "./context/AiChatContext";
-import { BrandingProvider } from "./hooks/BrandingContext";
 import "./index.css";
-import getEnv from "./lib/env";
-import store from "./redux/store";
-import AIChatWidget from "./components/shared/AIChat/AIChatWidget";
-import ErrorBoundary from "./components/shared/ErrorBoundary";
-
-export const socket = io(getEnv("SERVER_URL"), {
-  path: "/api/socket.io",
-  withCredentials: true,
-});
 
 const container = document.getElementById("root");
 
-// Avoid creating multiple roots
+// avoid creating a second root on hot reload
 if (!container._reactRoot) {
   const root = createRoot(container);
   container._reactRoot = root;
   root.render(
-    // <StrictMode>
     <LoadScript googleMapsApiKey={getEnv("GOOGLE_MAPS_API_KEY")} libraries={["places"]}>
-      <BrandingProvider>
-        <Provider store={store}>
-          <BrowserRouter>
-            <AIChatProvider>
-              <ErrorBoundary name="App">
-                <App />
-              </ErrorBoundary>
-              <ErrorBoundary name="AIChatWidget" silent>
-                <AIChatWidget />
-              </ErrorBoundary>
-            </AIChatProvider>
-          </BrowserRouter>
-        </Provider>
-      </BrandingProvider>
+      <Provider store={store}>
+        <BrowserRouter>
+          <ErrorBoundary name="App">
+            <App />
+          </ErrorBoundary>
+          <ErrorBoundary name="AIChatWidget" silent>
+            <AIChatWidget />
+          </ErrorBoundary>
+        </BrowserRouter>
+      </Provider>
     </LoadScript>,
-    // </StrictMode>
   );
 }

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { SERVER_URL } from "../constants/aiChatConstants.js";
+import { SERVER_URL } from "@/components/shared/AIChat/constants/aiChatConstants.js";
 
 /**
  * Speech recognition (PTT) and text-to-speech for the AI chat widget.

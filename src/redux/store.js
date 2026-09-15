@@ -1,42 +1,46 @@
-import { configureStore } from '@reduxjs/toolkit';
-import authApis from './apis/authApis';
-import authSlice from './slices/authSlice';
-import brandingSlice from './slices/brandingSlice';
-import userApis from './apis/userApis';
-import roleApis from './apis/roleApis';
-import formApis from './apis/formApis';
-import formSlice from './slices/formSlice';
-import idMissionApis from './apis/idMissionApis';
-import brandingApis from './apis/brandingApis';
-import companySlice from './slices/companySlice';
-import emailTemplateApis from './apis/emailTemplateApis';
+import { configureStore } from "@reduxjs/toolkit";
+import applicantApis from "@/redux/apis/applicant.apis";
+import authApis from "@/redux/apis/auth.apis";
+import brandingApis from "@/redux/apis/branding.apis";
+import emailApis from "@/redux/apis/email.apis";
+import formApis from "@/redux/apis/form.apis";
+import roleManagementApis from "@/redux/apis/role-management.apis";
+import userManagementApis from "@/redux/apis/user-management.apis";
+import aiChatSlice from "@/redux/slices/aiChat.slice";
+import authSlice from "@/redux/slices/auth.slice";
+import brandingSlice from "@/redux/slices/branding.slice";
+import companySlice from "@/redux/slices/company.slice";
+import demoSlice from "@/redux/slices/demo.slice";
+import formSlice from "@/redux/slices/form.slice";
 
 const store = configureStore({
   reducer: {
-    // reducers
+    // slices
     [authSlice.name]: authSlice.reducer,
     [brandingSlice.name]: brandingSlice.reducer,
     [formSlice.name]: formSlice.reducer,
     [companySlice.name]: companySlice.reducer,
+    [aiChatSlice.name]: aiChatSlice.reducer,
+    [demoSlice.name]: demoSlice.reducer,
 
     // apis
     [authApis.reducerPath]: authApis.reducer,
-    [userApis.reducerPath]: userApis.reducer,
-    [roleApis.reducerPath]: roleApis.reducer,
+    [userManagementApis.reducerPath]: userManagementApis.reducer,
+    [roleManagementApis.reducerPath]: roleManagementApis.reducer,
     [formApis.reducerPath]: formApis.reducer,
-    [idMissionApis.reducerPath]: idMissionApis.reducer,
+    [applicantApis.reducerPath]: applicantApis.reducer,
     [brandingApis.reducerPath]: brandingApis.reducer,
-    [emailTemplateApis.reducerPath]: emailTemplateApis.reducer,
+    [emailApis.reducerPath]: emailApis.reducer,
   },
-  middleware: getDefaultMiddleware =>
+  middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false })
       .concat(authApis.middleware)
-      .concat(userApis.middleware)
-      .concat(roleApis.middleware)
+      .concat(userManagementApis.middleware)
+      .concat(roleManagementApis.middleware)
       .concat(formApis.middleware)
-      .concat(idMissionApis.middleware)
+      .concat(applicantApis.middleware)
       .concat(brandingApis.middleware)
-      .concat(emailTemplateApis.middleware),
+      .concat(emailApis.middleware),
 });
 
 export default store;

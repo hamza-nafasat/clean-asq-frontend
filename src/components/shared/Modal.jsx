@@ -1,78 +1,29 @@
-import PropTypes from 'prop-types';
-import { memo } from 'react';
-import Button from './small/Button';
-// import Button from './Button';
-import { IoCloseSharp } from 'react-icons/io5';
+import { RxCross2 } from 'react-icons/rx';
 
-const Modal = memo(
-  ({
-    title,
-    children,
-    onClose,
-    onSave,
-    isLoading = false,
-    saveButtonText = 'Save',
-    cancelButtonText = 'Cancel',
-    hideCancelButton = false,
-    hideSaveButton = false,
-  }) => {
-    // const handleBackdropClick = useCallback(
-    //   e => {
-    //     // Only close if clicking the backdrop itself, not its children
-    //     if (e.target === e.currentTarget) {
-    //       onClose();
-    //     }
-    //   },
-    //   [onClose]
-    // );
-
-    return (
+const Modal = ({ title, onClose, children, width, headingIcon }) => {
+  return (
+    <div
+      className="modal fixed inset-0 top-0 left-0 z-99 flex items-center justify-center bg-[#000000c5] p-6"
+    // onClick={onClose}
+    >
       <div
-        className="fixed inset-0 z-50 flex h-full items-center justify-center overflow-auto bg-black/50"
-        // onClick={handleBackdropClick}
+        className={`custom-scroll shadow-card h-fit max-h-full overflow-y-auto rounded-[12px] bg-white p-4 md:p-6 ${width ? width : 'w-[4000px] md:w-[500px] lg:w-[700px] xl:w-[900px]'
+          }`}
+        onClick={e => e.stopPropagation()}
       >
-        <div className="scroll-0 max-h-[70%] w-[90%] max-w-3xl overflow-auto rounded-md bg-white p-6 shadow-lg">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-textPrimary text-lg font-semibold">{title}</h2>
-            <button onClick={onClose} className="cursor-pointer text-gray-400 hover:text-gray-500" disabled={isLoading}>
-              <IoCloseSharp />
-            </button>
-          </div>
-
-          <div className="mb-6">{children}</div>
-
-          <div className="flex justify-end gap-2">
-            {!hideCancelButton && (
-              <Button variant="secondary" label={cancelButtonText} onClick={onClose} disabled={isLoading} />
-            )}
-            {!hideSaveButton && (
-              <Button
-                variant="primary"
-                label={isLoading ? 'Loading...' : saveButtonText}
-                onClick={onSave}
-                disabled={isLoading}
-              />
-            )}
+        <div className="flex items-center justify-between">
+          <span className="flex gap-1">
+            {headingIcon && <span>{headingIcon}</span>}
+            <h2 className="text-textPrimary text-base font-semibold md:text-xl">{title}</h2>
+          </span>
+          <div className="bg-primary hover:bg-secondary cursor-pointer rounded-full p-2" onClick={onClose}>
+            <RxCross2 color="#fff" />
           </div>
         </div>
+        <div className="mt-2 w-full overflow-auto md:mt-6">{children}</div>
       </div>
-    );
-  }
-);
-
-Modal.propTypes = {
-  title: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired,
-  onClose: PropTypes.func.isRequired,
-  onSave: PropTypes.func.isRequired,
-  isLoading: PropTypes.bool,
-  saveButtonText: PropTypes.string,
-  saveButtonClassName: PropTypes.string,
-  cancelButtonClassName: PropTypes.string,
-  cancelButtonText: PropTypes.string,
-  hideSaveButton: PropTypes.bool,
+    </div>
+  );
 };
-
-Modal.displayName = 'Modal';
 
 export default Modal;

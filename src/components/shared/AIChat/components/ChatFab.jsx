@@ -1,4 +1,4 @@
-import { PANEL_HEIGHT, PANEL_WIDTH } from "../constants/aiChatConstants.js";
+import { PANEL_HEIGHT, PANEL_WIDTH } from "@/components/shared/AIChat/constants/aiChatConstants.js";
 
 export default function ChatFab({ fabRef, fabNudged, effectiveLaunchColor, aiUseCustomIcon, onOpen }) {
   return (

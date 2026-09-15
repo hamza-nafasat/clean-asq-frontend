@@ -22,7 +22,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-import { checkFieldForErrors } from "../lib/checkFieldForErrors.js";
+import { checkFieldForErrors } from "../utils/checkFieldForErrors.js";
 import { buildChatPayload } from "../components/shared/AIChat/utils/buildChatPayload.js";
 import { WIDGET_STRINGS } from "../components/shared/AIChat/constants/widgetStrings.js";
 import { LANGUAGES } from "../components/shared/AIChat/constants/languages.js";
@@ -356,7 +356,7 @@ describe("components/shared/AIChat · formPreviewUtils · toPreviewSection()", (
 
 describe("components/shared/AIChat · AIChatWidget · [QA 3.9] screen awareness while closed", () => {
   const widget = read("components/shared/AIChat/AIChatWidget.jsx");
-  const context = read("context/AiChatContext.jsx");
+  const context = read("hooks/useAiChat.js");
   const applicantHook = read("hooks/useApplicantScreenContext.js");
 
   describe("the live screen is tracked whether or not the panel is open", () => {
@@ -527,7 +527,7 @@ describe("components/shared/AIChat · translation mode", () => {
   it(
     "[QA 3.13] tells the assistant about manual ID entry on the QR screen",
     () => {
-      const sa = read("page/admin/userApplicationForms/ApplicationVerification/SingleApplication.jsx");
+      const sa = read("modules/applicant/pages/SingleApplication.jsx");
       const qrDescription = sa.slice(sa.indexOf('? "The applicant scans a QR code'), sa.indexOf('aiStage === "idmission-loading"', sa.indexOf('? "The applicant scans a QR code')));
       assert.match(qrDescription, /manual/i);
     },
@@ -552,7 +552,7 @@ describe("components/shared/AIChat · field guidance", () => {
 
     it("the stepper registers a scrollToField action scoped to the current step", () => {
       assert.match(
-        read("page/admin/userApplicationForms/ApplicationVerification/ApplicationForm.jsx"),
+        read("modules/applicant/pages/ApplicationForm.jsx"),
         /scrollToField: \(\{ fieldId \}\) => \{\s*const el = findAiFieldEl\(stepContainerRef\.current, fieldId\);/,
       );
     });
@@ -588,7 +588,7 @@ describe("components/shared/AIChat · field guidance", () => {
 });
 
 describe("components/shared · DocumentModal · [QA 3.41 / 3.42] document assistant", () => {
-  const modal = read("components/shared/DocumentModal.jsx");
+  const modal = read("components/modals/DocumentModal.jsx");
 
   it("opens the AI chat when a document opens, even if the applicant closed it earlier", () => {
     assert.match(modal, /sessionStorage\.removeItem\("ai-widget-user-closed"\);\s*\n\s*setIsOpen\(true\);/);
@@ -604,15 +604,15 @@ describe("components/shared · DocumentModal · [QA 3.41 / 3.42] document assist
   });
 
   it("gives the overlay priority over the page while it is open", () => {
-    assert.match(read("context/AiChatContext.jsx"), /overlayContextRef\.current \?\? screenContextRef\.current/);
+    assert.match(read("hooks/useAiChat.js"), /overlayContextRef\.current \?\? screenContextRef\.current/);
   });
 });
 
 describe("components/shared/AIChat · applyToolCall · AI-mode admin flows", () => {
   const tools = read("components/shared/AIChat/logic/applyToolCall.js");
-  const formsPage = read("components/admin/ApplicationsCard.jsx");
-  const brandingPage = read("components/admin/brandings/globalBranding/GlobalBrandingPage.jsx");
-  const emailPage = read("page/admin/dashboard/email/Email.jsx");
+  const formsPage = read("modules/application-forms/components/ApplicationFormsCards.jsx");
+  const brandingPage = read("modules/branding/components/BrandingEditor.jsx");
+  const emailPage = read("modules/email/pages/Email.jsx");
   const handles = (tool) => tools.includes(`if (tool === "${tool}") {`) || new RegExp(`"${tool}",?\\s`).test(tools);
 
   it(
@@ -659,7 +659,7 @@ describe("components/shared/AIChat · applyToolCall · AI-mode admin flows", () 
     it(
       "[QA 4.4] hands extracted branding to the create page it navigates to",
       () => {
-        const writers = [tools, brandingPage, read("page/admin/dashboard/brandings/Brandings.jsx")];
+        const writers = [tools, brandingPage, read("modules/branding/pages/Brandings.jsx")];
         assert.ok(writers.some((s) => /sessionStorage\.setItem\("pendingBrandingData"/.test(s)));
       },
     );
@@ -704,7 +704,7 @@ describe("components/shared/AIChat · applyToolCall · AI-mode admin flows", () 
   });
 
   it("[QA 4.15] links a lookup strategy to a form", () => {
-    assert.match(read("components/admin/AllStrategies.jsx"), /linkStrategyToForm: async \(\{ strategyId, formIds \}\) =>/);
+    assert.match(read("modules/strategies/components/StrategiesTable.jsx"), /linkStrategyToForm: async \(\{ strategyId, formIds \}\) =>/);
   });
 
   it("[QA 4.21 / 4.26] gives the readiness check the form detail and rule count", () => {
@@ -713,7 +713,7 @@ describe("components/shared/AIChat · applyToolCall · AI-mode admin flows", () 
 
   it("[QA 4.22] clones a form through the clone endpoint", () => {
     assert.match(formsPage, /cloneFormMutation\(\{ sourceFormId, name: newName \}\)/);
-    assert.match(read("redux/apis/formApis.js"), /url: `\/clone\/\$\{sourceFormId\}`/);
+    assert.match(read("redux/apis/form.apis.js"), /url: `\/clone\/\$\{sourceFormId\}`/);
   });
 
   it("[QA 4.23] previews a reorder and asks before saving", () => {
@@ -722,12 +722,12 @@ describe("components/shared/AIChat · applyToolCall · AI-mode admin flows", () 
   });
 
   it("[QA 4.24] names the cause when a reorder save fails", () => {
-    assert.match(formsPage, /import \{ apiErrorMessage \} from "@\/lib\/apiError";/);
+    assert.match(formsPage, /import \{ apiErrorMessage \} from "@\/utils\/apiError";/);
     assert.match(formsPage, /errors\.push\(`Reorder: \$\{apiErrorMessage\(err\)\}`\)/);
   });
 
   describe("[QA 4.17 / 4.18] AI Help on a customised field", () => {
-    const customField = read("components/shared/MakeFieldDataCustom.jsx");
+    const customField = read("modules/applicant/components/ApplicantFieldCustomizer.jsx");
 
     it("enables AI Help per field and generates the help text", () => {
       assert.match(customField, /label="Enable AI Help"/);
@@ -736,17 +736,17 @@ describe("components/shared/AIChat · applyToolCall · AI-mode admin flows", () 
 
     it("generates through the display-text formatting endpoint", () => {
       assert.match(customField, /formateTextInMarkDown\(\{/);
-      assert.match(read("redux/apis/formApis.js"), /url: "\/formate-display-text"/);
+      assert.match(read("redux/apis/form.apis.js"), /url: "\/formate-display-text"/);
     });
   });
 
   it("[QA 2.43] offers Preview AI Context when creating or editing a rule", () => {
     // The toggle lives in the rule editor that Manage Rules opens.
-    assert.match(read("components/admin/CreateOrUpdateRules.jsx"), /"Hide Ai Context" : "Preview Ai Context"/);
+    assert.match(read("modules/application-forms/components/ApplicationFormsRuleEditor.jsx"), /"Hide Ai Context" : "Preview Ai Context"/);
   });
 });
 
-const { apiErrorMessage } = await import("../lib/apiError.js");
+const { apiErrorMessage } = await import("../utils/apiError.js");
 
 /**
  * lib/apiError.js - QA 4.24: the save error rendered as
@@ -811,7 +811,7 @@ describe("lib · apiError · apiErrorMessage()", () => {
 });
 
 describe("redux/apis · formApis · [QA 4.24] reorder endpoint contract", () => {
-  const source = read("redux/apis/formApis.js");
+  const source = read("redux/apis/form.apis.js");
 
   it("calls the path the backend now serves", () => {
     const block = blockOf(source, "reorderFormSections: builder.mutation({");

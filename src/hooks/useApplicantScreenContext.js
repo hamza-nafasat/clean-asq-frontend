@@ -1,4 +1,4 @@
-import { UseAIChat } from "@/context/AiChatContext";
+import useAiChat from "@/hooks/useAiChat";
 import { useEffect } from "react";
 
 /**
@@ -21,7 +21,7 @@ import { useEffect } from "react";
  * the chat history is wiped clean every time the flow starts.
  */
 export const useApplicantScreenContext = (context, { clearOnMount = false, autoOpen = false } = {}) => {
-  const { registerScreenContext, unregisterScreenContext, setAssistantMode, resetSession, setIsOpen } = UseAIChat();
+  const { registerScreenContext, unregisterScreenContext, setAssistantMode, resetSession, setIsOpen } = useAiChat();
 
   // Switch to applicant mode while this page is mounted; reset session and/or open widget if requested
   useEffect(() => {

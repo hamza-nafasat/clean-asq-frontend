@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Button from "../shared/small/Button";
+import Button from "@/components/shared/Button";
 
 const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequiredFields = [], headerActions }) => {
   const [visibleStepRange, setVisibleStepRange] = useState({ start: 0, end: visibleSteps });

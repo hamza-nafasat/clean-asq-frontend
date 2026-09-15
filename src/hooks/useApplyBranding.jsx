@@ -1,7 +1,7 @@
-import { useGetSingleFormQueryQuery } from "@/redux/apis/formApis";
+import { useGetSingleFormQueryQuery } from "@/redux/apis/form.apis";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useBranding } from "./BrandingContext";
+import useBranding from "@/hooks/useBranding";
 
 const useApplyBranding = ({ formId }) => {
   const [isApplied, setIsApplied] = useState(false);

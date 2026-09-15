@@ -1,5 +1,5 @@
-import PreFillModal from "../PreFillModal.jsx";
-import FieldErrorModal from "../FieldErrorModal.jsx";
+import PreFillModal from "@/components/shared/AIChat/PreFillModal.jsx";
+import FieldErrorModal from "@/components/shared/AIChat/FieldErrorModal.jsx";
 
 export default function ChatOverlays({
   preFillModal,

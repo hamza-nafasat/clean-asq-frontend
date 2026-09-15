@@ -21,11 +21,11 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-import { FOOTER_WILDCARDS, renderFooterText } from "../lib/footerWildcards.js";
-import { safeImageUrl } from "../lib/safeImageUrl.js";
-import { executeBrandingAssignment } from "../lib/executeBrandingAssignment.js";
-import { APPLICATION_STATUS, getApplicationStatusMeta } from "../lib/applicationStatus.js";
-import { brandedButtonStyle, isUsableColor, readableTextOn, relativeLuminance } from "../lib/brandedButtonStyle.js";
+import { FOOTER_WILDCARDS, renderFooterText } from "../utils/footerWildcards.js";
+import { safeImageUrl } from "../utils/safeImageUrl.js";
+import { executeBrandingAssignment } from "../utils/executeBrandingAssignment.js";
+import { APPLICATION_STATUS, getApplicationStatusMeta } from "../utils/applicationStatus.js";
+import { brandedButtonStyle, isUsableColor, readableTextOn, relativeLuminance } from "../utils/brandedButtonStyle.js";
 import {
   EFFECT_OPTIONS,
   EFFECT_PRESETS,
@@ -35,8 +35,8 @@ import {
   materialToGloss,
   parseEffectState,
   parseEffectValue,
-} from "../lib/effectPresets.js";
-import checkPermission, { webPermissions } from "../utils/checkPermission.js";
+} from "../utils/effectPresets.js";
+import { hasPermission, PERMISSIONS } from "../utils/permissions.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (p) => readFileSync(path.join(root, p), "utf8");
@@ -48,8 +48,6 @@ const around = (source, marker, before = 300, after = 300) => {
   assert.notEqual(at, -1, `marker not found: ${marker}`);
   return source.slice(Math.max(0, at - before), at + after);
 };
-
-const BRANDING = "components/admin/brandings/globalBranding";
 
 // ═════════════════════════════════════════════════════════════════════════════
 // 1. pure logic
@@ -364,25 +362,28 @@ describe("lib · effectPresets", () => {
   });
 });
 
-describe("utils · checkPermission", () => {
+describe("utils · permissions", () => {
   const user = { role: { permissions: [{ name: "read_branding" }, { name: "update_form" }] } };
 
   it("grants a permission present on the user's role", () => {
-    assert.equal(checkPermission(user, webPermissions.read_branding), true);
+    assert.equal(hasPermission(user, PERMISSIONS.READ_BRANDING), true);
   });
 
   it("denies a permission the role lacks", () => {
-    assert.equal(checkPermission(user, webPermissions.delete_form), false);
+    assert.equal(hasPermission(user, PERMISSIONS.DELETE_FORM), false);
   });
 
-  it("maps every permission constant to its own name and cannot be mutated", () => {
-    for (const [key, value] of Object.entries(webPermissions)) assert.equal(key, value);
-    assert.ok(Object.isFrozen(webPermissions));
+  it("uses the exact permission names of the backend and cannot be mutated", () => {
+    const backend = read("../backend/src/global/utils/permissions.js");
+    const backendBlock = backend.slice(backend.indexOf("const PERMISSIONS"), backend.indexOf("});"));
+    const backendPairs = Object.fromEntries([...backendBlock.matchAll(/(\w+): "(\w+)"/g)].map((m) => [m[1], m[2]]));
+    assert.deepEqual({ ...PERMISSIONS }, backendPairs);
+    assert.ok(Object.isFrozen(PERMISSIONS));
   });
 
   describe("malformed input", () => {
     it("denies when the user, role or permission list is missing", () => {
-      for (const u of [null, undefined, {}, { role: {} }]) assert.equal(checkPermission(u, "read_form"), false);
+      for (const u of [null, undefined, {}, { role: {} }]) assert.equal(hasPermission(u, "read_form"), false);
     });
   });
 });
@@ -398,7 +399,7 @@ describe("utils · checkPermission", () => {
  */
 describe("config · branding defaults", () => {
   const env = read(".env");
-  const brandingPage = readSrc(`${BRANDING}/GlobalBrandingPage.jsx`);
+  const brandingPage = readSrc("modules/branding/components/BrandingEditor.jsx");
   const envValue = (key) => {
     const m = env.match(new RegExp(`^\\s*${key}\\s*=\\s*"?([^"\\n\\r]*)"?`, "m"));
     return m ? m[1].trim() : null;
@@ -419,7 +420,7 @@ describe("config · branding defaults", () => {
     });
 
     it("exposes both keys through the env helper", () => {
-      const envHelper = readSrc("lib/env.js");
+      const envHelper = readSrc("utils/env.js");
       assert.match(envHelper, /VITE_PRIVACY_POLICY_URL/);
       assert.match(envHelper, /VITE_TERMS_OF_SERVICE_URL/);
     });
@@ -440,15 +441,15 @@ describe("config · branding defaults", () => {
 });
 
 describe("branding · create and extract", () => {
-  const brandingPage = readSrc(`${BRANDING}/GlobalBrandingPage.jsx`);
+  const brandingPage = readSrc("modules/branding/components/BrandingEditor.jsx");
 
   it("[QA 1.2] opens Create Branding from the branding list", () => {
     assert.match(readSrc("App.jsx"), /<Route path="branding\/create" element=\{<CreateBranding \/>\} \/>/);
-    assert.match(readSrc("page/admin/dashboard/brandings/Brandings.jsx"), /onClick=\{\(\) => navigate\("\/branding\/create"\)\}/);
+    assert.match(readSrc("modules/branding/pages/Brandings.jsx"), /onClick=\{\(\) => navigate\("\/branding\/create"\)\}/);
   });
 
   it("[QA 1.3] extracts branding from a company name and website URL", () => {
-    const source = readSrc(`${BRANDING}/BrandingSource.jsx`);
+    const source = readSrc("modules/branding/components/BrandingSource.jsx");
     assert.match(source, /label=\{"Enter Website URL"\}/);
     assert.match(source, /onClick=\{extractBranding\}/);
     assert.match(source, /label=\{"Extract"\}/);
@@ -481,11 +482,11 @@ describe("branding · create and extract", () => {
   });
 
   it("[QA 1.5] previews the application and email with the current settings", () => {
-    assert.match(brandingPage, /import Preview, \{ EmailTemplatePreview \} from "\.\/Preview";/);
+    assert.match(brandingPage, /import Preview, \{ EmailTemplatePreview \} from "\.\/BrandingPreview";/);
   });
 
   it("[QA 1.7] labels the footer wildcard buttons as readable tokens, not HTML entities", () => {
-    const source = readSrc(`${BRANDING}/BrandElementAssignment.jsx`);
+    const source = readSrc("modules/branding/components/BrandingElementAssignment.jsx");
     assert.match(source, /label=\{"\+ \{Year\}"\}/);
     assert.match(source, /label=\{"\+ \{Company\}"\}/);
     assert.ok(!source.includes("&#123;"), "button labels must not show escaped braces");
@@ -517,7 +518,7 @@ describe("branding · create and extract", () => {
   });
 
   it("[QA 4.6] sizes the application logo and the email logo from their own settings", () => {
-    assert.match(readSrc(`${BRANDING}/Preview.jsx`), /maxWidth: appLogoMaxWidth \|\| 300,/);
+    assert.match(readSrc("modules/branding/components/BrandingPreview.jsx"), /maxWidth: appLogoMaxWidth \|\| 300,/);
     assert.match(brandingPage, /max-width: \{\{emailLogoMaxWidth\}\}px/);
   });
 
@@ -539,18 +540,18 @@ describe("branding · create and extract", () => {
 
 describe("branding · apply", () => {
   it("[QA 1.12 / 1.13] offers a For Website option in the Apply dialog", () => {
-    assert.match(readSrc(`${BRANDING}/ApplyBranding.jsx`), /label="For Website"/);
+    assert.match(readSrc("components/global/ApplyBranding.jsx"), /label="For Website"/);
   });
 
   it("[QA 1.14] shows the branding's header colour and logo on the form tile", () => {
-    const tile = readSrc("components/admin/ApplicationsCard.jsx");
+    const tile = readSrc("modules/application-forms/components/ApplicationFormsCards.jsx");
     assert.match(tile, /background: form\?\.branding\?\.colors\?\.headerBackground \|\| "#f3f4f6"/);
     assert.match(tile, /src=\{form\?\.branding\?\.selectedLogo \|\| logo\}/);
   });
 });
 
 describe("email templates page", () => {
-  const source = readSrc("page/admin/dashboard/email/Email.jsx");
+  const source = readSrc("modules/email/pages/Email.jsx");
 
   it("[QA 1.15 / 1.16] opens a template for editing", () => {
     assert.match(source, /data-testid="email-edit-btn"/);
@@ -571,16 +572,16 @@ describe("email templates page", () => {
 
 describe("strategies page", () => {
   it("[QA 1.19 / 3.1 / 5.25] edits a strategy and assigns forms to it", () => {
-    assert.match(readSrc("components/admin/AllStrategies.jsx"), /title="Edit Strategy"/);
+    assert.match(readSrc("modules/strategies/components/StrategiesTable.jsx"), /title="Edit Strategy"/);
     assert.match(
-      readSrc("components/admin/startegies/EditStrategies.jsx"),
+      readSrc("modules/strategies/components/StrategiesEditModal.jsx"),
       /renderFormField\("form", form\.form, handleChange, "multi-select", forms\)/,
     );
   });
 });
 
 describe("application forms page", () => {
-  const source = readSrc("components/admin/ApplicationsCard.jsx");
+  const source = readSrc("modules/application-forms/components/ApplicationFormsCards.jsx");
 
   it("[QA 1.1] creates a form from an uploaded CSV", () => {
     assert.match(source, /const createFormWithCsvHandler = async \(\) =>/);
@@ -604,7 +605,7 @@ describe("application forms page", () => {
 
 describe("sign-in, sign-out and password reset", () => {
   it("[QA 5.19 / 5.30 / 5.35 / 5.42] logging out returns to the login page", () => {
-    const header = readSrc("page/admin/layout/AdminHeader.jsx");
+    const header = readSrc("components/layouts/Header.jsx");
     assert.match(header, /data-testid="logout-button"/);
     assert.match(header, /return navigate\("\/login"\);/);
   });
@@ -619,13 +620,13 @@ describe("sign-in, sign-out and password reset", () => {
 
     it("keeps guests out of the admin routes", () => {
       assert.match(app, /<ProtectedRoute user=\{!isGuest && user\} redirect=\{isGuest && user \? "\/submission" : "\/login"\} \/>/);
-      assert.match(readSrc("components/ProtectedRoute.jsx"), /if \(!user\) return <Navigate to=\{redirect\} replace \/>;/);
+      assert.match(readSrc("routes/ProtectedRoute.jsx"), /if \(!user\) return <Navigate to=\{redirect\} replace \/>;/);
     });
   });
 
   /** page/auth - QA 5.36 link wording; QA 5.37 button wording and error. */
   describe("page/auth · password reset wording", () => {
-    const readAuth = (f) => readSrc(path.join("page/auth", f));
+    const readAuth = (f) => readSrc(path.join("modules/auth/pages", f));
     /** Text a user can actually read: JSX labels, titles and bare text nodes. */
     const visibleStrings = (src) => [
       ...[...src.matchAll(/label="([^"]*)"/g)].map((m) => m[1]),
@@ -666,7 +667,7 @@ describe("sign-in, sign-out and password reset", () => {
  * application was submitted saw a blank page.
  */
 describe("components/admin · AllSubmissionDraft", () => {
-  const source = readSrc("components/admin/AllSubmissionDraft.jsx");
+  const source = readSrc("modules/my-applications/components/MyApplicationsTabs.jsx");
 
   it("[QA 5.22] no longer uses tabs", () => {
     for (const marker of ["activeTab", "setActiveTab", "tabs.map"]) {
@@ -693,15 +694,15 @@ describe("components/admin · AllSubmissionDraft", () => {
 
 describe("applications page", () => {
   it("[QA 5.39 / 5.40] lists every draft and submitted application", () => {
-    assert.match(readSrc("page/admin/dashboard/applications/Applications.jsx"), /useGetAllSubmitOrDraftFormsQuery\(\)/);
+    assert.match(readSrc("modules/applications/pages/Applications.jsx"), /useGetAllSubmitOrDraftFormsQuery\(\)/);
   });
 
   it("[QA 5.41] opens an application's PDF from its menu", () => {
-    assert.match(readSrc("components/admin/ApplicantsTable.jsx"), /name: "View Pdf",/);
+    assert.match(readSrc("modules/applications/components/ApplicationsTable.jsx"), /name: "View Pdf",/);
   });
 
   it("[QA 5.23 / 5.34] lets an applicant download their submitted application", () => {
-    const card = readSrc("components/admin/Submission.jsx");
+    const card = readSrc("modules/my-applications/components/MyApplicationsSubmissions.jsx");
     assert.match(card, /label="Download PDF"/);
     assert.match(card, /generatePdfForm/);
   });

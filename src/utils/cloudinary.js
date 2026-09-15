@@ -1,4 +1,4 @@
-import { default as getEnv } from '@/lib/env';
+import { default as getEnv } from '@/utils/env';
 import { toast } from 'react-toastify';
 
 const uploadImageOnCloudinary = async (file) => {

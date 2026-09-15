@@ -1,6 +1,6 @@
 import { IoClose, IoSend } from "react-icons/io5";
-import ChatMessage from "../ChatMessage.jsx";
-import ADEPanel from "../ADEPanel.jsx";
+import ChatMessage from "@/components/shared/AIChat/ChatMessage.jsx";
+import ADEPanel from "@/components/shared/AIChat/ADEPanel.jsx";
 import PanelResizeHandles from "./PanelResizeHandles.jsx";
 import LanguageBanner from "./LanguageBanner.jsx";
 

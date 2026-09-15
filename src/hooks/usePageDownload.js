@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
 import { toast } from "react-toastify";
-import { UseAIChat } from "@/context/AiChatContext";
+import useAiChat from "@/hooks/useAiChat";
 import { extractHttpLinks } from "@/utils/extractHttpLinks";
-import { buildPagePdf } from "@/utils/buildPagePdf";
-import getEnv from "@/lib/env";
+import { buildPagePdf } from "@/lib/pdf";
+import getEnv from "@/utils/env";
 
 const SERVER_URL = getEnv("SERVER_URL");
 
@@ -24,7 +24,7 @@ const SERVER_URL = getEnv("SERVER_URL");
  * @param {string}   [opts.signDisplayHtml] - HTML shown above the signature box (included in PDF)
  */
 export function usePageDownload({ pageName, displayHtml, getFieldRows, signatureUrl, getHasFields, userName, userEmail, signDisplayHtml }) {
-  const { assistantMode } = UseAIChat();
+  const { assistantMode } = useAiChat();
   const [isDownloading, setIsDownloading] = useState(false);
 
   const pageLinks = useMemo(() => extractHttpLinks(displayHtml), [displayHtml]);

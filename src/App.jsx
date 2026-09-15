@@ -1,72 +1,68 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Route, Routes } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { DemoSessionProvider } from "./hooks/DemoSessionContext";
-import { useBranding } from "./hooks/BrandingContext";
-import { socket } from "./main";
-import { useGetMyProfileFirstTimeMutation } from "./redux/apis/authApis";
-import { userExist, userNotExist } from "./redux/slices/authSlice";
-import { detectVPN } from "./utils/vpnDetection";
+import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/auth.apis";
+import { userExist, userNotExist } from "@/redux/slices/auth.slice";
+import { socket } from "@/lib/socket";
+import useBranding from "@/hooks/useBranding";
+import useBrandingSync from "@/hooks/useBrandingSync";
+import CustomLoading from "@/components/shared/CustomLoading";
+import ProtectedRoute from "@/routes/ProtectedRoute";
+import { SOCKET_EVENTS } from "@/constants";
+import { isGuestRole } from "@/utils/permissions";
+import { detectVPN } from "@/utils/vpnDetection";
 
-import ProtectedRoute from "./components/ProtectedRoute";
-import CustomLoading from "./components/shared/small/CustomLoading";
-// Auth pages
+// auth pages
+const Login = lazy(() => import("@/modules/auth/pages/Login"));
+const Otp = lazy(() => import("@/modules/auth/pages/Otp"));
+const ForgetPassword = lazy(() => import("@/modules/auth/pages/ForgetPassword"));
+const ResetPassword = lazy(() => import("@/modules/auth/pages/ResetPassword"));
+const ResetMailSent = lazy(() => import("@/modules/auth/pages/ResetMailSent"));
+const ResetPasswordSuccessfully = lazy(() => import("@/modules/auth/pages/ResetPasswordSuccessfully"));
 
-const Login = lazy(() => import("./page/auth/Login"));
-const Otp = lazy(() => import("./page/auth/Otp"));
-const ForgetPassword = lazy(() => import("./page/auth/ForgetPassword"));
-const ResetPassword = lazy(() => import("./page/auth/ResetPassword"));
-const ResetMailSent = lazy(() => import("./page/auth/ResetMailSent"));
-const ResetPasswordSuccessfully = lazy(() => import("./page/auth/ResetPasswordSuccessfully"));
+// layouts
+const AdminDashboard = lazy(() => import("@/components/layouts/DashboardLayout"));
+const UserApplicationForms = lazy(() => import("@/components/layouts/ApplicationFormLayout"));
 
-// Layouts
-const AdminDashboard = lazy(() => import("./page/admin/dashboard"));
-const UserApplicationForms = lazy(() => import("./page/admin/userApplicationForms"));
-
-// Public / shared application routes
-const SingleApplication = lazy(
-  () => import("./page/admin/userApplicationForms/ApplicationVerification/SingleApplication"),
-);
-const FormHiddenSection = lazy(() => import("./page/admin/userApplicationForms/Hidden/HIdden"));
-const ManageRules = lazy(() => import("./components/admin/ManageRules"));
-const AdditionalOwnersForm = lazy(
-  () => import("./page/admin/userApplicationForms/ApplicationVerification/AdditionalOwnersForm"),
-);
+// public and shared application pages
+const SingleApplication = lazy(() => import("@/modules/applicant/pages/SingleApplication"));
+const FormHiddenSection = lazy(() => import("@/modules/applicant/pages/HiddenSection"));
+const ManageRules = lazy(() => import("@/modules/application-forms/pages/ManageRules"));
+const AdditionalOwnersForm = lazy(() => import("@/modules/applicant/pages/AdditionalOwnersForm"));
 const SubmissionSuccessPage = lazy(() =>
-  import("./components/LoadingWithTimerAfterSubmission").then((module) => ({
+  import("@/modules/applicant/pages/SubmissionSuccess").then((module) => ({
     default: module.SubmissionSuccessPage,
   })),
 );
-const ApplicationForm = lazy(() => import("./page/admin/userApplicationForms/ApplicationVerification/ApplicationForm"));
-const ApplicationPdfView = lazy(
-  () => import("./page/admin/userApplicationForms/ApplicationVerification/ApplicationPdfView"),
-);
-const Verification = lazy(() => import("./page/admin/dashboard/varification/Varification"));
-const DraftSubmission = lazy(() => import("./page/admin/dashboard/draftSubmission/DraftSubmission"));
+const ApplicationForm = lazy(() => import("@/modules/applicant/pages/ApplicationForm"));
+const ApplicationPdfView = lazy(() => import("@/components/global/ApplicationPdfView"));
+const Verification = lazy(() => import("@/modules/applicant/pages/CompanyVerification"));
+const DraftSubmission = lazy(() => import("@/modules/my-applications/pages/MyApplications"));
 
-// Authenticated admin routes
-const AllRoles = lazy(() => import("./page/admin/dashboard/role/AllRoles"));
-const AdminAllUsers = lazy(() => import("./page/admin/dashboard/admin-dashboard/AdminAllUsers"));
-const ApplicationForms = lazy(() => import("./page/admin/dashboard/applicationForms/ApplicationForms"));
-const Applications = lazy(() => import("./page/admin/dashboard/applications/Applications"));
-const OnBoarding = lazy(() => import("./page/admin/dashboard/underwriting/underwriting"));
-const Brandings = lazy(() => import("./page/admin/dashboard/brandings/Brandings"));
-const CreateBranding = lazy(() => import("./page/admin/dashboard/brandings/CreateBranding"));
-const FormStrategies = lazy(() => import("./page/admin/dashboard/formStrategies/FormStrategies"));
-const VerificationTest = lazy(() => import("./page/admin/dashboard/varification/VerficationTest"));
-const Strategies = lazy(() => import("./page/admin/dashboard/strategies/Strategies"));
-const Email = lazy(() => import("./page/admin/dashboard/email/Email"));
-const Testing = lazy(() => import("./page/admin/dashboard/testing/Testing"));
-const MyProfile = lazy(() => import("./page/admin/dashboard/myProfile/MyProfile"));
-const RoleRedirect = lazy(() => import("./components/RoleRedirect"));
+// signed-in dashboard pages
+const AllRoles = lazy(() => import("@/modules/role-management/pages/RoleManagement"));
+const AdminAllUsers = lazy(() => import("@/modules/user-management/pages/UserManagement"));
+const ApplicationForms = lazy(() => import("@/modules/application-forms/pages/ApplicationForms"));
+const Applications = lazy(() => import("@/modules/applications/pages/Applications"));
+const OnBoarding = lazy(() => import("@/modules/underwriting/pages/Underwriting"));
+const Brandings = lazy(() => import("@/modules/branding/pages/Brandings"));
+const CreateBranding = lazy(() => import("@/modules/branding/pages/CreateBranding"));
+const FormStrategies = lazy(() => import("@/modules/lookup-management/pages/LookupManagement"));
+const VerificationTest = lazy(() => import("@/modules/testing/pages/VerificationTest"));
+const Strategies = lazy(() => import("@/modules/strategies/pages/Strategies"));
+const Email = lazy(() => import("@/modules/email/pages/Email"));
+const Testing = lazy(() => import("@/modules/testing/pages/Testing"));
+const MyProfile = lazy(() => import("@/modules/my-profile/pages/MyProfile"));
+const RoleRedirect = lazy(() => import("@/routes/RoleRedirect"));
 
-function App() {
+const App = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [getUserProfile, { isLoading }] = useGetMyProfileFirstTimeMutation();
   const { user } = useSelector((state) => state.auth);
+  useBrandingSync();
   const {
     setName,
     setPrimaryColor,
@@ -121,8 +117,8 @@ function App() {
       } else {
         dispatch(userNotExist());
       }
-    } catch (err) {
-      console.log("error in app.jsx", err);
+    } catch (error) {
+      console.error("Get profile error:", error);
       dispatch(userNotExist());
     } finally {
       setLoading(false);
@@ -159,104 +155,85 @@ function App() {
   useEffect(() => {
     const userId = user?._id;
     if (!userId) return;
-    const register = () => {
-      socket.emit("register_user", userId);
-      console.log(`📌 User registered: ${userId} -> ${socket.id}`);
-    };
+    const register = () => socket.emit(SOCKET_EVENTS.REGISTER_USER, userId);
     // reconnect so the handshake carries the session cookie the server checks
-    socket.on("connect", register);
+    socket.on(SOCKET_EVENTS.CONNECT, register);
     socket.disconnect().connect();
-    return () => socket.off("connect", register);
+    return () => socket.off(SOCKET_EVENTS.CONNECT, register);
   }, [user?._id]);
 
   useEffect(() => {
-    // async function checkClientVpn() {
-
-    // const vpnData = await detectVPN();
-    // const resp = await fetch(`${getEnv("SERVER_URL")}/api/form/vpn-check`, {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ vpnData }),
-    // });
-    // const result = await resp.json();
-    // console.log("VPN result:", result);
-    // }
-    // checkClientVpn();
     detectVPN();
   }, []);
 
-  const isGuest = user?.role?.name === "guest";
+  const isGuest = isGuestRole(user);
   if (loading || isLoading) return <CustomLoading />;
   return (
-    <DemoSessionProvider>
-      <>
-        <Suspense fallback={<CustomLoading />}>
-          <Routes>
-            {/* root redirects */}
-            <Route
-              path="/"
-              element={user ? <Navigate to="/application-forms" replace /> : <Navigate to="/login" replace />}
-            />
-            <Route path="singleform/pdf-view/:pdfId/:userId" element={<ApplicationPdfView />} />
-            {/* public routes */}
+    <>
+      <Suspense fallback={<CustomLoading />}>
+        <Routes>
+          {/* root redirects */}
+          <Route
+            path="/"
+            element={user ? <Navigate to="/application-forms" replace /> : <Navigate to="/login" replace />}
+          />
+          <Route path="singleform/pdf-view/:pdfId/:userId" element={<ApplicationPdfView />} />
+
+          {/* public routes */}
+          <Route path="/" element={<AdminDashboard />}>
+            <Route path="application-form/:brandingName/:formId" element={<SingleApplication />} />
+            <Route path="hidden/:formId/:sectionKey" element={<FormHiddenSection />} />
+            <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
+            <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
+            <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
+            <Route path="verification" element={<Verification />} />
+            <Route path="submission" element={<DraftSubmission />} />
+            <Route path="my-profile" element={<MyProfile />} />
+          </Route>
+
+          {/* signed-out routes */}
+          <Route element={<ProtectedRoute user={!user} redirect={isGuest ? "/submission" : "/application-forms"} />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/otp" element={<Otp />} />
+            <Route path="/forget-password" element={<ForgetPassword />} />
+            <Route path="/reset-mail-sent" element={<ResetMailSent />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/reset-password-successfully" element={<ResetPasswordSuccessfully />} />
+          </Route>
+
+          {/* signed-in routes without guests */}
+          <Route element={<ProtectedRoute user={!isGuest && user} redirect={isGuest && user ? "/submission" : "/login"} />}>
             <Route path="/" element={<AdminDashboard />}>
-              <Route path="application-form/:brandingName/:formId" element={<SingleApplication />} />
-              <Route path="hidden/:formId/:sectionKey" element={<FormHiddenSection />} />
-              <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
-              <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
-              <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
-              <Route path="verification" element={<Verification />} />
-              <Route path="submission" element={<DraftSubmission />} />
-              <Route path="my-profile" element={<MyProfile />} />
-            </Route>
-            {/* non authentic routes */}
-            <Route element={<ProtectedRoute user={!user} redirect={isGuest ? "/submission" : "/application-forms"} />}>
-              <Route path="/login" element={<Login />} />
-              <Route path="/otp" element={<Otp />} />
-              <Route path="/forget-password" element={<ForgetPassword />} />
-              <Route path="/reset-mail-sent" element={<ResetMailSent />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/reset-password-successfully" element={<ResetPasswordSuccessfully />} />
+              <Route index element={<Navigate to="application-forms" replace />} />
+              <Route path="manage-rules/:formId" element={<ManageRules />} />
+              <Route path="all-roles" element={<AllRoles />} />
+              <Route path="all-users" element={<AdminAllUsers />} />
+              <Route path="application-forms" element={<ApplicationForms />} />
+              <Route path="applications" element={<Applications />} />
+              <Route path="underwriting/:applicantId" element={<OnBoarding />} />
+              <Route path="branding" element={<Brandings />} />
+              <Route path="branding/create" element={<CreateBranding />} />
+              <Route path="branding/single/:brandingId" element={<CreateBranding />} />
+              <Route path="strategies-key" element={<FormStrategies />} />
+              <Route path="verification-test" element={<VerificationTest />} />
+              <Route path="strategies" element={<Strategies />} />
+              <Route path="email" element={<Email />} />
+              <Route path="testing" element={<Testing />} />
             </Route>
 
-            {/* authentic routes admin only */}
-            <Route
-              element={<ProtectedRoute user={!isGuest && user} redirect={isGuest && user ? "/submission" : "/login"} />}
-            >
-              {/* Admin */}
-              <Route path="/" element={<AdminDashboard />}>
-                <Route index element={<Navigate to="application-forms" replace />} />
-                {/* HIDDEN FORM SECTION */}
-                <Route path="manage-rules/:formId" element={<ManageRules />} />
-                <Route path="all-roles" element={<AllRoles />} />
-                <Route path="all-users" element={<AdminAllUsers />} />
-                <Route path="application-forms" element={<ApplicationForms />} />
-                <Route path="applications" element={<Applications />} />
-                <Route path="underwriting/:applicantId" element={<OnBoarding />} />
-                <Route path="branding" element={<Brandings />} />
-                <Route path="branding/create" element={<CreateBranding />} />
-                <Route path="branding/single/:brandingId" element={<CreateBranding />} />
-                <Route path="strategies-key" element={<FormStrategies />} />
-                <Route path="verification-test" element={<VerificationTest />} />
-                <Route path="strategies" element={<Strategies />} />
-                <Route path="email" element={<Email />} />
-                <Route path="testing" element={<Testing />} />
-              </Route>
-
-              {/*all User Forms or application layout  , with out sidebar */}
-              <Route path="/user-application-forms" element={<UserApplicationForms />}>
-                <Route index element={<Navigate to="application-verification" replace />} />
-              </Route>
+            {/* application layout without the sidebar */}
+            <Route path="/user-application-forms" element={<UserApplicationForms />}>
+              <Route index element={<Navigate to="application-verification" replace />} />
             </Route>
+          </Route>
 
-            {/* Fallback */}
-            <Route path="*" element={<RoleRedirect user={user} />} />
-          </Routes>
-        </Suspense>
-        <ToastContainer autoClose={3000} />
-      </>
-    </DemoSessionProvider>
+          {/* fallback */}
+          <Route path="*" element={<RoleRedirect user={user} />} />
+        </Routes>
+      </Suspense>
+      <ToastContainer autoClose={3000} />
+    </>
   );
-}
+};
 
 export default App;

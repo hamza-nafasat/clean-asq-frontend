@@ -1,4 +1,4 @@
-import { LANGUAGES } from "../constants/languages.js";
+import { LANGUAGES } from "@/components/shared/AIChat/constants/languages.js";
 
 export default function LanguageBanner({ bannerIdx, bannerFading, effectiveBannerColor, effectiveBannerText }) {
   return (

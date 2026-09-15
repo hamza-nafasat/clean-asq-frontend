@@ -1,5 +1,5 @@
-import { findAiFieldEl } from "@/lib/discoverFormFields.js";
-import { PAGE_LABELS, PAGE_ROUTES, SERVER_URL } from "../constants/aiChatConstants.js";
+import { findAiFieldEl } from "@/utils/discoverFormFields.js";
+import { PAGE_LABELS, PAGE_ROUTES, SERVER_URL } from "@/components/shared/AIChat/constants/aiChatConstants.js";
 
 import { toPreviewSection } from "./formPreviewUtils.js";
 

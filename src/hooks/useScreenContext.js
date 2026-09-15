@@ -1,4 +1,4 @@
-import { UseAIChat } from "@/context/AiChatContext";
+import useAiChat from "@/hooks/useAiChat";
 import { useEffect } from "react";
 /**
  * Call this in any page to register it with the AI chat widget.
@@ -14,7 +14,7 @@ import { useEffect } from "react";
  * @param {boolean}  [context.enabled]      - set false to unregister this context (e.g. during a live demo)
  */
 export const useScreenContext = (context) => {
-  const { registerScreenContext, unregisterScreenContext } = UseAIChat();
+  const { registerScreenContext, unregisterScreenContext } = useAiChat();
   const enabled = context.enabled !== false; // default true
 
   useEffect(() => {
