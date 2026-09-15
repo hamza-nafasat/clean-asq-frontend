@@ -1,7 +1,7 @@
 import MakeFieldDataCustom from "./ApplicantFieldCustomizer";
 import Checkbox from "@/components/shared/Checkbox";
 import TextField from "@/components/shared/TextField";
-import { Button } from "@/components/ui/button";
+import Button from "@/components/shared/Button";
 import {
   useFormateTextInMarkDownMutation,
   useUpdateDeleteCreateFormFieldsMutation,
@@ -187,7 +187,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
               className="w-full rounded-md border border-gray-300 p-2 outline-none"
             />
             <div className="flex justify-end">
-              <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8">
+              <Button variant="standard" onClick={formateTextWithAi} disabled={isFormating} className="mt-8">
                 Format Text
               </Button>
             </div>
@@ -215,7 +215,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
                 name="aiPrompt"
                 onChange={(e) => setSignatureData((prev) => ({ ...prev, signAiPrompt: e.target.value }))}
               />
-              <Button onClick={getResponseFromAi} disabled={isFormating} className="bg-primary mt-8 text-white">
+              <Button variant="standard" onClick={getResponseFromAi} disabled={isFormating} className="bg-primary mt-8 text-white">
                 Generate
               </Button>
             </div>
@@ -250,7 +250,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
           />
         </div>
         <div className="flex w-full">
-          <Button
+          <Button variant="standard"
             onClick={handleUpdateSectionForSignature}
             disabled={isUpdatingSection}
             className="bg-primary mt-8 w-full text-white"
@@ -261,11 +261,11 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
       </div>
       <div className="mt-6 flex w-full items-center justify-between gap-2">
         {!isArticleForm && (
-          <Button className="bg-primary w-[45%] cursor-pointer text-white" onClick={addNewFieldHandler}>
+          <Button variant="standard" className="bg-primary w-[45%] cursor-pointer text-white" onClick={addNewFieldHandler}>
             Add New Field
           </Button>
         )}
-        <Button
+        <Button variant="standard"
           onClick={() => saveFormHandler(fieldsData)}
           disabled={isLoading}
           className={`bg-primary cursor-pointer text-white ${isArticleForm ? "w-full" : "w-[45%]"}`}

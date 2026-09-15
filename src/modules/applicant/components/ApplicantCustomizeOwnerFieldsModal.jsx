@@ -1,6 +1,6 @@
 import MakeFieldDataCustomForOwner from "./ApplicantOwnerFieldCustomizer";
 import Checkbox from "@/components/shared/Checkbox";
-import { Button } from "@/components/ui/button";
+import Button from "@/components/shared/Button";
 import {
   useFormateTextInMarkDownMutation,
   useUpdateDeleteCreateFormFieldsMutation,
@@ -219,7 +219,7 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
               className="w-full rounded-md border border-gray-300 p-2 outline-none"
             />
             <div className="flex justify-end">
-              <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8">
+              <Button variant="standard" onClick={formateTextWithAi} disabled={isFormating} className="mt-8">
                 Format Text
               </Button>
             </div>
@@ -247,7 +247,7 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
                 name="aiPrompt"
                 onChange={(e) => setSignatureData((prev) => ({ ...prev, signAiPrompt: e.target.value }))}
               />
-              <Button onClick={getResponseFromAi} disabled={isFormating} className="bg-primary mt-8 text-white">
+              <Button variant="standard" onClick={getResponseFromAi} disabled={isFormating} className="bg-primary mt-8 text-white">
                 Generate
               </Button>
             </div>
@@ -268,7 +268,7 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
           </div>
         )}
         <div className="flex w-full">
-          <Button
+          <Button variant="standard"
             onClick={handleUpdateSectionForSignature}
             disabled={isUpdatingSection}
             className="bg-primary mt-8 w-full text-white"
@@ -278,7 +278,7 @@ function CustomizationOwnerFieldsModal({ onClose, fields, blocks, sectionId, for
         </div>
       </div>
       <div className="mt-6 flex w-full justify-between gap-2">
-        <Button
+        <Button variant="standard"
           onClick={() => saveFormHandler([...fieldsData])}
           disabled={isLoading}
           className={`bg-primary w-full cursor-pointer text-white`}

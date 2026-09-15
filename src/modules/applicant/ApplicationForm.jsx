@@ -10,7 +10,7 @@ import useApplyBranding from "@/hooks/useApplyBranding";
 import { usePageDownload } from "./hooks/usePageDownload";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
-import Stepper from "@/components/Stepper/Stepper";
+import Stepper from "@/components/stepper/Stepper";
 import ApplicantAgreementBlock from "./components/ApplicantAgreementBlock";
 import ApplicantBankInfo from "./components/ApplicantBankInfo";
 import ApplicantCompanyInformation from "./components/ApplicantCompanyInformation";

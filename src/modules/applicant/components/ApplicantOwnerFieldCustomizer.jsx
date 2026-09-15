@@ -1,6 +1,6 @@
 import Checkbox from '@/components/shared/Checkbox';
 import TextField from '@/components/shared/TextField';
-import { Button } from '@/components/ui/button';
+import Button from "@/components/shared/Button";
 import { FIELD_TYPES } from '@/constants';
 import { useFormateTextInMarkDownMutation } from '@/redux/apis/form.apis';
 import DOMPurify from 'dompurify';
@@ -188,7 +188,7 @@ const MakeFieldDataCustomForOwner = ({ originalFieldData, fieldsData, setFieldsD
                 name="aiPrompt"
                 onChange={updateFieldDataField}
               />
-              <Button onClick={getResponseFromAi} disabled={isLoading} className="bg-primary mt-8 text-white">
+              <Button variant="standard" onClick={getResponseFromAi} disabled={isLoading} className="bg-primary mt-8 text-white">
                 Generate
               </Button>
             </div>
@@ -248,7 +248,7 @@ const MakeFieldDataCustomForOwner = ({ originalFieldData, fieldsData, setFieldsD
               className="w-full rounded-md border border-gray-300 p-2 outline-none"
             />
             <div className="flex justify-end">
-              <Button onClick={formateTextWithAi} disabled={isLoading} className="mt-8">
+              <Button variant="standard" onClick={formateTextWithAi} disabled={isLoading} className="mt-8">
                 Format Text
               </Button>
             </div>

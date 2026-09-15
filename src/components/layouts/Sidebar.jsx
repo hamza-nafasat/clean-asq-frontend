@@ -40,10 +40,10 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
 
       <div
         data-testid="sidebar"
-        className={`bg-backgroundColor fixed top-0 left-0 z-40 h-full rounded-md ${isNavOpen ? "p-4" : "p-8"} transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-[110%]"} lg:static lg:flex lg:translate-x-0 lg:flex-col lg:justify-between ${isNavOpen ? "w-[250px]" : "w-5"} shadow-lg`}
+        className={`bg-backgroundColor fixed top-0 left-0 z-40 h-full rounded-md ${isNavOpen ? "p-4" : "p-8"} transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "translate-x-[-110%]"} lg:static lg:flex lg:translate-x-0 lg:flex-col lg:justify-between ${isNavOpen ? "w-62.5" : "w-5"} shadow-lg`}
       >
         {/* Toggle Button (desktop only) */}
-        <div className="absolute top-[6%] right-[-11px] z-10 hidden cursor-pointer lg:block" onClick={handleNavOpen}>
+        <div className="absolute top-[6%] -right-2.75 z-10 hidden cursor-pointer lg:block" onClick={handleNavOpen}>
           <div className={`transition-all duration-500 ${isNavOpen ? "rotate-0" : "rotate-180"}`}>
             <ArrowBackIcon color="var(--primary)" />
           </div>

@@ -1,7 +1,7 @@
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Checkbox from "@/components/shared/Checkbox";
 import TextField from "@/components/shared/TextField";
-import { Button } from "@/components/ui/button";
+import Button from "@/components/shared/Button";
 import { FIELD_TYPES } from "@/constants";
 import { useFormateTextInMarkDownMutation } from "@/redux/apis/form.apis";
 import DOMPurify from "dompurify";
@@ -265,7 +265,7 @@ const MakeFieldDataCustom = ({
                 name="aiPrompt"
                 onChange={updateFieldDataField}
               />
-              <Button onClick={getResponseFromAi} disabled={isLoading} className="bg-primary mt-8 text-white">
+              <Button variant="standard" onClick={getResponseFromAi} disabled={isLoading} className="bg-primary mt-8 text-white">
                 Generate
               </Button>
             </div>
@@ -303,13 +303,13 @@ const MakeFieldDataCustom = ({
                   name="value"
                   onChange={(e) => updateFieldDataFieldForOptions(e, i)}
                 />
-                <Button onClick={() => removeOption(i)} className="mt-8 bg-red-500 hover:bg-red-700">
+                <Button variant="standard" onClick={() => removeOption(i)} className="mt-8 bg-red-500 hover:bg-red-700">
                   <TrashIcon className="h-5 w-5 text-white" />
                 </Button>
               </div>
             ))}
             <div className="flex justify-end">
-              <Button onClick={addNewOption} className="mt-4">
+              <Button variant="standard" onClick={addNewOption} className="mt-4">
                 Add Option
               </Button>
             </div>
@@ -337,7 +337,7 @@ const MakeFieldDataCustom = ({
               className="w-full rounded-md border border-gray-300 p-2 outline-none"
             />
             <div className="flex justify-end">
-              <Button onClick={formateTextWithAi} disabled={isLoading} className="mt-8">
+              <Button variant="standard" onClick={formateTextWithAi} disabled={isLoading} className="mt-8">
                 Format Text
               </Button>
             </div>
@@ -356,7 +356,7 @@ const MakeFieldDataCustom = ({
         )}
       </div>
       <div className="flex w-full justify-end">
-        <Button onClick={() => setConfirmDelete(true)} className="max-w-50 bg-red-600 text-white hover:bg-red-700">
+        <Button variant="standard" onClick={() => setConfirmDelete(true)} className="max-w-50 bg-red-600 text-white hover:bg-red-700">
           Delete Field
         </Button>
       </div>

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import Button from "@/components/shared/Button";
 import { useEffect, useState } from "react";
 
 export const LoadingWithTimer = ({ setIsProcessing }) => {
@@ -28,7 +28,7 @@ export const LoadingWithTimer = ({ setIsProcessing }) => {
           {formatTime(seconds)}
         </div>
       </div>
-      <Button className="cursor-pointer" onClick={() => setIsProcessing(false)}>
+      <Button variant="standard" className="cursor-pointer" onClick={() => setIsProcessing(false)}>
         Cancel
       </Button>
     </div>

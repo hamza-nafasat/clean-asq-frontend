@@ -1,5 +1,5 @@
 import { FaSave } from "react-icons/fa";
-import GridFill from "@/assets/svgs/UserApplicationForm/GridFill";
+import GridFill from "@/assets/svgs/userApplicationForm/GridFill";
 import minLogo from "@/assets/images/minLogo.png";
 import Button from "@/components/shared/Button";
 const UserApplicationFormHeader = () => {

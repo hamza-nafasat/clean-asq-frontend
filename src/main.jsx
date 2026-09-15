@@ -4,7 +4,7 @@ import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import store from "@/redux/store";
 import ErrorBoundary from "@/components/global/ErrorBoundary";
-import AIChatWidget from "@/components/shared/AIChat/AIChatWidget";
+import AIChatWidget from "@/components/shared/aiChat/AIChatWidget";
 import getEnv from "@/utils/env";
 import App from "./App";
 import "./index.css";

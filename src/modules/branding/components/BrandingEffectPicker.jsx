@@ -7,7 +7,9 @@ const EffectPicker = ({ label = "", value, onChange, material = 0, onMaterialCha
   const activeNames = Object.keys(effects);
   const hasAnyEffect = activeNames.length > 0;
   const showAngleDial = activeNames.some((n) => BRANDING_DIRECTIONAL_EFFECTS.has(n)) || material > 0;
-  const activeOptions = EFFECT_OPTIONS.filter((o) => o.value !== BRANDING_EFFECT_NONE && effects[o.value] !== undefined);
+  const activeOptions = EFFECT_OPTIONS.filter(
+    (o) => o.value !== BRANDING_EFFECT_NONE && effects[o.value] !== undefined,
+  );
 
   const toggleEffect = (name) => {
     if (name === BRANDING_EFFECT_NONE) {
@@ -72,7 +74,7 @@ const EffectPicker = ({ label = "", value, onChange, material = 0, onMaterialCha
                   value={intensity}
                   aria-label={`${opt.label} intensity`}
                   onChange={(e) => setIntensity(opt.value, parseFloat(e.target.value))}
-                  className="flex-1 min-w-20 max-w-[180px]"
+                  className="flex-1 min-w-20 max-w-45"
                   style={{ accentColor: "var(--primary, #6366f1)" }}
                 />
                 <span className="text-[10px] text-gray-400 shrink-0">Strong</span>
@@ -96,7 +98,7 @@ const EffectPicker = ({ label = "", value, onChange, material = 0, onMaterialCha
             value={material}
             aria-label="Material"
             onChange={(e) => onMaterialChange(Number(e.target.value))}
-            className="flex-1 min-w-20 max-w-[180px]"
+            className="flex-1 min-w-20 max-w-45"
             style={{ accentColor: "var(--primary, #6366f1)" }}
           />
           <span className="text-[10px] text-gray-400 shrink-0">Glossy</span>

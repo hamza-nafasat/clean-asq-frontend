@@ -30,7 +30,7 @@ const UserApplicationForms = lazy(() => import("@/components/layouts/Application
 // public and shared application pages
 const SingleApplication = lazy(() => import("@/modules/applicant/SingleApplication"));
 const FormHiddenSection = lazy(() => import("@/modules/applicant/HiddenSection"));
-const ManageRules = lazy(() => import("@/modules/application-forms/ManageRules"));
+const ManageRules = lazy(() => import("@/modules/applicationForms/ManageRules"));
 const AdditionalOwnersForm = lazy(() => import("@/modules/applicant/AdditionalOwnersForm"));
 const SubmissionSuccessPage = lazy(() =>
   import("@/modules/applicant/SubmissionSuccess").then((module) => ({
@@ -40,22 +40,22 @@ const SubmissionSuccessPage = lazy(() =>
 const ApplicationForm = lazy(() => import("@/modules/applicant/ApplicationForm"));
 const ApplicationPdfView = lazy(() => import("@/components/global/ApplicationPdfView"));
 const Verification = lazy(() => import("@/modules/applicant/CompanyVerification"));
-const DraftSubmission = lazy(() => import("@/modules/my-applications/MyApplications"));
+const DraftSubmission = lazy(() => import("@/modules/myApplications/MyApplications"));
 
 // signed-in dashboard pages
-const AllRoles = lazy(() => import("@/modules/role-management/RoleManagement"));
-const AdminAllUsers = lazy(() => import("@/modules/user-management/UserManagement"));
-const ApplicationForms = lazy(() => import("@/modules/application-forms/ApplicationForms"));
+const AllRoles = lazy(() => import("@/modules/roleManagement/RoleManagement"));
+const AdminAllUsers = lazy(() => import("@/modules/userManagement/UserManagement"));
+const ApplicationForms = lazy(() => import("@/modules/applicationForms/ApplicationForms"));
 const Applications = lazy(() => import("@/modules/applications/Applications"));
 const OnBoarding = lazy(() => import("@/modules/underwriting/Underwriting"));
 const Brandings = lazy(() => import("@/modules/branding/Brandings"));
 const CreateBranding = lazy(() => import("@/modules/branding/CreateBranding"));
-const FormStrategies = lazy(() => import("@/modules/lookup-management/LookupManagement"));
+const FormStrategies = lazy(() => import("@/modules/lookupManagement/LookupManagement"));
 const VerificationTest = lazy(() => import("@/modules/testing/VerificationTest"));
 const Strategies = lazy(() => import("@/modules/strategies/Strategies"));
 const Email = lazy(() => import("@/modules/email/Email"));
 const Testing = lazy(() => import("@/modules/testing/Testing"));
-const MyProfile = lazy(() => import("@/modules/my-profile/MyProfile"));
+const MyProfile = lazy(() => import("@/modules/myProfile/MyProfile"));
 const RoleRedirect = lazy(() => import("@/routes/RoleRedirect"));
 
 const App = () => {
