@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { useGetBankLookupMutation } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
 import { CheckCircle, XCircle } from "lucide-react";
-import { useEnterToNextField } from "@/hooks/useEnterToNextField";
+import { useEnterToNextField } from "../hooks/useEnterToNextField";
 import { OtherInputType } from "@/components/global/DynamicField";
 import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";

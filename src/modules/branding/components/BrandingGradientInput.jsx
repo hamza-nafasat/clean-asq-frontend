@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { LoaderIcon } from "lucide-react";
-import useBrandingColorCapture from "@/hooks/useBrandingColorCapture";
+import useBrandingColorCapture from "../hooks/useBrandingColorCapture";
 import Button from "@/components/shared/Button";
 import { BRANDING_FILL_MODES } from "../utils/branding.constants";
 import { parseGradient, toGradient } from "../utils/branding.utils2";

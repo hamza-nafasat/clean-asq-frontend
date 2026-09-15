@@ -4,7 +4,7 @@ import { BsGlobe2 } from "react-icons/bs";
 import { FiShield, FiUpload, FiX } from "react-icons/fi";
 import { GrImage } from "react-icons/gr";
 import { IoColorPaletteOutline } from "react-icons/io5";
-import useBrandingLogoSelection from "@/hooks/useBrandingLogoSelection";
+import useBrandingLogoSelection from "../hooks/useBrandingLogoSelection";
 import Button from "@/components/shared/Button";
 import TextField from "@/components/shared/TextField";
 import BrandingLogoGrid from "./BrandingLogoGrid";

@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { useGetSpecialAccessOfSectionQuery, useSubmitSpecialAccessFormMutation } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
 import { uploadFilesAndReplace } from "@/lib/utils";
-import useApplicantSectionIdMission from "@/hooks/useApplicantSectionIdMission";
+import useApplicantSectionIdMission from "../hooks/useApplicantSectionIdMission";
 import useApplyBranding from "@/hooks/useApplyBranding";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";

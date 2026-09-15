@@ -1,6 +1,6 @@
 import DisplayText from "./ApplicantDisplayText";
 import { FIELD_TYPES } from "@/constants";
-import { useEnterToNextField } from "@/hooks/useEnterToNextField";
+import { useEnterToNextField } from "../hooks/useEnterToNextField";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import Button from "@/components/shared/Button";

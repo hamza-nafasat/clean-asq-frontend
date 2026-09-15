@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { useFormateTextInMarkDownMutation } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
 import DOMPurify from "dompurify";
-import { useEnterToNextField } from "@/hooks/useEnterToNextField";
+import { useEnterToNextField } from "../hooks/useEnterToNextField";
 import { AiHelpModal, OtherInputType } from "@/components/global/DynamicField";
 import FileUploader from "@/components/global/FileUploader";
 import SignatureBox from "@/components/global/SignatureBox";

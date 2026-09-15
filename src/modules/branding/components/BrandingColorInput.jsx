@@ -1,5 +1,5 @@
 import { LoaderIcon } from "lucide-react";
-import useBrandingColorCapture from "@/hooks/useBrandingColorCapture";
+import useBrandingColorCapture from "../hooks/useBrandingColorCapture";
 import Button from "@/components/shared/Button";
 
 const BrandingColorInput = ({ label = "", color, setColor, setImage, image, hideLabel = false, className = "" }) => {

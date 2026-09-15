@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { useFindNaicAndMccMutation, useGetAllSearchStrategiesQuery } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
 import { CgSpinner } from "react-icons/cg";
-import { useEnterToNextField } from "@/hooks/useEnterToNextField";
+import { useEnterToNextField } from "../hooks/useEnterToNextField";
 import { OtherInputType } from "@/components/global/DynamicField";
 import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";

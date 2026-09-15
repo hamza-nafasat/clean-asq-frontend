@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { GrImage } from "react-icons/gr";
-import useBrandingLogoSelection from "@/hooks/useBrandingLogoSelection";
+import useBrandingLogoSelection from "../hooks/useBrandingLogoSelection";
 import BrandingLogoGrid from "./BrandingLogoGrid";
 
 const BrandingEmailLogoSelect = ({

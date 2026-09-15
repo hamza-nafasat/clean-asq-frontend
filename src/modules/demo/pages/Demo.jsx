@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import useAiChat from "@/hooks/useAiChat";
-import useDemoBuilder from "@/hooks/useDemoBuilder";
-import useDemoPresets from "@/hooks/useDemoPresets";
-import useDemoScreenContext from "@/hooks/useDemoScreenContext";
-import useDemoScriptEditor from "@/hooks/useDemoScriptEditor";
-import useDemoSession from "@/hooks/useDemoSession";
+import useDemoBuilder from "../hooks/useDemoBuilder";
+import useDemoPresets from "../hooks/useDemoPresets";
+import useDemoScreenContext from "../hooks/useDemoScreenContext";
+import useDemoScriptEditor from "../hooks/useDemoScriptEditor";
+import useDemoSession from "../hooks/useDemoSession";
 import DemoBuilderTab from "../components/DemoBuilderTab";
 import DemoFeatureList from "../components/DemoFeatureList";
 import DemoHeading from "../components/DemoHeading";

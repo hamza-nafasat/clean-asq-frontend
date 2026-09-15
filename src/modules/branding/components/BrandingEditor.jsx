@@ -3,10 +3,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import useBranding from "@/hooks/useBranding";
-import useBrandingEditorForm from "@/hooks/useBrandingEditorForm";
-import useBrandingEditorSave from "@/hooks/useBrandingEditorSave";
-import useBrandingEditorScreenContext from "@/hooks/useBrandingEditorScreenContext";
-import useBrandingEditorSync from "@/hooks/useBrandingEditorSync";
+import useBrandingEditorForm from "../hooks/useBrandingEditorForm";
+import useBrandingEditorSave from "../hooks/useBrandingEditorSave";
+import useBrandingEditorScreenContext from "../hooks/useBrandingEditorScreenContext";
+import useBrandingEditorSync from "../hooks/useBrandingEditorSync";
 import {
   useAddBrandingInFormMutation,
   useExtractColorsFromLogosMutation,

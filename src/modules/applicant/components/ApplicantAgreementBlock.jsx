@@ -1,4 +1,4 @@
-import { useEnterToNextField } from "@/hooks/useEnterToNextField";
+import { useEnterToNextField } from "../hooks/useEnterToNextField";
 import { makeDocLinkHandler } from "@/utils/makeDocLinkHandler";
 import { updateFormState } from "@/redux/slices/form.slice";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";

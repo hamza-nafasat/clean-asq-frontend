@@ -1,4 +1,4 @@
-import useBrandingVoiceSample from "@/hooks/useBrandingVoiceSample";
+import useBrandingVoiceSample from "../hooks/useBrandingVoiceSample";
 import Checkbox from "@/components/shared/Checkbox";
 import BrandingAiWidgetPreview from "./BrandingAiWidgetPreview";
 import BrandingColorInput from "./BrandingColorInput";

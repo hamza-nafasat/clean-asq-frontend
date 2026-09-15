@@ -1,7 +1,7 @@
 import { useState } from "react";
-import useTestingCases from "@/hooks/useTestingCases";
-import useTestingRun from "@/hooks/useTestingRun";
-import useTestingScreenContext from "@/hooks/useTestingScreenContext";
+import useTestingCases from "../hooks/useTestingCases";
+import useTestingRun from "../hooks/useTestingRun";
+import useTestingScreenContext from "../hooks/useTestingScreenContext";
 import TestingCaseEditor from "../components/TestingCaseEditor";
 import TestingCaseTable from "../components/TestingCaseTable";
 import TestingConfigure from "../components/TestingConfigure";

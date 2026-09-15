@@ -1,5 +1,5 @@
 import { useDispatch } from "react-redux";
-import { useApplicantScreenContext } from "@/hooks/useApplicantScreenContext";
+import { useApplicantScreenContext } from "./useApplicantScreenContext";
 import { updateEmailVerified } from "@/redux/slices/form.slice";
 import getEnv from "@/utils/env";
 import { findAiFieldEl } from "@/utils/discoverFormFields";

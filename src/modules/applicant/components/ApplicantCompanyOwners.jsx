@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { GoPlus } from "react-icons/go";
-import { useEnterToNextField } from "@/hooks/useEnterToNextField";
+import { useEnterToNextField } from "../hooks/useEnterToNextField";
 import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";
 import Modal from "@/components/shared/Modal";
