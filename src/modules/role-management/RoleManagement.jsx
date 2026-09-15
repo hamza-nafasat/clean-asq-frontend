@@ -1,4 +1,4 @@
-import RoleManagementTable from "../components/RoleManagementTable";
+import RoleManagementTable from "./components/RoleManagementTable";
 
 const RoleManagement = () => (
   <div>

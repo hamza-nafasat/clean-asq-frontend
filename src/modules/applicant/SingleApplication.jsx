@@ -4,43 +4,43 @@ import { useDispatch, useSelector } from "react-redux";
 import { useGetSingleFormQueryQuery } from "@/redux/apis/form.apis";
 import { updateEmailVerified, updateFormHeaderAndFooter } from "@/redux/slices/form.slice";
 import { toast } from "react-toastify";
-import useApplicantAddressAutocomplete from "../hooks/useApplicantAddressAutocomplete";
-import useApplicantEmailOtp from "../hooks/useApplicantEmailOtp";
-import useApplicantFocusFirstInput from "../hooks/useApplicantFocusFirstInput";
-import useApplicantIdMissionDraft from "../hooks/useApplicantIdMissionDraft";
-import useApplicantIdMissionQr from "../hooks/useApplicantIdMissionQr";
-import useApplicantIdMissionSocket from "../hooks/useApplicantIdMissionSocket";
-import useApplicantIdMissionSubmit from "../hooks/useApplicantIdMissionSubmit";
-import useApplicantSingleApplicationAi from "../hooks/useApplicantSingleApplicationAi";
+import useApplicantAddressAutocomplete from "./hooks/useApplicantAddressAutocomplete";
+import useApplicantEmailOtp from "./hooks/useApplicantEmailOtp";
+import useApplicantFocusFirstInput from "./hooks/useApplicantFocusFirstInput";
+import useApplicantIdMissionDraft from "./hooks/useApplicantIdMissionDraft";
+import useApplicantIdMissionQr from "./hooks/useApplicantIdMissionQr";
+import useApplicantIdMissionSocket from "./hooks/useApplicantIdMissionSocket";
+import useApplicantIdMissionSubmit from "./hooks/useApplicantIdMissionSubmit";
+import useApplicantSingleApplicationAi from "./hooks/useApplicantSingleApplicationAi";
 import useApplyBranding from "@/hooks/useApplyBranding";
-import { usePageDownload } from "../hooks/usePageDownload";
+import { usePageDownload } from "./hooks/usePageDownload";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
-import ApplicantEmailVerification from "../components/ApplicantEmailVerification";
-import ApplicantIdMissionDetailsForm from "../components/ApplicantIdMissionDetailsForm";
-import ApplicantIdMissionQrStep from "../components/ApplicantIdMissionQrStep";
-import { LoadingWithTimer } from "../components/ApplicantLoadingWithTimer";
-import ApplicantPersonalizingLoader from "../components/ApplicantPersonalizingLoader";
-import ApplicantSingleApplicationModals from "../components/ApplicantSingleApplicationModals";
+import ApplicantEmailVerification from "./components/ApplicantEmailVerification";
+import ApplicantIdMissionDetailsForm from "./components/ApplicantIdMissionDetailsForm";
+import ApplicantIdMissionQrStep from "./components/ApplicantIdMissionQrStep";
+import { LoadingWithTimer } from "./components/ApplicantLoadingWithTimer";
+import ApplicantPersonalizingLoader from "./components/ApplicantPersonalizingLoader";
+import ApplicantSingleApplicationModals from "./components/ApplicantSingleApplicationModals";
 import {
   AI_FIELD_IDS,
   DEFAULT_HEADER_FOOTER,
   SECTION_TITLES,
   SINGLE_APPLICATION_MODALS,
   SINGLE_APPLICATION_STAGES,
-} from "../utils/applicant.constants";
+} from "./utils/applicant.constants";
 import {
   areIdMissionFieldsFilled,
   buildInitialIdMissionData,
   getIdMissionSignDisplayHtml,
   uploadIdMissionSignature,
-} from "../utils/applicant.utils5";
+} from "./utils/applicant.utils5";
 import {
   buildStepperPath,
   buildVerificationPath,
   collectIdMissionFieldRows,
   focusNextInputOnEnter,
-} from "../utils/applicant.utils6";
+} from "./utils/applicant.utils6";
 import { isNotGuestRoleValue } from "@/utils/permissions";
 
 const SingleApplication = () => {

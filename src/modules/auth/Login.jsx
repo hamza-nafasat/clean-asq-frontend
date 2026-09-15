@@ -8,8 +8,8 @@ import useAiChat from "@/hooks/useAiChat";
 import useBranding from "@/hooks/useBranding";
 import Button from "@/components/shared/Button";
 import TextField from "@/components/shared/TextField";
-import { AUTH_ROUTES } from "../utils/auth.constants";
-import { applyUserBranding } from "../utils/auth.utils";
+import { AUTH_ROUTES } from "./utils/auth.constants";
+import { applyUserBranding } from "./utils/auth.utils";
 
 const Login = () => {
   const dispatch = useDispatch();

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import Button from "@/components/shared/Button";
-import { OTP_LENGTH } from "../utils/auth.constants";
+import { OTP_LENGTH } from "./utils/auth.constants";
 
 const DIGIT_PATTERN = /^[0-9]$/;
 

@@ -6,8 +6,8 @@ import {
 } from "@/redux/apis/form.apis";
 import { ApplicationPdfViewCommonProps } from "@/components/global/ApplicationPdfView";
 import Modal from "@/components/shared/Modal";
-import ApplicationsSpecialAccessModal from "../components/ApplicationsSpecialAccessModal";
-import ApplicationsTable from "../components/ApplicationsTable";
+import ApplicationsSpecialAccessModal from "./components/ApplicationsSpecialAccessModal";
+import ApplicationsTable from "./components/ApplicationsTable";
 
 const initialFilters = {
   dateRange: { start: "", end: "" },

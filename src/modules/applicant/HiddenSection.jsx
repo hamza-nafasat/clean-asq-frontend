@@ -4,17 +4,17 @@ import { useSelector } from "react-redux";
 import { useGetSpecialAccessOfSectionQuery, useSubmitSpecialAccessFormMutation } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
 import { uploadFilesAndReplace } from "@/lib/utils";
-import useApplicantSectionIdMission from "../hooks/useApplicantSectionIdMission";
+import useApplicantSectionIdMission from "./hooks/useApplicantSectionIdMission";
 import useApplyBranding from "@/hooks/useApplyBranding";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
 import Modal from "@/components/shared/Modal";
-import CustomizationFieldsModal from "../components/ApplicantCustomizeFieldsModal";
-import ApplicantIdMissionQrPanel from "../components/ApplicantIdMissionQrPanel";
-import ApplicantSectionField from "../components/ApplicantSectionField";
-import { EditSectionDisplayTextFromatingModal } from "../components/ApplicantSectionTextModal";
-import { APPLICANT_HOME_PATH } from "../utils/applicant.constants";
-import { withLinkTargets } from "../utils/applicant.utils6";
+import CustomizationFieldsModal from "./components/ApplicantCustomizeFieldsModal";
+import ApplicantIdMissionQrPanel from "./components/ApplicantIdMissionQrPanel";
+import ApplicantSectionField from "./components/ApplicantSectionField";
+import { EditSectionDisplayTextFromatingModal } from "./components/ApplicantSectionTextModal";
+import { APPLICANT_HOME_PATH } from "./utils/applicant.constants";
+import { withLinkTargets } from "./utils/applicant.utils6";
 import { isNotGuestRoleValue } from "@/utils/permissions";
 
 const FormHiddenSection = () => {

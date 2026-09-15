@@ -3,13 +3,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { useUpdateMyProfileMutation } from "@/redux/apis/auth.apis";
 import { userExist } from "@/redux/slices/auth.slice";
-import MyProfileActions from "../components/MyProfileActions";
-import MyProfileDetailsFields from "../components/MyProfileDetailsFields";
-import MyProfileHeading from "../components/MyProfileHeading";
-import MyProfilePasswordForm from "../components/MyProfilePasswordForm";
-import MyProfileSummary from "../components/MyProfileSummary";
-import { EMPTY_PROFILE, IMAGE_MIME_PREFIX, MY_PROFILE_FORM_ID } from "../utils/my-profile.constants";
-import { buildProfileFormData, buildProfileFromUser } from "../utils/my-profile.utils";
+import MyProfileActions from "./components/MyProfileActions";
+import MyProfileDetailsFields from "./components/MyProfileDetailsFields";
+import MyProfileHeading from "./components/MyProfileHeading";
+import MyProfilePasswordForm from "./components/MyProfilePasswordForm";
+import MyProfileSummary from "./components/MyProfileSummary";
+import { EMPTY_PROFILE, IMAGE_MIME_PREFIX, MY_PROFILE_FORM_ID } from "./utils/my-profile.constants";
+import { buildProfileFormData, buildProfileFromUser } from "./utils/my-profile.utils";
 
 const MyProfile = () => {
   const dispatch = useDispatch();

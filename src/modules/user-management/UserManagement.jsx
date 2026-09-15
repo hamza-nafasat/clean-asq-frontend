@@ -1,4 +1,4 @@
-import UserManagementTable from "../components/UserManagementTable";
+import UserManagementTable from "./components/UserManagementTable";
 
 const UserManagement = () => (
   <div>

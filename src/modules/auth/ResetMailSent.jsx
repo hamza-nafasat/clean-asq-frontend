@@ -1,8 +1,8 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { HiOutlineMailOpen } from "react-icons/hi";
 import Button from "@/components/shared/Button";
-import { AUTH_ROUTES } from "../utils/auth.constants";
-import { getMailboxUrl, maskEmail } from "../utils/auth.utils";
+import { AUTH_ROUTES } from "./utils/auth.constants";
+import { getMailboxUrl, maskEmail } from "./utils/auth.utils";
 
 const ResetMailSent = () => {
   const navigate = useNavigate();

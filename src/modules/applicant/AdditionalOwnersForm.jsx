@@ -1,6 +1,6 @@
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
-import { LoadingWithTimer } from "../components/ApplicantLoadingWithTimer";
+import { LoadingWithTimer } from "./components/ApplicantLoadingWithTimer";
 import TextField from "@/components/shared/TextField";
 import { socket } from "@/lib/socket";
 import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from "@/redux/apis/auth.apis";

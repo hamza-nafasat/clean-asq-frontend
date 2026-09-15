@@ -1,17 +1,17 @@
 import { useState } from "react";
-import useTestingCases from "../hooks/useTestingCases";
-import useTestingRun from "../hooks/useTestingRun";
-import useTestingScreenContext from "../hooks/useTestingScreenContext";
-import TestingCaseEditor from "../components/TestingCaseEditor";
-import TestingCaseTable from "../components/TestingCaseTable";
-import TestingConfigure from "../components/TestingConfigure";
-import TestingHeading from "../components/TestingHeading";
-import TestingHelpPanel from "../components/TestingHelpPanel";
-import TestingLogStream from "../components/TestingLogStream";
-import TestingReport from "../components/TestingReport";
-import TestingTabs from "../components/TestingTabs";
-import { DEFAULT_PERSONA_ID, INITIAL_CREDENTIALS, TESTING_TABS } from "../utils/testing.constants";
-import { getAreaNames } from "../utils/testing.utils";
+import useTestingCases from "./hooks/useTestingCases";
+import useTestingRun from "./hooks/useTestingRun";
+import useTestingScreenContext from "./hooks/useTestingScreenContext";
+import TestingCaseEditor from "./components/TestingCaseEditor";
+import TestingCaseTable from "./components/TestingCaseTable";
+import TestingConfigure from "./components/TestingConfigure";
+import TestingHeading from "./components/TestingHeading";
+import TestingHelpPanel from "./components/TestingHelpPanel";
+import TestingLogStream from "./components/TestingLogStream";
+import TestingReport from "./components/TestingReport";
+import TestingTabs from "./components/TestingTabs";
+import { DEFAULT_PERSONA_ID, INITIAL_CREDENTIALS, TESTING_TABS } from "./utils/testing.constants";
+import { getAreaNames } from "./utils/testing.utils";
 
 const Testing = () => {
   const [selectedPersona, setSelectedPersona] = useState(DEFAULT_PERSONA_ID);

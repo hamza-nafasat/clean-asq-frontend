@@ -1,4 +1,4 @@
-import CompanyVerification from '../components/ApplicantCompanyLookup';
+import CompanyVerification from './components/ApplicantCompanyLookup';
 import CustomLoading from '@/components/shared/CustomLoading';
 import useApplyBranding from '@/hooks/useApplyBranding';
 import { useSelector } from 'react-redux';

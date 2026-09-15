@@ -16,46 +16,46 @@ import { PERMISSIONS, getHomePath, isGuestRole } from "@/utils/permissions";
 import { detectVPN } from "@/utils/vpnDetection";
 
 // auth pages
-const Login = lazy(() => import("@/modules/auth/pages/Login"));
-const Otp = lazy(() => import("@/modules/auth/pages/Otp"));
-const ForgetPassword = lazy(() => import("@/modules/auth/pages/ForgetPassword"));
-const ResetPassword = lazy(() => import("@/modules/auth/pages/ResetPassword"));
-const ResetMailSent = lazy(() => import("@/modules/auth/pages/ResetMailSent"));
-const ResetPasswordSuccessfully = lazy(() => import("@/modules/auth/pages/ResetPasswordSuccessfully"));
+const Login = lazy(() => import("@/modules/auth/Login"));
+const Otp = lazy(() => import("@/modules/auth/Otp"));
+const ForgetPassword = lazy(() => import("@/modules/auth/ForgetPassword"));
+const ResetPassword = lazy(() => import("@/modules/auth/ResetPassword"));
+const ResetMailSent = lazy(() => import("@/modules/auth/ResetMailSent"));
+const ResetPasswordSuccessfully = lazy(() => import("@/modules/auth/ResetPasswordSuccessfully"));
 
 // layouts
 const AdminDashboard = lazy(() => import("@/components/layouts/DashboardLayout"));
 const UserApplicationForms = lazy(() => import("@/components/layouts/ApplicationFormLayout"));
 
 // public and shared application pages
-const SingleApplication = lazy(() => import("@/modules/applicant/pages/SingleApplication"));
-const FormHiddenSection = lazy(() => import("@/modules/applicant/pages/HiddenSection"));
-const ManageRules = lazy(() => import("@/modules/application-forms/pages/ManageRules"));
-const AdditionalOwnersForm = lazy(() => import("@/modules/applicant/pages/AdditionalOwnersForm"));
+const SingleApplication = lazy(() => import("@/modules/applicant/SingleApplication"));
+const FormHiddenSection = lazy(() => import("@/modules/applicant/HiddenSection"));
+const ManageRules = lazy(() => import("@/modules/application-forms/ManageRules"));
+const AdditionalOwnersForm = lazy(() => import("@/modules/applicant/AdditionalOwnersForm"));
 const SubmissionSuccessPage = lazy(() =>
-  import("@/modules/applicant/pages/SubmissionSuccess").then((module) => ({
+  import("@/modules/applicant/SubmissionSuccess").then((module) => ({
     default: module.SubmissionSuccessPage,
   })),
 );
-const ApplicationForm = lazy(() => import("@/modules/applicant/pages/ApplicationForm"));
+const ApplicationForm = lazy(() => import("@/modules/applicant/ApplicationForm"));
 const ApplicationPdfView = lazy(() => import("@/components/global/ApplicationPdfView"));
-const Verification = lazy(() => import("@/modules/applicant/pages/CompanyVerification"));
-const DraftSubmission = lazy(() => import("@/modules/my-applications/pages/MyApplications"));
+const Verification = lazy(() => import("@/modules/applicant/CompanyVerification"));
+const DraftSubmission = lazy(() => import("@/modules/my-applications/MyApplications"));
 
 // signed-in dashboard pages
-const AllRoles = lazy(() => import("@/modules/role-management/pages/RoleManagement"));
-const AdminAllUsers = lazy(() => import("@/modules/user-management/pages/UserManagement"));
-const ApplicationForms = lazy(() => import("@/modules/application-forms/pages/ApplicationForms"));
-const Applications = lazy(() => import("@/modules/applications/pages/Applications"));
-const OnBoarding = lazy(() => import("@/modules/underwriting/pages/Underwriting"));
-const Brandings = lazy(() => import("@/modules/branding/pages/Brandings"));
-const CreateBranding = lazy(() => import("@/modules/branding/pages/CreateBranding"));
-const FormStrategies = lazy(() => import("@/modules/lookup-management/pages/LookupManagement"));
-const VerificationTest = lazy(() => import("@/modules/testing/pages/VerificationTest"));
-const Strategies = lazy(() => import("@/modules/strategies/pages/Strategies"));
-const Email = lazy(() => import("@/modules/email/pages/Email"));
-const Testing = lazy(() => import("@/modules/testing/pages/Testing"));
-const MyProfile = lazy(() => import("@/modules/my-profile/pages/MyProfile"));
+const AllRoles = lazy(() => import("@/modules/role-management/RoleManagement"));
+const AdminAllUsers = lazy(() => import("@/modules/user-management/UserManagement"));
+const ApplicationForms = lazy(() => import("@/modules/application-forms/ApplicationForms"));
+const Applications = lazy(() => import("@/modules/applications/Applications"));
+const OnBoarding = lazy(() => import("@/modules/underwriting/Underwriting"));
+const Brandings = lazy(() => import("@/modules/branding/Brandings"));
+const CreateBranding = lazy(() => import("@/modules/branding/CreateBranding"));
+const FormStrategies = lazy(() => import("@/modules/lookup-management/LookupManagement"));
+const VerificationTest = lazy(() => import("@/modules/testing/VerificationTest"));
+const Strategies = lazy(() => import("@/modules/strategies/Strategies"));
+const Email = lazy(() => import("@/modules/email/Email"));
+const Testing = lazy(() => import("@/modules/testing/Testing"));
+const MyProfile = lazy(() => import("@/modules/my-profile/MyProfile"));
 const RoleRedirect = lazy(() => import("@/routes/RoleRedirect"));
 
 const App = () => {

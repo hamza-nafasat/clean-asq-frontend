@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { useResetPasswordMutation } from "@/redux/apis/auth.apis";
 import Button from "@/components/shared/Button";
 import TextField from "@/components/shared/TextField";
-import { AUTH_ROUTES, RESET_TOKEN_PARAM } from "../utils/auth.constants";
+import { AUTH_ROUTES, RESET_TOKEN_PARAM } from "./utils/auth.constants";
 
 const ResetPassword = () => {
   const navigate = useNavigate();

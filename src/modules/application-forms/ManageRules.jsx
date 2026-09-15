@@ -13,15 +13,15 @@ import {
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import CustomLoading from "@/components/shared/CustomLoading";
 import Modal from "@/components/shared/Modal";
-import { CreateRuleModal, UpdateRuleModal } from "../components/ApplicationFormsRuleEditor";
-import ApplicationFormsRulesFilter from "../components/ApplicationFormsRulesFilter";
-import ApplicationFormsRulesTable from "../components/ApplicationFormsRulesTable";
-import { buildRuleColumns } from "../utils/application-forms.columns";
+import { CreateRuleModal, UpdateRuleModal } from "./components/ApplicationFormsRuleEditor";
+import ApplicationFormsRulesFilter from "./components/ApplicationFormsRulesFilter";
+import ApplicationFormsRulesTable from "./components/ApplicationFormsRulesTable";
+import { buildRuleColumns } from "./utils/application-forms.columns";
 import {
   INITIAL_RULE_FILTERS,
   RULE_DRAG_ACTIVATION_DISTANCE,
   RULE_STATUSES,
-} from "../utils/application-forms.constants";
+} from "./utils/application-forms.constants";
 
 const matchesRuleFilters = (rule, filters) => {
   const matchName = !filters.name || rule.name?.toLowerCase().includes(filters.name.toLowerCase());

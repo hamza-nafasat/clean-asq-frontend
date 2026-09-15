@@ -3,16 +3,16 @@ import { Navigate, useParams } from "react-router-dom";
 import { useGetSingleSubmitFormQueryQuery } from "@/redux/apis/form.apis";
 import usePermission from "@/hooks/usePermission";
 import Button from "@/components/shared/Button";
-import UnderwritingAnalysis from "../components/UnderwritingAnalysis";
-import UnderwritingAppViewer from "../components/UnderwritingAppViewer";
-import UnderwritingFormVersions from "../components/UnderwritingFormVersions";
-import UnderwritingHistory from "../components/UnderwritingHistory";
+import UnderwritingAnalysis from "./components/UnderwritingAnalysis";
+import UnderwritingAppViewer from "./components/UnderwritingAppViewer";
+import UnderwritingFormVersions from "./components/UnderwritingFormVersions";
+import UnderwritingHistory from "./components/UnderwritingHistory";
 import { PERMISSIONS } from "@/utils/permissions";
 import {
   UNDERWRITING_FALLBACK_ROUTE,
   UNDERWRITING_TAB_BUTTONS,
   UNDERWRITING_TABS,
-} from "../utils/underwriting.constants";
+} from "./utils/underwriting.constants";
 
 const Underwriting = () => {
   const { applicantId } = useParams();

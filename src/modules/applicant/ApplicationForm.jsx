@@ -4,27 +4,27 @@ import { useDispatch, useSelector } from "react-redux";
 import { useGetSavedFormMutation, useGetSingleFormQueryQuery } from "@/redux/apis/form.apis";
 import { setIdMissionData } from "@/redux/slices/auth.slice";
 import { addSavedFormData, updateFormHeaderAndFooter } from "@/redux/slices/form.slice";
-import { useApplicantScreenContext } from "../hooks/useApplicantScreenContext";
-import useApplicantStepSubmission from "../hooks/useApplicantStepSubmission";
+import { useApplicantScreenContext } from "./hooks/useApplicantScreenContext";
+import useApplicantStepSubmission from "./hooks/useApplicantStepSubmission";
 import useApplyBranding from "@/hooks/useApplyBranding";
-import { usePageDownload } from "../hooks/usePageDownload";
+import { usePageDownload } from "./hooks/usePageDownload";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
 import Stepper from "@/components/Stepper/Stepper";
-import ApplicantAgreementBlock from "../components/ApplicantAgreementBlock";
-import ApplicantBankInfo from "../components/ApplicantBankInfo";
-import ApplicantCompanyInformation from "../components/ApplicantCompanyInformation";
-import ApplicantCompanyOwners from "../components/ApplicantCompanyOwners";
-import ApplicantCustomSection from "../components/ApplicantCustomSection";
-import ApplicantDocuments from "../components/ApplicantDocuments";
-import ApplicantProcessingInfo from "../components/ApplicantProcessingInfo";
+import ApplicantAgreementBlock from "./components/ApplicantAgreementBlock";
+import ApplicantBankInfo from "./components/ApplicantBankInfo";
+import ApplicantCompanyInformation from "./components/ApplicantCompanyInformation";
+import ApplicantCompanyOwners from "./components/ApplicantCompanyOwners";
+import ApplicantCustomSection from "./components/ApplicantCustomSection";
+import ApplicantDocuments from "./components/ApplicantDocuments";
+import ApplicantProcessingInfo from "./components/ApplicantProcessingInfo";
 import {
   DEFAULT_HEADER_FOOTER,
   RENDERABLE_SECTION_TITLES,
   SECTION_KEYS,
   SECTION_TITLES,
-} from "../utils/applicant.constants";
-import { buildApplicationFormPath, collectStepFieldRows } from "../utils/applicant.utils6";
+} from "./utils/applicant.constants";
+import { buildApplicationFormPath, collectStepFieldRows } from "./utils/applicant.utils6";
 import getEnv from "@/utils/env";
 import { findAiFieldEl } from "@/utils/discoverFormFields";
 

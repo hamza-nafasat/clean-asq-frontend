@@ -1,4 +1,4 @@
-import ApplicationsCard from "../components/ApplicationFormsCards";
+import ApplicationsCard from "./components/ApplicationFormsCards";
 
 const ApplicationForms = () => (
   <div>

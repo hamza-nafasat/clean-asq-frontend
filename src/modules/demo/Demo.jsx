@@ -1,23 +1,23 @@
 import { useEffect, useState } from "react";
 import useAiChat from "@/hooks/useAiChat";
-import useDemoBuilder from "../hooks/useDemoBuilder";
-import useDemoPresets from "../hooks/useDemoPresets";
-import useDemoScreenContext from "../hooks/useDemoScreenContext";
-import useDemoScriptEditor from "../hooks/useDemoScriptEditor";
-import useDemoSession from "../hooks/useDemoSession";
-import DemoBuilderTab from "../components/DemoBuilderTab";
-import DemoFeatureList from "../components/DemoFeatureList";
-import DemoHeading from "../components/DemoHeading";
-import DemoPresetBar from "../components/DemoPresetBar";
-import DemoScriptTab from "../components/DemoScriptTab";
+import useDemoBuilder from "./hooks/useDemoBuilder";
+import useDemoPresets from "./hooks/useDemoPresets";
+import useDemoScreenContext from "./hooks/useDemoScreenContext";
+import useDemoScriptEditor from "./hooks/useDemoScriptEditor";
+import useDemoSession from "./hooks/useDemoSession";
+import DemoBuilderTab from "./components/DemoBuilderTab";
+import DemoFeatureList from "./components/DemoFeatureList";
+import DemoHeading from "./components/DemoHeading";
+import DemoPresetBar from "./components/DemoPresetBar";
+import DemoScriptTab from "./components/DemoScriptTab";
 import {
   DEMO_SCRIPT_SOURCES,
   DEMO_SESSION_STATUSES,
   DEMO_STORAGE_KEYS,
   DEMO_TAB_OPTIONS,
   DEMO_TABS,
-} from "../utils/demo.constants";
-import { formatDemoDate, hasSavedNarration } from "../utils/demo.utils3";
+} from "./utils/demo.constants";
+import { formatDemoDate, hasSavedNarration } from "./utils/demo.utils3";
 
 const Demo = () => {
   const { session, sessionStatus, scriptSteps, startDemo } = useDemoSession();

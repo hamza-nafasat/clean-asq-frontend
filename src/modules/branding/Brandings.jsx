@@ -18,12 +18,12 @@ import ApplyBranding from "@/components/global/ApplyBranding";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
-import BrandingTable from "../components/BrandingTable";
+import BrandingTable from "./components/BrandingTable";
 import {
   BRANDING_LIST_SCREEN_CONTEXT,
   BRANDING_ROUTES,
   BRANDING_ROW_ACTIONS,
-} from "../utils/branding.constants";
+} from "./utils/branding.constants";
 import { executeBrandingAssignment, getBrandingSettersFromHook } from "@/utils/executeBrandingAssignment";
 import getEnv from "@/utils/env";
 import { getTableStyles } from "@/utils/tableStyles";

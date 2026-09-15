@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { HiOutlineCheckCircle } from "react-icons/hi";
 import Button from "@/components/shared/Button";
-import { AUTH_ROUTES } from "../utils/auth.constants";
+import { AUTH_ROUTES } from "./utils/auth.constants";
 
 const ResetPasswordSuccessfully = () => {
   const navigate = useNavigate();

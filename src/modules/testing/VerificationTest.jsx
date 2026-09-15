@@ -1,6 +1,6 @@
 import { useSearchParams } from "react-router-dom";
-import TestingCompanyLookup from "../components/TestingCompanyLookup";
-import { VERIFICATION_FORM_ID_PARAM } from "../utils/testing.constants";
+import TestingCompanyLookup from "./components/TestingCompanyLookup";
+import { VERIFICATION_FORM_ID_PARAM } from "./utils/testing.constants";
 
 const VerificationTest = () => {
   const [searchParams] = useSearchParams();
