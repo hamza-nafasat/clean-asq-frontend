@@ -9,10 +9,10 @@ import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";
 import Modal from "@/components/shared/Modal";
 import TextField from "@/components/shared/TextField";
+import NaicsMatchModal from "@/components/modals/NaicsMatchModal";
 import CustomizationFieldsModal from "./ApplicantCustomizeFieldsModal";
 import DisplayText from "./ApplicantDisplayText";
 import ApplicantNaicsInput from "./ApplicantNaicsInput";
-import ApplicantNaicsModal from "./ApplicantNaicsModal";
 import ApplicantSectionField from "./ApplicantSectionField";
 import { EditSectionDisplayTextFromatingModal } from "./ApplicantSectionTextModal";
 import { STATE_SUGGESTIONS } from "@/constants";
@@ -273,17 +273,16 @@ const CompanyInformation = ({
             </div>
           );
         })}
-      {naicsApiData?.bestMatch?.naics && showNaicsToMccDetails && (
-        <Modal onClose={() => setShowNaicsToMccDetails(false)}>
-          <ApplicantNaicsModal
-            isOpen={showNaicsToMccDetails}
-            naicsApiData={naicsApiData}
-            setNaicsApiData={setNaicsApiData}
-            setNaicsToMccDetails={setNaicsToMccDetails}
-            onClose={() => setShowNaicsToMccDetails(false)}
-          />
-        </Modal>
-      )}
+      <NaicsMatchModal
+        isOpen={Boolean(naicsApiData?.bestMatch?.naics && showNaicsToMccDetails)}
+        naicsApiData={naicsApiData}
+        onMatchesChange={setNaicsApiData}
+        onSave={(bestMatch) => {
+          if (bestMatch?.naics) setNaicsToMccDetails(formatNaicsBestMatch(bestMatch));
+          else toast.error("Please select a best match");
+        }}
+        onClose={() => setShowNaicsToMccDetails(false)}
+      />
       {!hasDescriptionField && findNaicsButton}
       <div className="mt-6 flex w-full flex-col items-start">
         <h4 className="text-textPrimary text-base font-medium lg:text-lg">NAICS Code and Description</h4>

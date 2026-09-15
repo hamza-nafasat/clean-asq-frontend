@@ -12,3 +12,14 @@ export const STRATEGY_FORM_FIELDS = {
   FORM: "form",
   SEARCH_STRATEGIES: "searchStrategies",
 };
+
+// props that give the shared FormField this module's look
+export const STRATEGY_FORM_FIELD_PROPS = {
+  labelClassName: "text-textPrimary mb-1 block text-sm font-medium",
+  selectBaseClassName:
+    "border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base",
+  selectDefaultClassName: "border-frameColor",
+  placeholderOption: "Choose an option",
+  onChangeShape: "field",
+  inputClassName: "w-full rounded border p-2 text-sm",
+};

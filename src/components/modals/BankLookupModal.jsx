@@ -1,20 +1,20 @@
 import Button from "@/components/shared/Button";
 import Modal from "@/components/shared/Modal";
 
-const ApplicationPdfBankModal = ({ isOpen = false, bank = {}, onClose, onConfirm }) => {
+const BankLookupModal = ({ isOpen = false, bankName = "", yesTestId, onClose, onConfirm }) => {
   if (!isOpen) return null;
 
   return (
-    <Modal title="Bank for your routing number " isOpen={isOpen} onClose={onClose}>
-      {bank?.bankName ? (
+    <Modal title="Bank for your routing number " onClose={onClose}>
+      {bankName ? (
         <>
           <p className="mb-6 leading-relaxed text-gray-600">
-            That routing number belongs to <span className="font-semibold text-gray-900">{bank.bankName}</span>. Is
-            this the bank you intended to enter?
+            That routing number belongs to <span className="font-semibold text-gray-900">{bankName}</span>. Is this the
+            bank you intended to enter?
           </p>
           <div className="flex justify-end gap-3">
             <Button variant="secondary" label="No" onClick={onClose} className="rounded-lg px-4 py-2" />
-            <Button label="Yes" onClick={() => onConfirm?.(bank.bankName)} className="rounded-lg px-4 py-2" />
+            <Button label="Yes" data-testid={yesTestId} onClick={onConfirm} className="rounded-lg px-4 py-2" />
           </div>
         </>
       ) : (
@@ -31,4 +31,4 @@ const ApplicationPdfBankModal = ({ isOpen = false, bank = {}, onClose, onConfirm
   );
 };
 
-export default ApplicationPdfBankModal;
+export default BankLookupModal;

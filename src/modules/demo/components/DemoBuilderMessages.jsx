@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { FiSend, FiX } from "react-icons/fi";
 import { HiOutlineSparkles } from "react-icons/hi";
 import { DEMO_CHAT_ROLES } from "../utils/demo.constants";
+import Spinner from "@/components/shared/Spinner";
 
 const DemoBuilderMessages = ({
   featureName = "",
@@ -61,7 +62,7 @@ const DemoBuilderMessages = ({
         {isThinking && (
           <div className="flex justify-start">
             <div className="bg-gray-100 rounded-xl rounded-bl-sm px-3 py-2 flex items-center gap-2">
-              <span className="h-3 w-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+              <Spinner tone="muted" />
               <span className="text-xs text-gray-500">thinking…</span>
             </div>
           </div>

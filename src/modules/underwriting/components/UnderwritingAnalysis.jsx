@@ -1,11 +1,9 @@
 import { useMemo, useState } from "react";
-import DataTable from "react-data-table-component";
 import { CgSpinner } from "react-icons/cg";
 import { useApplyRulesOnFormQuery } from "@/redux/apis/form.apis";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
-import useBranding from "@/hooks/useBranding";
 import Button from "@/components/shared/Button";
-import { getTableStyles } from "@/utils/tableStyles";
+import AppDataTable from "@/components/shared/AppDataTable";
 import { ALERT_CATEGORIES } from "../utils/underwriting.constants";
 
 const buildAlertColumns = () => [
@@ -34,8 +32,6 @@ const buildAlertColumns = () => [
 const numberRows = (rows) => rows.map((item, index) => ({ ...item, number: index + 1 }));
 
 const UnderwritingAnalysis = ({ submitFormData = null }) => {
-  const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
-  const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   const [isApplyingRules, setIsApplyingRules] = useState(false);
   const {
     data: alertsData,
@@ -82,10 +78,9 @@ const UnderwritingAnalysis = ({ submitFormData = null }) => {
             <span className="font-bold"> Key Application Info:</span> (section that contain all display rule output)
           </h2>
           <div className="w-full max-w-full">
-            <DataTable
+            <AppDataTable
               data={filteredRules.allDisplayAlertWithNumber}
               columns={buildAlertColumns()}
-              customStyles={tableStyles}
               highlightOnHover
               progressPending={isLoadingAlertsData}
               noDataComponent="No History found"
@@ -98,10 +93,9 @@ const UnderwritingAnalysis = ({ submitFormData = null }) => {
             <span className="font-bold"> Application Alerts:</span> (section that contain all alert rule output)
           </h2>
           <div className="w-full max-w-full ">
-            <DataTable
+            <AppDataTable
               data={filteredRules.otherAllCategoryAlertWithNumber}
               columns={buildAlertColumns()}
-              customStyles={tableStyles}
               highlightOnHover
               progressPending={isLoadingAlertsData}
               noDataComponent="No History found"

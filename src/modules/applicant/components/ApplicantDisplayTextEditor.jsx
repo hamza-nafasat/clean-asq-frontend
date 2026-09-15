@@ -4,7 +4,7 @@ import DOMPurify from "dompurify";
 import { useFormateTextInMarkDownMutation } from "@/redux/apis/form.apis";
 import Button from "@/components/shared/Button";
 import TextField from "@/components/shared/TextField";
-import { withLinkTargets } from "../utils/applicant.utils6";
+import HtmlContent from "@/components/shared/HtmlContent";
 
 const ApplicantDisplayTextEditor = ({
   initialText = "",
@@ -63,10 +63,10 @@ const ApplicantDisplayTextEditor = ({
           <Button onClick={handleFormatText} disabled={isFormatting} className="mt-8" label="Format Text" />
         </div>
         {values.formatted && (
-          <div
+          <HtmlContent
             className={previewClassName}
             data-ai-display-text={isPreviewAiText || undefined}
-            dangerouslySetInnerHTML={{ __html: withLinkTargets(values.formatted) }}
+            html={values.formatted}
           />
         )}
       </div>

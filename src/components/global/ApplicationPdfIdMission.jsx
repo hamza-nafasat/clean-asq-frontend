@@ -9,7 +9,7 @@ import TextField from "@/components/shared/TextField";
 import { FIELD_FORMATS, FIELD_TYPES, ID_MISSION_ROLES, SECTION_TITLES, SIGNATURE_KEY } from "@/constants";
 import { setSectionFieldValue } from "@/utils/fieldFormatting";
 import { hasPostalCode, parseAddressComponents, parseAddressResults } from "@/utils/googleAddress";
-import { openLinksInNewTab } from "@/utils/linkTargets";
+import HtmlContent from "@/components/shared/HtmlContent";
 import { uploadSectionSignature } from "@/utils/sectionSignature";
 
 const GEOCODER_OK = "OK";
@@ -134,10 +134,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
     <div className="flex w-full flex-col p-2">
       {form?.data?.idMissionDataDisplayFormatedText ? (
         <div className="flex items-end gap-3">
-          <div
-            className="w-full"
-            dangerouslySetInnerHTML={{ __html: openLinksInNewTab(form?.data?.idMissionDataDisplayFormatedText) }}
-          />
+          <HtmlContent className="w-full" html={form?.data?.idMissionDataDisplayFormatedText} />
         </div>
       ) : (
         <div className="flex w-full gap-3">
@@ -170,7 +167,7 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
           <div className="my-4 flex w-full justify-between gap-2">
             {idMissionSection?.signDisplayText && (
               <div className="flex items-end gap-3">
-                <div className="w-full" dangerouslySetInnerHTML={{ __html: idMissionSection?.signDisplayText }} />
+                <HtmlContent className="w-full" html={idMissionSection?.signDisplayText} linkMode="none" />
               </div>
             )}
           </div>

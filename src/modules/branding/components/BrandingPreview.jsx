@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useDispatch } from "react-redux";
+import useCopyToClipboard from "@/hooks/useCopyToClipboard";
 import Button from "@/components/shared/Button";
 import { setCompanyName } from "@/redux/slices/branding.slice";
 import { BRANDING_COPY_FEEDBACK_MS, BRANDING_HEADER_ALIGNMENTS, BRANDING_PREVIEW_STEPS } from "../utils/branding.constants";
@@ -32,17 +33,11 @@ const Preview = ({
   appLogoMaxHeight,
 }) => {
   const dispatch = useDispatch();
-  const [copied, setCopied] = useState(false);
+  const { isCopied: copied, copy: handleCopy } = useCopyToClipboard(1500);
 
   useEffect(() => {
     dispatch(setCompanyName(companyName));
   }, [companyName, dispatch]);
-
-  const handleCopy = async (text) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
 
   const logoJustify = LOGO_JUSTIFY[headerAlignment] ?? LOGO_JUSTIFY[BRANDING_HEADER_ALIGNMENTS.LEFT];
   const companySlug = (companyName || "")

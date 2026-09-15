@@ -10,10 +10,25 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import DOMPurify from "dompurify";
+import HtmlContent from "@/components/shared/HtmlContent";
 
-function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, suggestions, isArticleForm, section }) {
+const OWNER_VARIANT = "owner";
+
+function CustomizationFieldsModal({
+  onClose,
+  fields,
+  blocks,
+  sectionId,
+  formRefetch,
+  suggestions,
+  isArticleForm,
+  section,
+  variant = "field",
+}) {
+  const isOwner = variant === OWNER_VARIANT;
   const [fieldsData, setFieldsData] = useState([]);
   const [originalFieldData, setOriginalFieldData] = useState([]);
+  const [blockFieldsData, setBlockFieldsData] = useState([]);
   const [customizeForm, { isLoading }] = useUpdateDeleteCreateFormFieldsMutation();
   const [updateSection, { isLoading: isUpdatingSection }] = useUpdateFormSectionMutation();
   const [isIdMissionQrEnabled, setIsIdMissionQrEnabled] = useState(section?.isIdMissionQr || false);
@@ -44,7 +59,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
           signAiPrompt: signatureData.signAiPrompt,
           signAiResponse: signatureData.signAiResponse,
           signDisplayTextFormattingInstructions: signatureData.formatingAiInstruction,
-          isIdMissionQr: isIdMissionQrEnabled,
+          ...(isOwner ? {} : { isIdMissionQr: isIdMissionQrEnabled }),
         },
       }).unwrap();
       if (res.success) {
@@ -99,9 +114,12 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
 
   const addNewFieldHandler = () => setFieldsData((prev) => [...prev, { label: "", name: "", type: "text" }]);
 
-  const saveFormHandler = async (fieldsData) => {
+  const saveFormHandler = async () => {
     try {
-      const res = await customizeForm({ sectionId, fieldsData }).unwrap();
+      const payload = isOwner
+        ? { sectionId, ownerFieldsData: [...fieldsData, ...blockFieldsData] }
+        : { sectionId, fieldsData };
+      const res = await customizeForm(payload).unwrap();
       if (res.success) {
         await formRefetch();
         toast.success(res.message);
@@ -117,7 +135,18 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
       setFieldsData(fields);
       setOriginalFieldData(fields);
     }
-  }, [fields]);
+    if (blocks?.length > 0) {
+      const allFieldsData = [];
+      blocks?.forEach((block) => {
+        block?.fields?.forEach((field) => {
+          allFieldsData.push(field);
+        });
+      });
+      setBlockFieldsData(allFieldsData);
+    }
+  }, [blocks, fields]);
+
+  let fieldIndex = 0;
 
   return (
     <>
@@ -134,9 +163,41 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
               setFieldsData={setFieldsData}
               index={index}
               suggestions={suggestions}
+              variant={variant}
             />
           </div>
         ))}
+      {isOwner && blocks?.length > 0 && (
+        <div className="my-6 bg-[#E0E0E0] p-4">
+          <h3 className="bg-primary py-2 text-center text-2xl font-medium text-white">Update Fields For Blocks</h3>
+          <div className="flex flex-col gap-8">
+            {blocks?.map((block, index) => {
+              return (
+                <div key={index} className="my-5 bg-yellow-50 py-2">
+                  <p className="text-textPrimary text-center text-2xl font-medium capitalize">
+                    {block?.name?.replaceAll("_", " ")}
+                  </p>
+                  <p className="text-center text-base font-normal">{block?.description}</p>
+                  {block?.fields?.map((f, i) => {
+                    if (i !== index) fieldIndex++;
+                    return (
+                      <div key={i} className="mt-6 flex flex-col gap-4">
+                        <MakeFieldDataCustom
+                          fieldsData={blockFieldsData}
+                          setFieldsData={setBlockFieldsData}
+                          index={fieldIndex}
+                          variant={variant}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* signature Data  */}
       <div className="flex flex-col gap-2 border-2 p-2 pb-4">
         <div className="flex gap-2 pb-4">
@@ -192,15 +253,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
               </Button>
             </div>
             {signatureData?.signDisplayFormattedText && (
-              <div
-                className="h-full p-4"
-                dangerouslySetInnerHTML={{
-                  __html: String(signatureData?.signDisplayFormattedText || "").replace(/<a(\s+.*?)?>/g, (match) => {
-                    if (match.includes("target=")) return match; // avoid duplicates
-                    return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-                  }),
-                }}
-              />
+              <HtmlContent className="h-full p-4" html={signatureData?.signDisplayFormattedText} />
             )}
           </div>
         )}
@@ -222,20 +275,13 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
             {signatureData?.signAiResponse && (
               <div className="w-full flex-col py-4">
                 <h6 className="text-textPrimary py-2 text-xl font-semibold">AI Response</h6>
-                <div
-                  className="h-full p-4"
-                  dangerouslySetInnerHTML={{
-                    __html: String(signatureData?.signAiResponse || "").replace(/<a(\s+.*?)?>/g, (match) => {
-                      if (match.includes("target=")) return match; // avoid duplicates
-                      return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-                    }),
-                  }}
-                />
+                <HtmlContent className="h-full p-4" html={signatureData?.signAiResponse} />
               </div>
             )}
           </div>
         )}
         {/* id mission qr  */}
+        {!isOwner && (
         <div className="flex gap-2 pb-4">
           <Checkbox
             id="idMissionQr"
@@ -249,6 +295,7 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
             }}
           />
         </div>
+        )}
         <div className="flex w-full">
           <Button variant="standard"
             onClick={handleUpdateSectionForSignature}
@@ -259,16 +306,18 @@ function CustomizationFieldsModal({ onClose, fields, sectionId, formRefetch, sug
           </Button>
         </div>
       </div>
-      <div className="mt-6 flex w-full items-center justify-between gap-2">
-        {!isArticleForm && (
+      <div className={isOwner ? "mt-6 flex w-full justify-between gap-2" : "mt-6 flex w-full items-center justify-between gap-2"}>
+        {!isOwner && !isArticleForm && (
           <Button variant="standard" className="bg-primary w-[45%] cursor-pointer text-white" onClick={addNewFieldHandler}>
             Add New Field
           </Button>
         )}
         <Button variant="standard"
-          onClick={() => saveFormHandler(fieldsData)}
+          onClick={() => saveFormHandler()}
           disabled={isLoading}
-          className={`bg-primary cursor-pointer text-white ${isArticleForm ? "w-full" : "w-[45%]"}`}
+          className={
+            isOwner ? `bg-primary w-full cursor-pointer text-white` : `bg-primary cursor-pointer text-white ${isArticleForm ? "w-full" : "w-[45%]"}`
+          }
         >
           Save Form
         </Button>

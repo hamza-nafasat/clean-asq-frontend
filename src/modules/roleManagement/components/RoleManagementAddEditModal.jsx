@@ -1,8 +1,8 @@
 import Modal from "@/components/modals/SaveCancelModal";
 import { FIELD_TYPES } from "@/constants";
-import RoleManagementFormField from "./RoleManagementFormField";
+import FormField from "@/components/global/FormField";
 import RoleManagementPermissionsGrid from "./RoleManagementPermissionsGrid";
-import { ROLE_FORM_FIELDS, ROLE_MODAL_MODES, ROLE_STATUS_OPTIONS } from "../utils/roleManagement.constants";
+import { ROLE_FORM_FIELDS, ROLE_FORM_FIELD_PROPS, ROLE_MODAL_MODES, ROLE_STATUS_OPTIONS } from "../utils/roleManagement.constants";
 
 const RoleManagementAddEditModal = ({
   isOpen = false,
@@ -26,13 +26,15 @@ const RoleManagementAddEditModal = ({
       onSave={onSubmit}
       isLoading={isLoading}
     >
-      <RoleManagementFormField
+      <FormField
+        {...ROLE_FORM_FIELD_PROPS}
         field={ROLE_FORM_FIELDS.ROLE_NAME}
         value={initialData?.roleName}
         onChange={onChange}
         type={FIELD_TYPES.TEXT}
       />
-      <RoleManagementFormField
+      <FormField
+        {...ROLE_FORM_FIELD_PROPS}
         field={ROLE_FORM_FIELDS.STATUS}
         value={initialData?.status}
         onChange={onChange}

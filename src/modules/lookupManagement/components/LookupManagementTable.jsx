@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   useCreateSearchStrategyDefaultMutation,
   useCreateSearchStrategyMutation,
@@ -6,16 +6,17 @@ import {
   useGetAllSearchStrategiesQuery,
   useUpdateSearchStrategyMutation,
 } from "@/redux/apis/form.apis";
-import DataTable from "react-data-table-component";
 import { toast } from "react-toastify";
-import useBranding from "@/hooks/useBranding";
+import useDeleteConfirmation from "@/hooks/useDeleteConfirmation";
 import { useScreenContext } from "@/hooks/useScreenContext";
+import useRowActionMenu from "@/hooks/useRowActionMenu";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import AppDataTable from "@/components/shared/AppDataTable";
 import Modal from "@/components/modals/SaveCancelModal";
 import Button from "@/components/shared/Button";
 import LookupManagementAddModal from "./LookupManagementAddModal";
+import { DELETE_CLOSE_MODES } from "@/constants";
 import getEnv from "@/utils/env";
-import { getTableStyles } from "@/utils/tableStyles";
 import {
   ADD_COMPANY_IDENTIFICATION_OPTIONS,
   EDIT_COMPANY_IDENTIFICATION_OPTIONS,
@@ -33,13 +34,9 @@ const SERVER_URL = getEnv("SERVER_URL");
 const LookupManagementTable = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editModalData, setEditModalData] = useState(null);
-  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
-  const [actionMenu, setActionMenu] = useState(null);
-  const actionMenuRefs = useRef(new Map());
+  const { openRowId: actionMenu, setOpenRowId: setActionMenu, toggleMenu, getRowRef } = useRowActionMenu();
   const [selectedRow, setSelectedRow] = useState();
   const [aiDraftData, setAiDraftData] = useState(null);
-  const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
-  const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
 
   const { data } = useGetAllSearchStrategiesQuery();
   const [createDefaultStrategies, { isLoading: isLoadingCreateDefaultStrategies }] =
@@ -64,20 +61,26 @@ const LookupManagementTable = () => {
     deps: { lookupCount: data?.data?.length },
   });
 
-  const handleDelete = async () => {
-    if (!selectedRow) return toast.error("Please select a row");
-    try {
-      const res = await deleteSearchStrategy({ SearchStrategyId: selectedRow._id }).unwrap();
-      if (res.success) {
-        toast.success(res.message);
+  const {
+    target: deleteConfirmation,
+    openConfirmation: setDeleteConfirmation,
+    closeConfirmation,
+    handleConfirm: handleDelete,
+  } = useDeleteConfirmation({
+    closeOn: DELETE_CLOSE_MODES.FINALLY,
+    onDelete: async () => {
+      if (!selectedRow) return toast.error("Please select a row");
+      try {
+        const res = await deleteSearchStrategy({ SearchStrategyId: selectedRow._id }).unwrap();
+        if (res.success) {
+          toast.success(res.message);
+        }
+      } catch (error) {
+        console.error("Delete search strategy error:", error);
+        toast.error(error?.data?.message || "Failed to delete user");
       }
-    } catch (error) {
-      console.error("Delete search strategy error:", error);
-      toast.error(error?.data?.message || "Failed to delete user");
-    } finally {
-      setDeleteConfirmation(null);
-    }
-  };
+    },
+  });
 
   const handleCreateDefaultStrategies = async () => {
     try {
@@ -91,8 +94,8 @@ const LookupManagementTable = () => {
 
   const columns = buildLookupColumns({
     actionMenu,
-    actionMenuRefs,
-    onToggleMenu: (rowId) => setActionMenu((prev) => (prev === rowId ? null : rowId)),
+    getRowRef,
+    onToggleMenu: toggleMenu,
     onEdit: (row) => {
       setEditModalData(row);
       setActionMenu(null);
@@ -116,10 +119,9 @@ const LookupManagementTable = () => {
         />
       </div>
       <div className="mt-5 w-full lg:w-[calc(100vw-250px)] xl:w-full">
-        <DataTable
+        <AppDataTable
           data={data?.data || []}
           columns={columns}
-          customStyles={tableStyles}
           pagination
           highlightOnHover
           noDataComponent="No data found"
@@ -170,7 +172,7 @@ const LookupManagementTable = () => {
       {/* Delete Confirmation */}
       <ConfirmationModal
         isOpen={!!deleteConfirmation}
-        onClose={() => setDeleteConfirmation(null)}
+        onClose={closeConfirmation}
         onConfirm={handleDelete}
         title="Delete Strategy"
         message={`Are you sure you want to delete ${deleteConfirmation?.searchObjectKey}?`}

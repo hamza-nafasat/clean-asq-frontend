@@ -1,5 +1,6 @@
 import { FiSave, FiTrash2, FiX, FiZap } from "react-icons/fi";
 import DemoBuilderVariables from "./DemoBuilderVariables";
+import Spinner from "@/components/shared/Spinner";
 
 const DemoBuilderProposal = ({
   proposedAction = {},
@@ -29,7 +30,7 @@ const DemoBuilderProposal = ({
               className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-50 transition-colors"
             >
               {isSaving ? (
-                <span className="h-3 w-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                <Spinner tone="light" />
               ) : (
                 <FiSave size={11} />
               )}

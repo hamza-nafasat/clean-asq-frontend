@@ -1,4 +1,5 @@
 import { FiZap } from "react-icons/fi";
+import EmptyState from "@/components/shared/EmptyState";
 import DemoBuilderProposal from "./DemoBuilderProposal";
 import { findSavedEntry, getBuilderLevelLabel } from "../utils/demo.utils3";
 
@@ -7,21 +8,24 @@ const DemoBuilderTab = ({ features = [], activePreset = null, builder = {}, onGo
 
   if (!builderFeatureId) {
     return (
-      <div className="h-full overflow-y-auto p-6 flex flex-col items-center justify-center text-center gap-4 py-20">
-        <div className="rounded-full bg-gray-100 p-5">
-          <FiZap size={28} className="text-gray-400" />
-        </div>
-        <div className="max-w-sm">
-          <p className="text-sm font-semibold text-gray-700">No active builder target</p>
-          <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+      <EmptyState
+        className="h-full overflow-y-auto p-6 flex flex-col items-center justify-center text-center gap-4 py-20"
+        iconClassName="rounded-full bg-gray-100 p-5"
+        icon={<FiZap size={28} className="text-gray-400" />}
+        title="No active builder target"
+        textClassName="max-w-sm"
+        descriptionClassName="text-xs text-gray-400 mt-2 leading-relaxed"
+        description={
+          <>
             Click <strong>"Build Demo"</strong> on any feature in the Configure tab's Presentation Outline to start
             building a live action sequence here.
-          </p>
-        </div>
+          </>
+        }
+      >
         <button type="button" onClick={() => onGoToConfigure?.()} className="text-sm text-primary hover:underline">
           Go to Configure →
         </button>
-      </div>
+      </EmptyState>
     );
   }
 

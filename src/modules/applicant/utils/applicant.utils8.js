@@ -23,19 +23,6 @@ export const formatNaicsBestMatch = (bestMatch) => ({
   MCC: `${bestMatch?.mcc || ""}, ${bestMatch?.mccDescription || ""}`,
 });
 
-// swap the clicked other match with the current best match
-export const swapNaicsBestMatch = (naicsApiData, index) => {
-  const bestMatch = { ...naicsApiData?.bestMatch };
-  const clickedMatch = { ...naicsApiData?.otherMatches[index] };
-  const otherMatches = naicsApiData?.otherMatches.filter((_, i) => i !== index);
-  bestMatch.naics = clickedMatch.naics;
-  bestMatch.naicsDescription = clickedMatch.naicsDescription;
-  bestMatch.mcc = clickedMatch.mcc;
-  bestMatch.mccDescription = clickedMatch.mccDescription;
-  otherMatches.push(naicsApiData?.bestMatch);
-  return { otherMatches, bestMatch };
-};
-
 // replace [field] words in the prompt with company information values
 export const buildDocumentsAiPrompt = (companyInfoData, prompt) => {
   let newPrompt = prompt;

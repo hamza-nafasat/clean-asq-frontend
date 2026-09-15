@@ -15,6 +15,7 @@ import { FIELD_BLOCK_TYPE, FIELD_NAMES } from "../utils/applicant.constants";
 import { isCustomSectionValueFilled, uploadSignatureReplacing } from "../utils/applicant.utils12";
 import { isNotGuestRoleValue } from "@/utils/permissions";
 import { getSignatureUrl, isSignatureComplete, normalizeFieldEntry, normalizeSignature } from "@/utils/signatureShape";
+import HtmlContent from "@/components/shared/HtmlContent";
 
 const CustomSection = ({
   sectionKey,
@@ -150,11 +151,7 @@ const CustomSection = ({
         {isSignature && (
           <>
             {step?.signDisplayFormattedText && (
-              <div
-                className="mb-4"
-                data-ai-display-text
-                dangerouslySetInnerHTML={{ __html: String(step.signDisplayFormattedText) }}
-              />
+              <HtmlContent className="mb-4" data-ai-display-text html={String(step.signDisplayFormattedText)} linkMode="none" />
             )}
             <SignatureBox step={step} onSave={handleSignatureUpload} oldSignatureUrl={getSignatureUrl(form?.signature)} />
           </>

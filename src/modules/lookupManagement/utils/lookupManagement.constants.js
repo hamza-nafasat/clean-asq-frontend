@@ -101,3 +101,14 @@ export const EXTRACTION_SECTION_CARDS = [
     subtitle: "Final directive for JSON output",
   },
 ];
+
+// props that give the shared FormField this module's look
+export const LOOKUP_FORM_FIELD_PROPS = {
+  labelClassName: "text-textPrimary mb-1 block text-sm font-medium",
+  selectBaseClassName:
+    "border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base",
+  selectDefaultClassName: "border-frameColor",
+  placeholderOption: "Select",
+  onChangeShape: "field",
+  inputClassName: "w-full rounded border p-2 text-sm",
+};

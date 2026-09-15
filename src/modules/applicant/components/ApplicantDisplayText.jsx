@@ -1,36 +1,6 @@
-import DocumentModal from "@/components/modals/DocumentModal";
-import { makeDocLinkHandler } from "@/utils/makeDocLinkHandler";
-import { useEffect, useRef, useState } from "react";
+import HtmlContent from "@/components/shared/HtmlContent";
 
-/**
- * Renders HTML display text and intercepts all link clicks to open URLs
- * in the DocumentModal iframe (with AI assistant) instead of a new tab.
- */
+// display text whose links open in the DocumentModal instead of a new tab
 export default function DisplayText({ html, className, style, ...rest }) {
-  const ref = useRef(null);
-  const [openDoc, setOpenDoc] = useState(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const handler = makeDocLinkHandler(setOpenDoc);
-    // Capture phase fires before the browser acts on target="_blank"
-    el.addEventListener("click", handler, true);
-    return () => el.removeEventListener("click", handler, true);
-  }, [html]);
-
-  return (
-    <>
-      {openDoc && (
-        <DocumentModal url={openDoc.url} title={openDoc.title} onClose={() => setOpenDoc(null)} />
-      )}
-      <div
-        ref={ref}
-        className={className}
-        style={style}
-        dangerouslySetInnerHTML={{ __html: html || "" }}
-        {...rest}
-      />
-    </>
-  );
+  return <HtmlContent html={html} className={className} style={style} linkMode="documentModal" {...rest} />;
 }

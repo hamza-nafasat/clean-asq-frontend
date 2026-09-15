@@ -2,6 +2,7 @@ import ApplicationPdfField from "@/components/global/ApplicationPdfField";
 import SignatureBox from "@/components/global/SignatureBox";
 import { FIELD_NAMES, FORM_BLOCK_TYPE, SIGNATURE_KEY } from "@/constants";
 import { uploadSectionSignature } from "@/utils/sectionSignature";
+import HtmlContent from "@/components/shared/HtmlContent";
 
 const ProcessingInfoPdf = ({ name, fields, step, isSignature, formInnerData, setFormInnerData, sectionKey }) => (
   <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
@@ -10,7 +11,7 @@ const ProcessingInfoPdf = ({ name, fields, step, isSignature, formInnerData, set
     </div>
     {(step?.ai_formatting || step?.displayText) && (
       <div className="mb-4 flex w-full items-end justify-between gap-3">
-        <div dangerouslySetInnerHTML={{ __html: step?.ai_formatting || step?.displayText }} />
+        <HtmlContent html={step?.ai_formatting || step?.displayText} linkMode="none" />
       </div>
     )}
     {fields?.map((field, index) => {

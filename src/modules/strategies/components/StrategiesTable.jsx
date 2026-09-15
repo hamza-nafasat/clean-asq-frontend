@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   useCreateFormStrategyMutation,
   useDeleteFormStrategyMutation,
@@ -7,17 +7,17 @@ import {
   useGetMyAllFormsQuery,
   useUpdateFormStrategyMutation,
 } from "@/redux/apis/form.apis";
-import DataTable from "react-data-table-component";
 import { toast } from "react-toastify";
-import useBranding from "@/hooks/useBranding";
+import useDeleteConfirmation from "@/hooks/useDeleteConfirmation";
 import { useScreenContext } from "@/hooks/useScreenContext";
+import useRowActionMenu from "@/hooks/useRowActionMenu";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import AppDataTable from "@/components/shared/AppDataTable";
 import Modal from "@/components/modals/SaveCancelModal";
 import Button from "@/components/shared/Button";
-import StrategiesAddModal from "./StrategiesAddModal";
-import StrategiesEditModal from "./StrategiesEditModal";
+import StrategiesFormModal from "./StrategiesFormModal";
+import { DELETE_CLOSE_MODES, MODAL_MODES } from "@/constants";
 import getEnv from "@/utils/env";
-import { getTableStyles } from "@/utils/tableStyles";
 import { STRATEGIES_SCREEN_CONTEXT } from "@/modules/strategies/utils/strategies.constants";
 import { buildStrategiesColumns } from "@/modules/strategies/utils/strategies.columns";
 import {
@@ -33,12 +33,8 @@ const SERVER_URL = getEnv("SERVER_URL");
 const StrategiesTable = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editModalData, setEditModalData] = useState(null);
-  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
-  const [actionMenu, setActionMenu] = useState(null);
-  const actionMenuRefs = useRef(new Map());
+  const { openRowId: actionMenu, setOpenRowId: setActionMenu, toggleMenu, getRowRef } = useRowActionMenu();
   const [selectedRow, setSelectedRow] = useState();
-  const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
-  const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
 
   const [createFormStrategy] = useCreateFormStrategyMutation();
   const [updateFormStrategy] = useUpdateFormStrategyMutation();
@@ -87,26 +83,32 @@ const StrategiesTable = () => {
     },
   });
 
-  const handleDelete = async () => {
-    if (!selectedRow) return toast.error("Please select a row");
-    try {
-      const res = await deleteFormStrategy({ FormStrategyId: selectedRow?._id }).unwrap();
-      if (res.success) {
-        toast.success(res.message);
+  const {
+    target: deleteConfirmation,
+    openConfirmation: setDeleteConfirmation,
+    closeConfirmation,
+    handleConfirm: handleDelete,
+  } = useDeleteConfirmation({
+    closeOn: DELETE_CLOSE_MODES.FINALLY,
+    onDelete: async () => {
+      if (!selectedRow) return toast.error("Please select a row");
+      try {
+        const res = await deleteFormStrategy({ FormStrategyId: selectedRow?._id }).unwrap();
+        if (res.success) {
+          toast.success(res.message);
+        }
+      } catch (error) {
+        console.error("Delete strategy error:", error);
+        toast.error(error?.data?.message || "Failed to delete form strategy");
       }
-    } catch (error) {
-      console.error("Delete strategy error:", error);
-      toast.error(error?.data?.message || "Failed to delete form strategy");
-    } finally {
-      setDeleteConfirmation(null);
-    }
-  };
+    },
+  });
 
   const columns = buildStrategiesColumns({
     forms: formData?.data,
     actionMenu,
-    actionMenuRefs,
-    onToggleMenu: (rowId) => setActionMenu((prev) => (prev === rowId ? null : rowId)),
+    getRowRef,
+    onToggleMenu: toggleMenu,
     onEdit: (row) => {
       setEditModalData(row);
       setActionMenu(null);
@@ -124,10 +126,9 @@ const StrategiesTable = () => {
       <div className="mt-5 mb-4 flex w-full justify-end gap-3">
         <Button onClick={() => setIsModalOpen(true)} label="Add new" />
       </div>
-      <DataTable
+      <AppDataTable
         data={allFormStrategies?.data || []}
         columns={columns}
-        customStyles={tableStyles}
         pagination
         highlightOnHover
         noDataComponent="No data found"
@@ -137,9 +138,9 @@ const StrategiesTable = () => {
       {/* Add Modal */}
       {isModalOpen && (
         <Modal hideSaveButton={true} hideCancelButton={true} title="Add Strategy" onClose={() => setIsModalOpen(false)}>
-          <StrategiesAddModal
-            setIsModalOpen={setIsModalOpen}
-            setEditModalData={setEditModalData}
+          <StrategiesFormModal
+            mode={MODAL_MODES.ADD}
+            onClose={setIsModalOpen}
             forms={getUnassignedFormOptions(allFormStrategies?.data, formData?.data)}
             formKeys={toLookupOptions(allStrategies?.data)}
           />
@@ -155,8 +156,9 @@ const StrategiesTable = () => {
           saveButtonText="Save"
           onClose={() => setEditModalData(null)}
         >
-          <StrategiesEditModal
-            setEditModalData={setEditModalData}
+          <StrategiesFormModal
+            mode={MODAL_MODES.EDIT}
+            onClose={setEditModalData}
             selectedRow={selectedRow}
             forms={toFormOptions(formData?.data)}
             formKeys={toLookupOptions(allStrategies?.data)}
@@ -167,7 +169,7 @@ const StrategiesTable = () => {
       {/* Delete Confirmation */}
       <ConfirmationModal
         isOpen={!!deleteConfirmation}
-        onClose={() => setDeleteConfirmation(null)}
+        onClose={closeConfirmation}
         onConfirm={handleDelete}
         title="Delete Strategy"
         message={`Are you sure you want to delete ${deleteConfirmation?.searchObjectKey}?`}

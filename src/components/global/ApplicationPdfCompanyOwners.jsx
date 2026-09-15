@@ -16,6 +16,7 @@ import {
 } from "@/utils/companyOwners";
 import { collectLookupOwners } from "@/utils/lookupOwners";
 import { uploadSectionSignature } from "@/utils/sectionSignature";
+import HtmlContent from "@/components/shared/HtmlContent";
 
 const CompanyOwnersPdf = ({ name, reduxData, fields, step, isSignature, formInnerData, setFormInnerData, sectionKey }) => {
   const { formData, isDisabledAllFields } = useSelector((state) => state?.form);
@@ -155,7 +156,7 @@ const CompanyOwnersPdf = ({ name, reduxData, fields, step, isSignature, formInne
       </div>
       {(step?.ai_formatting || step?.displayText) && (
         <div className="mb-4 flex w-full items-end justify-between gap-3">
-          <div dangerouslySetInnerHTML={{ __html: step?.ai_formatting || step?.displayText }} />
+          <HtmlContent html={step?.ai_formatting || step?.displayText} linkMode="none" />
         </div>
       )}
       <div className="mt-5">

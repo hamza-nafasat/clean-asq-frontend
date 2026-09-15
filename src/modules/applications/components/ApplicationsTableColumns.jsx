@@ -1,6 +1,4 @@
-import { createRef } from "react";
-import { MoreVertical } from "lucide-react";
-import { ThreeDotEditViewDelete } from "@/components/shared/ThreeDotViewEditDelete";
+import RowActionMenuCell from "@/components/shared/RowActionMenuCell";
 import ApplicationsCopyTooltip from "./ApplicationsCopyTooltip";
 import { APPLICANT_STATUS, APPLICANT_TYPE } from "../utils/applications.constants";
 import { formatDateTime, getFullName } from "../utils/applications.utils";
@@ -90,34 +88,19 @@ const APPLICANT_TABLE_COLUMNS = [
   },
 ];
 
-export const buildApplicantColumns = ({ actionMenu, setActionMenu, actionMenuRefs, submittedButtons, draftButtons }) => [
+export const buildApplicantColumns = ({ actionMenu, onToggleMenu, getRowRef, submittedButtons, draftButtons }) => [
   ...APPLICANT_TABLE_COLUMNS,
   {
     name: "Action",
-    cell: (row) => {
-      if (!actionMenuRefs.current.has(row?._id)) {
-        actionMenuRefs.current.set(row?._id, createRef());
-      }
-      const rowRef = actionMenuRefs.current.get(row?._id);
-
-      return (
-        <div className="relative" ref={rowRef}>
-          <button
-            type="button"
-            onClick={() => setActionMenu((prevActionMenu) => (prevActionMenu === row?._id ? null : row?._id))}
-            className="cursor-pointer rounded p-1 hover:bg-gray-100"
-            aria-label="Actions"
-          >
-            <MoreVertical size={18} />
-          </button>
-          {actionMenu === row._id && (
-            <ThreeDotEditViewDelete
-              buttons={row?.type === APPLICANT_TYPE.SUBMITTED ? submittedButtons : draftButtons}
-              row={row}
-            />
-          )}
-        </div>
-      );
-    },
+    cell: (row) => (
+      <RowActionMenuCell
+        row={row}
+        buttons={row?.type === APPLICANT_TYPE.SUBMITTED ? submittedButtons : draftButtons}
+        isOpen={actionMenu === row._id}
+        onToggle={() => onToggleMenu(row?._id)}
+        rowRef={getRowRef(row?._id)}
+        buttonClassName="cursor-pointer rounded p-1 hover:bg-gray-100"
+      />
+    ),
   },
 ];

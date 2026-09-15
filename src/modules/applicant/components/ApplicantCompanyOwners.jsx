@@ -7,7 +7,7 @@ import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";
 import Modal from "@/components/shared/Modal";
 import ApplicantAdditionalOwnerRow from "./ApplicantAdditionalOwnerRow";
-import CustomizationOwnerFieldsModal from "./ApplicantCustomizeOwnerFieldsModal";
+import CustomizationFieldsModal from "./ApplicantCustomizeFieldsModal";
 import DisplayText from "./ApplicantDisplayText";
 import ApplicantOwnerSuggestionsModal from "./ApplicantOwnerSuggestionsModal";
 import ApplicantSectionField from "./ApplicantSectionField";
@@ -322,7 +322,8 @@ const CompanyOwners = ({
 
       {customizeModal && (
         <Modal onClose={() => setCustomizeModal(false)}>
-          <CustomizationOwnerFieldsModal
+          <CustomizationFieldsModal
+            variant="owner"
             sectionId={_id}
             fields={fields?.filter((f) => f.type !== FIELD_BLOCK_TYPE)}
             blocks={blocks}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { FiChevronDown, FiChevronUp, FiMessageCircle } from "react-icons/fi";
 import { HiOutlineSparkles } from "react-icons/hi";
+import Spinner from "@/components/shared/Spinner";
 
 const DemoRunnerQuestions = ({ questions = [] }) => {
   const [showQA, setShowQA] = useState(true);
@@ -43,7 +44,7 @@ const DemoRunnerQuestions = ({ questions = [] }) => {
                 </div>
               ) : (
                 <div className="ml-4 flex items-center gap-1.5 text-xs text-gray-400 italic">
-                  <span className="h-3 w-3 border-2 border-gray-300 border-t-primary rounded-full animate-spin" />
+                  <Spinner tone="neutral" />
                   Generating answer…
                 </div>
               )}

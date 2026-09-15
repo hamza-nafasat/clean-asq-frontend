@@ -2,6 +2,7 @@ import Button from "@/components/shared/Button";
 import TextField from "@/components/shared/TextField";
 import { AI_FIELD_IDS, KEYBOARD_KEYS } from "../utils/applicant.constants";
 import { formatOtpDisplayHtml } from "../utils/applicant.utils6";
+import HtmlContent from "@/components/shared/HtmlContent";
 
 const ApplicantEmailVerification = ({
   formDocument = {},
@@ -26,10 +27,11 @@ const ApplicantEmailVerification = ({
     )}
     {formDocument?.otpDisplayFormatedText && (
       <div className="flex w-full justify-center">
-        <div
+        <HtmlContent
           className="w-full p-4 lg:px-20"
           data-ai-display-text
-          dangerouslySetInnerHTML={{ __html: formatOtpDisplayHtml(formDocument?.otpDisplayFormatedText) }}
+          html={formatOtpDisplayHtml(formDocument?.otpDisplayFormatedText)}
+          linkMode="none"
         />
       </div>
     )}

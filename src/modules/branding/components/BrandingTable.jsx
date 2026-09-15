@@ -1,49 +1,34 @@
-import { useEffect, useRef, useState, createRef } from "react";
-import DataTable from "react-data-table-component";
-import { MoreVertical } from "lucide-react";
-import { ThreeDotEditViewDelete } from "@/components/shared/ThreeDotViewEditDelete";
+import useRowActionMenu from "@/hooks/useRowActionMenu";
+import AppDataTable from "@/components/shared/AppDataTable";
+import RowActionMenuCell from "@/components/shared/RowActionMenuCell";
 
-const buildColumns = ({ actionMenu, setActionMenu, actionMenuRefs, rowButtons }) => [
+const buildColumns = ({ actionMenu, onToggleMenu, getRowRef, rowButtons }) => [
   { name: "Name", selector: (row) => row?.name, sortable: true },
   { name: "Url", selector: (row) => row?.url || "N/A", sortable: true },
   { name: "logos", selector: (row) => row?.logos?.length || 0, sortable: true },
   { name: "Font family", selector: (row) => row?.fontFamily || "N/A", sortable: true },
   {
     name: "Action",
-    cell: (row) => {
-      if (!actionMenuRefs.current.has(row?._id)) actionMenuRefs.current.set(row?._id, createRef());
-      return (
-        <div className="relative" ref={actionMenuRefs.current.get(row?._id)}>
-          <button
-            type="button"
-            onClick={() => setActionMenu((prev) => (prev === row?._id ? null : row?._id))}
-            className="cursor-pointer rounded p-1 hover:bg-gray-100"
-            aria-label="Actions"
-          >
-            <MoreVertical size={18} />
-          </button>
-          {actionMenu === row?._id && <ThreeDotEditViewDelete buttons={rowButtons} row={row} />}
-        </div>
-      );
-    },
+    cell: (row) => (
+      <RowActionMenuCell
+        row={row}
+        buttons={rowButtons}
+        isOpen={actionMenu === row?._id}
+        onToggle={() => onToggleMenu(row?._id)}
+        rowRef={getRowRef(row?._id)}
+        buttonClassName="cursor-pointer rounded p-1 hover:bg-gray-100"
+      />
+    ),
   },
 ];
 
-const BrandingTable = ({ brandings = [], rowButtons = [], tableStyles = {}, isLoading = false }) => {
-  const actionMenuRefs = useRef(new Map());
-  const [actionMenu, setActionMenu] = useState(null);
-
-  // close the open row menu on an outside click
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
-        (ref) => !ref.current?.contains(event.target),
-      );
-      if (clickedOutsideAllMenus) setActionMenu(null);
-    };
-    if (actionMenu !== null) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [actionMenu]);
+const BrandingTable = ({ brandings = [], rowButtons = [], isLoading = false }) => {
+  const {
+    openRowId: actionMenu,
+    setOpenRowId: setActionMenu,
+    toggleMenu,
+    getRowRef,
+  } = useRowActionMenu({ closeOnOutsideClick: true });
 
   const buttonsWithClose = rowButtons.map((button) => ({
     ...button,
@@ -54,10 +39,9 @@ const BrandingTable = ({ brandings = [], rowButtons = [], tableStyles = {}, isLo
   }));
 
   return (
-    <DataTable
+    <AppDataTable
       data={brandings}
-      columns={buildColumns({ actionMenu, setActionMenu, actionMenuRefs, rowButtons: buttonsWithClose })}
-      customStyles={tableStyles}
+      columns={buildColumns({ actionMenu, onToggleMenu: toggleMenu, getRowRef, rowButtons: buttonsWithClose })}
       progressPending={isLoading}
       noDataComponent="No Brandings Found"
       className="rounded-md!"

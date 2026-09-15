@@ -58,3 +58,12 @@ export const USER_SCREEN_CONTEXT = {
 
 export const SELECT_CLASS_NAME =
   "border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base";
+
+// props that give the shared FormField this module's look
+export const USER_FORM_FIELD_PROPS = {
+  labelClassName: "mb-1 block text-sm font-medium text-gray-700",
+  selectBaseClassName: SELECT_CLASS_NAME,
+  selectDefaultClassName: "border-gray-300",
+  placeholderOption: "label",
+  checkboxVariant: "shared",
+};

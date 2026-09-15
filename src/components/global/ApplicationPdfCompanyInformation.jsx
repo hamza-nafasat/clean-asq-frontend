@@ -5,12 +5,12 @@ import { toast } from "react-toastify";
 import { useFindNaicAndMccMutation } from "@/redux/apis/form.apis";
 import ApplicationPdfField from "@/components/global/ApplicationPdfField";
 import ApplicationPdfNaicsField from "@/components/global/ApplicationPdfNaicsField";
-import ApplicationPdfNaicsModal from "@/components/global/ApplicationPdfNaicsModal";
 import SignatureBox from "@/components/global/SignatureBox";
+import NaicsMatchModal from "@/components/modals/NaicsMatchModal";
 import FieldLabel from "@/components/shared/FieldLabel";
 import TextField from "@/components/shared/TextField";
 import { FIELD_NAME_MATCHERS, FIELD_NAMES, FIELD_TYPES, SIGNATURE_KEY, STATE_SUGGESTIONS } from "@/constants";
-import { openLinksInNewTab } from "@/utils/linkTargets";
+import HtmlContent from "@/components/shared/HtmlContent";
 import { buildNaicsFromMatch, buildNaicsSelection, filterNaicsSuggestions } from "@/utils/naicsLookup";
 import { uploadSectionSignature } from "@/utils/sectionSignature";
 
@@ -144,7 +144,7 @@ const CompanyInformationPdf = ({
 
       {(step?.ai_formatting || step?.displayText) && (
         <div className="mb-4 flex items-end gap-3">
-          <div dangerouslySetInnerHTML={{ __html: openLinksInNewTab(step?.ai_formatting || step?.displayText) }} />
+          <HtmlContent html={step?.ai_formatting || step?.displayText} />
         </div>
       )}
 
@@ -189,10 +189,10 @@ const CompanyInformationPdf = ({
             </div>
           );
         })}
-      <ApplicationPdfNaicsModal
+      <NaicsMatchModal
         isOpen={Boolean(naicsApiData?.bestMatch?.naics && showNaicsToMccDetails)}
         onClose={() => setShowNaicsToMccDetails(false)}
-        onSubmit={handleSaveBestMatch}
+        onSave={handleSaveBestMatch}
         naicsApiData={naicsApiData}
         onMatchesChange={setNaicsApiData}
       />

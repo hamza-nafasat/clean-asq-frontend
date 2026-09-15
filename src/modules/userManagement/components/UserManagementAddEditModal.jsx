@@ -1,7 +1,7 @@
 import Modal from "@/components/modals/SaveCancelModal";
 import { FIELD_TYPES } from "@/constants";
-import UserManagementFormField from "./UserManagementFormField";
-import { BUSINESS_ROLE_IDS, USER_FORM_FIELDS, USER_MODAL_MODES } from "../utils/userManagement.constants";
+import FormField from "@/components/global/FormField";
+import { BUSINESS_ROLE_IDS, USER_FORM_FIELDS, USER_FORM_FIELD_PROPS, USER_MODAL_MODES } from "../utils/userManagement.constants";
 
 const UserManagementAddEditModal = ({
   isOpen = false,
@@ -25,19 +25,22 @@ const UserManagementAddEditModal = ({
       onSave={onSubmit}
       isLoading={isLoading}
     >
-      <UserManagementFormField
+      <FormField
+        {...USER_FORM_FIELD_PROPS}
         field={USER_FORM_FIELDS.FIRST_NAME}
         value={initialData?.firstName}
         onChange={onChange}
         error={errors.firstName}
       />
-      <UserManagementFormField
+      <FormField
+        {...USER_FORM_FIELD_PROPS}
         field={USER_FORM_FIELDS.LAST_NAME}
         value={initialData?.lastName}
         onChange={onChange}
         error={errors.lastName}
       />
-      <UserManagementFormField
+      <FormField
+        {...USER_FORM_FIELD_PROPS}
         field={USER_FORM_FIELDS.ROLE}
         value={initialData?.role}
         onChange={onChange}
@@ -46,14 +49,16 @@ const UserManagementAddEditModal = ({
         options={roleOptions}
       />
       {BUSINESS_ROLE_IDS.includes(initialData?.role) && (
-        <UserManagementFormField
+        <FormField
+          {...USER_FORM_FIELD_PROPS}
           field={USER_FORM_FIELDS.BUSINESS_NAME}
           value={initialData?.businessName}
           onChange={onChange}
           error={errors.businessName}
         />
       )}
-      <UserManagementFormField
+      <FormField
+        {...USER_FORM_FIELD_PROPS}
         field={USER_FORM_FIELDS.EMAIL}
         value={initialData?.email}
         onChange={onChange}
@@ -61,7 +66,8 @@ const UserManagementAddEditModal = ({
         error={errors.email}
       />
       {!isEditMode && (
-        <UserManagementFormField
+        <FormField
+          {...USER_FORM_FIELD_PROPS}
           field={USER_FORM_FIELDS.PASSWORD}
           value={initialData?.password}
           onChange={onChange}

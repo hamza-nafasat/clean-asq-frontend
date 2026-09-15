@@ -1,5 +1,5 @@
 import Button from "@/components/shared/Button";
-import { withLinkTargets } from "../utils/applicant.utils6";
+import HtmlContent from "@/components/shared/HtmlContent";
 
 const ApplicantIdMissionQrStep = ({
   section = {},
@@ -18,11 +18,7 @@ const ApplicantIdMissionQrStep = ({
     )}
     {(section?.ai_formatting || section?.displayText) && (
       <div className="flex w-full gap-3">
-        <div
-          className="w-full"
-          data-ai-display-text
-          dangerouslySetInnerHTML={{ __html: withLinkTargets(section?.ai_formatting || section?.displayText) }}
-        />
+        <HtmlContent className="w-full" data-ai-display-text html={section?.ai_formatting || section?.displayText} />
       </div>
     )}
     <div className="mt-4 flex w-full flex-col items-center gap-4">

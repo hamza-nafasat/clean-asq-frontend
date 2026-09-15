@@ -1,9 +1,9 @@
 import { useRef, useState } from "react";
 import { IoEyeOffSharp } from "react-icons/io5";
 import { RxEyeOpen } from "react-icons/rx";
-import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
-import "react-phone-number-input/style.css";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
+import PhoneFieldInput from "@/components/shared/PhoneFieldInput";
 import { FIELD_FORMATS, FIELD_NAME_MATCHERS, FIELD_TYPES } from "@/constants";
 import {
   focusNextField,
@@ -161,30 +161,23 @@ const TextField = ({
         {leftIconElement}
 
         {isPhone ? (
-          <div className="relative">
-            <PhoneInput
-              numberInputProps={{
-                style: { outline: "none" },
-                required: required || undefined,
-                disabled,
-                id,
-                name,
-                "data-ai-id": aiId,
-              }}
-              international
-              limitMaxLength
-              defaultCountry="US"
-              disabled={disabled}
-              placeholder={placeholder || "Enter phone number"}
-              value={value || ""}
-              onChange={(val) => onChange?.({ target: { name, value: val || "" } })}
-              className={`${cn} relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${iconPadding} ${
-                required && value && !isValidPhoneNumber(value) ? "border-red-500 border-2" : "border-frameColor"
-              } ${emptyClasses} ${disabledClasses}`}
-            />
-
-            {value && !isValidPhoneNumber(value) && <p className="mt-1 text-sm text-red-500">Invalid phone number</p>}
-          </div>
+          <PhoneFieldInput
+            wrapperClassName="relative"
+            numberInputProps={{
+              required: required || undefined,
+              disabled,
+              id,
+              name,
+              "data-ai-id": aiId,
+            }}
+            disabled={disabled}
+            placeholder={placeholder}
+            value={value}
+            onChange={(val) => onChange?.({ target: { name, value: val } })}
+            className={`${cn} relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${iconPadding} ${
+              required && value && !isValidPhoneNumber(value) ? "border-red-500 border-2" : "border-frameColor"
+            } ${emptyClasses} ${disabledClasses}`}
+          />
         ) : (
           <input
             ref={inputRef}

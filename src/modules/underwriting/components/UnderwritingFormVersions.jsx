@@ -1,27 +1,23 @@
-import { createRef, useMemo, useRef, useState } from "react";
-import DataTable from "react-data-table-component";
-import { Diff, Eye, MoreVertical } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Diff, Eye } from "lucide-react";
 import { useGetFormVersionsQuery } from "@/redux/apis/form.apis";
-import useBranding from "@/hooks/useBranding";
+import useRowActionMenu from "@/hooks/useRowActionMenu";
 import Modal from "@/components/shared/Modal";
-import { ThreeDotEditViewDelete } from "@/components/shared/ThreeDotViewEditDelete";
+import AppDataTable from "@/components/shared/AppDataTable";
+import RowActionMenuCell from "@/components/shared/RowActionMenuCell";
 import UnderwritingFieldChanges from "./UnderwritingFieldChanges";
 import UnderwritingVersionDetails from "./UnderwritingVersionDetails";
-import { getTableStyles } from "@/utils/tableStyles";
 import { buildVersionColumns } from "../utils/underwriting.utils";
 
 const UnderwritingFormVersions = ({ submittedFormId = "", submitForm = null }) => {
   const [selectedVersion, setSelectedVersion] = useState(null);
   const [viewDetailsModal, setViewDetailsModal] = useState(false);
   const [fieldChanges, setFieldChanges] = useState(null);
-  const actionMenuRefs = useRef(new Map());
-  const [actionMenu, setActionMenu] = useState(null);
+  const { openRowId: actionMenu, setOpenRowId, toggleMenu } = useRowActionMenu();
   const { data: versioning, isLoading: isLoadingVersioning } = useGetFormVersionsQuery(
     { submittedFormId },
     { skip: !submittedFormId },
   );
-  const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
-  const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
 
   const menuButtons = useMemo(
     () => [
@@ -31,7 +27,7 @@ const UnderwritingFormVersions = ({ submittedFormId = "", submitForm = null }) =
         onClick: (row) => {
           setSelectedVersion(row);
           setViewDetailsModal(true);
-          setActionMenu(null);
+          setOpenRowId(null);
         },
       },
       {
@@ -40,11 +36,11 @@ const UnderwritingFormVersions = ({ submittedFormId = "", submitForm = null }) =
         onClick: (row) => {
           setSelectedVersion(row);
           setFieldChanges(true);
-          setActionMenu(null);
+          setOpenRowId(null);
         },
       },
     ],
-    [],
+    [setOpenRowId],
   );
 
   const columns = useMemo(
@@ -52,26 +48,18 @@ const UnderwritingFormVersions = ({ submittedFormId = "", submitForm = null }) =
       ...buildVersionColumns(),
       {
         name: "Action",
-        cell: (row) => {
-          if (!actionMenuRefs.current.has(row?._id)) actionMenuRefs.current.set(row?._id, createRef());
-          const rowRef = actionMenuRefs.current.get(row?._id);
-          return (
-            <div className="relative" ref={rowRef}>
-              <button
-                type="button"
-                onClick={() => setActionMenu((prevActionMenu) => (prevActionMenu === row?._id ? null : row?._id))}
-                className="cursor-pointer rounded p-1 hover:bg-gray-100"
-                aria-label="Actions"
-              >
-                <MoreVertical size={18} />
-              </button>
-              {actionMenu === row._id && <ThreeDotEditViewDelete buttons={menuButtons} row={row} />}
-            </div>
-          );
-        },
+        cell: (row) => (
+          <RowActionMenuCell
+            row={row}
+            buttons={menuButtons}
+            isOpen={actionMenu === row._id}
+            onToggle={() => toggleMenu(row?._id)}
+            buttonClassName="cursor-pointer rounded p-1 hover:bg-gray-100"
+          />
+        ),
       },
     ],
-    [menuButtons, actionMenu],
+    [menuButtons, actionMenu, toggleMenu],
   );
 
   const handleCloseDetails = () => {
@@ -109,11 +97,10 @@ const UnderwritingFormVersions = ({ submittedFormId = "", submitForm = null }) =
         </Modal>
       )}
       <div className="w-full overflow-x-auto">
-        <DataTable
+        <AppDataTable
           progressPending={isLoadingVersioning}
           data={versioning?.data || []}
           columns={columns}
-          customStyles={tableStyles}
           highlightOnHover
           fixedHeader
           persistTableHead

@@ -6,7 +6,7 @@ import { useFormateTextInMarkDownMutation } from "@/redux/apis/form.apis";
 import useBranding from "@/hooks/useBranding";
 import Button from "@/components/shared/Button";
 import { AI_HELP_CHAT_ROLES } from "@/constants";
-import { openLinksInNewTab } from "@/utils/linkTargets";
+import HtmlContent from "@/components/shared/HtmlContent";
 
 const AiHelpModal = ({ aiResponse }) => {
   const [updateAiPrompt, setUpdateAiPrompt] = useState("");
@@ -43,7 +43,7 @@ const AiHelpModal = ({ aiResponse }) => {
       </div>
 
       <div className="flex flex-col items-start gap-2 border-2 p-4">
-        <div className="" dangerouslySetInnerHTML={{ __html: openLinksInNewTab(aiResponse) }} />
+        <HtmlContent className="" html={aiResponse} />
       </div>
       {chatHistory?.length > 0 ? (
         <div className="flex max-h-[60vh] flex-col gap-3 overflow-y-auto rounded-lg border bg-[#FAFBFF] p-4">
@@ -56,10 +56,7 @@ const AiHelpModal = ({ aiResponse }) => {
                   : "self-start bg-gray-100 text-gray-700"
               }`}
             >
-              <div
-                dangerouslySetInnerHTML={{ __html: openLinksInNewTab(msg.content) }}
-                className="prose prose-sm max-w-none"
-              />
+              <HtmlContent html={msg.content} className="prose prose-sm max-w-none" />
             </div>
           ))}
         </div>

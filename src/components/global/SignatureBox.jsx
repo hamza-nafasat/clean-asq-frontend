@@ -4,10 +4,9 @@ import { useSelector } from "react-redux";
 import useBranding from "@/hooks/useBranding";
 import Button from "@/components/shared/Button";
 import Modal from "@/components/shared/Modal";
-import DocumentModal from "@/components/modals/DocumentModal";
+import HtmlContent from "@/components/shared/HtmlContent";
 import AiHelpModal from "@/components/global/AiHelpModal";
 import { SIGNATURE_MODES } from "@/constants";
-import { makeDocLinkHandler } from "@/utils/makeDocLinkHandler";
 import { dataUrlToFile, getSignatureAiText, renderTypedSignature, SIGNATURE_LINE_WIDTH } from "@/utils/signatureCanvas";
 
 const BUTTON_CLASSES =
@@ -25,10 +24,8 @@ const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = f
   const [isSaving, setIsSaving] = useState(false);
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const [pendingAiFill, setPendingAiFill] = useState(false);
-  const [openDoc, setOpenDoc] = useState(null);
 
   const outerDivRef = useRef(null);
-  const signDisplayTextRef = useRef(null);
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
   const drawing = useRef(false);
@@ -68,14 +65,6 @@ const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = f
   }, [textColor, oldSignatureUrl]);
 
   // open display text links in the document modal
-  useEffect(() => {
-    const el = signDisplayTextRef.current;
-    if (!el) return;
-    const handler = makeDocLinkHandler(setOpenDoc);
-    el.addEventListener("click", handler, true);
-    return () => el.removeEventListener("click", handler, true);
-  }, [step?.signDisplayFormattedText]);
-
   const pointerPos = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -196,15 +185,10 @@ const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = f
           <AiHelpModal aiPrompt={step?.signAiPrompt} aiResponse={step?.signAiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
         </Modal>
       )}
-      {openDoc && <DocumentModal url={openDoc.url} title={openDoc.title} onClose={() => setOpenDoc(null)} />}
       <div className="flex items-center gap-2">
         {step?.isSignDisplayText && (
           <div className="flex w-full items-end gap-3">
-            <div
-              ref={signDisplayTextRef}
-              className="w-full"
-              dangerouslySetInnerHTML={{ __html: String(step?.signDisplayFormattedText || "") }}
-            />
+<HtmlContent className="w-full" html={String(step?.signDisplayFormattedText || "")} linkMode="documentModal" />
           </div>
         )}
         {!isPdf && step?.isSignAiHelp && (

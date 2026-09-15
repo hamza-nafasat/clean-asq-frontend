@@ -275,3 +275,9 @@ export const STATE_SUGGESTIONS = [
   "Australian Capital Territory",
   "Northern Territory",
 ];
+
+// when a delete confirmation closes after its action runs
+export const DELETE_CLOSE_MODES = {
+  FINALLY: "finally",
+  RESULT: "result",
+};

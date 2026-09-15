@@ -3,13 +3,13 @@ import Modal from "@/components/shared/Modal";
 import { FIELD_INPUT_CLASSES } from "@/utils/fieldStyles";
 import { promoteNaicsMatch } from "@/utils/naicsLookup";
 
-const ApplicationPdfNaicsModal = ({ isOpen = false, onClose, onSubmit, naicsApiData = {}, onMatchesChange }) => {
+const NaicsMatchModal = ({ isOpen = false, naicsApiData = {}, onMatchesChange, onSave, onClose }) => {
   if (!isOpen) return null;
 
   const bestMatch = naicsApiData?.bestMatch;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal onClose={onClose}>
       <div className="flex w-full flex-col items-start gap-4">
         <section className="flex w-full flex-col">
           <h4 className="text-textPrimary text-base font-medium lg:text-lg">Best Match</h4>
@@ -49,7 +49,7 @@ const ApplicationPdfNaicsModal = ({ isOpen = false, onClose, onSubmit, naicsApiD
           <Button
             label="Save Best Match"
             onClick={() => {
-              onSubmit?.(bestMatch);
+              onSave?.(bestMatch);
               onClose?.();
             }}
           />
@@ -59,4 +59,4 @@ const ApplicationPdfNaicsModal = ({ isOpen = false, onClose, onSubmit, naicsApiD
   );
 };
 
-export default ApplicationPdfNaicsModal;
+export default NaicsMatchModal;

@@ -1,5 +1,6 @@
 import { FiCheck, FiZap } from "react-icons/fi";
 import { DEMO_ACTION_STATUSES } from "../utils/demo.constants";
+import Spinner from "@/components/shared/Spinner";
 
 const STATUS_CLASSES = {
   [DEMO_ACTION_STATUSES.RUNNING]: "bg-primary/5 text-primary",
@@ -19,7 +20,7 @@ const DemoPanelActionStatus = ({ actionStatus = null, actionErrors = [] }) => {
       <div className="flex items-center gap-2">
         {actionStatus === DEMO_ACTION_STATUSES.RUNNING && (
           <>
-            <span className="h-3 w-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin shrink-0" />
+            <Spinner tone="primarySoft" className="shrink-0" />
             Running demo action…
           </>
         )}

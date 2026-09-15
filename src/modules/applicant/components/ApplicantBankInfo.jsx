@@ -8,7 +8,7 @@ import { OtherInputType } from "@/components/global/DynamicField";
 import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";
 import Modal from "@/components/shared/Modal";
-import ApplicantBankLookupModal from "./ApplicantBankLookupModal";
+import BankLookupModal from "@/components/modals/BankLookupModal";
 import CustomizationFieldsModal from "./ApplicantCustomizeFieldsModal";
 import DisplayText from "./ApplicantDisplayText";
 import ApplicantOwnerSuggestionsModal from "./ApplicantOwnerSuggestionsModal";
@@ -335,9 +335,10 @@ const BankInfo = ({
             />
           </Modal>
         )}
-        <ApplicantBankLookupModal
+        <BankLookupModal
           isOpen={!!bankModal}
           bankName={bankModal?.bankName}
+          yesTestId="bank-lookup-yes-btn"
           onClose={() => setBankModal(null)}
           onConfirm={confirmBankLookup}
         />

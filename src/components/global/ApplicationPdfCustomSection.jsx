@@ -3,6 +3,7 @@ import SignatureBox from "@/components/global/SignatureBox";
 import { FIELD_NAMES, FORM_BLOCK_TYPE, formKeys, SIGNATURE_KEY } from "@/constants";
 import { sectionEntries } from "@/utils/sectionCompletion";
 import { uploadSectionSignature } from "@/utils/sectionSignature";
+import HtmlContent from "@/components/shared/HtmlContent";
 
 const MULTI_ENTRY_SECTION_KEYS = new Set([formKeys.additional_owners_hidden_section_key]);
 
@@ -49,7 +50,7 @@ const CustomSectionPdf = ({ fields, name, step, isSignature, formInnerData, setF
 
       {(step?.ai_formatting || step?.displayText) && (
         <div className="flex w-full items-end justify-between gap-3">
-          <div className="mt-2 mb-4 w-full" dangerouslySetInnerHTML={{ __html: step?.ai_formatting || step?.displayText }} />
+          <HtmlContent className="mt-2 mb-4 w-full" html={step?.ai_formatting || step?.displayText} linkMode="none" />
         </div>
       )}
 
@@ -69,7 +70,7 @@ const CustomSectionPdf = ({ fields, name, step, isSignature, formInnerData, setF
             {isSignature && (
               <>
                 {step?.signDisplayFormattedText && (
-                  <div className="mb-4" dangerouslySetInnerHTML={{ __html: String(step.signDisplayFormattedText) }} />
+                  <HtmlContent className="mb-4" html={String(step.signDisplayFormattedText)} linkMode="none" />
                 )}
                 <SignatureBox
                   step={step}

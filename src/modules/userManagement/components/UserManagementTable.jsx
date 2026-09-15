@@ -1,4 +1,4 @@
-import { createRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useForgetPasswordMutation } from "@/redux/apis/auth.apis";
 import { useGetAllRolesQuery } from "@/redux/apis/roleManagement.apis";
 import {
@@ -7,25 +7,26 @@ import {
   useGetAllUsersQuery,
   useUpdateSingleUserMutation,
 } from "@/redux/apis/userManagement.apis";
-import { Lock, MoreVertical, Pencil, Trash } from "lucide-react";
-import DataTable from "react-data-table-component";
+import { Lock, Pencil, Trash } from "lucide-react";
 import { IoMdPersonAdd } from "react-icons/io";
 import { toast } from "react-toastify";
-import useBranding from "@/hooks/useBranding";
+import useDeleteConfirmation from "@/hooks/useDeleteConfirmation";
 import { useScreenContext } from "@/hooks/useScreenContext";
+import useRowActionMenu from "@/hooks/useRowActionMenu";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import AppDataTable from "@/components/shared/AppDataTable";
 import Modal from "@/components/modals/SaveCancelModal";
 import Button from "@/components/shared/Button";
-import { ThreeDotEditViewDelete } from "@/components/shared/ThreeDotViewEditDelete";
+import RowActionMenuCell from "@/components/shared/RowActionMenuCell";
 import { FIELD_TYPES } from "@/constants";
 import getEnv from "@/utils/env";
-import { getTableStyles } from "@/utils/tableStyles";
 import UserManagementAddEditModal from "./UserManagementAddEditModal";
-import UserManagementFormField from "./UserManagementFormField";
+import FormField from "@/components/global/FormField";
 import {
   INITIAL_USER_FORM,
   USER_AI_CHAT_PATH,
   USER_FORM_FIELDS,
+  USER_FORM_FIELD_PROPS,
   USER_MODAL_MODES,
   USER_SCREEN_CONTEXT,
 } from "../utils/userManagement.constants";
@@ -38,7 +39,7 @@ import {
 
 const SERVER_URL = getEnv("SERVER_URL");
 
-const buildColumns = ({ actionMenu, actionMenuRefs, buttons, setActionMenu }) => [
+const buildColumns = ({ actionMenu, getRowRef, buttons, onToggleMenu }) => [
   { name: "Name", selector: (row) => row?.firstName + " " + row?.lastName, sortable: true },
   { name: "Email", selector: (row) => row?.email, sortable: true },
   { name: "Role", selector: (row) => row?.role?.name, sortable: true },
@@ -46,25 +47,16 @@ const buildColumns = ({ actionMenu, actionMenuRefs, buttons, setActionMenu }) =>
   { name: "Create Date", selector: (row) => row?.createdAt?.split("T")[0], sortable: true },
   {
     name: "Action",
-    cell: (row) => {
-      if (!actionMenuRefs.current.has(row?._id)) {
-        actionMenuRefs.current.set(row?._id, createRef());
-      }
-      const rowRef = actionMenuRefs.current.get(row?._id);
-      return (
-        <div className="relative" ref={rowRef}>
-          <button
-            type="button"
-            onClick={() => setActionMenu((prevActionMenu) => (prevActionMenu === row?._id ? null : row?._id))}
-            className="rounded p-1 hover:bg-gray-100 cursor-pointer"
-            aria-label="Actions"
-          >
-            <MoreVertical size={18} />
-          </button>
-          {actionMenu === row?._id && <ThreeDotEditViewDelete buttons={buttons} row={row} />}
-        </div>
-      );
-    },
+    cell: (row) => (
+      <RowActionMenuCell
+        row={row}
+        buttons={buttons}
+        isOpen={actionMenu === row?._id}
+        onToggle={() => onToggleMenu(row?._id)}
+        rowRef={getRowRef(row?._id)}
+        buttonClassName="rounded p-1 hover:bg-gray-100 cursor-pointer"
+      />
+    ),
   },
 ];
 
@@ -79,15 +71,13 @@ const UserManagementTable = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editModalData, setEditModalData] = useState(null);
   const [passwordModalData, setPasswordModalData] = useState(null);
-  const [actionMenu, setActionMenu] = useState(null);
+  const { openRowId: actionMenu, setOpenRowId: setActionMenu, toggleMenu, getRowRef } = useRowActionMenu({
+    closeOnOutsideClick: true,
+  });
   const [formData, setFormData] = useState(INITIAL_USER_FORM);
   const [formErrors, setFormErrors] = useState({});
-  const actionMenuRefs = useRef(new Map());
-  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const [userIdForDelete, setUserIdForDelete] = useState(null);
 
-  const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
-  const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
 
   useScreenContext({
     ...USER_SCREEN_CONTEXT,
@@ -162,19 +152,26 @@ const UserManagementTable = () => {
     setFormErrors({});
   };
 
-  const handleDeleteUser = async () => {
-    try {
-      const res = await deleteUser({ _id: userIdForDelete }).unwrap();
-      if (res.success) {
-        toast.success(res?.message);
-        setDeleteConfirmation(null);
-        setActionMenu(null);
+  const {
+    target: deleteConfirmation,
+    openConfirmation: setDeleteConfirmation,
+    closeConfirmation,
+    handleConfirm: handleDeleteUser,
+  } = useDeleteConfirmation({
+    onDelete: async () => {
+      try {
+        const res = await deleteUser({ _id: userIdForDelete }).unwrap();
+        if (res.success) {
+          toast.success(res?.message);
+          setActionMenu(null);
+          return true;
+        }
+      } catch (error) {
+        console.error("Delete user error:", error);
+        toast.error(error?.data?.message || "Failed to change password");
       }
-    } catch (error) {
-      console.error("Delete user error:", error);
-      toast.error(error?.data?.message || "Failed to change password");
-    }
-  };
+    },
+  });
 
   const handleCloseAddModal = () => {
     setIsModalOpen(false);
@@ -225,25 +222,13 @@ const UserManagementTable = () => {
         },
       },
     ],
-    [],
+    [setDeleteConfirmation, setActionMenu],
   );
 
   const columns = useMemo(
-    () => buildColumns({ actionMenu, actionMenuRefs, buttons: ButtonsForThreeDot, setActionMenu }),
-    [ButtonsForThreeDot, actionMenu],
+    () => buildColumns({ actionMenu, getRowRef, buttons: ButtonsForThreeDot, onToggleMenu: toggleMenu }),
+    [ButtonsForThreeDot, actionMenu, getRowRef, toggleMenu],
   );
-
-  useEffect(() => {
-    if (actionMenu === null) return;
-    const handleClickOutside = (event) => {
-      const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
-        (ref) => !ref.current?.contains(event.target),
-      );
-      if (clickedOutsideAllMenus) setActionMenu(null);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [actionMenu]);
 
   return (
     <div className="mt-5" data-testid="users-page">
@@ -260,9 +245,8 @@ const UserManagementTable = () => {
         </div>
       </header>
 
-      <DataTable
+      <AppDataTable
         data-testid="users-table"
-        customStyles={tableStyles}
         columns={columns}
         data={users?.data || []}
         pagination
@@ -306,7 +290,8 @@ const UserManagementTable = () => {
           onSave={handleChangePassword}
           isLoading={isUpdatingUser}
         >
-          <UserManagementFormField
+          <FormField
+            {...USER_FORM_FIELD_PROPS}
             field={USER_FORM_FIELDS.PASSWORD}
             value={passwordModalData.password}
             onChange={handlePasswordInputChange}
@@ -318,7 +303,7 @@ const UserManagementTable = () => {
 
       <ConfirmationModal
         isOpen={Boolean(deleteConfirmation)}
-        onClose={() => setDeleteConfirmation(null)}
+        onClose={closeConfirmation}
         onConfirm={handleDeleteUser}
         title="Delete User"
         message={`Are you sure you want to delete the user ${deleteConfirmation?.name}? This action cannot be undone.`}

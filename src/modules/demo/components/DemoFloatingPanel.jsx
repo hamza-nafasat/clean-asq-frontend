@@ -8,6 +8,7 @@ import DemoPanelActionStatus from "./DemoPanelActionStatus";
 import DemoPanelControls from "./DemoPanelControls";
 import DemoPanelQuestions from "./DemoPanelQuestions";
 import { DEMO_SESSION_STATUSES } from "../utils/demo.constants";
+import Spinner from "@/components/shared/Spinner";
 
 const ACTIVE_STATUSES = Object.values(DEMO_SESSION_STATUSES);
 
@@ -103,7 +104,7 @@ const DemoFloatingPanel = ({ features = [] }) => {
         <div className="flex flex-col overflow-hidden">
           {sessionStatus === DEMO_SESSION_STATUSES.GENERATING && (
             <div className="flex items-center gap-3 px-4 py-4">
-              <div className="h-5 w-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin shrink-0" />
+              <Spinner as="div" size="lg" className="shrink-0" />
               <p className="text-xs text-gray-500">AI is writing your narration script…</p>
             </div>
           )}

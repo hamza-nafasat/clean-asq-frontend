@@ -1,19 +1,19 @@
-import ApplicationPdfCheckboxInputType from "@/components/global/ApplicationPdfCheckboxInputType";
-import ApplicationPdfFileInputType from "@/components/global/ApplicationPdfFileInputType";
-import ApplicationPdfMultiCheckboxInputType from "@/components/global/ApplicationPdfMultiCheckboxInputType";
 import ApplicationPdfOtherInputType from "@/components/global/ApplicationPdfOtherInputType";
-import ApplicationPdfRadioInputType from "@/components/global/ApplicationPdfRadioInputType";
-import ApplicationPdfRangeInputType from "@/components/global/ApplicationPdfRangeInputType";
-import ApplicationPdfSelectInputType from "@/components/global/ApplicationPdfSelectInputType";
+import CheckboxInputType from "@/components/global/CheckboxInputType";
+import FileInputType from "@/components/global/FileInputType";
+import MultiCheckboxInputType from "@/components/global/MultiCheckboxInputType";
+import RadioInputType from "@/components/global/RadioInputType";
+import RangeInputType from "@/components/global/RangeInputType";
+import SelectInputType from "@/components/global/SelectInputType";
 import { FIELD_TYPES } from "@/constants";
 
 const FIELD_COMPONENTS = {
-  [FIELD_TYPES.SELECT]: ApplicationPdfSelectInputType,
-  [FIELD_TYPES.MULTI_CHECKBOX]: ApplicationPdfMultiCheckboxInputType,
-  [FIELD_TYPES.RADIO]: ApplicationPdfRadioInputType,
-  [FIELD_TYPES.FILE]: ApplicationPdfFileInputType,
-  [FIELD_TYPES.RANGE]: ApplicationPdfRangeInputType,
-  [FIELD_TYPES.CHECKBOX]: ApplicationPdfCheckboxInputType,
+  [FIELD_TYPES.SELECT]: SelectInputType,
+  [FIELD_TYPES.MULTI_CHECKBOX]: MultiCheckboxInputType,
+  [FIELD_TYPES.RADIO]: RadioInputType,
+  [FIELD_TYPES.FILE]: FileInputType,
+  [FIELD_TYPES.RANGE]: RangeInputType,
+  [FIELD_TYPES.CHECKBOX]: CheckboxInputType,
 };
 
 const ApplicationPdfField = ({ field = {}, form, setForm, sectionKey, className = "", wrapperClassName = "mt-4" }) => {
@@ -21,7 +21,7 @@ const ApplicationPdfField = ({ field = {}, form, setForm, sectionKey, className 
 
   return (
     <div className={wrapperClassName}>
-      <FieldComponent field={field} form={form} setForm={setForm} sectionKey={sectionKey} className={className} />
+      <FieldComponent field={field} form={form} setForm={setForm} sectionKey={sectionKey} className={className} isPdf />
     </div>
   );
 };

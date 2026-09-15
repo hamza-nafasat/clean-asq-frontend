@@ -1,5 +1,6 @@
 import { FiCheck, FiEdit2, FiRefreshCw, FiSave, FiX } from "react-icons/fi";
 import { DEMO_PERSONA_PREVIEW_LENGTH, DEMO_SCRIPT_SOURCES } from "../utils/demo.constants";
+import Spinner from "@/components/shared/Spinner";
 
 const DemoScriptHeader = ({
   displayScript = [],
@@ -46,7 +47,7 @@ const DemoScriptHeader = ({
               className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50 transition-colors"
             >
               {isSavingScript ? (
-                <span className="h-3 w-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                <Spinner tone="light" />
               ) : (
                 <FiCheck size={13} />
               )}
@@ -85,7 +86,7 @@ const DemoScriptHeader = ({
                 className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
               >
                 {isSavingScript ? (
-                  <span className="h-3 w-3 border-2 border-gray-300 border-t-primary rounded-full animate-spin" />
+                  <Spinner tone="neutral" />
                 ) : (
                   <FiSave size={13} />
                 )}

@@ -46,3 +46,12 @@ export const SELECT_CLASS_NAME =
 
 export const VIEW_FIELD_CLASS_NAME =
   "border-frameColor flex h-11.25 w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base";
+
+// props that give the shared FormField this module's look
+export const ROLE_FORM_FIELD_PROPS = {
+  labelClassName: "text-textPrimary mb-1 block text-sm font-medium",
+  selectBaseClassName: SELECT_CLASS_NAME,
+  selectClassSeparator: "",
+  selectDefaultClassName: "border-frameColor",
+  inputPlaceholderSource: "field",
+};

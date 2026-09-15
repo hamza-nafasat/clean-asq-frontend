@@ -28,10 +28,11 @@ import {
   DISPLAY_TEXT_FIELDS,
   SECTION_KEYS,
 } from "../utils/applicant.constants";
-import { buildApplicationFormPath, withLinkTargets } from "../utils/applicant.utils6";
+import { buildApplicationFormPath } from "../utils/applicant.utils6";
 import { buildLookupData } from "../utils/applicant.utils7";
 import getEnv from "@/utils/env";
 import { isNotGuestRoleValue } from "@/utils/permissions";
+import HtmlContent from "@/components/shared/HtmlContent";
 
 // inputs stay read-only while a company request runs
 const ignoreChange = () => {};
@@ -245,11 +246,7 @@ const CompanyVerification = ({ formId, brandingName, draftId }) => {
               <div className="flex items-center justify-center gap-3">
                 {formDocument?.companyVerificationDisplayFormatedText && (
                   <div className="mb-4 flex w-full items-center justify-between">
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: withLinkTargets(formDocument?.companyVerificationDisplayFormatedText),
-                      }}
-                    />
+                    <HtmlContent html={formDocument?.companyVerificationDisplayFormatedText} />
                   </div>
                 )}
                 {isCreator && (

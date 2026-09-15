@@ -4,7 +4,7 @@ import DOMPurify from "dompurify";
 import { useFormateTextInMarkDownMutation, useUpdateFormSectionMutation } from "@/redux/apis/form.apis";
 import Button from "@/components/shared/Button";
 import TextField from "@/components/shared/TextField";
-import { withLinkTargets } from "../utils/applicant.utils6";
+import HtmlContent from "@/components/shared/HtmlContent";
 
 const ApplicantSignatureHelpModal = ({ section = {}, formRefetch, onClose }) => {
   const [updateSection, { isLoading: isUpdatingSection }] = useUpdateFormSectionMutation();
@@ -59,7 +59,7 @@ const ApplicantSignatureHelpModal = ({ section = {}, formRefetch, onClose }) => 
           <Button onClick={handleGetResponse} disabled={isFormatting} className="mt-8" label="Get Response" />
         </div>
         {helpData.signAiResponse && (
-          <div className="w-full" dangerouslySetInnerHTML={{ __html: withLinkTargets(helpData.signAiResponse) }} />
+          <HtmlContent className="w-full" html={helpData.signAiResponse} />
         )}
       </div>
 

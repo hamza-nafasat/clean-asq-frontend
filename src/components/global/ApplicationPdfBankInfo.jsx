@@ -4,14 +4,15 @@ import { CheckCircle, XCircle } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { useGetBankLookupMutation } from "@/redux/apis/form.apis";
-import ApplicationPdfBankModal from "@/components/global/ApplicationPdfBankModal";
 import ApplicationPdfField from "@/components/global/ApplicationPdfField";
 import ApplicationPdfOtherInputType from "@/components/global/ApplicationPdfOtherInputType";
 import SignatureBox from "@/components/global/SignatureBox";
+import BankLookupModal from "@/components/modals/BankLookupModal";
 import Button from "@/components/shared/Button";
 import { FIELD_NAMES, SIGNATURE_KEY } from "@/constants";
 import { collectLookupOwners } from "@/utils/lookupOwners";
 import { uploadSectionSignature } from "@/utils/sectionSignature";
+import HtmlContent from "@/components/shared/HtmlContent";
 
 const ROUTING_NOT_VERIFIED_MESSAGE =
   "we’re unable to verify this routing number, if you are sure it’s correct please continue. Otherwise correct any errors before moving forward.";
@@ -124,7 +125,7 @@ const BankInfoPdf = ({ name, fields, step, isSignature, formInnerData, setFormIn
       </div>
       {(step?.ai_formatting || step?.displayText) && (
         <div className="mb-4 flex w-full items-end justify-between gap-3">
-          <div dangerouslySetInnerHTML={{ __html: step?.ai_formatting || step?.displayText }} />
+          <HtmlContent html={step?.ai_formatting || step?.displayText} linkMode="none" />
         </div>
       )}
 
@@ -143,11 +144,11 @@ const BankInfoPdf = ({ name, fields, step, isSignature, formInnerData, setFormIn
         )}
       </div>
 
-      <ApplicationPdfBankModal
+      <BankLookupModal
         isOpen={Boolean(bankModal)}
-        bank={bankModal}
+        bankName={bankModal?.bankName}
         onClose={() => setBankModal(null)}
-        onConfirm={handleConfirmBank}
+        onConfirm={() => handleConfirmBank(bankModal?.bankName)}
       />
     </div>
   );

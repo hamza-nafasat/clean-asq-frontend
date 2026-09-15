@@ -1,10 +1,10 @@
 import { useState } from "react";
-import DataTable from "react-data-table-component";
 import { GoCheckCircle, GoDatabase } from "react-icons/go";
 import { IoShieldOutline } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { useCompanyLookupMutation, useCompanyVerificationMutation } from "@/redux/apis/form.apis";
 import useBranding from "@/hooks/useBranding";
+import AppDataTable from "@/components/shared/AppDataTable";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
 import TextField from "@/components/shared/TextField";
@@ -164,7 +164,8 @@ const TestingCompanyLookup = ({ formId = null }) => {
             </span>
           </div>
           <div className="p-4">
-            <DataTable
+            <AppDataTable
+              branded={false}
               title="Company Verification"
               columns={LOOKUP_COLUMNS}
               data={lookupRows}

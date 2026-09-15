@@ -1,8 +1,9 @@
-import ApplicationPdfFileInputType from "@/components/global/ApplicationPdfFileInputType";
+import FileInputType from "@/components/global/FileInputType";
 import ApplicationPdfOtherInputType from "@/components/global/ApplicationPdfOtherInputType";
 import SignatureBox from "@/components/global/SignatureBox";
 import { FIELD_TYPES, SIGNATURE_KEY } from "@/constants";
 import { uploadSectionSignature } from "@/utils/sectionSignature";
+import HtmlContent from "@/components/shared/HtmlContent";
 
 const DocumentsPdf = ({ name, fields, step, isSignature, formInnerData, setFormInnerData, sectionKey }) => (
   <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
@@ -12,7 +13,7 @@ const DocumentsPdf = ({ name, fields, step, isSignature, formInnerData, setFormI
       </div>
       {(step?.ai_formatting || step?.displayText) && (
         <div className="mb-4 w-full">
-          <div dangerouslySetInnerHTML={{ __html: step?.ai_formatting || step?.displayText }} />
+          <HtmlContent html={step?.ai_formatting || step?.displayText} linkMode="none" />
         </div>
       )}
     </div>
@@ -22,7 +23,7 @@ const DocumentsPdf = ({ name, fields, step, isSignature, formInnerData, setFormI
         if (field.type === FIELD_TYPES.FILE) {
           return (
             <div className="flex w-full flex-col gap-4 p-6" key={index}>
-              <ApplicationPdfFileInputType {...inputProps} />
+              <FileInputType {...inputProps} isPdf />
             </div>
           );
         }

@@ -10,7 +10,8 @@ import {
   ROLE_FILLING_FIELD,
 } from "../utils/applicant.constants";
 import { getIdMissionSignDisplayHtml } from "../utils/applicant.utils5";
-import { stripHtml, withLinkTargets } from "../utils/applicant.utils6";
+import { stripHtml } from "../utils/applicant.utils6";
+import HtmlContent from "@/components/shared/HtmlContent";
 
 const ApplicantIdMissionDetailsForm = ({
   formDocument = {},
@@ -43,11 +44,7 @@ const ApplicantIdMissionDetailsForm = ({
       <div className="flex items-center justify-between">
         {formDocument?.idMissionDataDisplayFormatedText ? (
           <div className="flex items-end gap-3">
-            <div
-              className="w-full"
-              data-ai-display-text
-              dangerouslySetInnerHTML={{ __html: withLinkTargets(formDocument?.idMissionDataDisplayFormatedText) }}
-            />
+            <HtmlContent className="w-full" data-ai-display-text html={formDocument?.idMissionDataDisplayFormatedText} />
           </div>
         ) : (
           <div className="flex w-full gap-3">
@@ -110,11 +107,7 @@ const ApplicantIdMissionDetailsForm = ({
           <div className="my-4 flex w-full justify-between gap-2">
             {signDisplayHtml && (
               <div className="flex items-end gap-3">
-                <div
-                  className="w-full"
-                  data-ai-display-text
-                  dangerouslySetInnerHTML={{ __html: withLinkTargets(signDisplayHtml) }}
-                />
+                <HtmlContent className="w-full" data-ai-display-text html={signDisplayHtml} />
               </div>
             )}
             <div className="flex items-center justify-end gap-2">

@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useCreateSearchStrategyMutation, useUpdateSearchStrategyMutation } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
 import Button from "@/components/shared/Button";
-import LookupManagementFormField from "./LookupManagementFormField";
+import FormField from "@/components/global/FormField";
 import { FIELD_TYPES } from "@/constants";
-import { LOOKUP_FORM_FIELDS } from "@/modules/lookupManagement/utils/lookupManagement.constants";
+import { LOOKUP_FORM_FIELDS, LOOKUP_FORM_FIELD_PROPS } from "@/modules/lookupManagement/utils/lookupManagement.constants";
 
 const LookupManagementAddModal = ({
   selectedRow = null,
@@ -58,33 +58,38 @@ const LookupManagementAddModal = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <LookupManagementFormField
+      <FormField
+        {...LOOKUP_FORM_FIELD_PROPS}
         field={LOOKUP_FORM_FIELDS.SEARCH_OBJECT_KEY}
         value={form?.searchObjectKey}
         onChange={handleChange}
       />
-      <LookupManagementFormField
+      <FormField
+        {...LOOKUP_FORM_FIELD_PROPS}
         field={LOOKUP_FORM_FIELDS.COMPANY_IDENTIFICATION}
         value={form.companyIdentification}
         onChange={handleChange}
         type={FIELD_TYPES.MULTI_SELECT}
         options={companyOptions}
       />
-      <LookupManagementFormField
+      <FormField
+        {...LOOKUP_FORM_FIELD_PROPS}
         field={LOOKUP_FORM_FIELDS.EXTRACT_AS}
         value={form.extractAs}
         onChange={handleChange}
         type={FIELD_TYPES.SELECT}
         options={extractAsOptions}
       />
-      <LookupManagementFormField field={LOOKUP_FORM_FIELDS.SEARCH_TERMS} value={form.searchTerms} onChange={handleChange} />
-      <LookupManagementFormField
+      <FormField {...LOOKUP_FORM_FIELD_PROPS} field={LOOKUP_FORM_FIELDS.SEARCH_TERMS} value={form.searchTerms} onChange={handleChange} />
+      <FormField
+        {...LOOKUP_FORM_FIELD_PROPS}
         field={LOOKUP_FORM_FIELDS.EXTRACTION_PROMPT}
         value={form.extractionPrompt}
         onChange={handleChange}
         type={FIELD_TYPES.TEXTAREA}
       />
-      <LookupManagementFormField
+      <FormField
+        {...LOOKUP_FORM_FIELD_PROPS}
         field={LOOKUP_FORM_FIELDS.ACTIVE}
         value={form.active}
         onChange={handleChange}

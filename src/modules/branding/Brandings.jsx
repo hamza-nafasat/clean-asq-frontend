@@ -26,7 +26,6 @@ import {
 } from "./utils/branding.constants";
 import { executeBrandingAssignment, getBrandingSettersFromHook } from "@/utils/executeBrandingAssignment";
 import getEnv from "@/utils/env";
-import { getTableStyles } from "@/utils/tableStyles";
 
 const Brandings = () => {
   const dispatch = useDispatch();
@@ -42,9 +41,6 @@ const Brandings = () => {
   const [deleteBranding, { isLoading: isDeleting }] = useDeleteSingleBrandingMutation();
   const [addFromBranding] = useAddBrandingInFormMutation();
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
-
-  const { primaryColor, textColor, backgroundColor, secondaryColor } = branding;
-  const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
 
   const openBranding = (brandingId) => navigate(`${BRANDING_ROUTES.SINGLE}/${brandingId}`);
 
@@ -205,7 +201,6 @@ const Brandings = () => {
         <BrandingTable
           brandings={brandings?.data || []}
           rowButtons={rowButtons}
-          tableStyles={tableStyles}
           isLoading={isBrandingsLoading}
         />
       </section>

@@ -1,6 +1,5 @@
-import { useState } from "react";
-import { FiCheck, FiCopy, FiPause, FiPlay, FiSkipBack, FiSkipForward, FiUsers, FiX } from "react-icons/fi";
-import { DEMO_COPY_FEEDBACK_MS } from "../utils/demo.constants";
+import { FiPause, FiPlay, FiSkipBack, FiSkipForward, FiX } from "react-icons/fi";
+import DemoViewerUrlBar from "./DemoViewerUrlBar";
 
 const DemoPanelControls = ({
   viewerUrl = "",
@@ -15,30 +14,10 @@ const DemoPanelControls = ({
   onNext,
   onBegin,
 }) => {
-  const [copiedUrl, setCopiedUrl] = useState(false);
-
-  const copyViewerUrl = async () => {
-    if (!viewerUrl) return;
-    await navigator.clipboard.writeText(viewerUrl);
-    setCopiedUrl(true);
-    setTimeout(() => setCopiedUrl(false), DEMO_COPY_FEEDBACK_MS);
-  };
-
   return (
     <footer className="px-3 py-2 flex flex-col gap-2 bg-gray-50 border-t border-gray-100">
       {viewerUrl && !isEnded && (
-        <div className="flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs">
-          <FiUsers size={11} className="text-gray-400 shrink-0" />
-          <span className="truncate flex-1 text-gray-500">{viewerUrl}</span>
-          <button
-            type="button"
-            onClick={copyViewerUrl}
-            className="shrink-0 text-primary hover:underline flex items-center gap-0.5"
-          >
-            {copiedUrl ? <FiCheck size={11} /> : <FiCopy size={11} />}
-            {copiedUrl ? "Copied" : "Copy"}
-          </button>
-        </div>
+        <DemoViewerUrlBar viewerUrl={viewerUrl} variant="panel" />
       )}
 
       <div className="flex items-center justify-between gap-2">

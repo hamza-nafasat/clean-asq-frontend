@@ -14,7 +14,7 @@ import ApplicantIdMissionQrPanel from "./components/ApplicantIdMissionQrPanel";
 import ApplicantSectionField from "./components/ApplicantSectionField";
 import { EditSectionDisplayTextFromatingModal } from "./components/ApplicantSectionTextModal";
 import { APPLICANT_HOME_PATH } from "./utils/applicant.constants";
-import { withLinkTargets } from "./utils/applicant.utils6";
+import HtmlContent from "@/components/shared/HtmlContent";
 import { isNotGuestRoleValue } from "@/utils/permissions";
 
 const FormHiddenSection = () => {
@@ -123,7 +123,7 @@ const FormHiddenSection = () => {
 
       {section?.ai_formatting && (
         <div className="mb-4 flex w-full items-end gap-3">
-          <div className="w-full" dangerouslySetInnerHTML={{ __html: withLinkTargets(section?.ai_formatting) }} />
+          <HtmlContent className="w-full" html={section?.ai_formatting} />
         </div>
       )}
 

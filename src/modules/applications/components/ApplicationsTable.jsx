@@ -1,23 +1,23 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { ArrowRight, Eye, Trash, UserIcon } from "lucide-react";
 import PropTypes from "prop-types";
-import DataTable from "react-data-table-component";
 import { toast } from "react-toastify";
 import { useGetSavedFormMutation } from "@/redux/apis/form.apis";
 import { addSavedFormData, setCurrentDraftId, updateEmailVerified } from "@/redux/slices/form.slice";
+import useDeleteConfirmation from "@/hooks/useDeleteConfirmation";
+import useRowActionMenu from "@/hooks/useRowActionMenu";
 import usePermission from "@/hooks/usePermission";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import AppDataTable from "@/components/shared/AppDataTable";
 import CustomLoading from "@/components/shared/CustomLoading";
 import ApplicationsFilter from "./ApplicationsFilter";
 import { buildApplicantColumns } from "./ApplicationsTableColumns";
 import { PERMISSIONS } from "@/utils/permissions";
 import { APPLICATIONS_ROUTES } from "../utils/applications.constants";
 import { getFullName } from "../utils/applications.utils";
-
-const emptyDeleteConfirmation = { id: null, type: null };
 
 const ApplicationsTable = ({
   applicants = [],
@@ -33,10 +33,10 @@ const ApplicationsTable = ({
 }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [actionMenu, setActionMenu] = useState(null);
+  const { openRowId: actionMenu, setOpenRowId: setActionMenu, toggleMenu, getRowRef } = useRowActionMenu({
+    closeOnOutsideClick: true,
+  });
   const [searchTerm, setSearchTerm] = useState("");
-  const [deleteConfirmation, setDeleteConfirmation] = useState(emptyDeleteConfirmation);
-  const actionMenuRefs = useRef(new Map());
   const [getSavedFormData] = useGetSavedFormMutation();
   const hasUnderwritingPermission = usePermission(PERMISSIONS.UNDERWRITING);
 
@@ -66,17 +66,24 @@ const ApplicationsTable = ({
     [dispatch, getSavedFormData, navigate],
   );
 
-  const handleDeleteApplicant = useCallback(async () => {
-    try {
-      if (!deleteConfirmation?.id || !deleteConfirmation?.type) return;
-      await onDeleteApplication?.(deleteConfirmation);
-      setDeleteConfirmation(emptyDeleteConfirmation);
-      setActionMenu(null);
-    } catch (error) {
-      console.error("Delete application error:", error);
-      toast.error(error?.data?.message || error?.message || "Failed to delete application");
-    }
-  }, [deleteConfirmation, onDeleteApplication]);
+  const {
+    target: deleteConfirmation,
+    openConfirmation: setDeleteConfirmation,
+    closeConfirmation,
+    handleConfirm: handleDeleteApplicant,
+  } = useDeleteConfirmation({
+    onDelete: async (target) => {
+      try {
+        if (!target?.id || !target?.type) return;
+        await onDeleteApplication?.(target);
+        setActionMenu(null);
+        return true;
+      } catch (error) {
+        console.error("Delete application error:", error);
+        toast.error(error?.data?.message || error?.message || "Failed to delete application");
+      }
+    },
+  });
 
   const filteredApplicants = useMemo(
     () =>
@@ -114,7 +121,7 @@ const ApplicationsTable = ({
         },
       },
     ],
-    [continueDraftHandler],
+    [continueDraftHandler, setDeleteConfirmation, setActionMenu],
   );
 
   const submittedButtons = useMemo(
@@ -158,26 +165,22 @@ const ApplicationsTable = ({
           ]
         : []),
     ],
-    [hasUnderwritingPermission, onView, setOpenSpecialAccess, setSelectedIdForSpecialAccessModal, setSelectedFormId, navigate],
+    [
+      hasUnderwritingPermission,
+      onView,
+      setOpenSpecialAccess,
+      setSelectedIdForSpecialAccessModal,
+      setSelectedFormId,
+      navigate,
+      setDeleteConfirmation,
+      setActionMenu,
+    ],
   );
 
   const columns = useMemo(
-    () => buildApplicantColumns({ actionMenu, setActionMenu, actionMenuRefs, submittedButtons, draftButtons }),
-    [draftButtons, submittedButtons, actionMenu],
+    () => buildApplicantColumns({ actionMenu, onToggleMenu: toggleMenu, getRowRef, submittedButtons, draftButtons }),
+    [draftButtons, submittedButtons, actionMenu, getRowRef, toggleMenu],
   );
-
-  // close action menu on outside click
-  useEffect(() => {
-    if (actionMenu === null) return;
-    const handleClickOutside = (event) => {
-      const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
-        (ref) => !ref.current?.contains(event.target),
-      );
-      if (clickedOutsideAllMenus) setActionMenu(null);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [actionMenu]);
 
   return (
     <div>
@@ -191,7 +194,8 @@ const ApplicationsTable = ({
         className="mt-5 w-full h-full overflow-x-auto lg:w-[calc(100vw-350px)]! xl:w-full"
         data-testid="applications-table"
       >
-        <DataTable
+        <AppDataTable
+          branded={false}
           columns={columns}
           data={filteredApplicants}
           progressPending={isLoading}
@@ -209,7 +213,7 @@ const ApplicationsTable = ({
       </div>
       <ConfirmationModal
         isOpen={deleteConfirmation?.id && deleteConfirmation?.type}
-        onClose={() => setDeleteConfirmation(emptyDeleteConfirmation)}
+        onClose={closeConfirmation}
         onConfirm={handleDeleteApplicant}
         title="Delete Submit Form"
         message={`Are you sure you want to delete this submit form?`}

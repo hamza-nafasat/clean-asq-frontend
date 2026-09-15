@@ -1,6 +1,7 @@
 import { FiChevronDown, FiPlus, FiRefreshCw, FiSave, FiTrash2 } from "react-icons/fi";
 import { HiOutlineSparkles } from "react-icons/hi";
 import { formatDemoDate } from "../utils/demo.utils3";
+import Spinner from "@/components/shared/Spinner";
 
 const DemoPresetBar = ({
   presetName = "",
@@ -107,7 +108,7 @@ const DemoPresetBar = ({
             className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 transition-colors"
           >
             {isStarting ? (
-              <span className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              <Spinner size="sm" tone="light" />
             ) : (
               <HiOutlineSparkles size={13} />
             )}

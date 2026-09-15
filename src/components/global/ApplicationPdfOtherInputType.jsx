@@ -6,7 +6,7 @@ import { isValidPhoneNumber } from "react-phone-number-input";
 import AiFormattedText from "@/components/shared/AiFormattedText";
 import FieldLabel from "@/components/shared/FieldLabel";
 import FieldSuggestionList from "@/components/shared/FieldSuggestionList";
-import PhoneFieldInput from "@/components/global/PhoneFieldInput";
+import PhoneFieldInput from "@/components/shared/PhoneFieldInput";
 import { FIELD_FORMATS, FIELD_NAME_MATCHERS, FIELD_TYPES } from "@/constants";
 import {
   BLOCK_CLIPBOARD_PROPS,

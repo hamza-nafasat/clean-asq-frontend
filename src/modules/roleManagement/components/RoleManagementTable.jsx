@@ -1,4 +1,4 @@
-import { createRef, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/auth.apis";
 import {
@@ -9,17 +9,17 @@ import {
   useUpdateSingleRoleMutation,
 } from "@/redux/apis/roleManagement.apis";
 import { userExist, userNotExist } from "@/redux/slices/auth.slice";
-import { Eye, MoreVertical, Pencil, Trash } from "lucide-react";
-import DataTable from "react-data-table-component";
+import { Eye, Pencil, Trash } from "lucide-react";
 import { FaUserShield } from "react-icons/fa";
 import { toast } from "react-toastify";
-import useBranding from "@/hooks/useBranding";
+import useDeleteConfirmation from "@/hooks/useDeleteConfirmation";
 import { useScreenContext } from "@/hooks/useScreenContext";
+import useRowActionMenu from "@/hooks/useRowActionMenu";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import AppDataTable from "@/components/shared/AppDataTable";
 import Button from "@/components/shared/Button";
-import { ThreeDotEditViewDelete } from "@/components/shared/ThreeDotViewEditDelete";
+import RowActionMenuCell from "@/components/shared/RowActionMenuCell";
 import getEnv from "@/utils/env";
-import { getTableStyles } from "@/utils/tableStyles";
 import RoleManagementAddEditModal from "./RoleManagementAddEditModal";
 import RoleManagementViewModal from "./RoleManagementViewModal";
 import {
@@ -39,32 +39,21 @@ import {
 
 const SERVER_URL = getEnv("SERVER_URL");
 
-const buildColumns = ({ actionMenu, actionMenuRefs, buttons, setActionMenu }) => [
+const buildColumns = ({ actionMenu, getRowRef, buttons, onToggleMenu }) => [
   { name: "Role Name", selector: (row) => row.name, sortable: true },
   { name: "_id", selector: (row) => row._id, sortable: true },
   { name: "Created At", selector: (row) => getDatePart(row.createdAt), sortable: true },
   {
     name: "Action",
-    cell: (row) => {
-      if (!actionMenuRefs.current.has(row._id)) {
-        actionMenuRefs.current.set(row._id, createRef());
-      }
-      const rowRef = actionMenuRefs.current.get(row._id);
-
-      return (
-        <div className="relative" ref={rowRef}>
-          <button
-            type="button"
-            onClick={() => setActionMenu((prevActionMenu) => (prevActionMenu === row._id ? null : row._id))}
-            className="rounded p-1 hover:bg-gray-100"
-            aria-label="Actions"
-          >
-            <MoreVertical size={18} />
-          </button>
-          {actionMenu === row._id && <ThreeDotEditViewDelete buttons={buttons} row={row} />}
-        </div>
-      );
-    },
+    cell: (row) => (
+      <RowActionMenuCell
+        row={row}
+        buttons={buttons}
+        isOpen={actionMenu === row._id}
+        onToggle={() => onToggleMenu(row._id)}
+        rowRef={getRowRef(row._id)}
+      />
+    ),
   },
 ];
 
@@ -80,13 +69,11 @@ const RoleManagementTable = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editModalData, setEditModalData] = useState(null);
   const [viewModalData, setViewModalData] = useState(null);
-  const [actionMenu, setActionMenu] = useState(null);
+  const { openRowId: actionMenu, setOpenRowId: setActionMenu, toggleMenu, getRowRef } = useRowActionMenu({
+    closeOnOutsideClick: true,
+  });
   const [formData, setFormData] = useState(INITIAL_ROLE_FORM);
-  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const [rowForDelete, setRowForDelete] = useState(null);
-  const actionMenuRefs = useRef(new Map());
-  const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
-  const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
 
   const getUserAndSetBranding = useCallback(async () => {
     try {
@@ -188,37 +175,32 @@ const RoleManagementTable = () => {
     }
   };
 
-  const handleDeleteRole = async () => {
-    try {
-      const res = await deleteRole({ _id: rowForDelete }).unwrap();
-      if (res?.success) {
-        toast.success(res.message);
-        setDeleteConfirmation(null);
-        setActionMenu(null);
-        setRowForDelete(null);
+  const {
+    target: deleteConfirmation,
+    openConfirmation: setDeleteConfirmation,
+    closeConfirmation,
+    handleConfirm: handleDeleteRole,
+  } = useDeleteConfirmation({
+    onDelete: async () => {
+      try {
+        const res = await deleteRole({ _id: rowForDelete }).unwrap();
+        if (res?.success) {
+          toast.success(res.message);
+          setActionMenu(null);
+          setRowForDelete(null);
+          return true;
+        }
+      } catch (error) {
+        console.error("Delete role error:", error);
+        toast.error(error?.data?.message || "Failed to delete role");
       }
-    } catch (error) {
-      console.error("Delete role error:", error);
-      toast.error(error?.data?.message || "Failed to delete role");
-    }
-  };
+    },
+  });
 
   const handleCloseAddModal = () => {
     setIsModalOpen(false);
     setFormData(INITIAL_ROLE_FORM);
   };
-
-  useEffect(() => {
-    if (actionMenu === null) return;
-    const handleClickOutside = (event) => {
-      const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
-        (ref) => !ref.current?.contains(event.target),
-      );
-      if (clickedOutsideAllMenus) setActionMenu(null);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [actionMenu]);
 
   return (
     <div className="mt-5 w-full" data-testid="roles-page">
@@ -235,11 +217,10 @@ const RoleManagementTable = () => {
         </div>
       </header>
 
-      <DataTable
+      <AppDataTable
         data-testid="roles-table"
         data={roles?.data || []}
-        columns={buildColumns({ actionMenu, actionMenuRefs, buttons: ButtonsForThreeDot, setActionMenu })}
-        customStyles={tableStyles}
+        columns={buildColumns({ actionMenu, getRowRef, buttons: ButtonsForThreeDot, onToggleMenu: toggleMenu })}
         pagination
         highlightOnHover
         progressPending={isLoadingRoles || isLoadingPermissions}
@@ -280,7 +261,7 @@ const RoleManagementTable = () => {
 
       <ConfirmationModal
         isOpen={Boolean(deleteConfirmation)}
-        onClose={() => setDeleteConfirmation(null)}
+        onClose={closeConfirmation}
         onConfirm={handleDeleteRole}
         title="Delete Role"
         message={`Are you sure you want to delete the role "${deleteConfirmation?.name}"? This action cannot be undone.`}

@@ -1,4 +1,5 @@
 import { FiSave } from "react-icons/fi";
+import Spinner from "@/components/shared/Spinner";
 
 const DemoBuilderSaveDialog = ({
   isOpen = false,
@@ -55,7 +56,7 @@ const DemoBuilderSaveDialog = ({
             className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
           >
             {isSaving ? (
-              <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              <Spinner size="md" tone="light" />
             ) : (
               <FiSave size={14} />
             )}

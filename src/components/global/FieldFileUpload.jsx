@@ -9,6 +9,23 @@ import { checkFieldFile, FIELD_FILE_ACCEPT, getFileNameFromUrl, isImageUpload } 
 import { isEmptyFileValue } from "@/utils/fieldFormatting";
 
 const ACTIVATE_KEYS = ["Enter", " "];
+const UPLOADER_VARIANT = "uploader";
+const UPLOADER_IMAGE_URL_PATTERN = /\.(jpg|jpeg|png|gif|webp)$/i;
+const CLOUDINARY_IMAGE_PATH = "/image/";
+const CSV_EXTENSION = ".csv";
+const DROPZONE_CLASSES =
+  "relative mt-2 flex h-70.75 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-10 text-gray-500 transition hover:border-[#5570F1] hover:bg-blue-50";
+const SELECT_BUTTON_CLASSES = "text-textPrimary! border-gray-300! bg-white! hover:bg-gray-500!";
+
+// pdf, image or csv only
+const checkUploaderFile = (file) => {
+  const fileType = file.type;
+  const isCSV = file.name.toLowerCase().endsWith(CSV_EXTENSION);
+  if (!fileType.includes("image") && !fileType.includes("pdf") && !isCSV) {
+    return { error: "Only PDF, image, or CSV files are allowed." };
+  }
+  return { isImage: fileType.includes("image") };
+};
 
 const FieldFileUpload = ({
   field = {},
@@ -17,25 +34,41 @@ const FieldFileUpload = ({
   isDisabled = false,
   onFileSelect,
   children,
+  variant = "field",
+  accept = FIELD_FILE_ACCEPT,
+  existingUrl = "",
   ...rest
 }) => {
   const { label, name, required, isDisplayText, ai_formatting } = field;
+  const isUploader = variant === UPLOADER_VARIANT;
   const [fileName, setFileName] = useState("");
   const [previewUrl, setPreviewUrl] = useState(null);
   const inputRef = useRef(null);
 
-  // restore a previously uploaded file from the draft
+  // restore a previously uploaded file
   useEffect(() => {
+    if (isUploader) {
+      if (!existingUrl || fileName) return;
+      setFileName(getFileNameFromUrl(existingUrl));
+      if (UPLOADER_IMAGE_URL_PATTERN.test(existingUrl) || existingUrl.includes(CLOUDINARY_IMAGE_PATH)) {
+        setPreviewUrl(existingUrl);
+      }
+      return;
+    }
     const url = value?.secureUrl;
     if (!url || fileName) return;
     setFileName(getFileNameFromUrl(url));
     if (isImageUpload(value)) setPreviewUrl(url);
-  }, [value, fileName]);
+  }, [isUploader, existingUrl, value, fileName]);
 
   const handleFile = (file) => {
     if (!file) return;
-    const { error, isImage } = checkFieldFile(file);
+    const { error, isImage } = isUploader ? checkUploaderFile(file) : checkFieldFile(file);
     if (error) {
+      if (isUploader) {
+        alert(error);
+        return;
+      }
       toast.error(error);
       if (inputRef.current) inputRef.current.value = "";
       return;
@@ -70,6 +103,65 @@ const FieldFileUpload = ({
 
   const disabledClasses = isDisabled ? "opacity-70 cursor-not-allowed!" : "";
 
+  const dropzoneBody = (
+    <>
+      <PiFileArrowUpFill className="text-textPrimary text-8xl" />
+      <h4 className="text-textPrimary text-base font-medium">Click to upload or drag and drop a file</h4>
+      <h5 className="text-textPrimary">
+        {isUploader ? ".pdf, .doc, .docx, .jpg, .png, .csv up to 10MB" : "pdf, jpg, png, csv, txt, rtf up to 10MB"}
+      </h5>
+      <Button
+        label="Select file"
+        className={isUploader ? SELECT_BUTTON_CLASSES : `${SELECT_BUTTON_CLASSES} ${disabledClasses}`}
+        rightIcon={CgSoftwareUpload}
+        disabled={isDisabled}
+      />
+      <input
+        ref={inputRef}
+        type="file"
+        name={name}
+        disabled={isDisabled}
+        accept={accept}
+        onChange={(e) => handleFile(e.target.files?.[0])}
+        className="hidden"
+      />
+    </>
+  );
+
+  const fileNameElement = fileName && (
+    <div className="mt-2 text-sm text-gray-700">
+      {isUploader && existingUrl && !previewUrl ? (
+        <a href={existingUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+          Selected: {fileName}
+        </a>
+      ) : (
+        <>Selected: {fileName}</>
+      )}
+    </div>
+  );
+
+  const previewElement = previewUrl && (
+    <img src={previewUrl} alt="Preview" className="mt-3 max-h-40 rounded border" />
+  );
+
+  if (isUploader) {
+    return (
+      <div className="w-full">
+        <label className="mb-2 block text-sm text-[#666666] lg:text-base">{label}</label>
+        <div
+          className={DROPZONE_CLASSES}
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+          onClick={() => inputRef.current.click()}
+        >
+          {dropzoneBody}
+        </div>
+        {fileNameElement}
+        {previewElement}
+      </div>
+    );
+  }
+
   return (
     <div className={`flex w-full flex-col items-start ${className}`} {...rest}>
       {label && (
@@ -83,7 +175,7 @@ const FieldFileUpload = ({
       <div className="flex w-full gap-2 mt-2">
         <div className="w-full">
           <div
-            className={`relative mt-2 flex h-70.75 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-10 text-gray-500 transition hover:border-[#5570F1] hover:bg-blue-50 ${
+            className={`${DROPZONE_CLASSES} ${
               required && isEmptyFileValue(value) ? "border-accent bg-highlighting" : "border-gray-300"
             } ${disabledClasses}`}
             onDrop={handleDrop}
@@ -94,29 +186,12 @@ const FieldFileUpload = ({
             role="button"
             aria-label="Upload file"
           >
-            <PiFileArrowUpFill className="text-textPrimary text-8xl" />
-            <h4 className="text-textPrimary text-base font-medium">Click to upload or drag and drop a file</h4>
-            <h5 className="text-textPrimary">pdf, jpg, png, csv, txt, rtf up to 10MB</h5>
-            <Button
-              label="Select file"
-              className={`text-textPrimary! border-gray-300! bg-white! hover:bg-gray-500! ${disabledClasses}`}
-              rightIcon={CgSoftwareUpload}
-              disabled={isDisabled}
-            />
-            <input
-              ref={inputRef}
-              type="file"
-              name={name}
-              disabled={isDisabled}
-              accept={FIELD_FILE_ACCEPT}
-              onChange={(e) => handleFile(e.target.files?.[0])}
-              className="hidden"
-            />
+            {dropzoneBody}
           </div>
 
-          {fileName && <div className="mt-2 text-sm text-gray-700">Selected: {fileName}</div>}
+          {fileNameElement}
 
-          {previewUrl && <img src={previewUrl} alt="Preview" className="mt-3 max-h-40 rounded border" />}
+          {previewElement}
 
           {children}
         </div>

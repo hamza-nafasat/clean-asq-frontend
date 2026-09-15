@@ -1,7 +1,9 @@
+import Spinner from "./Spinner";
+
 const CustomLoading = () => (
   <div>
     <div className="flex h-64 items-center justify-center">
-      <div className="border-light h-8 w-8 animate-spin rounded-full border-b-2"></div>
+      <Spinner variant="loader" />
     </div>
   </div>
 );

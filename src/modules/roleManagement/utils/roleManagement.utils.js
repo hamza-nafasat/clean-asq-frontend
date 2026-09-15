@@ -1,11 +1,5 @@
 import { FIELD_TYPES } from "@/constants";
 
-export const getFieldLabel = (field) =>
-  field
-    .split(/(?=[A-Z])/)
-    .join(" ")
-    .replace(/^\w/, (c) => c.toUpperCase());
-
 export const getDatePart = (date) => date?.split("T")?.[0];
 
 // add form keeps permission ids

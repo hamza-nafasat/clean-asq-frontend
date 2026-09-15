@@ -4,7 +4,7 @@ import { unwrapResult } from "@reduxjs/toolkit";
 import { updateFormState } from "@/redux/slices/form.slice";
 import SignatureBox from "@/components/global/SignatureBox";
 import { SIGNATURE_KEY } from "@/constants";
-import { openLinksInNewTab } from "@/utils/linkTargets";
+import HtmlContent from "@/components/shared/HtmlContent";
 import { uploadSectionSignature } from "@/utils/sectionSignature";
 
 const AggrementBlockPdf = ({ name, step, isSignature, formInnerData, setFormInnerData, sectionKey }) => {
@@ -27,10 +27,7 @@ const AggrementBlockPdf = ({ name, step, isSignature, formInnerData, setFormInne
 
       {(step?.ai_formatting || step?.displayText) && (
         <div className="mb-4 flex w-full items-end justify-between gap-3">
-          <div
-            className="mt-2 w-full"
-            dangerouslySetInnerHTML={{ __html: openLinksInNewTab(step?.ai_formatting || step?.displayText) }}
-          />
+          <HtmlContent className="mt-2 w-full" html={step?.ai_formatting || step?.displayText} />
         </div>
       )}
 
@@ -38,7 +35,7 @@ const AggrementBlockPdf = ({ name, step, isSignature, formInnerData, setFormInne
         {isSignature && (
           <>
             {step?.signDisplayFormattedText && (
-              <div className="mb-4" dangerouslySetInnerHTML={{ __html: String(step.signDisplayFormattedText) }} />
+              <HtmlContent className="mb-4" html={String(step.signDisplayFormattedText)} linkMode="none" />
             )}
             <SignatureBox
               step={step}

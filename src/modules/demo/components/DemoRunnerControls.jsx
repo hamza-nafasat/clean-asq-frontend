@@ -1,16 +1,6 @@
 import { useState } from "react";
-import {
-  FiCheck,
-  FiCopy,
-  FiMessageCircle,
-  FiPause,
-  FiPlay,
-  FiSkipBack,
-  FiSkipForward,
-  FiUsers,
-  FiX,
-} from "react-icons/fi";
-import { DEMO_COPY_FEEDBACK_MS } from "../utils/demo.constants";
+import { FiMessageCircle, FiPause, FiPlay, FiSkipBack, FiSkipForward, FiX } from "react-icons/fi";
+import DemoViewerUrlBar from "./DemoViewerUrlBar";
 
 const DemoRunnerControls = ({
   viewerUrl = "",
@@ -26,15 +16,6 @@ const DemoRunnerControls = ({
   onNext,
 }) => {
   const [question, setQuestion] = useState("");
-  const [copiedUrl, setCopiedUrl] = useState(false);
-
-  const copyViewerUrl = async () => {
-    if (!viewerUrl) return;
-    await navigator.clipboard.writeText(viewerUrl);
-    setCopiedUrl(true);
-    setTimeout(() => setCopiedUrl(false), DEMO_COPY_FEEDBACK_MS);
-  };
-
   const handleAskQuestion = (e) => {
     e.preventDefault();
     if (!question.trim()) return;
@@ -45,19 +26,7 @@ const DemoRunnerControls = ({
   return (
     <footer className="border-t border-gray-200 bg-white px-6 py-3 space-y-3">
       {viewerUrl && !isEnded && (
-        <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-          <FiUsers size={13} className="text-gray-400 shrink-0" />
-          <span className="text-xs text-gray-500 truncate flex-1">{viewerUrl}</span>
-          {viewerCount > 0 && <span className="text-xs text-green-600 font-medium shrink-0">{viewerCount} watching</span>}
-          <button
-            type="button"
-            onClick={copyViewerUrl}
-            className="flex items-center gap-1 text-xs text-primary hover:underline shrink-0"
-          >
-            {copiedUrl ? <FiCheck size={12} /> : <FiCopy size={12} />}
-            {copiedUrl ? "Copied!" : "Copy"}
-          </button>
-        </div>
+        <DemoViewerUrlBar viewerUrl={viewerUrl} viewerCount={viewerCount} variant="runner" />
       )}
 
       {isLive && (

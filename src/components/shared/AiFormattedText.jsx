@@ -1,8 +1,8 @@
-import { openLinksInNewTab } from "@/utils/linkTargets";
+import HtmlContent from "@/components/shared/HtmlContent";
 
 const AiFormattedText = ({ html = "", className = "" }) => (
   <div className={className}>
-    <div dangerouslySetInnerHTML={{ __html: openLinksInNewTab(html) }} />
+    <HtmlContent html={html} />
   </div>
 );
 

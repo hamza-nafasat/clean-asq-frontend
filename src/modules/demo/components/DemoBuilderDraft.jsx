@@ -3,6 +3,7 @@ import { FiCheck, FiChevronDown, FiChevronUp, FiPlay, FiSave, FiZap } from "reac
 import { HiOutlineSparkles } from "react-icons/hi";
 import DemoBuilderStepRow from "./DemoBuilderStepRow";
 import { DEMO_STEP_RESULTS } from "../utils/demo.constants";
+import Spinner from "@/components/shared/Spinner";
 
 const DemoBuilderDraft = ({
   demoAction = { steps: [], paramOverrides: {} },
@@ -33,7 +34,7 @@ const DemoBuilderDraft = ({
               title="Run these steps in the live browser"
             >
               {isRunning ? (
-                <span className="h-3 w-3 border-2 border-gray-300 border-t-primary rounded-full animate-spin" />
+                <Spinner tone="neutral" />
               ) : (
                 <FiPlay size={12} />
               )}

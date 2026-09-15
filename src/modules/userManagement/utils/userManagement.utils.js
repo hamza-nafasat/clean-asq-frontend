@@ -99,12 +99,6 @@ export const formateDateAndTime = (date) => {
   });
 };
 
-export const getFieldLabel = (field) =>
-  field
-    .split(/(?=[A-Z])/)
-    .join(" ")
-    .replace(/^\w/, (c) => c.toUpperCase());
-
 export const applyUserFormChange = (prev, { name, value, type, checked }) => ({
   ...prev,
   [name]: type === FIELD_TYPES.CHECKBOX ? checked : value,

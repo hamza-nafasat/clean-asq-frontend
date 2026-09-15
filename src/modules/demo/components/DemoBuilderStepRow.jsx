@@ -1,5 +1,6 @@
 import { FiCheck, FiX } from "react-icons/fi";
 import { DEMO_STEP_RESULTS } from "../utils/demo.constants";
+import Spinner from "@/components/shared/Spinner";
 
 const ROW_CLASSES = {
   [DEMO_STEP_RESULTS.RUNNING]: "border-primary/30 bg-primary/5",
@@ -25,7 +26,7 @@ const DemoBuilderStepRow = ({ step = {}, index = 0, status = null }) => (
       {step.message && <p className="text-gray-400 mt-0.5 italic">{step.message}</p>}
     </div>
     {status === DEMO_STEP_RESULTS.RUNNING && (
-      <span className="h-3 w-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin shrink-0 mt-0.5" />
+      <Spinner tone="primarySoft" className="shrink-0 mt-0.5" />
     )}
     {status === DEMO_STEP_RESULTS.PASS && <FiCheck size={12} className="text-green-500 shrink-0 mt-0.5" />}
     {status === DEMO_STEP_RESULTS.FAIL && <FiX size={12} className="text-red-400 shrink-0 mt-0.5" />}

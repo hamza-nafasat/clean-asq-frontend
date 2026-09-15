@@ -8,7 +8,7 @@ import Modal from "@/components/shared/Modal";
 import LocationSettingsModal from "@/components/modals/LocationSettingsModal";
 import { LAYOUT_ROUTES, LOCATION_STATUSES } from "@/constants";
 import getEnv from "@/utils/env";
-import { openLinksInNewTab } from "@/utils/linkTargets";
+import HtmlContent from "@/components/shared/HtmlContent";
 
 const LocationStatusModal = ({
   locationStatusModal,
@@ -36,7 +36,7 @@ const LocationStatusModal = ({
           <img src={locationData?.logo} alt="logo" referrerPolicy="no-referrer" />
         </div>
         <div className="flex w-full p-4">
-          <div dangerouslySetInnerHTML={{ __html: openLinksInNewTab(locationData?.message) }} />
+          <HtmlContent html={locationData?.message} />
         </div>
 
         <ReCAPTCHA

@@ -1,5 +1,5 @@
-import { MoreVertical } from "lucide-react";
-import { ThreeDotEditViewDelete } from "@/components/shared/ThreeDotViewEditDelete";
+import RowActionMenuCell from "@/components/shared/RowActionMenuCell";
+import ReadOnlyTextCell from "@/components/shared/ReadOnlyTextCell";
 
 // columns for the sortable rules table
 export const buildRuleColumns = ({ actionMenu, onToggleMenu, menuButtons }) => [
@@ -27,11 +27,9 @@ export const buildRuleColumns = ({ actionMenu, onToggleMenu, menuButtons }) => [
     grow: 1,
     selector: (row) => row.prompt,
     cell: (row) => (
-      <textarea
+      <ReadOnlyTextCell
         value={row.prompt}
-        readOnly
         className="text-textPrimary border border-frameColor w-full resize-none rounded-md bg-[#FAFBFF] p-2 text-sm"
-        rows={2}
       />
     ),
   },
@@ -55,17 +53,13 @@ export const buildRuleColumns = ({ actionMenu, onToggleMenu, menuButtons }) => [
     name: "Actions",
     width: "96px",
     cell: (row) => (
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => onToggleMenu(row._id)}
-          className="cursor-pointer rounded p-1 hover:bg-gray-100"
-          aria-label="Actions"
-        >
-          <MoreVertical size={18} />
-        </button>
-        {actionMenu === row._id && <ThreeDotEditViewDelete buttons={menuButtons} row={row} />}
-      </div>
+      <RowActionMenuCell
+        row={row}
+        buttons={menuButtons}
+        isOpen={actionMenu === row._id}
+        onToggle={() => onToggleMenu(row._id)}
+        buttonClassName="cursor-pointer rounded p-1 hover:bg-gray-100"
+      />
     ),
   },
 ];

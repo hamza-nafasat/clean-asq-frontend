@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { FiCheck, FiChevronUp, FiPlay } from "react-icons/fi";
 import { HiOutlineSparkles } from "react-icons/hi";
+import EmptyState from "@/components/shared/EmptyState";
+import LoadingState from "@/components/shared/LoadingState";
 import DemoRunnerControls from "./DemoRunnerControls";
 import DemoRunnerQuestions from "./DemoRunnerQuestions";
 import { DEMO_SESSION_STATUSES } from "../utils/demo.constants";
@@ -72,28 +74,21 @@ const DemoRunner = ({
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {isGenerating && (
-            <div className="flex flex-col items-center justify-center py-16 gap-4">
-              <div className="h-10 w-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-              <div className="text-center">
-                <p className="text-sm font-semibold text-gray-700">Generating your demo script…</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  AI is preparing narration for all {totalSteps} steps. This takes about 15 seconds.
-                </p>
-              </div>
-            </div>
+            <LoadingState
+              className="flex flex-col items-center justify-center py-16 gap-4"
+              title="Generating your demo script…"
+              description={<>AI is preparing narration for all {totalSteps} steps. This takes about 15 seconds.</>}
+            />
           )}
 
           {isReady && !isGenerating && (
-            <div className="flex flex-col items-center justify-center py-16 gap-4">
-              <div className="rounded-full bg-green-100 p-4">
-                <FiPlay size={28} className="text-green-600" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-semibold text-gray-700">Your script is ready!</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {totalSteps} steps prepared. Share the viewer URL with your audience, then click Begin.
-                </p>
-              </div>
+            <EmptyState
+              className="flex flex-col items-center justify-center py-16 gap-4"
+              iconClassName="rounded-full bg-green-100 p-4"
+              icon={<FiPlay size={28} className="text-green-600" />}
+              title="Your script is ready!"
+              description={<>{totalSteps} steps prepared. Share the viewer URL with your audience, then click Begin.</>}
+            >
               <button
                 type="button"
                 onClick={() => onBegin?.()}
@@ -101,19 +96,17 @@ const DemoRunner = ({
               >
                 <FiPlay size={14} /> Begin Demo
               </button>
-            </div>
+            </EmptyState>
           )}
 
           {isEnded && (
-            <div className="flex flex-col items-center justify-center py-16 gap-4">
-              <div className="rounded-full bg-gray-100 p-4">
-                <FiCheck size={28} className="text-gray-500" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-semibold text-gray-700">Demo complete</p>
-                <p className="text-xs text-gray-400 mt-1">Thanks for presenting!</p>
-              </div>
-            </div>
+            <EmptyState
+              className="flex flex-col items-center justify-center py-16 gap-4"
+              iconClassName="rounded-full bg-gray-100 p-4"
+              icon={<FiCheck size={28} className="text-gray-500" />}
+              title="Demo complete"
+              description="Thanks for presenting!"
+            />
           )}
 
           {isLive && (

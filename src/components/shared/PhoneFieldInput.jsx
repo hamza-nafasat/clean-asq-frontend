@@ -1,8 +1,16 @@
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 
-const PhoneFieldInput = ({ value, placeholder, className = "", numberInputProps = {}, disabled, onChange }) => (
-  <div>
+const PhoneFieldInput = ({
+  value,
+  placeholder,
+  className = "",
+  wrapperClassName,
+  numberInputProps = {},
+  disabled,
+  onChange,
+}) => (
+  <div className={wrapperClassName}>
     <PhoneInput
       international
       limitMaxLength

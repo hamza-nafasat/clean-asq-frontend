@@ -9,6 +9,9 @@ import { TrashIcon, XIcon } from "lucide-react";
 import React, { useCallback, useState } from "react";
 import { MdOutlineRestore } from "react-icons/md";
 import { toast } from "react-toastify";
+import HtmlContent from "@/components/shared/HtmlContent";
+
+const OWNER_VARIANT = "owner";
 
 const MakeFieldDataCustom = ({
   originalFieldData,
@@ -17,11 +20,12 @@ const MakeFieldDataCustom = ({
   index,
   suggestions,
   isArticleForm = false,
+  variant = "field",
 }) => {
+  const isOwner = variant === OWNER_VARIANT;
   const field = fieldsData[index] || {};
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [formateTextInMarkDown, { isLoading }] = useFormateTextInMarkDownMutation();
-  field?.displayTextFormattingInstructions;
 
   const addNewOption = useCallback(() => {
     setFieldsData((prev) =>
@@ -78,7 +82,7 @@ const MakeFieldDataCustom = ({
 
   const updateFieldDataFieldForOptions = useCallback(
     (e, optionIndex) => {
-      console.log("e", e.target);
+      if (!isOwner) console.log("e", e.target);
       const { name, value } = e.target;
       setFieldsData((prev) =>
         prev.map((item, idx) =>
@@ -91,7 +95,7 @@ const MakeFieldDataCustom = ({
         ),
       );
     },
-    [setFieldsData, index],
+    [setFieldsData, index, isOwner],
   );
 
   const handleDeleteField = useCallback(() => {
@@ -107,7 +111,7 @@ const MakeFieldDataCustom = ({
     const textForDisplay = field.displayText || "";
     const instructions = field?.displayTextFormattingInstructions || "";
 
-    console.log("textForDisplay", textForDisplay, instructions);
+    if (!isOwner) console.log("textForDisplay", textForDisplay, instructions);
     if (!instructions || !textForDisplay) {
       toast.error("Please enter formatting instruction and text to format");
       return;
@@ -125,7 +129,7 @@ const MakeFieldDataCustom = ({
       console.error(err);
       toast.error(err?.data?.message || "Failed to format text");
     }
-  }, [field?.displayTextFormattingInstructions, field.displayText, formateTextInMarkDown, index, setFieldsData]);
+  }, [field?.displayTextFormattingInstructions, field.displayText, formateTextInMarkDown, index, setFieldsData, isOwner]);
 
   const getResponseFromAi = useCallback(async () => {
     const aiPrompt = field.aiPrompt || "";
@@ -179,7 +183,7 @@ const MakeFieldDataCustom = ({
         </div>
         {/* Field Type & Placeholder */}
         <div className="flex items-center justify-between gap-2">
-          {!isArticleForm && (
+          {!isArticleForm && !isOwner && (
             <div className="flex w-full flex-col items-start gap-2">
               <p className="text-start text-sm lg:text-base">Field Type</p>
               <div className="w-full rounded-lg border border-gray-300 p-1.5">
@@ -209,7 +213,7 @@ const MakeFieldDataCustom = ({
         </div>
 
         {/* for text field add suggestions list */}
-        {field?.type == "text" && (
+        {!isOwner && field?.type == "text" && (
           <div className="flex items-center justify-between gap-2">
             <TextField
               label="Enter suggestions (comma separated)"
@@ -272,15 +276,7 @@ const MakeFieldDataCustom = ({
             {field?.aiResponse && (
               <div className="w-full flex-col py-4">
                 <h6 className="text-textPrimary py-2 text-xl font-semibold">AI Response</h6>
-                <div
-                  className="h-full p-4"
-                  dangerouslySetInnerHTML={{
-                    __html: String(field?.aiResponse || "").replace(/<a(\s+.*?)?>/g, (match) => {
-                      if (match.includes("target=")) return match; // avoid duplicates
-                      return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-                    }),
-                  }}
-                />
+                <HtmlContent className="h-full p-4" html={field?.aiResponse} />
               </div>
             )}
           </div>
@@ -297,22 +293,34 @@ const MakeFieldDataCustom = ({
                   name="label"
                   onChange={(e) => updateFieldDataFieldForOptions(e, i)}
                 />
-                <TextField
-                  label={`Option ${i + 1} Value`}
-                  value={opt.value}
-                  name="value"
-                  onChange={(e) => updateFieldDataFieldForOptions(e, i)}
-                />
-                <Button variant="standard" onClick={() => removeOption(i)} className="mt-8 bg-red-500 hover:bg-red-700">
-                  <TrashIcon className="h-5 w-5 text-white" />
-                </Button>
+                {isOwner ? (
+                  <TextField label={`Option ${i + 1} Value`} value={opt.value} name="value" />
+                ) : (
+                  <TextField
+                    label={`Option ${i + 1} Value`}
+                    value={opt.value}
+                    name="value"
+                    onChange={(e) => updateFieldDataFieldForOptions(e, i)}
+                  />
+                )}
+                {!isOwner && (
+                  <Button
+                    variant="standard"
+                    onClick={() => removeOption(i)}
+                    className="mt-8 bg-red-500 hover:bg-red-700"
+                  >
+                    <TrashIcon className="h-5 w-5 text-white" />
+                  </Button>
+                )}
               </div>
             ))}
-            <div className="flex justify-end">
-              <Button variant="standard" onClick={addNewOption} className="mt-4">
-                Add Option
-              </Button>
-            </div>
+            {!isOwner && (
+              <div className="flex justify-end">
+                <Button variant="standard" onClick={addNewOption} className="mt-4">
+                  Add Option
+                </Button>
+              </div>
+            )}
           </div>
         )}
         {/* Display text & AI formatting */}
@@ -325,7 +333,7 @@ const MakeFieldDataCustom = ({
               name="displayText"
               onChange={updateFieldDataField}
             />
-            <label htmlFor="displayTextFormattingInstructions">
+            <label htmlFor={isOwner ? "formattingInstructionForAi" : "displayTextFormattingInstructions"}>
               Enter formatting instruction for AI and click on generate
             </label>
             <textarea
@@ -342,34 +350,34 @@ const MakeFieldDataCustom = ({
               </Button>
             </div>
             {field.ai_formatting && (
-              <div
-                className="h-full w-full p-4"
-                dangerouslySetInnerHTML={{
-                  __html: String(field?.ai_formatting || "").replace(/<a(\s+.*?)?>/g, (match) => {
-                    if (match.includes("target=")) return match; // avoid duplicates
-                    return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-                  }),
-                }}
-              />
+              <HtmlContent className={isOwner ? "h-full p-4" : "h-full w-full p-4"} html={field?.ai_formatting} />
             )}
           </div>
         )}
       </div>
-      <div className="flex w-full justify-end">
-        <Button variant="standard" onClick={() => setConfirmDelete(true)} className="max-w-50 bg-red-600 text-white hover:bg-red-700">
-          Delete Field
-        </Button>
-      </div>
-      <ConfirmationModal
-        isOpen={confirmDelete}
-        onClose={() => setConfirmDelete(false)}
-        onConfirm={handleDeleteField}
-        title="Delete Field"
-        message="Are you sure you want to delete this field?"
-        confirmButtonText="Delete"
-        confirmButtonClassName="bg-red-500 hover:bg-red-600 text-white"
-        cancelButtonText="Cancel"
-      />
+      {!isOwner && (
+        <>
+          <div className="flex w-full justify-end">
+            <Button
+              variant="standard"
+              onClick={() => setConfirmDelete(true)}
+              className="max-w-50 bg-red-600 text-white hover:bg-red-700"
+            >
+              Delete Field
+            </Button>
+          </div>
+          <ConfirmationModal
+            isOpen={confirmDelete}
+            onClose={() => setConfirmDelete(false)}
+            onConfirm={handleDeleteField}
+            title="Delete Field"
+            message="Are you sure you want to delete this field?"
+            confirmButtonText="Delete"
+            confirmButtonClassName="bg-red-500 hover:bg-red-600 text-white"
+            cancelButtonText="Cancel"
+          />
+        </>
+      )}
     </div>
   );
 };

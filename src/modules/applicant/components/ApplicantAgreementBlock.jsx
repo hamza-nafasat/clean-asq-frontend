@@ -1,5 +1,4 @@
 import { useEnterToNextField } from "../hooks/useEnterToNextField";
-import { makeDocLinkHandler } from "@/utils/makeDocLinkHandler";
 import { updateFormState } from "@/redux/slices/form.slice";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
 import { getSignatureUrl, isSignatureComplete, normalizeFieldEntry, normalizeSignature } from "@/utils/signatureShape";
@@ -7,7 +6,7 @@ import { unwrapResult } from "@reduxjs/toolkit";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import DocumentModal from "@/components/modals/DocumentModal";
+import HtmlContent from "@/components/shared/HtmlContent";
 import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";
 import { EditSectionDisplayTextFromatingModal } from "./ApplicantSectionTextModal";
@@ -41,9 +40,6 @@ function AggrementBlock({
   const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
   const [loadingNext, setLoadingNext] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
-  const [openDoc, setOpenDoc] = useState(null); // { url, title } | null
-  const displayTextRef = useRef(null);
-  const signDisplayTextRef = useRef(null);
   const requiredNames = useMemo(
     () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
     [fields],
@@ -123,23 +119,6 @@ function AggrementBlock({
   }, [form, isCreator, isSignature, requiredNames]);
   console.log("isAllRequiredFieldsFilled", isAllRequiredFieldsFilled);
 
-  // Intercept link clicks inside display text — open in DocumentModal instead of new tab.
-  useEffect(() => {
-    const el = displayTextRef.current;
-    if (!el) return;
-    const handler = makeDocLinkHandler(setOpenDoc);
-    el.addEventListener("click", handler, true);
-    return () => el.removeEventListener("click", handler, true);
-  }, [step?.ai_formatting, step?.displayText]);
-
-  useEffect(() => {
-    const el = signDisplayTextRef.current;
-    if (!el) return;
-    const handler = makeDocLinkHandler(setOpenDoc);
-    el.addEventListener("click", handler, true);
-    return () => el.removeEventListener("click", handler, true);
-  }, [step?.signDisplayFormattedText]);
-
   submitFromEnterRef.current = () => {
     if (loadingNext) return;
     if (currentStep < totalSteps - 1) {
@@ -153,7 +132,6 @@ function AggrementBlock({
 
   return (
     <div ref={formContainerRef} className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
-      {openDoc && <DocumentModal url={openDoc.url} title={openDoc.title} onClose={() => setOpenDoc(null)} />}
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold" data-ai-display-text>
           {name}
@@ -177,13 +155,11 @@ function AggrementBlock({
 
       {(step?.ai_formatting || step?.displayText) && (
         <div className="mb-4 flex w-full items-end justify-between gap-3">
-          <div
-            ref={displayTextRef}
+          <HtmlContent
             className="mt-2 w-full"
             data-ai-display-text
-            dangerouslySetInnerHTML={{
-              __html: String(step?.ai_formatting || step?.displayText || ""),
-            }}
+            html={String(step?.ai_formatting || step?.displayText || "")}
+            linkMode="documentModal"
           />
         </div>
       )}
@@ -248,13 +224,11 @@ function AggrementBlock({
         {isSignature && (
           <>
             {step?.signDisplayFormattedText && (
-              <div
-                ref={signDisplayTextRef}
+              <HtmlContent
                 className="mb-4"
                 data-ai-display-text
-                dangerouslySetInnerHTML={{
-                  __html: String(step.signDisplayFormattedText),
-                }}
+                html={String(step.signDisplayFormattedText)}
+                linkMode="documentModal"
               />
             )}
             <SignatureBox
