@@ -9,7 +9,7 @@ export const isEnterSequenceType = (type, includeCheckboxes = false) => {
   return true;
 };
 
-export function useEnterToNextField(containerRef, options = {}) {
+export const useEnterToNextField = (containerRef, options = {}) => {
   const { excludeIds = [], onLastFieldRef, onSpecialEnterRef, includeCheckboxes = false } = options;
   const excludeIdsRef = useRef(excludeIds);
   excludeIdsRef.current = excludeIds;
@@ -59,4 +59,4 @@ export function useEnterToNextField(containerRef, options = {}) {
     container.addEventListener("keydown", handler);
     return () => container.removeEventListener("keydown", handler);
   }, [containerRef, includeCheckboxes, onLastFieldRef, onSpecialEnterRef]);
-}
+};

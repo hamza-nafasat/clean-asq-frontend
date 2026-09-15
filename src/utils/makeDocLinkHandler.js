@@ -1,9 +1,5 @@
-/**
- * Capture-phase click handler that opens document links in DocumentModal
- * instead of navigating / opening a new tab.
- * Skips hash, mailto, tel, and javascript URLs.
- */
-export function makeDocLinkHandler(setDoc) {
+// capture-phase click handler that opens document links in DocumentModal
+export const makeDocLinkHandler = (setDoc) => {
   return (e) => {
     const a = e.target.closest?.("a[href]");
     if (!a) return;
@@ -21,4 +17,4 @@ export function makeDocLinkHandler(setDoc) {
     e.stopPropagation();
     setDoc({ url: href, title: href });
   };
-}
+};

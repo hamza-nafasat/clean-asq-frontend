@@ -1,22 +1,19 @@
-import getEnv from "@/utils/env";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import getEnv from "@/utils/env";
 
 const idMissionApis = createApi({
   reducerPath: "idMissionApi",
   baseQuery: fetchBaseQuery({ baseUrl: `${getEnv("SERVER_URL")}/api/id-mission`, credentials: "include" }),
-
   tagTypes: ["idMission"],
   endpoints: (builder) => ({
-    // get session
-    // --------------
+    /////
     getIdMissionSession: builder.mutation({
       query: (data) => ({
         url: `/get-session?sectionKey=${data?.sectionKey || ""}`,
         method: "GET",
       }),
     }),
-    // send otp
-    // --------------
+    /////
     sendOtp: builder.mutation({
       query: (data) => ({
         url: "/send-otp",
@@ -24,8 +21,7 @@ const idMissionApis = createApi({
         body: data,
       }),
     }),
-    // verify email
-    // --------------
+    /////
     verifyEmail: builder.mutation({
       query: (data) => ({
         url: "/verify-email",
@@ -35,5 +31,6 @@ const idMissionApis = createApi({
     }),
   }),
 });
+
 export const { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } = idMissionApis;
 export default idMissionApis;

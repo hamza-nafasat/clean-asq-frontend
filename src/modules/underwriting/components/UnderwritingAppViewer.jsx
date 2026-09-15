@@ -1,7 +1,6 @@
-import { ApplicationPdfViewCommonProps } from '@/components/global/ApplicationPdfView';
-import React from 'react'
+import { ApplicationPdfViewCommonProps } from "@/components/global/ApplicationPdfView";
 
-const AppViewer = ({ data }) => {
+const UnderwritingAppViewer = ({ data = null }) => {
   const userId = data?.user?._id;
   const pdfId = data?.form?._id;
 
@@ -9,7 +8,7 @@ const AppViewer = ({ data }) => {
     <div className="flex w-full min-h-screen justify-center items-center">
       <ApplicationPdfViewCommonProps userId={userId} pdfId={pdfId} className="rounded-lg!" isEditAble={true} />
     </div>
-  )
-}
+  );
+};
 
-export { AppViewer };
+export default UnderwritingAppViewer;

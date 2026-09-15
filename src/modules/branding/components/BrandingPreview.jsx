@@ -1,14 +1,18 @@
-import Button from "@/components/shared/Button";
-import { setCompanyName } from "@/redux/slices/branding.slice";
-import { detectLogo } from "../utils/branding.utils2";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
+import Button from "@/components/shared/Button";
+import { setCompanyName } from "@/redux/slices/branding.slice";
+import { BRANDING_COPY_FEEDBACK_MS, BRANDING_HEADER_ALIGNMENTS, BRANDING_PREVIEW_STEPS } from "../utils/branding.constants";
 
-const STEPS = ["Business Info", "Owners", "Documents", "Review"];
+const LOGO_JUSTIFY = {
+  [BRANDING_HEADER_ALIGNMENTS.RIGHT]: "flex-end",
+  [BRANDING_HEADER_ALIGNMENTS.CENTER]: "center",
+  [BRANDING_HEADER_ALIGNMENTS.LEFT]: "flex-start",
+};
 
 const Preview = ({
   primaryColor,
-  companyName,
+  companyName = "",
   selectedLogo,
   secondaryColor,
   accentColor,
@@ -30,29 +34,22 @@ const Preview = ({
   const dispatch = useDispatch();
   const [copied, setCopied] = useState(false);
 
+  useEffect(() => {
+    dispatch(setCompanyName(companyName));
+  }, [companyName, dispatch]);
+
   const handleCopy = async (text) => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
 
-  useEffect(() => {
-    dispatch(setCompanyName(companyName));
-    if (selectedLogo) {
-      detectLogo(selectedLogo).then((res) => {
-        console.log("res", res);
-      });
-    }
-  }, [companyName, dispatch, selectedLogo]);
-
-  const logoJustify = headerAlignment === "right" ? "flex-end" : headerAlignment === "center" ? "center" : "flex-start";
-
-  const domain = window.location.hostname;
+  const logoJustify = LOGO_JUSTIFY[headerAlignment] ?? LOGO_JUSTIFY[BRANDING_HEADER_ALIGNMENTS.LEFT];
   const companySlug = (companyName || "")
     .toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "");
-  const previewUrl = `https://${domain}/${companySlug || "company-name"}`;
+  const previewUrl = `https://${window.location.hostname}/${companySlug || "company-name"}`;
 
   return (
     <div className="mt-6 rounded-xl border border-[#F0F0F0] p-3 shadow-sm md:p-6">
@@ -94,10 +91,10 @@ const Preview = ({
           </div>
         </div>
 
-        {/* Stepper — inherits form background color */}
+        {/* Stepper */}
         <div style={{ backgroundColor: backgroundColor || "#ffffff" }} className="px-6 py-3">
           <div className="flex items-center gap-0">
-            {STEPS.map((step, i) => (
+            {BRANDING_PREVIEW_STEPS.map((step, i) => (
               <div key={step} className="flex flex-1 items-center">
                 <div className="flex flex-col items-center gap-1">
                   <div
@@ -112,7 +109,7 @@ const Preview = ({
                   </div>
                   <span style={{ color: accentColor || "#6366f1", fontSize: 10, whiteSpace: "nowrap" }}>{step}</span>
                 </div>
-                {i < STEPS.length - 1 && (
+                {i < BRANDING_PREVIEW_STEPS.length - 1 && (
                   <div
                     style={{ backgroundColor: accentColor || "#6366f1", opacity: 0.3, height: 2, marginBottom: 18 }}
                     className="flex-1"
@@ -132,7 +129,6 @@ const Preview = ({
             </a>
           </p>
 
-          {/* Normal field */}
           <div className="mb-4">
             <label className="mb-1 block text-xs font-medium" style={{ color: textColor || "#000000" }}>
               Business Name
@@ -150,7 +146,6 @@ const Preview = ({
             />
           </div>
 
-          {/* Highlighted field */}
           <div className="mb-5">
             <label className="mb-1 block text-xs font-medium" style={{ color: textColor || "#000000" }}>
               Business Email <span style={{ color: accentColor || "#6366f1", fontSize: 10 }}>← focused</span>
@@ -169,7 +164,6 @@ const Preview = ({
             />
           </div>
 
-          {/* Buttons */}
           <div className="flex flex-wrap items-center gap-3">
             <Button
               label="Next Step"
@@ -204,26 +198,23 @@ const Preview = ({
   );
 };
 
-export const EmailTemplatePreview = ({ emailHeader, emailFooter, emailText, emailBodyColor }) => {
-  return (
-    <div className="rounded-xlp-3 mt-6 md:p-6">
-      <h2 className="text-textPrimary text-[18px] font-medium">Email Preview</h2>
+export const EmailTemplatePreview = ({ emailHeader = "", emailFooter = "", emailText, emailBodyColor }) => (
+  <div className="rounded-xlp-3 mt-6 md:p-6">
+    <h2 className="text-textPrimary text-[18px] font-medium">Email Preview</h2>
 
-      <div className="mt-5 rounded-md p-3 md:p-6">
-        <div className="flex w-full flex-col border-4">
-          {/* Render processed HTML */}
-          <div dangerouslySetInnerHTML={{ __html: emailHeader }} />
-          <div
-            className={`align-center flex w-full justify-center p-4 md:p-6`}
-            style={{ color: emailText, background: emailBodyColor }}
-          >
-            Email Body will be here ...
-          </div>
-          <div dangerouslySetInnerHTML={{ __html: emailFooter }} />
+    <div className="mt-5 rounded-md p-3 md:p-6">
+      <div className="flex w-full flex-col border-4">
+        <div dangerouslySetInnerHTML={{ __html: emailHeader }} />
+        <div
+          className={`align-center flex w-full justify-center p-4 md:p-6`}
+          style={{ color: emailText, background: emailBodyColor }}
+        >
+          Email Body will be here ...
         </div>
+        <div dangerouslySetInnerHTML={{ __html: emailFooter }} />
       </div>
     </div>
-  );
-};
+  </div>
+);
 
 export default Preview;

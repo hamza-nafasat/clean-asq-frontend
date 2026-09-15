@@ -1,10 +1,10 @@
 import { uploadImageOnCloudinary } from "@/utils/cloudinary";
 import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge"
+import { twMerge } from "tailwind-merge";
 
-export function cn(...inputs) {
+export const cn = (...inputs) => {
   return twMerge(clsx(inputs));
-}
+};
 
 export const uploadFilesAndReplace = async (data) => {
   let updatedData = { ...data };
@@ -25,5 +25,3 @@ export const uploadFilesAndReplace = async (data) => {
 
   return updatedData;
 };
-
-

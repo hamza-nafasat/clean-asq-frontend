@@ -1,70 +1,66 @@
-import getEnv from '@/utils/env';
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import getEnv from "@/utils/env";
+
+const EMAIL_TEMPLATE_TAG = "EmailTemplate";
 
 const emailTemplateApis = createApi({
-  reducerPath: 'emailTemplateApi',
+  reducerPath: "emailTemplateApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `${getEnv('SERVER_URL')}/api/email-templates`,
-    credentials: 'include',
+    baseUrl: `${getEnv("SERVER_URL")}/api/email-templates`,
+    credentials: "include",
   }),
 
-  tagTypes: ['EmailTemplate'],
-  endpoints: builder => ({
-    // Create
+  tagTypes: [EMAIL_TEMPLATE_TAG],
+  endpoints: (builder) => ({
+    /////
     createEmailTemplate: builder.mutation({
-      query: data => ({
-        url: '/create',
-        method: 'POST',
+      query: (data) => ({
+        url: "/create",
+        method: "POST",
         body: data,
       }),
-      invalidatesTags: ['EmailTemplate'],
+      invalidatesTags: [EMAIL_TEMPLATE_TAG],
     }),
-
-    // Get All
+    /////
     getAllEmailTemplates: builder.query({
-      query: () => '/all',
-      providesTags: ['EmailTemplate'],
+      query: () => "/all",
+      providesTags: [EMAIL_TEMPLATE_TAG],
     }),
-
-    // Get Single
+    /////
     getSingleEmailTemplate: builder.query({
-      query: id => `/single/${id}`,
-      providesTags: ['EmailTemplate'],
+      query: (id) => `/single/${id}`,
+      providesTags: [EMAIL_TEMPLATE_TAG],
     }),
-
-    // Update
+    /////
     updateSingleEmailTemplate: builder.mutation({
-      query: data => ({
+      query: (data) => ({
         url: `/single/${data?.id}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
       }),
-      invalidatesTags: ['EmailTemplate'],
+      invalidatesTags: [EMAIL_TEMPLATE_TAG],
     }),
-
-    // Delete
+    /////
     deleteSingleEmailTemplate: builder.mutation({
       query: ({ emailTemplateId }) => ({
         url: `/single/${emailTemplateId}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: ['EmailTemplate'],
+      invalidatesTags: [EMAIL_TEMPLATE_TAG],
     }),
-
-    // attach to forms
+    /////
     attachTemplateToForm: builder.mutation({
-      query: data => ({
-        url: '/attach',
-        method: 'PUT',
+      query: (data) => ({
+        url: "/attach",
+        method: "PUT",
         body: data,
       }),
-      invalidatesTags: ['EmailTemplate'],
+      invalidatesTags: [EMAIL_TEMPLATE_TAG],
     }),
-    // unattached forms list
-
+    /////
     unAttachedFormsList: builder.query({
-      query: data => `/all-unattached-forms?emailTemplateId=${data?.emailTemplateId}`,
-      providesTags: ['EmailTemplate'],
+      query: (data) => `/all-unattached-forms?emailTemplateId=${data?.emailTemplateId}`,
+      providesTags: [EMAIL_TEMPLATE_TAG],
     }),
   }),
 });

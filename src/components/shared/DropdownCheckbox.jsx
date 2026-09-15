@@ -1,7 +1,21 @@
-"use client";
-import { useEffect, useRef, useState, useCallback, memo } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { GoChevronDown } from "react-icons/go";
+
+import { DROPDOWN_OPTION_VALUES } from "@/constants";
+
+// lowercase, underscore separated, comma split
+const normalizeAndSplitValues = (str) =>
+  str
+    .split(",")
+    .map((s) =>
+      s
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "_")
+        .replace(/[^a-z0-9_]/g, ""),
+    )
+    .filter(Boolean);
 
 const DropdownCheckbox = memo(
   ({
@@ -26,35 +40,20 @@ const DropdownCheckbox = memo(
     const idRef = useRef(`dropdown-${Math.random().toString(36).slice(2, 9)}`);
     const customInputRef = useRef(null);
 
-    // Normalize custom input
-    const normalizeAndSplitValues = (str) =>
-      str
-        .split(",")
-        .map((s) =>
-          s
-            .toLowerCase()
-            .trim()
-            .replace(/\s+/g, "_")
-            .replace(/[^a-z0-9_]/g, ""),
-        )
-        .filter(Boolean); // remove empty
-
     const toggleValue = useCallback(
       (option) => {
         if (readOnly) return;
 
-        // Case: None option
-        if (option.value === "none") {
-          setSelectedValues(["none"]);
+        if (option.value === DROPDOWN_OPTION_VALUES.NONE) {
+          setSelectedValues([DROPDOWN_OPTION_VALUES.NONE]);
           setShowCustomInput(false);
           setCustomValue("");
-          onSelect?.(["none"]);
+          onSelect?.([DROPDOWN_OPTION_VALUES.NONE]);
           return;
         }
 
-        // Case: Others option
-        if (option.value === "others") {
-          setSelectedValues((prev) => prev.filter((v) => v !== "none"));
+        if (option.value === DROPDOWN_OPTION_VALUES.OTHERS) {
+          setSelectedValues((prev) => prev.filter((v) => v !== DROPDOWN_OPTION_VALUES.NONE));
 
           if (!showCustomInput) {
             setShowCustomInput(true);
@@ -72,15 +71,14 @@ const DropdownCheckbox = memo(
           return;
         }
 
-        // Regular multi select
         setSelectedValues((prev) => {
           let updated;
           if (prev.includes(option.value)) {
             updated = prev.filter((v) => v !== option.value);
           } else {
-            updated = [...prev.filter((v) => v !== "none"), option.value];
+            updated = [...prev.filter((v) => v !== DROPDOWN_OPTION_VALUES.NONE), option.value];
           }
-          updated = updated.filter(Boolean); // remove empty
+          updated = updated.filter(Boolean);
           onSelect?.(updated);
           return updated;
         });
@@ -105,9 +103,7 @@ const DropdownCheckbox = memo(
     );
 
     const handleCustomInputBlur = useCallback(() => {
-      if (!customValue.trim()) {
-        setShowCustomInput(false);
-      }
+      if (!customValue.trim()) setShowCustomInput(false);
     }, [customValue]);
 
     const toggleDropdown = useCallback(() => {
@@ -138,7 +134,7 @@ const DropdownCheckbox = memo(
       };
     }, [handleClickOutside, handleKeyDown]);
 
-    // Normalize incoming selected prop
+    // normalise the incoming selected prop
     useEffect(() => {
       if (Array.isArray(selected)) {
         setSelectedValues(selected.filter(Boolean));
@@ -162,14 +158,11 @@ const DropdownCheckbox = memo(
       shadow && "shadow-input",
       readOnly ? "cursor-not-allowed" : "border-[#E0E0E9]",
       mainClassName,
-      `flex items-center justify-between border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base`,
+      "flex items-center justify-between border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base",
     ]
       .filter(Boolean)
       .join(" ");
 
-    const chevronClasses = `transition-all duration-300 ${isOpen ? "rotate-180" : "rotate-0"}`;
-
-    // Dropdown list
     const dropdownList = (
       <ul
         ref={portalRef}
@@ -181,42 +174,35 @@ const DropdownCheckbox = memo(
         }}
       >
         {label && <li className="border-b border-[#d3d3d3] px-4 py-2 text-sm font-medium text-[#666666]">{label}</li>}
-        {options.map((option) => {
-          const labelText = option?.label ?? option?.option;
-          return (
-            <li
-              key={option?.value}
-              className="flex items-center space-x-2 border-b border-[#d3d3d3] px-4 py-2 hover:bg-[hsl(208,100%,95%)]"
-            >
+        {options.map((option) => (
+          <li
+            key={option?.value}
+            className="flex items-center space-x-2 border-b border-[#d3d3d3] px-4 py-2 hover:bg-[hsl(208,100%,95%)]"
+          >
+            <input
+              type="checkbox"
+              id={`checkbox-${option?.value}`}
+              checked={selectedValues?.includes(option?.value)}
+              onChange={() => toggleValue(option)}
+              className="h-4 w-4 cursor-pointer"
+            />
+            <label htmlFor={`checkbox-${option?.value}`} className="cursor-pointer text-sm" onClick={() => toggleValue(option)}>
+              {option?.label ?? option?.option}
+            </label>
+            {option?.value === DROPDOWN_OPTION_VALUES.OTHERS && showCustomInput && (
               <input
-                type="checkbox"
-                id={`checkbox-${option?.value}`}
-                checked={selectedValues?.includes(option?.value)}
-                onChange={() => toggleValue(option)}
-                className="h-4 w-4 cursor-pointer"
+                ref={customInputRef}
+                type="text"
+                value={customValue}
+                onChange={handleCustomInputChange}
+                onBlur={handleCustomInputBlur}
+                placeholder="Enter comma-separated values"
+                className="focus:border-primary ml-2 flex-1 rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none"
+                onClick={(e) => e.stopPropagation()}
               />
-              <label
-                htmlFor={`checkbox-${option?.value}`}
-                className="cursor-pointer text-sm"
-                onClick={() => toggleValue(option)}
-              >
-                {labelText}
-              </label>
-              {option?.value === "others" && showCustomInput && (
-                <input
-                  ref={customInputRef}
-                  type="text"
-                  value={customValue}
-                  onChange={handleCustomInputChange}
-                  onBlur={handleCustomInputBlur}
-                  placeholder="Enter comma-separated values"
-                  className="focus:border-primary ml-2 flex-1 rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              )}
-            </li>
-          );
-        })}
+            )}
+          </li>
+        ))}
       </ul>
     );
 
@@ -237,7 +223,7 @@ const DropdownCheckbox = memo(
           disabled={readOnly}
         >
           <span className="truncate text-[#383838E5] capitalize">{displayText}</span>
-          <div className={chevronClasses}>
+          <div className={`transition-all duration-300 ${isOpen ? "rotate-180" : "rotate-0"}`}>
             <GoChevronDown fontSize={20} color={readOnly ? "#999999" : "#292D3280"} />
           </div>
         </button>

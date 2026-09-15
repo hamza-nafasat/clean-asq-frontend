@@ -1,22 +1,19 @@
-import AllFormsStrategies from '../components/LookupManagementTable';
-import React, { useState } from 'react';
-import ExtractionContext from '../components/LookupManagementExtractionContext';
+import { useState } from "react";
+import LookupManagementExtractionContext from "@/modules/lookup-management/components/LookupManagementExtractionContext";
+import LookupManagementTable from "@/modules/lookup-management/components/LookupManagementTable";
+import { LOOKUP_TAB_LIST, LOOKUP_TABS } from "@/modules/lookup-management/utils/lookup-management.constants";
 
-function FormStrategies() {
-  const [activeTab, setActiveTab] = useState('one');
-
-  const tabs = [
-    { id: 'one', label: 'Strategies Key' },
-    { id: 'two', label: 'Extraction Prompt' },
-  ];
+const LookupManagement = () => {
+  const [activeTab, setActiveTab] = useState(LOOKUP_TABS.STRATEGIES_KEY);
 
   return (
     <div className="w-full">
-      {/* Tabs aligned top-left */}
+      {/* Tabs */}
       <div className="flex space-x-2 bg-white/80 backdrop-blur-md border rounded-lg w-fit p-1.5 shadow-sm">
-        {tabs.map((tab) => (
+        {LOOKUP_TAB_LIST.map((tab) => (
           <button
             key={tab.id}
+            type="button"
             onClick={() => setActiveTab(tab.id)}
             className={`relative px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300
               ${activeTab === tab.id
@@ -34,10 +31,10 @@ function FormStrategies() {
 
       {/* Tab Content */}
       <div className="mt-5">
-        {activeTab === 'one' ? <AllFormsStrategies /> : <ExtractionContext />}
+        {activeTab === LOOKUP_TABS.STRATEGIES_KEY ? <LookupManagementTable /> : <LookupManagementExtractionContext />}
       </div>
     </div>
   );
-}
+};
 
-export default FormStrategies;
+export default LookupManagement;

@@ -1,6 +1,6 @@
 import DOMPurify from "dompurify";
 
-function sanitizeHtml(dirtyHtml = "") {
+const sanitizeHtml = (dirtyHtml = "") => {
   if (!dirtyHtml || typeof dirtyHtml !== "string") return "";
 
   // First sanitize
@@ -44,6 +44,6 @@ function sanitizeHtml(dirtyHtml = "") {
   });
 
   return tempDiv.innerHTML;
-}
+};
 
 export { sanitizeHtml };

@@ -1,6 +1,7 @@
-import Button from "@/components/shared/Button";
-import { HiOutlineCheckCircle } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
+import { HiOutlineCheckCircle } from "react-icons/hi";
+import Button from "@/components/shared/Button";
+import { AUTH_ROUTES } from "../utils/auth.constants";
 
 const ResetPasswordSuccessfully = () => {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ const ResetPasswordSuccessfully = () => {
         <Button
           type="button"
           label="Go to Login"
-          onClick={() => navigate("/login")}
+          onClick={() => navigate(AUTH_ROUTES.LOGIN)}
           className="hover:bg-primary! text-textPrimary border-secondary! w-full rounded-[20px]! border!"
         />
       </div>

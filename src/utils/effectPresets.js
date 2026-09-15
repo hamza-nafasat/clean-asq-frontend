@@ -98,8 +98,8 @@ export const EFFECT_OPTIONS = Object.entries(EFFECT_PRESETS).map(([value, { labe
 
 // ── Serialization ─────────────────────────────────────────────────────────────
 
-/** Parse any stored effect value → { effects: { name: intensity }, angle: number } */
-export function parseEffectState(value) {
+// parse any stored effect value → { effects: { name: intensity }, angle: number }
+export const parseEffectState = (value) => {
   if (!value || value === "none") return { effects: {}, angle: 135 };
   if (value.startsWith("{")) {
     try {
@@ -115,16 +115,16 @@ export function parseEffectState(value) {
   const intensity = colonIdx === -1 ? 1 : parseFloat(value.slice(colonIdx + 1)) || 1;
   if (name === "none" || !EFFECT_PRESETS[name]) return { effects: {}, angle: 135 };
   return { effects: { [name]: intensity }, angle: 135 };
-}
+};
 
-/** Serialize effect state → stored string */
-export function encodeEffectState({ effects, angle }) {
+// serialize effect state → stored string
+export const encodeEffectState = ({ effects, angle }) => {
   if (!effects || Object.keys(effects).length === 0) return "none";
   return JSON.stringify({ effects, angle });
-}
+};
 
-/** Convert any stored effect value to a CSS box-shadow string. */
-export function effectToBoxShadow(value) {
+// convert any stored effect value to a CSS box-shadow string
+export const effectToBoxShadow = (value) => {
   const { effects, angle } = parseEffectState(value);
   const parts = [];
   for (const [name, intensity] of Object.entries(effects)) {
@@ -135,18 +135,12 @@ export function effectToBoxShadow(value) {
     }
   }
   return parts.join(", ");
-}
+};
 
 // ── Material / gloss ─────────────────────────────────────────────────────────
 
-/**
- * Convert a material value (0 = matte, 100 = high-gloss) into a CSS gradient
- * that can be layered on top of a base background to simulate paint finish.
- *
- * lightAngle uses the same convention as effect angles (0=right, 90=top, 135=top-left).
- * Returns null when material is 0 so callers can skip adding an empty layer.
- */
-export function materialToGloss(material, lightAngle = 90) {
+// convert a material value (0 = matte, 100 = high-gloss) into a CSS gradient
+export const materialToGloss = (material, lightAngle = 90) => {
   if (!material || material <= 0) return null;
   const t = material / 100;
   // Convert "where light comes from" angle to CSS gradient direction angle.
@@ -157,23 +151,23 @@ export function materialToGloss(material, lightAngle = 90) {
   const a2 = Math.min(0.08 * t, 1).toFixed(3); // fade
   const a3 = Math.min(0.18 * t, 1).toFixed(3); // bottom shadow
   return `linear-gradient(${cssAngle}deg, rgba(255,255,255,${a1}) 0%, rgba(255,255,255,${a2}) 48%, rgba(0,0,0,0) 52%, rgba(0,0,0,${a3}) 100%)`;
-}
+};
 
-/** Human-readable material name for a 0–100 value. */
-export function materialName(v) {
+// human-readable material name for a 0–100 value
+export const materialName = (v) => {
   if (!v || v <= 0) return "Matte";
   if (v <= 20) return "Eggshell";
   if (v <= 40) return "Satin";
   if (v <= 60) return "Semi-gloss";
   if (v <= 80) return "Gloss";
   return "High-gloss";
-}
+};
 
-/** @deprecated Use parseEffectState. Kept for backward compat. */
-export function parseEffectValue(value) {
+// @deprecated Use parseEffectState. Kept for backward compat
+export const parseEffectValue = (value) => {
   const { effects } = parseEffectState(value);
   const entries = Object.entries(effects);
   if (entries.length === 0) return { name: "none", intensity: 1 };
   const [name, intensity] = entries[0];
   return { name, intensity };
-}
+};

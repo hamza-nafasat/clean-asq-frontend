@@ -1,8 +1,5 @@
-/**
- * Apply a userBranding profile object to the branding store setters.
- * Used after home/website branding is updated.
- */
-export function applyUserBrandingToContext(userBranding, setters) {
+// apply a userBranding profile object to the branding store setters
+export const applyUserBrandingToContext = (userBranding, setters) => {
   if (!userBranding?.colors) return;
   const c = userBranding.colors;
   setters.setPrimaryColor?.(c.primary);
@@ -46,10 +43,10 @@ export function applyUserBrandingToContext(userBranding, setters) {
   setters.setButtonMaterial?.(userBranding?.buttonMaterial ?? 0);
   setters.setEmailHeaderMaterial?.(userBranding?.emailHeaderMaterial ?? 0);
   setters.setEmailFooterMaterial?.(userBranding?.emailFooterMaterial ?? 0);
-}
+};
 
-/** Map useBranding() return value to setter object for applyUserBrandingToContext. */
-export function getBrandingSettersFromHook(b) {
+// map useBranding() return value to setter object for applyUserBrandingToContext
+export const getBrandingSettersFromHook = (b) => {
   if (!b) return {};
   return {
     setPrimaryColor: b.setPrimaryColor,
@@ -94,24 +91,22 @@ export function getBrandingSettersFromHook(b) {
     setEmailHeaderMaterial: b.setEmailHeaderMaterial,
     setEmailFooterMaterial: b.setEmailFooterMaterial,
   };
-}
+};
 
-export function mapHomeBranding(user) {
+export const mapHomeBranding = (user) => {
   const b = user?.branding;
   if (!b?._id) return null;
   return { _id: b._id, name: b.name || "Home branding" };
-}
+};
 
-/**
- * Execute a single branding assignment (form, home/website, or both).
- */
-export async function executeBrandingAssignment({
+// execute a single branding assignment (form, home/website, or both)
+export const executeBrandingAssignment = async ({
   addBrandingMutation,
   getUserProfile,
   brandingSetters,
   dispatchUserRefresh,
   assignment: { brandingId, formId, applyToHome },
-}) {
+}) => {
   if (!brandingId) throw new Error("Branding ID is required");
   if (!formId && !applyToHome) {
     throw new Error("At least one target is required: formId or applyToHome");
@@ -137,18 +132,16 @@ export async function executeBrandingAssignment({
   }
 
   return res;
-}
+};
 
-/**
- * Run multiple branding assignments (deduped by brandingId+formId+applyToHome).
- */
-export async function executeBrandingAssignments({
+// run multiple branding assignments (deduped by brandingId+formId+applyToHome)
+export const executeBrandingAssignments = async ({
   updates,
   addBrandingMutation,
   getUserProfile,
   brandingSetters,
   dispatchUserRefresh,
-}) {
+}) => {
   const errors = [];
   let lastMessage = "";
 
@@ -178,4 +171,4 @@ export async function executeBrandingAssignments({
   }
 
   return { message: lastMessage };
-}
+};

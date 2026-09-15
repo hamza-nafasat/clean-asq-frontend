@@ -1,21 +1,8 @@
 import { IoClose, IoCheckmarkCircle } from "react-icons/io5";
 import { CgSpinner } from "react-icons/cg";
 
-/**
- * Pre-fill notification — shown when the DB has pre-populated fields on a new
- * form screen. Lets the applicant scan the values before continuing. If anything
- * is wrong they correct it directly on the form after dismissing this dialog.
- *
- * Props:
- *   preFilled       Array<{ id, label, type, value }>
- *   remaining       Array<{ id, label, required }>
- *   headerBg        Brand header background colour
- *   headerTextColor Contrasting text/icon colour for the header
- *   accentColor     Brand accent colour for the primary button
- *   fontFamily      Brand font family name
- *   onDismiss       () => void
- */
-export default function PreFillModal({
+// pre-fill notification — shown when the DB has pre-populated fields on a new
+const PreFillModal = ({
   preFilled = [],
   remaining = [],
   headerBg,
@@ -28,7 +15,7 @@ export default function PreFillModal({
   // legacy aliases
   onConfirm,
   onSkip,
-}) {
+}) => {
   const dismiss = onDismiss || onConfirm || onSkip || (() => {});
   const accent    = accentColor    || "#6366f1";
   const hBg       = headerBg       || accent;
@@ -185,4 +172,6 @@ export default function PreFillModal({
       </div>
     </>
   );
-}
+};
+
+export default PreFillModal;

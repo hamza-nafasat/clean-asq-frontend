@@ -1,6 +1,8 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import FormPreview from "./FormPreview";
+import { CHAT_ROLES } from "./constants/aiChatConstants.js";
+import { AI_TOOLS } from "./constants/aiToolNames.js";
 
 const mdComponents = {
   table: ({ children }) => (
@@ -82,17 +84,17 @@ const handleCsvSave = async (csvDownload) => {
   }
 };
 
-export default function ChatMessage({
+const ChatMessage = ({
   message,
   accentColor = "#6366f1",
   accentTextColor = "#ffffff",
   onAction,
   introButtonsDismissed = false,
-}) {
-  const isUser = message.role === "user";
-  const isPalette = message.toolCall?.tool === "generateColorPalette";
-  const isApply = message.toolCall?.tool === "applyBrandingChanges";
-  const isSuggest = message.toolCall?.tool === "suggestColors";
+}) => {
+  const isUser = message.role === CHAT_ROLES.USER;
+  const isPalette = message.toolCall?.tool === AI_TOOLS.GENERATE_COLOR_PALETTE;
+  const isApply = message.toolCall?.tool === AI_TOOLS.APPLY_BRANDING_CHANGES;
+  const isSuggest = message.toolCall?.tool === AI_TOOLS.SUGGEST_COLORS;
 
   if (isUser) {
     return (
@@ -211,4 +213,6 @@ export default function ChatMessage({
       </div>
     </div>
   );
-}
+};
+
+export default ChatMessage;

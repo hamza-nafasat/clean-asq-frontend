@@ -1,0 +1,274 @@
+import {
+  AI_ENDPOINTS,
+  AI_RESPONSE_TYPES,
+  CHAT_ROLES,
+  PAGE_ROUTES,
+} from "@/components/shared/AIChat/constants/aiChatConstants.js";
+import { STORAGE_KEYS } from "@/constants";
+import { AI_TOOLS } from "@/components/shared/AIChat/constants/aiToolNames.js";
+import { getErrorDetail, postJson } from "@/components/shared/AIChat/logic/toolHelpers.js";
+
+const BRANDING_PAGE_KEY = "branding";
+const BRANDING_CREATE_PAGE_KEY = "branding-create";
+const ON_HOME = { YES: "yes", NO: "no" };
+
+const getDomainBase = (url) =>
+  new URL(url.startsWith("http") ? url : `https://${url}`).hostname.replace(/^www\./, "").split(".")[0];
+
+const nameFromDomain = (url) => {
+  try {
+    const base = getDomainBase(url);
+    return base.charAt(0).toUpperCase() + base.slice(1);
+  } catch {
+    return "";
+  }
+};
+
+const displayNameFromDomain = (url) => {
+  try {
+    return getDomainBase(url);
+  } catch {
+    return url;
+  }
+};
+
+// text handed back to the AI after parsing pasted content
+const buildPastedContentSummary = ({ colors, cssVars, logoUrls, colorCount }) => {
+  const cssVarCount = Object.keys(cssVars).length;
+  const parts = [
+    colorCount > 0 ? `${colorCount} hex colors` : null,
+    cssVarCount > 0 ? `${cssVarCount} CSS variables` : null,
+    logoUrls.length > 0 ? `${logoUrls.length} image URLs` : null,
+  ].filter(Boolean);
+
+  const summary = parts.length
+    ? `Extracted from pasted content: ${parts.join(", ")}.`
+    : "No recognizable colors or URLs found in the pasted content.";
+
+  return [
+    summary,
+    colors.length ? `Colors: ${colors.join(", ")}` : null,
+    cssVarCount ? `CSS variables: ${JSON.stringify(cssVars)}` : null,
+    logoUrls.length ? `Image URLs: ${logoUrls.join(", ")}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+};
+
+const createBrandingTools = ({ bindings, helpers, getApplyToolCall }) => {
+  const { addMessage, isVoiceModeRef, speak, wt, navigate, continueAfterToolCall, pushRevertable } = bindings;
+  const { suppressNextScreenGreetingRef, addBrandingToFormGlobal } = bindings;
+  const { say, reportCouldnt, runActionAndSay } = helpers;
+
+  return {
+    [AI_TOOLS.FETCH_WEBSITE_BRANDING]: async (args, { ctx }) => {
+      const { url, companyName: aiProvidedName } = args;
+      addMessage({ role: CHAT_ROLES.ASSISTANT, content: `Fetching **${url}**… this may take a moment.` });
+
+      // fetch branding data
+      let brandingData, screenshotUrl;
+      try {
+        const data = await postJson(AI_ENDPOINTS.FETCH_WEBSITE_BRANDING, { url });
+        if (!data.success) throw new Error(data.message || "Failed");
+        brandingData = data.data?.brandingData;
+        screenshotUrl = data.data?.screenshotUrl;
+      } catch {
+        addMessage({ role: CHAT_ROLES.ASSISTANT, content: `${wt("fetchFailed")} **${url}**. ${wt("tryAgain")}` });
+        return;
+      }
+
+      // not on an editor: the create page applies the stored extraction
+      if (!ctx.actions.applyExtractedBranding) {
+        sessionStorage.setItem(
+          STORAGE_KEYS.PENDING_BRANDING_DATA,
+          JSON.stringify({ brandingData, screenshotUrl, url }),
+        );
+        suppressNextScreenGreetingRef.current = true;
+        addMessage({
+          role: CHAT_ROLES.ASSISTANT,
+          content: `Branding extracted from **${brandingData?.name || url}**. Opening **Create Branding** with it applied.`,
+        });
+        navigate(PAGE_ROUTES[BRANDING_CREATE_PAGE_KEY]);
+        return;
+      }
+      ctx.actions.applyExtractedBranding(brandingData);
+      if (screenshotUrl && ctx.actions.setWebsiteImage) ctx.actions.setWebsiteImage(screenshotUrl);
+
+      // company name: AI-given name, then a pre-filled name, then extraction or domain
+      if (ctx.actions.companyName) {
+        const existingName = ctx.currentState?.companyName;
+        if (aiProvidedName) {
+          ctx.actions.companyName(aiProvidedName);
+        } else if (!existingName) {
+          const nameToUse = brandingData?.name || nameFromDomain(url);
+          if (nameToUse) ctx.actions.companyName(nameToUse);
+        }
+      }
+
+      if (!ctx.currentState?.websiteUrl && ctx.actions.websiteUrl) ctx.actions.websiteUrl(url);
+
+      // fixed confirmation so the AI cannot overwrite extracted values
+      const displayName = brandingData?.name || displayNameFromDomain(url);
+      addMessage({
+        role: CHAT_ROLES.ASSISTANT,
+        content: `Branding extracted from **${displayName}** and applied. You can review the colors and logos above, or ask me to make any adjustments.`,
+      });
+    },
+
+    [AI_TOOLS.OPEN_MANUAL_EXTRACTION_FLOW]: async (args, { ctx }) => {
+      const { url, explanation } = args;
+      say(explanation);
+      const action = ctx?.actions?.openManualExtractionFlow;
+      if (action) {
+        action({ url });
+      } else {
+        addMessage({
+          role: CHAT_ROLES.ASSISTANT,
+          content: "Open the Extract Branding modal and switch to the Manual Extract tab to continue.",
+        });
+      }
+    },
+
+    [AI_TOOLS.EXTRACT_BRANDING_FROM_PASTED_CONTENT]: async (args, { ctx, chatEndpoint, currentHistory }) => {
+      const { content, explanation } = args;
+      addMessage({ role: CHAT_ROLES.ASSISTANT, content: explanation });
+      try {
+        const data = await postJson(AI_ENDPOINTS.EXTRACT_BRANDING_FROM_CONTENT, { content });
+        if (!data.success) throw new Error("Failed to parse content");
+
+        const followUpHistory = [
+          ...currentHistory,
+          { role: CHAT_ROLES.USER, content: buildPastedContentSummary(data.data) },
+        ];
+        const aiResponse = await postJson(chatEndpoint, {
+          messages: followUpHistory,
+          context: {
+            screenId: ctx?.screenId,
+            screenName: ctx?.screenName,
+            description: ctx?.description,
+            currentState: ctx?.currentState,
+            logos: ctx?.logos,
+            colorPalette: ctx?.colorPalette || undefined,
+          },
+        });
+        if (!aiResponse.success) throw new Error(aiResponse.message || "AI request failed");
+        const aiData = aiResponse.data;
+
+        if (aiData.type === AI_RESPONSE_TYPES.TOOL_CALL) {
+          await getApplyToolCall()(aiData.tool, aiData.args, followUpHistory);
+        } else {
+          say(aiData.content);
+        }
+      } catch {
+        addMessage({
+          role: CHAT_ROLES.ASSISTANT,
+          content:
+            "I couldn't parse the pasted content. Try pasting just the hex color codes or CSS variables directly.",
+        });
+      }
+    },
+
+    [AI_TOOLS.APPLY_BRANDING_CHANGES]: async (args, { tool, ctx, chatEndpoint, currentHistory }) => {
+      const { changes, explanation } = args;
+      // snapshot current values before overwriting
+      const snapshot = {};
+      Object.keys(changes).forEach((key) => {
+        snapshot[key] = ctx.currentState?.[key];
+      });
+      pushRevertable({
+        description: `Applied branding changes (${Object.keys(changes).join(", ")})`,
+        revertFn: (freshCtx) => {
+          Object.entries(snapshot).forEach(([key, val]) => {
+            if (val !== undefined && freshCtx?.actions?.[key]) freshCtx.actions[key](val);
+          });
+        },
+      });
+      Object.entries(changes).forEach(([key, value]) => {
+        const setter = ctx.actions[key];
+        if (setter) setter(value);
+      });
+      addMessage({ role: CHAT_ROLES.ASSISTANT, content: explanation, toolCall: { tool, changes } });
+      if (isVoiceModeRef.current) speak(explanation);
+      // continue for chained tool calls only
+      await continueAfterToolCall(
+        tool,
+        args,
+        "Branding changes applied to the screen.",
+        currentHistory,
+        chatEndpoint,
+        ctx,
+        true,
+      );
+    },
+
+    [AI_TOOLS.SUGGEST_COLORS]: async (args, { ctx }) => {
+      const { colors, explanation } = args;
+      if (ctx.actions.setSuggestedColors) ctx.actions.setSuggestedColors(colors);
+      addMessage({ role: CHAT_ROLES.ASSISTANT, content: explanation, toolCall: { tool: AI_TOOLS.SUGGEST_COLORS, colors } });
+      if (isVoiceModeRef.current) speak(explanation);
+    },
+
+    [AI_TOOLS.SAVE_BRANDING]: async (args, { tool, ctx, chatEndpoint, currentHistory }) => {
+      try {
+        if (ctx.actions.saveBranding) await ctx.actions.saveBranding();
+        say(args.explanation);
+        // continue for chained tool calls only
+        await continueAfterToolCall(tool, args, "Branding saved successfully.", currentHistory, chatEndpoint, ctx, true);
+      } catch (err) {
+        reportCouldnt(getErrorDetail(err));
+      }
+    },
+
+    [AI_TOOLS.APPLY_BRANDING_TO_FORMS]: async (args, { ctx }) => {
+      const { formIds, onHome, brandingId: argBrandingId, explanation } = args;
+      try {
+        if (ctx.actions.saveAndApplyBrandingToForms) {
+          await ctx.actions.saveAndApplyBrandingToForms({ formIds: formIds || [], onHome: !!onHome });
+        } else if (argBrandingId && ((formIds || []).length > 0 || onHome)) {
+          // branding already saved: apply it directly
+          const errors = [];
+          if (onHome) {
+            try {
+              await addBrandingToFormGlobal({ brandingId: argBrandingId, onHome: ON_HOME.YES }).unwrap();
+            } catch {
+              errors.push("website");
+            }
+          }
+          for (const formId of formIds || []) {
+            try {
+              await addBrandingToFormGlobal({ brandingId: argBrandingId, formId, onHome: ON_HOME.NO }).unwrap();
+            } catch {
+              errors.push(formId);
+            }
+          }
+          if (errors.length) throw new Error(`Failed to set branding on ${errors.length} target(s)`);
+          if (onHome) {
+            window.location.href = PAGE_ROUTES[BRANDING_PAGE_KEY];
+          } else {
+            navigate(PAGE_ROUTES[BRANDING_PAGE_KEY]);
+          }
+        } else {
+          throw new Error("applyBrandingToForms action not available on this screen");
+        }
+        say(explanation);
+      } catch (err) {
+        reportCouldnt(getErrorDetail(err));
+      }
+    },
+
+    [AI_TOOLS.DELETE_BRANDINGS]: async (args, { ctx }) =>
+      runActionAndSay(ctx, AI_TOOLS.DELETE_BRANDINGS, { brandingIds: args.brandingIds }, args.explanation),
+
+    [AI_TOOLS.OPEN_EDIT_BRANDING]: async (args, { ctx }) => {
+      if (ctx.actions.openEditBranding) ctx.actions.openEditBranding({ brandingId: args.brandingId });
+      say(args.explanation);
+    },
+
+    [AI_TOOLS.OPEN_CREATE_BRANDING]: async (args, { ctx }) => {
+      if (ctx.actions.openCreateBranding) ctx.actions.openCreateBranding();
+      say(args.explanation);
+    },
+  };
+};
+
+export default createBrandingTools;

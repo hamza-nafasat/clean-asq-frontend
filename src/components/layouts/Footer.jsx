@@ -1,9 +1,14 @@
-import DocumentModal from "@/components/modals/DocumentModal";
-import { renderFooterText } from "@/utils/footerWildcards";
-import useBranding from "@/hooks/useBranding";
 import { useState } from "react";
 
-function Footer() {
+import useBranding from "@/hooks/useBranding";
+import DocumentModal from "@/components/modals/DocumentModal";
+import { renderFooterText } from "@/utils/footerWildcards";
+
+const DEFAULT_FOOTER_PADDING = 16;
+const DEFAULT_FOOTER_TEXT_SIZE = 16;
+const FOOTER_LINK_CLASSES = "text-footer-text hover:text-secondary cursor-pointer bg-transparent border-0 p-0 text-sm";
+
+const Footer = () => {
   const {
     applicationFooterText,
     applicationFooterTextSize,
@@ -20,12 +25,15 @@ function Footer() {
       <div
         className="bg-footer flex w-full shrink-0 items-center justify-between gap-4 rounded-t-md border-t-2 px-4 shadow md:px-4 xl:px-20"
         style={{
-          paddingTop: `${appFooterPadding ?? 16}px`,
-          paddingBottom: `${appFooterPadding ?? 16}px`,
+          paddingTop: `${appFooterPadding ?? DEFAULT_FOOTER_PADDING}px`,
+          paddingBottom: `${appFooterPadding ?? DEFAULT_FOOTER_PADDING}px`,
         }}
       >
         {/* Footer text */}
-        <div className="text-footer-text font-semibold" style={{ fontSize: `${applicationFooterTextSize || 16}px` }}>
+        <div
+          className="text-footer-text font-semibold"
+          style={{ fontSize: `${applicationFooterTextSize || DEFAULT_FOOTER_TEXT_SIZE}px` }}
+        >
           {renderFooterText(applicationFooterText, name)}
         </div>
 
@@ -36,7 +44,7 @@ function Footer() {
               type="button"
               data-testid="footer-privacy-link"
               onClick={() => setOpenDoc({ url: privacyPolicyUrl, title: "Privacy Policy" })}
-              className="text-footer-text hover:text-secondary cursor-pointer bg-transparent border-0 p-0 text-sm"
+              className={FOOTER_LINK_CLASSES}
             >
               Privacy Policy
             </button>
@@ -46,7 +54,7 @@ function Footer() {
               type="button"
               data-testid="footer-tos-link"
               onClick={() => setOpenDoc({ url: termsOfServiceUrl, title: "Terms of Service" })}
-              className="text-footer-text hover:text-secondary cursor-pointer bg-transparent border-0 p-0 text-sm"
+              className={FOOTER_LINK_CLASSES}
             >
               Terms of Service
             </button>
@@ -57,6 +65,6 @@ function Footer() {
       {openDoc && <DocumentModal url={openDoc.url} title={openDoc.title} onClose={() => setOpenDoc(null)} />}
     </>
   );
-}
+};
 
 export default Footer;

@@ -1,16 +1,16 @@
-import AllSubmissionDraft from "../components/MyApplicationsTabs";
-import CustomLoading from "@/components/shared/CustomLoading";
 import { useGetMyAllDraftsAndSubmittionsQuery } from "@/redux/apis/form.apis";
+import CustomLoading from "@/components/shared/CustomLoading";
+import MyApplicationsTabs from "../components/MyApplicationsTabs";
 
-function DraftSubmission() {
+const MyApplications = () => {
   const { data, isLoading } = useGetMyAllDraftsAndSubmittionsQuery();
 
   if (isLoading) return <CustomLoading />;
   return (
     <div>
-      <AllSubmissionDraft forms={data?.data} invitations={data?.data?.pendingOwnerForms} />
+      <MyApplicationsTabs forms={data?.data} invitations={data?.data?.pendingOwnerForms} />
     </div>
   );
-}
+};
 
-export default DraftSubmission;
+export default MyApplications;

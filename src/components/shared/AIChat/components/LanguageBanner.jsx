@@ -1,6 +1,6 @@
 import { LANGUAGES } from "@/components/shared/AIChat/constants/languages.js";
 
-export default function LanguageBanner({ bannerIdx, bannerFading, effectiveBannerColor, effectiveBannerText }) {
+const LanguageBanner = ({ bannerIdx, bannerFading, effectiveBannerColor, effectiveBannerText }) => {
   return (
     <div
       className="flex shrink-0 items-center px-3 py-2 border-b"
@@ -14,4 +14,6 @@ export default function LanguageBanner({ bannerIdx, bannerFading, effectiveBanne
       </span>
     </div>
   );
-}
+};
+
+export default LanguageBanner;

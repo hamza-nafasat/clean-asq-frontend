@@ -1,14 +1,15 @@
-import Button from "@/components/shared/Button";
-import TextField from "@/components/shared/TextField";
-import { useResetPasswordMutation } from "@/redux/apis/auth.apis";
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useResetPasswordMutation } from "@/redux/apis/auth.apis";
+import Button from "@/components/shared/Button";
+import TextField from "@/components/shared/TextField";
+import { AUTH_ROUTES, RESET_TOKEN_PARAM } from "../utils/auth.constants";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const token = useMemo(() => searchParams.get("token") || "", [searchParams]);
+  const token = useMemo(() => searchParams.get(RESET_TOKEN_PARAM) || "", [searchParams]);
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
@@ -38,10 +39,10 @@ const ResetPassword = () => {
         confirmNewPassword,
       }).unwrap();
       if (res.success) {
-        navigate("/reset-password-successfully");
+        navigate(AUTH_ROUTES.RESET_PASSWORD_SUCCESSFULLY);
       }
     } catch (error) {
-      console.log("error while resetting password", error);
+      console.error("Reset password error:", error);
       toast.error(error?.data?.message || "Error while resetting password");
     }
   };
@@ -110,7 +111,7 @@ const ResetPassword = () => {
 
           <div className="text-center text-sm text-gray-500">
             Back to{" "}
-            <Link className="text-textPrimary! hover:underline!" to="/login">
+            <Link className="text-textPrimary! hover:underline!" to={AUTH_ROUTES.LOGIN}>
               Sign in
             </Link>
           </div>

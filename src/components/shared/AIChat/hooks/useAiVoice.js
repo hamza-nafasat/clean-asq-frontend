@@ -1,10 +1,9 @@
 import { useCallback, useRef, useState } from "react";
+import { AI_ASSISTANT_MODES } from "@/constants";
 import { SERVER_URL } from "@/components/shared/AIChat/constants/aiChatConstants.js";
 
-/**
- * Speech recognition (PTT) and text-to-speech for the AI chat widget.
- */
-export function useAiVoice({ assistantMode, voice, sendMessageRef }) {
+// speech recognition (PTT) and text-to-speech for the AI chat widget
+export const useAiVoice = ({ assistantMode, voice, sendMessageRef }) => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
@@ -110,7 +109,7 @@ export function useAiVoice({ assistantMode, voice, sendMessageRef }) {
       lastAIPlainTextRef.current = plain;
 
       const ttsEndpoint =
-        assistantMode === "applicant" ? `${SERVER_URL}/api/ai/applicant-tts` : `${SERVER_URL}/api/ai/tts`;
+        assistantMode === AI_ASSISTANT_MODES.APPLICANT ? `${SERVER_URL}/api/ai/applicant-tts` : `${SERVER_URL}/api/ai/tts`;
       try {
         const res = await fetch(ttsEndpoint, {
           method: "POST",
@@ -183,4 +182,4 @@ export function useAiVoice({ assistantMode, voice, sendMessageRef }) {
     setIsListening,
     setIsSpeaking,
   };
-}
+};

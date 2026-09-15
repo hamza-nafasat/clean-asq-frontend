@@ -1,4 +1,4 @@
-/** HTTP status, when the rejection carries one. */
+// hTTP status, when the rejection carries one
 const statusOf = (err) => (typeof err?.originalStatus === "number" ? err.originalStatus : err?.status);
 
 export const apiErrorMessage = (err) => {

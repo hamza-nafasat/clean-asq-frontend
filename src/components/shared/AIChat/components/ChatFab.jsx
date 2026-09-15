@@ -1,6 +1,8 @@
 import { PANEL_HEIGHT, PANEL_WIDTH } from "@/components/shared/AIChat/constants/aiChatConstants.js";
 
-export default function ChatFab({ fabRef, fabNudged, effectiveLaunchColor, aiUseCustomIcon, onOpen }) {
+export { PANEL_WIDTH, PANEL_HEIGHT };
+
+const ChatFab = ({ fabRef, fabNudged, effectiveLaunchColor, aiUseCustomIcon, onOpen }) => {
   return (
     <button
       ref={fabRef}
@@ -24,6 +26,6 @@ export default function ChatFab({ fabRef, fabNudged, effectiveLaunchColor, aiUse
       )}
     </button>
   );
-}
+};
 
-export { PANEL_WIDTH, PANEL_HEIGHT };
+export default ChatFab;

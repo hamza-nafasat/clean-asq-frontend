@@ -1,57 +1,50 @@
-import Button from "@/components/shared/Button";
-import { useGetSingleSubmitFormQueryQuery } from "@/redux/apis/form.apis";
 import { useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
-import { History } from "../components/UnderwritingHistory";
-import { ApplicationAnalysis } from "../components/UnderwritingAnalysis";
-import { AppViewer } from "../components/UnderwritingAppViewer";
+import { useGetSingleSubmitFormQueryQuery } from "@/redux/apis/form.apis";
 import usePermission from "@/hooks/usePermission";
+import Button from "@/components/shared/Button";
+import UnderwritingAnalysis from "../components/UnderwritingAnalysis";
+import UnderwritingAppViewer from "../components/UnderwritingAppViewer";
+import UnderwritingFormVersions from "../components/UnderwritingFormVersions";
+import UnderwritingHistory from "../components/UnderwritingHistory";
 import { PERMISSIONS } from "@/utils/permissions";
-import { FormVersions } from "../components/UnderwritingFormVersions";
+import {
+  UNDERWRITING_FALLBACK_ROUTE,
+  UNDERWRITING_TAB_BUTTONS,
+  UNDERWRITING_TABS,
+} from "../utils/underwriting.constants";
 
-function OnBoarding() {
+const Underwriting = () => {
   const { applicantId } = useParams();
-  const [activeTab, setActiveTab] = useState("history");
+  const [activeTab, setActiveTab] = useState(UNDERWRITING_TABS.HISTORY);
   const { data: submitFormData } = useGetSingleSubmitFormQueryQuery({ _id: applicantId }, { skip: !applicantId });
   const hasUnderwritingPermission = usePermission(PERMISSIONS.UNDERWRITING);
-  if (!hasUnderwritingPermission) return <Navigate to="/application-forms" />;
+  if (!hasUnderwritingPermission) return <Navigate to={UNDERWRITING_FALLBACK_ROUTE} />;
   return (
-    <>
-      <div className="bg-backgroundColor rounded-t-md p-4">
-        <div className="mb-4">
-          {/* create thre tab history , profile, and settings */}
-          <div className="flex space-x-4">
+    <div className="bg-backgroundColor rounded-t-md p-4">
+      <div className="mb-4">
+        {/* Tabs */}
+        <div className="flex space-x-4">
+          {UNDERWRITING_TAB_BUTTONS.map((tab) => (
             <Button
-              label="History"
-              variant={activeTab === "history" ? "primary" : "secondary"}
-              onClick={() => setActiveTab("history")}
+              key={tab.value}
+              label={tab.label}
+              variant={activeTab === tab.value ? "primary" : "secondary"}
+              onClick={() => setActiveTab(tab.value)}
             />
-            <Button
-              label="Application Analysis"
-              variant={activeTab === "applicationAnalysis" ? "primary" : "secondary"}
-              onClick={() => setActiveTab("applicationAnalysis")}
-            />
-            <Button
-              label="App viewer"
-              variant={activeTab === "appViewer" ? "primary" : "secondary"}
-              onClick={() => setActiveTab("appViewer")}
-            />
-            <Button
-              label="Form Versions"
-              variant={activeTab === "formVersions" ? "primary" : "secondary"}
-              onClick={() => setActiveTab("formVersions")}
-            />
-          </div>
+          ))}
         </div>
-        {activeTab === "history" && <History submittedFormId={applicantId} />}
-        {activeTab === "applicationAnalysis" && <ApplicationAnalysis submitFormData={submitFormData?.data} />}
-        {activeTab === "appViewer" && <AppViewer data={submitFormData?.data} />}
-        {activeTab === "formVersions" && (
-          <FormVersions submittedFormId={applicantId} submitForm={submitFormData?.data} />
-        )}
       </div>
-    </>
+      {activeTab === UNDERWRITING_TABS.HISTORY && <UnderwritingHistory submittedFormId={applicantId} />}
+      {activeTab === UNDERWRITING_TABS.APPLICATION_ANALYSIS && (
+        <UnderwritingAnalysis submitFormData={submitFormData?.data} />
+      )}
+      {activeTab === UNDERWRITING_TABS.APP_VIEWER && <UnderwritingAppViewer data={submitFormData?.data} />}
+      {activeTab === UNDERWRITING_TABS.FORM_VERSIONS && (
+        <UnderwritingFormVersions submittedFormId={applicantId} submitForm={submitFormData?.data} />
+      )}
+    </div>
   );
-}
+};
 
-export default OnBoarding;
+export default Underwriting;

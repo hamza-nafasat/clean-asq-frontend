@@ -1,146 +1,133 @@
-import { useState, useEffect } from "react";
-import StepBuilder from "./TestingStepBuilder";
+import { useEffect, useState } from "react";
+import TestingStepBuilder from "./TestingStepBuilder";
+import {
+  DEFAULT_TEST_AREAS,
+  EMPTY_TEST_CASE,
+  TEST_CASE_FIELDS,
+  TEST_CASE_FLAGS,
+  TEST_ID_PATTERN,
+} from "../utils/testing.constants";
 
-const DEFAULT_AREAS = [
-  "Authentication",
-  "Branding",
-  "Form Builder",
-  "Email Templates",
-  "User Management",
-  "Admin Review",
-  "Applicant Flow",
-  "AI Chat",
-];
+const getInputClasses = (error) =>
+  `h-9 w-full rounded border ${error ? "border-red-400" : "border-gray-300"} bg-white px-3 text-sm text-gray-700 outline-none focus:border-primary`;
 
-const EMPTY_CASE = {
-  testId: "",
-  name: "",
-  area: "",
-  description: "",
-  requiresLogin: false,
-  requiresFormUrl: false,
-  smoke: false,
-  isActive: true,
-  steps: [],
+const EditorField = ({ label, error = "", children }) => (
+  <div>
+    <label className="mb-1 block text-xs font-medium text-gray-600 uppercase tracking-wide">{label}</label>
+    {children}
+    {error && <p className="mt-0.5 text-xs text-red-500">{error}</p>}
+  </div>
+);
+
+const validateTestCase = (form) => {
+  const errors = {};
+  if (!form.testId.trim()) errors.testId = "Required";
+  else if (!TEST_ID_PATTERN.test(form.testId.trim()))
+    errors.testId = 'Use format: area.test-name (e.g. "auth.login-valid")';
+  if (!form.name.trim()) errors.name = "Required";
+  if (!form.area.trim()) errors.area = "Required";
+  if (form.steps.length === 0) errors.steps = "Add at least one step";
+  return errors;
 };
 
-export default function TestCaseEditor({ isOpen, testCase, onSave, onClose, saving, areas = [] }) {
-  const [form, setForm] = useState(EMPTY_CASE);
+const TestingCaseEditor = ({ isOpen = false, testCase = null, onSave, onClose, saving = false, areas = [] }) => {
+  const [form, setForm] = useState(EMPTY_TEST_CASE);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (isOpen) {
-      setForm(testCase ? { ...EMPTY_CASE, ...testCase } : { ...EMPTY_CASE });
+      setForm(testCase ? { ...EMPTY_TEST_CASE, ...testCase } : { ...EMPTY_TEST_CASE });
       setErrors({});
     }
   }, [isOpen, testCase]);
 
   if (!isOpen) return null;
 
-  const set = (field, val) => setForm((f) => ({ ...f, [field]: val }));
-
-  const validate = () => {
-    const e = {};
-    if (!form.testId.trim()) e.testId = "Required";
-    else if (!/^[a-z0-9]+(\.[a-z0-9-]+)+$/.test(form.testId.trim()))
-      e.testId = 'Use format: area.test-name (e.g. "auth.login-valid")';
-    if (!form.name.trim()) e.name = "Required";
-    if (!form.area.trim()) e.area = "Required";
-    if (form.steps.length === 0) e.steps = "Add at least one step";
-    return e;
-  };
+  const setField = (field, val) => setForm((f) => ({ ...f, [field]: val }));
 
   const handleSave = () => {
-    const e = validate();
-    if (Object.keys(e).length) { setErrors(e); return; }
-    onSave(form);
+    const nextErrors = validateTestCase(form);
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors);
+      return;
+    }
+    onSave?.(form);
   };
 
   const isEdit = !!testCase;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-8">
-      <div className="w-full max-w-2xl rounded-xl bg-white shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <h2 className="text-base font-semibold text-gray-900">
-            {isEdit ? "Edit Test Case" : "New Test Case"}
-          </h2>
+      <article className="w-full max-w-2xl rounded-xl bg-white shadow-2xl">
+        <header className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+          <h2 className="text-base font-semibold text-gray-900">{isEdit ? "Edit Test Case" : "New Test Case"}</h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => onClose?.()}
+            aria-label="Close"
             className="text-gray-400 hover:text-gray-600 text-lg leading-none"
           >
             ×
           </button>
-        </div>
+        </header>
 
-        {/* Body */}
         <div className="px-6 py-5 space-y-5">
-          {/* testId + name */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Test ID *" error={errors.testId}>
+            <EditorField label="Test ID *" error={errors.testId}>
               <input
                 type="text"
                 value={form.testId}
-                onChange={(e) => set("testId", e.target.value)}
-                placeholder='e.g. auth.login-valid'
+                onChange={(e) => setField(TEST_CASE_FIELDS.TEST_ID, e.target.value)}
+                placeholder="e.g. auth.login-valid"
                 disabled={isEdit}
-                className={inputCls(errors.testId) + (isEdit ? " bg-gray-50 text-gray-400" : "")}
+                className={getInputClasses(errors.testId) + (isEdit ? " bg-gray-50 text-gray-400" : "")}
               />
-            </Field>
-            <Field label="Name *" error={errors.name}>
+            </EditorField>
+            <EditorField label="Name *" error={errors.name}>
               <input
                 type="text"
                 value={form.name}
-                onChange={(e) => set("name", e.target.value)}
+                onChange={(e) => setField(TEST_CASE_FIELDS.NAME, e.target.value)}
                 placeholder="Human-readable test name"
-                className={inputCls(errors.name)}
+                className={getInputClasses(errors.name)}
               />
-            </Field>
+            </EditorField>
           </div>
 
-          {/* area + description */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Area *" error={errors.area}>
+            <EditorField label="Area *" error={errors.area}>
               <input
                 type="text"
                 list="area-suggestions"
                 value={form.area}
-                onChange={(e) => set("area", e.target.value)}
+                onChange={(e) => setField(TEST_CASE_FIELDS.AREA, e.target.value)}
                 placeholder="Pick existing or type new…"
-                className={inputCls(errors.area)}
+                className={getInputClasses(errors.area)}
               />
               <datalist id="area-suggestions">
-                {[...new Set([...DEFAULT_AREAS, ...areas])].map((a) => (
+                {[...new Set([...DEFAULT_TEST_AREAS, ...areas])].map((a) => (
                   <option key={a} value={a} />
                 ))}
               </datalist>
-            </Field>
-            <Field label="Description">
+            </EditorField>
+            <EditorField label="Description">
               <input
                 type="text"
                 value={form.description}
-                onChange={(e) => set("description", e.target.value)}
+                onChange={(e) => setField(TEST_CASE_FIELDS.DESCRIPTION, e.target.value)}
                 placeholder="What this test verifies"
-                className={inputCls()}
+                className={getInputClasses()}
               />
-            </Field>
+            </EditorField>
           </div>
 
-          {/* Checkboxes */}
           <div className="flex flex-wrap gap-5">
-            {[
-              { field: "requiresLogin",   label: "Requires Login" },
-              { field: "requiresFormUrl", label: "Requires Form URL" },
-              { field: "smoke",           label: "Smoke Test" },
-              { field: "isActive",        label: "Active" },
-            ].map(({ field, label }) => (
+            {TEST_CASE_FLAGS.map(({ field, label }) => (
               <label key={field} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={!!form[field]}
-                  onChange={(e) => set(field, e.target.checked)}
+                  onChange={(e) => setField(field, e.target.checked)}
                   className="rounded"
                 />
                 {label}
@@ -148,21 +135,19 @@ export default function TestCaseEditor({ isOpen, testCase, onSave, onClose, savi
             ))}
           </div>
 
-          {/* Steps */}
-          <div>
+          <section>
             <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-medium text-gray-700">Steps</span>
               {errors.steps && <span className="text-xs text-red-500">{errors.steps}</span>}
             </div>
-            <StepBuilder steps={form.steps} onChange={(s) => set("steps", s)} />
-          </div>
+            <TestingStepBuilder steps={form.steps} onChange={(s) => setField(TEST_CASE_FIELDS.STEPS, s)} />
+          </section>
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 border-t border-gray-200 px-6 py-4">
+        <footer className="flex items-center justify-end gap-3 border-t border-gray-200 px-6 py-4">
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => onClose?.()}
             className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
           >
             Cancel
@@ -175,22 +160,10 @@ export default function TestCaseEditor({ isOpen, testCase, onSave, onClose, savi
           >
             {saving ? "Saving…" : isEdit ? "Save Changes" : "Create Test Case"}
           </button>
-        </div>
-      </div>
+        </footer>
+      </article>
     </div>
   );
-}
+};
 
-function Field({ label, error, children }) {
-  return (
-    <div>
-      <label className="mb-1 block text-xs font-medium text-gray-600 uppercase tracking-wide">{label}</label>
-      {children}
-      {error && <p className="mt-0.5 text-xs text-red-500">{error}</p>}
-    </div>
-  );
-}
-
-function inputCls(error) {
-  return `h-9 w-full rounded border ${error ? "border-red-400" : "border-gray-300"} bg-white px-3 text-sm text-gray-700 outline-none focus:border-primary`;
-}
+export default TestingCaseEditor;

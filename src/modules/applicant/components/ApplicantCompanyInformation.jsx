@@ -1,55 +1,55 @@
-import DisplayText from "./ApplicantDisplayText";
-import { FIELD_TYPES, STATE_SUGGESTIONS } from "@/constants";
-import { useEnterToNextField } from "@/hooks/useEnterToNextField";
-import { useFindNaicAndMccMutation, useGetAllSearchStrategiesQuery } from "@/redux/apis/form.apis";
-import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary.js";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CgSpinner } from "react-icons/cg";
 import { useSelector } from "react-redux";
+import { useFindNaicAndMccMutation, useGetAllSearchStrategiesQuery } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
-import { getSignatureUrl, isSignatureComplete, normalizeSignature } from "@/utils/signatureShape";
-import { naicsToMcc } from "@/../public/NAICStoMCC.js";
-import SignatureBox from "@/components/global/SignatureBox.jsx";
-import Button from "@/components/shared/Button.jsx";
+import { CgSpinner } from "react-icons/cg";
+import { useEnterToNextField } from "@/hooks/useEnterToNextField";
+import { OtherInputType } from "@/components/global/DynamicField";
+import SignatureBox from "@/components/global/SignatureBox";
+import Button from "@/components/shared/Button";
+import Modal from "@/components/shared/Modal";
+import TextField from "@/components/shared/TextField";
+import CustomizationFieldsModal from "./ApplicantCustomizeFieldsModal";
+import DisplayText from "./ApplicantDisplayText";
+import ApplicantNaicsInput from "./ApplicantNaicsInput";
+import ApplicantNaicsModal from "./ApplicantNaicsModal";
+import ApplicantSectionField from "./ApplicantSectionField";
+import { EditSectionDisplayTextFromatingModal } from "./ApplicantSectionTextModal";
+import { STATE_SUGGESTIONS } from "@/constants";
+import { FIELD_NAMES, NAICS_INPUT_ID, SECTION_FIELD_INPUT_TYPES } from "../utils/applicant.constants";
+import { formatNaicsBestMatch } from "../utils/applicant.utils8";
 import {
-  CheckboxInputType,
-  FileInputType,
-  MultiCheckboxInputType,
-  OtherInputType,
-  RadioInputType,
-  RangeInputType,
-  SelectInputType,
-} from "@/components/global/DynamicField.jsx";
-import TextField from "@/components/shared/TextField.jsx";
-import { EditSectionDisplayTextFromatingModal } from "./ApplicantSectionTextModal.jsx";
-import Modal from "@/components/shared/Modal.jsx";
-import CustomizationFieldsModal from "./ApplicantCustomizeFieldsModal.jsx";
-
+  buildCompanyInformationForm,
+  isCompanyInformationComplete,
+  uploadSignatureReplacing,
+} from "../utils/applicant.utils12";
 import { isNotGuestRoleValue } from "@/utils/permissions";
-function CompanyInformation({
+import { getSignatureUrl, normalizeSignature } from "@/utils/signatureShape";
+
+const CompanyInformation = ({
   sectionKey,
   formRefetch,
   _id,
   name,
   handleNext,
   handlePrevious,
-  currentStep,
-  totalSteps,
+  currentStep = 0,
+  totalSteps = 0,
   handleSubmit,
   reduxData,
-  formLoading,
-  fields,
+  formLoading = false,
+  fields = [],
   saveInProgress,
-  step,
-  isSignature,
-}) {
+  step = {},
+  isSignature = false,
+}) => {
   const prevRef = useRef(null);
   const formContainerRef = useRef(null);
   const submitFromEnterRef = useRef(null);
   const { user } = useSelector((state) => state.auth);
   const { formData } = useSelector((state) => state?.form);
   const [customizeModal, setCustomizeModal] = useState(false);
-  const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
+  const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const [form, setForm] = useState({});
   const [loadingNext, setLoadingNext] = useState(false);
   const [naicsToMccDetails, setNaicsToMccDetails] = useState({
@@ -59,55 +59,45 @@ function CompanyInformation({
   });
   const [showNaicsToMccDetails, setShowNaicsToMccDetails] = useState(true);
   const [naicsApiData, setNaicsApiData] = useState({ bestMatch: {}, otherMatches: [] });
-  const [naicsSuggestions, setNaicsSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [naicsHighlight, setNaicsHighlight] = useState(-1); // suggestion selected with the arrow keys
-  const naicsInputRef = useRef(null);
   const [naicsLoading, setNaicsLoading] = useState(false);
-  const [naicsSuggestionsAbove, setNaicsSuggestionsAbove] = useState(false);
   const [findNaicsToMccDetails] = useFindNaicAndMccMutation();
-  const [strategyKeys, setStrategyKeys] = useState([]);
   const { data: strategyKeysData } = useGetAllSearchStrategiesQuery();
-  const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
-  const companyHasNoWebsite = formData?.company_has_no_website === true;
 
+  const strategyKeys = strategyKeysData?.data?.map((item) => item?.searchObjectKey) ?? [];
+  const companyHasNoWebsite = formData?.company_has_no_website === true;
   const effectiveFields = useMemo(
-    () => (fields || []).map((f) => (companyHasNoWebsite && f?.name === "website_url" ? { ...f, required: false } : f)),
+    () =>
+      (fields || []).map((f) =>
+        companyHasNoWebsite && f?.name === FIELD_NAMES.WEBSITE_URL ? { ...f, required: false } : f,
+      ),
     [fields, companyHasNoWebsite],
   );
-
   const requiredNames = useMemo(
     () => effectiveFields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
     [effectiveFields],
   );
-
   const isCreator = user?._id && user?._id === step?.owner && isNotGuestRoleValue(user);
+  const isAllRequiredFieldsFilled =
+    isCreator || isCompanyInformationComplete({ form, requiredNames, naics: naicsToMccDetails.NAICS, isSignature });
+  const hasDescriptionField = effectiveFields?.some((f) => f.name === FIELD_NAMES.COMPANY_DESCRIPTION);
+  const sectionData = { ...form, naics: naicsToMccDetails };
 
-  const signatureUploadHandler = async (file, setIsSaving) => {
+  const handleSignatureUpload = async (file, setIsSaving) => {
     try {
       if (!file) return toast.error("Please select a file");
-      if (file) {
-        const oldSign = form?.["signature"]?.value || {};
-        if (oldSign?.publicId) {
-          const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
-          if (!result) return toast.error("File Not Deleted Please Try Again");
-        }
-        const res = await uploadImageOnCloudinary(file);
-        if (!res.publicId || !res.secureUrl || !res.resourceType) {
-          return toast.error("File Not Uploaded Please Try Again");
-        }
-        setForm((prev) => ({ ...prev, signature: { name: "signature", value: res } }));
-        toast.success("Signature uploaded successfully");
-      }
+      const { res, errorMessage } = await uploadSignatureReplacing(file, form?.signature?.value || {});
+      if (errorMessage) return toast.error(errorMessage);
+      setForm((prev) => ({ ...prev, signature: { name: FIELD_NAMES.SIGNATURE, value: res } }));
+      toast.success("Signature uploaded successfully");
     } catch (error) {
-      console.log("error while uploading signature", error);
+      console.error("Upload signature error:", error);
     } finally {
-      if (setIsSaving) setIsSaving(false);
+      setIsSaving?.(false);
     }
   };
 
-  const findNaicsHandler = async () => {
-    const description = Object.values(form).find((v) => v?.name === "companydescription")?.value;
+  const handleFindNaics = async () => {
+    const description = Object.values(form).find((v) => v?.name === FIELD_NAMES.COMPANY_DESCRIPTION)?.value;
     if (!description) return toast.error("Please enter a description first");
     try {
       setNaicsLoading(true);
@@ -117,163 +107,43 @@ function CompanyInformation({
         setShowNaicsToMccDetails(true);
       }
     } catch (error) {
-      console.log("Error finding NAICS:", error);
+      console.error("Find NAICS error:", error);
       toast.error(error?.data?.message || "Failed to find NAICS code");
     } finally {
       setNaicsLoading(false);
     }
   };
 
-  // Filter NAICS codes based on input
-  const handleNaicsInputChange = (e) => {
-    const value = e.target.value;
-    setNaicsToMccDetails((prev) => ({
-      ...prev,
-      NAICS: value,
-      NAICS_Description: "",
-      MCC: "",
-      MCC_Description: "",
-    }));
-
-    if (value.length > 0) {
-      // First, find all NAICS codes that start with the entered number
-      const startsWithNumber = naicsToMcc.filter((item) => item["NAICS Code"].startsWith(value));
-
-      // Then find descriptions containing the value (case insensitive)
-      const containsInDescription = naicsToMcc.filter(
-        (item) =>
-          !item["NAICS Code"].startsWith(value) &&
-          item["NAICS Description"].toLowerCase().includes(value.toLowerCase()),
-      );
-
-      // Combine both, with exact matches first, then description matches
-      const allMatches = [...startsWithNumber, ...containsInDescription];
-
-      // Show more results (up to 20) for better discovery
-      const filtered = allMatches.slice(0, 20);
-
-      setNaicsSuggestions(filtered);
-      setShowSuggestions(filtered.length > 0);
-    } else {
-      setShowSuggestions(false);
-    }
-    setNaicsHighlight(-1);
-  };
-
-  // Handle selection from suggestions
-  const handleSelectNaics = (item) => {
-    const formattedValue = `${item["NAICS Code"]}, ${item["NAICS Description"]} ${item["MCC Code"] ? `, ${item["MCC Code"]}` : ""} ${item["MCC Description"] ? `, ${item["MCC Description"]}` : ""}`;
-    setNaicsToMccDetails({
-      NAICS: formattedValue,
-      NAICS_Description: item["NAICS Description"],
-      MCC: item["MCC Code"] || "",
-      MCC_Description: item["MCC Description"] || "",
-    });
-    setShowSuggestions(false);
-    setNaicsHighlight(-1);
-  };
-
+  // best NAICS match from the lookup description, once per lookup change
   useEffect(() => {
-    if (strategyKeysData?.data) {
-      setStrategyKeys(strategyKeysData?.data?.map((item) => item?.searchObjectKey));
-    }
-  }, [strategyKeysData]);
-
-  useEffect(() => {
-    const prev = prevRef.current;
     const curr = formData?.company_lookup_data;
-    // Compare actual values, not just reference
-    if (JSON.stringify(prev) === JSON.stringify(curr)) return;
+    if (JSON.stringify(prevRef.current) === JSON.stringify(curr)) return;
     prevRef.current = curr;
     if (!curr) return;
     (async () => {
-      const description = curr.find((i) => i?.name === "companydescription")?.result;
-      if (naicsToMccDetails?.NAICS) return;
-      if (!description) return;
+      const description = curr.find((i) => i?.name === FIELD_NAMES.COMPANY_DESCRIPTION)?.result;
+      if (naicsToMccDetails?.NAICS || !description) return;
       try {
         setNaicsLoading(true);
         const res = await findNaicsToMccDetails({ description }).unwrap();
-        if (res.success) {
-          console.log("i am called baby");
-          const bestMatch = res.data.bestMatch;
-          setNaicsToMccDetails({
-            NAICS: `${bestMatch.naics}, ${bestMatch.naicsDescription}`,
-            MCC: `${bestMatch.mcc || ""}, ${bestMatch.mccDescription || ""}`,
-          });
-        }
-      } catch (err) {
-        toast.error(err?.data?.message || "Failed to find NAICS code");
+        if (res.success) setNaicsToMccDetails(formatNaicsBestMatch(res.data.bestMatch));
+      } catch (error) {
+        console.error("Find NAICS error:", error);
+        toast.error(error?.data?.message || "Failed to find NAICS code");
       } finally {
         setNaicsLoading(false);
       }
     })();
   }, [findNaicsToMccDetails, formData?.company_lookup_data, naicsToMccDetails?.NAICS]);
 
-  // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (naicsInputRef.current && !naicsInputRef.current.contains(event.target)) setShowSuggestions(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
   useEffect(() => {
     if (fields && fields.length > 0) {
-      const lookupData = formData?.company_lookup_data;
-      const initialForm = {};
-      let isDateField = false;
-      fields.forEach((field) => {
-        let fieldValueFromLookupData = lookupData?.find((item) => {
-          const fieldName = field?.name?.trim()?.toLowerCase();
-          const itemName = item?.name?.trim()?.toLowerCase();
-          if (itemName == fieldName && itemName?.includes("date")) isDateField = true;
-          return fieldName === itemName;
-        })?.result;
-        if (isDateField) {
-          let formatedData = fieldValueFromLookupData
-            ? new Date(fieldValueFromLookupData)?.toISOString()?.split("T")?.[0]
-            : "";
-          isDateField = false;
-          // initialForm[field.name] = reduxData?.[field?.name] || formatedData || "";
-          initialForm[field.uniqueId] = {
-            name: field.name,
-            value: reduxData?.[field?.uniqueId]?.value || formatedData || "",
-          };
-        } else {
-          // initialForm[field.name] = reduxData?.[field?.name] || fieldValueFromLookupData || "";
-          initialForm[field.uniqueId] = {
-            name: field.name,
-            value: reduxData?.[field?.uniqueId]?.value || fieldValueFromLookupData || "",
-          };
-        }
-      });
-      setForm(initialForm);
+      setForm(buildCompanyInformationForm(fields, formData?.company_lookup_data, reduxData));
     }
-    // if (isSignature) {
-    //   const isSignatureExistingData = {};
-    //   if (reduxData?.signature?.publicId) isSignatureExistingData.publicId = reduxData?.signature?.publicId;
-    //   if (reduxData?.signature?.secureUrl) isSignatureExistingData.secureUrl = reduxData?.signature?.secureUrl;
-    //   if (reduxData?.signature?.resourceType) isSignatureExistingData.resourceType = reduxData?.signature?.resourceType;
-    //   setForm((prev) => ({
-    //     ...prev,
-    //     ["signature"]: isSignatureExistingData?.publicId
-    //       ? isSignatureExistingData
-    //       : { publicId: "", secureUrl: "", resourceType: "" },
-    //   }));
-    // }
-
-    if (isSignature) {
-      setForm((prev) => ({
-        ...prev,
-        signature: normalizeSignature(reduxData?.signature),
-      }));
-    }
+    if (isSignature) setForm((prev) => ({ ...prev, signature: normalizeSignature(reduxData?.signature) }));
   }, [fields, formData?.company_lookup_data, isSignature, reduxData]);
 
-  // Keep NAICS in sync when draft/redux loads after mount
+  // keep NAICS in sync when the draft loads after mount
   useEffect(() => {
     if (!reduxData?.naics) return;
     setNaicsToMccDetails((prev) => {
@@ -286,54 +156,16 @@ function CompanyInformation({
     });
   }, [reduxData?.naics]);
 
-  // checking is all required fields are filled or not
-  // ---------------------------------------------------
+  // focus the first input after the initial effects settle
   useEffect(() => {
-    if (isCreator) {
-      setIsAllRequiredFieldsFilled(true);
-      return;
-    }
-    const allFilled = requiredNames.every((name) => {
-      const val = form[name.uniqueId]?.value;
-      if (val == null) return false;
-      if (typeof val === "string") return val.trim() !== "";
-      if (Array.isArray(val))
-        return (
-          val.length > 0 &&
-          val.every((item) =>
-            typeof item === "object"
-              ? Object.values(item).every((v) => v?.toString().trim() !== "")
-              : item?.toString().trim() !== "",
-          )
-        );
-      return true;
-    });
-
-    // check naics filled
-    const isNaicsFilled = naicsToMccDetails.NAICS ? true : false;
-    let isCompanyStockSymbol = true;
-    if (form?.["company_ownership_type"]?.value == "public") {
-      isCompanyStockSymbol = false;
-      if (form?.["stocksymbol"]?.value) isCompanyStockSymbol = true;
-    }
-    const isSignatureDone = !isSignature || isSignatureComplete(form?.signature);
-    const isAllRequiredFieldsFilled = allFilled && isNaicsFilled && isCompanyStockSymbol && isSignatureDone;
-    setIsAllRequiredFieldsFilled(isAllRequiredFieldsFilled);
-  }, [form, isCreator, isSignature, naicsToMccDetails.NAICS, requiredNames]);
-
-  // Focus the first visible text input after the initial render cascade settles.
-  // autoFocus fires at commit time (before setForm initialisms form state), so the
-  // subsequent re-render can knock focus loose. Two rAF frames land safely after
-  // all initial effects and their queued re-renders have flushed.
-  useEffect(() => {
-    let frame1, frame2;
-    frame1 = requestAnimationFrame(() => {
+    let frame2;
+    const frame1 = requestAnimationFrame(() => {
       frame2 = requestAnimationFrame(() => {
         const container = formContainerRef.current;
         if (!container) return;
         const inputs = Array.from(
           container.querySelectorAll(
-            "input:not([disabled]):not([readonly]):not(#naics-code), textarea:not([disabled]):not([readonly])",
+            `input:not([disabled]):not([readonly]):not(#${NAICS_INPUT_ID}), textarea:not([disabled]):not([readonly])`,
           ),
         ).filter((el) => el.offsetParent !== null);
         if (inputs.length > 0) inputs[0].focus();
@@ -345,58 +177,22 @@ function CompanyInformation({
     };
   }, []);
 
-  // Keep a fresh reference to the next/submit action so the Enter handler below
-  // never captures stale closure values (form, naicsToMccDetails, etc.).
   submitFromEnterRef.current = () => {
     if (!isAllRequiredFieldsFilled || loadingNext) return;
-    if (currentStep < totalSteps - 1) {
-      handleNext({ data: { ...form, naics: naicsToMccDetails }, name: sectionKey, setLoadingNext });
-    } else {
-      handleSubmit({ data: { ...form, naics: naicsToMccDetails }, name: sectionKey, setLoadingNext });
-    }
+    if (currentStep < totalSteps - 1) handleNext({ data: sectionData, name: sectionKey, setLoadingNext });
+    else handleSubmit({ data: sectionData, name: sectionKey, setLoadingNext });
   };
+  useEnterToNextField(formContainerRef, { onLastFieldRef: submitFromEnterRef, excludeIds: [NAICS_INPUT_ID] });
 
-  // Enter → next field (NAICS has its own Enter logic via excludeIds).
-  useEnterToNextField(formContainerRef, {
-    onLastFieldRef: submitFromEnterRef,
-    excludeIds: ["naics-code"],
-  });
-
-  const checkNaicsPosition = () => {
-    if (!naicsInputRef.current) return;
-    const rect = naicsInputRef.current.getBoundingClientRect();
-    setNaicsSuggestionsAbove(window.innerHeight - rect.bottom < 350);
-  };
-
-  // Arrow keys move through the NAICS suggestions; Enter or Tab picks the highlighted one.
-  const handleNaicsKeyDown = (e) => {
-    if (!showSuggestions || naicsSuggestions.length === 0) return;
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setNaicsHighlight((i) => Math.min(i + 1, naicsSuggestions.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setNaicsHighlight((i) => Math.max(i - 1, 0));
-    } else if ((e.key === "Enter" || e.key === "Tab") && naicsHighlight >= 0) {
-      e.preventDefault();
-      handleSelectNaics(naicsSuggestions[naicsHighlight]);
-    } else if (e.key === "Escape") {
-      setShowSuggestions(false);
-    }
-  };
-
-  // "Find NAICS" reads the business description, so it sits right under that field.
-  // Forms without a description field still get the button after the field list.
-  const hasDescriptionField = effectiveFields?.some((f) => f.name === "companydescription");
-  const renderFindNaicsButton = () => (
+  const findNaicsButton = (
     <div className="mt-2 flex w-full flex-col items-end">
       <Button
-        label={`Find NAICS`}
+        label="Find NAICS"
         className={`text-nowrap ${naicsLoading && "pointer-events-none opacity-30"}`}
         disabled={naicsLoading}
-        onClick={findNaicsHandler}
+        onClick={handleFindNaics}
         icon={naicsLoading && CgSpinner}
-        cnLeft={"animate-spin h-5 w-5"}
+        cnLeft="animate-spin h-5 w-5"
       />
     </div>
   );
@@ -404,7 +200,7 @@ function CompanyInformation({
   return (
     <div ref={formContainerRef} className="mt-14 h-full">
       {updateSectionFromatingModal && (
-        <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
+        <Modal onClose={() => setUpdateSectionFromatingModal(false)}>
           <EditSectionDisplayTextFromatingModal step={step} setModal={setUpdateSectionFromatingModal} />
         </Modal>
       )}
@@ -413,16 +209,12 @@ function CompanyInformation({
         <p className="text-textPrimary text-2xl font-semibold" data-ai-display-text>
           {name}
         </p>
-
         <div className="flex gap-2">
-          <Button
-            onClick={() => saveInProgress({ data: { ...form, naics: naicsToMccDetails }, name: sectionKey })}
-            label={"Save my progress"}
-          />
+          <Button onClick={() => saveInProgress({ data: sectionData, name: sectionKey })} label="Save my progress" />
           {isCreator && (
             <>
-              <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={"Customize"} />
-              <Button onClick={() => setUpdateSectionFromatingModal(true)} label={"Update Display Text"} />
+              <Button variant="secondary" onClick={() => setCustomizeModal(true)} label="Customize" />
+              <Button onClick={() => setUpdateSectionFromatingModal(true)} label="Update Display Text" />
             </>
           )}
         </div>
@@ -436,55 +228,18 @@ function CompanyInformation({
 
       {effectiveFields?.length > 0 &&
         effectiveFields.map((field, index) => {
-          if (field.type === FIELD_TYPES.SELECT) {
+          if (SECTION_FIELD_INPUT_TYPES.includes(field.type)) {
             return (
-              <div key={index} className="mt-4">
-                <SelectInputType field={field} form={form} setForm={setForm} className={""} />
-              </div>
+              <ApplicantSectionField
+                key={index}
+                field={field}
+                form={form}
+                setForm={setForm}
+                radioClassName="mt-4 flex flex-col gap-2"
+              />
             );
           }
-          if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
-            return (
-              <div key={index} className="mt-4">
-                <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={""} />
-              </div>
-            );
-          }
-          if (field.type === FIELD_TYPES.RADIO) {
-            return (
-              <div key={index} className="mt-4 flex flex-col gap-2">
-                <RadioInputType field={field} form={form} setForm={setForm} className={""} />
-              </div>
-            );
-          }
-          if (field.type === FIELD_TYPES.RANGE) {
-            return (
-              <div key={index} className="mt-4">
-                <RangeInputType field={field} form={form} setForm={setForm} className={""} />
-              </div>
-            );
-          }
-          if (field.type === FIELD_TYPES.FILE) {
-            return (
-              <div key={index} className="mt-4">
-                <FileInputType field={field} form={form} setForm={setForm} className={""} />
-              </div>
-            );
-          }
-          if (field.type === FIELD_TYPES.CHECKBOX) {
-            return (
-              <div key={index} className="mt-4">
-                <CheckboxInputType
-                  field={field}
-                  placeholder={field.placeholder}
-                  form={form}
-                  setForm={setForm}
-                  className={""}
-                />
-              </div>
-            );
-          }
-          if (field.name?.toLowerCase().includes("incorp")) {
+          if (field.name?.toLowerCase().includes(FIELD_NAMES.INCORPORATION_PART)) {
             return (
               <div key={index} className="mt-4">
                 {field.label && (
@@ -506,90 +261,42 @@ function CompanyInformation({
               </div>
             );
           }
+          const isDescription = field.name === FIELD_NAMES.COMPANY_DESCRIPTION;
           return (
             <div
               key={index}
               className="mt-4"
-              data-ai-loading={
-                field.name === "companydescription" && !formData?.company_lookup_data ? "true" : undefined
-              }
+              data-ai-loading={isDescription && !formData?.company_lookup_data ? "true" : undefined}
             >
-              <OtherInputType
-                field={field}
-                placeholder={field.placeholder}
-                form={form}
-                setForm={setForm}
-                className={""}
-              />
-              {field.name === "companydescription" && renderFindNaicsButton()}
+              <OtherInputType field={field} placeholder={field.placeholder} form={form} setForm={setForm} className="" />
+              {isDescription && findNaicsButton}
             </div>
           );
         })}
-      {/* NAICS to MCC SECTION  */}
       {naicsApiData?.bestMatch?.naics && showNaicsToMccDetails && (
-        <Modal isOpen={showNaicsToMccDetails} onClose={() => setShowNaicsToMccDetails(false)}>
-          <NAICSModal
+        <Modal onClose={() => setShowNaicsToMccDetails(false)}>
+          <ApplicantNaicsModal
+            isOpen={showNaicsToMccDetails}
             naicsApiData={naicsApiData}
             setNaicsApiData={setNaicsApiData}
-            naicsToMccDetails={naicsToMccDetails}
             setNaicsToMccDetails={setNaicsToMccDetails}
-            setShowNaicsToMccDetails={setShowNaicsToMccDetails}
+            onClose={() => setShowNaicsToMccDetails(false)}
           />
         </Modal>
       )}
-      {!hasDescriptionField && renderFindNaicsButton()}
+      {!hasDescriptionField && findNaicsButton}
       <div className="mt-6 flex w-full flex-col items-start">
         <h4 className="text-textPrimary text-base font-medium lg:text-lg">NAICS Code and Description</h4>
-
         <div className="mt-2 flex w-full flex-col gap-4">
-          <div className="relative w-full" ref={naicsInputRef}>
-            <div className="flex w-full gap-4">
-              <input
-                id="naics-code"
-                name="naics-code"
-                placeholder="Type NAICS code or description..."
-                type="text"
-                value={naicsToMccDetails.NAICS}
-                onKeyDown={handleNaicsKeyDown}
-                className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${!naicsToMccDetails.NAICS ? "bg-highlighting border-accent! border-2" : ""}`}
-                data-ai-has-suggestions="true"
-                data-ai-required="true"
-                data-ai-label="NAICS Code and Description"
-                data-ai-loading={naicsLoading ? "true" : undefined}
-                onChange={(e) => {
-                  checkNaicsPosition();
-                  handleNaicsInputChange(e);
-                }}
-                onFocus={() => {
-                  checkNaicsPosition();
-                  naicsToMccDetails.NAICS ? setShowSuggestions(true) : setShowSuggestions(false);
-                }}
-              />
-            </div>
-            {showSuggestions && (
-              <div
-                className={`rounded-md absolute z-10 max-h-80 w-full overflow-y-auto border border-gray-200 bg-white shadow-lg ${naicsSuggestionsAbove ? "bottom-full mb-1" : "mt-1"}`}
-              >
-                {naicsSuggestions.map((item, index) => (
-                  <div
-                    key={index}
-                    className={`cursor-pointer px-4 py-2 hover:bg-gray-100 ${index === naicsHighlight ? "bg-gray-100" : ""}`}
-                    onMouseEnter={() => setNaicsHighlight(index)}
-                    onClick={() => handleSelectNaics(item)}
-                  >
-                    <div className="font-medium">{item["NAICS Code"]}</div>
-                    <div className="text-sm text-gray-600">{item["NAICS Description"]}</div>
-                    {/* <div className="text-sm text-gray-400">{item["MCC Code"]}</div>
-                    <div className="text-sm text-gray-400">{item["MCC Description"]}</div> */}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <ApplicantNaicsInput
+            value={naicsToMccDetails.NAICS}
+            isLoading={naicsLoading}
+            setNaicsToMccDetails={setNaicsToMccDetails}
+          />
           <div className="">
             {isSignature && (
               <SignatureBox
-                onSave={signatureUploadHandler}
+                onSave={handleSignatureUpload}
                 step={step}
                 oldSignatureUrl={getSignatureUrl(form?.signature)}
               />
@@ -597,11 +304,12 @@ function CompanyInformation({
           </div>
         </div>
       </div>
-      {/* next Previous buttons  */}
+
+      {/* Actions */}
       <div className="flex justify-end gap-4 p-4">
         <div className="mt-8 flex justify-end gap-5">
           {currentStep > 0 && (
-            <Button variant="secondary" label={"Previous"} onClick={handlePrevious} data-testid="form-back-btn" />
+            <Button variant="secondary" label="Previous" onClick={handlePrevious} data-testid="form-back-btn" />
           )}
           {currentStep < totalSteps - 1 ? (
             <Button
@@ -609,27 +317,15 @@ function CompanyInformation({
               disabled={!isAllRequiredFieldsFilled || loadingNext}
               label={isAllRequiredFieldsFilled || loadingNext ? "Next" : "Some Required Fields are Missing"}
               data-testid="form-next-btn"
-              onClick={() =>
-                handleNext({
-                  data: { ...form, naics: naicsToMccDetails },
-                  name: sectionKey,
-                  setLoadingNext,
-                })
-              }
+              onClick={() => handleNext({ data: sectionData, name: sectionKey, setLoadingNext })}
             />
           ) : (
             <Button
               disabled={formLoading || loadingNext}
               className={`${(formLoading || loadingNext) && "pinter-events-none cursor-not-allowed opacity-50"}`}
-              label={"Submit"}
+              label="Submit"
               data-testid="form-submit-btn"
-              onClick={() =>
-                handleSubmit({
-                  data: { ...form, naics: naicsToMccDetails },
-                  name: sectionKey,
-                  setLoadingNext,
-                })
-              }
+              onClick={() => handleSubmit({ data: sectionData, name: sectionKey, setLoadingNext })}
             />
           )}
         </div>
@@ -649,70 +345,6 @@ function CompanyInformation({
       )}
     </div>
   );
-}
+};
 
 export default CompanyInformation;
-
-const NAICSModal = ({ naicsApiData, setNaicsApiData, setNaicsToMccDetails, setShowNaicsToMccDetails }) => {
-  const handlerOnClickOnOtherMatches = (i) => {
-    const bestMatch = { ...naicsApiData?.bestMatch };
-    const clickedMatch = { ...naicsApiData?.otherMatches[i] };
-    const remainingOtherMatches = naicsApiData?.otherMatches.filter((match, index) => index !== i);
-    bestMatch.naics = clickedMatch.naics;
-    bestMatch.naicsDescription = clickedMatch.naicsDescription;
-    bestMatch.mcc = clickedMatch.mcc;
-    bestMatch.mccDescription = clickedMatch.mccDescription;
-    remainingOtherMatches.push(naicsApiData?.bestMatch);
-    setNaicsApiData({ otherMatches: remainingOtherMatches, bestMatch });
-  };
-  const saveHandler = (bestMatch) => {
-    if (!bestMatch?.naics) return toast.error("Please select a best match");
-    setNaicsToMccDetails({
-      NAICS: `${bestMatch?.naics}, ${bestMatch?.naicsDescription}`,
-      MCC: `${bestMatch?.mcc || ""}, ${bestMatch?.mccDescription || ""}`,
-    });
-    setShowNaicsToMccDetails(false);
-  };
-  return (
-    <div className="flex w-full flex-col items-start gap-4">
-      <section className="flex w-full flex-col">
-        <h4 className="text-textPrimary text-base font-medium lg:text-lg">Best Match</h4>
-        <div className={`'mt-2' flex w-full gap-4`}>
-          <input
-            placeholder={"NAICS Code and Description"}
-            type={"text"}
-            readOnly
-            value={`${naicsApiData?.bestMatch?.naics ? naicsApiData?.bestMatch?.naics + " ," : ""} ${naicsApiData?.bestMatch?.naicsDescription || ""}`}
-            className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base`}
-          />
-        </div>
-      </section>
-      <section className="flex w-full flex-col">
-        <h4 className="text-textPrimary text-base font-medium lg:text-lg">Other Possible Matches</h4>
-        <div className={`'mt-2' flex w-full gap-4`}>
-          {naicsApiData?.otherMatches?.map((match, i) => (
-            <button className="cursor-pointer" key={i} onClick={() => handlerOnClickOnOtherMatches(i)}>
-              <input
-                placeholder="NAICS Code and Description"
-                type="text"
-                readOnly
-                value={`${match?.naics}, ${match?.naicsDescription}`}
-                title={`${match?.naics}, ${match?.naicsDescription}`}
-                className={`border-frameColor h-11.25 w-full cursor-pointer rounded-lg bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base`}
-              />
-            </button>
-          ))}
-        </div>
-      </section>
-      <div className="flex w-full items-center justify-end">
-        <Button
-          label="Save Best Match"
-          onClick={() => {
-            saveHandler(naicsApiData?.bestMatch);
-            setShowNaicsToMccDetails(false);
-          }}
-        />
-      </div>
-    </div>
-  );
-};

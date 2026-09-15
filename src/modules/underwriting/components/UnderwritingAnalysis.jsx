@@ -1,13 +1,14 @@
-import { getTableStyles } from "@/utils/tableStyles";
-import useBranding from "@/hooks/useBranding";
-import { useApplyRulesOnFormQuery } from "@/redux/apis/form.apis";
 import { useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 import { CgSpinner } from "react-icons/cg";
-import Button from "@/components/shared/Button";
+import { useApplyRulesOnFormQuery } from "@/redux/apis/form.apis";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import useBranding from "@/hooks/useBranding";
+import Button from "@/components/shared/Button";
+import { getTableStyles } from "@/utils/tableStyles";
+import { ALERT_CATEGORIES } from "../utils/underwriting.constants";
 
-const columns = () => [
+const buildAlertColumns = () => [
   { name: "Rule No", selector: (row) => row?.number, sortable: true, width: "110px" },
   {
     name: "Alert Name",
@@ -30,11 +31,12 @@ const columns = () => [
   },
 ];
 
-const ApplicationAnalysis = ({ submitFormData }) => {
+const numberRows = (rows) => rows.map((item, index) => ({ ...item, number: index + 1 }));
+
+const UnderwritingAnalysis = ({ submitFormData = null }) => {
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
   const [isApplyingRules, setIsApplyingRules] = useState(false);
-  const [isFetchingAlertsData, setIsFetchingAlertsData] = useState(false);
   const {
     data: alertsData,
     refetch: refetchAlertsData,
@@ -44,18 +46,10 @@ const ApplicationAnalysis = ({ submitFormData }) => {
   });
 
   const filteredRules = useMemo(() => {
-    setIsFetchingAlertsData(true);
     const data = alertsData?.data || [];
-    const allDisplayAlertWithNumber = data
-      ?.filter((item) => item.category === "display")
-      ?.map((item, index) => ({ ...item, number: index + 1 }));
-    const otherAllCategoryAlertWithNumber = data
-      .filter((item) => item.category !== "display")
-      ?.map((item, index) => ({ ...item, number: index + 1 }));
-    setIsFetchingAlertsData(false);
     return {
-      allDisplayAlertWithNumber,
-      otherAllCategoryAlertWithNumber,
+      allDisplayAlertWithNumber: numberRows(data.filter((item) => item.category === ALERT_CATEGORIES.DISPLAY)),
+      otherAllCategoryAlertWithNumber: numberRows(data.filter((item) => item.category !== ALERT_CATEGORIES.DISPLAY)),
     };
   }, [alertsData?.data]);
 
@@ -65,7 +59,7 @@ const ApplicationAnalysis = ({ submitFormData }) => {
       await refetchAlertsData(submitFormData?._id);
       setIsApplyingRules(false);
     } catch (error) {
-      console.error("Error applying rules:", error);
+      console.error("Apply rules error:", error);
       setIsApplyingRules(false);
     }
   };
@@ -82,43 +76,42 @@ const ApplicationAnalysis = ({ submitFormData }) => {
           icon={isApplyingRules ? CgSpinner : undefined}
         />
       </div>
-      {/* if on tab or mobile then flex col else flex row  */}
       <div className="w-full gap-4 flex flex-col ">
-        <div className="flex w-full flex-col gap-2 overflow-x-auto">
-          <h1 className="text-textPrimary text-xl font-medium p-4">
+        <section className="flex w-full flex-col gap-2 overflow-x-auto">
+          <h2 className="text-textPrimary text-xl font-medium p-4">
             <span className="font-bold"> Key Application Info:</span> (section that contain all display rule output)
-          </h1>
+          </h2>
           <div className="w-full max-w-full">
             <DataTable
               data={filteredRules.allDisplayAlertWithNumber}
-              columns={columns()}
+              columns={buildAlertColumns()}
               customStyles={tableStyles}
               highlightOnHover
-              progressPending={isLoadingAlertsData || isFetchingAlertsData}
+              progressPending={isLoadingAlertsData}
               noDataComponent="No History found"
               className="rounded-t-xl!"
             />
           </div>
-        </div>
-        <div className="flex w-full flex-col gap-2">
-          <h1 className="text-textPrimary text-xl font-medium p-4">
+        </section>
+        <section className="flex w-full flex-col gap-2">
+          <h2 className="text-textPrimary text-xl font-medium p-4">
             <span className="font-bold"> Application Alerts:</span> (section that contain all alert rule output)
-          </h1>
+          </h2>
           <div className="w-full max-w-full ">
             <DataTable
               data={filteredRules.otherAllCategoryAlertWithNumber}
-              columns={columns()}
+              columns={buildAlertColumns()}
               customStyles={tableStyles}
               highlightOnHover
-              progressPending={isLoadingAlertsData || isFetchingAlertsData}
+              progressPending={isLoadingAlertsData}
               noDataComponent="No History found"
               className="rounded-t-xl!"
             />
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );
 };
 
-export { ApplicationAnalysis };
+export default UnderwritingAnalysis;

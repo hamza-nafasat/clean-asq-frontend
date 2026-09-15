@@ -1,17 +1,11 @@
-import ApplyBranding from "@/components/global/ApplyBranding";
-import ConfirmationModal from "@/components/modals/ConfirmationModal";
-import Button from "@/components/shared/Button";
-import CustomLoading from "@/components/shared/CustomLoading";
-import { ThreeDotEditViewDelete } from "@/components/shared/ThreeDotViewEditDelete";
-// import { Button } from '@/components/ui/button';
-import { getTableStyles } from "@/utils/tableStyles";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { Pencil, Trash } from "lucide-react";
+import { FaExchangeAlt } from "react-icons/fa";
 import useBranding from "@/hooks/useBranding";
 import { useScreenContext } from "@/hooks/useScreenContext";
-import getEnv from "@/utils/env";
-import {
-  executeBrandingAssignment,
-  getBrandingSettersFromHook,
-} from "@/utils/executeBrandingAssignment";
 import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/auth.apis";
 import {
   useAddBrandingInFormMutation,
@@ -20,24 +14,27 @@ import {
 } from "@/redux/apis/branding.apis";
 import { useGetMyAllFormsQuery } from "@/redux/apis/form.apis";
 import { userExist, userNotExist } from "@/redux/slices/auth.slice";
-import { MoreVertical, Pencil, Trash } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
-import DataTable from "react-data-table-component";
-import { FaExchangeAlt } from "react-icons/fa";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import ApplyBranding from "@/components/global/ApplyBranding";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import Button from "@/components/shared/Button";
+import CustomLoading from "@/components/shared/CustomLoading";
+import BrandingTable from "../components/BrandingTable";
+import {
+  BRANDING_LIST_SCREEN_CONTEXT,
+  BRANDING_ROUTES,
+  BRANDING_ROW_ACTIONS,
+} from "../utils/branding.constants";
+import { executeBrandingAssignment, getBrandingSettersFromHook } from "@/utils/executeBrandingAssignment";
+import getEnv from "@/utils/env";
+import { getTableStyles } from "@/utils/tableStyles";
 
 const Brandings = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const actionMenuRefs = useRef(new Map());
+  const branding = useBranding();
   const [applyModal, setApplyModal] = useState(false);
-  const [actionMenu, setActionMenu] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
-  const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
-  const [onHome, setOnHome] = React.useState(false);
-  const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
+  const [onHome, setOnHome] = useState(false);
   const [selectedBranding, setSelectedBranding] = useState(null);
 
   const { data: allFormsData, refetch: formRefetch } = useGetMyAllFormsQuery();
@@ -45,139 +42,60 @@ const Brandings = () => {
   const [deleteBranding, { isLoading: isDeleting }] = useDeleteSingleBrandingMutation();
   const [addFromBranding] = useAddBrandingInFormMutation();
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
-  const {
-    setPrimaryColor,
-    setSecondaryColor,
-    setAccentColor,
-    setTextColor,
-    setLinkColor,
-    setBackgroundColor,
-    setFrameColor,
-    setFontFamily,
-    setLogo,
-    setButtonTextPrimary,
-    setButtonTextSecondary,
-    setHeaderAlignment,
-    setHeaderBackground,
-    setFooterBackground,
-    setHeaderText,
-    setFooterText,
-    setHighlightingColor,
-    setApplicationFooterText,
-    setAppLogoMaxHeight,
-    setAppLogoMaxWidth,
-    setAiVoice,
-    setAiCustomPrompt,
-    setAiLaunchButtonColor,
-    setAiHeaderColor,
-    setAiBannerColor,
-    setAiBannerTextColor,
-    setAiSliderColor,
-    setPrivacyPolicyUrl,
-    setTermsOfServiceUrl,
-    setFavicon,
-    setTabTitle,
-    setHeaderEffect,
-    setFooterEffect,
-    setEmailHeaderEffect,
-    setEmailFooterEffect,
-    setButtonEffect,
-    setHeaderMaterial,
-    setFooterMaterial,
-    setButtonMaterial,
-    setEmailHeaderMaterial,
-    setEmailFooterMaterial,
-  } = useBranding();
 
-  const ButtonsForThreeDot = [
+  const { primaryColor, textColor, backgroundColor, secondaryColor } = branding;
+  const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
+
+  const openBranding = (brandingId) => navigate(`${BRANDING_ROUTES.SINGLE}/${brandingId}`);
+
+  const removeBranding = async (brandingId) => {
+    const res = await deleteBranding(brandingId).unwrap();
+    if (!res?.success) throw new Error(res?.message);
+    return res;
+  };
+
+  const rowButtons = [
     {
-      name: "edit",
+      name: BRANDING_ROW_ACTIONS.EDIT,
       icon: <Pencil size={16} className="mr-2" />,
-      onClick: (row) => {
-        navigate(`/branding/single/${row?._id}`);
-        setActionMenu(null);
-      },
+      onClick: (row) => openBranding(row?._id),
     },
     {
-      name: "delete",
+      name: BRANDING_ROW_ACTIONS.DELETE,
       icon: <Trash size={16} className="mr-2" />,
       disabled: isDeleting,
       onClick: async (row) => {
         try {
           if (!row?._id) toast.error("Branding ID is missing");
-          const res = await deleteBranding(row?._id).unwrap();
-          if (res.success) {
-            await refetch();
-            toast.success(row?.message || "Branding deleted successfully");
-          }
+          await removeBranding(row?._id);
+          await refetch();
+          toast.success(row?.message || "Branding deleted successfully");
         } catch (error) {
+          console.error("Delete branding error:", error);
           toast.error(error?.data?.message || "Failed to delete branding");
-        } finally {
-          setActionMenu(null);
         }
       },
     },
     {
-      name: "apply",
+      name: BRANDING_ROW_ACTIONS.APPLY,
       icon: <FaExchangeAlt size={16} className="mr-2" />,
       onClick: (row) => {
         setApplyModal(true);
         setSelectedBranding(row?._id);
-        setActionMenu(null);
       },
     },
   ];
 
-  const brandingSetters = getBrandingSettersFromHook({
-    setPrimaryColor,
-    setSecondaryColor,
-    setAccentColor,
-    setTextColor,
-    setLinkColor,
-    setBackgroundColor,
-    setFrameColor,
-    setFontFamily,
-    setLogo,
-    setButtonTextPrimary,
-    setButtonTextSecondary,
-    setHeaderAlignment,
-    setHeaderBackground,
-    setFooterBackground,
-    setHeaderText,
-    setFooterText,
-    setHighlightingColor,
-    setApplicationFooterText,
-    setAppLogoMaxWidth,
-    setAppLogoMaxHeight,
-    setAiVoice,
-    setAiCustomPrompt,
-    setAiLaunchButtonColor,
-    setAiHeaderColor,
-    setAiBannerColor,
-    setAiBannerTextColor,
-    setAiSliderColor,
-    setPrivacyPolicyUrl,
-    setTermsOfServiceUrl,
-    setFavicon,
-    setTabTitle,
-    setHeaderEffect,
-    setFooterEffect,
-    setEmailHeaderEffect,
-    setEmailFooterEffect,
-    setButtonEffect,
-    setHeaderMaterial,
-    setFooterMaterial,
-    setButtonMaterial,
-    setEmailHeaderMaterial,
-    setEmailFooterMaterial,
-  });
-
   const dispatchUserRefresh = async (profileRes) => {
-    if (profileRes?.success) {
-      dispatch(userExist(profileRes.data));
-    } else {
-      dispatch(userNotExist());
-    }
+    if (profileRes?.success) dispatch(userExist(profileRes.data));
+    else dispatch(userNotExist());
+  };
+
+  const closeApplyModal = () => {
+    setApplyModal(false);
+    setSelectedId(null);
+    setSelectedBranding(null);
+    setOnHome(false);
   };
 
   const onConfirmApply = async () => {
@@ -193,95 +111,28 @@ const Brandings = () => {
       const res = await executeBrandingAssignment({
         addBrandingMutation: addFromBranding,
         getUserProfile,
-        brandingSetters,
+        brandingSetters: getBrandingSettersFromHook(branding),
         dispatchUserRefresh,
-        assignment: {
-          brandingId: selectedBranding,
-          formId: selectedId || undefined,
-          applyToHome: onHome,
-        },
+        assignment: { brandingId: selectedBranding, formId: selectedId || undefined, applyToHome: onHome },
       });
       await formRefetch();
       toast?.success(res?.message || "Branding applied successfully");
     } catch (error) {
-      console.error("Error applying branding:", error);
+      console.error("Apply branding error:", error);
       toast.error(error?.message || error?.data?.message || "Failed to apply branding");
     } finally {
-      setApplyModal(false);
-      setSelectedId(null);
-      setSelectedBranding(null);
-      setOnHome(false);
+      closeApplyModal();
     }
   };
 
-  const columns = () => [
-    {
-      name: "Name",
-      selector: (row) => row?.name,
-      sortable: true,
-    },
-    {
-      name: "Url",
-      selector: (row) => row?.url || "N/A",
-      sortable: true,
-    },
-    {
-      name: "logos",
-      selector: (row) => row?.logos?.length || 0,
-      sortable: true,
-    },
-    {
-      name: "Font family",
-      selector: (row) => row?.fontFamily || "N/A",
-      sortable: true,
-    },
-    {
-      name: "Action",
-      cell: (row) => {
-        if (!actionMenuRefs.current.has(row?._id)) {
-          actionMenuRefs.current.set(row?._id, React.createRef());
-        }
-        const rowRef = actionMenuRefs.current.get(row?._id);
-        return (
-          <div className="relative" ref={rowRef}>
-            <button
-              onClick={() => setActionMenu((prevActionMenu) => (prevActionMenu === row?._id ? null : row?._id))}
-              className="cursor-pointer rounded p-1 hover:bg-gray-100"
-              aria-label="Actions"
-            >
-              <MoreVertical size={18} />
-            </button>
-            {actionMenu === row?._id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
-          </div>
-        );
-      },
-    },
-  ];
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
-        (ref) => !ref.current?.contains(event.target),
-      );
-      if (clickedOutsideAllMenus) setActionMenu(null);
-    };
-    if (actionMenu !== null) document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [actionMenu]);
-
   useScreenContext({
-    screenId: "branding-list",
-    screenName: "Branding Management",
-    assistantName: "Branding Assistant",
+    screenId: BRANDING_LIST_SCREEN_CONTEXT.SCREEN_ID,
+    screenName: BRANDING_LIST_SCREEN_CONTEXT.SCREEN_NAME,
+    assistantName: BRANDING_LIST_SCREEN_CONTEXT.ASSISTANT_NAME,
     aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/branding-list-chat`,
-    greeting: `Hi! I'm your **Branding Assistant**.\n\nI can help you:\n- **Search** your branding profiles by name, color, font, or URL\n- **Open** a branding for editing\n- **Delete** one or more brandings\n- **Create** a new branding profile\n- **Apply** a branding to application forms or the home page\n\nWhat would you like to do?`,
+    greeting: BRANDING_LIST_SCREEN_CONTEXT.GREETING,
     currentState: {
-      forms: (allFormsData?.data || []).map((f) => ({
-        _id: f._id,
-        name: f.name || f.headerText || "Untitled",
-      })),
+      forms: (allFormsData?.data || []).map((f) => ({ _id: f._id, name: f.name || f.headerText || "Untitled" })),
       brandings: (brandings?.data || []).map((b) => ({
         _id: b._id,
         name: b.name,
@@ -302,8 +153,7 @@ const Brandings = () => {
         const errors = [];
         for (const brandingId of brandingIds) {
           try {
-            const res = await deleteBranding(brandingId).unwrap();
-            if (!res?.success) throw new Error(res?.message);
+            await removeBranding(brandingId);
           } catch {
             errors.push(brandingId);
           }
@@ -314,12 +164,8 @@ const Brandings = () => {
           throw new Error(`Failed to delete ${errors.length} brandings`);
         }
       },
-      openEditBranding: ({ brandingId }) => {
-        navigate(`/branding/single/${brandingId}`);
-      },
-      openCreateBranding: () => {
-        navigate("/branding/create");
-      },
+      openEditBranding: ({ brandingId }) => openBranding(brandingId),
+      openCreateBranding: () => navigate(BRANDING_ROUTES.CREATE),
     },
     deps: [brandings?.data?.length, allFormsData?.data?.length],
   });
@@ -327,7 +173,7 @@ const Brandings = () => {
   if (isBrandingsLoading) return <CustomLoading />;
 
   return (
-    <div className="mt-5 w-full" data-testid="branding-page">
+    <article className="mt-5 w-full" data-testid="branding-page">
       {applyModal && (
         <ConfirmationModal
           isOpen={!!applyModal}
@@ -348,33 +194,22 @@ const Brandings = () => {
           title={"Apply Branding"}
         />
       )}
-      <div className="mb-4 flex justify-end">
+      <header className="mb-4 flex justify-end">
         <Button
           label={"Create Branding"}
-          onClick={() => navigate("/branding/create")}
+          onClick={() => navigate(BRANDING_ROUTES.CREATE)}
           data-testid="branding-create-btn"
         />
-        {/* Create Branding
-        </Button> */}
-      </div>
-      <div className="mt-5 w-full h-full overflow-y-auto lg:w-[calc(100vw-350px)]! xl:w-full">
-        {/* <div className="min-w-[500px]"> */}
-        <DataTable
-          data={brandings?.data || []}
-          columns={columns()}
-          customStyles={tableStyles}
-          progressPending={isBrandingsLoading}
-          noDataComponent="No Brandings Found"
-          className="rounded-md!"
-          highlightOnHover
-          fixedHeader
-          persistTableHead
-          responsive
-          pagination
+      </header>
+      <section className="mt-5 w-full h-full overflow-y-auto lg:w-[calc(100vw-350px)]! xl:w-full">
+        <BrandingTable
+          brandings={brandings?.data || []}
+          rowButtons={rowButtons}
+          tableStyles={tableStyles}
+          isLoading={isBrandingsLoading}
         />
-        {/* </div> */}
-      </div>
-    </div>
+      </section>
+    </article>
   );
 };
 

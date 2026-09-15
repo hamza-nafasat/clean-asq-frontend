@@ -1,30 +1,8 @@
-import Button from "@/components/shared/Button";
-import { HiOutlineMailOpen } from "react-icons/hi";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-
-const MAILBOX_PROVIDERS = [
-  { match: /(gmail|googlemail)\.com$/i, url: "https://mail.google.com/" },
-  { match: /(outlook|hotmail|live|msn)\./i, url: "https://outlook.live.com/mail/" },
-  { match: /yahoo\./i, url: "https://mail.yahoo.com/" },
-  { match: /icloud\.com$|me\.com$|mac\.com$/i, url: "https://www.icloud.com/mail" },
-  { match: /aol\.com$/i, url: "https://mail.aol.com/" },
-  { match: /proton(\.me|mail\.com)$/i, url: "https://mail.proton.me/" },
-  { match: /zoho\.com$/i, url: "https://mail.zoho.com/" },
-];
-
-const getMailboxUrl = (email = "") => {
-  const domain = email.split("@")[1]?.trim().toLowerCase();
-  if (!domain) return "mailto:";
-  const provider = MAILBOX_PROVIDERS.find(({ match }) => match.test(domain));
-  return provider?.url || `https://${domain}`;
-};
-
-const maskEmail = (email = "") => {
-  const [local, domain] = email.split("@");
-  if (!local || !domain) return email;
-  if (local.length <= 2) return `${local[0] || ""}***@${domain}`;
-  return `${local.slice(0, 2)}***@${domain}`;
-};
+import { HiOutlineMailOpen } from "react-icons/hi";
+import Button from "@/components/shared/Button";
+import { AUTH_ROUTES } from "../utils/auth.constants";
+import { getMailboxUrl, maskEmail } from "../utils/auth.utils";
 
 const ResetMailSent = () => {
   const navigate = useNavigate();
@@ -79,13 +57,13 @@ const ResetMailSent = () => {
             type="button"
             variant="secondary"
             label="Back to Forgot Password"
-            onClick={() => navigate("/forget-password")}
+            onClick={() => navigate(AUTH_ROUTES.FORGET_PASSWORD)}
             className="w-full rounded-[20px]!"
           />
 
           <div className="mt-2 text-sm text-gray-500">
             Already reset?{" "}
-            <Link className="text-textPrimary! hover:underline!" to="/login">
+            <Link className="text-textPrimary! hover:underline!" to={AUTH_ROUTES.LOGIN}>
               Sign in
             </Link>
           </div>

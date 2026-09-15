@@ -1,17 +1,7 @@
 import { useState } from "react";
 import { FiChevronDown, FiChevronRight, FiClock } from "react-icons/fi";
 
-/**
- * DemoChecklist — feature selection panel (left side only).
- * Shows features grouped by category with checkboxes.
- *
- * Props:
- *   features        – flat array of feature definitions from /api/demo/features
- *   categories      – ordered array of category names
- *   selectedSteps   – array of { featureId, enabled, order }
- *   onChange        – (updatedSteps) => void
- */
-export default function DemoChecklist({ features = [], categories = [], selectedSteps = [], onChange }) {
+const DemoChecklist = ({ features = [], categories = [], selectedSteps = [], onChange }) => {
   const [collapsed, setCollapsed] = useState({});
 
   const stepMap = Object.fromEntries(selectedSteps.map((s) => [s.featureId, s]));
@@ -19,32 +9,26 @@ export default function DemoChecklist({ features = [], categories = [], selected
   const toggleCategory = (cat) => setCollapsed((p) => ({ ...p, [cat]: !p[cat] }));
 
   const toggleFeature = (featureId) => {
-    const existing = stepMap[featureId];
-    if (existing) {
-      onChange(selectedSteps.filter((s) => s.featureId !== featureId));
-    } else {
-      const maxOrder = selectedSteps.reduce((m, s) => Math.max(m, s.order), -1);
-      onChange([...selectedSteps, { featureId, enabled: true, order: maxOrder + 1 }]);
+    if (stepMap[featureId]) {
+      onChange?.(selectedSteps.filter((s) => s.featureId !== featureId));
+      return;
     }
+    const maxOrder = selectedSteps.reduce((m, s) => Math.max(m, s.order), -1);
+    onChange?.([...selectedSteps, { featureId, enabled: true, order: maxOrder + 1 }]);
   };
+
+  const selectAll = () => onChange?.(features.map((f, i) => ({ featureId: f.id, enabled: true, order: i })));
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between mb-3">
         <p className="text-sm font-semibold text-gray-700">Select features to demo</p>
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              const all = features.map((f, i) => ({ featureId: f.id, enabled: true, order: i }));
-              onChange(all);
-            }}
-            className="text-xs text-primary hover:underline"
-          >
+          <button type="button" onClick={selectAll} className="text-xs text-primary hover:underline">
             Select all
           </button>
           <span className="text-gray-300">|</span>
-          <button type="button" onClick={() => onChange([])} className="text-xs text-gray-400 hover:underline">
+          <button type="button" onClick={() => onChange?.([])} className="text-xs text-gray-400 hover:underline">
             Clear
           </button>
         </div>
@@ -60,6 +44,7 @@ export default function DemoChecklist({ features = [], categories = [], selected
             <button
               type="button"
               onClick={() => toggleCategory(cat)}
+              aria-expanded={isOpen}
               className="w-full flex items-center justify-between px-3 py-2.5 bg-gray-50 hover:bg-gray-100 transition-colors"
             >
               <div className="flex items-center gap-2">
@@ -82,6 +67,7 @@ export default function DemoChecklist({ features = [], categories = [], selected
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleFeature(feature.id)}
+                          aria-label={feature.name}
                           className="mt-0.5 accent-primary cursor-pointer"
                         />
                         <div className="flex-1 min-w-0">
@@ -90,10 +76,13 @@ export default function DemoChecklist({ features = [], categories = [], selected
                               {feature.name}
                             </p>
                             <span className="flex items-center gap-0.5 text-[10px] text-gray-400">
-                              <FiClock size={10} />{feature.estimatedMins}m
+                              <FiClock size={10} />
+                              {feature.estimatedMins}m
                             </span>
                             {feature.naturalPause && (
-                              <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-200 rounded px-1">pause</span>
+                              <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-200 rounded px-1">
+                                pause
+                              </span>
                             )}
                           </div>
                           <p className="text-xs text-gray-400 mt-0.5 leading-snug">{feature.description}</p>
@@ -109,4 +98,6 @@ export default function DemoChecklist({ features = [], categories = [], selected
       })}
     </div>
   );
-}
+};
+
+export default DemoChecklist;

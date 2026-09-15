@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { AI_ASSISTANT_MODES } from "@/constants";
 import { toast } from "react-toastify";
 import useAiChat from "@/hooks/useAiChat";
 import { extractHttpLinks } from "@/utils/extractHttpLinks";
@@ -7,23 +8,8 @@ import getEnv from "@/utils/env";
 
 const SERVER_URL = getEnv("SERVER_URL");
 
-/**
- * Shared hook that powers the "Download this page" / "Download this page & agreements" button.
- *
- * @param {object} opts
- * @param {string}   opts.pageName       - Display name of the section (used as PDF title)
- * @param {string}   opts.displayHtml    - The section's rendered display text HTML (ai_formatting || displayText)
- * @param {Function} opts.getFieldRows   - Returns [{label, value}] for the current form state
- * @param {string|Function} [opts.signatureUrl] - Cloudinary URL, or getter called at download time
- *   (prefer getter so form.signature.value.secureUrl is read after the user signs)
- * @param {Function} [opts.getHasFields] - Optional: returns true if the current view has meaningful
- *                                         data-entry fields. When omitted the button always shows.
- *                                         Return false to hide the button (e.g. when a DOM ref is null).
- * @param {string}   [opts.userName]       - Full name of the applicant (included in PDF header)
- * @param {string}   [opts.userEmail]      - Email of the applicant (included in PDF header)
- * @param {string}   [opts.signDisplayHtml] - HTML shown above the signature box (included in PDF)
- */
-export function usePageDownload({ pageName, displayHtml, getFieldRows, signatureUrl, getHasFields, userName, userEmail, signDisplayHtml }) {
+// shared hook that powers the "Download this page" / "Download this page & agreements" button
+export const usePageDownload = ({ pageName, displayHtml, getFieldRows, signatureUrl, getHasFields, userName, userEmail, signDisplayHtml }) => {
   const { assistantMode } = useAiChat();
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -56,7 +42,7 @@ export function usePageDownload({ pageName, displayHtml, getFieldRows, signature
     }
 
     const proxyEndpoint =
-      assistantMode === "applicant"
+      assistantMode === AI_ASSISTANT_MODES.APPLICANT
         ? `${SERVER_URL}/api/ai/applicant-document-text`
         : `${SERVER_URL}/api/ai/document-text`;
 
@@ -73,10 +59,10 @@ export function usePageDownload({ pageName, displayHtml, getFieldRows, signature
           const data = await res.json();
           if (!data.success) throw new Error(`Failed to fetch agreement from ${url}`);
           return {
-            title: data.title || linkText || url,
+            title: data.data?.title || linkText || url,
             url,
-            text: data.text || "",
-            bodyHtml: data.bodyHtml || "",
+            text: data.data?.text || "",
+            bodyHtml: data.data?.bodyHtml || "",
           };
         }),
       );
@@ -96,7 +82,7 @@ export function usePageDownload({ pageName, displayHtml, getFieldRows, signature
         signDisplayHtml: signDisplayHtml || null,
       });
     } catch (err) {
-      console.error("Page download failed:", err);
+      console.error("Page download error:", err);
       toast.error("Download failed — could not retrieve one or more agreements. Please try again.");
     } finally {
       setIsDownloading(false);
@@ -104,4 +90,4 @@ export function usePageDownload({ pageName, displayHtml, getFieldRows, signature
   };
 
   return { buttonLabel, hasAgreements, hasFields, shouldShow, isDownloading, handleDownload };
-}
+};

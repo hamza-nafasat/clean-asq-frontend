@@ -1,7 +1,6 @@
-import { INITIAL_USER_FORM } from "../utils/user-management.constants";
-import { getTableStyles } from "@/utils/tableStyles";
-import { useGetAllRolesQuery } from "@/redux/apis/role-management.apis";
+import { createRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForgetPasswordMutation } from "@/redux/apis/auth.apis";
+import { useGetAllRolesQuery } from "@/redux/apis/role-management.apis";
 import {
   useCreateUserMutation,
   useDeleteSingleUserMutation,
@@ -9,24 +8,67 @@ import {
   useUpdateSingleUserMutation,
 } from "@/redux/apis/user-management.apis";
 import { Lock, MoreVertical, Pencil, Trash } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import DataTable from "react-data-table-component";
 import { IoMdPersonAdd } from "react-icons/io";
 import { toast } from "react-toastify";
+import useBranding from "@/hooks/useBranding";
+import { useScreenContext } from "@/hooks/useScreenContext";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Modal from "@/components/modals/SaveCancelModal";
 import Button from "@/components/shared/Button";
-import Checkbox from "@/components/shared/Checkbox";
-import TextField from "@/components/shared/TextField";
 import { ThreeDotEditViewDelete } from "@/components/shared/ThreeDotViewEditDelete";
-import useBranding from "@/hooks/useBranding";
-import { formateDateAndTime } from "../utils/user-management.utils";
+import { FIELD_TYPES } from "@/constants";
 import getEnv from "@/utils/env";
-import { useScreenContext } from "@/hooks/useScreenContext";
+import { getTableStyles } from "@/utils/tableStyles";
+import UserManagementAddEditModal from "./UserManagementAddEditModal";
+import UserManagementFormField from "./UserManagementFormField";
+import {
+  INITIAL_USER_FORM,
+  USER_AI_CHAT_PATH,
+  USER_FORM_FIELDS,
+  USER_MODAL_MODES,
+  USER_SCREEN_CONTEXT,
+} from "../utils/user-management.constants";
+import {
+  applyUserFormChange,
+  buildUserScreenActions,
+  buildUserScreenState,
+  formateDateAndTime,
+} from "../utils/user-management.utils";
 
 const SERVER_URL = getEnv("SERVER_URL");
 
-const UserTable = () => {
+const buildColumns = ({ actionMenu, actionMenuRefs, buttons, setActionMenu }) => [
+  { name: "Name", selector: (row) => row?.firstName + " " + row?.lastName, sortable: true },
+  { name: "Email", selector: (row) => row?.email, sortable: true },
+  { name: "Role", selector: (row) => row?.role?.name, sortable: true },
+  { name: "Last Active", selector: (row) => formateDateAndTime(row?.lastActive), sortable: true },
+  { name: "Create Date", selector: (row) => row?.createdAt?.split("T")[0], sortable: true },
+  {
+    name: "Action",
+    cell: (row) => {
+      if (!actionMenuRefs.current.has(row?._id)) {
+        actionMenuRefs.current.set(row?._id, createRef());
+      }
+      const rowRef = actionMenuRefs.current.get(row?._id);
+      return (
+        <div className="relative" ref={rowRef}>
+          <button
+            type="button"
+            onClick={() => setActionMenu((prevActionMenu) => (prevActionMenu === row?._id ? null : row?._id))}
+            className="rounded p-1 hover:bg-gray-100 cursor-pointer"
+            aria-label="Actions"
+          >
+            <MoreVertical size={18} />
+          </button>
+          {actionMenu === row?._id && <ThreeDotEditViewDelete buttons={buttons} row={row} />}
+        </div>
+      );
+    },
+  },
+];
+
+const UserManagementTable = () => {
   const { data: users, isLoading: isLoadingUsers } = useGetAllUsersQuery();
   const { data: userTypeOptions, isLoading: isLoadingUserTypeOptions } = useGetAllRolesQuery();
   const [createUser, { isLoading: isCreatingUser }] = useCreateUserMutation();
@@ -48,93 +90,24 @@ const UserTable = () => {
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
 
   useScreenContext({
-    screenId: "user-management",
-    screenName: "User Management",
-    assistantName: "User Management Assistant",
-    description:
-      "The User Management screen lets admins create, edit, and delete user accounts, assign roles, and manage passwords. Each user has a first name, last name, email, and an assigned role.",
-    aiEndpoint: `${SERVER_URL}/api/ai/user-chat`,
-    greeting: `Hi! I'm your **User Management Assistant**.\n\nI can help you:\n- **List and categorize** users by role\n- **Spot duplicate accounts** based on email\n- **Create new users** and assign them to a role\n- **Edit user information** (name, email, role)\n- **Send password reset links** to users\n- **Delete users** based on your instructions\n\nWhat would you like to do?`,
-    currentState: {
-      users: (users?.data || []).map((u) => ({
-        _id: u._id,
-        firstName: u.firstName,
-        lastName: u.lastName,
-        email: u.email,
-        role: { _id: u.role?._id, name: u.role?.name },
-        createdAt: u.createdAt?.split("T")[0],
-        lastActive: u.lastActive?.split("T")[0] || null,
-      })),
-      availableRoles: (userTypeOptions?.data || []).map((r) => ({ _id: r._id, name: r.name })),
-    },
-    actions: {
-      createUser: async ({ firstName, lastName, email, roleId }) => {
-        try {
-          const res = await createUser({ firstName, lastName, email, role: roleId }).unwrap();
-          if (!res?.success) throw new Error(res?.message);
-        } catch (err) {
-          toast.error(err?.data?.message || err?.message || "Failed to create user");
-          throw err;
-        }
-      },
-      updateUser: async ({ userId, firstName, lastName, email, roleId }) => {
-        try {
-          const payload = { _id: userId };
-          if (firstName) payload.firstName = firstName;
-          if (lastName) payload.lastName = lastName;
-          if (email) payload.email = email;
-          if (roleId) payload.role = roleId;
-          const res = await updateUser(payload).unwrap();
-          if (!res?.success) throw new Error(res?.message);
-        } catch (err) {
-          toast.error(err?.data?.message || err?.message || "Failed to update user");
-          throw err;
-        }
-      },
-      sendPasswordResetLinks: async ({ userIds }) => {
-        const emails = (users?.data || []).filter((user) => userIds?.includes(user?._id)).map((user) => user?.email);
-        const results = await Promise.allSettled(emails.map((email) => sendPasswordResetLink({ email }).unwrap()));
-        const failedCount = results.filter((result) => result.status === "rejected").length + (userIds?.length || 0) - emails.length;
-        if (failedCount) {
-          toast.error(`Failed to send ${failedCount} of ${userIds?.length || 0} password reset links`);
-          throw new Error(`Failed to send ${failedCount} password reset links`);
-        }
-      },
-      deleteUser: async ({ userId }) => {
-        try {
-          const res = await deleteUser({ _id: userId }).unwrap();
-          if (!res?.success) throw new Error(res?.message);
-        } catch (err) {
-          toast.error(err?.data?.message || err?.message || "Failed to delete user");
-          throw err;
-        }
-      },
-      deleteUsers: async ({ userIds }) => {
-        const errors = [];
-        for (const userId of userIds) {
-          try {
-            await deleteUser({ _id: userId }).unwrap();
-          } catch {
-            errors.push(userId);
-          }
-        }
-        if (errors.length) {
-          toast.error(`Failed to delete ${errors.length} of ${userIds.length} users`);
-          throw new Error(`Failed to delete ${errors.length} users`);
-        }
-      },
-    },
+    ...USER_SCREEN_CONTEXT,
+    aiEndpoint: `${SERVER_URL}${USER_AI_CHAT_PATH}`,
+    currentState: buildUserScreenState(users?.data || [], userTypeOptions?.data || []),
+    actions: buildUserScreenActions({
+      users: users?.data || [],
+      createUser,
+      updateUser,
+      deleteUser,
+      sendPasswordResetLink,
+      toastError: toast.error,
+    }),
     deps: { userCount: users?.data?.length, roleCount: userTypeOptions?.data?.length },
   });
 
   const handleInputChange = useCallback(
     (e) => {
-      const { name, value, type, checked } = e.target;
-      setFormData((prev) => ({
-        ...prev,
-        [name]: type === "checkbox" ? checked : value,
-        ...(name === "type" && !["client", "client-mbr", "super-bank"].includes(value) ? { businessName: "" } : {}),
-      }));
+      const { name } = e.target;
+      setFormData((prev) => applyUserFormChange(prev, e.target));
       if (formErrors[name]) {
         setFormErrors((prev) => ({ ...prev, [name]: null }));
       }
@@ -144,14 +117,7 @@ const UserTable = () => {
 
   const handleEditInputChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
-    setEditModalData((prev) => {
-      if (!prev) return prev;
-      if (type === "checkbox") {
-        return { ...prev, [name]: checked };
-      } else {
-        return { ...prev, [name]: value };
-      }
-    });
+    setEditModalData((prev) => (prev ? { ...prev, [name]: type === FIELD_TYPES.CHECKBOX ? checked : value } : prev));
   }, []);
 
   const handlePasswordInputChange = useCallback((e) => {
@@ -169,7 +135,7 @@ const UserTable = () => {
         setFormErrors({});
       }
     } catch (error) {
-      console.error("Error creating user:", error);
+      console.error("Create user error:", error);
       toast.error(error?.data?.message || "Failed to create user");
     }
   };
@@ -185,12 +151,13 @@ const UserTable = () => {
         setIsModalOpen(false);
       }
     } catch (error) {
-      console.error("Error updating user:", error);
+      console.error("Update user error:", error);
       toast.error(error?.data?.message || "Failed to update user");
     }
   };
 
-  const handleChangePassword = async () => {
+  // TODO: call the change password endpoint
+  const handleChangePassword = () => {
     setPasswordModalData(null);
     setFormErrors({});
   };
@@ -204,64 +171,26 @@ const UserTable = () => {
         setActionMenu(null);
       }
     } catch (error) {
-      console.error("Error changing password:", error);
+      console.error("Delete user error:", error);
       toast.error(error?.data?.message || "Failed to change password");
     }
   };
 
-  const renderFormField = useCallback((field, value, onChange, type = "text", error = null, options = null) => {
-    const labelText = field
-      .split(/(?=[A-Z])/)
-      .join(" ")
-      .replace(/^\w/, (c) => c.toUpperCase());
+  const handleCloseAddModal = () => {
+    setIsModalOpen(false);
+    setFormData(INITIAL_USER_FORM);
+    setFormErrors({});
+  };
 
-    if (type === "select" && options) {
-      return (
-        <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium text-gray-700">{labelText}</label>
-          <select
-            name={field}
-            value={value}
-            onChange={onChange}
-            className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${
-              error ? "border-red-500" : "border-gray-300"
-            }`}
-          >
-            <option value="">Select {labelText}</option>
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-        </div>
-      );
-    }
+  const handleCloseEditModal = () => {
+    setEditModalData(null);
+    setFormErrors({});
+  };
 
-    if (type === "checkbox") {
-      return (
-        <div className="mb-4 flex items-center space-x-2">
-          <Checkbox name={field} checked={value} onChange={onChange} label={labelText} />
-          {error && <p className="ml-2 text-xs text-red-500">{error}</p>}
-        </div>
-      );
-    }
-
-    return (
-      <div className="mb-4">
-        <TextField
-          label={labelText}
-          name={field}
-          type={type}
-          value={value}
-          onChange={onChange}
-          placeholder={`Enter ${labelText}`}
-        />
-        {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-      </div>
-    );
-  }, []);
+  const handleClosePasswordModal = () => {
+    setPasswordModalData(null);
+    setFormErrors({});
+  };
 
   const userTypeDropdownOptions = useMemo(
     () => userTypeOptions?.data?.map((option) => ({ value: option?._id, label: option?.name })),
@@ -300,80 +229,25 @@ const UserTable = () => {
   );
 
   const columns = useMemo(
-    () => [
-      {
-        name: "Name",
-        selector: (row) => row?.firstName + " " + row?.lastName,
-        sortable: true,
-      },
-
-      {
-        name: "Email",
-        selector: (row) => row?.email,
-        sortable: true,
-      },
-      {
-        name: "Role",
-        selector: (row) => row?.role?.name,
-        sortable: true,
-      },
-
-      {
-        name: "Last Active",
-        selector: (row) => formateDateAndTime(row?.lastActive),
-        sortable: true,
-      },
-
-      {
-        name: "Create Date",
-        selector: (row) => row?.createdAt?.split("T")[0],
-        sortable: true,
-      },
-      {
-        name: "Action",
-        cell: (row) => {
-          if (!actionMenuRefs.current.has(row?._id)) {
-            actionMenuRefs.current.set(row?._id, React.createRef());
-          }
-          const rowRef = actionMenuRefs.current.get(row?._id);
-          return (
-            <div className="relative" ref={rowRef}>
-              <button
-                onClick={() => setActionMenu((prevActionMenu) => (prevActionMenu === row?._id ? null : row?._id))}
-                className="rounded p-1 hover:bg-gray-100 cursor-pointer"
-                aria-label="Actions"
-              >
-                <MoreVertical size={18} />
-              </button>
-              {actionMenu === row?._id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
-            </div>
-          );
-        },
-      },
-    ],
+    () => buildColumns({ actionMenu, actionMenuRefs, buttons: ButtonsForThreeDot, setActionMenu }),
     [ButtonsForThreeDot, actionMenu],
   );
 
   useEffect(() => {
+    if (actionMenu === null) return;
     const handleClickOutside = (event) => {
       const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
         (ref) => !ref.current?.contains(event.target),
       );
-      if (clickedOutsideAllMenus) {
-        setActionMenu(null);
-      }
+      if (clickedOutsideAllMenus) setActionMenu(null);
     };
-    if (actionMenu !== null) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [actionMenu]);
 
   return (
     <div className="mt-5" data-testid="users-page">
-      <div className="mb-5 flex items-center justify-between">
+      <header className="mb-5 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-[#323332]">User Table</h2>
         <div className="flex gap-2">
           <Button
@@ -384,7 +258,7 @@ const UserTable = () => {
             data-testid="invite-user-btn"
           />
         </div>
-      </div>
+      </header>
 
       <DataTable
         data-testid="users-table"
@@ -401,90 +275,49 @@ const UserTable = () => {
         responsive
       />
 
-      {isModalOpen && (
-        <Modal
-          saveButtonText="Create User"
-          title="Add User"
-          onClose={() => {
-            setIsModalOpen(false);
-            setFormData(INITIAL_USER_FORM);
-            setFormErrors({});
-          }}
-          onSave={handleAddUser}
-          isLoading={isCreatingUser}
-        >
-          {renderFormField("firstName", formData.firstName, handleInputChange, "text", formErrors.firstName)}
-          {renderFormField("lastName", formData.lastName, handleInputChange, "text", formErrors.lastName)}
-          {renderFormField(
-            "role",
-            formData.role,
-            handleInputChange,
-            "select",
-            formErrors.role,
-            userTypeDropdownOptions,
-          )}
-          {["r2", "r3", "r4", "r5"].includes(formData.role) &&
-            renderFormField("businessName", formData.businessName, handleInputChange, "text", formErrors.businessName)}
-          {renderFormField("email", formData.email, handleInputChange, "email", formErrors.email)}
-          {renderFormField("password", formData.password, handleInputChange, "password", formErrors.password)}
-        </Modal>
-      )}
+      <UserManagementAddEditModal
+        isOpen={isModalOpen}
+        mode={USER_MODAL_MODES.ADD}
+        initialData={formData}
+        errors={formErrors}
+        roleOptions={userTypeDropdownOptions}
+        isLoading={isCreatingUser}
+        onChange={handleInputChange}
+        onClose={handleCloseAddModal}
+        onSubmit={handleAddUser}
+      />
 
-      {editModalData && (
-        <Modal
-          saveButtonText="Save"
-          title="Edit User"
-          onClose={() => {
-            setEditModalData(null);
-            setFormErrors({});
-          }}
-          onSave={handleEditUser}
-          isLoading={isUpdatingUser}
-        >
-          {renderFormField("firstName", editModalData.firstName, handleEditInputChange, "text", formErrors.firstName)}
-          {renderFormField("lastName", editModalData.lastName, handleEditInputChange, "text", formErrors.lastName)}
-          {renderFormField(
-            "role",
-            editModalData.role,
-            handleEditInputChange,
-            "select",
-            formErrors.role,
-            userTypeDropdownOptions,
-          )}
-          {["r2", "r3", "r4", "r5"].includes(editModalData.role) &&
-            renderFormField(
-              "businessName",
-              editModalData.businessName,
-              handleEditInputChange,
-              "text",
-              formErrors.businessName,
-            )}
-          {renderFormField("email", editModalData.email, handleEditInputChange, "email", formErrors.email)}
-        </Modal>
-      )}
+      <UserManagementAddEditModal
+        isOpen={Boolean(editModalData)}
+        mode={USER_MODAL_MODES.EDIT}
+        initialData={editModalData}
+        errors={formErrors}
+        roleOptions={userTypeDropdownOptions}
+        isLoading={isUpdatingUser}
+        onChange={handleEditInputChange}
+        onClose={handleCloseEditModal}
+        onSubmit={handleEditUser}
+      />
 
       {passwordModalData && (
         <Modal
           title="Change Password"
-          onClose={() => {
-            setPasswordModalData(null);
-            setFormErrors({});
-          }}
+          onClose={handleClosePasswordModal}
           onSave={handleChangePassword}
           isLoading={isUpdatingUser}
         >
-          {renderFormField(
-            "password",
-            passwordModalData.password,
-            handlePasswordInputChange,
-            "password",
-            formErrors.password,
-          )}
+          <UserManagementFormField
+            field={USER_FORM_FIELDS.PASSWORD}
+            value={passwordModalData.password}
+            onChange={handlePasswordInputChange}
+            type={FIELD_TYPES.PASSWORD}
+            error={formErrors.password}
+          />
         </Modal>
       )}
 
       <ConfirmationModal
-        isOpen={deleteConfirmation}
+        isOpen={Boolean(deleteConfirmation)}
         onClose={() => setDeleteConfirmation(null)}
         onConfirm={handleDeleteUser}
         title="Delete User"
@@ -498,8 +331,4 @@ const UserTable = () => {
   );
 };
 
-UserTable.propTypes = {
-  // Add any props if needed
-};
-
-export default UserTable;
+export default UserManagementTable;

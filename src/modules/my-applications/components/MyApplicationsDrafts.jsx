@@ -1,16 +1,25 @@
-import ApplicationStatusBadge from "./MyApplicationsStatusBadge";
-import { APPLICATION_STATUS } from "@/utils/applicationStatus";
-import { addSavedFormData, setCurrentDraftId, updateEmailVerified } from "@/redux/slices/form.slice";
-import { useGetSavedFormMutation, useRemoveSavedFormMutation } from "@/redux/apis/form.apis";
-import { unwrapResult } from "@reduxjs/toolkit";
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { unwrapResult } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
+import { useGetSavedFormMutation, useRemoveSavedFormMutation } from "@/redux/apis/form.apis";
+import { addSavedFormData, setCurrentDraftId, updateEmailVerified } from "@/redux/slices/form.slice";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
+import MyApplicationsStatusBadge from "./MyApplicationsStatusBadge";
+import { APPLICATION_STATUS } from "@/utils/applicationStatus";
+import { CARD_CLASS } from "../utils/my-applications.constants";
+import {
+  buildApplicationFormPath,
+  buildBrandedButtonStyle,
+  buildVerificationPath,
+  dimOnHover,
+  formatLongDate,
+  undimOnLeave,
+} from "../utils/my-applications.utils";
 
-function Draft({ forms }) {
+const MyApplicationsDrafts = ({ forms = [] }) => {
   const dispatch = useDispatch();
   const { emailVerified } = useSelector((state) => state.form);
   const navigate = useNavigate();
@@ -23,22 +32,15 @@ function Draft({ forms }) {
       if (!emailVerified) dispatch(updateEmailVerified(true));
       if (draftId) dispatch(setCurrentDraftId(draftId));
       const res = await getSavedFormData({ formId: formId, draftId }).unwrap();
-      if (res.success) {
-        const savedData = res?.data?.savedData || [];
-        const action = await dispatch(addSavedFormData(savedData || []));
-        unwrapResult(action);
-        const draftQuery = draftId ? `&draftId=${draftId}` : "";
-        if (!savedData?.company_lookup_data) {
-          return navigate(`/verification?formid=${formId}${draftQuery}`);
-        } else {
-          return navigate(`/application-form/${brandingName}/${formId}${draftId ? `?draftId=${draftId}` : ""}`);
-        }
-      } else {
-        return navigate(`/verification?formid=${formId}${draftId ? `&draftId=${draftId}` : ""}`);
-      }
+      if (!res.success) return navigate(buildVerificationPath(formId, draftId));
+      const savedData = res?.data?.savedData || [];
+      const action = await dispatch(addSavedFormData(savedData || []));
+      unwrapResult(action);
+      if (!savedData?.company_lookup_data) return navigate(buildVerificationPath(formId, draftId));
+      return navigate(buildApplicationFormPath(brandingName, formId, draftId));
     } catch (error) {
-      console.log("error while getting saved data", error);
-      return navigate(`/verification?formid=${formId}${draftId ? `&draftId=${draftId}` : ""}`);
+      console.error("Get saved form error:", error);
+      return navigate(buildVerificationPath(formId, draftId));
     }
   };
 
@@ -49,45 +51,34 @@ function Draft({ forms }) {
       if (res.success) toast.success(res.message || "Draft deleted successfully");
       setDeleteTarget(null);
     } catch (error) {
-      console.log("error while deleting draft", error);
+      console.error("Delete draft error:", error);
       toast.error(error?.data?.message || "Failed to delete draft");
     }
   };
+
   return (
     <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
       {forms?.length > 0 ? (
         forms?.map((form, index) => {
-          const colors = form?.branding?.colors;
+          const brandedStyle = buildBrandedButtonStyle(form?.branding?.colors);
 
           return (
-            <div
-              key={form?.draftId || form?._id || index}
-              className="relative flex h-full w-full min-w-0 flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition duration-300 hover:border-gray-300 hover:shadow-md md:p-5"
-            >
-              {/* Header: title block on the left, status on the right */}
+            <div key={form?.draftId || form?._id || index} className={CARD_CLASS}>
+              {/* Header */}
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  {/* truncate + title: long names stay on one line and reveal in full on hover */}
                   <h2
                     title={form?.name}
                     className="truncate text-base leading-tight font-bold text-gray-800 sm:text-lg"
                   >
                     {form?.name}
                   </h2>
-                  <p className="mt-1 truncate text-xs text-gray-500">
-                    Started{" "}
-                    {new Date(form?.createdAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </p>
+                  <p className="mt-1 truncate text-xs text-gray-500">Started {formatLongDate(form?.createdAt)}</p>
                 </div>
-                <ApplicationStatusBadge status={APPLICATION_STATUS.draft} />
+                <MyApplicationsStatusBadge status={APPLICATION_STATUS.draft} />
               </div>
-              {/* Details - same label/value grid as the submitted card, so both
-                  lists line up when they sit together on the page. The section
-                  count and the date used to be repeated three and two times. */}
+
+              {/* Details */}
               <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                 <div className="min-w-0">
                   <dt className="text-xs text-gray-500">Sections</dt>
@@ -99,40 +90,25 @@ function Draft({ forms }) {
                 </div>
               </dl>
 
+              {/* Actions */}
               <div className="mt-auto flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
                 <Button
+                  type="button"
                   label="Delete"
                   className="w-full sm:w-auto"
                   onClick={() => setDeleteTarget({ formId: form?._id, draftId: form?.draftId, name: form?.name })}
-                  style={{
-                    backgroundColor: colors?.primary,
-                    borderColor: colors?.primary,
-                    color: colors?.buttonTextPrimary,
-                    transition: "all 0.3s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.opacity = "0.6";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = "1";
-                  }}
+                  style={brandedStyle}
+                  onMouseEnter={dimOnHover}
+                  onMouseLeave={undimOnLeave}
                 />
                 <Button
+                  type="button"
                   label="Resume"
                   className="w-full sm:w-auto"
                   onClick={() => getSavedData(form?._id, form?.branding?.name, form?.draftId)}
-                  style={{
-                    backgroundColor: colors?.primary,
-                    borderColor: colors?.primary,
-                    color: colors?.buttonTextPrimary,
-                    transition: "all 0.3s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.opacity = "0.6";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = "1";
-                  }}
+                  style={brandedStyle}
+                  onMouseEnter={dimOnHover}
+                  onMouseLeave={undimOnLeave}
                 />
               </div>
             </div>
@@ -154,8 +130,6 @@ function Draft({ forms }) {
       />
     </div>
   );
-}
+};
 
-export default Draft;
-
-// export default Draft;
+export default MyApplicationsDrafts;

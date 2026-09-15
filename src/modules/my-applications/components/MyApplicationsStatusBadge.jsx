@@ -1,6 +1,6 @@
 import { getApplicationStatusMeta } from "@/utils/applicationStatus";
 
-function ApplicationStatusBadge({ status, className = "" }) {
+const MyApplicationsStatusBadge = ({ status, className = "" }) => {
   const { label, description, className: tone } = getApplicationStatusMeta(status);
 
   return (
@@ -12,6 +12,6 @@ function ApplicationStatusBadge({ status, className = "" }) {
       {label}
     </span>
   );
-}
+};
 
-export default ApplicationStatusBadge;
+export default MyApplicationsStatusBadge;

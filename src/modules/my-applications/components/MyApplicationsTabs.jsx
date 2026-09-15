@@ -1,8 +1,8 @@
-import Draft from "./MyApplicationsDrafts";
-import OwnerInvitations from "./MyApplicationsOwnerInvitations";
-import Submission from "./MyApplicationsSubmissions";
+import MyApplicationsDrafts from "./MyApplicationsDrafts";
+import MyApplicationsOwnerInvitations from "./MyApplicationsOwnerInvitations";
+import MyApplicationsSubmissions from "./MyApplicationsSubmissions";
 
-function AllSubmissionDraft({ forms, invitations = [] }) {
+const MyApplicationsTabs = ({ forms = {}, invitations = [] }) => {
   const drafts = forms?.saved || [];
   const submitted = forms?.submitted || [];
   const hasNothing = drafts.length === 0 && submitted.length === 0 && invitations.length === 0;
@@ -24,7 +24,7 @@ function AllSubmissionDraft({ forms, invitations = [] }) {
             <h2 className="text-textPrimary text-lg font-semibold">Waiting for your details</h2>
             <p className="text-sm text-gray-500">Applications where you were added as an owner or operator.</p>
           </div>
-          <OwnerInvitations invitations={invitations} />
+          <MyApplicationsOwnerInvitations invitations={invitations} />
         </section>
       )}
 
@@ -34,7 +34,7 @@ function AllSubmissionDraft({ forms, invitations = [] }) {
             <h2 className="text-textPrimary text-lg font-semibold">In progress</h2>
             <p className="text-sm text-gray-500">Applications you started but have not submitted yet.</p>
           </div>
-          <Draft forms={drafts} />
+          <MyApplicationsDrafts forms={drafts} />
         </section>
       )}
 
@@ -44,11 +44,11 @@ function AllSubmissionDraft({ forms, invitations = [] }) {
             <h2 className="text-textPrimary text-lg font-semibold">Submitted</h2>
             <p className="text-sm text-gray-500">Applications you have already sent for review.</p>
           </div>
-          <Submission forms={submitted} />
+          <MyApplicationsSubmissions forms={submitted} />
         </section>
       )}
     </div>
   );
-}
+};
 
-export default AllSubmissionDraft;
+export default MyApplicationsTabs;

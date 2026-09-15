@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { FiChevronDown, FiChevronRight } from "react-icons/fi";
 
-export default function TestChecklist({ areas, selectedIds, onChange }) {
+const TestingChecklist = ({ areas = [], selectedIds = [], onChange }) => {
   const [collapsed, setCollapsed] = useState({});
 
-  const toggleArea = (areaId) =>
-    setCollapsed((prev) => ({ ...prev, [areaId]: !prev[areaId] }));
+  const toggleArea = (areaId) => setCollapsed((prev) => ({ ...prev, [areaId]: !prev[areaId] }));
 
-  const isAreaFullySelected = (area) =>
-    area.tests.every((t) => selectedIds.includes(t.id));
+  const isAreaFullySelected = (area) => area.tests.every((t) => selectedIds.includes(t.id));
 
   const isAreaPartiallySelected = (area) =>
     area.tests.some((t) => selectedIds.includes(t.id)) && !isAreaFullySelected(area);
@@ -16,40 +14,42 @@ export default function TestChecklist({ areas, selectedIds, onChange }) {
   const toggleAreaSelection = (area) => {
     const areaIds = area.tests.map((t) => t.id);
     if (isAreaFullySelected(area)) {
-      onChange(selectedIds.filter((id) => !areaIds.includes(id)));
+      onChange?.(selectedIds.filter((id) => !areaIds.includes(id)));
     } else {
-      onChange([...new Set([...selectedIds, ...areaIds])]);
+      onChange?.([...new Set([...selectedIds, ...areaIds])]);
     }
   };
 
   const toggleTest = (testId) => {
     if (selectedIds.includes(testId)) {
-      onChange(selectedIds.filter((id) => id !== testId));
+      onChange?.(selectedIds.filter((id) => id !== testId));
     } else {
-      onChange([...selectedIds, testId]);
+      onChange?.([...selectedIds, testId]);
     }
   };
 
   return (
     <div className="space-y-2" data-testid="test-checklist">
       {areas.map((area) => {
-        const fullySelected = isAreaFullySelected(area);
-        const partial = isAreaPartiallySelected(area);
         const isOpen = !collapsed[area.id];
 
         return (
-          <div key={area.id} className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-            {/* Area header */}
-            <div className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 border-b border-gray-100">
+          <section key={area.id} className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+            <header className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 border-b border-gray-100">
               <input
                 type="checkbox"
-                checked={fullySelected}
-                ref={(el) => { if (el) el.indeterminate = partial; }}
+                checked={isAreaFullySelected(area)}
+                ref={(el) => {
+                  if (el) el.indeterminate = isAreaPartiallySelected(area);
+                }}
                 onChange={() => toggleAreaSelection(area)}
+                aria-label={`Select all ${area.id} tests`}
                 className="h-4 w-4 rounded accent-primary cursor-pointer"
               />
               <button
+                type="button"
                 onClick={() => toggleArea(area.id)}
+                aria-expanded={isOpen}
                 className="flex flex-1 items-center gap-2 text-left"
               >
                 <span className="text-sm font-semibold text-gray-800">{area.id}</span>
@@ -60,9 +60,8 @@ export default function TestChecklist({ areas, selectedIds, onChange }) {
                   {isOpen ? <FiChevronDown size={14} /> : <FiChevronRight size={14} />}
                 </span>
               </button>
-            </div>
+            </header>
 
-            {/* Test list */}
             {isOpen && (
               <div className="divide-y divide-gray-50">
                 {area.tests.map((test) => (
@@ -98,9 +97,11 @@ export default function TestChecklist({ areas, selectedIds, onChange }) {
                 ))}
               </div>
             )}
-          </div>
+          </section>
         );
       })}
     </div>
   );
-}
+};
+
+export default TestingChecklist;

@@ -10,8 +10,9 @@ import useBranding from "@/hooks/useBranding";
 import useBrandingSync from "@/hooks/useBrandingSync";
 import CustomLoading from "@/components/shared/CustomLoading";
 import ProtectedRoute from "@/routes/ProtectedRoute";
+import RequirePermission from "@/routes/RequirePermission";
 import { SOCKET_EVENTS } from "@/constants";
-import { isGuestRole } from "@/utils/permissions";
+import { PERMISSIONS, getHomePath, isGuestRole } from "@/utils/permissions";
 import { detectVPN } from "@/utils/vpnDetection";
 
 // auth pages
@@ -175,7 +176,7 @@ const App = () => {
           {/* root redirects */}
           <Route
             path="/"
-            element={user ? <Navigate to="/application-forms" replace /> : <Navigate to="/login" replace />}
+            element={user ? <Navigate to={getHomePath(user)} replace /> : <Navigate to="/login" replace />}
           />
           <Route path="singleform/pdf-view/:pdfId/:userId" element={<ApplicationPdfView />} />
 
@@ -192,7 +193,7 @@ const App = () => {
           </Route>
 
           {/* signed-out routes */}
-          <Route element={<ProtectedRoute user={!user} redirect={isGuest ? "/submission" : "/application-forms"} />}>
+          <Route element={<ProtectedRoute user={!user} redirect={getHomePath(user)} />}>
             <Route path="/login" element={<Login />} />
             <Route path="/otp" element={<Otp />} />
             <Route path="/forget-password" element={<ForgetPassword />} />
@@ -204,21 +205,119 @@ const App = () => {
           {/* signed-in routes without guests */}
           <Route element={<ProtectedRoute user={!isGuest && user} redirect={isGuest && user ? "/submission" : "/login"} />}>
             <Route path="/" element={<AdminDashboard />}>
-              <Route index element={<Navigate to="application-forms" replace />} />
-              <Route path="manage-rules/:formId" element={<ManageRules />} />
-              <Route path="all-roles" element={<AllRoles />} />
-              <Route path="all-users" element={<AdminAllUsers />} />
-              <Route path="application-forms" element={<ApplicationForms />} />
-              <Route path="applications" element={<Applications />} />
-              <Route path="underwriting/:applicantId" element={<OnBoarding />} />
-              <Route path="branding" element={<Brandings />} />
-              <Route path="branding/create" element={<CreateBranding />} />
-              <Route path="branding/single/:brandingId" element={<CreateBranding />} />
-              <Route path="strategies-key" element={<FormStrategies />} />
-              <Route path="verification-test" element={<VerificationTest />} />
-              <Route path="strategies" element={<Strategies />} />
-              <Route path="email" element={<Email />} />
-              <Route path="testing" element={<Testing />} />
+              <Route index element={<Navigate to={getHomePath(user)} replace />} />
+              <Route
+                path="manage-rules/:formId"
+                element={
+                  <RequirePermission permission={PERMISSIONS.UNDERWRITING}>
+                    <ManageRules />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="all-roles"
+                element={
+                  <RequirePermission permission={PERMISSIONS.READ_ROLE}>
+                    <AllRoles />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="all-users"
+                element={
+                  <RequirePermission permission={PERMISSIONS.READ_USER}>
+                    <AdminAllUsers />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="application-forms"
+                element={
+                  <RequirePermission permission={PERMISSIONS.READ_FORM}>
+                    <ApplicationForms />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="applications"
+                element={
+                  <RequirePermission permission={PERMISSIONS.UNDERWRITING}>
+                    <Applications />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="underwriting/:applicantId"
+                element={
+                  <RequirePermission permission={PERMISSIONS.UNDERWRITING}>
+                    <OnBoarding />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="branding"
+                element={
+                  <RequirePermission permission={PERMISSIONS.READ_BRANDING}>
+                    <Brandings />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="branding/create"
+                element={
+                  <RequirePermission permission={PERMISSIONS.READ_BRANDING}>
+                    <CreateBranding />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="branding/single/:brandingId"
+                element={
+                  <RequirePermission permission={PERMISSIONS.READ_BRANDING}>
+                    <CreateBranding />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="strategies-key"
+                element={
+                  <RequirePermission permission={PERMISSIONS.READ_STRATEGY}>
+                    <FormStrategies />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="verification-test"
+                element={
+                  <RequirePermission permission={PERMISSIONS.READ_TESTING}>
+                    <VerificationTest />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="strategies"
+                element={
+                  <RequirePermission permission={PERMISSIONS.READ_STRATEGY}>
+                    <Strategies />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="email"
+                element={
+                  <RequirePermission permission={PERMISSIONS.READ_EMAIL}>
+                    <Email />
+                  </RequirePermission>
+                }
+              />
+              <Route
+                path="testing"
+                element={
+                  <RequirePermission permission={PERMISSIONS.READ_TESTING}>
+                    <Testing />
+                  </RequirePermission>
+                }
+              />
             </Route>
 
             {/* application layout without the sidebar */}

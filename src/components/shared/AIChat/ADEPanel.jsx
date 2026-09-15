@@ -1,26 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { IoClose } from "react-icons/io5";
+import { FIELD_TYPES } from "@/constants";
+import { FIELD_MODES } from "@/components/shared/AIChat/constants/aiChatConstants.js";
 
-/**
- * Assisted Direct Entry panel — renders inside the chat widget when the AI
- * calls openFieldPanel.
- *
- * fieldMode="secure"  — shows a masked input; value is captured locally and
- *                       filled into the DOM directly, never sent to AI servers.
- * fieldMode="direct"  — scrolls to and focuses the real form field so the
- *                       applicant can use native UI (Google Places, date picker,
- *                       etc.). A "Done" button closes the panel when finished.
- *
- * Props
- *   fieldId      string   id/name of the target field
- *   fieldLabel   string   human-readable field name shown in the panel header
- *   fieldMode    "secure" | "direct"
- *   explanation  string   AI-provided instruction shown to the applicant
- *   accentColor  string   theme colour for the primary button
- *   onComplete   (value: string) => void   called with entered/read value
- *   onCancel     () => void
- */
-export default function ADEPanel({ fieldId, fieldLabel, fieldMode, isRequired = true, explanation, accentColor = "#6366f1", onComplete, onCancel }) {
+// assisted Direct Entry panel — renders inside the chat widget when the AI
+const ADEPanel = ({ fieldId, fieldLabel, fieldMode, isRequired = true, explanation, accentColor = "#6366f1", onComplete, onCancel }) => {
   const [secureValue, setSecureValue] = useState("");
   const [showValue, setShowValue] = useState(false);
   const [fieldFocused, setFieldFocused] = useState(false);
@@ -32,14 +16,14 @@ export default function ADEPanel({ fieldId, fieldLabel, fieldMode, isRequired = 
 
   // Focus the secure input on mount
   useEffect(() => {
-    if (fieldMode === "secure") {
+    if (fieldMode === FIELD_MODES.SECURE) {
       setTimeout(() => inputRef.current?.focus(), 80);
     }
   }, [fieldMode]);
 
   // For direct mode: scroll to and focus the real field on mount
   useEffect(() => {
-    if (fieldMode !== "direct") return;
+    if (fieldMode !== FIELD_MODES.DIRECT) return;
     const el =
       document.getElementById(fieldId) ||
       document.querySelector(`[name="${CSS.escape(fieldId)}"]`);
@@ -69,13 +53,13 @@ export default function ADEPanel({ fieldId, fieldLabel, fieldMode, isRequired = 
   //
   // Non-date fields: "change" is always accepted (fires only on actual value commit).
   useEffect(() => {
-    if (fieldMode !== "direct") return;
+    if (fieldMode !== FIELD_MODES.DIRECT) return;
     const el =
       document.getElementById(fieldId) ||
       document.querySelector(`[name="${CSS.escape(fieldId)}"]`);
     if (!el) return;
 
-    const isDateField = el.type === "date";
+    const isDateField = el.type === FIELD_TYPES.DATE;
     let completed = false;
     let isTyping = false;
     let typingTimer = null;
@@ -160,7 +144,7 @@ export default function ADEPanel({ fieldId, fieldLabel, fieldMode, isRequired = 
   };
 
   /* ── Secure panel ──────────────────────────────────────────────────────── */
-  if (fieldMode === "secure") {
+  if (fieldMode === FIELD_MODES.SECURE) {
     return (
       <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-3 shadow-sm text-sm">
         {/* Header */}
@@ -272,4 +256,6 @@ export default function ADEPanel({ fieldId, fieldLabel, fieldMode, isRequired = 
       </div>
     </div>
   );
-}
+};
+
+export default ADEPanel;

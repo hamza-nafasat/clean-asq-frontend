@@ -61,7 +61,6 @@ const useApplyBranding = ({ formId }) => {
   const setBrandingHandler = useCallback(
     (formBranding) => {
       if (formBranding?.colors) {
-        console.log("form branding is applied");
         setName(formBranding?.name || "");
         setPrimaryColor(formBranding?.colors?.primary);
         setSecondaryColor(formBranding?.colors?.secondary);
@@ -170,7 +169,6 @@ const useApplyBranding = ({ formId }) => {
       setBrandingHandler(formBranding);
     } else if (user?.branding) {
       const formBranding = user?.branding;
-      console.log("user branding is applied");
       setBrandingHandler(formBranding);
     }
     setIsApplying(false);
@@ -178,7 +176,6 @@ const useApplyBranding = ({ formId }) => {
 
     return () => {
       const formBranding = user?.branding;
-      console.log("returned branding is applied");
       setBrandingHandler(formBranding);
       setIsApplied(true);
     };

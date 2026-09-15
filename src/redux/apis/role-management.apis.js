@@ -1,72 +1,69 @@
-import getEnv from '@/utils/env';
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import getEnv from "@/utils/env";
+
+const ROLE_TAGS = {
+  ROLE: "Role",
+  PERMISSION: "Permission",
+};
 
 const roleApis = createApi({
-  reducerPath: 'roleApi',
-  baseQuery: fetchBaseQuery({ baseUrl: `${getEnv('SERVER_URL')}/api/role`, credentials: 'include' }),
-
-  tagTypes: ['Role', 'Permission'],
-  endpoints: builder => ({
-    // create new role
-    // ---------------
+  reducerPath: "roleApi",
+  baseQuery: fetchBaseQuery({ baseUrl: `${getEnv("SERVER_URL")}/api/role`, credentials: "include" }),
+  tagTypes: [ROLE_TAGS.ROLE, ROLE_TAGS.PERMISSION],
+  endpoints: (builder) => ({
+    /////
     createRole: builder.mutation({
-      query: data => ({
-        url: '/create',
-        method: 'POST',
+      query: (data) => ({
+        url: "/create",
+        method: "POST",
         body: data,
       }),
-      invalidatesTags: ['Role'],
+      invalidatesTags: [ROLE_TAGS.ROLE],
     }),
-    // get get all users
-    // --------------
+    /////
     getAllRoles: builder.query({
       query: () => ({
-        url: '/all',
-        method: 'GET',
+        url: "/all",
+        method: "GET",
       }),
-      providesTags: ['Role'],
+      providesTags: [ROLE_TAGS.ROLE],
     }),
-
-    // get single role
-    // ---------------
+    /////
     getSingleRole: builder.mutation({
-      query: data => ({
+      query: (data) => ({
         url: `single/${data?._id}`,
-        method: 'GET',
+        method: "GET",
       }),
-      invalidatesTags: ['Role'],
+      invalidatesTags: [ROLE_TAGS.ROLE],
     }),
-
-    // update single role
-    // ---------------
+    /////
     updateSingleRole: builder.mutation({
       query: ({ _id, name, permissions }) => ({
         url: `single/${_id}`,
-        method: 'PUT',
+        method: "PUT",
         body: { name, permissions },
       }),
-      invalidatesTags: ['Role'],
+      invalidatesTags: [ROLE_TAGS.ROLE],
     }),
-    // DELETE single role
-    // ---------------
+    /////
     deleteSingleRole: builder.mutation({
-      query: data => ({
+      query: (data) => ({
         url: `single/${data?._id}`,
-        method: 'Delete',
+        method: "Delete",
       }),
-      invalidatesTags: ['Role'],
+      invalidatesTags: [ROLE_TAGS.ROLE],
     }),
-    // get all permissions
-    // ------------------
+    /////
     getAllPermissions: builder.query({
       query: () => ({
-        url: '/permissions',
-        method: 'GET',
+        url: "/permissions",
+        method: "GET",
       }),
-      providesTags: ['Permission'],
+      providesTags: [ROLE_TAGS.PERMISSION],
     }),
   }),
 });
+
 export const {
   useCreateRoleMutation,
   useGetAllRolesQuery,
@@ -75,4 +72,5 @@ export const {
   useDeleteSingleRoleMutation,
   useGetAllPermissionsQuery,
 } = roleApis;
+
 export default roleApis;

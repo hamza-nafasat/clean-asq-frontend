@@ -1,11 +1,8 @@
-/**
- * Build the standard POST body for /api/ai/* chat endpoints.
- * Matches the wire payload sent by the stagging AIChatWidget exactly:
- *   { messages, context: { screenId, screenName, description, currentState,
- *     logos, colorPalette, forms, brandingId, maxHelpMode, formLanguage? } }
- * `formLanguage` is only included when it is a non-English language.
- */
-export function buildChatPayload({ messages, ctx, assistantMode, currentState, formLanguage }) {
+import { AI_ASSISTANT_MODES } from "@/constants";
+import { DEFAULT_FORM_LANGUAGE } from "@/components/shared/AIChat/constants/aiChatConstants.js";
+
+// build the standard POST body for /api/ai/* chat endpoints
+export const buildChatPayload = ({ messages, ctx, assistantMode, currentState, formLanguage }) => {
   const context = {
     screenId: ctx?.screenId,
     screenName: ctx?.screenName,
@@ -15,10 +12,10 @@ export function buildChatPayload({ messages, ctx, assistantMode, currentState, f
     colorPalette: ctx?.colorPalette || undefined,
     forms: ctx?.forms || undefined,
     brandingId: ctx?.brandingId || undefined,
-    maxHelpMode: assistantMode === "applicant",
+    maxHelpMode: assistantMode === AI_ASSISTANT_MODES.APPLICANT,
   };
-  if (formLanguage && formLanguage !== "English") {
+  if (formLanguage && formLanguage !== DEFAULT_FORM_LANGUAGE) {
     context.formLanguage = formLanguage;
   }
   return { messages, context };
-}
+};

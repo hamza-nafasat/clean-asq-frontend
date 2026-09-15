@@ -1,21 +1,31 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import Button from "@/components/shared/Button";
-import { AiHelpModal } from "@/components/global/DynamicField";
-import Modal from "@/components/shared/Modal";
-import DocumentModal from "@/components/modals/DocumentModal";
-import { makeDocLinkHandler } from "@/utils/makeDocLinkHandler";
-import useBranding from "@/hooks/useBranding";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 
-export default function SignatureBox({ onSave, step, oldSignatureUrl, className = "", isPdf = false }) {
+import useBranding from "@/hooks/useBranding";
+import Button from "@/components/shared/Button";
+import Modal from "@/components/shared/Modal";
+import DocumentModal from "@/components/modals/DocumentModal";
+import AiHelpModal from "@/components/global/AiHelpModal";
+import { SIGNATURE_MODES } from "@/constants";
+import { makeDocLinkHandler } from "@/utils/makeDocLinkHandler";
+import { dataUrlToFile, getSignatureAiText, renderTypedSignature, SIGNATURE_LINE_WIDTH } from "@/utils/signatureCanvas";
+
+const BUTTON_CLASSES =
+  "cursor-pointer rounded px-4 py-2 text-sm font-medium transition-transform duration-200 hover:scale-105 active:scale-95";
+const SIGNATURE_FILE_NAME = "signature.png";
+
+const getModeButtonClasses = (isActive) =>
+  `${BUTTON_CLASSES} flex-1 ${isActive ? "bg-primary text-buttonTextPrimary" : "bg-secondary text-buttonTextSecondary"}`;
+
+const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = false }) => {
   const { isDisabledAllFields } = useSelector((state) => state.form);
   const { textColor, fontFamily } = useBranding();
-  const [mode, setMode] = useState("draw");
+  const [mode, setMode] = useState(SIGNATURE_MODES.DRAW);
   const [typedSignature, setTypedSignature] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const [pendingAiFill, setPendingAiFill] = useState(false);
-  const [openDoc, setOpenDoc] = useState(null); // { url, title } | null
+  const [openDoc, setOpenDoc] = useState(null);
 
   const outerDivRef = useRef(null);
   const signDisplayTextRef = useRef(null);
@@ -23,10 +33,9 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
   const ctxRef = useRef(null);
   const drawing = useRef(false);
   const lastPoint = useRef({ x: 0, y: 0 });
-  const historyRef = useRef([]);
-  const historyPos = useRef(-1);
 
-  // ---------- Setup Canvas ----------
+  const isLocked = isPdf && isDisabledAllFields;
+
   const setupCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -43,14 +52,14 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
     ctx.scale(ratio, ratio);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = SIGNATURE_LINE_WIDTH;
     ctx.strokeStyle = textColor;
     ctxRef.current = ctx;
 
-    // Draw old preview if available
+    // draw the saved signature as a preview
     if (oldSignatureUrl) {
       const img = new Image();
-      img.crossOrigin = "anonymous"; // must come before src
+      img.crossOrigin = "anonymous";
       img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
       img.src = oldSignatureUrl;
     } else {
@@ -58,8 +67,7 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
     }
   }, [textColor, oldSignatureUrl]);
 
-  // Intercept link clicks inside display text — open in DocumentModal instead of new tab.
-  // Uses capture phase so we fire before the browser acts on target="_blank".
+  // open display text links in the document modal
   useEffect(() => {
     const el = signDisplayTextRef.current;
     if (!el) return;
@@ -68,27 +76,24 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
     return () => el.removeEventListener("click", handler, true);
   }, [step?.signDisplayFormattedText]);
 
-  // ---------- Draw Handlers ----------
   const pointerPos = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   };
 
   const startDraw = (e) => {
-    if (isPdf && isDisabledAllFields) return;
-    if (mode !== "draw") return;
+    if (isLocked || mode !== SIGNATURE_MODES.DRAW) return;
     drawing.current = true;
     lastPoint.current = pointerPos(e);
     try {
       canvasRef.current.setPointerCapture(e.pointerId);
     } catch {
-      console.log("Failed to set pointer capture");
+      // pointer capture is optional
     }
   };
 
   const draw = (e) => {
-    if (isPdf && isDisabledAllFields) return;
-    if (!drawing.current) return;
+    if (isLocked || !drawing.current) return;
     const ctx = ctxRef.current;
     const p = pointerPos(e);
     ctx.beginPath();
@@ -99,103 +104,39 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
   };
 
   const endDraw = (e) => {
-    if (isPdf && isDisabledAllFields) return;
-    if (!drawing.current) return;
+    if (isLocked || !drawing.current) return;
     drawing.current = false;
     try {
       canvasRef.current.releasePointerCapture(e.pointerId);
     } catch {
-      console.log("Failed to release pointer capture");
+      // pointer capture is optional
     }
-    historyRef.current = historyRef.current.slice(0, historyPos.current + 1);
-    historyRef.current?.push(canvasRef?.current?.toDataURL());
-    historyPos.current = historyRef.current.length - 1;
   };
-
-  // ---------- Helpers ----------
-  const exportCanvas = useCallback(() => {
-    return canvasRef.current?.toDataURL("image/png") || null;
-  }, []);
 
   const generateSignatureData = useCallback(() => {
-    if (mode === "type") {
+    if (mode === SIGNATURE_MODES.TYPE) {
       if (!typedSignature.trim()) return null;
-      const canvas = document.createElement("canvas");
-      canvas.width = 1600;
-      canvas.height = 400;
-      const ctx = canvas.getContext("2d");
-      ctx.fillStyle = textColor;
-      ctx.textBaseline = "middle";
-      const text = typedSignature;
-      // Auto-fit: start at max size and scale down until the text fits with padding.
-      const maxFontSize = 200;
-      const paddedWidth = canvas.width - 80;
-      let fontSize = maxFontSize;
-      ctx.font = `${fontSize}px "Dancing Script", cursive`;
-      const measured = ctx.measureText(text).width;
-      if (measured > paddedWidth) fontSize = Math.floor(fontSize * (paddedWidth / measured));
-      ctx.font = `${fontSize}px "Dancing Script", cursive`;
-      const x = (canvas.width - ctx.measureText(text).width) / 2;
-      ctx.fillText(text, x, canvas.height / 2);
-      return canvas.toDataURL("image/png");
+      return renderTypedSignature(typedSignature, textColor);
     }
-    return exportCanvas();
-  }, [mode, typedSignature, textColor, exportCanvas]);
+    return canvasRef.current?.toDataURL("image/png") || null;
+  }, [mode, typedSignature, textColor]);
 
-  const dataURLtoFile = (dataUrl, filename) => {
-    const arr = dataUrl.split(",");
-    const mime = arr[0].match(/:(.*?);/)[1];
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) u8arr[n] = bstr.charCodeAt(n);
-    return new File([u8arr], filename, { type: mime });
-  };
-
-  // ---------- Button Handlers ----------
   const handleClear = () => {
     const rect = canvasRef.current.getBoundingClientRect();
     ctxRef.current.clearRect(0, 0, rect.width, rect.height);
     setTypedSignature("");
   };
 
-  // const undo = () => {
-  //   if (historyPos.current <= 0) return;
-  //   historyPos.current -= 1;
-  //   const url = historyRef.current[historyPos.current];
-  //   const img = new Image();
-  //   img.onload = () => {
-  //     const rect = canvasRef.current.getBoundingClientRect();
-  //     ctxRef.current.clearRect(0, 0, rect.width, rect.height);
-  //     ctxRef.current.drawImage(img, 0, 0, rect.width, rect.height);
-  //   };
-  //   img.src = url;
-  // };
-
-  // const redo = () => {
-  //   if (historyPos.current >= historyRef.current.length - 1) return;
-  //   historyPos.current += 1;
-  //   const url = historyRef.current[historyPos.current];
-  //   const img = new Image();
-  //   img.onload = () => {
-  //     const rect = canvasRef.current.getBoundingClientRect();
-  //     ctxRef.current.clearRect(0, 0, rect.width, rect.height);
-  //     ctxRef.current.drawImage(img, 0, 0, rect.width, rect.height);
-  //   };
-  //   img.src = url;
-  // };
-
   const handleSave = useCallback(async () => {
     try {
       setIsSaving(true);
       const dataUrl = generateSignatureData();
       if (dataUrl) {
-        const file = dataURLtoFile(dataUrl, "signature.png");
-        await onSave?.(file, setIsSaving);
-        setMode("draw");
+        await onSave?.(dataUrlToFile(dataUrl, SIGNATURE_FILE_NAME), setIsSaving);
+        setMode(SIGNATURE_MODES.DRAW);
       }
-    } catch (err) {
-      console.error("Error is Handle save signature box", err);
+    } catch (error) {
+      console.error("Save signature error:", error);
       setIsSaving(false);
     }
   }, [generateSignatureData, onSave]);
@@ -206,15 +147,14 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
     return () => window.removeEventListener("resize", setupCanvas);
   }, [setupCanvas, mode]);
 
-  // AI max help mode: listen for a typed-signature request dispatched by the chat widget.
-  // Step 1 — switch to type mode and set the name. State setters are stable so no deps needed.
+  // ai help: switch to type mode with the requested name
   useEffect(() => {
     const el = outerDivRef.current;
     if (!el) return;
     const handler = (e) => {
       const name = e.detail?.name;
       if (!name) return;
-      setMode("type");
+      setMode(SIGNATURE_MODES.TYPE);
       setTypedSignature(name);
       setPendingAiFill(true);
     };
@@ -222,26 +162,19 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
     return () => el.removeEventListener("ai:fill-signature", handler);
   }, []);
 
-  // Step 2 — after React re-renders with mode="type" and the correct typedSignature,
-  // call handleSave so generateSignatureData picks up the right state. handleSave will
-  // call setMode("draw") on completion, switching to the draw tab to display the image.
+  // ai help: save once the typed name has rendered
   useEffect(() => {
-    if (!pendingAiFill || mode !== "type" || !typedSignature.trim()) return;
+    if (!pendingAiFill || mode !== SIGNATURE_MODES.TYPE || !typedSignature.trim()) return;
     setPendingAiFill(false);
     handleSave();
   }, [pendingAiFill, mode, typedSignature, handleSave]);
 
-  // ---------- Update stroke style ----------
   useEffect(() => {
     if (ctxRef.current) {
-      ctxRef.current.lineWidth = 3;
+      ctxRef.current.lineWidth = SIGNATURE_LINE_WIDTH;
       ctxRef.current.strokeStyle = textColor;
     }
   }, [textColor]);
-
-  // ---------- UI ----------
-  const buttonClasses =
-    "cursor-pointer rounded px-4 py-2 text-sm font-medium transition-transform duration-200 hover:scale-105 active:scale-95";
 
   return (
     <div
@@ -253,40 +186,24 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
         "data-ai-label": "Authorized Signature",
         "data-ai-required": "true",
         "data-ai-value": oldSignatureUrl ? "signed" : "",
-        // Mirrors form.signature.value.secureUrl so page-download can find it at click time
         "data-signature-url": oldSignatureUrl || "",
-        "data-ai-text": (() => {
-          const strip = (v) =>
-            String(v || "")
-              .replace(/<[^>]*>/g, " ")
-              .replace(/\s+/g, " ")
-              .trim();
-          return (strip(step?.signDisplayFormattedText) || strip(step?.ai_formatting)).slice(0, 500);
-        })(),
+        "data-ai-text": getSignatureAiText(step),
         tabIndex: 0,
       })}
     >
       {openAiHelpModal && (
         <Modal onClose={() => setOpenAiHelpModal(false)}>
-          <AiHelpModal
-            aiPrompt={step?.signAiPrompt}
-            aiResponse={step?.signAiResponse}
-            setOpenAiHelpModal={setOpenAiHelpModal}
-          />
+          <AiHelpModal aiPrompt={step?.signAiPrompt} aiResponse={step?.signAiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
         </Modal>
       )}
-      {openDoc && (
-        <DocumentModal url={openDoc.url} title={openDoc.title} onClose={() => setOpenDoc(null)} />
-      )}
+      {openDoc && <DocumentModal url={openDoc.url} title={openDoc.title} onClose={() => setOpenDoc(null)} />}
       <div className="flex items-center gap-2">
         {step?.isSignDisplayText && (
           <div className="flex w-full items-end gap-3">
             <div
               ref={signDisplayTextRef}
               className="w-full"
-              dangerouslySetInnerHTML={{
-                __html: String(step?.signDisplayFormattedText || ""),
-              }}
+              dangerouslySetInnerHTML={{ __html: String(step?.signDisplayFormattedText || "") }}
             />
           </div>
         )}
@@ -297,29 +214,29 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
         )}
       </div>
 
-      {/* Mode Switch */}
-      {!(isPdf && isDisabledAllFields) && (
+      {/* Mode switch */}
+      {!isLocked && (
         <div className="mt-4 flex gap-3">
           <button
             type="button"
-            onClick={() => setMode("draw")}
-            className={`${buttonClasses} flex-1 ${mode === "draw" ? "bg-primary text-buttonTextPrimary" : "bg-secondary text-buttonTextSecondary"}`}
+            onClick={() => setMode(SIGNATURE_MODES.DRAW)}
+            className={getModeButtonClasses(mode === SIGNATURE_MODES.DRAW)}
           >
             ✍️ Draw
           </button>
           <button
             type="button"
-            onClick={() => setMode("type")}
-            className={`${buttonClasses} flex-1 ${mode === "type" ? "bg-primary text-buttonTextPrimary" : "bg-secondary text-buttonTextSecondary"}`}
+            onClick={() => setMode(SIGNATURE_MODES.TYPE)}
+            className={getModeButtonClasses(mode === SIGNATURE_MODES.TYPE)}
           >
             ⌨️ Type
           </button>
         </div>
       )}
 
-      {/* Drawing / Typing Area */}
+      {/* Drawing or typing area */}
       <div className="mt-4 h-56 rounded-md border bg-gray-50">
-        {mode === "draw" ? (
+        {mode === SIGNATURE_MODES.DRAW ? (
           <canvas
             ref={canvasRef}
             onPointerDown={startDraw}
@@ -341,21 +258,15 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       </div>
 
       {/* Controls */}
-      {!(isPdf && isDisabledAllFields) && (
+      {!isLocked && (
         <div className="mt-4 flex flex-wrap gap-2">
-          <button type="button" onClick={handleClear} className={`${buttonClasses} border`}>
+          <button type="button" onClick={handleClear} className={`${BUTTON_CLASSES} border`}>
             Clear
           </button>
-          {/* <button type="button" onClick={undo} className={`${buttonClasses} border`}>
-            Undo
-          </button>
-          <button type="button" onClick={redo} className={`${buttonClasses} border`}>
-            Redo
-          </button> */}
           <button
             type="button"
             onClick={handleSave}
-            className={`${buttonClasses} bg-primary text-buttonTextPrimary ml-auto ${isSaving ? "pointer-events-none opacity-30" : ""}`}
+            className={`${BUTTON_CLASSES} bg-primary text-buttonTextPrimary ml-auto ${isSaving ? "pointer-events-none opacity-30" : ""}`}
           >
             {isSaving ? "Saving..." : "Save Signature"}
           </button>
@@ -363,4 +274,6 @@ export default function SignatureBox({ onSave, step, oldSignatureUrl, className 
       )}
     </div>
   );
-}
+};
+
+export default SignatureBox;

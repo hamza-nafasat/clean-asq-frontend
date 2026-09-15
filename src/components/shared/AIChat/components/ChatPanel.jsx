@@ -3,8 +3,10 @@ import ChatMessage from "@/components/shared/AIChat/ChatMessage.jsx";
 import ADEPanel from "@/components/shared/AIChat/ADEPanel.jsx";
 import PanelResizeHandles from "./PanelResizeHandles.jsx";
 import LanguageBanner from "./LanguageBanner.jsx";
+import { AI_ASSISTANT_MODES } from "@/constants";
+import { CHAT_ROLES } from "@/components/shared/AIChat/constants/aiChatConstants.js";
 
-export default function ChatPanel({
+const ChatPanel = ({
   panelRef,
   panelWidth,
   panelHeight,
@@ -40,7 +42,7 @@ export default function ChatPanel({
   sendMessage,
   handleMessageAction,
   introButtonsDismissed,
-}) {
+}) => {
   return (
     <div
       ref={panelRef}
@@ -105,7 +107,7 @@ export default function ChatPanel({
         style={{ backgroundColor: "#f8f9ff" }}
       >
         {messages
-          .filter((msg) => msg.role !== "function" && msg.content !== null)
+          .filter((msg) => msg.role !== CHAT_ROLES.FUNCTION && msg.content !== null)
           .map((msg) => (
             <ChatMessage
               key={msg.id}
@@ -164,7 +166,7 @@ export default function ChatPanel({
               }
             }}
             placeholder={
-              assistantMode === "applicant"
+              assistantMode === AI_ASSISTANT_MODES.APPLICANT
                 ? "Ask me anything about the application…"
                 : "Ask me to change colors, fonts, layout…"
             }
@@ -192,4 +194,6 @@ export default function ChatPanel({
       </div>
     </div>
   );
-}
+};
+
+export default ChatPanel;

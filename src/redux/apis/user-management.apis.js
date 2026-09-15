@@ -1,62 +1,60 @@
-import getEnv from "@/utils/env";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import getEnv from "@/utils/env";
+
+const USER_TAGS = {
+  USERS: "Users",
+};
 
 const userApis = createApi({
   reducerPath: "userApi",
   baseQuery: fetchBaseQuery({ baseUrl: `${getEnv("SERVER_URL")}/api/user`, credentials: "include" }),
-  tagTypes: ["Users"],
+  tagTypes: [USER_TAGS.USERS],
   endpoints: (builder) => ({
-    // create new user
-    // ---------------
+    /////
     createUser: builder.mutation({
       query: (data) => ({
         url: "/create",
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Users"],
+      invalidatesTags: [USER_TAGS.USERS],
     }),
-    // get get all users
-    // --------------
+    /////
     getAllUsers: builder.query({
       query: () => ({
         url: "/all",
         method: "GET",
       }),
-      providesTags: ["Users"],
+      providesTags: [USER_TAGS.USERS],
     }),
-
-    // get single user
-    // ---------------
+    /////
     getSingleUser: builder.mutation({
       query: (data) => ({
         url: `single/${data?._id}`,
         method: "GET",
       }),
-      invalidatesTags: ["Users"],
+      invalidatesTags: [USER_TAGS.USERS],
     }),
-
-    // update single user
-    // ---------------
+    /////
     updateSingleUser: builder.mutation({
       query: (data) => ({
         url: `single/${data?._id}`,
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["Users"],
+      invalidatesTags: [USER_TAGS.USERS],
     }),
-    // DELETE single user
-    // ---------------
+    /////
     deleteSingleUser: builder.mutation({
       query: (data) => ({
         url: `single/${data?._id}`,
         method: "Delete",
       }),
-      invalidatesTags: ["Users"],
+      invalidatesTags: [USER_TAGS.USERS],
     }),
   }),
 });
+
 export const {
   useCreateUserMutation,
   useGetAllUsersQuery,
@@ -64,4 +62,5 @@ export const {
   useUpdateSingleUserMutation,
   useDeleteSingleUserMutation,
 } = userApis;
+
 export default userApis;

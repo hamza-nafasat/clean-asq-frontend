@@ -11,7 +11,6 @@ const config = Object.freeze({
 
 const getEnv = (key) => {
   const value = config[key];
-  // if (!value) throw new Error(`Config ${key} not found`);
   return value;
 };
 

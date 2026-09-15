@@ -1,62 +1,52 @@
-import AggrementBlock from "../components/ApplicantAgreementBlock";
-import BankInfo from "../components/ApplicantBankInfo";
-import CompanyInformation from "../components/ApplicantCompanyInformation";
-import CompanyOwners from "../components/ApplicantCompanyOwners";
-import CustomSection from "../components/ApplicantCustomSection";
-import Documents from "../components/ApplicantDocuments";
-import ProcessingInfo from "../components/ApplicantProcessingInfo";
-import CustomLoading from "@/components/shared/CustomLoading";
-import Button from "@/components/shared/Button";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { useGetSavedFormMutation, useGetSingleFormQueryQuery } from "@/redux/apis/form.apis";
+import { setIdMissionData } from "@/redux/slices/auth.slice";
+import { addSavedFormData, updateFormHeaderAndFooter } from "@/redux/slices/form.slice";
+import { useApplicantScreenContext } from "@/hooks/useApplicantScreenContext";
+import useApplicantStepSubmission from "@/hooks/useApplicantStepSubmission";
 import useApplyBranding from "@/hooks/useApplyBranding";
 import { usePageDownload } from "@/hooks/usePageDownload";
-import {
-  useGetSavedFormMutation,
-  useGetSingleFormQueryQuery,
-  useSaveFormInDraftMutation,
-  useSubmitFormMutation,
-} from "@/redux/apis/form.apis";
-import { setIdMissionData } from "@/redux/slices/auth.slice";
-import {
-  addSavedFormData,
-  clearSavedFormData,
-  setCurrentDraftId,
-  updateFormHeaderAndFooter,
-  updateFormState,
-} from "@/redux/slices/form.slice";
-import { unwrapResult } from "@reduxjs/toolkit";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
+import Button from "@/components/shared/Button";
+import CustomLoading from "@/components/shared/CustomLoading";
 import Stepper from "@/components/Stepper/Stepper";
-import { uploadFilesAndReplace } from "@/lib/utils";
-import { findAiFieldEl } from "@/utils/discoverFormFields";
-import { useApplicantScreenContext } from "@/hooks/useApplicantScreenContext";
+import ApplicantAgreementBlock from "../components/ApplicantAgreementBlock";
+import ApplicantBankInfo from "../components/ApplicantBankInfo";
+import ApplicantCompanyInformation from "../components/ApplicantCompanyInformation";
+import ApplicantCompanyOwners from "../components/ApplicantCompanyOwners";
+import ApplicantCustomSection from "../components/ApplicantCustomSection";
+import ApplicantDocuments from "../components/ApplicantDocuments";
+import ApplicantProcessingInfo from "../components/ApplicantProcessingInfo";
+import {
+  DEFAULT_HEADER_FOOTER,
+  RENDERABLE_SECTION_TITLES,
+  SECTION_KEYS,
+  SECTION_TITLES,
+} from "../utils/applicant.constants";
+import { buildApplicationFormPath, collectStepFieldRows } from "../utils/applicant.utils6";
 import getEnv from "@/utils/env";
+import { findAiFieldEl } from "@/utils/discoverFormFields";
 
-// Section titles that map to a renderable step component in the stepper below.
-// Keep this in sync with the step.title branches in the effect.
-const RENDERABLE_SECTION_TITLES = [
-  "company_information_blk",
-  "beneficial_blk",
-  "bank_account_info_blk",
-  "avg_transactions_blk",
-  "incorporation_article_blk",
-  "custom_section",
-  "agreement_blk",
-];
+const SECTION_COMPONENTS = {
+  [SECTION_TITLES.COMPANY_INFORMATION]: ApplicantCompanyInformation,
+  [SECTION_TITLES.BENEFICIAL]: ApplicantCompanyOwners,
+  [SECTION_TITLES.BANK_ACCOUNT_INFO]: ApplicantBankInfo,
+  [SECTION_TITLES.AVG_TRANSACTIONS]: ApplicantProcessingInfo,
+  [SECTION_TITLES.INCORPORATION_ARTICLE]: ApplicantDocuments,
+  [SECTION_TITLES.CUSTOM_SECTION]: ApplicantCustomSection,
+  [SECTION_TITLES.AGREEMENT]: ApplicantAgreementBlock,
+};
 
-export default function ApplicationForm() {
+const ApplicationForm = () => {
   const stepContainerRef = useRef(null);
   const queryParams = new URLSearchParams(window.location.search);
   const step = queryParams.get("step");
   const urlDraftId = queryParams.get("draftId");
-
-  const { user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
-  const params = useParams();
-  const formId = params.formId;
+  const { formId } = useParams();
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
   const { formData, currentDraftId } = useSelector((state) => state?.form);
   const draftId = urlDraftId || currentDraftId;
 
@@ -67,72 +57,17 @@ export default function ApplicationForm() {
   const [isSavedApiRun, setIsSavedApiRun] = useState(false);
 
   const { data: form, isLoading: formLoading, refetch: formRefetch } = useGetSingleFormQueryQuery({ _id: formId });
-  const [formSubmit] = useSubmitFormMutation();
   const [getSavedFormData] = useGetSavedFormMutation();
-  const [saveFormInDraft] = useSaveFormInDraftMutation();
   const { isApplied } = useApplyBranding({ formId });
-  const rememberDraftId = useCallback(
-    (id) => {
-      if (!id) return;
-      dispatch(setCurrentDraftId(id));
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("draftId") === String(id)) return;
-      params.set("draftId", id);
-      const search = params.toString();
-      window.history.replaceState(null, "", `${window.location.pathname}${search ? `?${search}` : ""}`);
-    },
-    [dispatch],
-  );
-  const handlePrevious = useCallback(() => {
-    if (currentStep > 0) setCurrentStep(currentStep - 1);
-  }, [currentStep]);
-  const handleNext = useCallback(
-    async ({ data, name, setLoadingNext }) => {
-      try {
-        setLoadingNext(true);
-        if (data && name) {
-          const updatedData = await uploadFilesAndReplace(data);
-          // check if not createdAt and updatedAt fields in data then add them
-          const oldData = formData?.[name];
-          updatedData.updatedAt = new Date().toISOString();
-          if (!updatedData.createdAt && !oldData?.createdAt) {
-            updatedData.createdAt = new Date().toISOString();
-          } else if (oldData?.createdAt) {
-            updatedData.createdAt = oldData?.createdAt;
-          } else {
-            updatedData.createdAt = new Date().toISOString();
-          }
-          const updatedBy = {
-            _id: user?._id,
-            email: user?.email,
-            name: user?.firstName + " " + user?.lastName,
-            role: user?.role?.name,
-          };
-          updatedData.updatedBy = updatedBy;
-          // Update Redux state
-          const res = await saveFormInDraft({
-            formId: form?.data?._id,
-            draftId,
-            formData: { ...formData, [name]: updatedData },
-          }).unwrap();
-
-          if (res.success) {
-            rememberDraftId(res?.data?.draftId);
-            const action = await dispatch(updateFormState({ data: updatedData, name }));
-            unwrapResult(action);
-          }
-        }
-      } catch (error) {
-        console.log("error while handling next", error);
-        toast.error(error?.data?.message || "Error while handling next");
-      } finally {
-        // Move to next step (cap at the number of actual rendered steps)
-        if (currentStep < stepsComps.length - 1) setCurrentStep(currentStep + 1);
-        setLoadingNext(false);
-      }
-    },
-    [currentStep, dispatch, form?.data?._id, draftId, rememberDraftId, stepsComps.length, formData, saveFormInDraft, user],
-  );
+  const { handleNext, handlePrevious, handleSubmit, saveInProgress } = useApplicantStepSubmission({
+    formDocumentId: form?.data?._id,
+    draftId,
+    formData,
+    user,
+    currentStep,
+    stepsCount: stepsComps.length,
+    setCurrentStep,
+  });
 
   useApplicantScreenContext({
     screenId: `application-form-stepper-${currentStep}`,
@@ -145,7 +80,6 @@ export default function ApplicationForm() {
       totalSteps: stepsComps.length,
       canGoNext: currentStep < stepsComps.length - 1,
       canGoPrev: currentStep > 0,
-      // fields are discovered from the live DOM via formRef
     },
     actions: {
       scrollToField: ({ fieldId }) => {
@@ -164,113 +98,9 @@ export default function ApplicationForm() {
     },
     deps: [currentStep, stepsComps.length, sectionNames[currentStep], form?.data?._id],
   });
-  const handleSubmit = useCallback(
-    async ({ data, name, setLoadingNext }) => {
-      try {
-        setLoadingNext(true);
 
-        if (data && name) {
-          const updatedData = await uploadFilesAndReplace(data);
-          // check if not createdAt and updatedAt fields in data then add them
-          const oldData = formData?.[name];
-          updatedData.updatedAt = new Date().toISOString();
-          if (!updatedData.createdAt && !oldData?.createdAt) {
-            updatedData.createdAt = new Date().toISOString();
-          } else if (oldData?.createdAt) {
-            updatedData.createdAt = oldData?.createdAt;
-          } else {
-            updatedData.createdAt = new Date().toISOString();
-          }
-          const updatedBy = {
-            _id: user?._id,
-            email: user?.email,
-            name: user?.firstName + " " + user?.lastName,
-            role: user?.role?.name,
-          };
-          updatedData.updatedBy = updatedBy;
-          // Save form draft (non-file data only)
-          const res = await formSubmit({
-            formId: form?.data?._id,
-            draftId,
-            formData: { ...formData, [name]: updatedData },
-          }).unwrap();
-          if (res.success) {
-            toast.success(res.message);
-            // clear redux state
-            dispatch(clearSavedFormData());
-            navigate("/submited-successfully/" + form?.data?._id);
-          }
-        }
-      } catch (error) {
-        console.log("error submitting form", error);
-        toast.error(error?.data?.message || "Error while submitting form");
-      } finally {
-        setLoadingNext(false);
-      }
-    },
-    [
-      dispatch,
-      form?.data?._id,
-      draftId,
-      formData,
-      formSubmit,
-      navigate,
-      user?._id,
-      user?.email,
-      user?.firstName,
-      user?.lastName,
-      user?.role?.name,
-    ],
-  );
-  const saveInProgress = useCallback(
-    async ({ data, name }) => {
-      try {
-        if (data && name) {
-          const updatedData = await uploadFilesAndReplace(data);
-          // Merge into existing section so partial saves (e.g. signature-only) don't wipe fields
-          const oldData = formData?.[name] || {};
-          const merged = { ...oldData, ...updatedData };
-          merged.updatedAt = new Date().toISOString();
-          if (!merged.createdAt && !oldData?.createdAt) {
-            merged.createdAt = new Date().toISOString();
-          } else if (oldData?.createdAt) {
-            merged.createdAt = oldData.createdAt;
-          } else if (updatedData.createdAt) {
-            merged.createdAt = updatedData.createdAt;
-          } else {
-            merged.createdAt = new Date().toISOString();
-          }
-          const updatedBy = {
-            _id: user?._id,
-            email: user?.email,
-            name: user?.firstName + " " + user?.lastName,
-            role: user?.role?.name,
-          };
-          merged.updatedBy = updatedBy;
-          const res = await saveFormInDraft({
-            formId: form?.data?._id,
-            draftId,
-            formData: { ...formData, [name]: merged },
-          }).unwrap();
-          if (res.success) {
-            rememberDraftId(res?.data?.draftId);
-            // Keep Redux in sync so reopen / step remount hydrates filled fields
-            const action = await dispatch(updateFormState({ data: merged, name }));
-            unwrapResult(action);
-            toast.success(res.message);
-          }
-        }
-      } catch (error) {
-        console.log("error while saving form in draft", error);
-        toast.error(error?.data?.message || "Error while saving form in draft");
-      }
-    },
-    [dispatch, form?.data?._id, draftId, formData, rememberDraftId, saveFormInDraft, user],
-  );
-
+  // resume only when a draft id was passed
   useEffect(() => {
-    // Resume only when Continue passed a draftId. A fresh start has no draft yet —
-    // it is created later when company lookup saves.
     if (form?.data?.sections && form?.data?.sections?.length > 0) {
       if (!draftId) {
         setIsSavedApiRun(true);
@@ -284,85 +114,58 @@ export default function ApplicationForm() {
           .finally(() => setIsSavedApiRun(true));
       }
     }
-    // add footer and header text in state
     if (form?.data?.footerText || form?.data?.headerText || form?.data?.name) {
       dispatch(
         updateFormHeaderAndFooter({
           headerText: form?.data?.headerText || form?.data?.name || "",
-          footerText: form?.data?.footerText || "All rights reserved",
+          footerText: form?.data?.footerText || DEFAULT_HEADER_FOOTER.footerText,
           headerTextSize: form?.data?.headerTextSize || 24,
         }),
       );
     }
     return () => {
-      dispatch(updateFormHeaderAndFooter({ headerText: "", footerText: "All rights reserved" }));
+      dispatch(updateFormHeaderAndFooter({ ...DEFAULT_HEADER_FOOTER }));
     };
   }, [dispatch, form, draftId, getSavedFormData]);
 
+  // only sections with a step component count towards the stepper
   useEffect(() => {
-    if (form?.data?.sections && form?.data?.sections?.length > 0 && isSavedApiRun) {
-      const companyInformationStep = form?.data?.sections.find((step) => step.key === "company_information");
-      const data = [];
-      const stepNames = [];
-      const renderedSectionsArr = [];
-      const isOwner = user?._id && user?._id === form?.data?.owner;
-      // Only sections that map to a renderable step component count towards the stepper.
-      // Sections with an unrecognized title are neither rendered nor counted, so
-      // totalSteps stays in sync with the actual number of steps (fixes last-step
-      // showing "Next" instead of "Submit").
-      const visibleSections = (
-        isOwner ? form?.data?.sections : form?.data?.sections?.filter((step) => !step?.isHidden)
-      )?.filter((step) => RENDERABLE_SECTION_TITLES.includes(step?.title));
-      visibleSections.forEach((step) => {
-        renderedSectionsArr.push(step);
-        const sectionDataFromRedux = formData?.[step?.key];
-        const commonProps = {
-          _id: step._id,
-          sectionKey: step.key || "",
-          name: step.name,
-          title: step.title,
-          fields: step?.fields ?? [],
-          blocks: step?.blocks ?? [],
-          isSignature: step?.isSignature,
-          reduxData: sectionDataFromRedux,
-          currentStep,
-          totalSteps: visibleSections?.length,
-          handleNext,
-          handlePrevious,
-          handleSubmit,
-          formLoading,
-          formRefetch,
-          saveInProgress,
-          step,
-        };
-        if (step.title === "company_information_blk") {
-          data.push(<CompanyInformation {...commonProps} />);
-          stepNames.push(step.name);
-        } else if (step.title === "beneficial_blk") {
-          data.push(<CompanyOwners {...commonProps} />);
-          stepNames.push(step.name);
-        } else if (step.title === "bank_account_info_blk") {
-          data.push(<BankInfo {...commonProps} />);
-          stepNames.push(step.name);
-        } else if (step.title === "avg_transactions_blk") {
-          data.push(<ProcessingInfo {...commonProps} />);
-          stepNames.push(step.name);
-        } else if (step.title === "incorporation_article_blk") {
-          data.push(<Documents {...commonProps} companyInformationStep={companyInformationStep} />);
-          stepNames.push(step.name);
-        } else if (step.title === "custom_section") {
-          data.push(<CustomSection {...commonProps} />);
-          stepNames.push(step.name);
-        } else if (step.title === "agreement_blk") {
-          data.push(<AggrementBlock {...commonProps} />);
-          stepNames.push(step.name);
-        }
-      });
-
-      setStepsComps(data);
-      setSectionNames(stepNames);
-      setRenderedSections(renderedSectionsArr);
-    }
+    if (!(form?.data?.sections && form?.data?.sections?.length > 0 && isSavedApiRun)) return;
+    const companyInformationStep = form?.data?.sections.find((item) => item.key === SECTION_KEYS.COMPANY_INFORMATION);
+    const isOwner = user?._id && user?._id === form?.data?.owner;
+    const visibleSections = (
+      isOwner ? form?.data?.sections : form?.data?.sections?.filter((item) => !item?.isHidden)
+    )?.filter((item) => RENDERABLE_SECTION_TITLES.includes(item?.title));
+    const steps = visibleSections.map((item) => {
+      const StepComponent = SECTION_COMPONENTS[item.title];
+      const commonProps = {
+        _id: item._id,
+        sectionKey: item.key || "",
+        name: item.name,
+        title: item.title,
+        fields: item?.fields ?? [],
+        blocks: item?.blocks ?? [],
+        isSignature: item?.isSignature,
+        reduxData: formData?.[item?.key],
+        currentStep,
+        totalSteps: visibleSections?.length,
+        handleNext,
+        handlePrevious,
+        handleSubmit,
+        formLoading,
+        formRefetch,
+        saveInProgress,
+        step: item,
+      };
+      return item.title === SECTION_TITLES.INCORPORATION_ARTICLE ? (
+        <StepComponent {...commonProps} companyInformationStep={companyInformationStep} />
+      ) : (
+        <StepComponent {...commonProps} />
+      );
+    });
+    setStepsComps(steps);
+    setSectionNames(visibleSections.map((item) => item.name));
+    setRenderedSections(visibleSections);
   }, [
     currentStep,
     form?.data?.owner,
@@ -377,6 +180,7 @@ export default function ApplicationForm() {
     saveInProgress,
     user?._id,
   ]);
+
   const currentSection = renderedSections[currentStep];
   const { buttonLabel: downloadLabel, handleDownload, isDownloading } = usePageDownload({
     pageName: sectionNames[currentStep] || currentSection?.name || "Page",
@@ -384,52 +188,33 @@ export default function ApplicationForm() {
     userName: [user?.firstName, user?.lastName].filter(Boolean).join(" ") || null,
     userEmail: user?.email || null,
     signDisplayHtml: currentSection?.signDisplayFormattedText || null,
-    getFieldRows: () => {
-      if (!stepContainerRef.current) return [];
-      const rows = [];
-      stepContainerRef.current.querySelectorAll("input, select, textarea").forEach((el) => {
-        if (el.type === "file" || el.type === "hidden") return;
-        const value = el.value?.trim();
-        if (!value) return;
-        const label =
-          document.querySelector(`label[for="${el.id}"]`)?.textContent?.trim() ||
-          el.getAttribute("data-ai-label") ||
-          el.placeholder ||
-          el.name ||
-          "";
-        if (label) rows.push({ label: label.replace(/[*:]+$/, "").trim(), value });
-      });
-      return rows;
-    },
-    // Read signature at download click time from the live page:
-    // SignatureBox gets oldSignatureUrl={form?.signature?.value?.secureUrl} and exposes it as data-signature-url.
-    // Fallback to Redux if the section was already saved.
+    getFieldRows: () => collectStepFieldRows(stepContainerRef.current),
+    // live page signature first, then the saved section
     signatureUrl: () => {
       const fromPage = stepContainerRef.current
         ?.querySelector("[data-signature-url]")
         ?.getAttribute("data-signature-url");
       if (fromPage) return fromPage;
-      const section = formData?.[currentSection?.key];
-      return section?.signature?.value?.secureUrl || section?.signature?.secureUrl || null;
+      const savedSection = formData?.[currentSection?.key];
+      return savedSection?.signature?.value?.secureUrl || savedSection?.signature?.secureUrl || null;
     },
   });
-  // Redirect from an effect, never during render: navigating while rendering can fire
-  // more than once and flash the previous screen before the stepper settles.
+
+  // redirect from an effect, never during render
   const mustVerifyFirst = isApplied && !!form?.data?._id && !user?._id;
   useEffect(() => {
     if (!mustVerifyFirst) return;
-    navigate(`/application-form/${form?.data?.branding?.name}/${formId}${draftId ? `?draftId=${draftId}` : ""}`, {
-      replace: true,
-    });
+    navigate(buildApplicationFormPath(form?.data?.branding?.name, formId, draftId), { replace: true });
   }, [mustVerifyFirst, navigate, form?.data?.branding?.name, formId, draftId]);
 
   if (!isApplied || !form?.data?._id || mustVerifyFirst)
     return (
       <>
-        <div data-ai-loading="page" style={{ display: "none" }} />
+        <div data-ai-loading="page" className="hidden" />
         <CustomLoading />
       </>
     );
+
   return (
     <div
       className="bg-backgroundColor w-full rounded-[10px] px-6 py-6"
@@ -449,4 +234,6 @@ export default function ApplicationForm() {
       </Stepper>
     </div>
   );
-}
+};
+
+export default ApplicationForm;

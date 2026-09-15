@@ -1,40 +1,35 @@
 import { AllRoles, AllUsers, Applicants, Applications } from "@/assets/svgs/icon";
 import useBranding from "@/hooks/useBranding";
+import { SIDEBAR_ITEMS, hasPermission } from "@/utils/permissions";
 import { BrushIcon } from "lucide-react";
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import { HiOutlineLightBulb } from "react-icons/hi";
 import { PiStrategyBold } from "react-icons/pi";
 import { RiHistoryLine } from "react-icons/ri";
 import { Link, useLocation } from "react-router-dom";
 import ArrowBackIcon from "@/assets/svgs/ArrowBackIcon";
 
+// icon for each sidebar item, keyed by its path
+const SIDEBAR_ICONS = {
+  "/application-forms": <Applications />,
+  "/all-roles": <AllRoles />,
+  "/all-users": <AllUsers />,
+  "/applications": <Applicants />,
+  "/branding": <BrushIcon />,
+  "/strategies-key": <HiOutlineLightBulb />,
+  "/strategies": <PiStrategyBold />,
+  "/email": <RiHistoryLine size={20} />,
+};
+
 const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
   const [isNavOpen, setIsNavOpen] = useState(true);
   const location = useLocation();
   const { logo, headerBackground, appLogoMaxWidth, appLogoMaxHeight } = useBranding();
+  const user = useSelector((state) => state.auth.user);
   const handleNavOpen = () => setIsNavOpen(!isNavOpen);
 
-  const pages = [
-    { title: "Application forms", link: "/application-forms", icon: <Applications /> },
-    { title: "Role Management", link: "/all-roles", icon: <AllRoles /> },
-    { title: "User Management", link: "/all-users", icon: <AllUsers /> },
-    { title: "Applications", link: "/applications", icon: <Applicants /> },
-    { title: "Branding Management", link: "/branding", icon: <BrushIcon /> },
-    { title: "Lookup management", link: "/strategies-key", icon: <HiOutlineLightBulb /> },
-    { title: "Strategies", link: "/strategies", icon: <PiStrategyBold /> },
-    {
-      title: "Email",
-      link: `email`,
-      icon: <RiHistoryLine size={20} />,
-    },
-
-    //  { title: "Verification", link: "/verification-test", icon: <CheckCircle /> },
-    // {
-    //   title: "Pdf View",
-    //   link: `singleform/pdf-view/696f5c44bb3b82a0641facec/${user?._id}`,
-    //   icon: <RiHistoryLine size={20} />,
-    // },
-  ];
+  const pages = SIDEBAR_ITEMS.filter((item) => hasPermission(user, item.permission));
 
   return (
     <>
@@ -74,12 +69,12 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
           </div>
 
           <div className={`flex flex-col justify-center gap-2 ${isNavOpen ? "items-start" : "items-center"}`}>
-            {pages.map((page, i) => {
-              const isActive = location.pathname === page.link;
+            {pages.map((page) => {
+              const isActive = location.pathname === page.path;
               return (
                 <Link
-                  key={i}
-                  to={page.link}
+                  key={page.path}
+                  to={page.path}
                   data-testid={`nav-${page.title.toLowerCase().replace(/\s+/g, "-")}`}
                   onClick={() => setSidebarOpen(false)}
                   className={`flex w-full min-w-fit items-center rounded-md p-2 ${isNavOpen ? "size-12 gap-2" : "size-12"} ${isActive ? "bg-primary font-semibold text-white" : "hover:text-primary text-[#526581] hover:bg-gray-100"} `}
@@ -87,7 +82,7 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
                   <div
                     className={`${isNavOpen ? "p-6!" : "bg-red-500!"}text-[20px] ${isActive ? "text-white" : "text-[#526581]"}`}
                   >
-                    {React.cloneElement(page.icon, {
+                    {React.cloneElement(SIDEBAR_ICONS[page.path], {
                       color: isActive ? "#ffffff" : "#526581",
                     })}
                   </div>

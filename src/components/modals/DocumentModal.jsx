@@ -1,41 +1,31 @@
-import useAiChat from "@/hooks/useAiChat";
-import useBranding from "@/hooks/useBranding";
-import getEnv from "@/utils/env";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FiDownload, FiExternalLink, FiX } from "react-icons/fi";
 import { IoCheckmarkCircle } from "react-icons/io5";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
-pdfMake.vfs = pdfFonts.vfs;
 
-// Returns "#000" or "#fff" — whichever contrasts better against the given hex background.
-function contrastColor(hex = "#000000") {
-  const h = (hex || "").replace("#", "");
-  if (h.length < 6) return "#ffffff";
-  const r = parseInt(h.slice(0, 2), 16) / 255;
-  const g = parseInt(h.slice(2, 4), 16) / 255;
-  const b = parseInt(h.slice(4, 6), 16) / 255;
-  const toLinear = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
-  const L = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
-  return L > 0.179 ? "#000000" : "#ffffff";
-}
+import useAiChat from "@/hooks/useAiChat";
+import useBranding from "@/hooks/useBranding";
+import { DOCUMENT_STATUSES } from "@/constants";
+import { buildDocumentPdfDefinition, extractReadableText, getContrastColor } from "@/utils/documentPdf";
+import getEnv from "@/utils/env";
+
+pdfMake.vfs = pdfFonts.vfs;
 
 const SERVER_URL = getEnv("SERVER_URL");
 
-function DocumentModal({ url, title, onClose }) {
+const DocumentModal = ({ url, title, onClose }) => {
   const { aiHeaderColor, accentColor, fontFamily } = useBranding();
   const { setOverlayContext, clearOverlayContext, assistantMode, setIsOpen, addMessage } = useAiChat();
 
   const headerBg = aiHeaderColor || accentColor || "#1e3a5f";
-  const headerText = contrastColor(headerBg);
-  const [docText, setDocText] = useState(null); // extracted plain-text content
+  const headerText = getContrastColor(headerBg);
+  const [docText, setDocText] = useState(null);
 
   const iframeRef = useRef(null);
-  const [docStatus, setDocStatus] = useState("loading"); // "loading" | "ready" | "unavailable"
+  const [docStatus, setDocStatus] = useState(DOCUMENT_STATUSES.LOADING);
 
-  // Auto-open AI assistant when the document viewer opens.
-  // Clear the "user closed" flag so the widget actually opens — the user deliberately
-  // clicked a document link, which implies intent to use the AI assistant.
+  // open the ai assistant with the document
   useEffect(() => {
     sessionStorage.removeItem("ai-widget-user-closed");
     setIsOpen(true);
@@ -45,7 +35,7 @@ function DocumentModal({ url, title, onClose }) {
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Stable download function — used by both the header button and the AI tool call.
+  // download used by the header button and the ai tool
   const downloadDocument = useCallback(async () => {
     const proxyEndpoint =
       assistantMode === "applicant"
@@ -53,7 +43,7 @@ function DocumentModal({ url, title, onClose }) {
         : `${SERVER_URL}/api/ai/document-text`;
     let text = "";
     let structuredHtml = "";
-    let docTitle = title; // fallback to the prop if backend doesn't return one
+    let docTitle = title;
     try {
       const res = await fetch(proxyEndpoint, {
         method: "POST",
@@ -62,80 +52,22 @@ function DocumentModal({ url, title, onClose }) {
         body: JSON.stringify({ url }),
       });
       const data = await res.json();
-      if (data.success && data.text) text = data.text;
-      if (data.success && data.title) docTitle = data.title;
-      if (data.success && data.bodyHtml) structuredHtml = data.bodyHtml;
+      if (data.success && data.data?.text) text = data.data.text;
+      if (data.success && data.data?.title) docTitle = data.data.title;
+      if (data.success && data.data?.bodyHtml) structuredHtml = data.data.bodyHtml;
     } catch {
       /* fall through */
     }
     if (!text) text = docText || "";
 
-    const timestamp = new Date().toLocaleString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZoneName: "short",
-    });
-
-    // Convert bodyHtml chunks into pdfmake content nodes.
-    // Each double-newline-separated chunk is either a heading tag or plain text.
     const source = structuredHtml || text || "Document content could not be retrieved.";
-    const headingSizes = { h1: 20, h2: 16, h3: 14, h4: 12, h5: 11, h6: 10 };
-    const pdfContent = [
-      // Metadata header
-      { text: docTitle, style: "metaTitle" },
-      {
-        columns: [
-          { text: `Downloaded: ${timestamp}`, style: "meta" },
-          { text: `Source: ${url}`, style: "metaUrl", alignment: "right", link: url },
-        ],
-        margin: [0, 4, 0, 0],
-      },
-      { canvas: [{ type: "line", x1: 0, y1: 4, x2: 515, y2: 4, lineWidth: 0.5, lineColor: "#cccccc" }], margin: [0, 8, 0, 16] },
-    ];
-
-    source.split(/\n{2,}/).forEach((chunk) => {
-      const t = chunk.trim();
-      if (!t) return;
-      const headingMatch = t.match(/^<(h[1-6])>([\s\S]*?)<\/h[1-6]>$/i);
-      if (headingMatch) {
-        const level = headingMatch[1].toLowerCase();
-        const headingText = headingMatch[2].replace(/<[^>]+>/g, "").trim();
-        if (!headingText) return;
-        pdfContent.push({
-          text: headingText,
-          fontSize: headingSizes[level] || 12,
-          bold: true,
-          margin: [0, level === "h1" ? 16 : 12, 0, 4],
-          color: "#111111",
-        });
-      } else {
-        const plain = t.replace(/<[^>]+>/g, "").trim();
-        if (!plain) return;
-        pdfContent.push({ text: plain, style: "body" });
-      }
-    });
-
-    const docDef = {
-      content: pdfContent,
-      styles: {
-        metaTitle: { fontSize: 10, bold: true, color: "#333333", margin: [0, 0, 0, 2] },
-        meta: { fontSize: 8, color: "#666666" },
-        metaUrl: { fontSize: 8, color: "#0066cc" },
-        body: { fontSize: 10, lineHeight: 1.6, color: "#111111", margin: [0, 0, 0, 8] },
-      },
-      defaultStyle: { font: "Roboto" },
-      pageMargins: [56, 48, 56, 48],
-    };
+    const docDef = buildDocumentPdfDefinition({ docTitle, url, source });
 
     const safeFilename = docTitle.replace(/[^a-z0-9]/gi, "_");
     pdfMake.createPdf(docDef).download(`${safeFilename}.pdf`);
   }, [url, title, assistantMode, docText]);
 
-  // Button handler — triggers the same download as the AI tool, and surfaces
-  // a chat message so the user sees feedback even if they had the widget closed.
+  // header download with chat feedback
   const handleSaveCopy = useCallback(async () => {
     sessionStorage.removeItem("ai-widget-user-closed");
     setIsOpen(true);
@@ -150,7 +82,7 @@ function DocumentModal({ url, title, onClose }) {
     });
   }, [downloadDocument, setIsOpen, addMessage]);
 
-  // Register / update the overlay context whenever the document content changes.
+  // keep the ai overlay context in sync with the document
   useEffect(() => {
     const aiEndpoint =
       assistantMode === "applicant"
@@ -182,41 +114,37 @@ function DocumentModal({ url, title, onClose }) {
     return () => clearOverlayContext();
   }, [url, title, assistantMode, docText]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Extract document text after the iframe finishes loading.
+  // extract document text after the iframe loads
   const handleIframeLoad = () => {
-    // Attempt 1 — direct DOM access (works for same-origin documents)
+    // same-origin documents can be read directly
     try {
       const doc = iframeRef.current?.contentDocument;
       if (doc?.body) {
-        const clone = doc.body.cloneNode(true);
-        clone.querySelectorAll("script, style, noscript, svg").forEach((el) => el.remove());
-        const text = (clone.innerText || clone.textContent || "").replace(/\s{3,}/g, "\n\n").trim();
-        if (text.length > 20) {
+        const text = extractReadableText(doc.body.cloneNode(true));
+        if (text) {
           setDocText(text);
-          setDocStatus("ready");
+          setDocStatus(DOCUMENT_STATUSES.READY);
           return;
         }
       }
     } catch {
-      // Cross-origin — fall through to fetch
+      // cross-origin, fall through to fetch
     }
 
-    // Attempt 2 — fetch the URL and strip tags (works when CORS allows)
     fetch(url)
       .then((r) => r.text())
       .then((html) => {
         const div = document.createElement("div");
         div.innerHTML = html;
-        div.querySelectorAll("script, style, noscript, svg").forEach((el) => el.remove());
-        const text = (div.innerText || div.textContent || "").replace(/\s{3,}/g, "\n\n").trim();
-        if (text.length > 20) {
+        const text = extractReadableText(div);
+        if (text) {
           setDocText(text);
-          setDocStatus("ready");
+          setDocStatus(DOCUMENT_STATUSES.READY);
         } else {
-          setDocStatus("unavailable");
+          setDocStatus(DOCUMENT_STATUSES.UNAVAILABLE);
         }
       })
-      .catch(() => setDocStatus("unavailable"));
+      .catch(() => setDocStatus(DOCUMENT_STATUSES.UNAVAILABLE));
   };
 
   return (
@@ -234,19 +162,19 @@ function DocumentModal({ url, title, onClose }) {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── Header — branded ── */}
+        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 shrink-0" style={{ backgroundColor: headerBg }}>
           {/* Title + AI status */}
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-sm font-semibold truncate" style={{ color: headerText }}>
               {title}
             </span>
-            {docStatus === "loading" && (
+            {docStatus === DOCUMENT_STATUSES.LOADING && (
               <span className="text-xs opacity-60 shrink-0" style={{ color: headerText }}>
                 · loading…
               </span>
             )}
-            {docStatus === "ready" && (
+            {docStatus === DOCUMENT_STATUSES.READY && (
               <span
                 className="flex items-center gap-1 text-xs opacity-80 shrink-0"
                 style={{ color: headerText }}
@@ -298,7 +226,7 @@ function DocumentModal({ url, title, onClose }) {
           </div>
         </div>
 
-        {/* ── Document iframe ── */}
+        {/* Document */}
         <iframe
           ref={iframeRef}
           src={url}
@@ -310,6 +238,6 @@ function DocumentModal({ url, title, onClose }) {
       </div>
     </div>
   );
-}
+};
 
 export default DocumentModal;

@@ -1,111 +1,35 @@
-import Modal from "@/components/modals/SaveCancelModal";
-import Button from "@/components/shared/Button";
-import TextField from "@/components/shared/TextField";
-import React, { useState, useEffect, useRef } from "react";
-import ReactQuill from "react-quill-new";
-import "react-quill-new/dist/quill.snow.css";
-import { FiMoreVertical } from "react-icons/fi";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
+  useAttachTemplateToFormMutation,
   useCreateEmailTemplateMutation,
-  useUpdateSingleEmailTemplateMutation,
   useDeleteSingleEmailTemplateMutation,
   useGetAllEmailTemplatesQuery,
-  useAttachTemplateToFormMutation,
-  useUnAttachedFormsListQuery,
+  useUpdateSingleEmailTemplateMutation,
 } from "@/redux/apis/email.apis";
 import { useGetMyAllFormsQuery } from "@/redux/apis/form.apis";
-import DropdownCheckbox from "@/components/shared/DropdownCheckbox";
-import CustomLoading from "@/components/shared/CustomLoading";
-import Checkbox from "@/components/shared/Checkbox";
-import { useDispatch, useSelector } from "react-redux";
-import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/auth.apis";
-import { userExist } from "@/redux/slices/auth.slice";
-import getEnv from "@/utils/env";
 import { useScreenContext } from "@/hooks/useScreenContext";
+import Button from "@/components/shared/Button";
+import EmailAttachFormsModal from "@/modules/email/components/EmailAttachFormsModal";
+import EmailTemplateCard from "@/modules/email/components/EmailTemplateCard";
+import EmailTemplateModal from "@/modules/email/components/EmailTemplateModal";
+import { INITIAL_EDIT_DATA, TEMPLATE_KEYWORDS, TEMPLATE_OPEN_MODES } from "@/modules/email/utils/email.constants";
+import getEnv from "@/utils/env";
 
 const SERVER_URL = getEnv("SERVER_URL");
-const emailTypes = [
-  {
-    label: "Otp Email Template",
-    value: "otp_email_template",
-  },
-  {
-    label: "Old Beneficial Owners Email Template",
-    value: "old_beneficial_owners_email_template",
-  },
-  {
-    label: "New Beneficial Owners Email Template",
-    value: "new_beneficial_owners_email_template",
-  },
-  {
-    label: "Form Forwarded Email Template",
-    value: "form_forwarded_email_template",
-  },
-  {
-    label: "Welcome Email Template",
-    value: "welcome_email_template",
-  },
-  {
-    label: "Rule Triggered Email Template",
-    value: "rule_triggered_email_template",
-  },
-];
 
-const quillModules = {
-  toolbar: [
-    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-    ["bold", "italic", "underline", "strike"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    [{ script: "sub" }, { script: "super" }],
-    [{ indent: "-1" }, { indent: "+1" }],
-    [{ direction: "rtl" }],
-    [{ color: [] }, { background: [] }],
-    [{ align: [] }],
-    ["link", "image"],
-    ["clean"],
-  ],
-};
-
-const quillFormats = [
-  "header",
-  "bold",
-  "italic",
-  "underline",
-  "strike",
-  "list",
-  "bullet",
-  "script",
-  "indent",
-  "direction",
-  "color",
-  "background",
-  "align",
-  "link",
-  "image",
-  "data",
-];
-
-const sedationKeywords = ["link", "otp", "email", "password", "frontEndUrl", "recipientName", "brandCompanyName"];
 const Email = () => {
   const menuRef = useRef(null);
   const [viewModalData, setViewModalData] = useState(null);
 
   const { data: applicationForms } = useGetMyAllFormsQuery();
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [editData, setEditData] = useState({
-    templateName: "",
-    subject: "",
-    emailType: "",
-    body: "",
-  });
+  const [editData, setEditData] = useState(INITIAL_EDIT_DATA);
   const [isEdit, setIsEdit] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState(null);
   const [isReadOnly, setIsReadOnly] = useState(true);
 
-  // Always-current ref — updated on every render so that action closures
-  // (registered in useScreenContext) always read the latest state values
-  // even if they were captured in an earlier render's closure.
+  // latest state for screen context actions
   const latestRef = useRef({ editData, isEdit, viewModalData });
   latestRef.current = { editData, isEdit, viewModalData };
 
@@ -118,33 +42,21 @@ const Email = () => {
 
   const templates = emailTemplates?.data;
 
-  <ReactQuill
-    className={`h-50 border ${!editData.body ? "border-accent" : "border-frameColor"}`}
-    value={editData.body}
-    onChange={(value) => handleChange("body", value)}
-    modules={quillModules}
-    formats={quillFormats}
-    theme="snow"
-    readOnly={isReadOnly}
-  />;
+  const findTemplate = (templateId) => {
+    const template = (templates || []).find((t) => String(t._id) === String(templateId));
+    if (!template) throw new Error(`Template not found`);
+    return template;
+  };
 
-  <div className="mt-2 flex flex-wrap gap-2 text-sm">
-    {sedationKeywords?.map((keyword, idx) => (
-      <span
-        key={idx}
-        className={`cursor-pointer rounded-md border px-2 py-1 ${
-          editData.body.toLowerCase().includes(keyword.toLowerCase())
-            ? "border-green-400 bg-green-100"
-            : "border-gray-300 bg-gray-100"
-        }`}
-      >
-        {keyword}
-      </span>
-    ))}
-  </div>;
+  const openTemplate = (template, mode) => {
+    if (mode === TEMPLATE_OPEN_MODES.EDIT) {
+      handleEdit(template);
+    } else {
+      handleView(template);
+    }
+  };
 
-  // Register screen context so the AI chat widget knows what screen this is
-  // and can draft/proofread/enhance the currently open template
+  // register screen context for the ai chat widget
   useScreenContext({
     screenId: viewModalData?._id
       ? `email-template-${viewModalData._id}`
@@ -170,8 +82,7 @@ const Email = () => {
       subject: editData.subject,
       body: editData.body,
       isReadOnly,
-      availableVariables: sedationKeywords.map((k) => `{{${k}}}`).join(", "),
-      // Templates list — shown when on the list page
+      availableVariables: TEMPLATE_KEYWORDS.map((k) => `{{${k}}}`).join(", "),
       templates: (templates || []).map((t) => ({
         _id: t._id,
         templateName: t.templateName,
@@ -180,7 +91,7 @@ const Email = () => {
         attachedFormCount: (t.forms || []).length,
         attachedFormNames: (t.forms || []).map((f) => f.name),
       })),
-      // Derive attached forms from the live query rather than viewModalData so it auto-updates after attach/detach
+      // derived from the live query so it updates after attach
       attachedForms: viewModalData?._id
         ? (templates?.find((t) => t._id === viewModalData._id)?.forms || []).map((f) => ({ _id: f._id, name: f.name }))
         : [],
@@ -197,8 +108,6 @@ const Email = () => {
       },
       saveEmailTemplate: () => handleSave(),
       saveAndAttachToForms: async ({ formIds }) => {
-        // Read from ref so we always get the latest viewModalData._id,
-        // even if this action closure was captured in an earlier render.
         const id = latestRef.current.viewModalData?._id;
         if (!id) throw new Error("No template is currently open");
         await handleSave();
@@ -210,13 +119,7 @@ const Email = () => {
         await attachEmailTemplate({ emailTemplateId: id, formIds }).unwrap();
       },
       openTemplate: ({ templateId, mode }) => {
-        const template = (templates || []).find((t) => String(t._id) === String(templateId));
-        if (!template) throw new Error(`Template not found`);
-        if (mode === "edit") {
-          handleEdit(template);
-        } else {
-          handleView(template);
-        }
+        openTemplate(findTemplate(templateId), mode);
       },
       createTemplate: () => handleCreate(),
       closeTemplate: () => {
@@ -225,28 +128,16 @@ const Email = () => {
       },
       saveAndOpenTemplate: async ({ templateId, mode }) => {
         await handleSave();
-        const template = (templates || []).find((t) => String(t._id) === String(templateId));
-        if (!template) throw new Error(`Template not found`);
-        if (mode === "edit") {
-          handleEdit(template);
-        } else {
-          handleView(template);
-        }
+        openTemplate(findTemplate(templateId), mode);
       },
       switchTemplate: ({ templateId, mode }) => {
-        const template = (templates || []).find((t) => String(t._id) === String(templateId));
-        if (!template) throw new Error(`Template not found`);
+        const template = findTemplate(templateId);
         setViewModalData(null);
         setIsEdit(false);
-        if (mode === "edit") {
-          handleEdit(template);
-        } else {
-          handleView(template);
-        }
+        openTemplate(template, mode);
       },
       deleteTemplate: async ({ templateId }) => {
-        const template = (templates || []).find((t) => String(t._id) === String(templateId));
-        if (!template) throw new Error(`Template not found`);
+        findTemplate(templateId);
         await deleteEmailTemplate({ emailTemplateId: templateId }).unwrap();
       },
     },
@@ -267,11 +158,13 @@ const Email = () => {
     setEditData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleInsertKeyword = (keyword) => {
+    setEditData((prev) => ({ ...prev, body: `${prev.body} {{${keyword}}}` }));
+  };
+
   const handleSave = async () => {
-    // Always read from the ref so we get the latest editData/isEdit/viewModalData,
-    // not whatever was captured in the closure when this function was defined.
+    // read latest state from the ref
     const { editData: data, isEdit: edit, viewModalData: vmd } = latestRef.current;
-    console.log("Saved Data:", data);
 
     try {
       const res = edit
@@ -287,7 +180,7 @@ const Email = () => {
 
       setIsEdit(false);
       setViewModalData(null);
-      setEditData({ templateName: "", subject: "", emailType: "", body: "" });
+      setEditData(INITIAL_EDIT_DATA);
     } catch (error) {
       toast.error(error?.data?.message || "Failed to save template");
     }
@@ -315,7 +208,7 @@ const Email = () => {
 
   const handleCreate = () => {
     setIsReadOnly(false);
-    setEditData({ templateName: "", subject: "", emailType: "", body: "" });
+    setEditData(INITIAL_EDIT_DATA);
     setViewModalData({});
   };
 
@@ -329,12 +222,21 @@ const Email = () => {
     }
   };
 
+  const handleCloseTemplate = () => {
+    setViewModalData(null);
+    setIsEdit(false);
+  };
+
+  const handleToggleMenu = (item) => {
+    setMenuOpenId(menuOpenId === item._id ? null : item._id);
+  };
+
   useEffect(() => {
-    function handleClickOutside(event) {
+    const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setMenuOpenId(null);
       }
-    }
+    };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -342,7 +244,7 @@ const Email = () => {
   return (
     <div data-testid="email-page">
       {isAttachFormModalOpen && (
-        <ModalForAttachForms
+        <EmailAttachFormsModal
           refetchTemplates={refetchEmailTemplates}
           setIsAttachFormModalOpen={setIsAttachFormModalOpen}
           forms={applicationForms?.data}
@@ -350,86 +252,15 @@ const Email = () => {
         />
       )}
       {viewModalData && (
-        <Modal
+        <EmailTemplateModal
+          template={viewModalData}
+          editData={editData}
+          isReadOnly={isReadOnly}
           onSave={!isReadOnly ? handleSave : () => setViewModalData(null)}
-          saveButtonText={!isReadOnly ? "Save" : "Close"}
-          title={isReadOnly ? "Template Details" : viewModalData._id ? "Edit Template" : "Create Template"}
-          onClose={() => {
-            (setViewModalData(null), setIsEdit(false));
-          }}
-        >
-          <div className="mt-4 space-y-4 overflow-auto">
-            <TextField
-              label="Template Name"
-              value={editData.templateName}
-              onChange={(e) => handleChange("templateName", e.target.value)}
-              readOnly={isReadOnly}
-              cn={isReadOnly ? "cursor-not-allowed" : ""}
-              data-testid="email-name-input"
-            />
-
-            <div className="mb-4">
-              <label className="text-textPrimary mb-1 block text-sm font-medium">Email Type</label>
-              <select
-                name={"emailType"}
-                value={editData.emailType}
-                onChange={(e) => handleChange("emailType", e.target.value)}
-                data-testid="email-type-select"
-                className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base`}
-              >
-                <option value="">Choose an option</option>
-                {emailTypes?.map((opt) => (
-                  <option key={opt?.value} value={opt?.value}>
-                    {opt?.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <TextField
-              label="Subject"
-              value={editData.subject}
-              onChange={(e) => handleChange("subject", e.target.value)}
-              readOnly={isReadOnly}
-              cn={isReadOnly ? "cursor-not-allowed" : ""}
-              data-testid="email-subject-input"
-            />
-
-            <div className="custom-quill-wrapper" data-testid="email-body-editor">
-              <ReactQuill
-                className="custom-quill h-50"
-                value={editData.body}
-                onChange={(value) => handleChange("body", value)}
-                modules={quillModules}
-                formats={quillFormats}
-                theme="snow"
-                readOnly={isReadOnly}
-                style={{
-                  "--border-color": editData.body ? "var(--frameColor)" : "var(--accent)",
-                }}
-              />
-            </div>
-
-            <div className="mt-20">
-              {!isReadOnly && (
-                <div className="mt-2 mb-4 flex flex-wrap gap-2 text-sm">
-                  {sedationKeywords.map((keyword, idx) => (
-                    <span
-                      key={idx}
-                      onClick={() => setEditData((prev) => ({ ...prev, body: `${prev.body} {{${keyword}}}` }))}
-                      className={`cursor-pointer rounded-md border px-2 py-1 ${
-                        editData.body.toLowerCase().includes(keyword.toLowerCase())
-                          ? "border-green-400 bg-green-100"
-                          : "border-gray-300 bg-gray-100"
-                      } hover:border-blue-400 hover:bg-blue-400 hover:text-white`}
-                    >
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </Modal>
+          onClose={handleCloseTemplate}
+          onChange={handleChange}
+          onInsertKeyword={handleInsertKeyword}
+        />
       )}
 
       <div className="flex items-center justify-between">
@@ -439,70 +270,17 @@ const Email = () => {
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {templates?.map((item) => (
-          <div
+          <EmailTemplateCard
             key={item?._id}
-            data-testid="email-card"
-            className="relative rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
-          >
-            <div className="absolute top-4 right-4">
-              <FiMoreVertical
-                data-testid="email-card-menu-btn"
-                className="cursor-pointer text-gray-500 hover:text-gray-700"
-                onClick={() => setMenuOpenId(menuOpenId === item._id ? null : item._id)}
-              />
-              {menuOpenId === item._id && (
-                <div
-                  ref={menuRef}
-                  className="absolute top-6 right-0 z-50 w-32 rounded-md border border-gray-200 bg-white shadow-lg"
-                >
-                  <button
-                    data-testid="email-edit-btn"
-                    className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
-                    onClick={() => handleEdit(item)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    data-testid="email-attach-btn"
-                    className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
-                    onClick={() => handleAttachForms(item)}
-                  >
-                    Attach
-                  </button>
-                  <button
-                    data-testid="email-delete-btn"
-                    className="w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100"
-                    onClick={() => handleDelete(item)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <h2 className="mb-2 text-lg font-bold text-gray-800">{item.templateName}</h2>
-            <div className="space-y-3 text-sm text-gray-600">
-              <div>
-                <p className="font-medium text-gray-700">Subject</p>
-                <p>{item.subject}</p>
-              </div>
-              <div>
-                <p className="font-medium text-gray-700">Application</p>
-                <p>{item.email}</p>
-              </div>
-              <div>
-                <p className="font-medium text-gray-700">Email Type</p>
-                <p>{item.emailType}</p>
-              </div>
-            </div>
-            <button
-              data-testid="email-view-btn"
-              onClick={() => handleView(item)}
-              className="mt-4 rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
-            >
-              View Details
-            </button>
-          </div>
+            item={item}
+            isMenuOpen={menuOpenId === item._id}
+            menuRef={menuRef}
+            onToggleMenu={handleToggleMenu}
+            onEdit={handleEdit}
+            onAttach={handleAttachForms}
+            onDelete={handleDelete}
+            onView={handleView}
+          />
         ))}
       </div>
     </div>
@@ -510,76 +288,3 @@ const Email = () => {
 };
 
 export default Email;
-
-const ModalForAttachForms = React.memo(({ setIsAttachFormModalOpen, selectedTemplate }) => {
-  const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
-  const { data: unAttachedForms, isLoading: isLoadingUnAttachedForms } = useUnAttachedFormsListQuery(
-    { emailTemplateId: selectedTemplate?._id },
-    { skip: !selectedTemplate?._id },
-  );
-  const [getUserProfile, { isLoading: isLoadingUserProfile }] = useGetMyProfileFirstTimeMutation();
-  const [selectedForms, setSelectedForms] = useState(selectedTemplate?.forms?.map((form) => form._id) || []);
-  const [attachEmailToForms, { isLoading }] = useAttachTemplateToFormMutation();
-  const [attachToMe, setAttachToMe] = useState(user?.welcomeMail === selectedTemplate?._id);
-
-  const onSaveHandler = async () => {
-    if (!selectedTemplate?._id) return toast.error("Please select template and forms");
-    try {
-      const res = await attachEmailToForms({
-        emailTemplateId: selectedTemplate?._id,
-        formIds: selectedForms?.length ? selectedForms : [],
-        attachToMe: attachToMe,
-      }).unwrap();
-      if (res.success) {
-        const userData = await getUserProfile().unwrap();
-        if (userData?.success) {
-          dispatch(userExist(userData?.data));
-        }
-        toast.success("Template attached to forms successfully");
-        setIsAttachFormModalOpen(false);
-      }
-    } catch (error) {
-      toast.error(error?.data?.message || "Failed to attach template to forms");
-      console.log(error);
-    }
-  };
-
-  return (
-    <Modal
-      isLoading={isLoading || isLoadingUserProfile}
-      onSave={onSaveHandler}
-      onClose={() => setIsAttachFormModalOpen(false)}
-    >
-      {isLoadingUnAttachedForms ? (
-        <CustomLoading />
-      ) : (
-        <div className="p-4 min-h-[30vh]">
-          <h2 className="mb-4 text-lg font-semibold">Attach To Forms</h2>
-
-          <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium">Select Forms</label>
-            <DropdownCheckbox
-              options={unAttachedForms?.data?.map((item) => ({ label: item?.name, value: item?._id }))}
-              selected={selectedForms}
-              defaultText={`Select Forms`}
-              onSelect={(vals) => setSelectedForms(vals)}
-            />
-          </div>
-          {selectedTemplate.emailType === "welcome_email_template" && (
-            <div className="flex justify-end">
-              <Checkbox
-                id="attachToMe"
-                name="attachToMe"
-                label="Attach to Me"
-                onChange={(e) => setAttachToMe(e.target.checked)}
-                value={attachToMe}
-                checked={attachToMe}
-              />
-            </div>
-          )}
-        </div>
-      )}
-    </Modal>
-  );
-});

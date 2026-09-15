@@ -1,196 +1,159 @@
-import getEnv from "@/utils/env";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import getEnv from "@/utils/env";
+
+const FORM_TAGS = {
+  FORM: "Form",
+  STRATEGY: "Strategy",
+  PROMPTS: "Prompts",
+  FORM_STRATEGY: "FormStrategy",
+  SUBMIT_FORM: "SubmitForm",
+  HISTORY: "History",
+  FORM_RULES: "FormRules",
+  SUBMIT_FORM_VERSIONS: "SubmitFormVersions",
+};
 
 const formApis = createApi({
   reducerPath: "formApi",
-  baseQuery: fetchBaseQuery({ baseUrl: `${getEnv("SERVER_URL")}/api/form`, credentials: "include" }),
-
-  tagTypes: ["Form", "Strategy", "Prompts", "FormStrategy", "SubmitForm", "History", "FormRules", "SubmitFormVersions"],
+  baseQuery: fetchBaseQuery({
+    baseUrl: `${getEnv("SERVER_URL")}/api/form`,
+    credentials: "include",
+  }),
+  tagTypes: Object.values(FORM_TAGS),
   endpoints: (builder) => ({
-    // create new form
-    // ---------------
+    /////
     createForm: builder.mutation({
-      query: (data) => ({
-        url: "/create",
-        method: "POST",
-        body: data,
-      }),
-      invalidatesTags: ["Form"],
+      query: (data) => ({ url: "/create", method: "POST", body: data }),
+      invalidatesTags: [FORM_TAGS.FORM],
     }),
-    // update  form
-    // ---------------
+    /////
     updateForm: builder.mutation({
       query: ({ data, _id }) => ({
         url: `/update/${_id}`,
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["Form"],
+      invalidatesTags: [FORM_TAGS.FORM],
     }),
-    // update  form location status
-    // ---------------
+    /////
     updateFormLocation: builder.mutation({
       query: ({ data, _id }) => ({
         url: `/update-form-location/${_id}`,
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["Form"],
+      invalidatesTags: [FORM_TAGS.FORM],
     }),
-    // get my all users
-    // --------------
+    /////
     getMyAllForms: builder.query({
-      query: () => ({
-        url: "/my",
-        method: "GET",
-      }),
-      providesTags: ["Form"],
+      query: () => ({ url: "/my", method: "GET" }),
+      providesTags: [FORM_TAGS.FORM],
     }),
-
-    // get single form
-    // ---------------
+    /////
     getSingleFormQuery: builder.query({
-      query: (data) => ({
-        url: `single/${data?._id}`,
-        method: "GET",
-      }),
-      providesTags: ["Form"],
+      query: (data) => ({ url: `single/${data?._id}`, method: "GET" }),
+      providesTags: [FORM_TAGS.FORM],
     }),
-
-    // CLONE form
-    // ---------------
+    /////
     cloneForm: builder.mutation({
       query: ({ sourceFormId, name }) => ({
         url: `/clone/${sourceFormId}`,
         method: "POST",
         body: name ? { name } : {},
       }),
-      invalidatesTags: ["Form", "Strategy"],
+      invalidatesTags: [FORM_TAGS.FORM, FORM_TAGS.STRATEGY],
     }),
-
-    // DELETE single form
-    // ---------------
+    /////
     deleteSingleForm: builder.mutation({
-      query: (data) => ({
-        url: `single/${data?._id}`,
-        method: "Delete",
-      }),
-      invalidatesTags: ["Form"],
+      query: (data) => ({ url: `single/${data?._id}`, method: "Delete" }),
+      invalidatesTags: [FORM_TAGS.FORM],
     }),
-
-    // SUBMIT form
-    // ---------------
+    /////
     submitForm: builder.mutation({
-      query: (data) => ({
-        url: "/submit",
-        method: "POST",
-        body: data,
-      }),
-      invalidatesTags: ["Form", "SubmitForm", "SubmitFormVersions"],
+      query: (data) => ({ url: "/submit", method: "POST", body: data }),
+      invalidatesTags: [FORM_TAGS.FORM, FORM_TAGS.SUBMIT_FORM, FORM_TAGS.SUBMIT_FORM_VERSIONS],
     }),
-
-    // update submitted form
-    // ---------------
+    /////
     updateSubmittedForm: builder.mutation({
       query: ({ submittedFormId, formData }) => ({
         url: "/submit",
         method: "PUT",
         body: { submittedFormId, formData },
       }),
-      invalidatesTags: ["SubmitForm", "History", "SubmitFormVersions"],
+      invalidatesTags: [FORM_TAGS.SUBMIT_FORM, FORM_TAGS.HISTORY, FORM_TAGS.SUBMIT_FORM_VERSIONS],
     }),
-
-    // get submitted form users
-    // ---------------
+    /////
     getSubmittedFormUsers: builder.query({
       query: ({ formId }) => ({
         url: `/submitted-users/${formId}`,
         method: "GET",
       }),
     }),
-    // give special access to user
-    // ---------------
+    /////
     giveSpecialAccessToUser: builder.mutation({
       query: ({ formId, submittedFormId, email, sectionKey }) => ({
         url: `/special-access-of-section/${formId}?submittedFormId=${submittedFormId}`,
         method: "POST",
         body: { email, sectionKey },
       }),
-      invalidatesTags: ["History"],
+      invalidatesTags: [FORM_TAGS.HISTORY],
     }),
-    // give special access to user
-    // ---------------
+    /////
     applicantGiveSpecialAccessToBeneficialOwner: builder.mutation({
       query: ({ formId, email }) => ({
         url: `/applicant-give-special-access-to-beneficial-owner/${formId}`,
         method: "POST",
         body: { email },
       }),
-      invalidatesTags: ["History", "SubmitForm"],
+      invalidatesTags: [FORM_TAGS.HISTORY, FORM_TAGS.SUBMIT_FORM],
     }),
-    // get special access of section
-    // ---------------
+    /////
     getSpecialAccessOfSection: builder.query({
       query: ({ formId, token, sectionKey }) => ({
         url: `/special-access-of-section/${formId}?token=${token}&sectionKey=${sectionKey}`,
         method: "GET",
       }),
-      providesTags: ["Form"],
+      providesTags: [FORM_TAGS.FORM],
     }),
-    // get special access of section
-    // ---------------
+    /////
     submitSpecialAccessForm: builder.mutation({
       query: ({ formId, token, sectionKey, formData }) => ({
         url: `/special-access-of-section/${formId}`,
         method: "PUT",
         body: { sectionKey, formData, token },
       }),
-      invalidatesTags: ["History"],
+      invalidatesTags: [FORM_TAGS.HISTORY],
     }),
-
-    // save form in draft
-    // ---------------
+    /////
     saveFormInDraft: builder.mutation({
-      query: (data) => ({
-        url: "/save-in-draft",
-        method: "POST",
-        body: data,
-      }),
-      invalidatesTags: ["Form"],
+      query: (data) => ({ url: "/save-in-draft", method: "POST", body: data }),
+      invalidatesTags: [FORM_TAGS.FORM],
     }),
-
-    // generate pdf form
-    // ---------------
+    /////
     generatePdfForm: builder.mutation({
       query: ({ _id, userId }) => ({
         url: `/generate-pdf/${_id}/${userId}`,
         method: "GET",
-        responseHandler: (response) => response.blob(), // important
+        // read the pdf as a blob, not json
+        responseHandler: (response) => response.blob(),
       }),
     }),
-
-    // get saved form
-    // ---------------
+    /////
     getSavedForm: builder.mutation({
       query: ({ formId, draftId }) => ({
         url: `/get-saved/${formId}${draftId ? `?draftId=${draftId}` : ""}`,
         method: "GET",
       }),
-      invalidatesTags: ["SubmitForm"],
+      invalidatesTags: [FORM_TAGS.SUBMIT_FORM],
     }),
-
-    // get form history
-    // ---------------
+    /////
     getFormHistory: builder.query({
       query: ({ formSubmittedId }) => ({
         url: `/get-history/${formSubmittedId}`,
         method: "GET",
       }),
-      providesTags: ["History"],
+      providesTags: [FORM_TAGS.HISTORY],
     }),
-
-    // get saved form by userId
-    // ---------------
+    /////
     getSavedFormByUserId: builder.mutation({
       query: ({ formId, userId, pdfToken }) => ({
         url: pdfToken
@@ -198,81 +161,66 @@ const formApis = createApi({
           : `/get-submitted-form/${formId}/${userId}`,
         method: "GET",
       }),
-      invalidatesTags: ["SubmitForm"],
+      invalidatesTags: [FORM_TAGS.SUBMIT_FORM],
     }),
-
-    // remove saved form
-    // ---------------
+    /////
     removeSavedForm: builder.mutation({
       query: ({ formId, draftId }) => ({
         url: `/remove-saved/${formId}${draftId ? `?draftId=${draftId}` : ""}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Form"],
+      invalidatesTags: [FORM_TAGS.FORM],
     }),
-
-    // get all draft and submissions
-    // ---------------
+    /////
     getMyAllDraftsAndSubmittions: builder.query({
-      query: () => ({
-        url: "/draft-and-submitions",
-        method: "GET",
-      }),
-      providesTags: ["Form"],
+      query: () => ({ url: "/draft-and-submitions", method: "GET" }),
+      providesTags: [FORM_TAGS.FORM],
     }),
-
-    // reorder form sections
-    // ---------------
+    /////
     reorderFormSections: builder.mutation({
       query: (data) => ({
         url: "/reorder-form-sections",
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["Form"],
+      invalidatesTags: [FORM_TAGS.FORM],
     }),
-    // add a new section to an existing form
-    // ---------------
+    /////
     addFormSection: builder.mutation({
       query: (data) => ({
         url: "/add-form-section",
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Form"],
+      invalidatesTags: [FORM_TAGS.FORM],
     }),
-    // delete a form section
-    // ---------------
+    /////
     deleteFormSection: builder.mutation({
       query: ({ sectionId }) => ({
         url: `/delete-form-section/${sectionId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Form"],
+      invalidatesTags: [FORM_TAGS.FORM],
     }),
-    // update form section
-    // ---------------
+    /////
     updateFormSection: builder.mutation({
       query: ({ data, _id }) => ({
         url: `/update-form-section/${_id}`,
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["Form"],
+      invalidatesTags: [FORM_TAGS.FORM],
     }),
-    // update form fields delete and create api
-    // ---------------
+    /////
     updateDeleteCreateFormFields: builder.mutation({
       query: (data) => ({
         url: "/update-delete-create-fields",
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Form"],
+      invalidatesTags: [FORM_TAGS.FORM],
     }),
-
-    // formate display text
-    // ---------------
+    /////
     formateTextInMarkDown: builder.mutation({
       query: (data) => ({
         url: "/formate-display-text",
@@ -280,16 +228,14 @@ const formApis = createApi({
         body: data,
       }),
     }),
-    // get beneficial owners
-    // ---------------
+    /////
     getBeneficialOwnersData: builder.query({
       query: ({ email, submitId, userId }) => ({
         url: `/beneficial-owners?email=${email}&submitId=${submitId}&userId=${userId}`,
         method: "GET",
       }),
     }),
-    // update beneficial owners
-    // ---------------
+    /////
     updateBeneficialOwners: builder.mutation({
       query: ({ submitId, userId, form }) => ({
         url: `/beneficial-owners?submitId=${submitId}&userId=${userId}`,
@@ -297,159 +243,116 @@ const formApis = createApi({
         body: form,
       }),
     }),
-
-    //===========================
-    // Search Strategy APIs
-    //===========================
-
-    // create search strategy
-    // ---------------
+    /////
     createSearchStrategy: builder.mutation({
       query: ({ data }) => ({
         url: "/search-strategy/create",
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Strategy"],
+      invalidatesTags: [FORM_TAGS.STRATEGY],
     }),
-    // create search strategy default
-    // ---------------
+    /////
     createSearchStrategyDefault: builder.mutation({
       query: () => ({
         url: "/search-strategy/create-default",
         method: "POST",
         body: {},
       }),
-      invalidatesTags: ["Strategy"],
+      invalidatesTags: [FORM_TAGS.STRATEGY],
     }),
-    // get all search strategies
-    // ---------------
+    /////
     getAllSearchStrategies: builder.query({
-      query: () => ({
-        url: "/search-strategy/all",
-        method: "GET",
-      }),
-      providesTags: ["Strategy"],
+      query: () => ({ url: "/search-strategy/all", method: "GET" }),
+      providesTags: [FORM_TAGS.STRATEGY],
     }),
-    // update search strategy
-    // ---------------
+    /////
     updateSearchStrategy: builder.mutation({
       query: ({ SearchStrategyId, data }) => ({
         url: `/search-strategy/single/${SearchStrategyId}`,
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["Strategy"],
+      invalidatesTags: [FORM_TAGS.STRATEGY],
     }),
-    // delete search strategy
-    // ---------------
+    /////
     deleteSearchStrategy: builder.mutation({
       query: ({ SearchStrategyId }) => ({
         url: `/search-strategy/single/${SearchStrategyId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Strategy"],
+      invalidatesTags: [FORM_TAGS.STRATEGY],
     }),
-    // create prompt
-    // ---------------
+    /////
     createPrompt: builder.mutation({
       query: ({ data }) => ({
         url: "/create-prompt",
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Prompts"],
+      invalidatesTags: [FORM_TAGS.PROMPTS],
     }),
-    // update prompt
-    // ---------------
+    /////
     updatePrompt: builder.mutation({
       query: (data) => ({
         url: `/prompt/single/update`,
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["Prompts"],
+      invalidatesTags: [FORM_TAGS.PROMPTS],
     }),
-    // get all prompts
-    // ---------------
+    /////
     getAllPrompts: builder.query({
-      query: () => ({
-        url: "/get-my-prompts",
-        method: "GET",
-      }),
-      providesTags: ["Prompts"],
+      query: () => ({ url: "/get-my-prompts", method: "GET" }),
+      providesTags: [FORM_TAGS.PROMPTS],
     }),
-    //================================
-    // form strategies apis
-    //================================
-
-    // create form strategy
-    // ---------------
+    /////
     createFormStrategy: builder.mutation({
       query: (data) => ({
         url: "/form-strategy/create",
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Strategy"],
+      invalidatesTags: [FORM_TAGS.STRATEGY],
     }),
-    // get all form strategies
-    // ---------------
+    /////
     getAllFormStrategies: builder.query({
-      query: () => ({
-        url: "/form-strategy/all",
-        method: "GET",
-      }),
-      providesTags: ["Strategy"],
+      query: () => ({ url: "/form-strategy/all", method: "GET" }),
+      providesTags: [FORM_TAGS.STRATEGY],
     }),
-    // update form strategy
-    // ---------------
+    /////
     updateFormStrategy: builder.mutation({
       query: ({ FormStrategyId, data }) => ({
         url: `/form-strategy/single/${FormStrategyId}`,
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["Strategy"],
+      invalidatesTags: [FORM_TAGS.STRATEGY],
     }),
-    // delete form strategy
-    // ---------------
+    /////
     deleteFormStrategy: builder.mutation({
       query: ({ FormStrategyId }) => ({
         url: `/form-strategy/single/${FormStrategyId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Strategy"],
+      invalidatesTags: [FORM_TAGS.STRATEGY],
     }),
-
-    // getBankLookup: builder.query({
-    //   query: searchTerm => `/routing-lookup?searchTerm=${searchTerm}`,
-    // }),
-
+    /////
     getBankLookup: builder.mutation({
       query: (data) => ({
         url: `/routing-lookup?searchTerm=${data}`,
         method: "GET",
       }),
     }),
-    //================================
-    // company verification and lookup
-    //================================
-
+    /////
     companyVerification: builder.mutation({
-      query: (data) => ({
-        url: "/verify-company",
-        method: "POST",
-        body: data,
-      }),
+      query: (data) => ({ url: "/verify-company", method: "POST", body: data }),
     }),
+    /////
     companyLookup: builder.mutation({
-      query: (data) => ({
-        url: "/lookup-company",
-        method: "POST",
-        body: data,
-      }),
+      query: (data) => ({ url: "/lookup-company", method: "POST", body: data }),
     }),
+    /////
     findNaicAndMcc: builder.mutation({
       query: (data) => ({
         url: "/find-naics-to-mcc",
@@ -457,102 +360,100 @@ const formApis = createApi({
         body: data,
       }),
     }),
+    /////
     detectVpn: builder.mutation({
-      query: (data) => ({
-        url: "/vpn-check",
-        method: "POST",
-        body: data,
-      }),
+      query: (data) => ({ url: "/vpn-check", method: "POST", body: data }),
     }),
-
-    // submit form crud
-    // ============================
+    /////
     getAllSubmitOrDraftForms: builder.query({
-      query: () => ({
-        url: "/all-submit-or-draft",
-        method: "GET",
-      }),
-      providesTags: ["SubmitForm"],
+      query: () => ({ url: "/all-submit-or-draft", method: "GET" }),
+      providesTags: [FORM_TAGS.SUBMIT_FORM],
     }),
+    /////
     getSingleSubmitFormQuery: builder.query({
       query: (data) => ({
         url: `single-submit-or-draft/${data?._id}`,
         method: "GET",
       }),
-      providesTags: ["SubmitForm"],
+      providesTags: [FORM_TAGS.SUBMIT_FORM],
     }),
+    /////
     deleteSingleSubmitOrDraftForm: builder.mutation({
       query: ({ _id, type }) => ({
         url: `single-submit-or-draft/${_id}?type=${type}`,
         method: "Delete",
       }),
-      invalidatesTags: ["SubmitForm"],
+      invalidatesTags: [FORM_TAGS.SUBMIT_FORM],
     }),
-
-    // form rules apis
-    // ============================
+    /////
     createFormRule: builder.mutation({
       query: (data) => ({
         url: "/create-form-rule",
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["FormRules"],
+      invalidatesTags: [FORM_TAGS.FORM_RULES],
     }),
+    /////
     cloneFormRules: builder.mutation({
       query: ({ sourceFormId, targetFormId }) => ({
         url: "/clone-form-rules",
         method: "POST",
         body: { sourceFormId, targetFormId },
       }),
-      invalidatesTags: ["FormRules"],
+      invalidatesTags: [FORM_TAGS.FORM_RULES],
     }),
+    /////
     applyRulesOnForm: builder.query({
       query: (formSubmittedId) => ({
         url: `/apply-rules-on-form/${formSubmittedId}`,
         method: "GET",
       }),
-      invalidatesTags: ["SubmitForm"],
+      invalidatesTags: [FORM_TAGS.SUBMIT_FORM],
     }),
-    // get form versions
-    // ---------------
+    /////
     getFormVersions: builder.query({
       query: ({ submittedFormId }) => ({
         url: `/form-versions/${submittedFormId}`,
         method: "GET",
       }),
-      providesTags: ["SubmitFormVersions"],
+      providesTags: [FORM_TAGS.SUBMIT_FORM_VERSIONS],
     }),
+    /////
     getAllFormRules: builder.query({
       query: ({ formId }) => ({
         url: `/all-rules?formId=${formId}`,
         method: "GET",
       }),
-      providesTags: ["FormRules"],
+      providesTags: [FORM_TAGS.FORM_RULES],
     }),
+    /////
     deleteSingleFormRule: builder.mutation({
       query: ({ ruleId }) => ({
         url: `/single/rule/${ruleId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["FormRules"],
+      invalidatesTags: [FORM_TAGS.FORM_RULES],
     }),
+    /////
     updateSingleFormRule: builder.mutation({
       query: ({ data, ruleId }) => ({
         url: `/single/rule/${ruleId}`,
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["FormRules"],
+      invalidatesTags: [FORM_TAGS.FORM_RULES],
     }),
+    /////
     updateStatusSingleFormRule: builder.mutation({
       query: ({ ruleId, isActive }) => ({
         url: `/single/rule-status/${ruleId}`,
         method: "PUT",
         body: { isActive },
       }),
-      invalidatesTags: ["FormRules"],
+      invalidatesTags: [FORM_TAGS.FORM_RULES],
     }),
+    /////
     getFormRuleFromAi: builder.mutation({
       query: (data) => ({
         url: "/get-form-rule-from-ai",
@@ -560,21 +461,23 @@ const formApis = createApi({
         body: data,
       }),
     }),
-
+    /////
     updateRulesOrder: builder.mutation({
       query: (data) => ({
         url: "/update-rules-order",
         method: "PUT",
         body: { rulesData: data },
       }),
-      invalidatesTags: ["FormRules"],
+      invalidatesTags: [FORM_TAGS.FORM_RULES],
     }),
+    /////
     formDataWhichUseToCreateForms: builder.query({
       query: ({ formId }) => ({
         url: `/form-data-which-use-to-create-forms/${formId}`,
         method: "GET",
       }),
     }),
+    /////
     checkFormRuleFromAi: builder.mutation({
       query: (data) => ({
         url: "/check-form-rule-from-ai",
@@ -584,6 +487,7 @@ const formApis = createApi({
     }),
   }),
 });
+
 export const {
   useCloneFormMutation,
   useCreateFormMutation,
@@ -636,7 +540,6 @@ export const {
   useGetAllSubmitOrDraftFormsQuery,
   useGetSingleSubmitFormQueryQuery,
   useDeleteSingleSubmitOrDraftFormMutation,
-  // form rules
   useCreateFormRuleMutation,
   useCloneFormRulesMutation,
   useApplyRulesOnFormQuery,
@@ -649,4 +552,5 @@ export const {
   useFormDataWhichUseToCreateFormsQuery,
   useCheckFormRuleFromAiMutation,
 } = formApis;
+
 export default formApis;

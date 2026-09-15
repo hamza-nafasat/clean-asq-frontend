@@ -1,67 +1,18 @@
-import { getTableStyles } from "@/utils/tableStyles";
-import useBranding from "@/hooks/useBranding";
-import { useGetFormVersionsQuery } from "@/redux/apis/form.apis";
-import DataTable from "react-data-table-component";
-import { ThreeDotEditViewDelete } from "@/components/shared/ThreeDotViewEditDelete";
-import { Diff, Eye, History, MoreVertical, Trash } from "lucide-react";
 import { createRef, useMemo, useRef, useState } from "react";
-import { FieldChanges } from "./UnderwritingFieldChanges";
-import { ApplicationPdfViewCommonProps } from "@/components/global/ApplicationPdfView";
+import DataTable from "react-data-table-component";
+import { Diff, Eye, MoreVertical } from "lucide-react";
+import { useGetFormVersionsQuery } from "@/redux/apis/form.apis";
+import useBranding from "@/hooks/useBranding";
 import Modal from "@/components/shared/Modal";
+import { ThreeDotEditViewDelete } from "@/components/shared/ThreeDotViewEditDelete";
+import UnderwritingFieldChanges from "./UnderwritingFieldChanges";
+import UnderwritingVersionDetails from "./UnderwritingVersionDetails";
+import { getTableStyles } from "@/utils/tableStyles";
+import { buildVersionColumns } from "../utils/underwriting.utils";
 
-const ColumnsForFormVersions = () => [
-  {
-    name: "Date/Time",
-    selector: (row) =>
-      new Date(row?.updatedAt || "").toLocaleString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      }),
-    sortable: true,
-    wrap: true,
-  },
-  {
-    name: "User Name",
-    selector: (row) => `${row?.actor?.name}`,
-    sortable: true,
-  },
-  {
-    name: "email",
-    selector: (row) => `${row?.actor?.email}`,
-    sortable: true,
-    wrap: true,
-  },
-  {
-    name: "Role",
-    selector: (row) => `${row?.actor?.role}`,
-    sortable: true,
-  },
-  {
-    name: "Form Name",
-    selector: (row) => row?.form?.name,
-    sortable: true,
-  },
-  {
-    name: "Version",
-    selector: (row) => row?.version,
-    sortable: true,
-  },
-  {
-    name: "Fields Changed",
-    selector: (row) => row?.diff?.length,
-    sortable: true,
-    wrap: true,
-  },
-];
-
-const FormVersions = ({ submittedFormId, submitForm }) => {
+const UnderwritingFormVersions = ({ submittedFormId = "", submitForm = null }) => {
   const [selectedVersion, setSelectedVersion] = useState(null);
   const [viewDetailsModal, setViewDetailsModal] = useState(false);
-  // const [deleteVersionModal, setDeleteVersionModal] = useState(false);
   const [fieldChanges, setFieldChanges] = useState(null);
   const actionMenuRefs = useRef(new Map());
   const [actionMenu, setActionMenu] = useState(null);
@@ -72,7 +23,7 @@ const FormVersions = ({ submittedFormId, submitForm }) => {
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
 
-  const ButtonsForThreeDot = useMemo(
+  const menuButtons = useMemo(
     () => [
       {
         name: "Version Details",
@@ -98,7 +49,7 @@ const FormVersions = ({ submittedFormId, submitForm }) => {
 
   const columns = useMemo(
     () => [
-      ...ColumnsForFormVersions(),
+      ...buildVersionColumns(),
       {
         name: "Action",
         cell: (row) => {
@@ -107,20 +58,26 @@ const FormVersions = ({ submittedFormId, submitForm }) => {
           return (
             <div className="relative" ref={rowRef}>
               <button
+                type="button"
                 onClick={() => setActionMenu((prevActionMenu) => (prevActionMenu === row?._id ? null : row?._id))}
                 className="cursor-pointer rounded p-1 hover:bg-gray-100"
                 aria-label="Actions"
               >
                 <MoreVertical size={18} />
               </button>
-              {actionMenu === row._id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
+              {actionMenu === row._id && <ThreeDotEditViewDelete buttons={menuButtons} row={row} />}
             </div>
           );
         },
       },
     ],
-    [ButtonsForThreeDot, actionMenu],
+    [menuButtons, actionMenu],
   );
+
+  const handleCloseDetails = () => {
+    setViewDetailsModal(false);
+    setSelectedVersion(null);
+  };
 
   return (
     <div className="w-full overflow-x-auto">
@@ -132,7 +89,7 @@ const FormVersions = ({ submittedFormId, submitForm }) => {
           hideSaveButton={true}
           hideCancelButton={true}
         >
-          <FieldChanges selectedVersion={selectedVersion} />
+          <UnderwritingFieldChanges selectedVersion={selectedVersion} />
         </Modal>
       )}
       {viewDetailsModal && (
@@ -140,14 +97,15 @@ const FormVersions = ({ submittedFormId, submitForm }) => {
           width="min-w-[75vw] max-w-2xl"
           title="Version Details"
           isOpen={viewDetailsModal}
-          onClose={() => {
-            setViewDetailsModal(false);
-            setSelectedVersion(null);
-          }}
+          onClose={handleCloseDetails}
           hideSaveButton={true}
           hideCancelButton={true}
         >
-          <ViewDetailsModal key={selectedVersion?._id} selectedVersion={selectedVersion} submitForm={submitForm} />
+          <UnderwritingVersionDetails
+            key={selectedVersion?._id}
+            selectedVersion={selectedVersion}
+            submitForm={submitForm}
+          />
         </Modal>
       )}
       <div className="w-full overflow-x-auto">
@@ -168,22 +126,4 @@ const FormVersions = ({ submittedFormId, submitForm }) => {
   );
 };
 
-export { FormVersions };
-
-const ViewDetailsModal = ({ selectedVersion, submitForm }) => {
-  const userId = submitForm?.user?._id || submitForm?.user;
-  const pdfId = submitForm?.form?._id || submitForm?.form || selectedVersion?.form?._id;
-  const initialSubmitData = selectedVersion?.snapshot?.submitData;
-
-  return (
-    <div className="flex w-full min-h-screen justify-center items-center">
-      <ApplicationPdfViewCommonProps
-        userId={userId}
-        pdfId={pdfId}
-        initialSubmitData={initialSubmitData}
-        submittedFormId={submitForm?._id}
-        className="rounded-lg!"
-      />
-    </div>
-  );
-};
+export default UnderwritingFormVersions;

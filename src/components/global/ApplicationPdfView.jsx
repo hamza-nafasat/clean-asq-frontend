@@ -1,21 +1,9 @@
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { useParams, useSearchParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { CgSpinner } from "react-icons/cg";
+import { toast } from "react-toastify";
 
-// Components
-
-// Hooks & Redux
-import AggrementBlockPdf from "@/components/global/ApplicationPdfAgreementBlock";
-import BankInfoPdf from "@/components/global/ApplicationPdfBankInfo";
-import CompanyInformationPdf from "@/components/global/ApplicationPdfCompanyInformation";
-import CompanyOwnersPdf from "@/components/global/ApplicationPdfCompanyOwners";
-import CustomSectionPdf from "@/components/global/ApplicationPdfCustomSection";
-import DocumentsPdf from "@/components/global/ApplicationPdfDocuments";
-import { sectionsForPdf } from "@/utils/sectionCompletion";
-import ProcessingInfoPdf from "@/components/global/ApplicationPdfProcessingInfo";
-import Button from "@/components/shared/Button";
-import useBranding from "@/hooks/useBranding";
-import useApplyBranding from "@/hooks/useApplyBranding";
 import {
   useGeneratePdfFormMutation,
   useGetSavedFormByUserIdMutation,
@@ -23,19 +11,41 @@ import {
   useUpdateSubmittedFormMutation,
 } from "@/redux/apis/form.apis";
 import { addSavedFormData, updateIsDisabledAllFields } from "@/redux/slices/form.slice";
-import IdMissionDataPdf from "@/components/global/ApplicationPdfIdMission";
-import { toast } from "react-toastify";
-import { CgSpinner } from "react-icons/cg";
+import useApplyBranding from "@/hooks/useApplyBranding";
+import useBranding from "@/hooks/useBranding";
 import { uploadFilesAndReplace } from "@/lib/utils";
+import AggrementBlockPdf from "@/components/global/ApplicationPdfAgreementBlock";
+import BankInfoPdf from "@/components/global/ApplicationPdfBankInfo";
+import CompanyInformationPdf from "@/components/global/ApplicationPdfCompanyInformation";
+import CompanyOwnersPdf from "@/components/global/ApplicationPdfCompanyOwners";
+import CustomSectionPdf from "@/components/global/ApplicationPdfCustomSection";
+import DocumentsPdf from "@/components/global/ApplicationPdfDocuments";
+import IdMissionDataPdf from "@/components/global/ApplicationPdfIdMission";
+import ProcessingInfoPdf from "@/components/global/ApplicationPdfProcessingInfo";
+import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
+import { SECTION_TITLES } from "@/constants";
+import { sectionsForPdf } from "@/utils/sectionCompletion";
 
-const ApplicationPdfView = () => {
-  const { pdfId, userId } = useParams();
-  const [searchParams] = useSearchParams();
-  useApplyBranding({ formId: pdfId });
-  return (
-    <ApplicationPdfViewCommonProps userId={userId} pdfId={pdfId} pdfToken={searchParams.get("pdfToken")} isPdf={true} />
-  );
+const ID_MISSION_SECTION_KEY = "idMission";
+
+const SECTION_COMPONENTS = {
+  [SECTION_TITLES.COMPANY_INFORMATION]: CompanyInformationPdf,
+  [SECTION_TITLES.BENEFICIAL]: CompanyOwnersPdf,
+  [SECTION_TITLES.BANK_ACCOUNT_INFO]: BankInfoPdf,
+  [SECTION_TITLES.AVG_TRANSACTIONS]: ProcessingInfoPdf,
+  [SECTION_TITLES.INCORPORATION_ARTICLE]: DocumentsPdf,
+  [SECTION_TITLES.CUSTOM_SECTION]: CustomSectionPdf,
+  [SECTION_TITLES.AGREEMENT]: AggrementBlockPdf,
+};
+
+const HEADER_DATE_OPTIONS = {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+  hour12: true,
 };
 
 export const ApplicationPdfViewCommonProps = ({
@@ -56,22 +66,20 @@ export const ApplicationPdfViewCommonProps = ({
   const [submittedFormId, setSubmittedFormId] = useState(submittedFormIdProp);
   const [formInnerData, setFormInnerData] = useState(() => (usesPrefilledData ? initialSubmitData : {}));
   const [dataLoaded, setDataLoaded] = useState(usesPrefilledData);
+  const [isUpdatingSubmittedForm, setIsUpdatingSubmittedForm] = useState(false);
   const [updateSubmittedForm] = useUpdateSubmittedFormMutation();
-  const {
-    data: form,
-    isLoading: formLoading,
-    refetch: formRefetch,
-  } = useGetSingleFormQueryQuery({ _id: pdfId }, { skip: !pdfId });
+  const { data: form, isLoading: formLoading, refetch: formRefetch } = useGetSingleFormQueryQuery(
+    { _id: pdfId },
+    { skip: !pdfId },
+  );
   const [getSavedFormData, { isLoading: getSavedFormDataLoading }] = useGetSavedFormByUserIdMutation();
   const [generatePdfForm, { isLoading: isGeneratingPdf }] = useGeneratePdfFormMutation();
-  const [isUpdatingSubmittedForm, setIsUpdatingSubmittedForm] = useState(false);
 
-  const updateSubmittedFormData = async () => {
+  const handleUpdateSubmittedForm = async () => {
     setIsUpdatingSubmittedForm(true);
     try {
-      const formInnerDataKeys = Object.keys(formInnerData);
       const updatedFormData = {};
-      for (const key of formInnerDataKeys) {
+      for (const key of Object.keys(formInnerData)) {
         updatedFormData[key] = await uploadFilesAndReplace(formInnerData[key]);
       }
       const res = await updateSubmittedForm({ submittedFormId: submittedFormId, formData: updatedFormData }).unwrap();
@@ -81,28 +89,27 @@ export const ApplicationPdfViewCommonProps = ({
         toast.success(res.message);
       }
     } catch (error) {
-      console.log("Error updating submitted form data", error);
+      console.error("Update submitted form error:", error);
     } finally {
       setIsUpdatingSubmittedForm(false);
     }
   };
 
-  const handleDownload = async (formId, userId) => {
+  const handleDownload = async (formId, applicantId) => {
     try {
-      const blob = await generatePdfForm({ _id: formId, userId }).unwrap();
-
+      const blob = await generatePdfForm({ _id: formId, userId: applicantId }).unwrap();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `form-${formId}.pdf`;
       a.click();
       window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.log("PDF download failed", err);
+    } catch (error) {
+      console.error("Download PDF error:", error);
     }
   };
 
-  // Version-history modal: seed from immutable snapshot — no API fetch.
+  // version history seeds from an immutable snapshot, no fetch
   useEffect(() => {
     if (!usesPrefilledData) return;
     setFormInnerData(initialSubmitData);
@@ -110,7 +117,7 @@ export const ApplicationPdfViewCommonProps = ({
     setDataLoaded(true);
   }, [initialSubmitData, submittedFormIdProp, usesPrefilledData]);
 
-  // Applications / App Viewer: fetch latest submit data by applicant userId.
+  // fetch the latest submit data by applicant user id
   useEffect(() => {
     if (usesPrefilledData || !userId || !pdfId) return;
 
@@ -124,7 +131,7 @@ export const ApplicationPdfViewCommonProps = ({
           setSubmittedFormId(res?.data?._id);
         }
       } catch (error) {
-        console.log("Error fetching saved form data", error);
+        console.error("Fetch saved form error:", error);
       } finally {
         setDataLoaded(true);
       }
@@ -146,28 +153,12 @@ export const ApplicationPdfViewCommonProps = ({
     <>
       {isPdf && (
         <div className="flex h-16 items-center justify-between rounded-md border-b bg-white px-6 shadow">
-          {/* Hamburger Icon (mobile only) */}
           <div className="my-4 flex items-center gap-8">
-            <img
-              src={logo || ""}
-              alt="Logo"
-              className="h-12 w-auto max-w-55 object-contain"
-              referrerPolicy="no-referrer"
-            />
+            <img src={logo || ""} alt="Logo" className="h-12 w-auto max-w-55 object-contain" referrerPolicy="no-referrer" />
             <h1 className="text-2xl font-semibold text-gray-800">{form?.data?.name}</h1>
           </div>
           <div className="my-4 flex items-center gap-8">
-            {/* current time and date in good formate  */}
-            <h3 className="text-sm text-gray-800">
-              {new Date().toLocaleString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                hour: "numeric",
-                minute: "numeric",
-                hour12: true,
-              })}
-            </h3>
+            <h3 className="text-sm text-gray-800">{new Date().toLocaleString("en-US", HEADER_DATE_OPTIONS)}</h3>
           </div>
         </div>
       )}
@@ -185,7 +176,7 @@ export const ApplicationPdfViewCommonProps = ({
               rightIcon={isUpdatingSubmittedForm && CgSpinner}
               cnRight={isUpdatingSubmittedForm ? "animate-spin h-5 w-5" : ""}
               label="Save"
-              onClick={updateSubmittedFormData}
+              onClick={handleUpdateSubmittedForm}
             />
           </div>
         )}
@@ -203,50 +194,43 @@ export const ApplicationPdfViewCommonProps = ({
         )}
         <IdMissionDataPdf
           formId={pdfId}
-          sectionKey="idMission"
+          sectionKey={ID_MISSION_SECTION_KEY}
           formInnerData={formInnerData}
           setFormInnerData={setFormInnerData}
         />
         {sectionsForPdf(form?.data?.sections, formInnerData).map((section, index) => {
-          const sectionData = formInnerData?.[section?.key];
-
-          const commonProps = {
-            _id: section._id,
-            name: section.name,
-            sectionKey: section?.key,
-            formInnerData: formInnerData,
-            setFormInnerData: setFormInnerData,
-            title: section.title,
-            fields: section?.fields ?? [],
-            blocks: section?.blocks ?? [],
-            isSignature: section?.isSignature,
-            reduxData: sectionData,
-            formLoading,
-            formRefetch,
-            step: section,
-          };
-
-          switch (section.title) {
-            case "company_information_blk":
-              return <CompanyInformationPdf key={index} {...commonProps} />;
-            case "beneficial_blk":
-              return <CompanyOwnersPdf key={index} {...commonProps} />;
-            case "bank_account_info_blk":
-              return <BankInfoPdf key={index} {...commonProps} />;
-            case "avg_transactions_blk":
-              return <ProcessingInfoPdf key={index} {...commonProps} />;
-            case "incorporation_article_blk":
-              return <DocumentsPdf key={index} {...commonProps} />;
-            case "custom_section":
-              return <CustomSectionPdf key={index} {...commonProps} />;
-            case "agreement_blk":
-              return <AggrementBlockPdf key={index} {...commonProps} />;
-            default:
-              return null;
-          }
+          const SectionComponent = SECTION_COMPONENTS[section.title];
+          if (!SectionComponent) return null;
+          return (
+            <SectionComponent
+              key={index}
+              _id={section._id}
+              name={section.name}
+              sectionKey={section?.key}
+              formInnerData={formInnerData}
+              setFormInnerData={setFormInnerData}
+              title={section.title}
+              fields={section?.fields ?? []}
+              blocks={section?.blocks ?? []}
+              isSignature={section?.isSignature}
+              reduxData={formInnerData?.[section?.key]}
+              formLoading={formLoading}
+              formRefetch={formRefetch}
+              step={section}
+            />
+          );
         })}
       </div>
     </>
+  );
+};
+
+const ApplicationPdfView = () => {
+  const { pdfId, userId } = useParams();
+  const [searchParams] = useSearchParams();
+  useApplyBranding({ formId: pdfId });
+  return (
+    <ApplicationPdfViewCommonProps userId={userId} pdfId={pdfId} pdfToken={searchParams.get("pdfToken")} isPdf={true} />
   );
 };
 

@@ -1,7 +1,20 @@
 // Visual preview of an application form derived from a CSV structure.
 // Rendered inside the AI chat when the AI calls the previewFormStructure tool.
 
-const SYSTEM_BLOCKS = new Set(["otp_blk", "company_scraping_blk", "id_mission_blk"]);
+const SECTION_KEYS = {
+  OTP: "otp_blk",
+  COMPANY_SCRAPING: "company_scraping_blk",
+  ID_MISSION: "id_mission_blk",
+  AGREEMENT: "agreement_blk",
+};
+
+const BADGES = {
+  SYSTEM_STEP: "System Step",
+  SIGNATURE: "Signature",
+  SECTION: "Section",
+  BLOCK: "Block",
+  HIDDEN: "Hidden — Underwriting",
+};
 
 // ── Field mockup ──────────────────────────────────────────────────────────────
 
@@ -128,7 +141,7 @@ const FieldMockup = ({ field }) => {
 // ── Section renderers ─────────────────────────────────────────────────────────
 
 const OtpSection = ({ section }) => (
-  <SectionCard section={section} badge="System Step">
+  <SectionCard section={section} badge={BADGES.SYSTEM_STEP}>
     <div className="flex flex-col items-center gap-2 py-2 text-center">
       <div className="text-2xl">✉️</div>
       <p className="text-[10px] text-gray-500">A verification code will be sent to the applicant's email address.</p>
@@ -150,7 +163,7 @@ const OtpSection = ({ section }) => (
 );
 
 const CompanyScrapingSection = ({ section }) => (
-  <SectionCard section={section} badge="System Step">
+  <SectionCard section={section} badge={BADGES.SYSTEM_STEP}>
     <div className="flex flex-col gap-2">
       <div className="flex flex-col gap-0.5">
         <label className="text-[10px] font-medium text-gray-600">
@@ -173,7 +186,7 @@ const CompanyScrapingSection = ({ section }) => (
 );
 
 const IdMissionSection = ({ section }) => (
-  <SectionCard section={section} badge="System Step">
+  <SectionCard section={section} badge={BADGES.SYSTEM_STEP}>
     <div className="flex flex-col items-center gap-2 py-2 text-center">
       <div className="text-2xl">🪪</div>
       <p className="text-[10px] text-gray-500">
@@ -187,7 +200,7 @@ const IdMissionSection = ({ section }) => (
 );
 
 const AgreementSection = ({ section }) => (
-  <SectionCard section={section} badge="Signature">
+  <SectionCard section={section} badge={BADGES.SIGNATURE}>
     {section.displayText && <p className="mb-2 text-[10px] text-gray-500 italic">{section.displayText}</p>}
     {section.signDisplayText && <p className="mb-2 text-[10px] text-gray-600">{section.signDisplayText}</p>}
     <div className="rounded border border-dashed border-gray-300 bg-gray-50 p-3 text-center">
@@ -200,7 +213,7 @@ const AgreementSection = ({ section }) => (
 const StandardSection = ({ section }) => (
   <SectionCard
     section={section}
-    badge={section.isHidden ? "Hidden — Underwriting" : section.isBlock ? "Block" : "Section"}
+    badge={section.isHidden ? BADGES.HIDDEN : section.isBlock ? BADGES.BLOCK : BADGES.SECTION}
   >
     {section.displayText && <p className="mb-2 text-[10px] text-gray-500 italic">{section.displayText}</p>}
     {section.fields?.length > 0 ? (
@@ -231,9 +244,9 @@ const SectionCard = ({ section, badge, children }) => (
         className={`rounded px-1.5 py-0.5 text-[9px] font-medium ${
           section.isHidden
             ? "bg-gray-200 text-gray-500"
-            : badge === "System Step"
+            : badge === BADGES.SYSTEM_STEP
               ? "bg-blue-100 text-blue-600"
-              : badge === "Signature"
+              : badge === BADGES.SIGNATURE
                 ? "bg-purple-100 text-purple-600"
                 : "bg-indigo-100 text-indigo-600"
         }`}
@@ -247,7 +260,7 @@ const SectionCard = ({ section, badge, children }) => (
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function FormPreview({ formName, sections }) {
+const FormPreview = ({ formName, sections }) => {
   return (
     <div className="mt-2 rounded-xl border border-indigo-100 bg-indigo-50/40 p-3">
       <div className="mb-2 flex items-center justify-between">
@@ -257,10 +270,10 @@ export default function FormPreview({ formName, sections }) {
       <div className="flex flex-col gap-2">
         {(sections || []).map((section, i) => {
           const t = section.sectionTitle;
-          if (t === "otp_blk") return <OtpSection key={i} section={section} />;
-          if (t === "company_scraping_blk") return <CompanyScrapingSection key={i} section={section} />;
-          if (t === "id_mission_blk") return <IdMissionSection key={i} section={section} />;
-          if (t === "agreement_blk") return <AgreementSection key={i} section={section} />;
+          if (t === SECTION_KEYS.OTP) return <OtpSection key={i} section={section} />;
+          if (t === SECTION_KEYS.COMPANY_SCRAPING) return <CompanyScrapingSection key={i} section={section} />;
+          if (t === SECTION_KEYS.ID_MISSION) return <IdMissionSection key={i} section={section} />;
+          if (t === SECTION_KEYS.AGREEMENT) return <AgreementSection key={i} section={section} />;
           return <StandardSection key={i} section={section} />;
         })}
       </div>
@@ -269,4 +282,6 @@ export default function FormPreview({ formName, sections }) {
       </p>
     </div>
   );
-}
+};
+
+export default FormPreview;

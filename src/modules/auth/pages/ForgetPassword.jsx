@@ -1,9 +1,10 @@
-import Button from "@/components/shared/Button";
-import TextField from "@/components/shared/TextField";
-import { useForgetPasswordMutation } from "@/redux/apis/auth.apis";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useForgetPasswordMutation } from "@/redux/apis/auth.apis";
+import Button from "@/components/shared/Button";
+import TextField from "@/components/shared/TextField";
+import { AUTH_ROUTES } from "../utils/auth.constants";
 
 const ForgetPassword = () => {
   const navigate = useNavigate();
@@ -22,10 +23,10 @@ const ForgetPassword = () => {
     try {
       const res = await forgetPassword({ email: trimmedEmail }).unwrap();
       if (res.success) {
-        navigate("/reset-mail-sent", { state: { email: trimmedEmail } });
+        navigate(AUTH_ROUTES.RESET_MAIL_SENT, { state: { email: trimmedEmail } });
       }
     } catch (error) {
-      console.log("error while requesting password reset", error);
+      console.error("Forget password error:", error);
       toast.error(error?.data?.message || "Error while requesting password reset");
     }
   };
@@ -71,7 +72,7 @@ const ForgetPassword = () => {
 
           <div className="text-center text-sm text-gray-500">
             Remember your password?{" "}
-            <Link className="text-textPrimary! hover:underline!" to="/login">
+            <Link className="text-textPrimary! hover:underline!" to={AUTH_ROUTES.LOGIN}>
               Sign in
             </Link>
           </div>

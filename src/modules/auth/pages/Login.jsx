@@ -1,13 +1,15 @@
-import Button from "@/components/shared/Button";
-import useBranding from "@/hooks/useBranding";
-import { useGetMyProfileFirstTimeMutation, useLoginMutation } from "@/redux/apis/auth.apis";
-import { userExist, userNotExist } from "@/redux/slices/auth.slice";
-import { useCallback, useState } from "react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import TextField from "@/components/shared/TextField";
+import { useGetMyProfileFirstTimeMutation, useLoginMutation } from "@/redux/apis/auth.apis";
+import { userExist, userNotExist } from "@/redux/slices/auth.slice";
 import useAiChat from "@/hooks/useAiChat";
-import { Link } from "react-router-dom";
+import useBranding from "@/hooks/useBranding";
+import Button from "@/components/shared/Button";
+import TextField from "@/components/shared/TextField";
+import { AUTH_ROUTES } from "../utils/auth.constants";
+import { applyUserBranding } from "../utils/auth.utils";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -16,85 +18,22 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [login, { isLoading }] = useLoginMutation();
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
-  const {
-    setName,
-    setPrimaryColor,
-    setSecondaryColor,
-    setAccentColor,
-    setTextColor,
-    setLinkColor,
-    setBackgroundColor,
-    setFrameColor,
-    setFontFamily,
-    setLogo,
-    setButtonTextPrimary,
-    setButtonTextSecondary,
-    setHeaderBackground,
-    setFooterBackground,
-    setHeaderAlignment,
-    setHeaderText,
-    setFooterText,
-    setApplicationFooterText,
-  } = useBranding();
+  const brandingSetters = useBranding();
 
-  const getUserAndSetBranding = useCallback(async () => {
+  const getUserAndSetBranding = async () => {
     try {
       const res = await getUserProfile().unwrap();
-      console.log("res", res);
       if (res?.success) {
         dispatch(userExist(res?.data));
-        const formBranding = res?.data?.branding;
-        console.log("form branding is ", formBranding);
-        console.log("returned branding is applied");
-        if (formBranding?.colors) {
-          setName(formBranding.name);
-          setPrimaryColor(formBranding.colors.primary);
-          setSecondaryColor(formBranding.colors.secondary);
-          setAccentColor(formBranding.colors.accent);
-          setTextColor(formBranding.colors.text);
-          setLinkColor(formBranding.colors.link);
-          setBackgroundColor(formBranding.colors.background);
-          setFrameColor(formBranding.colors.frame);
-          setFontFamily(formBranding.fontFamily);
-          setLogo(formBranding.selectedLogo);
-          setButtonTextPrimary(formBranding.colors.buttonTextPrimary);
-          setButtonTextSecondary(formBranding.colors.buttonTextSecondary);
-          setHeaderBackground(formBranding.colors.headerBackground);
-          setFooterBackground(formBranding.colors.footerBackground);
-          setHeaderAlignment(formBranding.headerAlignment);
-          setHeaderText(formBranding.colors.headerText);
-          setFooterText(formBranding.colors.footerText);
-          setApplicationFooterText(formBranding.applicationFooterText);
-        }
+        applyUserBranding(res?.data?.branding, brandingSetters);
       } else {
         dispatch(userNotExist());
       }
-    } catch (err) {
-      console.log("error in app.jsx", err);
+    } catch (error) {
+      console.error("Get my profile error:", error);
       dispatch(userNotExist());
     }
-  }, [
-    getUserProfile,
-    dispatch,
-    setName,
-    setPrimaryColor,
-    setSecondaryColor,
-    setAccentColor,
-    setTextColor,
-    setLinkColor,
-    setBackgroundColor,
-    setFrameColor,
-    setFontFamily,
-    setLogo,
-    setButtonTextPrimary,
-    setButtonTextSecondary,
-    setHeaderBackground,
-    setFooterBackground,
-    setHeaderAlignment,
-    setHeaderText,
-    setFooterText,
-    setApplicationFooterText,
-  ]);
+  };
 
   const loginHandler = async (e) => {
     e.preventDefault();
@@ -106,7 +45,7 @@ const Login = () => {
         await getUserAndSetBranding();
       }
     } catch (error) {
-      console.log("error while logging in", error);
+      console.error("Login error:", error);
       toast.error(error?.data?.message || "Error while login");
     }
   };
@@ -158,7 +97,7 @@ const Login = () => {
             />
           </div>
           <div className="text-right">
-            <Link className="text-textPrimary! hover:underline!" to="/forget-password">
+            <Link className="text-textPrimary! hover:underline!" to={AUTH_ROUTES.FORGET_PASSWORD}>
               Forgot Password
             </Link>
           </div>

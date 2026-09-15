@@ -4,58 +4,23 @@ import { RxEyeOpen } from "react-icons/rx";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 
-// ----------------------
-// FORMAT UTILITIES
-// ----------------------
+import { FIELD_FORMATS, FIELD_NAME_MATCHERS, FIELD_TYPES } from "@/constants";
+import {
+  focusNextField,
+  formatByParts,
+  formatDateValue,
+  limitByFormat,
+  normalizeDateValue,
+} from "@/utils/fieldFormatting";
 
-const getFormatParts = (format) =>
-  String(format || "")
-    .split(",")
-    .map((n) => parseInt(n.trim(), 10))
-    .filter((n) => Number.isFinite(n) && n > 0);
-
-const getMaxDigitsFromFormat = (format) => getFormatParts(format).reduce((a, b) => a + b, 0);
-
-const limitByFormat = (value, format) => {
-  const maxDigits = getMaxDigitsFromFormat(format);
-  const digits = String(value || "").replace(/\D/g, "");
-  if (!maxDigits) return digits;
-  return digits.slice(0, maxDigits);
-};
-
-const formatByParts = (raw, format) => {
-  const parts = getFormatParts(format);
-  if (!parts.length) return String(raw || "");
-  const maxDigits = parts.reduce((a, b) => a + b, 0);
-  const digits = String(raw || "").replace(/\D/g, "").slice(0, maxDigits);
-  let out = "";
-  let start = 0;
-  for (let i = 0; i < parts.length; i++) {
-    if (start >= digits.length) break;
-    out += digits.slice(start, start + parts[i]);
-    start += parts[i];
-    if (i < parts.length - 1 && start < digits.length) out += "-";
-  }
-  return out;
-};
-
-const focusNextField = (el) => {
-  if (!el) return;
-  const focusable = Array.from(
-    document.querySelectorAll("input:not([disabled]), select:not([disabled]), textarea:not([disabled])"),
-  ).filter((f) => f.offsetParent !== null && f.tabIndex !== -1);
-  const idx = focusable.indexOf(el);
-  if (idx >= 0 && idx + 1 < focusable.length) focusable[idx + 1].focus();
-};
-// -------------------------
-// COMPONENT
-// -------------------------
+const TEL_TYPE = "tel";
+const BLUR_CLOSE_DELAY_MS = 150;
 
 const TextField = ({
   isPdf = false,
   cn,
   label,
-  type = "text",
+  type = FIELD_TYPES.TEXT,
   leftIcon,
   cnLeft,
   rightIcon,
@@ -84,100 +49,116 @@ const TextField = ({
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
   const inputRef = useRef(null);
 
-  const inputVal = String(value ?? "").toLowerCase();
-
-  const isPhone = type === "tel" || name?.toLowerCase().includes("phone");
-  const isSSN = name?.toLowerCase().includes("ssn");
-  const isTaxId = name?.toLowerCase().includes("tax");
+  const lowerName = name?.toLowerCase();
+  const isDate = type === FIELD_TYPES.DATE;
+  const isPhone = type === TEL_TYPE || lowerName?.includes(FIELD_NAME_MATCHERS.PHONE);
   let effectiveFormatting = formatting;
-  if (isSSN) effectiveFormatting = "3,2,4";
-  if (isTaxId) effectiveFormatting = "2,7";
+  if (lowerName?.includes(FIELD_NAME_MATCHERS.SSN)) effectiveFormatting = FIELD_FORMATS.SSN;
+  if (lowerName?.includes(FIELD_NAME_MATCHERS.TAX)) effectiveFormatting = FIELD_FORMATS.TAX_ID;
 
+  const inputVal = String(value ?? "").toLowerCase();
   const filteredSuggestions = Array.isArray(suggestions)
     ? suggestions.filter((s) => s.toLowerCase().includes(inputVal))
     : [];
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "";
-    const [year, month, day] = dateStr.split(/[-/]/);
-    return `${year}-${month}-${day}`;
+  const iconPadding = `${leftIcon ? "pl-10" : ""} ${rightIcon ? "pr-10" : ""}`;
+  const emptyClasses =
+    !value && required && !isPdf && borderAndBgChangeIfEmpty ? "border-accent bg-highlighting border-2" : "border-frameColor";
+  const disabledClasses = disabled ? "opacity-70 cursor-not-allowed" : "";
+  const aiId = rest["data-ai-id"] || id;
+
+  const getDisplayValue = (raw) => {
+    if (!raw) return "";
+    if (effectiveFormatting && !isDate && !isPhone) return formatByParts(String(raw), effectiveFormatting);
+    return raw;
   };
 
-  const normalizeDate = (dateStr) => {
-    if (!dateStr) return "";
-    const [year, month, day] = dateStr.split(/[-\s/]/);
-    return `${year}-${month}-${day}`;
+  const closeSuggestions = () => {
+    setShowSuggestions(false);
+    setSuggestionIndex(-1);
   };
 
-  const getDisplayValue = (value) => {
-    if (!value) return "";
-    if (effectiveFormatting && type !== "date" && !isPhone) {
-      return formatByParts(String(value), effectiveFormatting);
+  const pickSuggestion = (picked) => {
+    onChange?.({ target: { name, value: picked } });
+    closeSuggestions();
+  };
+
+  const handleKeyDown = (e) => {
+    if (showSuggestions && filteredSuggestions.length) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSuggestionIndex((i) => Math.min(i + 1, filteredSuggestions.length - 1));
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSuggestionIndex((i) => Math.max(i - 1, 0));
+        return;
+      }
+      if ((e.key === "Enter" || e.key === "Tab") && suggestionIndex >= 0) {
+        const picked = filteredSuggestions[suggestionIndex];
+        if (!picked) return;
+        if (e.key === "Enter") e.preventDefault();
+        pickSuggestion(picked);
+        if (e.key === "Enter") setTimeout(() => focusNextField(inputRef.current), 0);
+        return;
+      }
+      if (e.key === "Escape") {
+        closeSuggestions();
+        return;
+      }
     }
-    return value;
+    rest.onKeyDown?.(e);
   };
 
-  // -----------------------------
-  // TEXTAREA MODE
-  // -----------------------------
-  if (type === "textarea")
+  const labelElement = label && (
+    <h4 className={`text-textPrimary text-base font-medium lg:text-lg ${labelCs && labelCs}`}>{label}</h4>
+  );
+  const leftIconElement = leftIcon && (
+    <span className={`absolute top-1/2 left-3 -translate-y-1/2 text-gray-500 ${cnLeft}`}>{leftIcon}</span>
+  );
+  const rightIconElement = rightIcon && (
+    <span className={`absolute top-1/2 right-3 flex -translate-y-1/2 items-center justify-center text-gray-500 ${cnRight}`}>
+      <button type="button" onClick={onClickRightIcon} className="cursor-pointer">
+        {rightIcon}
+      </button>
+    </span>
+  );
+
+  if (type === FIELD_TYPES.TEXTAREA) {
     return (
       <div className={`input-box flex w-full flex-col items-start ${className}`}>
-        {label && (
-          <h4 className={`text-textPrimary text-base font-medium lg:text-lg ${labelCs && labelCs}`}>{label}</h4>
-        )}
-
+        {labelElement}
         <div className={`relative w-full ${label ? "mt-2" : ""}`}>
-          {leftIcon && (
-            <span className={`absolute top-1/2 left-3 -translate-y-1/2 text-gray-500 ${cnLeft}`}>{leftIcon}</span>
-          )}
-
+          {leftIconElement}
           <textarea
-            onChange={(e) => {
-              const val = type === "date" ? normalizeDate(e.target.value) : e.target.value;
-              onChange?.({ target: { name, value: val } });
-            }}
+            onChange={(e) => onChange?.({ target: { name, value: e.target.value } })}
             rows={rows}
             cols={cols}
             placeholder={placeholder}
             name={name}
             id={id}
-            data-ai-id={rest["data-ai-id"] || id}
+            data-ai-id={aiId}
             disabled={disabled}
-            value={type === "date" ? formatDate(value) : value}
+            value={value}
             autoComplete="off"
             onFocus={() => setShowSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-            className={`${cn} relative min-h-[${textAreaHeight}]! w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:text-base $ ${
-              leftIcon ? "pl-10" : ""
-            } ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf && borderAndBgChangeIfEmpty ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), BLUR_CLOSE_DELAY_MS)}
+            className={`${cn} relative min-h-[${textAreaHeight}]! w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:text-base ${iconPadding} ${emptyClasses} ${disabledClasses}`}
             {...rest}
           />
-
-          {rightIcon && (
-            <span
-              className={`absolute top-1/2 right-3 flex -translate-y-1/2 items-center justify-center text-gray-500 ${cnRight}`}
-            >
-              <button onClick={onClickRightIcon} className="cursor-pointer">
-                {rightIcon}
-              </button>
-            </span>
-          )}
+          {rightIconElement}
         </div>
       </div>
     );
+  }
 
-  // -----------------------------
-  // INPUT MODE
-  // -----------------------------
   return (
     <div className={`input-box flex w-full flex-col items-start ${className}`}>
-      {label && <h4 className={`text-textPrimary text-base font-medium lg:text-lg ${labelCs && labelCs}`}>{label}</h4>}
+      {labelElement}
 
       <div className={`relative w-full ${label ? "mt-2" : ""}`}>
-        {leftIcon && (
-          <span className={`absolute top-1/2 left-3 -translate-y-1/2 text-gray-500 ${cnLeft}`}>{leftIcon}</span>
-        )}
+        {leftIconElement}
 
         {isPhone ? (
           <div className="relative">
@@ -188,7 +169,7 @@ const TextField = ({
                 disabled,
                 id,
                 name,
-                "data-ai-id": rest["data-ai-id"] || id,
+                "data-ai-id": aiId,
               }}
               international
               limitMaxLength
@@ -196,19 +177,10 @@ const TextField = ({
               disabled={disabled}
               placeholder={placeholder || "Enter phone number"}
               value={value || ""}
-              onChange={(val) => {
-                onChange?.({
-                  target: {
-                    name,
-                    value: val || "", // E.164
-                  },
-                });
-              }}
-              className={`${cn} relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${
-                leftIcon ? "pl-10" : ""
-              } ${rightIcon ? "pr-10" : ""} ${
+              onChange={(val) => onChange?.({ target: { name, value: val || "" } })}
+              className={`${cn} relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${iconPadding} ${
                 required && value && !isValidPhoneNumber(value) ? "border-red-500 border-2" : "border-frameColor"
-              } ${!value && required && !isPdf && borderAndBgChangeIfEmpty ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
+              } ${emptyClasses} ${disabledClasses}`}
             />
 
             {value && !isValidPhoneNumber(value) && <p className="mt-1 text-sm text-red-500">Invalid phone number</p>}
@@ -217,59 +189,26 @@ const TextField = ({
           <input
             ref={inputRef}
             id={id}
-            data-ai-id={rest["data-ai-id"] || id}
+            data-ai-id={aiId}
             name={name}
             data-ai-has-suggestions={suggestions?.length ? "true" : undefined}
             disabled={disabled}
             placeholder={placeholder}
             autoComplete="off"
-            type={showMasked ? "password" : type}
-            value={type === "date" ? formatDate(value) : getDisplayValue(value)}
-            className={`${cn} relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${leftIcon ? "pl-10" : ""} ${rightIcon ? "pr-10" : ""} ${!value && required && !isPdf && borderAndBgChangeIfEmpty ? "border-accent bg-highlighting border-2" : "border-frameColor"} ${disabled ? "opacity-70 cursor-not-allowed" : ""} `}
+            type={showMasked ? FIELD_TYPES.PASSWORD : type}
+            value={isDate ? formatDateValue(value) : getDisplayValue(value)}
+            className={`${cn} relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${iconPadding} ${emptyClasses} ${disabledClasses} `}
             {...rest}
             onFocus={() => setShowSuggestions(true)}
-            onBlur={() =>
-              setTimeout(() => {
-                setShowSuggestions(false);
-                setSuggestionIndex(-1);
-              }, 150)
-            }
+            onBlur={() => setTimeout(closeSuggestions, BLUR_CLOSE_DELAY_MS)}
             onChange={(e) => {
               let val = e.target.value;
-              if (effectiveFormatting && type !== "date" && !isPhone) {
-                val = limitByFormat(val, effectiveFormatting);
-              }
-              if (type === "date") val = normalizeDate(val);
+              if (effectiveFormatting && !isDate && !isPhone) val = limitByFormat(val, effectiveFormatting);
+              if (isDate) val = normalizeDateValue(val);
               setSuggestionIndex(-1);
               onChange?.({ target: { name, value: val } });
             }}
-            onKeyDown={(e) => {
-              if (showSuggestions && filteredSuggestions.length) {
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  setSuggestionIndex((i) => Math.min(i + 1, filteredSuggestions.length - 1));
-                  return;
-                } else if (e.key === "ArrowUp") {
-                  e.preventDefault();
-                  setSuggestionIndex((i) => Math.max(i - 1, 0));
-                  return;
-                } else if ((e.key === "Enter" || e.key === "Tab") && suggestionIndex >= 0) {
-                  const picked = filteredSuggestions[suggestionIndex];
-                  if (!picked) return;
-                  if (e.key === "Enter") e.preventDefault();
-                  onChange?.({ target: { name, value: picked } });
-                  setShowSuggestions(false);
-                  setSuggestionIndex(-1);
-                  if (e.key === "Enter") setTimeout(() => focusNextField(inputRef.current), 0);
-                  return;
-                } else if (e.key === "Escape") {
-                  setShowSuggestions(false);
-                  setSuggestionIndex(-1);
-                  return;
-                }
-              }
-              rest.onKeyDown?.(e);
-            }}
+            onKeyDown={handleKeyDown}
           />
         )}
 
@@ -286,9 +225,7 @@ const TextField = ({
                   onMouseEnter={() => setSuggestionIndex(index)}
                   onMouseDown={(e) => {
                     e.preventDefault();
-                    onChange?.({ target: { name, value: suggestion } });
-                    setShowSuggestions(false);
-                    setSuggestionIndex(-1);
+                    pickSuggestion(suggestion);
                     setTimeout(() => focusNextField(inputRef.current), 0);
                   }}
                 >
@@ -299,15 +236,7 @@ const TextField = ({
           </div>
         )}
 
-        {rightIcon && (
-          <span
-            className={`absolute top-1/2 right-3 flex -translate-y-1/2 items-center justify-center text-gray-500 ${cnRight}`}
-          >
-            <button onClick={onClickRightIcon} className="cursor-pointer">
-              {rightIcon}
-            </button>
-          </span>
-        )}
+        {rightIconElement}
 
         {isMasked && (
           <span

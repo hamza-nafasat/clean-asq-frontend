@@ -1,7 +1,7 @@
 import PreFillModal from "@/components/shared/AIChat/PreFillModal.jsx";
 import FieldErrorModal from "@/components/shared/AIChat/FieldErrorModal.jsx";
 
-export default function ChatOverlays({
+const ChatOverlays = ({
   preFillModal,
   fieldErrorModal,
   translationTooltip,
@@ -14,7 +14,7 @@ export default function ChatOverlays({
   handlePreFillSkip,
   handleFieldErrorKeep,
   handleFieldErrorSave,
-}) {
+}) => {
   return (
     <>
       {preFillModal && (
@@ -81,4 +81,6 @@ export default function ChatOverlays({
       `}</style>
     </>
   );
-}
+};
+
+export default ChatOverlays;

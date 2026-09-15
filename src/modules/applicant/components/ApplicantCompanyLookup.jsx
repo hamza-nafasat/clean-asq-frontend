@@ -1,85 +1,82 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  useCompanyLookupMutation,
+  useCompanyVerificationMutation,
+  useGetSingleFormQueryQuery,
+  useSaveFormInDraftMutation,
+} from "@/redux/apis/form.apis";
+import { addLookupData } from "@/redux/slices/company.slice";
+import { setCurrentDraftId, updateFormHeaderAndFooter, updateFormState } from "@/redux/slices/form.slice";
+import { toast } from "react-toastify";
+import { GoCheckCircle } from "react-icons/go";
+import { useApplicantScreenContext } from "@/hooks/useApplicantScreenContext";
+import useApplicantFocusFirstInput from "@/hooks/useApplicantFocusFirstInput";
+import { useEnterToNextField } from "@/hooks/useEnterToNextField";
+import LocationStatusModal from "@/components/modals/LocationStatusModal";
 import Button from "@/components/shared/Button";
 import Checkbox from "@/components/shared/Checkbox";
 import CustomLoading from "@/components/shared/CustomLoading";
 import Modal from "@/components/shared/Modal";
 import TextField from "@/components/shared/TextField";
-import { useApplicantScreenContext } from "@/hooks/useApplicantScreenContext";
-import { useEnterToNextField } from "@/hooks/useEnterToNextField";
-import getEnv from "@/utils/env";
+import ApplicantFormDisplayTextModal from "./ApplicantFormDisplayTextModal";
+import { formKeys } from "@/constants";
 import {
-  useCompanyLookupMutation,
-  useCompanyVerificationMutation,
-  useFormateTextInMarkDownMutation,
-  useGetSingleFormQueryQuery,
-  useSaveFormInDraftMutation,
-  useUpdateFormMutation,
-} from "@/redux/apis/form.apis";
-import { addLookupData } from "@/redux/slices/company.slice";
-import { setCurrentDraftId, updateFormHeaderAndFooter, updateFormState } from "@/redux/slices/form.slice";
-import DOMPurify from "dompurify";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { GoCheckCircle } from "react-icons/go";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import LocationStatusModal from "@/components/modals/LocationStatusModal";
-
+  COMPANY_VERIFICATION_STATUSES,
+  DEFAULT_HEADER_FOOTER,
+  DISPLAY_TEXT_FIELDS,
+  SECTION_KEYS,
+} from "../utils/applicant.constants";
+import { buildApplicationFormPath, withLinkTargets } from "../utils/applicant.utils6";
+import { buildLookupData } from "../utils/applicant.utils7";
+import getEnv from "@/utils/env";
 import { isNotGuestRoleValue } from "@/utils/permissions";
-function CompanyVerification({ formId, brandingName, draftId }) {
+
+// inputs stay read-only while a company request runs
+const ignoreChange = () => {};
+
+const CompanyVerification = ({ formId, brandingName, draftId }) => {
   const companyFormRef = useRef(null);
-  const hasFocusedRef = useRef(false);
   const submitFromEnterRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state?.auth);
+  const { formData, currentDraftId } = useSelector((state) => state?.form);
+  const activeDraftId = draftId || currentDraftId;
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", url: "", noWebsite: false });
   const [apisRes, setApisRes] = useState({ companyLookup: {}, companyVerify: {} });
-  const [verifyCompany, { isLoading: verifyCompanyLoading }] = useCompanyVerificationMutation();
-  const [lookupCompany, { isLoading: lookupCompanyLoading }] = useCompanyLookupMutation();
-  const { formData, currentDraftId } = useSelector((state) => state?.form);
-  const activeDraftId = draftId || currentDraftId;
-  const { data: formBackendData, isLoading, refetch } = useGetSingleFormQueryQuery({ _id: formId });
-  const [saveFormInDraft, { isLoading: isSavingFormInDraft }] = useSaveFormInDraftMutation();
   const [locationStatusModal, setLocationStatusModal] = useState(false);
   const [locationData, setLocationData] = useState({});
-  const [isCreator, setIsCreator] = useState(false);
-  const [openCompanyVerificationDisplayTextModal, setOpenCompanyVerificationDisplayTextModal] = useState(false);
-  useEffect(() => {
-    if (user && formBackendData) {
-      setIsCreator(user?._id && user?._id === formBackendData?.data?.owner && isNotGuestRoleValue(user));
-    }
-    // add footer and header text in state
-    if (formBackendData?.data?.footerText || formBackendData?.data?.headerText || formBackendData?.data?.name) {
-      dispatch(
-        updateFormHeaderAndFooter({
-          headerText: formBackendData?.data?.headerText || formBackendData?.data?.name || "",
-          footerText: formBackendData?.data?.footerText || "All rights reserved",
-          headerTextSize: formBackendData?.data?.headerTextSize || 24,
-        }),
-      );
-    }
-    return () => {
-      dispatch(updateFormHeaderAndFooter({ headerText: "", footerText: "All rights reserved" }));
-    };
-  }, [dispatch, formBackendData, user]);
+  const [isDisplayTextModalOpen, setIsDisplayTextModalOpen] = useState(false);
+  const [verifyCompany, { isLoading: verifyCompanyLoading }] = useCompanyVerificationMutation();
+  const [lookupCompany, { isLoading: lookupCompanyLoading }] = useCompanyLookupMutation();
+  const { data: formBackendData, isLoading, refetch } = useGetSingleFormQueryQuery({ _id: formId });
+  const [saveFormInDraft, { isLoading: isSavingFormInDraft }] = useSaveFormInDraftMutation();
+
+  const formDocument = formBackendData?.data;
+  const isCreator = Boolean(
+    user && formBackendData && user?._id && user?._id === formDocument?.owner && isNotGuestRoleValue(user),
+  );
+  const isRequestBusy = verifyCompanyLoading || lookupCompanyLoading;
+  const isContinueDisabled = loading || isSavingFormInDraft || isRequestBusy;
 
   const goToApplicationWithDraft = useCallback(
     async ({ createIfMissing = false } = {}) => {
       let id = activeDraftId;
       try {
-        // Complete OR skip: the first visit to this page creates the draft. Later
-        // saves (IDMission + stepper) reuse this same id until the form is submitted.
+        // the first visit creates the draft that later steps reuse
         if (!id && createIfMissing) {
           const res = await saveFormInDraft({ formId, formData: formData || {} }).unwrap();
           id = res?.data?.draftId;
         }
         if (id) dispatch(setCurrentDraftId(id));
-        return navigate(`/application-form/${brandingName}/${formId}${id ? `?draftId=${id}` : ""}`);
+        return navigate(buildApplicationFormPath(brandingName, formId, id));
       } catch (error) {
-        console.log("error while creating draft", error);
+        console.error("Create draft error:", error);
         toast.error(error?.data?.message || "Failed to save draft");
-        return navigate(`/application-form/${brandingName}/${formId}${id ? `?draftId=${id}` : ""}`);
+        return navigate(buildApplicationFormPath(brandingName, formId, id));
       }
     },
     [activeDraftId, brandingName, dispatch, formData, formId, navigate, saveFormInDraft],
@@ -88,19 +85,15 @@ function CompanyVerification({ formId, brandingName, draftId }) {
   const saveInProgress = useCallback(
     async ({ data, name, draftId: overrideDraftId }) => {
       try {
-        const formDataInRedux = { ...formData, [name]: data };
         const res = await saveFormInDraft({
-          formId: formId,
+          formId,
           draftId: overrideDraftId || activeDraftId,
-          formData: formDataInRedux,
+          formData: { ...formData, [name]: data },
         }).unwrap();
-        if (res.success) {
-          if (res?.data?.draftId) dispatch(setCurrentDraftId(res.data.draftId));
-          console.log("form saved in draft successfully");
-        }
+        if (res.success && res?.data?.draftId) dispatch(setCurrentDraftId(res.data.draftId));
         return res;
       } catch (error) {
-        console.log("error while saving form in draft", error);
+        console.error("Save draft error:", error);
         toast.error(error?.data?.message || "Error while saving form in draft");
       }
     },
@@ -114,33 +107,19 @@ function CompanyVerification({ formId, brandingName, draftId }) {
         const lookupCompanyRes = await lookupCompany({ name: form?.name, url: form?.url, formId }).unwrap();
         if (lookupCompanyRes?.success) {
           setApisRes((prev) => ({ ...prev, companyLookup: lookupCompanyRes?.data }));
-          const lookupDataObj = lookupCompanyRes?.data?.lookupData || {};
-          const totalStrEntries = Object.entries(lookupDataObj);
-          const totalStr = totalStrEntries.filter(([key]) => key.includes("source"));
-          const verifiedStr = totalStrEntries.filter(([key]) => !key.includes("source"));
-
-          let totalLookupData = totalStr?.map(([key, value]) => {
-            let nameObj = verifiedStr?.find(([k]) => key?.includes(k));
-            if (value == "Not found") return {};
-            return {
-              source: String(value).split(",")[0],
-              name: nameObj?.[0],
-              result: nameObj?.[1],
-            };
-          });
-          totalLookupData = totalLookupData.filter((item) => item.name !== undefined);
+          const totalLookupData = buildLookupData(lookupCompanyRes?.data?.lookupData || {});
           dispatch(addLookupData(totalLookupData));
-          dispatch(updateFormState({ data: totalLookupData, name: "company_lookup_data" }));
+          dispatch(updateFormState({ data: totalLookupData, name: formKeys.company_lookup_data }));
           const saveRes = await saveInProgress({
             data: totalLookupData,
-            name: "company_lookup_data",
+            name: formKeys.company_lookup_data,
             draftId: draftIdForSave,
           });
           toast.success("Company lookup successfully completed");
           return saveRes?.data?.draftId;
         }
       } catch (error) {
-        console.log("Error lookup company:", error);
+        console.error("Lookup company error:", error);
         toast.error(error?.data?.message || "Failed to lookup company");
       }
     },
@@ -149,32 +128,29 @@ function CompanyVerification({ formId, brandingName, draftId }) {
 
   const handleSubmit = async () => {
     try {
-      if (form?.noWebsite) {
-        return goToApplicationWithDraft({ createIfMissing: true });
-      }
+      if (form?.noWebsite) return goToApplicationWithDraft({ createIfMissing: true });
       if (!form?.name || !form?.url) return toast.error("Please fill all fields");
       setLoading(true);
-      const companyVerifyPromise = verifyCompany({ name: form?.name, url: form?.url, formId }).unwrap();
-      const companyVerifyRes = await companyVerifyPromise;
-      if (companyVerifyRes?.success && companyVerifyRes?.data?.verificationStatus !== "unverified") {
+      const companyVerifyRes = await verifyCompany({ name: form?.name, url: form?.url, formId }).unwrap();
+      if (
+        companyVerifyRes?.success &&
+        companyVerifyRes?.data?.verificationStatus !== COMPANY_VERIFICATION_STATUSES.UNVERIFIED
+      ) {
         setApisRes((prev) => ({ ...prev, companyVerify: companyVerifyRes?.data }));
         toast.success("Company verified successfully");
-
         let id = activeDraftId;
         if (!id) {
           const res = await saveFormInDraft({ formId, formData: formData || {} }).unwrap();
           id = res?.data?.draftId;
         }
         if (id) dispatch(setCurrentDraftId(id));
-
-        // Lookup keeps running after redirect so Enter/Continue is not blocked here.
+        // lookup keeps running after the redirect
         companyLookup(id);
-
-        return navigate(`/application-form/${brandingName}/${formId}${id ? `?draftId=${id}` : ""}`);
+        return navigate(buildApplicationFormPath(brandingName, formId, id));
       }
       toast.error("Company verification failed, please try again");
     } catch (error) {
-      console.log("Error verifying company:", error);
+      console.error("Verify company error:", error);
       toast.error(error?.data?.message || "Failed to verify company");
     } finally {
       setLoading(false);
@@ -182,16 +158,11 @@ function CompanyVerification({ formId, brandingName, draftId }) {
   };
 
   submitFromEnterRef.current = () => {
-    if (loading || isSavingFormInDraft || verifyCompanyLoading || lookupCompanyLoading) return;
+    if (isContinueDisabled) return;
     handleSubmit();
   };
+  useEnterToNextField(companyFormRef, { onLastFieldRef: submitFromEnterRef, includeCheckboxes: true });
 
-  useEnterToNextField(companyFormRef, {
-    onLastFieldRef: submitFromEnterRef,
-    includeCheckboxes: true,
-  });
-
-  // Register this page with the AI applicant assistant
   useApplicantScreenContext({
     screenId: "company-verification",
     screenName: "Company Information",
@@ -201,9 +172,8 @@ function CompanyVerification({ formId, brandingName, draftId }) {
       'If the applicant says their company has no website, fill field "noWebsite" with value "true" to check the checkbox — this removes the URL requirement.',
     aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
     formRef: companyFormRef,
-    currentState: {}, // fields discovered from DOM via formRef
+    currentState: {},
     actions: {
-      // fillField auto-provided by AIChatContext via DOM dispatch (formRef above)
       goToNextStep: () => handleSubmit(),
       scrollToField: ({ fieldId }) => {
         const el = document.getElementById(fieldId) || document.querySelector(`[name="${fieldId}"]`);
@@ -213,50 +183,45 @@ function CompanyVerification({ formId, brandingName, draftId }) {
     deps: [form],
   });
 
+  // header and footer text for the layout
   useEffect(() => {
-    if (formBackendData?.data) {
-      const form = formBackendData?.data;
-      setLocationStatusModal(form?.locationStatus);
-      setLocationData({
-        logo: form?.branding?.selectedLogo || "",
-        title: form?.locationTitle,
-        subtitle: form?.locationSubtitle,
-        message: form?.formatedLocationMessage,
-      });
+    if (formDocument?.footerText || formDocument?.headerText || formDocument?.name) {
+      dispatch(
+        updateFormHeaderAndFooter({
+          headerText: formDocument?.headerText || formDocument?.name || "",
+          footerText: formDocument?.footerText || DEFAULT_HEADER_FOOTER.footerText,
+          headerTextSize: formDocument?.headerTextSize || 24,
+        }),
+      );
     }
-  }, [formBackendData]);
-
-  // Focus the first input once the form finishes loading.
-  // Can't use [] deps because the form renders <CustomLoading/> while isLoading=true,
-  // so the container ref isn't attached until isLoading flips to false.
-  useEffect(() => {
-    if (isLoading || hasFocusedRef.current) return;
-    hasFocusedRef.current = true;
-    let frame1, frame2;
-    frame1 = requestAnimationFrame(() => {
-      frame2 = requestAnimationFrame(() => {
-        const container = companyFormRef.current;
-        if (!container) return;
-        const inputs = Array.from(container.querySelectorAll("input:not([disabled]):not([readonly])")).filter(
-          (el) => el.offsetParent !== null,
-        );
-        if (inputs.length > 0) inputs[0].focus();
-      });
-    });
     return () => {
-      cancelAnimationFrame(frame1);
-      cancelAnimationFrame(frame2);
+      dispatch(updateFormHeaderAndFooter({ ...DEFAULT_HEADER_FOOTER }));
     };
-  }, [isLoading]);
+  }, [dispatch, formDocument, user]);
+
+  useEffect(() => {
+    if (!formDocument) return;
+    setLocationStatusModal(formDocument?.locationStatus);
+    setLocationData({
+      logo: formDocument?.branding?.selectedLogo || "",
+      title: formDocument?.locationTitle,
+      subtitle: formDocument?.locationSubtitle,
+      message: formDocument?.formatedLocationMessage,
+    });
+  }, [formDocument]);
+
+  useApplicantFocusFirstInput(companyFormRef, !isLoading);
 
   return (
     <>
-      {openCompanyVerificationDisplayTextModal && formBackendData?.data && (
-        <Modal onClose={() => setOpenCompanyVerificationDisplayTextModal(false)}>
-          <CompanyVerificationDisplayText
+      {isDisplayTextModalOpen && formDocument && (
+        <Modal onClose={() => setIsDisplayTextModalOpen(false)}>
+          <ApplicantFormDisplayTextModal
+            form={formDocument}
+            fieldKeys={DISPLAY_TEXT_FIELDS.COMPANY_VERIFICATION}
+            previewClassName="h-full p-4"
             formRefetch={refetch}
-            setOpenCompanyVerificationDisplayTextModal={setOpenCompanyVerificationDisplayTextModal}
-            form={formBackendData?.data}
+            onClose={() => setIsDisplayTextModalOpen(false)}
           />
         </Modal>
       )}
@@ -278,17 +243,11 @@ function CompanyVerification({ formId, brandingName, draftId }) {
             )}
             <div className="border-frameColor w-full rounded-md border p-4">
               <div className="flex items-center justify-center gap-3">
-                {formBackendData?.data?.companyVerificationDisplayFormatedText && (
+                {formDocument?.companyVerificationDisplayFormatedText && (
                   <div className="mb-4 flex w-full items-center justify-between">
                     <div
                       dangerouslySetInnerHTML={{
-                        __html: String(formBackendData?.data?.companyVerificationDisplayFormatedText).replace(
-                          /<a(\s+.*?)?>/g,
-                          (match) => {
-                            if (match.includes("target=")) return match; // avoid duplicates
-                            return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-                          },
-                        ),
+                        __html: withLinkTargets(formDocument?.companyVerificationDisplayFormatedText),
                       }}
                     />
                   </div>
@@ -297,8 +256,8 @@ function CompanyVerification({ formId, brandingName, draftId }) {
                   <div className="flex w-full justify-end">
                     <Button
                       className="h-fit"
-                      label={"Customize Display Text"}
-                      onClick={() => setOpenCompanyVerificationDisplayTextModal(true)}
+                      label="Customize Display Text"
+                      onClick={() => setIsDisplayTextModalOpen(true)}
                     />
                   </div>
                 )}
@@ -308,41 +267,32 @@ function CompanyVerification({ formId, brandingName, draftId }) {
                   id="company-name"
                   name="company-name"
                   data-testid="company-name-input"
-                  label={"Legal company name *"}
+                  label="Legal company name *"
                   className="w-full rounded px-2 text-sm"
                   value={form.name}
-                  onChange={
-                    verifyCompanyLoading || lookupCompanyLoading
-                      ? () => {}
-                      : (e) => setForm({ ...form, name: e.target.value })
-                  }
+                  onChange={isRequestBusy ? ignoreChange : (e) => setForm({ ...form, name: e.target.value })}
                 />
                 {!form.noWebsite && (
                   <TextField
                     id="company-url"
                     name="company-url"
                     data-testid="company-url-input"
-                    label={"Website URL *"}
+                    label="Website URL *"
                     className="w-full rounded px-2 text-sm"
                     value={form.url}
-                    onChange={
-                      verifyCompanyLoading || lookupCompanyLoading
-                        ? () => {}
-                        : (e) => setForm({ ...form, url: e.target.value })
-                    }
+                    onChange={isRequestBusy ? ignoreChange : (e) => setForm({ ...form, url: e.target.value })}
                   />
                 )}
                 <Checkbox
-                  id={"noWebsite"}
-                  label={"This company has no website"}
-                  name={"noWebsite"}
+                  id="noWebsite"
+                  label="This company has no website"
+                  name="noWebsite"
                   data-testid="company-no-website-checkbox"
                   checked={form.noWebsite}
                   onChange={(e) => {
                     const checked = e.target.checked;
                     setForm({ ...form, noWebsite: checked, ...(checked ? { url: "" } : {}) });
-
-                    dispatch(updateFormState({ data: checked, name: "company_has_no_website" }));
+                    dispatch(updateFormState({ data: checked, name: SECTION_KEYS.COMPANY_HAS_NO_WEBSITE }));
                   }}
                 />
                 {apisRes?.companyVerify?.confidenceScore && apisRes?.companyVerify?.verificationStatus && (
@@ -363,8 +313,8 @@ function CompanyVerification({ formId, brandingName, draftId }) {
                     label="Continue"
                     onClick={handleSubmit}
                     data-testid="company-verification-continue-btn"
-                    disabled={loading || isSavingFormInDraft || verifyCompanyLoading || lookupCompanyLoading}
-                    className={` ${(loading || isSavingFormInDraft || verifyCompanyLoading || lookupCompanyLoading) && "pointer-events-auto cursor-not-allowed opacity-20"}`}
+                    disabled={isContinueDisabled}
+                    className={` ${isContinueDisabled && "pointer-events-auto cursor-not-allowed opacity-20"}`}
                   />
                 </div>
               </div>
@@ -372,9 +322,9 @@ function CompanyVerification({ formId, brandingName, draftId }) {
 
             {isCreator && (
               <Button
-                disabled={loading || isSavingFormInDraft || verifyCompanyLoading || lookupCompanyLoading}
+                disabled={isContinueDisabled}
                 onClick={() => goToApplicationWithDraft({ createIfMissing: true })}
-                label={"Skip"}
+                label="Skip"
               />
             )}
           </>
@@ -382,113 +332,6 @@ function CompanyVerification({ formId, brandingName, draftId }) {
       </div>
     </>
   );
-}
+};
 
 export default CompanyVerification;
-
-const CompanyVerificationDisplayText = ({ form, formRefetch, setOpenCompanyVerificationDisplayTextModal }) => {
-  const [updateForm, { isLoading: isUpdatingSection }] = useUpdateFormMutation();
-  const [formateTextInMarkDown, { isLoading: isFormating }] = useFormateTextInMarkDownMutation();
-  const [displayData, setDisplayData] = useState({
-    companyVerificationDisplayText: form?.companyVerificationDisplayText || "",
-    companyVerificationDisplayFormatingInstructions: form?.companyVerificationDisplayFormatingInstructions || "",
-    companyVerificationDisplayFormatedText: form?.companyVerificationDisplayFormatedText || "",
-  });
-
-  const handleUpdateSectionForSignature = async () => {
-    try {
-      const res = await updateForm({
-        _id: form?._id,
-        data: {
-          companyVerificationDisplayText: displayData.companyVerificationDisplayText,
-          companyVerificationDisplayFormatingInstructions: displayData.companyVerificationDisplayFormatingInstructions,
-          companyVerificationDisplayFormatedText: displayData.companyVerificationDisplayFormatedText,
-        },
-      }).unwrap();
-      if (res.success) {
-        await formRefetch();
-        toast.success(res.message);
-        setOpenCompanyVerificationDisplayTextModal(false);
-      }
-    } catch (error) {
-      console.log("Error while updating signature", error);
-    }
-  };
-
-  const formateTextWithAi = useCallback(async () => {
-    if (!displayData?.companyVerificationDisplayText || !displayData?.companyVerificationDisplayFormatingInstructions) {
-      toast.error("Please enter formatting instruction and text to format");
-      return;
-    }
-    try {
-      const res = await formateTextInMarkDown({
-        text: displayData.companyVerificationDisplayText,
-        instructions: displayData?.companyVerificationDisplayFormatingInstructions,
-      }).unwrap();
-      if (res.success) {
-        let html = DOMPurify.sanitize(res.data);
-        setDisplayData((prev) => ({ ...prev, companyVerificationDisplayFormatedText: html }));
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error(err?.data?.message || "Failed to format text");
-    }
-  }, [
-    displayData.companyVerificationDisplayText,
-    displayData?.companyVerificationDisplayFormatingInstructions,
-    formateTextInMarkDown,
-  ]);
-
-  return (
-    <div className="flex flex-col gap-2 border-2 p-2 pb-4">
-      {/* display text  */}
-      <div className="flex w-full flex-col gap-2 pb-4">
-        <TextField
-          type="textarea"
-          label="Display Text"
-          value={displayData?.companyVerificationDisplayText}
-          name="displayText"
-          onChange={(e) => setDisplayData((prev) => ({ ...prev, companyVerificationDisplayText: e.target.value }))}
-        />
-        <label htmlFor="formattingInstructionForAi">Enter formatting instruction for AI and click on generate</label>
-        <textarea
-          id="formattingInstructionForAi"
-          rows={2}
-          value={displayData?.companyVerificationDisplayFormatingInstructions}
-          onChange={(e) =>
-            setDisplayData((prev) => ({ ...prev, companyVerificationDisplayFormatingInstructions: e.target.value }))
-          }
-          className="w-full rounded-md border border-gray-300 p-2 outline-none"
-        />
-        <div className="flex justify-end">
-          <Button onClick={formateTextWithAi} disabled={isFormating} className="mt-8" label={"Format Text"} />
-        </div>
-        {displayData?.companyVerificationDisplayFormatedText && (
-          <div
-            className="h-full p-4"
-            dangerouslySetInnerHTML={{
-              __html: String(displayData?.companyVerificationDisplayFormatedText || "").replace(
-                /<a(\s+.*?)?>/g,
-                (match) => {
-                  if (match.includes("target=")) return match; // avoid duplicates
-                  return match.replace("<a", '<a target="_blank" rel="noopener noreferrer"');
-                },
-              ),
-            }}
-          />
-        )}
-      </div>
-
-      <div className="flex w-full items-center justify-end gap-2">
-        <Button
-          onClick={() => setOpenCompanyVerificationDisplayTextModal(false)}
-          disabled={isUpdatingSection}
-          className=" "
-          variant="secondary"
-          label={"Cancel"}
-        />
-        <Button onClick={handleUpdateSectionForSignature} disabled={isUpdatingSection} className="" label={"Save"} />
-      </div>
-    </div>
-  );
-};

@@ -89,11 +89,11 @@ const createDemoActions = (dispatch) => {
         const response = await fetch(`${SERVER_URL}/api/demo/session/${sessionId}/status`, { credentials: "include" });
         const data = await response.json();
         if (data.success) {
-          dispatch(setViewerCount(data.viewerCount));
-          if (LIVE_STATUSES.includes(data.status)) {
+          dispatch(setViewerCount(data.data?.viewerCount));
+          if (LIVE_STATUSES.includes(data.data?.status)) {
             clearInterval(poll);
             connectPresenterStream(sessionId);
-          } else if (data.status === DEMO_SESSION_STATUSES.ENDED) {
+          } else if (data.data?.status === DEMO_SESSION_STATUSES.ENDED) {
             clearInterval(poll);
             dispatch(setSessionStatus(DEMO_SESSION_STATUSES.ENDED));
           }
@@ -132,7 +132,7 @@ const createDemoActions = (dispatch) => {
       const data = await response.json();
       if (!data.success) throw new Error(data.message);
 
-      dispatch(sessionStarted(data));
+      dispatch(sessionStarted(data.data));
 
       if (generationTimeoutRef.current) clearTimeout(generationTimeoutRef.current);
       generationTimeoutRef.current = setTimeout(() => {
@@ -140,7 +140,7 @@ const createDemoActions = (dispatch) => {
         toast.warn("Script generation timed out — proceeding with talking-point notes.");
       }, GENERATION_TIMEOUT_MS);
 
-      connectPresenterStream(data.sessionId);
+      connectPresenterStream(data.data.sessionId);
       return true;
     } catch (error) {
       toast.error(error.message || "Failed to start demo");

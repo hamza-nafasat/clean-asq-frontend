@@ -1,24 +1,46 @@
 import { useEffect, useRef, useState } from "react";
 import { IoClose } from "react-icons/io5";
+import { FIELD_TYPES } from "@/constants";
 
-/**
- * "Confirm or Change" dialog shown when the silent field-error monitor detects
- * an obvious typo or validation problem in an applicant form field.
- *
- * Props:
- *   fieldLabel      {string}        Human-readable label of the field
- *   currentValue    {string}        The value the applicant entered
- *   description     {string}        One-sentence description of the suspected error
- *   suggestion      {string|null}   Corrected value (null = no automatic fix available)
- *   retryNote       {string|null}   Optional advisory shown below the error (e.g. for email fields)
- *   headerBg        {string}        Brand header background colour
- *   headerTextColor {string}        Contrasting text/icon colour for the header
- *   accentColor     {string}        Brand accent colour for primary action buttons
- *   fontFamily      {string}        Brand font family name
- *   onKeep          {() => void}    Called when the applicant confirms their value
- *   onSave          {(value:string) => void}  Called with the accepted / typed value
- */
-export default function FieldErrorModal({
+// "Confirm or Change" dialog shown when the silent field-error monitor detects
+// ── Shared button styles ───────────────────────────────────────────────────
+const primaryBtn = (accent) => ({
+  width: "100%",
+  padding: "9px 14px",
+  borderRadius: "7px",
+  border: "none",
+  background: accent,
+  color: "#fff",
+  fontSize: "13px",
+  fontWeight: 600,
+  cursor: "pointer",
+  textAlign: "center",
+});
+
+const secondaryBtn = {
+  padding: "8px 14px",
+  borderRadius: "7px",
+  border: "1px solid #d1d5db",
+  background: "#f9fafb",
+  color: "#374151",
+  fontSize: "13px",
+  fontWeight: 500,
+  cursor: "pointer",
+};
+
+const ghostBtn = {
+  width: "100%",
+  padding: "7px 14px",
+  borderRadius: "7px",
+  border: "1px solid #e5e7eb",
+  background: "transparent",
+  color: "#6b7280",
+  fontSize: "12px",
+  cursor: "pointer",
+  textAlign: "center",
+};
+
+const FieldErrorModal = ({
   fieldLabel,
   fieldType,
   currentValue,
@@ -31,7 +53,7 @@ export default function FieldErrorModal({
   fontFamily,
   onKeep,
   onSave,
-}) {
+}) => {
   const accent     = accentColor || "#6366f1";
   const hBg        = headerBg    || accent;
   const hText      = headerTextColor || "#ffffff";
@@ -168,16 +190,16 @@ export default function FieldErrorModal({
                 htmlFor="fem-input"
                 style={{ display: "block", fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}
               >
-                {fieldType === "date" ? "Select the correct date:" : "Type the correct value:"}
+                {fieldType === FIELD_TYPES.DATE ? "Select the correct date:" : "Type the correct value:"}
               </label>
               <input
                 id="fem-input"
                 ref={inputRef}
-                type={fieldType === "date" ? "date" : "text"}
+                type={fieldType === FIELD_TYPES.DATE ? "date" : "text"}
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={fieldType === "date" ? undefined : (suggestion || currentValue)}
+                placeholder={fieldType === FIELD_TYPES.DATE ? undefined : (suggestion || currentValue)}
                 style={{
                   display: "block",
                   width: "100%",
@@ -241,41 +263,6 @@ export default function FieldErrorModal({
       </div>
     </>
   );
-}
-
-// ── Shared button styles ───────────────────────────────────────────────────
-const primaryBtn = (accent) => ({
-  width: "100%",
-  padding: "9px 14px",
-  borderRadius: "7px",
-  border: "none",
-  background: accent,
-  color: "#fff",
-  fontSize: "13px",
-  fontWeight: 600,
-  cursor: "pointer",
-  textAlign: "center",
-});
-
-const secondaryBtn = {
-  padding: "8px 14px",
-  borderRadius: "7px",
-  border: "1px solid #d1d5db",
-  background: "#f9fafb",
-  color: "#374151",
-  fontSize: "13px",
-  fontWeight: 500,
-  cursor: "pointer",
 };
 
-const ghostBtn = {
-  width: "100%",
-  padding: "7px 14px",
-  borderRadius: "7px",
-  border: "1px solid #e5e7eb",
-  background: "transparent",
-  color: "#6b7280",
-  fontSize: "12px",
-  cursor: "pointer",
-  textAlign: "center",
-};
+export default FieldErrorModal;

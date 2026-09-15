@@ -1,31 +1,33 @@
-import Button from '@/components/shared/Button';
-import React, { useState, useRef } from 'react';
+import { useRef, useState } from "react";
+import Button from "@/components/shared/Button";
+import { OTP_LENGTH } from "../utils/auth.constants";
+
+const DIGIT_PATTERN = /^[0-9]$/;
 
 const OTP = () => {
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
   const inputsRef = useRef([]);
 
   const handleChange = (value, index) => {
-    if (/^[0-9]$/.test(value)) {
+    if (DIGIT_PATTERN.test(value)) {
       const newOtp = [...otp];
       newOtp[index] = value;
       setOtp(newOtp);
       if (index < inputsRef.current.length - 1) inputsRef.current[index + 1].focus();
-    } else if (value === '') {
+    } else if (value === "") {
       const newOtp = [...otp];
-      newOtp[index] = '';
+      newOtp[index] = "";
       setOtp(newOtp);
     }
   };
 
   const handleKeyDown = (e, index) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) inputsRef.current[index - 1].focus();
+    if (e.key === "Backspace" && !otp[index] && index > 0) inputsRef.current[index - 1].focus();
   };
 
-  const submitHandler = e => {
+  // TODO: verify the entered otp with the api
+  const submitHandler = (e) => {
     e.preventDefault();
-    const enteredOtp = otp.join('');
-    console.log('OTP Submitted:', enteredOtp);
   };
 
   return (
@@ -47,23 +49,23 @@ const OTP = () => {
                 {otp.map((digit, index) => (
                   <div className="h-16 w-16" key={index}>
                     <input
-                      ref={el => (inputsRef.current[index] = el)}
+                      ref={(el) => (inputsRef.current[index] = el)}
                       className="ring-light h-full w-full rounded-xl border border-gray-200 bg-white px-5 text-center text-lg outline-none focus:bg-gray-50 focus:ring-1"
                       type="text"
                       maxLength={1}
                       value={digit}
-                      onChange={e => handleChange(e.target.value, index)}
-                      onKeyDown={e => handleKeyDown(e, index)}
+                      onChange={(e) => handleChange(e.target.value, index)}
+                      onKeyDown={(e) => handleKeyDown(e, index)}
                     />
                   </div>
                 ))}
               </div>
 
               <div className="flex flex-col space-y-5">
-                <Button className="py-4" label={'  Verify Account'} />
+                <Button type="button" className="py-4" label="  Verify Account" />
 
                 <div className="flex justify-center space-x-1 text-sm font-medium text-gray-500">
-                  <p>Didn't receive code?</p>
+                  <p>Didn&apos;t receive code?</p>
                   <button type="button" className="cursor-pointer text-blue-600">
                     Resend
                   </button>

@@ -1,14 +1,16 @@
-import CompanyVerificationTest from '../components/TestingCompanyLookup';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from "react-router-dom";
+import TestingCompanyLookup from "../components/TestingCompanyLookup";
+import { VERIFICATION_FORM_ID_PARAM } from "../utils/testing.constants";
 
-function VerificationTest() {
+const VerificationTest = () => {
   const [searchParams] = useSearchParams();
-  const formId = searchParams.get('formid');
+  const formId = searchParams.get(VERIFICATION_FORM_ID_PARAM);
+
   return (
     <div>
-      <CompanyVerificationTest formId={formId} />
+      <TestingCompanyLookup formId={formId} />
     </div>
   );
-}
+};
 
 export default VerificationTest;

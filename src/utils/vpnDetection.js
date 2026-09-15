@@ -1,4 +1,4 @@
-export async function detectVPN() {
+export const detectVPN = async () => {
   const webrtcLocalIps = [];
   let webrtcPublicIp;
   let connectionLatency;
@@ -10,27 +10,27 @@ export async function detectVPN() {
 
   // 1. Get browser IP
   try {
-    const resp = await fetch('https://api.ipify.org?format=json');
+    const resp = await fetch("https://api.ipify.org?format=json");
     const data = await resp.json();
     webrtcPublicIp = data.ip;
   } catch (e) {
     webrtcPublicIp = null;
-    console.log('Browser IP lookup failed', e);
+    console.error("Browser IP lookup error:", e);
   }
 
   // 2. Collect WebRTC IPs
   try {
     const pc = new RTCPeerConnection({ iceServers: [] });
-    pc.createDataChannel('');
+    pc.createDataChannel("");
     const candPromise = new Promise(resolve => {
       pc.onicecandidate = event => {
         if (event.candidate) {
           const cand = event.candidate.candidate;
-          const parts = cand.split(' ');
+          const parts = cand.split(" ");
           const ip = parts[4];
           const type = parts[7];
           if (ip && !webrtcLocalIps.includes(ip)) webrtcLocalIps.push(ip);
-          if (type === 'relay') proxyDetection = true;
+          if (type === "relay") proxyDetection = true;
         } else resolve(null);
       };
     });
@@ -38,17 +38,17 @@ export async function detectVPN() {
     await candPromise;
     pc.close();
   } catch (e) {
-    console.log('WebRTC IP collection failed', e);
+    console.error("WebRTC IP collection error:", e);
   }
 
   // 3. Latency test
   try {
     const start = performance.now();
-    await fetch('https://www.cloudflare.com/cdn-cgi/trace');
+    await fetch("https://www.cloudflare.com/cdn-cgi/trace");
     connectionLatency = performance.now() - start;
   } catch (e) {
     connectionLatency = null;
-    console.log('Latency test failed', e);
+    console.error("Latency test error:", e);
   }
 
   // 4. Timezone checks
@@ -64,20 +64,20 @@ export async function detectVPN() {
     timezoneOffset = null;
     systemTimezone = null;
     ipTimezoneMatch = null;
-    console.log('Timezone checks failed', e);
+    console.error("Timezone check error:", e);
   }
 
   // 5. Suspicious headers
   try {
-    const hdrResp = await fetch('https://httpbin.org/headers');
+    const hdrResp = await fetch("https://httpbin.org/headers");
     const hdrs = await hdrResp.json();
     const headers = hdrs.headers || {};
-    const vpnHeaders = ['x-forwarded-for', 'via', 'x-real-ip'];
+    const vpnHeaders = ["x-forwarded-for", "via", "x-real-ip"];
     for (const h of vpnHeaders) {
       if (headers[h]) suspiciousHeaders.push(h);
     }
   } catch (e) {
-    console.log('Suspicious headers check failed', e);
+    console.error("Headers check error:", e);
   }
 
   return {
@@ -90,4 +90,4 @@ export async function detectVPN() {
     suspiciousHeaders,
     proxyDetection,
   };
-}
+};

@@ -1,5 +1,4 @@
-import { getTableStyles } from "@/utils/tableStyles";
-import useBranding from "@/hooks/useBranding";
+import { useRef, useState } from "react";
 import {
   useCreateSearchStrategyDefaultMutation,
   useCreateSearchStrategyMutation,
@@ -7,21 +6,31 @@ import {
   useGetAllSearchStrategiesQuery,
   useUpdateSearchStrategyMutation,
 } from "@/redux/apis/form.apis";
-import { MoreVertical, Pencil, Trash } from "lucide-react";
-import React, { useRef, useState } from "react";
 import DataTable from "react-data-table-component";
 import { toast } from "react-toastify";
+import useBranding from "@/hooks/useBranding";
+import { useScreenContext } from "@/hooks/useScreenContext";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Modal from "@/components/modals/SaveCancelModal";
-import { ThreeDotEditViewDelete } from "@/components/shared/ThreeDotViewEditDelete";
-// import AddStrategiesKey from './LookupManagementAddModal';
 import Button from "@/components/shared/Button";
-import AddStrategiesKey from "./LookupManagementAddModal";
+import LookupManagementAddModal from "./LookupManagementAddModal";
 import getEnv from "@/utils/env";
-import { useScreenContext } from "@/hooks/useScreenContext";
+import { getTableStyles } from "@/utils/tableStyles";
+import {
+  ADD_COMPANY_IDENTIFICATION_OPTIONS,
+  EDIT_COMPANY_IDENTIFICATION_OPTIONS,
+  EXTRACT_AS_OPTIONS,
+  LOOKUP_SCREEN_CONTEXT,
+} from "@/modules/lookup-management/utils/lookup-management.constants";
+import { buildLookupColumns } from "@/modules/lookup-management/utils/lookup-management.columns";
+import {
+  buildLookupAssistantActions,
+  buildLookupScreenState,
+} from "@/modules/lookup-management/utils/lookup-management.utils2";
 
 const SERVER_URL = getEnv("SERVER_URL");
-function AllFormsStrategies() {
+
+const LookupManagementTable = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editModalData, setEditModalData] = useState(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
@@ -40,95 +49,21 @@ function AllFormsStrategies() {
   const [updateSearchStrategy] = useUpdateSearchStrategyMutation();
 
   useScreenContext({
-    screenId: "lookup-management",
-    screenName: "Lookup Management",
-    assistantName: "Lookup Assistant",
-    description:
-      "The Lookup Management screen lets admins create and manage search strategies (lookups) — AI-powered extraction rules that pull specific data fields from company research. Each lookup has a key, search terms, an extraction prompt, an output format (extractAs), and an active/inactive status.",
+    ...LOOKUP_SCREEN_CONTEXT,
     aiEndpoint: `${SERVER_URL}/api/ai/lookup-chat`,
-    greeting: `Hi! I'm your **Lookup Assistant**.\n\nI can help you:\n- **Answer questions** about how lookups work and what each field does\n- **Review active vs. inactive lookups** and explain what they do\n- **Draft new lookups** with a properly written extraction prompt\n- **Activate or deactivate** one or more lookups by name\n- **Describe the expected output** for any lookup, with a sample to help with troubleshooting\n\nWhat would you like to do?`,
-    currentState: {
-      lookups: (data?.data || []).map((l) => ({
-        _id: l._id,
-        searchObjectKey: l.searchObjectKey,
-        searchTerms: l.searchTerms,
-        extractionPrompt: l.extractionPrompt,
-        extractAs: l.extractAs,
-        companyIdentification: l.companyIdentification,
-        isActive: l.isActive,
-      })),
-    },
-    actions: {
-      setLookupActive: async ({ searchObjectKey, isActive }) => {
-        const lookup = data?.data?.find((l) => l.searchObjectKey === searchObjectKey);
-        if (!lookup) return;
-        try {
-          await updateSearchStrategy({
-            SearchStrategyId: lookup._id,
-            data: {
-              searchObjectKey: lookup.searchObjectKey,
-              searchTerms: lookup.searchTerms,
-              extractionPrompt: lookup.extractionPrompt,
-              extractAs: lookup.extractAs,
-              companyIdentification: lookup.companyIdentification,
-              active: isActive,
-              _id: lookup._id,
-            },
-          }).unwrap();
-        } catch (err) {
-          toast.error(err?.data?.message || "Failed to update lookup");
-        }
-      },
-      openCreateModal: (draftData) => {
+    currentState: buildLookupScreenState(data?.data),
+    actions: buildLookupAssistantActions({
+      lookups: data?.data,
+      createSearchStrategy,
+      updateSearchStrategy,
+      onOpenCreateModal: (draftData) => {
         setAiDraftData(draftData || null);
         setIsModalOpen(true);
       },
-      createLookup: async ({
-        searchObjectKey,
-        searchTerms,
-        extractionPrompt,
-        extractAs,
-        companyIdentification,
-        isActive,
-      }) => {
-        await createSearchStrategy({
-          data: {
-            searchObjectKey,
-            searchTerms,
-            extractionPrompt,
-            extractAs,
-            companyIdentification,
-            active: isActive ?? true,
-          },
-        }).unwrap();
-      },
-      updateLookup: async ({
-        lookupId,
-        searchObjectKey,
-        searchTerms,
-        extractionPrompt,
-        extractAs,
-        companyIdentification,
-        isActive,
-      }) => {
-        const lookup = data?.data?.find((l) => l._id === lookupId);
-        if (!lookup) throw new Error("Lookup not found");
-        await updateSearchStrategy({
-          SearchStrategyId: lookupId,
-          data: {
-            searchObjectKey: searchObjectKey ?? lookup.searchObjectKey,
-            searchTerms: searchTerms ?? lookup.searchTerms,
-            extractionPrompt: extractionPrompt ?? lookup.extractionPrompt,
-            extractAs: extractAs ?? lookup.extractAs,
-            companyIdentification: companyIdentification ?? lookup.companyIdentification,
-            active: isActive ?? lookup.isActive,
-            _id: lookupId,
-          },
-        }).unwrap();
-      },
-    },
+    }),
     deps: { lookupCount: data?.data?.length },
   });
+
   const handleDelete = async () => {
     if (!selectedRow) return toast.error("Please select a row");
     try {
@@ -137,121 +72,50 @@ function AllFormsStrategies() {
         toast.success(res.message);
       }
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error("Delete search strategy error:", error);
       toast.error(error?.data?.message || "Failed to delete user");
     } finally {
       setDeleteConfirmation(null);
     }
   };
+
   const handleCreateDefaultStrategies = async () => {
     try {
       const res = await createDefaultStrategies().unwrap();
       if (res.success) toast.success(res.message);
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error("Create default search strategies error:", error);
       toast.error(error?.data?.message || "Failed to delete user");
     }
   };
 
-  // Table columns
-  const columns = [
-    {
-      name: "Search Object Key",
-      selector: (row) => row?.searchObjectKey || "",
-      sortable: true,
+  const columns = buildLookupColumns({
+    actionMenu,
+    actionMenuRefs,
+    onToggleMenu: (rowId) => setActionMenu((prev) => (prev === rowId ? null : rowId)),
+    onEdit: (row) => {
+      setEditModalData(row);
+      setActionMenu(null);
+      setSelectedRow(row);
     },
-    {
-      name: "Company Identification",
-      cell: (row) =>
-        Array.isArray(row.companyIdentification) ? (
-          <span>{row.companyIdentification.join(", ")}</span> // ✅ just text instead of DropdownCheckbox
-        ) : (
-          <span>-</span>
-        ),
+    onDelete: (row) => {
+      setDeleteConfirmation(row);
+      setActionMenu(null);
+      setSelectedRow(row);
     },
-    {
-      name: "Search Terms",
-      selector: (row) => row?.searchTerms || "",
-      sortable: true,
-    },
-    {
-      name: "Extraction Prompt",
-      sortable: true,
-      width: "20%",
-      cell: (row) => (
-        <textarea
-          value={row?.extractionPrompt || ""}
-          readOnly // ✅ makes it read-only
-          className="text-textPrimary border-frameColor w-full resize-none rounded-md border bg-[#FAFBFF] p-2 text-sm"
-          rows={2} // adjust height if needed
-        />
-      ),
-    },
-    {
-      name: "Extract As",
-      cell: (row) => <span>{row?.extractAs || "-"}</span>,
-    },
-    {
-      name: "Active",
-      cell: (row) => <input type="checkbox" checked={!!row?.isActive} disabled className="cursor-not-allowed" />,
-    },
-    {
-      name: "Action",
-      cell: (row) => {
-        if (!actionMenuRefs.current.has(row.id)) {
-          actionMenuRefs.current.set(row.id, React.createRef());
-        }
-        const rowRef = actionMenuRefs.current.get(row.id);
-
-        const buttons = [
-          {
-            name: "edit",
-            icon: <Pencil size={16} className="mr-2" />,
-            onClick: () => {
-              setEditModalData(row);
-              setActionMenu(null);
-              setSelectedRow(row);
-            },
-          },
-          {
-            name: "delete",
-            icon: <Trash size={16} className="mr-2" />,
-            onClick: async () => {
-              setDeleteConfirmation(row);
-              setActionMenu(null);
-              setSelectedRow(row);
-            },
-          },
-        ];
-
-        return (
-          <div className="relative" ref={rowRef}>
-            <button
-              onClick={() => setActionMenu((prev) => (prev === row._id ? null : row._id))}
-              className="rounded p-1 hover:bg-gray-100"
-              aria-label="Actions"
-            >
-              <MoreVertical className="cursor-pointer" size={18} />
-            </button>
-            {actionMenu === row._id && <ThreeDotEditViewDelete buttons={buttons} row={row} />}
-          </div>
-        );
-      },
-    },
-  ];
+  });
 
   return (
     <div>
       <div className="mb-4 flex w-full justify-end gap-3">
-        <Button onClick={() => setIsModalOpen(true)} label={"Add new"} />
+        <Button onClick={() => setIsModalOpen(true)} label="Add new" />
         <Button
           onClick={handleCreateDefaultStrategies}
           disabled={isLoadingCreateDefaultStrategies}
-          label={"Create Default"}
+          label="Create Default"
         />
       </div>
       <div className="mt-5 w-full lg:w-[calc(100vw-250px)] xl:w-full">
-        {/* <div className="min-w-[500px]"> */}
         <DataTable
           data={data?.data || []}
           columns={columns}
@@ -261,8 +125,8 @@ function AllFormsStrategies() {
           noDataComponent="No data found"
           className="rounded-lg!"
         />
-        {/* </div> */}
       </div>
+
       {/* Add Modal */}
       {isModalOpen && (
         <Modal
@@ -274,25 +138,12 @@ function AllFormsStrategies() {
             setAiDraftData(null);
           }}
         >
-          <AddStrategiesKey
+          <LookupManagementAddModal
             setIsModalOpen={setIsModalOpen}
             setEditModalData={setEditModalData}
             selectedRow={aiDraftData}
-            companyOptions={[
-              { label: "Legal company name", value: "legal_company_name" },
-              { label: "Simple company name", value: "simple_company_name" },
-              { label: "Website Url", value: "website_url" },
-              { label: "None", value: "none" },
-            ]}
-            extractAsOptions={[
-              { label: "Simple Text", value: "simple_text" },
-              { label: "Phone", value: "phone" },
-              { label: "Address", value: "address" },
-              { label: "Text", value: "text" },
-              { label: "Number", value: "number" },
-              { label: "Date", value: "date" },
-              { label: "List", value: "list" },
-            ]}
+            companyOptions={ADD_COMPANY_IDENTIFICATION_OPTIONS}
+            extractAsOptions={EXTRACT_AS_OPTIONS}
           />
         </Modal>
       )}
@@ -306,24 +157,12 @@ function AllFormsStrategies() {
           saveButtonText="Save"
           onClose={() => setEditModalData(null)}
         >
-          <AddStrategiesKey
+          <LookupManagementAddModal
             setIsModalOpen={setIsModalOpen}
             setEditModalData={setEditModalData}
             selectedRow={selectedRow}
-            companyOptions={[
-              { label: "Legal company name", value: "legal_company_name" },
-              { label: "Simple company name", value: "simple_company_name" },
-              { label: "Website Url", value: "website_url" },
-            ]}
-            extractAsOptions={[
-              { label: "Simple Text", value: "simple_text" },
-              { label: "Phone", value: "phone" },
-              { label: "Address", value: "address" },
-              { label: "Text", value: "text" },
-              { label: "Number", value: "number" },
-              { label: "Date", value: "date" },
-              { label: "List", value: "list" },
-            ]}
+            companyOptions={EDIT_COMPANY_IDENTIFICATION_OPTIONS}
+            extractAsOptions={EXTRACT_AS_OPTIONS}
           />
         </Modal>
       )}
@@ -340,6 +179,6 @@ function AllFormsStrategies() {
       />
     </div>
   );
-}
+};
 
-export default AllFormsStrategies;
+export default LookupManagementTable;

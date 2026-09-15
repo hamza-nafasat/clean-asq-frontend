@@ -1,12 +1,9 @@
-import AllStrategies from '../components/StrategiesTable';
-import React from 'react';
+import StrategiesTable from "@/modules/strategies/components/StrategiesTable";
 
-function Strategies() {
-  return (
-    <div>
-      <AllStrategies />
-    </div>
-  );
-}
+const Strategies = () => (
+  <div>
+    <StrategiesTable />
+  </div>
+);
 
 export default Strategies;

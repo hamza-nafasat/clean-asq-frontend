@@ -1,4 +1,4 @@
-import Modal from '@/components/modals/SaveCancelModal';
+import Modal from "@/components/modals/SaveCancelModal";
 
 const ConfirmationModal = ({
   isOpen,
@@ -7,10 +7,10 @@ const ConfirmationModal = ({
   title,
   message,
   isLoading,
-  confirmButtonText = 'Delete',
-  confirmButtonClassName = '',
-  cancelButtonText = 'Cancel',
-  cancelButtonClassName = '',
+  confirmButtonText = "Delete",
+  confirmButtonClassName = "",
+  cancelButtonText = "Cancel",
+  cancelButtonClassName = "",
 }) => {
   if (!isOpen) return null;
 

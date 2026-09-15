@@ -1,158 +1,46 @@
-import { APPLICANT_STATUS, APPLICANT_TYPE } from "../utils/applications.constants";
-import { ArrowRight, Eye, History, MoreVertical, Pencil, Trash, UserIcon } from "lucide-react";
-import PropTypes from "prop-types";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import DataTable from "react-data-table-component";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import ConfirmationModal from "@/components/modals/ConfirmationModal";
-import Modal from "@/components/modals/SaveCancelModal";
-import TextField from "@/components/shared/TextField";
-import { ThreeDotEditViewDelete } from "@/components/shared/ThreeDotViewEditDelete";
-import ApplicantSearch from "./ApplicationsSearch";
 import { useDispatch } from "react-redux";
+import { unwrapResult } from "@reduxjs/toolkit";
+import { ArrowRight, Eye, Trash, UserIcon } from "lucide-react";
+import PropTypes from "prop-types";
+import DataTable from "react-data-table-component";
+import { toast } from "react-toastify";
 import { useGetSavedFormMutation } from "@/redux/apis/form.apis";
 import { addSavedFormData, setCurrentDraftId, updateEmailVerified } from "@/redux/slices/form.slice";
-import { unwrapResult } from "@reduxjs/toolkit";
 import usePermission from "@/hooks/usePermission";
-import { PERMISSIONS } from "@/utils/permissions";
-import CopyPasteTooltip from "./ApplicationsCopyTooltip";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import CustomLoading from "@/components/shared/CustomLoading";
-// Table columns configuration
+import ApplicationsFilter from "./ApplicationsFilter";
+import { buildApplicantColumns } from "./ApplicationsTableColumns";
+import { PERMISSIONS } from "@/utils/permissions";
+import { APPLICATIONS_ROUTES } from "../utils/applications.constants";
+import { getFullName } from "../utils/applications.utils";
 
-const APPLICANT_TABLE_COLUMNS = [
-  {
-    name: "ID",
-    selector: (row) => row?._id,
-    sortable: true,
-    width: "100px",
-    cell: (row) => <CopyPasteTooltip id={row?._id} />,
-  },
-  {
-    name: "Name",
-    selector: (row) => `${row?.user?.firstName} ${row?.user?.lastName}`,
-    sortable: true,
-    cell: (row) => (
-      <CopyPasteTooltip
-        id={`${row?.user?.firstName} ${row?.user?.lastName}`}
-        label={`${row?.user?.firstName} ${row?.user?.lastName}`}
-      />
-    ),
-  },
-  {
-    name: "Application",
-    selector: (row) => row?.form?.name || "N/A",
-    sortable: true,
-    cell: (row) => <CopyPasteTooltip id={row?.form?.name || "N/A"} label={row?.form?.name || "N/A"} />,
-  },
-  {
-    name: "Email",
-    selector: (row) => row?.user?.email,
-    sortable: true,
-    wrap: true,
-    cell: (row) => <CopyPasteTooltip id={row?.user?.email} label={row?.user?.email} />,
-  },
-  {
-    name: "Client Type",
-    selector: (row) => row?.user?.role?.name,
-    sortable: true,
-    cell: (row) => (
-      <CopyPasteTooltip
-        id={row?.user?.role?.name}
-        label={
-          <span className="text-accent w-32.5 rounded-sm bg-gray-100 px-2.5 py-0.75 text-center text-xs font-bold capitalize">
-            {row?.user?.role?.name}
-          </span>
-        }
-      />
-    ),
-  },
-  {
-    name: "Submitted Date",
-    selector: (row) =>
-      new Date(row?.updatedAt || "").toLocaleString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      }),
-    sortable: true,
-    cell: (row) => {
-      const formatted = new Date(row?.updatedAt || "").toLocaleString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-      return <CopyPasteTooltip id={formatted} label={formatted} />;
-    },
-  },
-  {
-    name: "Status",
-    selector: (row) => row?.status,
-    sortable: true,
-    cell: (row) =>
-      row?.type === APPLICANT_TYPE.SUBMITTED ? (
-        <CopyPasteTooltip
-          id={row?.status}
-          label={
-            <span
-              className={`w-25 rounded-sm px-2.5 py-0.75 text-center font-bold capitalize ${
-                row.status === APPLICANT_STATUS.APPROVED ? "bg-[#34C7591A] text-[#34C759]" : ""
-              } ${row.status === APPLICANT_STATUS.REJECTED ? "bg-[#FF3B301A] text-[#FF3B30]" : ""} ${
-                row.status === APPLICANT_STATUS.PENDING ? "bg-yellow-100 text-yellow-800" : ""
-              } ${row.status === APPLICANT_STATUS.REVIEWING ? "bg-blue-100 text-blue-500" : ""}`}
-            >
-              {row?.status?.charAt(0)?.toUpperCase() + row?.status?.slice(1)}
-            </span>
-          }
-        />
-      ) : (
-        <CopyPasteTooltip
-          id={"Draft"}
-          label={
-            <span
-              className={`w-25 rounded-sm px-2.5 py-0.75 text-center font-bold capitalize ${"bg-yellow-100 text-yellow-800"}`}
-            >
-              Draft
-            </span>
-          }
-        />
-      ),
-  },
-];
+const emptyDeleteConfirmation = { id: null, type: null };
 
-const ApplicantsTable = ({
-  applicants,
-  isLoading,
-  isLoadingDelete,
+const ApplicationsTable = ({
+  applicants = [],
+  isLoading = false,
+  isLoadingDelete = false,
   onView,
   onDeleteApplication,
-  filters,
+  filters = {},
   onFilterChange,
   setOpenSpecialAccess,
   setSelectedIdForSpecialAccessModal,
   setSelectedFormId,
 }) => {
   const navigate = useNavigate();
-  const [isApplicantsLoading, setIsApplicantsLoading] = useState(false);
-  const [actionMenu, setActionMenu] = React.useState(null);
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [editModalData, setEditModalData] = useState(null);
-  const [formErrors, setFormErrors] = useState({});
-  const [deleteConfirmation, setDeleteConfirmation] = useState({ id: null, type: null });
-  const actionMenuRefs = useRef(new Map());
-
   const dispatch = useDispatch();
+  const [actionMenu, setActionMenu] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [deleteConfirmation, setDeleteConfirmation] = useState(emptyDeleteConfirmation);
+  const actionMenuRefs = useRef(new Map());
   const [getSavedFormData] = useGetSavedFormMutation();
   const hasUnderwritingPermission = usePermission(PERMISSIONS.UNDERWRITING);
 
-  // Resume a specific draft: hydrate Redux from that draft, then continue where the
-  // applicant left off (company step if lookup isn't done, otherwise the form itself).
+  // resume draft from where the applicant left off
   const continueDraftHandler = useCallback(
     async (row) => {
       const formId = row?.form?._id || row?.form;
@@ -167,123 +55,47 @@ const ApplicantsTable = ({
         unwrapResult(action);
         const brandingQuery = brandingName ? `&brandingName=${brandingName}` : "";
         if (!savedData?.company_lookup_data) {
-          return navigate(`/verification?formid=${formId}${brandingQuery}&draftId=${draftId}`);
+          return navigate(`${APPLICATIONS_ROUTES.VERIFICATION}?formid=${formId}${brandingQuery}&draftId=${draftId}`);
         }
-        return navigate(`/application-form/${brandingName}/${formId}?draftId=${draftId}`);
+        return navigate(`${APPLICATIONS_ROUTES.APPLICATION_FORM}/${brandingName}/${formId}?draftId=${draftId}`);
       } catch (error) {
-        console.log("error while resuming draft", error);
-        return navigate(`/verification?formid=${formId}&draftId=${draftId}`);
+        console.error("Resume draft error:", error);
+        return navigate(`${APPLICATIONS_ROUTES.VERIFICATION}?formid=${formId}&draftId=${draftId}`);
       }
     },
     [dispatch, getSavedFormData, navigate],
   );
-  // Get unique clients for quick filters
 
   const handleDeleteApplicant = useCallback(async () => {
     try {
       if (!deleteConfirmation?.id || !deleteConfirmation?.type) return;
-      await onDeleteApplication(deleteConfirmation);
-      setDeleteConfirmation({ id: null, type: null });
+      await onDeleteApplication?.(deleteConfirmation);
+      setDeleteConfirmation(emptyDeleteConfirmation);
       setActionMenu(null);
     } catch (error) {
-      console.error("Error deleting application:", error);
+      console.error("Delete application error:", error);
       toast.error(error?.data?.message || error?.message || "Failed to delete application");
     }
   }, [deleteConfirmation, onDeleteApplication]);
 
-  // Handle search
-  const handleSearch = useCallback((value) => {
-    setSearchTerm(value);
-  }, []);
-
-  const handleEditApplicant = useCallback(async () => {
-    // Basic validation
-    const errors = {};
-    if (!editModalData.name.trim()) errors.name = "Name is required";
-    if (!editModalData.email.trim()) errors.email = "Email is required";
-    if (!editModalData.application.trim()) errors.application = "Application is required";
-
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
-
-    // Here you would typically make an API call to update the applicant
-    // For now, we'll just close the modal
-    setEditModalData(null);
-    setFormErrors({});
-  }, [editModalData]);
-
-  const renderFormField = useCallback((field, value, onChange, type = "text", error = null, options = null) => {
-    const labelText = field
-      .split(/(?=[A-Z])/)
-      .join(" ")
-      .replace(/^\w/, (c) => c.toUpperCase());
-
-    if (type === "select" && options) {
-      return (
-        <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium text-gray-700">{labelText}</label>
-          <select
-            name={field}
-            value={value}
-            onChange={onChange}
-            className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${
-              error ? "border-red-500" : "border-gray-300"
-            }`}
-          >
-            <option value="">Select {labelText}</option>
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-        </div>
-      );
-    }
-
-    return (
-      <div className="mb-4">
-        <TextField
-          label={labelText}
-          name={field}
-          type={type}
-          value={value}
-          onChange={onChange}
-          placeholder={`Enter ${labelText}`}
-        />
-        {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-      </div>
-    );
-  }, []);
-
-  const filteredApplicants = useMemo(() => {
-    return applicants?.filter((applicant) => {
-      try {
-        setIsApplicantsLoading(true);
+  const filteredApplicants = useMemo(
+    () =>
+      applicants?.filter((applicant) => {
         const matchesDateRange =
           (!filters?.dateRange?.start || applicant?.createdAt >= filters?.dateRange?.start) &&
           (!filters?.dateRange?.end || applicant?.createdAt <= filters?.dateRange?.end);
         const matchesStatus = !filters?.status || applicant?.status === filters?.status;
         const matchesSearch =
           !searchTerm || applicant?.user?.role?.name?.toLowerCase()?.includes(searchTerm?.toLowerCase() || "");
-        const name = applicant?.user?.firstName + " " + applicant?.user?.lastName;
+        const name = getFullName(applicant?.user);
         const matchesName = !filters?.name || name?.toLowerCase()?.includes(filters?.name?.toLowerCase() || "");
         const matchesType = !filters?.type || applicant?.type === filters?.type;
         return matchesDateRange && matchesStatus && matchesSearch && matchesName && matchesType;
-      } catch (error) {
-        console.error("Error filtering applicants:", error);
-        toast.error(error?.data?.message || error?.message || "Failed to filter applicants");
-        return [];
-      } finally {
-        setIsApplicantsLoading(false);
-      }
-    });
-  }, [applicants, filters, searchTerm]);
+      }),
+    [applicants, filters, searchTerm],
+  );
 
-  const ButtonsForThreeDotDraft = useMemo(
+  const draftButtons = useMemo(
     () => [
       {
         name: "Delete",
@@ -304,13 +116,14 @@ const ApplicantsTable = ({
     ],
     [continueDraftHandler],
   );
-  const ButtonsForThreeDotSubmitted = useMemo(
+
+  const submittedButtons = useMemo(
     () => [
       {
         name: "View Pdf",
         icon: <Eye size={16} className="mr-2" />,
         onClick: (row) => {
-          onView(row);
+          onView?.(row);
           setActionMenu(null);
         },
       },
@@ -326,9 +139,9 @@ const ApplicantsTable = ({
         name: "Forward a form",
         icon: <ArrowRight size={16} className="mr-2" />,
         onClick: (row) => {
-          setOpenSpecialAccess(true);
-          setSelectedIdForSpecialAccessModal(row?._id);
-          setSelectedFormId(row?.form?._id);
+          setOpenSpecialAccess?.(true);
+          setSelectedIdForSpecialAccessModal?.(row?._id);
+          setSelectedFormId?.(row?.form?._id);
           setActionMenu(null);
         },
       },
@@ -338,151 +151,42 @@ const ApplicantsTable = ({
               name: "Underwriting",
               icon: <UserIcon size={16} className="mr-2" />,
               onClick: (row) => {
-                navigate(`/underwriting/${row?._id}`);
+                navigate(`${APPLICATIONS_ROUTES.UNDERWRITING}/${row?._id}`);
                 setActionMenu(null);
               },
             },
           ]
         : []),
     ],
-    [
-      hasUnderwritingPermission,
-      onView,
-      setOpenSpecialAccess,
-      setSelectedIdForSpecialAccessModal,
-      setSelectedFormId,
-      navigate,
-    ],
+    [hasUnderwritingPermission, onView, setOpenSpecialAccess, setSelectedIdForSpecialAccessModal, setSelectedFormId, navigate],
   );
 
   const columns = useMemo(
-    () => [
-      ...APPLICANT_TABLE_COLUMNS,
-      {
-        name: "Action",
-        cell: (row) => {
-          if (!actionMenuRefs.current.has(row?._id)) {
-            actionMenuRefs.current.set(row?._id, React.createRef());
-          }
-          const rowRef = actionMenuRefs.current.get(row?._id);
-
-          return (
-            <div className="relative" ref={rowRef}>
-              <button
-                onClick={() => setActionMenu((prevActionMenu) => (prevActionMenu === row?._id ? null : row?._id))}
-                className="cursor-pointer rounded p-1 hover:bg-gray-100"
-                aria-label="Actions"
-              >
-                <MoreVertical size={18} />
-              </button>
-              {actionMenu === row._id && (
-                <ThreeDotEditViewDelete
-                  buttons={
-                    row?.type === APPLICANT_TYPE.SUBMITTED ? ButtonsForThreeDotSubmitted : ButtonsForThreeDotDraft
-                  }
-                  row={row}
-                />
-              )}
-            </div>
-          );
-        },
-      },
-    ],
-    [ButtonsForThreeDotDraft, ButtonsForThreeDotSubmitted, actionMenu],
+    () => buildApplicantColumns({ actionMenu, setActionMenu, actionMenuRefs, submittedButtons, draftButtons }),
+    [draftButtons, submittedButtons, actionMenu],
   );
 
-  // Handle click outside for action menu
+  // close action menu on outside click
   useEffect(() => {
+    if (actionMenu === null) return;
     const handleClickOutside = (event) => {
       const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
         (ref) => !ref.current?.contains(event.target),
       );
-
-      if (clickedOutsideAllMenus) {
-        setActionMenu(null);
-      }
+      if (clickedOutsideAllMenus) setActionMenu(null);
     };
-
-    if (actionMenu !== null) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [actionMenu]);
 
   return (
     <div>
-      <div className="mt-14 mb-4 flex items-center justify-between gap-4">
-        <div className="w-full">
-          <TextField
-            label={"Name"}
-            type="text"
-            value={filters.name || ""}
-            onChange={(e) => onFilterChange("name", e.target.value)}
-            placeholder="Enter name to search..."
-          />
-        </div>
-        <div className="w-full">
-          <TextField
-            label={"Role"}
-            type="text"
-            value={searchTerm || ""}
-            onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Enter name to search..."
-          />
-        </div>
-      </div>
-
-      <div className="mb-4 flex items-center justify-between md:flex-nowrap flex-wrap gap-4">
-        <div className="w-full min-w-50">
-          <label className="text-textPrimary text-sm lg:text-base">Status</label>
-          <select
-            value={filters.status}
-            onChange={(e) => onFilterChange("status", e.target.value)}
-            className="border-frameColor mt-2 h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base"
-          >
-            <option value="">All Statuses</option>
-            {Object.values(APPLICANT_STATUS).map((status) => (
-              <option key={status} value={status}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="w-full min-w-50">
-          <label className="text-textPrimary text-sm lg:text-base">Type</label>
-          <select
-            value={filters.type}
-            onChange={(e) => onFilterChange("type", e.target.value)}
-            className="border-frameColor mt-2 h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base"
-          >
-            <option value="">All Types</option>
-            {Object.values(APPLICANT_TYPE).map((status) => (
-              <option key={status} value={status}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="w-full min-w-50">
-          <div className="grid grid-cols-2 gap-2">
-            <TextField
-              label={"Start Date "}
-              type="date"
-              value={filters.dateRange.start}
-              onChange={(e) => onFilterChange("dateRange", { ...filters.dateRange, start: e.target.value })}
-            />
-            <TextField
-              label={"End Date"}
-              type="date"
-              value={filters.dateRange.end}
-              onChange={(e) => onFilterChange("dateRange", { ...filters.dateRange, end: e.target.value })}
-            />
-          </div>
-        </div>
-      </div>
+      <ApplicationsFilter
+        filters={filters}
+        onFilterChange={onFilterChange}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+      />
       <div
         className="mt-5 w-full h-full overflow-x-auto lg:w-[calc(100vw-350px)]! xl:w-full"
         data-testid="applications-table"
@@ -490,7 +194,7 @@ const ApplicantsTable = ({
         <DataTable
           columns={columns}
           data={filteredApplicants}
-          progressPending={isLoading || isApplicantsLoading}
+          progressPending={isLoading}
           noDataComponent={
             <div className="flex items-center justify-center h-full flex-col gap-2 p-10">
               <h3 className="text-textPrimary text-xl font-bold">No applicants found</h3>
@@ -503,66 +207,9 @@ const ApplicantsTable = ({
           responsive
         />
       </div>
-
-      {/* Edit Modal */}
-      {editModalData && (
-        <Modal
-          title="Edit Applicant"
-          onClose={() => {
-            setEditModalData(null);
-            setFormErrors({});
-          }}
-          onSave={handleEditApplicant}
-          isLoading={isLoading}
-        >
-          {renderFormField(
-            "name",
-            editModalData.name,
-            (e) => setEditModalData((prev) => ({ ...prev, name: e.target.value })),
-            "text",
-            formErrors.name,
-          )}
-          {renderFormField(
-            "email",
-            editModalData.email,
-            (e) => setEditModalData((prev) => ({ ...prev, email: e.target.value })),
-            "email",
-            formErrors.email,
-          )}
-          {renderFormField(
-            "application",
-            editModalData.application,
-            (e) => setEditModalData((prev) => ({ ...prev, application: e.target.value })),
-            "text",
-            formErrors.application,
-          )}
-          {renderFormField(
-            "status",
-            editModalData.status,
-            (e) => setEditModalData((prev) => ({ ...prev, status: e.target.value })),
-            "select",
-            formErrors.status,
-            Object.values(APPLICANT_STATUS).map((status) => ({
-              value: status,
-              label: status.charAt(0).toUpperCase() + status.slice(1),
-            })),
-          )}
-          {/* {renderFormField(
-            'clientType',
-            editModalData.clientType,
-            e => setEditModalData(prev => ({ ...prev, clientType: e.target.value })),
-            'select',
-            formErrors.clientType,
-            Object.entries(CLIENT_LABELS).map(([value, label]) => ({
-              value,
-              label,
-            }))
-          )} */}
-        </Modal>
-      )}
       <ConfirmationModal
         isOpen={deleteConfirmation?.id && deleteConfirmation?.type}
-        onClose={() => setDeleteConfirmation({ id: null, type: null })}
+        onClose={() => setDeleteConfirmation(emptyDeleteConfirmation)}
         onConfirm={handleDeleteApplicant}
         title="Delete Submit Form"
         message={`Are you sure you want to delete this submit form?`}
@@ -575,7 +222,7 @@ const ApplicantsTable = ({
   );
 };
 
-ApplicantsTable.propTypes = {
+ApplicationsTable.propTypes = {
   applicants: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.number.isRequired,
@@ -584,7 +231,6 @@ ApplicantsTable.propTypes = {
       email: PropTypes.string.isRequired,
       dateCreated: PropTypes.string.isRequired,
       status: PropTypes.string.isRequired,
-      // clientType: PropTypes.oneOf(Object.values(CLIENT_TYPES)).isRequired,
     }),
   ).isRequired,
   isLoading: PropTypes.bool,
@@ -601,4 +247,4 @@ ApplicantsTable.propTypes = {
   onFilterChange: PropTypes.func.isRequired,
 };
 
-export default ApplicantsTable;
+export default ApplicationsTable;

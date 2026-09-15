@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
 
+const NOT_SET_VALUE = "not set";
+
 const CustomizableSelect = ({
   options,
   defaultText = "Select",
@@ -12,40 +14,28 @@ const CustomizableSelect = ({
   multi = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-
-  // ✅ Keep only values (single = value, multi = array of values)
   const [selected, setSelected] = useState(multi ? initialValue || [] : initialValue || null);
-
   const dropdownRef = useRef(null);
 
-  // ✅ Sync with external value (Redux, props, etc.)
+  // keep in sync with the value from outside
   useEffect(() => {
-    if (multi) {
-      setSelected(initialValue || []);
-    } else {
-      setSelected(initialValue || null);
-    }
+    setSelected(multi ? initialValue || [] : initialValue || null);
   }, [initialValue, multi]);
 
-  // ✅ Toggle option selection
   const toggleOption = (option) => {
     if (multi) {
-      let updatedSelection;
-      if (selected.includes(option.value)) {
-        updatedSelection = selected.filter((val) => val !== option.value);
-      } else {
-        updatedSelection = [...selected, option.value];
-      }
+      const updatedSelection = selected.includes(option.value)
+        ? selected.filter((val) => val !== option.value)
+        : [...selected, option.value];
       setSelected(updatedSelection);
       onSelect?.(updatedSelection);
-    } else {
-      setSelected(option.value);
-      onSelect?.(option.value || "not set");
-      setIsOpen(false);
+      return;
     }
+    setSelected(option.value);
+    onSelect?.(option.value || NOT_SET_VALUE);
+    setIsOpen(false);
   };
 
-  // ✅ Get display text
   const getSelectedText = () => {
     if (multi) {
       if (!selected.length) return defaultText;
@@ -54,21 +44,15 @@ const CustomizableSelect = ({
         .map((opt) => opt.option)
         .join(", ");
     }
-    const matched = options.find((opt) => opt.value === selected);
-    return matched?.option || defaultText;
+    return options.find((opt) => opt.value === selected)?.option || defaultText;
   };
 
-  // ✅ Close on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setIsOpen(false);
-      }
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -92,7 +76,6 @@ const CustomizableSelect = ({
         </div>
       </button>
 
-      {/* ✅ Dropdown list */}
       {isOpen && (
         <ul
           className="absolute z-10 mt-1 max-h-60 cursor-pointer overflow-auto rounded-[6px] border border-[#54545433] bg-white shadow-md"
@@ -100,7 +83,6 @@ const CustomizableSelect = ({
         >
           {options?.map((option) => {
             const isChecked = multi ? selected.includes(option.value) : selected === option.value;
-
             return (
               <li
                 key={option.value}

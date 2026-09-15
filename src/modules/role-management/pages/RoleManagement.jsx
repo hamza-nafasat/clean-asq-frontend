@@ -1,12 +1,9 @@
-import AllUserRoles from '../components/RoleManagementTable';
-import React from 'react';
+import RoleManagementTable from "../components/RoleManagementTable";
 
-function AllRoles() {
-  return (
-    <div>
-      <AllUserRoles />
-    </div>
-  );
-}
+const RoleManagement = () => (
+  <div>
+    <RoleManagementTable />
+  </div>
+);
 
-export default AllRoles;
+export default RoleManagement;

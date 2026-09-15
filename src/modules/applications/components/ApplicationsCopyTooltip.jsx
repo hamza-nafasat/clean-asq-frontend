@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const CopyPasteTooltip = ({ id, label }) => {
+const ApplicationsCopyTooltip = ({ id = "", label }) => {
   const [copied, setCopied] = useState(false);
   const timerRef = useRef(null);
 
@@ -36,4 +36,4 @@ const CopyPasteTooltip = ({ id, label }) => {
   );
 };
 
-export default CopyPasteTooltip;
+export default ApplicationsCopyTooltip;

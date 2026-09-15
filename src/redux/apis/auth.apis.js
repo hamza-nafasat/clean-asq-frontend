@@ -6,8 +6,7 @@ const authApis = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: `${getEnv("SERVER_URL")}/api/auth`, credentials: "include" }),
 
   endpoints: (builder) => ({
-    // login
-    // -----
+    /////
     login: builder.mutation({
       query: (data) => ({
         url: "/login",
@@ -15,9 +14,7 @@ const authApis = createApi({
         body: data,
       }),
     }),
-
-    // forget password
-    // ---------------
+    /////
     forgetPassword: builder.mutation({
       query: (data) => ({
         url: "/forget-password",
@@ -25,9 +22,7 @@ const authApis = createApi({
         body: data,
       }),
     }),
-
-    // reset password
-    // --------------
+    /////
     resetPassword: builder.mutation({
       query: (data) => ({
         url: "/reset-password",
@@ -35,25 +30,21 @@ const authApis = createApi({
         body: data,
       }),
     }),
-
+    /////
     getMyProfileFirstTime: builder.mutation({
       query: () => ({
         url: "/me",
         method: "GET",
       }),
     }),
-
-    // get my profile
-    // --------------
+    /////
     getMyProfile: builder.query({
       query: () => ({
         url: "/me",
         method: "GET",
       }),
     }),
-
-    // updateMyProfile
-    // ---------------
+    /////
     updateMyProfile: builder.mutation({
       query: (data) => ({
         url: "/me",
@@ -61,9 +52,7 @@ const authApis = createApi({
         body: data,
       }),
     }),
-
-    // update my password
-    // ------------------
+    /////
     updateMyPassword: builder.mutation({
       query: (data) => ({
         url: "/me/password",
@@ -71,9 +60,7 @@ const authApis = createApi({
         body: data,
       }),
     }),
-
-    // logout
-    // ------
+    /////
     logout: builder.mutation({
       query: () => ({
         url: "/logout",

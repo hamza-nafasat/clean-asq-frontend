@@ -1,5 +1,5 @@
 /** Transparent resize hit areas around the chat panel edges and corners. */
-export default function PanelResizeHandles({ onResizeMouseDown }) {
+const PanelResizeHandles = ({ onResizeMouseDown }) => {
   return (
     <>
       <div
@@ -65,4 +65,6 @@ export default function PanelResizeHandles({ onResizeMouseDown }) {
       </div>
     </>
   );
-}
+};
+
+export default PanelResizeHandles;

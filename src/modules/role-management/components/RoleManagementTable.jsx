@@ -1,4 +1,6 @@
-import { getTableStyles } from "@/utils/tableStyles";
+import { createRef, useCallback, useEffect, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
+import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/auth.apis";
 import {
   useCreateRoleMutation,
   useDeleteSingleRoleMutation,
@@ -6,39 +8,67 @@ import {
   useGetAllRolesQuery,
   useUpdateSingleRoleMutation,
 } from "@/redux/apis/role-management.apis";
+import { userExist, userNotExist } from "@/redux/slices/auth.slice";
 import { Eye, MoreVertical, Pencil, Trash } from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
 import DataTable from "react-data-table-component";
 import { FaUserShield } from "react-icons/fa";
 import { toast } from "react-toastify";
 import useBranding from "@/hooks/useBranding";
-import ConfirmationModal from "@/components/modals/ConfirmationModal";
-import Modal from "@/components/modals/SaveCancelModal";
-import Button from "@/components/shared/Button";
-import Checkbox from "@/components/shared/Checkbox";
-import TextField from "@/components/shared/TextField";
-import { ThreeDotEditViewDelete } from "@/components/shared/ThreeDotViewEditDelete";
-import { userExist, userNotExist } from "@/redux/slices/auth.slice";
-import { useDispatch } from "react-redux";
-import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/auth.apis";
-import getEnv from "@/utils/env";
 import { useScreenContext } from "@/hooks/useScreenContext";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import Button from "@/components/shared/Button";
+import { ThreeDotEditViewDelete } from "@/components/shared/ThreeDotViewEditDelete";
+import getEnv from "@/utils/env";
+import { getTableStyles } from "@/utils/tableStyles";
+import RoleManagementAddEditModal from "./RoleManagementAddEditModal";
+import RoleManagementViewModal from "./RoleManagementViewModal";
+import {
+  INITIAL_ROLE_FORM,
+  ROLE_ACTION_NAMES,
+  ROLE_AI_CHAT_PATH,
+  ROLE_MODAL_MODES,
+  ROLE_SCREEN_CONTEXT,
+} from "../utils/role-management.constants";
+import {
+  applyRoleFormChange,
+  applyRolePermissionChange,
+  buildRoleScreenActions,
+  buildRoleScreenState,
+  getDatePart,
+} from "../utils/role-management.utils";
 
 const SERVER_URL = getEnv("SERVER_URL");
 
-// Define role status
-const ROLE_STATUS = {
-  ACTIVE: "active",
-  INACTIVE: "inactive",
-};
+const buildColumns = ({ actionMenu, actionMenuRefs, buttons, setActionMenu }) => [
+  { name: "Role Name", selector: (row) => row.name, sortable: true },
+  { name: "_id", selector: (row) => row._id, sortable: true },
+  { name: "Created At", selector: (row) => getDatePart(row.createdAt), sortable: true },
+  {
+    name: "Action",
+    cell: (row) => {
+      if (!actionMenuRefs.current.has(row._id)) {
+        actionMenuRefs.current.set(row._id, createRef());
+      }
+      const rowRef = actionMenuRefs.current.get(row._id);
 
-const INITIAL_ROLE_FORM = {
-  roleName: "",
-  permissions: [],
-  status: ROLE_STATUS.ACTIVE,
-};
+      return (
+        <div className="relative" ref={rowRef}>
+          <button
+            type="button"
+            onClick={() => setActionMenu((prevActionMenu) => (prevActionMenu === row._id ? null : row._id))}
+            className="rounded p-1 hover:bg-gray-100"
+            aria-label="Actions"
+          >
+            <MoreVertical size={18} />
+          </button>
+          {actionMenu === row._id && <ThreeDotEditViewDelete buttons={buttons} row={row} />}
+        </div>
+      );
+    },
+  },
+];
 
-function AllUserRoles() {
+const RoleManagementTable = () => {
   const { data: permissionsData, isLoading: isLoadingPermissions } = useGetAllPermissionsQuery();
   const { data: roles, isLoading: isLoadingRoles } = useGetAllRolesQuery();
   const [deleteRole, { isLoading: isDeletingRole }] = useDeleteSingleRoleMutation();
@@ -61,20 +91,16 @@ function AllUserRoles() {
   const getUserAndSetBranding = useCallback(async () => {
     try {
       const res = await getUserProfile().unwrap();
-      if (res?.success) {
-        dispatch(userExist(res?.data));
-      } else {
-        dispatch(userNotExist());
-      }
-    } catch (err) {
-      console.log("error in app.jsx", err);
+      dispatch(res?.success ? userExist(res?.data) : userNotExist());
+    } catch (error) {
+      console.error("Get user profile error:", error);
       dispatch(userNotExist());
     }
   }, [getUserProfile, dispatch]);
 
   const ButtonsForThreeDot = [
     {
-      name: "view",
+      name: ROLE_ACTION_NAMES.VIEW,
       icon: <Eye size={16} className="mr-2" />,
       onClick: (row) => {
         setViewModalData(row);
@@ -82,7 +108,7 @@ function AllUserRoles() {
       },
     },
     {
-      name: "edit",
+      name: ROLE_ACTION_NAMES.EDIT,
       icon: <Pencil size={16} className="mr-2" />,
       onClick: (row) => {
         setEditModalData({ ...row, roleName: row.name });
@@ -90,7 +116,7 @@ function AllUserRoles() {
       },
     },
     {
-      name: "delete",
+      name: ROLE_ACTION_NAMES.DELETE,
       icon: <Trash size={16} className="mr-2" />,
       onClick: (row) => {
         setDeleteConfirmation(row);
@@ -100,124 +126,34 @@ function AllUserRoles() {
     },
   ];
 
-  // Only update local state for form fields, do not persist
-  const handleInputChange = useCallback((e) => {
-    const { name, value, type, checked } = e.target;
-    if (type === "checkbox") {
-      const permissionId = name;
-      setFormData((prev) => {
-        const newPermissions = checked
-          ? [...prev.permissions, permissionId]
-          : prev.permissions.filter((id) => id !== permissionId);
-        return { ...prev, permissions: newPermissions };
-      });
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
-  }, []);
+  const handleInputChange = useCallback((e) => setFormData((prev) => applyRoleFormChange(prev, e.target)), []);
 
-  // For edit modal
-  const handleEditInputChange = useCallback((e) => {
-    const { name, value, type, checked } = e.target;
-    setEditModalData((prev) => {
-      if (!prev) return prev;
-      if (type === "checkbox") {
-        const permissionId = name;
-        const newPermissions = checked
-          ? [...prev.permissions, permissionId]
-          : prev.permissions.filter((id) => id !== permissionId);
-        return { ...prev, permissions: newPermissions };
-      } else {
-        return {
-          ...prev,
-          [name]: value,
-        };
-      }
-    });
-  }, []);
+  const handleEditInputChange = useCallback(
+    (e) => setEditModalData((prev) => (prev ? applyRoleFormChange(prev, e.target) : prev)),
+    [],
+  );
 
-  // For edit modal
-  const handleEditInputChangeForPermissions = useCallback((e, value) => {
-    const { name, checked } = e.target;
-    setEditModalData((prev) => {
-      let permissions = prev?.permissions || [];
-      if (checked) {
-        if (!permissions.some((p) => p._id === name)) {
-          permissions = [...permissions, value];
-        }
-      } else {
-        permissions = permissions.filter((p) => p._id !== name);
-      }
-      return { ...prev, permissions };
-    });
-  }, []);
+  const handleEditPermissionChange = useCallback(
+    (e, permission) => setEditModalData((prev) => applyRolePermissionChange(prev, e.target, permission)),
+    [],
+  );
 
   useScreenContext({
-    screenId: "role-management",
-    screenName: "Role Management",
-    assistantName: "Role Management Assistant",
-    description:
-      "The Role Management screen lets admins create and manage roles, each with a custom set of permissions. Roles are assigned to users to control what they can access and do in the platform.",
-    aiEndpoint: `${SERVER_URL}/api/ai/role-chat`,
-    greeting: `Hi! I'm your **Role Management Assistant**.\n\nI can help you:\n- **Explain any permission** — what it does and which roles typically need it\n- **Suggest permissions** for a role based on its purpose (e.g. manager, staff, guest)\n- **Create, edit, or delete roles** based on your instructions\n- **Review existing roles** and flag gaps or over-permissions\n\nWhat would you like to do?`,
-    currentState: {
-      roles: (roles?.data || []).map((r) => ({
-        _id: r._id,
-        name: r.name,
-        permissions: (r.permissions || []).map((p) => p.name),
-      })),
-      availablePermissions: (permissionsData?.data || []).map((p) => ({ _id: p._id, name: p.name })),
-    },
-    actions: {
-      createRole: async ({ name, permissionNames }) => {
-        const permissionIds = (permissionsData?.data || [])
-          .filter((p) => permissionNames.includes(p.name))
-          .map((p) => p._id);
-        try {
-          const res = await createRole({ name, permissions: permissionIds }).unwrap();
-          if (!res?.success) throw new Error(res?.message);
-          await getUserAndSetBranding();
-        } catch (err) {
-          toast.error(err?.data?.message || err?.message || "Failed to create role");
-          throw err;
-        }
-      },
-      updateRole: async ({ roleId, name, permissionNames }) => {
-        const role = roles?.data?.find((r) => r._id === roleId);
-        if (!role) throw new Error("Role not found");
-        const permissionIds = permissionNames
-          ? (permissionsData?.data || []).filter((p) => permissionNames.includes(p.name)).map((p) => p._id)
-          : (role.permissions || []).map((p) => p._id);
-        try {
-          const res = await editRole({
-            _id: roleId,
-            name: name || role.name,
-            permissions: permissionIds,
-          }).unwrap();
-          if (!res?.success) throw new Error(res?.message);
-          await getUserAndSetBranding();
-        } catch (err) {
-          toast.error(err?.data?.message || err?.message || "Failed to update role");
-          throw err;
-        }
-      },
-      deleteRole: async ({ roleId }) => {
-        try {
-          const res = await deleteRole({ _id: roleId }).unwrap();
-          if (!res?.success) throw new Error(res?.message);
-        } catch (err) {
-          toast.error(err?.data?.message || err?.message || "Failed to delete role");
-          throw err;
-        }
-      },
-    },
+    ...ROLE_SCREEN_CONTEXT,
+    aiEndpoint: `${SERVER_URL}${ROLE_AI_CHAT_PATH}`,
+    currentState: buildRoleScreenState(roles?.data || [], permissionsData?.data || []),
+    actions: buildRoleScreenActions({
+      roles: roles?.data || [],
+      permissions: permissionsData?.data || [],
+      createRole,
+      editRole,
+      deleteRole,
+      refreshUser: getUserAndSetBranding,
+      toastError: toast.error,
+    }),
     deps: { roleCount: roles?.data?.length, permissionCount: permissionsData?.data?.length },
   });
 
-  // No-op for add, edit, delete
   const handleAddRole = async () => {
     try {
       const res = await createRole({ name: formData.roleName, permissions: formData.permissions }).unwrap();
@@ -227,7 +163,7 @@ function AllUserRoles() {
         setIsModalOpen(false);
       }
     } catch (error) {
-      console.error("Error creating role:", error);
+      console.error("Create role error:", error);
       toast.error(error?.data?.message || "Failed to create role");
     }
   };
@@ -247,7 +183,7 @@ function AllUserRoles() {
         toast.error(res?.message || "Failed to update role");
       }
     } catch (error) {
-      console.error("Error updating role:", error);
+      console.error("Update role error:", error);
       toast.error(error?.data?.message || "Failed to update role");
     }
   };
@@ -262,147 +198,31 @@ function AllUserRoles() {
         setRowForDelete(null);
       }
     } catch (error) {
-      console.error("Error deleting role:", error);
+      console.error("Delete role error:", error);
       toast.error(error?.data?.message || "Failed to delete role");
     }
   };
 
-  const columns = () => [
-    {
-      name: "Role Name",
-      selector: (row) => row.name,
-      sortable: true,
-    },
-
-    {
-      name: "_id",
-      selector: (row) => row._id,
-      sortable: true,
-    },
-
-    {
-      name: "Created At",
-      selector: (row) => row.createdAt?.split("T")?.[0],
-      sortable: true,
-    },
-    {
-      name: "Action",
-      cell: (row) => {
-        if (!actionMenuRefs.current.has(row._id)) {
-          actionMenuRefs.current.set(row._id, React.createRef());
-        }
-        const rowRef = actionMenuRefs.current.get(row._id);
-
-        return (
-          <div className="relative" ref={rowRef}>
-            <button
-              onClick={() => setActionMenu((prevActionMenu) => (prevActionMenu === row._id ? null : row._id))}
-              className="rounded p-1 hover:bg-gray-100"
-              aria-label="Actions"
-            >
-              <MoreVertical size={18} />
-            </button>
-            {actionMenu === row._id && <ThreeDotEditViewDelete buttons={ButtonsForThreeDot} row={row} />}
-          </div>
-        );
-      },
-    },
-  ];
+  const handleCloseAddModal = () => {
+    setIsModalOpen(false);
+    setFormData(INITIAL_ROLE_FORM);
+  };
 
   useEffect(() => {
+    if (actionMenu === null) return;
     const handleClickOutside = (event) => {
       const clickedOutsideAllMenus = Array.from(actionMenuRefs.current.values()).every(
         (ref) => !ref.current?.contains(event.target),
       );
-      if (clickedOutsideAllMenus) {
-        setActionMenu(null);
-      }
+      if (clickedOutsideAllMenus) setActionMenu(null);
     };
-    if (actionMenu !== null) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [actionMenu]);
-
-  const renderPermissionsGrid = (permissions, onChange) => {
-    return (
-      <div className="mt-4">
-        <h3 className="mb-2 text-sm font-medium text-gray-700">Access Permissions</h3>
-        <div className="grid grid-cols-2 gap-2">
-          {permissionsData?.data?.map((permission) => {
-            const isViewMode = !onChange;
-            const isChecked = isViewMode
-              ? permissions.some((p) => p._id === permission._id)
-              : permissions.some((p) => p._id === permission._id);
-            return (
-              <Checkbox
-                key={permission._id}
-                id={permission._id}
-                value={permission}
-                name={permission._id}
-                label={permission.name}
-                checked={isChecked}
-                onChange={isViewMode ? null : (e) => onChange(e, permission)}
-                disabled={isViewMode}
-              />
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  const renderFormField = useCallback((field, value, onChange, type = "text", error = null, options = null) => {
-    const labelText = field
-      .split(/(?=[A-Z])/)
-      .join(" ")
-      .replace(/^\w/, (c) => c.toUpperCase());
-
-    if (type === "select" && options) {
-      return (
-        <div className="mb-4">
-          <label className="text-textPrimary mb-1 block text-sm font-medium">{labelText}</label>
-          <select
-            name={field}
-            value={value}
-            onChange={onChange}
-            className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base${
-              error ? "border-red-500" : "border-frameColor"
-            }`}
-          >
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-        </div>
-      );
-    }
-
-    return (
-      <div className="mb-4">
-        {/* <label className="text-textPrimary mb-1 block text-sm font-medium">{labelText}</label> */}
-        <TextField
-          label={labelText}
-          name={field}
-          type={type}
-          value={value}
-          onChange={onChange}
-          placeholder={`Enter ${field}`}
-        />
-
-        {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-      </div>
-    );
-  }, []);
 
   return (
     <div className="mt-5 w-full" data-testid="roles-page">
-      <div className="mb-5 flex items-center justify-between">
+      <header className="mb-5 flex items-center justify-between">
         <h2 className="text-textPrimary text-xl font-semibold">Role Management</h2>
         <div>
           <Button
@@ -413,12 +233,12 @@ function AllUserRoles() {
             data-testid="roles-create-btn"
           />
         </div>
-      </div>
+      </header>
 
       <DataTable
         data-testid="roles-table"
         data={roles?.data || []}
-        columns={columns()}
+        columns={buildColumns({ actionMenu, actionMenuRefs, buttons: ButtonsForThreeDot, setActionMenu })}
         customStyles={tableStyles}
         pagination
         highlightOnHover
@@ -427,73 +247,39 @@ function AllUserRoles() {
         className="rounded-t-xl!"
       />
 
-      {/* Add Role Modal */}
-      {isModalOpen && (
-        <Modal
-          title="Add Role"
-          onClose={() => {
-            setIsModalOpen(false);
-            setFormData(INITIAL_ROLE_FORM);
-          }}
-          onSave={handleAddRole}
-          isLoading={isCreatingRole}
-        >
-          {renderFormField("roleName", formData.roleName, handleInputChange, "text")}
-          {renderFormField("status", formData.status, handleInputChange, "select", null, [
-            { value: ROLE_STATUS.ACTIVE, label: "Active" },
-            { value: ROLE_STATUS.INACTIVE, label: "Inactive" },
-          ])}
-          {renderPermissionsGrid(formData.permissions, handleInputChange)}
-        </Modal>
-      )}
+      <RoleManagementAddEditModal
+        isOpen={isModalOpen}
+        mode={ROLE_MODAL_MODES.ADD}
+        initialData={formData}
+        allPermissions={permissionsData?.data}
+        isLoading={isCreatingRole}
+        onChange={handleInputChange}
+        onPermissionChange={handleInputChange}
+        onClose={handleCloseAddModal}
+        onSubmit={handleAddRole}
+      />
 
-      {/* Edit Role Modal */}
-      {editModalData && (
-        <Modal
-          saveButtonText="Edit"
-          title="Edit Role"
-          onClose={() => setEditModalData(null)}
-          onSave={handleEditRole}
-          isLoading={isEditingRole}
-        >
-          {renderFormField("roleName", editModalData.roleName, handleEditInputChange, "text")}
-          {renderFormField("status", editModalData.status, handleEditInputChange, "select", null, [
-            { value: ROLE_STATUS.ACTIVE, label: "Active" },
-            { value: ROLE_STATUS.INACTIVE, label: "Inactive" },
-          ])}
-          {renderPermissionsGrid(editModalData.permissions, handleEditInputChangeForPermissions)}
-        </Modal>
-      )}
-      {/* View Role Modal */}
-      {viewModalData && (
-        <Modal title="View Role" onClose={() => setViewModalData(null)} hideSaveButton isLoading={isGettingUserProfile}>
-          <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium text-gray-700">Role Name</label>
-            <div className="border-frameColor flex h-11.25 w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base">
-              {viewModalData.name}
-            </div>
-          </div>
-          <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium text-gray-700">Status</label>
-            <div className="border-frameColor flex h-11.25 w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base">
-              <span className={`text-textPrimary inline-flex rounded-full px-2 py-1 text-xs font-semibold`}>
-                {viewModalData.status === ROLE_STATUS.ACTIVE ? "Active" : "Inactive"}
-              </span>
-            </div>
-          </div>
-          <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium text-gray-700">Created Date</label>
-            <div className="border-frameColor flex h-11.25 w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base">
-              {viewModalData?.createdAt?.split("T")?.[0]}
-            </div>
-          </div>
-          {renderPermissionsGrid(viewModalData?.permissions)}
-        </Modal>
-      )}
+      <RoleManagementAddEditModal
+        isOpen={Boolean(editModalData)}
+        mode={ROLE_MODAL_MODES.EDIT}
+        initialData={editModalData}
+        allPermissions={permissionsData?.data}
+        isLoading={isEditingRole}
+        onChange={handleEditInputChange}
+        onPermissionChange={handleEditPermissionChange}
+        onClose={() => setEditModalData(null)}
+        onSubmit={handleEditRole}
+      />
 
-      {/* Add Delete Confirmation Modal */}
+      <RoleManagementViewModal
+        initialData={viewModalData}
+        allPermissions={permissionsData?.data}
+        isLoading={isGettingUserProfile}
+        onClose={() => setViewModalData(null)}
+      />
+
       <ConfirmationModal
-        isOpen={!!deleteConfirmation}
+        isOpen={Boolean(deleteConfirmation)}
         onClose={() => setDeleteConfirmation(null)}
         onConfirm={handleDeleteRole}
         title="Delete Role"
@@ -505,6 +291,6 @@ function AllUserRoles() {
       />
     </div>
   );
-}
+};
 
-export default AllUserRoles;
+export default RoleManagementTable;

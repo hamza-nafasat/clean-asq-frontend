@@ -1,66 +1,62 @@
-import React, { useState, useEffect } from "react";
-import Button from "@/components/shared/Button";
+import { Fragment, useEffect, useState } from "react";
 
-const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequiredFields = [], headerActions }) => {
+const WIDE_SCREEN_WIDTH = 1440;
+const WIDE_SCREEN_MAX_STEPS = 14;
+const MIN_STEPS_PER_SCREEN = 3;
+const PIXELS_PER_STEP = 200;
+
+const getStepCircleClasses = (actualIndex, currentStep, isEmptyRequired) => {
+  if (actualIndex < currentStep) return `border-accent ${isEmptyRequired ? "bg-[#974748]" : "bg-accent"}`;
+  if (actualIndex === currentStep) return "border-accent bg-accent";
+  return `border-gray-300 ${isEmptyRequired ? "bg-[#974748]/30" : "bg-white"}`;
+};
+
+const Stepper = ({ steps = [], currentStep, visibleSteps = 5, children, emptyRequiredFields = [], headerActions }) => {
   const [visibleStepRange, setVisibleStepRange] = useState({ start: 0, end: visibleSteps });
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const totalSteps = steps.length;
 
-  // Handle window resize
   useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-    };
-
+    const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Update visible steps when current step or window width changes
+  // keep the current step inside the visible range
   useEffect(() => {
-    if (windowWidth >= 1440) {
-      const maxSteps = 14;
-
-      setVisibleStepRange({
-        start: 0,
-        end: Math.min(totalSteps, maxSteps),
-      });
-    } else {
-      const stepsPerScreen = Math.max(3, Math.floor(windowWidth / 200));
-
-      let start = Math.max(0, currentStep - Math.floor(stepsPerScreen / 2));
-      let end = Math.min(totalSteps, start + stepsPerScreen);
-
-      // Adjust boundaries
-      if (end === totalSteps) start = Math.max(0, end - stepsPerScreen);
-      if (start === 0) end = Math.min(totalSteps, start + stepsPerScreen);
-
-      setVisibleStepRange({ start, end });
+    if (windowWidth >= WIDE_SCREEN_WIDTH) {
+      setVisibleStepRange({ start: 0, end: Math.min(totalSteps, WIDE_SCREEN_MAX_STEPS) });
+      return;
     }
+    const stepsPerScreen = Math.max(MIN_STEPS_PER_SCREEN, Math.floor(windowWidth / PIXELS_PER_STEP));
+
+    let start = Math.max(0, currentStep - Math.floor(stepsPerScreen / 2));
+    let end = Math.min(totalSteps, start + stepsPerScreen);
+
+    if (end === totalSteps) start = Math.max(0, end - stepsPerScreen);
+    if (start === 0) end = Math.min(totalSteps, start + stepsPerScreen);
+
+    setVisibleStepRange({ start, end });
   }, [currentStep, totalSteps, windowWidth]);
 
   const displayedSteps = steps.slice(visibleStepRange.start, visibleStepRange.end);
 
   return (
     <div className="w-full p-4">
-      {/* Stepper Header */}
+      {/* Stepper header */}
       <div className="mb-8 flex items-center justify-between overflow-x-auto overflow-y-hidden">
         {displayedSteps.map((step, index) => {
           const actualIndex = visibleStepRange.start + index;
           const isLastDisplayedStep = index === displayedSteps.length - 1;
           return (
-            <React.Fragment key={actualIndex}>
-              {/* Step Circle and Label */}
+            <Fragment key={actualIndex}>
               <div className={`relative flex flex-col items-center ${actualIndex === currentStep ? "-top-3.5" : ""}`}>
-                {/* Step Circle */}
                 <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-200 ${
-                    actualIndex < currentStep
-                      ? `border-accent ${emptyRequiredFields.includes(actualIndex) ? "bg-[#974748]" : "bg-accent"}`
-                      : actualIndex === currentStep
-                        ? "border-accent bg-accent"
-                        : `border-gray-300 ${emptyRequiredFields.includes(actualIndex) ? "bg-[#974748]/30" : "bg-white"}`
-                  }`}
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-200 ${getStepCircleClasses(
+                    actualIndex,
+                    currentStep,
+                    emptyRequiredFields.includes(actualIndex),
+                  )}`}
                 >
                   {actualIndex < currentStep ? (
                     <svg
@@ -78,7 +74,6 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
                   ) : null}
                 </div>
 
-                {/* Step Label */}
                 <div className="mt-2">
                   <div
                     title={step}
@@ -90,22 +85,21 @@ const Stepper = ({ steps, currentStep, visibleSteps = 5, children, emptyRequired
                 {actualIndex !== currentStep && <div className="mt-2 h-5" />}
               </div>
 
-              {/* Connector Line */}
+              {/* Connector line */}
               {!isLastDisplayedStep && (
                 <div
                   className={`h-0.5 flex-auto ${actualIndex < currentStep ? "bg-accent" : "bg-gray-300"}`}
                   style={{ marginBottom: "48px" }}
                 />
               )}
-            </React.Fragment>
+            </Fragment>
           );
         })}
       </div>
 
-      {/* Optional actions rendered between step nav and content (e.g. Download button) */}
+      {/* Actions between the step nav and the content */}
       {headerActions && <div className="flex justify-end mb-2">{headerActions}</div>}
 
-      {/* Step Content */}
       <div>{children}</div>
     </div>
   );

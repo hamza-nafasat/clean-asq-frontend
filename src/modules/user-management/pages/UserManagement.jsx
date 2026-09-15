@@ -1,12 +1,9 @@
-import UserTable from '../components/UserManagementTable';
-import React from 'react';
+import UserManagementTable from "../components/UserManagementTable";
 
-function AdminAllUsers() {
-  return (
-    <div>
-      <UserTable />
-    </div>
-  );
-}
+const UserManagement = () => (
+  <div>
+    <UserManagementTable />
+  </div>
+);
 
-export default AdminAllUsers;
+export default UserManagement;

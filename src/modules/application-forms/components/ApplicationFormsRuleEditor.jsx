@@ -1,3 +1,7 @@
+import { useState } from "react";
+import { FaSpinner } from "react-icons/fa";
+import { toast } from "react-toastify";
+import { useGetAllEmailTemplatesQuery } from "@/redux/apis/email.apis";
 import {
   useCheckFormRuleFromAiMutation,
   useCreateFormRuleMutation,
@@ -5,126 +9,151 @@ import {
   useGetFormRuleFromAiMutation,
   useUpdateSingleFormRuleMutation,
 } from "@/redux/apis/form.apis";
-import { useState } from "react";
-import { FaSpinner } from "react-icons/fa";
-import { toast } from "react-toastify";
+import { SelectInputType } from "@/components/global/DynamicField";
 import Button from "@/components/shared/Button";
-import { CheckboxInputType, MultiCheckboxInputType, SelectInputType } from "@/components/global/DynamicField";
-import TextField from "@/components/shared/TextField";
 import CustomLoading from "@/components/shared/CustomLoading";
-import Checkbox from "@/components/shared/Checkbox";
-import { useGetAllEmailTemplatesQuery } from "@/redux/apis/email.apis";
+import TextField from "@/components/shared/TextField";
+import ApplicationFormsRuleAiControls from "./ApplicationFormsRuleAiControls";
+import ApplicationFormsRuleEmailFields from "./ApplicationFormsRuleEmailFields";
+import ApplicationFormsRulePreview from "./ApplicationFormsRulePreview";
+import { RULE_CATEGORIES_FIELD, RULE_RECIPIENTS } from "../utils/application-forms.constants";
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-const CATEGORY_OPTIONS = [
-  { label: "Alert", value: "alert" },
-  { label: "Display", value: "display" },
-  { label: "Update Status", value: "update_status" },
-];
-const RECIPIENT_EMAIL_OPTIONS = [
-  { label: "Beneficial Owners", value: "beneficial_owners_key" },
-  { label: "Applicant", value: "applicant" },
-  { label: "All", value: "all" },
-];
+const SPINNER_CLASSES = "mr-2 w-4 h-4 animate-spin";
+
+const hasRuleDetails = (rule) =>
+  !!(
+    rule.prompt &&
+    rule.name &&
+    rule.handler &&
+    rule.formula &&
+    rule.example &&
+    rule.explanation &&
+    rule.category &&
+    rule.order
+  );
+
+// every field filled and email settings complete
+const isRuleComplete = (rule) =>
+  hasRuleDetails(rule) &&
+  !!String(rule.isEmailSentOn) &&
+  !(rule.isEmailSentOn && !(rule.recieverEmail && rule.emailTemplateId));
+
+const ApplicationFormsRuleCategoryField = ({ category = "", onChange }) => (
+  <SelectInputType
+    field={RULE_CATEGORIES_FIELD}
+    onChange={(e) => onChange?.(e.target.value)}
+    form={{ category: { name: "category", value: category } }}
+  />
+);
 
 const CreateRuleModal = ({ formId, setModal, refetch }) => {
   const [promptForCheck, setPromptForCheck] = useState("");
-  const [showRuleFieldsGuide, setShowRuleFieldsGuide] = useState(false);
-  const [prompt, setPrompt] = useState("");
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("");
-  const [order, setOrder] = useState("");
-  const [handler, setHandler] = useState("");
-  const [formula, setFormula] = useState("");
-  const [example, setExample] = useState("");
-  const [explanation, setExplanation] = useState("");
-  const [createRule, { isLoading: isCreatingRule }] = useCreateFormRuleMutation();
-  const [getFormRuleFromAi, { isLoading: isGettingFormRuleFromAi }] = useGetFormRuleFromAiMutation();
-  const { data: formData, isLoading: isLoadingFormData } = useFormDataWhichUseToCreateFormsQuery({ formId });
-  const [checkFormRuleFromAi, { isLoading: isCheckingFormRuleFromAi }] = useCheckFormRuleFromAiMutation();
-  const { data: emailTemplates, isLoading: isLoadingEmailTemplates } = useGetAllEmailTemplatesQuery();
+  const [rule, setRule] = useState({
+    prompt: "",
+    name: "",
+    category: "",
+    order: "",
+    handler: "",
+    formula: "",
+    example: "",
+    explanation: "",
+  });
+  const [isEmailSentOn, setIsEmailSentOn] = useState(false);
+  const [recieverEmail, setRecieverEmail] = useState(RULE_RECIPIENTS.APPLICANT);
+  const [emailTemplateId, setEmailTemplateId] = useState("");
   const [canCreateFormRule, setCanCreateFormRule] = useState({
     canCreate: null,
     message: "",
   });
-  const [isEmailSentOn, setIsEmailSentOn] = useState(false);
-  const [recieverEmail, setRecieverEmail] = useState("applicant");
-  const [emailTemplateId, setEmailTemplateId] = useState("");
+  const [createRule, { isLoading: isCreatingRule }] = useCreateFormRuleMutation();
+  const [getFormRuleFromAi, { isLoading: isGettingFormRuleFromAi }] = useGetFormRuleFromAiMutation();
+  const [checkFormRuleFromAi, { isLoading: isCheckingFormRuleFromAi }] = useCheckFormRuleFromAiMutation();
+  const { data: formData, isLoading: isLoadingFormData } = useFormDataWhichUseToCreateFormsQuery({ formId });
+  const { data: emailTemplates, isLoading: isLoadingEmailTemplates } = useGetAllEmailTemplatesQuery();
 
-  const createRuleHandler = async () => {
+  const updateRule = (name, value) => setRule((prev) => ({ ...prev, [name]: value }));
+
+  const handleCreateRule = async () => {
     try {
       const data = {
         formId,
-        prompt,
-        name,
-        category,
-        handler,
-        formula,
-        example,
-        explanation,
-        order,
+        ...rule,
         isEmailSentOn: String(isEmailSentOn),
         recieverEmail,
         emailTemplateId,
       };
       if (
         !formId ||
-        !prompt ||
-        !name ||
-        !handler ||
-        !formula ||
-        !example ||
-        !explanation ||
-        !category ||
-        !order ||
-        !String(isEmailSentOn) ||
-        (isEmailSentOn && !(recieverEmail && emailTemplateId))
-      )
+        !isRuleComplete({
+          ...rule,
+          isEmailSentOn,
+          recieverEmail,
+          emailTemplateId,
+        })
+      ) {
         return toast.error("Please fill all the fields");
-
+      }
       const res = await createRule(data).unwrap();
       if (res?.success) {
         toast?.success(res?.message || "Rule created successfully");
-        await refetch();
-        setModal(false);
+        await refetch?.();
+        setModal?.(false);
       }
     } catch (error) {
-      console.error("Error creating rule:", error);
+      console.error("Create rule error:", error);
       toast.error(error?.data?.message || "Failed to create rule");
     }
   };
 
-  const getFormRuleFromAiHandler = async () => {
+  const handleGetRuleFromAi = async () => {
     try {
+      const { prompt, name, category } = rule;
       if (!formId || !prompt || !name || !category) return toast.error("Please fill all the fields");
-      const res = await getFormRuleFromAi({ formId, prompt, name, category }).unwrap();
-      console.log(res);
+      const res = await getFormRuleFromAi({
+        formId,
+        prompt,
+        name,
+        category,
+      }).unwrap();
       if (res?.success) {
-        setName(res?.data?.name);
-        setHandler(res?.data?.handler);
-        setFormula(res?.data?.formula);
-        setExample(res?.data?.example);
-        setExplanation(res?.data?.explanation);
-        setOrder(res?.data?.order);
+        const { name: aiName, handler, formula, example, explanation, order } = res?.data || {};
+        setRule((prev) => ({
+          ...prev,
+          name: aiName,
+          handler,
+          formula,
+          example,
+          explanation,
+          order,
+        }));
       }
     } catch (error) {
-      console.error("Error getting form rule from ai:", error);
+      console.error("Get form rule from ai error:", error);
       toast.error(error?.data?.message || "Failed to get form rule from ai");
     }
   };
 
-  const checkPromptForCheckHandler = async () => {
+  const handleCheckPrompt = async () => {
     try {
       if (!promptForCheck) return toast.error("Please fill all the fields");
-      const res = await checkFormRuleFromAi({ formId, prompt: promptForCheck }).unwrap();
+      const res = await checkFormRuleFromAi({
+        formId,
+        prompt: promptForCheck,
+      }).unwrap();
       if (res?.success) {
-        setCanCreateFormRule((prev) => ({ ...prev, canCreate: res?.data?.canCreate, message: res?.data?.message }));
+        setCanCreateFormRule((prev) => ({
+          ...prev,
+          canCreate: res?.data?.canCreate,
+          message: res?.data?.message,
+        }));
       }
     } catch (error) {
-      console.error("Error checking prompt for check:", error);
+      console.error("Check form rule from ai error:", error);
     }
   };
+
   if (isLoadingFormData || isLoadingEmailTemplates) return <CustomLoading />;
+
   return (
     <div className="flex items-center w-full justify-center p-4">
       <div className="flex w-full max-w-3xl flex-col gap-6">
@@ -138,15 +167,14 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
               value={promptForCheck}
               onChange={(e) => setPromptForCheck(e.target.value)}
             />
-
             <Button
               label="Check"
               variant="primary"
               className="h-12! self-end"
-              onClick={checkPromptForCheckHandler}
+              onClick={handleCheckPrompt}
               disabled={!promptForCheck || isCheckingFormRuleFromAi}
               icon={isCheckingFormRuleFromAi && FaSpinner}
-              cnLeft="mr-2 w-4 h-4 animate-spin"
+              cnLeft={SPINNER_CLASSES}
             />
           </div>
           {canCreateFormRule.canCreate !== null && (
@@ -162,207 +190,117 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
             label="Rule Name:"
             id="rule-name"
             placeholder="Enter rule name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={rule.name}
+            onChange={(e) => updateRule("name", e.target.value)}
           />
-          <SelectInputType
-            field={{
-              label: "Category",
-              options: CATEGORY_OPTIONS,
-              uniqueId: "category",
-            }}
-            onChange={(e) => setCategory(e.target.value)}
-            form={{ category: { name: "category", value: category } }}
+          <ApplicationFormsRuleCategoryField
+            category={rule.category}
+            onChange={(value) => updateRule("category", value)}
           />
           <TextField
             label="Prompt:"
             id="prompt"
             type="textarea"
             placeholder="Enter prompt for rule creation"
-            value={prompt}
+            value={rule.prompt}
             textAreaHeight="100px"
-            onChange={(e) => setPrompt(e.target.value)}
+            onChange={(e) => updateRule("prompt", e.target.value)}
           />
-
-          <Checkbox
-            id="isEmailSentOn"
-            name="isEmailSentOn"
-            label="Send Email"
-            checked={isEmailSentOn}
-            onChange={() => setIsEmailSentOn((prev) => !prev)}
+          <ApplicationFormsRuleEmailFields
+            emailTemplates={emailTemplates?.data}
+            isEmailSentOn={isEmailSentOn}
+            setIsEmailSentOn={setIsEmailSentOn}
+            recieverEmail={recieverEmail}
+            setRecieverEmail={setRecieverEmail}
+            emailTemplateId={emailTemplateId}
+            setEmailTemplateId={setEmailTemplateId}
           />
-          {isEmailSentOn && (
-            <>
-              <SelectInputType
-                field={{
-                  label: "Reciever's Email:",
-                  options: RECIPIENT_EMAIL_OPTIONS,
-                  uniqueId: "recieverEmail",
-                }}
-                onChange={(e) => setRecieverEmail(e.target.value)}
-                form={{ recieverEmail: { name: "recieverEmail", value: recieverEmail } }}
-              />
-              <SelectInputType
-                field={{
-                  label: "Email Template:",
-                  options: emailTemplates?.data
-                    ?.filter((template) => template?.emailType === "rule_triggered_email_template")
-                    ?.map((template) => ({
-                      label: template?.templateName,
-                      value: template?._id,
-                    })),
-                  uniqueId: "emailTemplateId",
-                }}
-                onChange={(e) => setEmailTemplateId(e.target.value)}
-                form={{ emailTemplateId: { name: "emailTemplateId", value: emailTemplateId } }}
-              />
-            </>
-          )}
-          <div className="flex justify-end  w-full items-end gap-2">
-            <Button
-              label={showRuleFieldsGuide ? "Hide Ai Context" : "Preview Ai Context"}
-              variant="secondary"
-              onClick={() => setShowRuleFieldsGuide((prev) => !prev)}
-            />
-
-            <Button
-              label="Get Rule from AI"
-              variant="primary"
-              icon={isGettingFormRuleFromAi && FaSpinner}
-              cnLeft="mr-2 w-4 h-4 animate-spin"
-              onClick={getFormRuleFromAiHandler}
-              disabled={isGettingFormRuleFromAi || !prompt || !name || !category}
-            />
-          </div>
-          {showRuleFieldsGuide && formData?.data && (
-            <div className="flex flex-col gap-3 mt-4 border border-gray-200 rounded-xl p-4 bg-[#FAFBFF]">
-              <h4 className="text-lg font-semibold text-gray-800">The data ai use to create the rules</h4>
-              <div className="overflow-x-auto overflow-y-auto max-h-75">
-                <pre className="text-xs bg-black text-green-400 p-3 rounded-md mt-2 overflow-x-auto">
-                  {JSON.stringify(formData?.data, null, 2)}
-                </pre>
-              </div>
-            </div>
-          )}
+          <ApplicationFormsRuleAiControls
+            formData={formData?.data}
+            isGenerating={isGettingFormRuleFromAi}
+            canGenerate={!!(rule.prompt && rule.name && rule.category)}
+            onGenerate={handleGetRuleFromAi}
+          />
         </div>
 
-        {formula && example && (
-          <div className="flex flex-col gap-4 mt-4 border border-gray-200 rounded-xl p-4 bg-[#FAFBFF]">
-            <h4 className="text-lg font-semibold text-gray-800">Rule Preview</h4>
-            {explanation && (
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Explanation</p>
-                <div className="text-sm text-gray-800 bg-white border rounded-md p-3">{explanation}</div>
-              </div>
-            )}
-            <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Formula</p>
-              <div className="text-sm font-mono text-blue-600 bg-white border rounded-md p-3 wrap-break-word">
-                {formula}
-              </div>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Example Calculation</p>
-              <pre className="text-sm text-gray-800 bg-white border rounded-md p-3 whitespace-pre-wrap">{example}</pre>
-            </div>
-            <details className="mt-2">
-              <summary className="cursor-pointer text-sm text-gray-500">Show technical code</summary>
-              <pre className="text-xs bg-black text-green-400 p-3 rounded-md mt-2 overflow-x-auto">{handler}</pre>
-            </details>
-          </div>
-        )}
+        <ApplicationFormsRulePreview {...rule} />
         <div className="flex w-full justify-end gap-2">
-          <Button label="Cancel" variant="secondary" onClick={() => setModal(false)} />
+          <Button label="Cancel" variant="secondary" onClick={() => setModal?.(false)} />
           <Button
             label="Create Rule"
             variant="primary"
             icon={isCreatingRule && FaSpinner}
-            cnLeft="mr-2 w-4 h-4 animate-spin"
-            onClick={createRuleHandler}
-            disabled={
-              isCreatingRule ||
-              !formId ||
-              !prompt ||
-              !name ||
-              !handler ||
-              !formula ||
-              !example ||
-              !explanation ||
-              !category ||
-              !order
-            }
+            cnLeft={SPINNER_CLASSES}
+            onClick={handleCreateRule}
+            disabled={isCreatingRule || !formId || !hasRuleDetails(rule)}
           />
         </div>
       </div>
     </div>
   );
 };
-const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
-  const [showRuleFieldsGuide, setShowRuleFieldsGuide] = useState(false);
-  const [prompt, setPrompt] = useState(ruleData?.prompt);
-  const [name, setName] = useState(ruleData?.name);
-  const [category, setCategory] = useState(ruleData?.category);
-  const [handler, setHandler] = useState(ruleData?.handler);
-  const [formula, setFormula] = useState(ruleData?.formula);
-  const [example, setExample] = useState(ruleData?.example);
-  const [explanation, setExplanation] = useState(ruleData?.explanation);
-  const [order] = useState(ruleData?.order);
-  const [updateRule, { isLoading: isUpdatingRule }] = useUpdateSingleFormRuleMutation();
+
+const UpdateRuleModal = ({ ruleData = null, setModal, refetch }) => {
+  const [rule, setRule] = useState({
+    prompt: ruleData?.prompt,
+    name: ruleData?.name,
+    category: ruleData?.category,
+    order: ruleData?.order,
+    handler: ruleData?.handler,
+    formula: ruleData?.formula,
+    example: ruleData?.example,
+    explanation: ruleData?.explanation,
+  });
+  const [emailTemplateId, setEmailTemplateId] = useState(ruleData?.emailTemplateId);
+  const [isEmailSentOn, setIsEmailSentOn] = useState(ruleData?.isEmailSentOn);
+  const [recieverEmail, setRecieverEmail] = useState(ruleData?.recieverEmail);
+  const [updateRuleMutation, { isLoading: isUpdatingRule }] = useUpdateSingleFormRuleMutation();
   const [getFormRuleFromAi, { isLoading: isGettingFormRuleFromAi }] = useGetFormRuleFromAiMutation();
   const { data: formData, isLoading: isLoadingFormData } = useFormDataWhichUseToCreateFormsQuery({
     formId: ruleData?.formId,
   });
   const { data: emailTemplates, isLoading: isLoadingEmailTemplates } = useGetAllEmailTemplatesQuery();
-  const [emailTemplateId, setEmailTemplateId] = useState(ruleData?.emailTemplateId);
-  const [isEmailSentOn, setIsEmailSentOn] = useState(ruleData?.isEmailSentOn);
-  const [recieverEmail, setRecieverEmail] = useState(ruleData?.recieverEmail);
 
-  const updateRuleHandler = async () => {
+  const updateRule = (name, value) => setRule((prev) => ({ ...prev, [name]: value }));
+
+  const handleUpdateRule = async () => {
     try {
       const data = {
         formId: ruleData?.formId,
-        prompt,
-        name,
-        category,
-        handler,
-        formula,
-        example,
-        explanation,
-        order,
+        ...rule,
         isEmailSentOn: String(isEmailSentOn),
         recieverEmail,
         emailTemplateId,
       };
-
       if (
         !ruleData?._id ||
-        !prompt ||
-        !name ||
-        !handler ||
-        !formula ||
-        !example ||
-        !explanation ||
-        !category ||
-        !order ||
-        !String(isEmailSentOn) ||
-        (isEmailSentOn && !(recieverEmail && emailTemplateId))
-      )
+        !isRuleComplete({
+          ...rule,
+          isEmailSentOn,
+          recieverEmail,
+          emailTemplateId,
+        })
+      ) {
         return toast.error("Please fill all the fields");
-
-      const res = await updateRule({ data, ruleId: ruleData?._id }).unwrap();
+      }
+      const res = await updateRuleMutation({
+        data,
+        ruleId: ruleData?._id,
+      }).unwrap();
       if (res?.success) {
         toast?.success(res?.message || "Rule updated successfully");
-        await refetch();
-        setModal(false);
+        await refetch?.();
+        setModal?.(false);
       }
     } catch (error) {
-      console.error("Error updating rule:", error);
+      console.error("Update rule error:", error);
       toast.error(error?.data?.message || "Failed to update rule");
     }
   };
 
-  const getFormRuleFromAiHandler = async () => {
+  const handleGetRuleFromAi = async () => {
     try {
+      const { prompt, name, category, order } = rule;
       if (!ruleData?.formId || !prompt || !name || !category) return toast.error("Please fill all the fields");
       const res = await getFormRuleFromAi({
         formId: ruleData?.formId,
@@ -372,19 +310,25 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
         order,
       }).unwrap();
       if (res?.success) {
-        setName(res?.data?.name);
-        setHandler(res?.data?.handler);
-        setFormula(res?.data?.formula);
-        setExample(res?.data?.example);
-        setExplanation(res?.data?.explanation);
-        setCategory(res?.data?.category);
+        const { name: aiName, handler, formula, example, explanation, category: aiCategory } = res?.data || {};
+        setRule((prev) => ({
+          ...prev,
+          name: aiName,
+          handler,
+          formula,
+          example,
+          explanation,
+          category: aiCategory,
+        }));
       }
     } catch (error) {
-      console.error("Error getting form rule from ai:", error);
+      console.error("Get form rule from ai error:", error);
       toast.error(error?.data?.message || "Failed to get form rule from ai");
     }
   };
+
   if (isLoadingFormData || isLoadingEmailTemplates) return <CustomLoading />;
+
   return (
     <div className="flex items-center justify-center p-4">
       <div className="flex w-full max-w-2xl flex-col gap-6">
@@ -394,132 +338,49 @@ const UpdateRuleModal = ({ ruleData, setModal, refetch }) => {
             label="Rule Name:*"
             id="rule-name"
             placeholder="Enter rule name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={rule.name}
+            onChange={(e) => updateRule("name", e.target.value)}
           />
-          <SelectInputType
-            field={{
-              label: "Category",
-              options: CATEGORY_OPTIONS,
-              uniqueId: "category",
-            }}
-            onChange={(e) => setCategory(e.target.value)}
-            form={{ category: { name: "category", value: category } }}
+          <ApplicationFormsRuleCategoryField
+            category={rule.category}
+            onChange={(value) => updateRule("category", value)}
           />
           <TextField
             label="Prompt"
             id="prompt"
             type="textarea"
             placeholder="Enter prompt for rule creation"
-            value={prompt}
+            value={rule.prompt}
             textAreaHeight="100px"
-            onChange={(e) => setPrompt(e.target.value)}
+            onChange={(e) => updateRule("prompt", e.target.value)}
           />
-
-          <Checkbox
-            id="isEmailSentOn"
-            name="isEmailSentOn"
-            label="Send Email"
-            checked={isEmailSentOn}
-            onChange={() => setIsEmailSentOn((prev) => !prev)}
+          <ApplicationFormsRuleEmailFields
+            emailTemplates={emailTemplates?.data}
+            isEmailSentOn={isEmailSentOn}
+            setIsEmailSentOn={setIsEmailSentOn}
+            recieverEmail={recieverEmail}
+            setRecieverEmail={setRecieverEmail}
+            emailTemplateId={emailTemplateId}
+            setEmailTemplateId={setEmailTemplateId}
           />
-          {isEmailSentOn && (
-            <>
-              <SelectInputType
-                field={{
-                  label: "Reciever's Email:",
-                  options: RECIPIENT_EMAIL_OPTIONS,
-                  uniqueId: "recieverEmail",
-                }}
-                onChange={(e) => setRecieverEmail(e.target.value)}
-                form={{ recieverEmail: { name: "recieverEmail", value: recieverEmail } }}
-              />
-              <SelectInputType
-                field={{
-                  label: "Email Template:",
-                  options: emailTemplates?.data
-                    ?.filter((template) => template?.emailType === "rule_triggered_email_template")
-                    ?.map((template) => ({ label: template?.templateName, value: template?._id })),
-                  uniqueId: "emailTemplateId",
-                }}
-                onChange={(e) => setEmailTemplateId(e.target.value)}
-                form={{ emailTemplateId: { name: "emailTemplateId", value: emailTemplateId } }}
-              />
-            </>
-          )}
-          <div className="flex justify-end  w-full items-end gap-2">
-            <Button
-              label={showRuleFieldsGuide ? "Hide Ai Context" : "Preview Ai Context"}
-              variant="secondary"
-              onClick={() => setShowRuleFieldsGuide((prev) => !prev)}
-            />
-
-            <Button
-              label="Get Rule from AI"
-              variant="primary"
-              icon={isGettingFormRuleFromAi && FaSpinner}
-              cnLeft="mr-2 w-4 h-4 animate-spin"
-              onClick={getFormRuleFromAiHandler}
-              disabled={isGettingFormRuleFromAi || !prompt || !name || !category}
-            />
-          </div>
-          {showRuleFieldsGuide && formData?.data && (
-            <div className="flex flex-col gap-3 mt-4 border border-gray-200 rounded-xl p-4 bg-[#FAFBFF]">
-              <h4 className="text-lg font-semibold text-gray-800">The data ai use to create the rules</h4>
-              <div className="overflow-x-auto overflow-y-auto max-h-75">
-                <pre className="text-xs bg-black text-green-400 p-3 rounded-md mt-2 overflow-x-auto">
-                  {JSON.stringify(formData?.data, null, 2)}
-                </pre>
-              </div>
-            </div>
-          )}
+          <ApplicationFormsRuleAiControls
+            formData={formData?.data}
+            isGenerating={isGettingFormRuleFromAi}
+            canGenerate={!!(rule.prompt && rule.name && rule.category)}
+            onGenerate={handleGetRuleFromAi}
+          />
         </div>
 
-        {formula && example && (
-          <div className="flex flex-col gap-4 mt-4 border border-gray-200 rounded-xl p-4 bg-[#FAFBFF]">
-            <h4 className="text-lg font-semibold text-gray-800">Rule Preview</h4>
-            {explanation && (
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Explanation</p>
-                <div className="text-sm text-gray-800 bg-white border rounded-md p-3">{explanation}</div>
-              </div>
-            )}
-            <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Formula</p>
-              <div className="text-sm font-mono text-blue-600 bg-white border rounded-md p-3 wrap-break-word">
-                {formula}
-              </div>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Example Calculation</p>
-              <pre className="text-sm text-gray-800 bg-white border rounded-md p-3 whitespace-pre-wrap">{example}</pre>
-            </div>
-            <details className="mt-2">
-              <summary className="cursor-pointer text-sm text-gray-500">Show technical code</summary>
-              <pre className="text-xs bg-black text-green-400 p-3 rounded-md mt-2 overflow-x-auto">{handler}</pre>
-            </details>
-          </div>
-        )}
+        <ApplicationFormsRulePreview {...rule} />
         <div className="flex w-full justify-end gap-2">
-          <Button label="Cancel" variant="secondary" onClick={() => setModal(false)} />
+          <Button label="Cancel" variant="secondary" onClick={() => setModal?.(false)} />
           <Button
             label="Update Rule"
             variant="primary"
             icon={isUpdatingRule && FaSpinner}
-            cnLeft="mr-2 w-4 h-4 animate-spin"
-            onClick={updateRuleHandler}
-            disabled={
-              isUpdatingRule ||
-              !ruleData?._id ||
-              !prompt ||
-              !name ||
-              !handler ||
-              !formula ||
-              !example ||
-              !explanation ||
-              !category ||
-              !order
-            }
+            cnLeft={SPINNER_CLASSES}
+            onClick={handleUpdateRule}
+            disabled={isUpdatingRule || !ruleData?._id || !hasRuleDetails(rule)}
           />
         </div>
       </div>

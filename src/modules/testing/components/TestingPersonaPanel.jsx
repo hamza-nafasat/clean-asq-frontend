@@ -1,50 +1,70 @@
 import { useState } from "react";
-import { FiChevronDown, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
-export default function PersonaPanel({
-  personas,
-  selectedPersona,
+const INPUT_CLASSES =
+  "w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40";
+
+const TestingPersonaPanel = ({
+  personas = [],
+  selectedPersona = "",
   onPersonaChange,
-  credentials,
+  credentials = { email: "", password: "" },
   onCredentialsChange,
-  formUrl,
+  formUrl = "",
   onFormUrlChange,
   baseUrl = "",
-}) {
+}) => {
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleFormPathChange = (e) => {
+    const path = e.target.value;
+    onFormUrlChange?.(path ? baseUrl + (path.startsWith("/") ? path : "/" + path) : "");
+  };
 
   return (
     <div className="space-y-4">
-      {/* Test Account */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
+      {/* Test account */}
+      <section className="rounded-lg border border-gray-200 bg-white p-4">
         <h3 className="text-sm font-semibold text-gray-800 mb-3">Test Account</h3>
         <p className="text-xs text-gray-500 mb-3 leading-relaxed">
           The credentials used to log in when running tests that require authentication.
         </p>
         <div className="space-y-2">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+            <label htmlFor="testing-email" className="block text-xs font-medium text-gray-600 mb-1">
+              Email
+            </label>
             <input
+              id="testing-email"
               type="email"
               value={credentials.email}
-              onChange={(e) => onCredentialsChange({ ...credentials, email: e.target.value })}
+              onChange={(e) => onCredentialsChange?.({ ...credentials, email: e.target.value })}
               placeholder="admin@yourdomain.com"
-              className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+              className={INPUT_CLASSES}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Password</label>
+            <label htmlFor="testing-password" className="block text-xs font-medium text-gray-600 mb-1">
+              Password
+            </label>
             <div className="relative">
               <input
+                id="testing-password"
                 type={showPassword ? "text" : "password"}
                 value={credentials.password}
-                onChange={(e) => onCredentialsChange({ ...credentials, password: e.target.value })}
+                onChange={(e) =>
+                  onCredentialsChange?.({
+                    ...credentials,
+                    password: e.target.value,
+                  })
+                }
                 placeholder="Password"
-                className="w-full rounded-md border border-gray-200 px-3 py-2 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className={`${INPUT_CLASSES} pr-9`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 {showPassword ? <FiEyeOff size={14} /> : <FiEye size={14} />}
@@ -52,14 +72,14 @@ export default function PersonaPanel({
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Application Form URL */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
+      {/* Application form url */}
+      <section className="rounded-lg border border-gray-200 bg-white p-4">
         <h3 className="text-sm font-semibold text-gray-800 mb-3">Application Form URL</h3>
         <p className="text-xs text-gray-500 mb-3 leading-relaxed">
-          Used for applicant flow and AI chat tests. Leave blank to auto-detect
-          the first available form, or add a path to target a specific one.
+          Used for applicant flow and AI chat tests. Leave blank to auto-detect the first available form, or add a path
+          to target a specific one.
         </p>
         <div className="flex items-stretch rounded-md border border-gray-200 overflow-hidden focus-within:ring-2 focus-within:ring-primary/40">
           {baseUrl && (
@@ -70,27 +90,23 @@ export default function PersonaPanel({
           <input
             type="text"
             value={formUrl.startsWith(baseUrl) ? formUrl.slice(baseUrl.length) : formUrl}
-            onChange={(e) => {
-              const path = e.target.value;
-              onFormUrlChange(path ? baseUrl + (path.startsWith("/") ? path : "/" + path) : "");
-            }}
+            onChange={handleFormPathChange}
             placeholder="/application-form/your-token-here"
+            aria-label="Application form path"
             className="flex-1 min-w-0 px-3 py-2 text-sm focus:outline-none bg-white"
           />
         </div>
         {!formUrl && (
-          <p className="text-[11px] text-gray-400 mt-1.5">
-            Blank = server will auto-detect the first available form.
-          </p>
+          <p className="text-[11px] text-gray-400 mt-1.5">Blank = server will auto-detect the first available form.</p>
         )}
-      </div>
+      </section>
 
-      {/* Test Persona */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
+      {/* Test persona */}
+      <section className="rounded-lg border border-gray-200 bg-white p-4">
         <h3 className="text-sm font-semibold text-gray-800 mb-3">Test Persona</h3>
         <p className="text-xs text-gray-500 mb-3 leading-relaxed">
-          The persona provides fake applicant data (name, email, phone, etc.) used
-          to fill application forms during testing.
+          The persona provides fake applicant data (name, email, phone, etc.) used to fill application forms during
+          testing.
         </p>
         <div className="space-y-2">
           {personas.map((p) => (
@@ -107,7 +123,7 @@ export default function PersonaPanel({
                 name="persona"
                 value={p.id}
                 checked={selectedPersona === p.id}
-                onChange={() => onPersonaChange(p.id)}
+                onChange={() => onPersonaChange?.(p.id)}
                 className="mt-0.5 accent-primary"
               />
               <div>
@@ -117,7 +133,9 @@ export default function PersonaPanel({
             </label>
           ))}
         </div>
-      </div>
+      </section>
     </div>
   );
-}
+};
+
+export default TestingPersonaPanel;

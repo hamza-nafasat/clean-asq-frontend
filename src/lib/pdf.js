@@ -4,11 +4,8 @@ pdfMake.vfs = pdfFonts.vfs;
 
 const HEADING_SIZES = { h1: 20, h2: 16, h3: 14, h4: 12, h5: 11, h6: 10 };
 
-/**
- * Converts an HTML string to an array of pdfMake content nodes, preserving
- * heading hierarchy and collapsing everything else to plain-text paragraphs.
- */
-function htmlToNodes(html, baseStyle = "body") {
+// converts an HTML string to an array of pdfMake content nodes, preserving
+const htmlToNodes = (html, baseStyle = "body") => {
   if (!html) return [];
   const div = document.createElement("div");
   div.innerHTML = html;
@@ -23,14 +20,10 @@ function htmlToNodes(html, baseStyle = "body") {
     if (t) nodes.push({ text: t, style: baseStyle });
   });
   return nodes;
-}
+};
 
-/**
- * Converts an image URL to a base64 data URI so pdfMake can embed it.
- * Prefers Image+canvas (Cloudinary CORS, same as SignatureBox), then fetch.
- * Returns null on failure (signature omitted rather than crash).
- */
-async function imageUrlToDataUri(url) {
+// converts an image URL to a base64 data URI so pdfMake can embed it
+const imageUrlToDataUri = async (url) => {
   if (!url) return null;
 
   try {
@@ -73,12 +66,10 @@ async function imageUrlToDataUri(url) {
   } catch {
     return null;
   }
-}
+};
 
-/**
- * Converts a bodyHtml/text string (same format as DocumentModal uses) into pdfMake content nodes.
- */
-function agreementContentNodes(source) {
+// converts a bodyHtml/text string (same format as DocumentModal uses) into pdfMake content nodes
+const agreementContentNodes = (source) => {
   const nodes = [];
   (source || "").split(/\n{2,}/).forEach((chunk) => {
     const t = chunk.trim();
@@ -102,23 +93,10 @@ function agreementContentNodes(source) {
     }
   });
   return nodes;
-}
+};
 
-/**
- * Generates and downloads a PDF containing the current page's form data and
- * optionally one or more fetched agreement documents.
- *
- * @param {object} opts
- * @param {string}   opts.pageName      - Display name of the current page/section
- * @param {Array}    opts.fieldRows     - [{label, value}] pairs (text fields only, skip empties)
- * @param {string}   [opts.signatureUrl]  - Cloudinary URL of an uploaded signature image
- * @param {Array}    [opts.agreements]  - [{title, url, text, bodyHtml}] fetched agreement docs
- * @param {string}   [opts.userName]       - Full name of the applicant completing the form
- * @param {string}   [opts.userEmail]      - Email of the applicant completing the form
- * @param {string}   [opts.displayHtml]    - Section display text HTML (shown before field rows)
- * @param {string}   [opts.signDisplayHtml] - Signature display text HTML (shown before signature)
- */
-export async function buildPagePdf({ pageName, fieldRows = [], signatureUrl = null, agreements = [], userName = null, userEmail = null, displayHtml = null, signDisplayHtml = null }) {
+// generates and downloads a PDF containing the current page's form data and
+export const buildPagePdf = async ({ pageName, fieldRows = [], signatureUrl = null, agreements = [], userName = null, userEmail = null, displayHtml = null, signDisplayHtml = null }) => {
   const timestamp = new Date().toLocaleString(undefined, {
     year: "numeric", month: "long", day: "numeric",
     hour: "2-digit", minute: "2-digit", timeZoneName: "short",
@@ -216,4 +194,4 @@ export async function buildPagePdf({ pageName, fieldRows = [], signatureUrl = nu
 
   const safeFilename = pageName.replace(/[^a-z0-9]/gi, "_").toLowerCase();
   pdfMake.createPdf(docDef).download(`${safeFilename}.pdf`);
-}
+};

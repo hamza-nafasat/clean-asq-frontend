@@ -1,56 +1,10 @@
-import { getTableStyles } from "@/utils/tableStyles";
-import useBranding from "@/hooks/useBranding";
-import { useGetFormHistoryQuery } from "@/redux/apis/form.apis";
 import DataTable from "react-data-table-component";
+import { useGetFormHistoryQuery } from "@/redux/apis/form.apis";
+import useBranding from "@/hooks/useBranding";
+import { getTableStyles } from "@/utils/tableStyles";
+import { buildHistoryColumns } from "../utils/underwriting.utils";
 
-const columns = () => [
-  {
-    name: "Date/Time",
-    selector: (row) =>
-      new Date(row?.updatedAt || "").toLocaleString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      }),
-    sortable: true,
-    wrap: true,
-  },
-  {
-    name: "User",
-    selector: (row) => `${row?.email}`,
-    sortable: true,
-    wrap: true,
-  },
-  {
-    name: "User Type",
-    selector: (row) => `${row?.role}`,
-    sortable: true,
-    wrap: true,
-  },
-  {
-    name: "Section",
-    selector: (row) => row?.sectionKey,
-    sortable: true,
-    wrap: true,
-  },
-  {
-    name: "Action/Status",
-    selector: (row) => row?.status,
-    sortable: true,
-    wrap: true,
-  },
-  {
-    name: "Comment/Details",
-    selector: (row) => row?.comment,
-    sortable: true,
-    wrap: true,
-  },
-];
-
-const History = ({ submittedFormId }) => {
+const UnderwritingHistory = ({ submittedFormId = "" }) => {
   const { data: historyData, isLoading: isLoadingHistory } = useGetFormHistoryQuery(
     { formSubmittedId: submittedFormId },
     { skip: !submittedFormId },
@@ -58,13 +12,11 @@ const History = ({ submittedFormId }) => {
   const { primaryColor, textColor, backgroundColor, secondaryColor } = useBranding();
   const tableStyles = getTableStyles({ primaryColor, secondaryColor, textColor, backgroundColor });
 
-  console.log(historyData);
-
   return (
     <div>
       <DataTable
         data={historyData?.data?.history || []}
-        columns={columns()}
+        columns={buildHistoryColumns()}
         customStyles={tableStyles}
         pagination
         highlightOnHover
@@ -76,4 +28,4 @@ const History = ({ submittedFormId }) => {
   );
 };
 
-export { History };
+export default UnderwritingHistory;
