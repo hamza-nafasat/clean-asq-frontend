@@ -1,6 +1,7 @@
 import { INITIAL_USER_FORM } from "@/constants/constants";
 import { getTableStyles } from "@/data/data";
 import { useGetAllRolesQuery } from "@/redux/apis/roleApis";
+import { useForgetPasswordMutation } from "@/redux/apis/authApis";
 import {
   useCreateUserMutation,
   useDeleteSingleUserMutation,
@@ -31,6 +32,7 @@ const UserTable = () => {
   const [createUser, { isLoading: isCreatingUser }] = useCreateUserMutation();
   const [deleteUser, { isLoading: isDeletingUser }] = useDeleteSingleUserMutation();
   const [updateUser, { isLoading: isUpdatingUser }] = useUpdateSingleUserMutation();
+  const [sendPasswordResetLink] = useForgetPasswordMutation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editModalData, setEditModalData] = useState(null);
@@ -52,7 +54,7 @@ const UserTable = () => {
     description:
       "The User Management screen lets admins create, edit, and delete user accounts, assign roles, and manage passwords. Each user has a first name, last name, email, and an assigned role.",
     aiEndpoint: `${SERVER_URL}/api/ai/user-chat`,
-    greeting: `Hi! I'm your **User Management Assistant**.\n\nI can help you:\n- **List and categorize** users by role\n- **Spot duplicate accounts** based on email\n- **Create new users** and assign them to a role\n- **Edit user information** (name, email, role)\n- **Generate a secure random password** for a user\n- **Delete users** based on your instructions\n\nWhat would you like to do?`,
+    greeting: `Hi! I'm your **User Management Assistant**.\n\nI can help you:\n- **List and categorize** users by role\n- **Spot duplicate accounts** based on email\n- **Create new users** and assign them to a role\n- **Edit user information** (name, email, role)\n- **Send password reset links** to users\n- **Delete users** based on your instructions\n\nWhat would you like to do?`,
     currentState: {
       users: (users?.data || []).map((u) => ({
         _id: u._id,
@@ -66,9 +68,9 @@ const UserTable = () => {
       availableRoles: (userTypeOptions?.data || []).map((r) => ({ _id: r._id, name: r.name })),
     },
     actions: {
-      createUser: async ({ firstName, lastName, email, password, roleId }) => {
+      createUser: async ({ firstName, lastName, email, roleId }) => {
         try {
-          const res = await createUser({ firstName, lastName, email, password, role: roleId }).unwrap();
+          const res = await createUser({ firstName, lastName, email, role: roleId }).unwrap();
           if (!res?.success) throw new Error(res?.message);
         } catch (err) {
           toast.error(err?.data?.message || err?.message || "Failed to create user");
@@ -89,27 +91,13 @@ const UserTable = () => {
           throw err;
         }
       },
-      changePassword: async ({ userId, newPassword }) => {
-        try {
-          const res = await updateUser({ _id: userId, password: newPassword }).unwrap();
-          if (!res?.success) throw new Error(res?.message);
-        } catch (err) {
-          toast.error(err?.data?.message || err?.message || "Failed to change password");
-          throw err;
-        }
-      },
-      changePasswords: async ({ updates }) => {
-        const errors = [];
-        for (const { userId, newPassword } of updates) {
-          try {
-            await updateUser({ _id: userId, password: newPassword }).unwrap();
-          } catch {
-            errors.push(userId);
-          }
-        }
-        if (errors.length) {
-          toast.error(`Failed to update ${errors.length} of ${updates.length} passwords`);
-          throw new Error(`Failed to update ${errors.length} passwords`);
+      sendPasswordResetLinks: async ({ userIds }) => {
+        const emails = (users?.data || []).filter((user) => userIds?.includes(user?._id)).map((user) => user?.email);
+        const results = await Promise.allSettled(emails.map((email) => sendPasswordResetLink({ email }).unwrap()));
+        const failedCount = results.filter((result) => result.status === "rejected").length + (userIds?.length || 0) - emails.length;
+        if (failedCount) {
+          toast.error(`Failed to send ${failedCount} of ${userIds?.length || 0} password reset links`);
+          throw new Error(`Failed to send ${failedCount} password reset links`);
         }
       },
       deleteUser: async ({ userId }) => {

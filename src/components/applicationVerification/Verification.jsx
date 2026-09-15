@@ -5,12 +5,15 @@ import { updateEmailVerified } from "@/redux/slices/formSlice";
 import { useEffect, useState } from "react";
 import { MdVerifiedUser } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Button from "../shared/small/Button";
 import TextField from "../shared/small/TextField";
 
 function Verification() {
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const formId = searchParams.get("formid");
   const { emailVerified } = useSelector((state) => state.form);
   const [webLink, setWebLink] = useState(null);
   const [qrCode, setQrCode] = useState("");
@@ -39,7 +42,7 @@ function Verification() {
   const sentOtpForEmail = async () => {
     try {
       if (!email) return toast.error("Please enter your email");
-      const res = await sendOtp({ email }).unwrap();
+      const res = await sendOtp({ email, formId }).unwrap();
       if (res.success) {
         setOtpSent(true);
         toast.success(res.message);
@@ -53,7 +56,7 @@ function Verification() {
   const verifyWithOtp = async () => {
     try {
       if (!email || !otp) return toast.error("Please enter your email and otp");
-      const res = await verifyEmail({ email, otp }).unwrap();
+      const res = await verifyEmail({ email, otp, formId }).unwrap();
       if (res.success) {
         await getSessionId();
         await refetch();

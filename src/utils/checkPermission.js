@@ -39,6 +39,25 @@ export const webPermissions = Object.freeze({
   fetch_branding: "fetch_branding",
   // underwriting
   underwriting: "underwriting",
+  // email
+  create_email: "create_email",
+  read_email: "read_email",
+  update_email: "update_email",
+  delete_email: "delete_email",
+  // demo
+  create_demo: "create_demo",
+  read_demo: "read_demo",
+  update_demo: "update_demo",
+  delete_demo: "delete_demo",
+  present_demo: "present_demo",
+  // testing
+  create_testing: "create_testing",
+  read_testing: "read_testing",
+  update_testing: "update_testing",
+  delete_testing: "delete_testing",
+  run_testing: "run_testing",
+  // dashboard
+  access_sidebar: "access_sidebar",
 });
 
 

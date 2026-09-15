@@ -598,26 +598,10 @@ export function createApplyToolCall(bindings) {
       return;
     }
 
-    if (tool === "changePassword") {
-      const { explanation, ...pwArgs } = args;
+    if (tool === "sendPasswordResetLinks") {
+      const { explanation, ...resetArgs } = args;
       try {
-        if (ctx.actions.changePassword) await ctx.actions.changePassword(pwArgs);
-        addMessage({ role: "assistant", content: explanation });
-        if (isVoiceModeRef.current) speak(explanation);
-      } catch (err) {
-        const detail = err?.data?.message || err?.message || "";
-        addMessage({
-          role: "assistant",
-          content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
-      }
-      return;
-    }
-
-    if (tool === "changePasswords") {
-      const { explanation, ...pwArgs } = args;
-      try {
-        if (ctx.actions.changePasswords) await ctx.actions.changePasswords(pwArgs);
+        if (ctx.actions.sendPasswordResetLinks) await ctx.actions.sendPasswordResetLinks(resetArgs);
         addMessage({ role: "assistant", content: explanation });
         if (isVoiceModeRef.current) speak(explanation);
       } catch (err) {

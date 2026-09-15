@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 
 // Components
 
@@ -31,13 +31,17 @@ import CustomLoading from "@/components/shared/small/CustomLoading";
 
 const ApplicationPdfView = () => {
   const { pdfId, userId } = useParams();
+  const [searchParams] = useSearchParams();
   useApplyBranding({ formId: pdfId });
-  return <ApplicationPdfViewCommonProps userId={userId} pdfId={pdfId} isPdf={true} />;
+  return (
+    <ApplicationPdfViewCommonProps userId={userId} pdfId={pdfId} pdfToken={searchParams.get("pdfToken")} isPdf={true} />
+  );
 };
 
 export const ApplicationPdfViewCommonProps = ({
   userId,
   pdfId,
+  pdfToken = null,
   isPdf = false,
   className = "",
   isEditAble = false,
@@ -112,7 +116,7 @@ export const ApplicationPdfViewCommonProps = ({
 
     const fetchSavedFormData = async () => {
       try {
-        const res = await getSavedFormData({ formId: pdfId, userId }).unwrap();
+        const res = await getSavedFormData({ formId: pdfId, userId, pdfToken }).unwrap();
         if (res.success) {
           const submitData = res?.data?.submitData ?? {};
           setFormInnerData(submitData);
@@ -127,7 +131,7 @@ export const ApplicationPdfViewCommonProps = ({
     };
     setDataLoaded(false);
     fetchSavedFormData();
-  }, [dispatch, getSavedFormData, pdfId, userId, usesPrefilledData]);
+  }, [dispatch, getSavedFormData, pdfId, pdfToken, userId, usesPrefilledData]);
 
   useEffect(() => {
     return () => {

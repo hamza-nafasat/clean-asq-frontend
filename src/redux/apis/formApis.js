@@ -192,8 +192,10 @@ const formApis = createApi({
     // get saved form by userId
     // ---------------
     getSavedFormByUserId: builder.mutation({
-      query: ({ formId, userId }) => ({
-        url: `/get-submitted-form/${formId}/${userId}`,
+      query: ({ formId, userId, pdfToken }) => ({
+        url: pdfToken
+          ? `/pdf-submitted-form/${formId}/${userId}?pdfToken=${encodeURIComponent(pdfToken)}`
+          : `/get-submitted-form/${formId}/${userId}`,
         method: "GET",
       }),
       invalidatesTags: ["SubmitForm"],

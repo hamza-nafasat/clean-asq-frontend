@@ -10,6 +10,7 @@ import { userExist, userNotExist } from "@/redux/slices/authSlice";
 import React, { useCallback, useEffect, useState } from "react";
 import { MdVerifiedUser } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const AdditionalOwnersForm = () => {
@@ -29,8 +30,9 @@ const AdditionalOwnersForm = () => {
   const [isIdMissionProcessing, setIsIdMissionProcessing] = useState(false);
   const [idMissionVerified, setIdMissionVerified] = useState(false);
 
-  const { data, isLoading } = useGetBeneficialOwnersDataQuery({ userId, submitId, email });
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
+  const { data, isLoading } = useGetBeneficialOwnersDataQuery({ userId, submitId, email }, { skip: !user });
   const [getIdMissionSession, { isLoading: getQrAndWebLinkLoading }] = useGetIdMissionSessionMutation();
   const [updateBeneficialOwners, { isLoading: updateLoading }] = useUpdateBeneficialOwnersMutation();
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
@@ -146,6 +148,15 @@ const AdditionalOwnersForm = () => {
       socket.off("idMission_failed");
     };
   }, [dispatch, form, getUserProfile, updateMyProfile, user?._id]);
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center gap-4 p-4">
+        <p className="text-textPrimary text-[18px] font-semibold">Please log in to open your owner details.</p>
+        <Button label="Log in" onClick={() => navigate("/login")} />
+      </div>
+    );
+  }
 
   return isLoading || getQrAndWebLinkLoading ? (
     <CustomLoading />

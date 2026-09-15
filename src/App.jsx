@@ -163,8 +163,9 @@ function App() {
       socket.emit("register_user", userId);
       console.log(`📌 User registered: ${userId} -> ${socket.id}`);
     };
-    if (socket.connected) register();
-    else socket.on("connect", register);
+    // reconnect so the handshake carries the session cookie the server checks
+    socket.on("connect", register);
+    socket.disconnect().connect();
     return () => socket.off("connect", register);
   }, [user?._id]);
 
