@@ -87,6 +87,7 @@ const FieldFileUpload = ({
     if (isImage) {
       const reader = new FileReader();
       reader.onloadend = () => setPreviewUrl(reader.result);
+      reader.onerror = () => toast.error("Could not read the selected file");
       reader.readAsDataURL(file);
     } else {
       setPreviewUrl(null);

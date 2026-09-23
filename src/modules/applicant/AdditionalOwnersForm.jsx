@@ -7,7 +7,8 @@ import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from "@/
 import { useGetBeneficialOwnersDataQuery, useUpdateBeneficialOwnersMutation } from "@/redux/apis/form.apis";
 import { useGetIdMissionSessionMutation } from "@/redux/apis/applicant.apis";
 import { userExist, userNotExist } from "@/redux/slices/auth.slice";
-import React, { useCallback, useEffect, useState } from "react";
+import { ID_MISSION_SOCKET_EVENTS } from "@/modules/applicant/utils/applicant.constants";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { MdVerifiedUser } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -37,6 +38,12 @@ const AdditionalOwnersForm = () => {
   const [updateBeneficialOwners, { isLoading: updateLoading }] = useUpdateBeneficialOwnersMutation();
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const [updateMyProfile] = useUpdateMyProfileMutation();
+  const userRef = useRef(user);
+  userRef.current = user;
+  const getUserProfileRef = useRef(getUserProfile);
+  getUserProfileRef.current = getUserProfile;
+  const updateMyProfileRef = useRef(updateMyProfile);
+  updateMyProfileRef.current = updateMyProfile;
 
   const updateBeneficialOwnersHandler = async (e) => {
     e.preventDefault();
@@ -95,59 +102,54 @@ const AdditionalOwnersForm = () => {
       .catch(() => dispatch(userNotExist()));
   }, [getUserProfile, dispatch]);
 
-  // check and get socket events
+  // registers once - uses refs
   useEffect(() => {
-    // Setup listener ONCE when component mounts
-    socket.on("idMission_processing_started", (data) => {
-      console.log("you start id mission verification", data);
-      setIsIdMissionProcessing(true);
-    });
-    socket.on("idMission_verified", async (data) => {
-      if (user?._id && data?.Form_Data?.FullName) {
-        const res = await updateMyProfile({
-          _id: user?._id,
-          firstName: data?.Form_Data?.FullName?.split(" ")[0],
-          lastName: data?.Form_Data?.FullName?.split(" ")[1],
-        }).unwrap();
-        if (!res.success) return toast.error(res.message);
-        else {
-          await getUserProfile()
-            .then((res) => {
-              if (res?.data?.success) dispatch(userExist(res.data.data));
-            })
-            .catch(() => dispatch(userNotExist()));
+    const handleProcessingStarted = () => setIsIdMissionProcessing(true);
+
+    const handleVerified = async (data) => {
+      const currentUser = userRef.current;
+      if (currentUser?._id && data?.Form_Data?.FullName) {
+        try {
+          const res = await updateMyProfileRef.current({
+            _id: currentUser._id,
+            firstName: data?.Form_Data?.FullName?.split(" ")[0],
+            lastName: data?.Form_Data?.FullName?.split(" ")[1],
+          }).unwrap();
+          if (!res.success) toast.error(res.message);
+          else {
+            const profile = await getUserProfileRef.current();
+            if (profile?.data?.success) dispatch(userExist(profile.data.data));
+            else dispatch(userNotExist());
+          }
+        } catch (error) {
+          console.error("Sync profile error:", error);
         }
       }
 
-      console.log("You are verified successfully", data);
       setIsIdMissionProcessing(false);
       setIdMissionVerified(true);
-      setForm((prev) => ({
-        ...prev,
-        isVerified: true,
-        idMissionData: data,
-      }));
+      setForm((prev) => ({ ...prev, isVerified: true, idMissionData: data }));
       setQrCode("");
       setWebLink("");
-    });
-    socket.on("idMission_failed", async (data) => {
-      console.log("you start id mission failed", data);
-      setForm((prev) => ({
-        ...prev,
-        isVerified: false,
-        idMissionData: data,
-      }));
-      setQrCode("");
-      setWebLink("");
-    });
-
-    // Cleanup listener when component unmounts
-    return () => {
-      socket.off("idMission_processing_started");
-      socket.off("idMission_verified");
-      socket.off("idMission_failed");
     };
-  }, [dispatch, form, getUserProfile, updateMyProfile, user?._id]);
+
+    const handleFailed = (data) => {
+      setForm((prev) => ({ ...prev, isVerified: false, idMissionData: data }));
+      setQrCode("");
+      setWebLink("");
+    };
+
+    socket.on(ID_MISSION_SOCKET_EVENTS.PROCESSING_STARTED, handleProcessingStarted);
+    socket.on(ID_MISSION_SOCKET_EVENTS.VERIFIED, handleVerified);
+    socket.on(ID_MISSION_SOCKET_EVENTS.FAILED, handleFailed);
+
+    // remove only this component's listeners
+    return () => {
+      socket.off(ID_MISSION_SOCKET_EVENTS.PROCESSING_STARTED, handleProcessingStarted);
+      socket.off(ID_MISSION_SOCKET_EVENTS.VERIFIED, handleVerified);
+      socket.off(ID_MISSION_SOCKET_EVENTS.FAILED, handleFailed);
+    };
+  }, [dispatch]);
 
   if (!user) {
     return (

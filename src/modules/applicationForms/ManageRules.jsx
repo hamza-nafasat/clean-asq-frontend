@@ -82,8 +82,11 @@ const ManageRules = () => {
 
       const oldFilteredIdx = filteredRules.findIndex((r) => r._id === active.id);
       const newFilteredIdx = filteredRules.findIndex((r) => r._id === over.id);
+      if (oldFilteredIdx === -1 || newFilteredIdx === -1) return;
+
       const oldFullIdx = orderedRules.findIndex((r) => r._id === filteredRules[oldFilteredIdx]._id);
       const newFullIdx = orderedRules.findIndex((r) => r._id === filteredRules[newFilteredIdx]._id);
+      if (oldFullIdx === -1 || newFullIdx === -1) return;
 
       const reordered = arrayMove(orderedRules, oldFullIdx, newFullIdx).map((r, i) => ({ ...r, order: i + 1 }));
 
