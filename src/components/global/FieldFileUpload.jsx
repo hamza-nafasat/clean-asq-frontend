@@ -5,7 +5,13 @@ import { toast } from "react-toastify";
 
 import Button from "@/components/shared/Button";
 import AiFormattedText from "@/components/shared/AiFormattedText";
-import { checkFieldFile, FIELD_FILE_ACCEPT, getFileNameFromUrl, isImageUpload } from "@/utils/fieldFile";
+import {
+  checkFieldFile,
+  FIELD_FILE_ACCEPT,
+  getFileNameFromUrl,
+  isImageUpload,
+  MAX_FIELD_FILE_SIZE_BYTES,
+} from "@/utils/fieldFile";
 import { isEmptyFileValue } from "@/utils/fieldFormatting";
 
 const ACTIVATE_KEYS = ["Enter", " "];
@@ -21,6 +27,7 @@ const SELECT_BUTTON_CLASSES = "text-textPrimary! border-gray-300! bg-white! hove
 const checkUploaderFile = (file) => {
   const fileType = file.type;
   const isCSV = file.name.toLowerCase().endsWith(CSV_EXTENSION);
+  if (file.size > MAX_FIELD_FILE_SIZE_BYTES) return { error: "File must be 10MB or smaller" };
   if (!fileType.includes("image") && !fileType.includes("pdf") && !isCSV) {
     return { error: "Only PDF, image, or CSV files are allowed." };
   }

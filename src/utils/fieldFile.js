@@ -10,11 +10,14 @@ const IMAGE_URL_PATTERN = /\.(jpg|jpeg|png|gif|webp)$/i;
 
 export const FIELD_FILE_ACCEPT = "image/*,application/pdf,text/csv,text/plain,application/rtf";
 
+export const MAX_FIELD_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
 // returns an error message, or whether the file is an image
 export const checkFieldFile = (file) => {
   const fileNameLower = file.name.toLowerCase();
   const mimeType = file.type;
 
+  if (file.size > MAX_FIELD_FILE_SIZE_BYTES) return { error: "File must be 10MB or smaller" };
   if (FORBIDDEN_EXTENSIONS.some((ext) => fileNameLower.endsWith(ext))) {
     return { error: "DOC and Excel files are not allowed" };
   }

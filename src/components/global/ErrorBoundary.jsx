@@ -4,11 +4,8 @@ import { AlertTriangle, Check, ChevronDown, Copy, Home, RotateCcw } from "lucide
 const HOME_PATH = "/";
 const COPY_RESET_DELAY_MS = 2000;
 
-// decide whether the technical details panel is shown
-const shouldShowErrorDetails = () => {
-  // TODO(human): return true or false based on the environment
-  return true;
-};
+// stack traces stay dev-only - they leak internal file and module structure
+const shouldShowErrorDetails = () => import.meta.env.DEV;
 
 const buildErrorReport = ({ boundaryName, error, componentStack }) =>
   [

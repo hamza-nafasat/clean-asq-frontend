@@ -149,35 +149,44 @@ const createDemoActions = (dispatch) => {
   };
 
   const sendEnd = async (sessionId) => {
-    await postSessionCommand(sessionId, DEMO_SESSION_COMMANDS.END);
+    try {
+      await postSessionCommand(sessionId, DEMO_SESSION_COMMANDS.END);
+    } catch (error) {
+      toast.error(error.message || "Failed to end demo");
+    }
     clearGenerationTimeout();
     closeEventSource();
     dispatch(sessionCleared());
   };
 
   const sendQuestion = async (sessionId, question) => {
-    await fetch(`${SERVER_URL}/api/demo/session/${sessionId}/question`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question }),
-    });
+    try {
+      await fetch(`${SERVER_URL}/api/demo/session/${sessionId}/question`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+    } catch (error) {
+      toast.error(error.message || "Failed to send question");
+    }
+  };
+
+  // shared fire-and-forget sender - a network failure surfaces as a toast, not a crash
+  const sendCommand = async (sessionId, command) => {
+    try {
+      await postSessionCommand(sessionId, command);
+    } catch (error) {
+      toast.error(error.message || "Failed to send command");
+    }
   };
 
   return {
     startDemo,
-    sendBegin: async (sessionId) => {
-      await postSessionCommand(sessionId, DEMO_SESSION_COMMANDS.BEGIN);
-    },
-    sendNext: async (sessionId) => {
-      await postSessionCommand(sessionId, DEMO_SESSION_COMMANDS.NEXT);
-    },
-    sendPrev: async (sessionId) => {
-      await postSessionCommand(sessionId, DEMO_SESSION_COMMANDS.PREV);
-    },
-    sendPause: async (sessionId) => {
-      await postSessionCommand(sessionId, DEMO_SESSION_COMMANDS.PAUSE);
-    },
+    sendBegin: (sessionId) => sendCommand(sessionId, DEMO_SESSION_COMMANDS.BEGIN),
+    sendNext: (sessionId) => sendCommand(sessionId, DEMO_SESSION_COMMANDS.NEXT),
+    sendPrev: (sessionId) => sendCommand(sessionId, DEMO_SESSION_COMMANDS.PREV),
+    sendPause: (sessionId) => sendCommand(sessionId, DEMO_SESSION_COMMANDS.PAUSE),
     sendEnd,
     sendQuestion,
   };

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import getEnv from "@/utils/env";
 import {
@@ -19,6 +19,15 @@ const useTestingRun = ({ selectedIds = [], selectedPersona, credentials, formUrl
   const [report, setReport] = useState(null);
   const [runMeta, setRunMeta] = useState(null);
   const eventSourceRef = useRef(null);
+  const pollTimerRef = useRef(null);
+
+  // close the stream and stop polling if the user navigates away mid-run
+  useEffect(() => {
+    return () => {
+      eventSourceRef.current?.close();
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    };
+  }, []);
 
   const finishWithReport = (nextReport) => {
     setReport(nextReport);
@@ -45,6 +54,7 @@ const useTestingRun = ({ selectedIds = [], selectedPersona, credentials, formUrl
         setIsRunning(false);
       }
     }, REPORT_POLL_INTERVAL_MS);
+    pollTimerRef.current = poll;
   };
 
   const handleRun = async () => {
@@ -100,6 +110,7 @@ const useTestingRun = ({ selectedIds = [], selectedPersona, credentials, formUrl
 
   const handleStop = () => {
     eventSourceRef.current?.close();
+    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
     setIsRunning(false);
     toast.info("Test run stopped");
   };

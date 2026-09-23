@@ -2,6 +2,7 @@ import { LoadScript } from "@react-google-maps/api";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
+import { toast } from "react-toastify";
 import store from "@/redux/store";
 import ErrorBoundary from "@/components/global/ErrorBoundary";
 import AIChatWidget from "@/components/shared/aiChat/AIChatWidget";
@@ -16,7 +17,11 @@ if (!container._reactRoot) {
   const root = createRoot(container);
   container._reactRoot = root;
   root.render(
-    <LoadScript googleMapsApiKey={getEnv("GOOGLE_MAPS_API_KEY")} libraries={["places"]}>
+    <LoadScript
+      googleMapsApiKey={getEnv("GOOGLE_MAPS_API_KEY")}
+      libraries={["places"]}
+      onError={() => toast.error("Failed to load Google Maps")}
+    >
       <Provider store={store}>
         <BrowserRouter>
           <ErrorBoundary name="App">

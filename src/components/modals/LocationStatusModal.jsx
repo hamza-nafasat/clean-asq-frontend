@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import ReCAPTCHA from "react-google-recaptcha";
+import { toast } from "react-toastify";
 
 import { updateEmailVerified } from "@/redux/slices/form.slice";
 import Button from "@/components/shared/Button";
@@ -42,6 +43,7 @@ const LocationStatusModal = ({
         <ReCAPTCHA
           sitekey={getEnv("VITE_RECAPTCHA_SITE_KEY")}
           onChange={(token) => setCaptchaVerified(token ? token : null)}
+          onErrored={() => toast.error("Failed to load captcha, please refresh")}
         />
         <div className="flex w-full justify-center gap-4 pt-2">
           <Button variant="outline" onClick={handleBack} label="Go Back" />

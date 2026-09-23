@@ -209,6 +209,7 @@ const ApplicationsTable = ({
           fixedHeader
           persistTableHead
           responsive
+          pagination
         />
       </div>
       <ConfirmationModal

@@ -1,5 +1,4 @@
 import { useCallback, useState } from "react";
-import DOMPurify from "dompurify";
 import { CgSpinner } from "react-icons/cg";
 import { toast } from "react-toastify";
 
@@ -7,6 +6,7 @@ import { useFormateTextInMarkDownMutation, useUpdateFormLocationMutation } from 
 import Button from "@/components/shared/Button";
 import TextField from "@/components/shared/TextField";
 import { LOCATION_STATUSES } from "@/constants";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const LOCATION_OPTIONS = [
   { status: LOCATION_STATUSES.REQUIRED, label: "Location Required" },
@@ -49,7 +49,7 @@ const LocationSettingsModal = ({ locationModal, setLocationModal, formLocationDa
     if (!locationMessage || !formateTextInstructions) return toast.error("Please enter text and instructions");
     try {
       const res = await formateText({ text: locationMessage, instructions: formateTextInstructions }).unwrap();
-      if (res.success) setFormatedLocationMessage(DOMPurify.sanitize(res.data));
+      if (res.success) setFormatedLocationMessage(res.data);
     } catch (error) {
       console.error("Format text error:", error);
       toast.error(error?.data?.message || "Failed to format text");
@@ -99,7 +99,7 @@ const LocationSettingsModal = ({ locationModal, setLocationModal, formLocationDa
           <div className="flex flex-col gap-2">
             <label className="font-medium text-gray-700">Formated Message</label>
             <div className="broder-gray-200 flex items-center justify-between gap-2 border p-2">
-              <div dangerouslySetInnerHTML={{ __html: formatedLocationMessage }} />
+              <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(formatedLocationMessage) }} />
             </div>
           </div>
         )}
