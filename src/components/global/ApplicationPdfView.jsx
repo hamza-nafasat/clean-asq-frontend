@@ -14,6 +14,7 @@ import { addSavedFormData, updateIsDisabledAllFields } from "@/redux/slices/form
 import useApplyBranding from "@/hooks/useApplyBranding";
 import useBranding from "@/hooks/useBranding";
 import { uploadFilesAndReplace } from "@/lib/utils";
+import HeaderBrandLogo from "@/components/layouts/HeaderBrandLogo";
 import AggrementBlockPdf from "@/components/global/ApplicationPdfAgreementBlock";
 import BankInfoPdf from "@/components/global/ApplicationPdfBankInfo";
 import CompanyInformationPdf from "@/components/global/ApplicationPdfCompanyInformation";
@@ -60,7 +61,7 @@ export const ApplicationPdfViewCommonProps = ({
   submittedFormId: submittedFormIdProp = null,
 }) => {
   const dispatch = useDispatch();
-  const { logo } = useBranding();
+  const { logo, appLogoMaxWidth, appLogoMaxHeight } = useBranding();
   const { isDisabledAllFields } = useSelector((state) => state.form);
   const usesPrefilledData = initialSubmitData != null && typeof initialSubmitData === "object";
   const [submittedFormId, setSubmittedFormId] = useState(submittedFormIdProp);
@@ -152,9 +153,9 @@ export const ApplicationPdfViewCommonProps = ({
   return (
     <>
       {isPdf && (
-        <div className="flex h-16 items-center justify-between rounded-md border-b bg-white px-6 shadow">
+        <div className="flex min-h-16 items-center justify-between rounded-md border-b bg-white px-6 shadow">
           <div className="my-4 flex items-center gap-8">
-            <img src={logo || ""} alt="Logo" className="h-12 w-auto max-w-55 object-contain" referrerPolicy="no-referrer" />
+            <HeaderBrandLogo logo={logo} maxWidth={appLogoMaxWidth} maxHeight={appLogoMaxHeight} />
             <h1 className="text-2xl font-semibold text-gray-800">{form?.data?.name}</h1>
           </div>
           <div className="my-4 flex items-center gap-8">

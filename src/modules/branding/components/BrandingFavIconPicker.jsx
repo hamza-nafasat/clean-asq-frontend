@@ -44,7 +44,7 @@ const FaviconPicker = ({ logos = [], value = "", onChange }) => {
   }, [logos]);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2" data-testid="branding-favicon-picker">
       <label className="text-sm font-medium text-gray-700">Favicon</label>
       <p className="text-xs text-gray-400">
         Select a small logo to use as the browser tab icon. Only icon-sized images (≤{BRANDING_FAVICON_MAX_DIM}px) are
@@ -71,6 +71,7 @@ const FaviconPicker = ({ logos = [], value = "", onChange }) => {
               <button
                 key={url}
                 type="button"
+                data-testid="branding-favicon-option"
                 onClick={() => onChange?.(isSelected ? "" : url)}
                 title={isSelected ? "Selected — click to deselect" : "Click to use as favicon"}
                 aria-pressed={isSelected}
