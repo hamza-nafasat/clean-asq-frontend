@@ -80,15 +80,8 @@ export const AI_TOOLS = {
   ADD_SECTION: "addSection",
   ADD_FIELD: "addField",
   // applicant
-  FILL_FIELD: "fillField",
-  FILL_SIGNATURE: "fillSignature",
   OPEN_FIELD_PANEL: "openFieldPanel",
   SCROLL_TO_FIELD: "scrollToField",
-  ACTIVATE_FIELD: "activateField",
-  SUBMIT_OTP_CODE: "submitOtpCode",
-  SUBMIT_EMAIL_FOR_OTP: "submitEmailForOtp",
-  GO_TO_NEXT_STEP: "goToNextStep",
-  GO_TO_PREV_STEP: "goToPrevStep",
   ENTER_TRANSLATION_MODE: "enterTranslationMode",
   // testing
   CREATE_TEST_CASE: "createTestCase",

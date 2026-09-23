@@ -168,14 +168,12 @@ const CompanyVerification = ({ formId, brandingName, draftId }) => {
     screenId: "company-verification",
     screenName: "Company Information",
     description:
-      "The applicant enters their company's full legal name and website URL. " +
-      "After all required fields are filled, call goToNextStep to submit and proceed automatically. " +
-      'If the applicant says their company has no website, fill field "noWebsite" with value "true" to check the checkbox — this removes the URL requirement.',
+      "The applicant enters their company's full legal name and website URL themselves, then clicks Continue to submit. " +
+      'If their company has no website, tell them to check the "This company has no website" checkbox themselves — this removes the URL requirement.',
     aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
     formRef: companyFormRef,
     currentState: {},
     actions: {
-      goToNextStep: () => handleSubmit(),
       scrollToField: ({ fieldId }) => {
         const el = document.getElementById(fieldId) || document.querySelector(`[name="${fieldId}"]`);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });

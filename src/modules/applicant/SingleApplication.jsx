@@ -57,7 +57,6 @@ const SingleApplication = () => {
   // details show only after their data is committed
   const [idMissionDetailsReady, setIdMissionDetailsReady] = useState(false);
   const [submiting, setSubmiting] = useState(false);
-  const [emailVerifiedLoading, setEmailVerifiedLoading] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
   const [idMissionVerifiedData, setIdMissionVerifiedData] = useState(() => buildInitialIdMissionData(user?.email));
   const idMissionFormRef = useRef(null);
@@ -85,7 +84,7 @@ const SingleApplication = () => {
     idMissionManualEntryRef.current || !!idMissionVerifiedData?.name?.value || !!idMissionVerifiedData?.idNumber?.value;
   const idMissionDetailsVisible = idMissionVerified && idMissionDetailsReady && !isIdMissionProcessing && hasDetailsData;
   const aiStage =
-    !emailVerified || emailVerifiedLoading || navigatingAwayRef.current
+    !emailVerified || navigatingAwayRef.current
       ? SINGLE_APPLICATION_STAGES.EMAIL
       : !idMissionVerified
         ? SINGLE_APPLICATION_STAGES.IDMISSION_QR
@@ -140,7 +139,6 @@ const SingleApplication = () => {
   useApplicantSingleApplicationAi({
     ...otpFlow,
     aiStage,
-    formId,
     formRef: idMissionFormRef,
     emailVerified,
     webLink,
@@ -148,8 +146,6 @@ const SingleApplication = () => {
     idMissionDetailsVisible,
     idMissionVerifiedData,
     isIdMissionProcessing,
-    setEmailVerifiedLoading,
-    getSavedFormDataAndSaveInRedux,
   });
 
   const submitIdMissionData = useApplicantIdMissionSubmit({ formId, draftId, idMissionVerifiedData, setSubmiting });

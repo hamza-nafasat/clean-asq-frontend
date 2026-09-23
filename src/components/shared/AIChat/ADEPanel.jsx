@@ -133,16 +133,6 @@ const ADEPanel = ({ fieldId, fieldLabel, fieldMode, isRequired = true, explanati
     if (e.key === "Escape") onCancel();
   };
 
-  const handleGoToField = () => {
-    const el =
-      document.getElementById(fieldId) ||
-      document.querySelector(`[name="${CSS.escape(fieldId)}"]`);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      setTimeout(() => el.focus(), 300);
-    }
-  };
-
   /* ── Secure panel ──────────────────────────────────────────────────────── */
   if (fieldMode === FIELD_MODES.SECURE) {
     return (
@@ -240,13 +230,7 @@ const ADEPanel = ({ fieldId, fieldLabel, fieldMode, isRequired = true, explanati
       </p>
 
       {/* Actions */}
-      <div className="flex gap-2 justify-between">
-        <button
-          onClick={handleGoToField}
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-blue-700 border border-blue-300 hover:bg-blue-100 transition-colors"
-        >
-          Go to field ↗
-        </button>
+      <div className="flex gap-2 justify-end">
         <button
           onClick={onCancel}
           className="rounded-lg px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"

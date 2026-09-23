@@ -86,15 +86,6 @@ const ApplicationForm = () => {
         const el = findAiFieldEl(stepContainerRef.current, fieldId);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
       },
-      goToNextStep: () => {
-        const nextBtn = stepContainerRef.current?.querySelector('[data-testid="form-next-btn"]');
-        if (nextBtn && !nextBtn.disabled) nextBtn.click();
-      },
-      goToPrevStep: () => {
-        const backBtn = stepContainerRef.current?.querySelector('[data-testid="form-back-btn"]');
-        if (backBtn && !backBtn.disabled) backBtn.click();
-        else if (currentStep > 0) setCurrentStep(currentStep - 1);
-      },
     },
     deps: [currentStep, stepsComps.length, sectionNames[currentStep], form?.data?._id],
   });
