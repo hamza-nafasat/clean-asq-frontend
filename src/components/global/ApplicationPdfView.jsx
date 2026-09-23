@@ -14,7 +14,6 @@ import { addSavedFormData, updateIsDisabledAllFields } from "@/redux/slices/form
 import useApplyBranding from "@/hooks/useApplyBranding";
 import useBranding from "@/hooks/useBranding";
 import { uploadFilesAndReplace } from "@/lib/utils";
-import HeaderBrandLogo from "@/components/layouts/HeaderBrandLogo";
 import AggrementBlockPdf from "@/components/global/ApplicationPdfAgreementBlock";
 import BankInfoPdf from "@/components/global/ApplicationPdfBankInfo";
 import CompanyInformationPdf from "@/components/global/ApplicationPdfCompanyInformation";
@@ -23,6 +22,7 @@ import CustomSectionPdf from "@/components/global/ApplicationPdfCustomSection";
 import DocumentsPdf from "@/components/global/ApplicationPdfDocuments";
 import IdMissionDataPdf from "@/components/global/ApplicationPdfIdMission";
 import ProcessingInfoPdf from "@/components/global/ApplicationPdfProcessingInfo";
+import BrandLogo from "@/components/shared/BrandLogo";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
 import { SECTION_TITLES } from "@/constants";
@@ -155,7 +155,7 @@ export const ApplicationPdfViewCommonProps = ({
       {isPdf && (
         <div className="flex min-h-16 items-center justify-between rounded-md border-b bg-white px-6 shadow">
           <div className="my-4 flex items-center gap-8">
-            <HeaderBrandLogo logo={logo} maxWidth={appLogoMaxWidth} maxHeight={appLogoMaxHeight} />
+            <BrandLogo logo={logo} maxWidth={appLogoMaxWidth} maxHeight={appLogoMaxHeight} />
             <h1 className="text-2xl font-semibold text-gray-800">{form?.data?.name}</h1>
           </div>
           <div className="my-4 flex items-center gap-8">

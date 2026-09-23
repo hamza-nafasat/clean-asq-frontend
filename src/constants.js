@@ -124,6 +124,9 @@ export const SECTION_TITLES = {
   CUSTOM_SECTION: "custom_section",
   AGREEMENT: "agreement_blk",
   ID_VERIFICATION: "id_verification_blk",
+  OTP: "otp_blk",
+  COMPANY_SCRAPING: "company_scraping_blk",
+  ID_MISSION: "id_mission_blk",
 };
 
 export const FORM_BLOCK_TYPE = "block";
@@ -153,6 +156,153 @@ export const FIELD_FORMATS = {
   SSN: "3,2,4",
   TAX_ID: "2,7",
   PHONE: "3,3,4",
+};
+
+// fixed applicant fields shared with preview
+export const COMPANY_LOOKUP_FIELDS = {
+  NAME: { name: "company-name", label: "Legal company name *" },
+  URL: { name: "company-url", label: "Website URL *" },
+  NO_WEBSITE: { name: "noWebsite", type: FIELD_TYPES.CHECKBOX, label: "This company has no website" },
+};
+
+export const ID_DETAIL_FIELDS = [
+  { name: "name", label: "Name:*", required: true, placeholder: "First name, middle name (optional), last name" },
+  { name: "email", label: "Email Address:*", required: true, placeholder: "e.g. john.doe@email.com" },
+  { name: "dateOfBirth", type: FIELD_TYPES.DATE, label: "Date of Birth:*", required: true },
+  {
+    name: "idType",
+    type: FIELD_TYPES.TEXT,
+    label: "ID Type:*",
+    required: true,
+    placeholder: 'e.g. "Driver\'s License", "State ID", "Passport"',
+  },
+  {
+    name: "idIssuer",
+    type: FIELD_TYPES.TEXT,
+    label: "ID Issuer:*",
+    required: true,
+    placeholder: "State/Province or Country",
+  },
+  { name: "idExpiryDate", type: FIELD_TYPES.DATE, label: "ID Expiry Date:*", required: true },
+  { name: "issueDate", type: FIELD_TYPES.DATE, label: "Issue Date:*", required: true },
+  { name: "idNumber", label: "ID Number:*", required: true, placeholder: "As it appears on your ID" },
+  {
+    name: "streetAddress",
+    type: FIELD_TYPES.TEXT,
+    label: "Street Address:*",
+    required: true,
+    placeholder: "Start typing your address",
+  },
+  {
+    name: "address2",
+    type: FIELD_TYPES.TEXT,
+    label: "Address 2 (Apt, Suite, Unit):",
+    placeholder: "Apt, Suite, Unit, Floor, etc.",
+  },
+  { name: "city", type: FIELD_TYPES.TEXT, label: "City:*", required: true, placeholder: "e.g. New York City" },
+  { name: "zipCode", type: FIELD_TYPES.TEXT, label: "Zip or Postal Code:*", required: true, placeholder: "e.g. 90210" },
+  { name: "state", type: FIELD_TYPES.TEXT, label: "State/Province:*", required: true, placeholder: "e.g. California" },
+  {
+    name: "country",
+    type: FIELD_TYPES.TEXT,
+    label: "Country:*",
+    required: true,
+    placeholder: "e.g. United States",
+  },
+  { name: "companyTitle", label: "Company Title:*", required: true, placeholder: "e.g. CEO, Owner, Director" },
+  {
+    name: "phoneNumber",
+    type: FIELD_TYPES.TEXT,
+    label: "Phone Number:*",
+    required: true,
+    placeholder: "e.g. 555-867-5309",
+    formatting: FIELD_FORMATS.PHONE,
+  },
+];
+
+export const ROLE_FILLING_FIELD = {
+  label: "What is the role you are filling for the company as you complete this application? ",
+  type: FIELD_TYPES.RADIO,
+  options: [
+    {
+      label:
+        "A primary company operator/controller (C-level executive, owner or other person that holds significant control over company direction and decisions)",
+      value: ID_MISSION_ROLES.PRIMARY_OPERATOR_AND_CONTROLLER,
+    },
+    {
+      label: "The primary contact for the company for this product or service, but not a company operator/controller ",
+      value: ID_MISSION_ROLES.PRIMARY_CONTACT,
+    },
+    {
+      label: "Both a company operator and the primary contact",
+      value: ID_MISSION_ROLES.BOTH,
+    },
+  ],
+  name: "roleFillingForCompany",
+  uniqueId: "roleFillingForCompany",
+  required: true,
+};
+
+export const OWNER_CARD_FIELDS = {
+  NAME: {
+    name: "name",
+    label: "Owner or primary operator name",
+    required: true,
+    placeholder: "First name, middle name (optional), last name",
+  },
+  EMAIL: {
+    name: "email",
+    type: FIELD_TYPES.EMAIL,
+    label: "Email Address",
+    required: true,
+    placeholder: "e.g. john.doe@email.com",
+  },
+  PHONE: {
+    name: "phone",
+    type: FIELD_TYPES.TEXT,
+    label: "Phone Number",
+    placeholder: "e.g. 555-867-5309",
+    formatting: FIELD_FORMATS.PHONE,
+  },
+  ROLE: {
+    name: "role",
+    type: FIELD_TYPES.RADIO,
+    label: "Role",
+    required: true,
+    options: [
+      { label: "Primary Operator", value: OWNER_ROLES.PRIMARY_OPERATOR },
+      { label: "Beneficial Owner", value: OWNER_ROLES.BENEFICIAL_OWNER },
+      { label: "Both", value: OWNER_ROLES.BOTH },
+    ],
+  },
+  HAVE_DETAIL: {
+    name: "have_detail",
+    type: FIELD_TYPES.RADIO,
+    label: "Do you have full information for this person?",
+    required: true,
+    options: [
+      { label: "No", value: YES_NO_VALUES.NO },
+      { label: "Yes", value: YES_NO_VALUES.YES },
+    ],
+  },
+  JOB_TITLE: { name: "job_title", label: "Job Title" },
+  SSN: {
+    name: "ssn",
+    label: "Social Security, Tax, or National ID Number",
+    placeholder: "e.g. 123-45-6789",
+    formatting: FIELD_FORMATS.SSN,
+  },
+  ADDRESS: { name: "address", label: "Address" },
+  PERCENTAGE: { name: "percentage", label: "Ownership Percentage", placeholder: "e.g. 25" },
+  DATE_OF_BIRTH: { name: "date_of_birth", type: FIELD_TYPES.DATE, label: "Date of Birth" },
+  ID_ISSUER: { name: "id_issuer", label: "ID Issuer", placeholder: "State/Province or Country" },
+  ID_NUMBER: { name: "id_number", label: "ID Number", placeholder: "As it appears on your ID" },
+};
+
+export const NAICS_FIELD = {
+  label: "NAICS Code and Description",
+  required: true,
+  placeholder: "Type NAICS code or description...",
 };
 
 export const DROPDOWN_OPTION_VALUES = {

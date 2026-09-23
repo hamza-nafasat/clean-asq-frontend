@@ -1,4 +1,4 @@
-import HeaderBrandLogo from "@/components/layouts/HeaderBrandLogo";
+import BrandLogo from "@/components/shared/BrandLogo";
 import HeaderUserMenu from "@/components/layouts/HeaderUserMenu";
 import { HEADER_ALIGNMENTS } from "@/constants";
 
@@ -15,7 +15,7 @@ const HeaderBranded = ({
   userMenuProps = {},
 }) => {
   const headerTextStyle = { fontSize: `${formHeaderTextSize || DEFAULT_HEADER_TEXT_SIZE}px` };
-  const logo = <HeaderBrandLogo {...logoProps} />;
+  const logo = <BrandLogo {...logoProps} />;
   const userMenu = user && <HeaderUserMenu user={user} {...userMenuProps} />;
   const logoBox = <div className="my-4 flex w-75 items-center">{logo}</div>;
   const userMenuBox = <div className="flex w-75 items-center gap-4 px-6 py-2">{userMenu}</div>;

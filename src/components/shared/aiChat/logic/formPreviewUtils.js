@@ -1,7 +1,7 @@
 // Maps a DB-shape section (from ctx.currentState.detailedForm.sections) to the
 // shape expected by FormPreview.jsx (sectionTitle, sectionName, fields, etc.)
 export const toPreviewSection = (s, overrides = {}) => ({
-  sectionTitle: s.key || (s.isSignature ? "agreement_blk" : ""),
+  sectionTitle: s.title || "",
   sectionName: s.name || s.title || "",
   isHidden: s.isHidden || false,
   isBlock: s.isBlock || false,

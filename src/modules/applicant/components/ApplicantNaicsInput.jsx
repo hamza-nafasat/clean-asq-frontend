@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { naicsToMcc } from "@/../public/NAICStoMCC.js";
+import { NAICS_FIELD } from "@/constants";
 import {
   KEYBOARD_KEYS,
   NAICS_COLUMNS,
@@ -73,14 +74,14 @@ const ApplicantNaicsInput = ({ value = "", isLoading = false, setNaicsToMccDetai
         <input
           id={NAICS_INPUT_ID}
           name={NAICS_INPUT_ID}
-          placeholder="Type NAICS code or description..."
+          placeholder={NAICS_FIELD.placeholder}
           type="text"
           value={value}
           onKeyDown={handleKeyDown}
           className={`border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${!value ? "bg-highlighting border-accent! border-2" : ""}`}
           data-ai-has-suggestions="true"
           data-ai-required="true"
-          data-ai-label="NAICS Code and Description"
+          data-ai-label={NAICS_FIELD.label}
           data-ai-loading={isLoading ? "true" : undefined}
           onChange={handleInputChange}
           onFocus={() => {

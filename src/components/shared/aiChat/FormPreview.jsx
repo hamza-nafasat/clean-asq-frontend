@@ -1,12 +1,35 @@
-// Visual preview of an application form derived from a CSV structure.
-// Rendered inside the AI chat when the AI calls the previewFormStructure tool.
+// ai chat preview of an application form
 
-const SECTION_KEYS = {
-  OTP: "otp_blk",
-  COMPANY_SCRAPING: "company_scraping_blk",
-  ID_MISSION: "id_mission_blk",
-  AGREEMENT: "agreement_blk",
+import {
+  COMPANY_LOOKUP_FIELDS,
+  FIELD_TYPES,
+  FORM_BLOCK_TYPE,
+  ID_DETAIL_FIELDS,
+  NAICS_FIELD,
+  OWNER_CARD_FIELDS,
+  ROLE_FILLING_FIELD,
+  SECTION_TITLES,
+} from "@/constants";
+
+// same lists the pages render
+const COMPANY_LOOKUP_PREVIEW_FIELDS = Object.values(COMPANY_LOOKUP_FIELDS);
+const ID_DETAILS_PREVIEW_FIELDS = [...ID_DETAIL_FIELDS, ROLE_FILLING_FIELD];
+const OWNER_CARD_PREVIEW_FIELDS = Object.values(OWNER_CARD_FIELDS);
+
+// drawn by the fixed pages instead
+const SYSTEM_SECTION_TITLES = [
+  SECTION_TITLES.OTP,
+  SECTION_TITLES.COMPANY_SCRAPING,
+  SECTION_TITLES.ID_MISSION,
+  SECTION_TITLES.ID_VERIFICATION,
+];
+
+// page-only fields after form fields
+const SECTION_EXTRA_FIELDS = {
+  [SECTION_TITLES.COMPANY_INFORMATION]: [NAICS_FIELD],
 };
+
+const WIDE_FIELD_TYPES = [FIELD_TYPES.TEXTAREA, FIELD_TYPES.RADIO, FORM_BLOCK_TYPE];
 
 const BADGES = {
   SYSTEM_STEP: "System Step",
@@ -20,17 +43,19 @@ const BADGES = {
 
 const FieldMockup = ({ field }) => {
   const { label, type, required, placeholder, options, conditional_fields, displayText, isDisplayText } = field;
+  // page labels may include *
+  const showRequiredMark = required && !String(label).trimEnd().endsWith("*");
 
   let input;
   switch (type) {
-    case "textarea":
+    case FIELD_TYPES.TEXTAREA:
       input = (
         <div className="h-14 w-full rounded border border-gray-200 bg-gray-50 px-2 py-1.5 text-[10px] text-gray-400 leading-relaxed">
           {placeholder || "Enter text…"}
         </div>
       );
       break;
-    case "select":
+    case FIELD_TYPES.SELECT:
       input = (
         <div className="flex h-7 w-full items-center justify-between rounded border border-gray-200 bg-gray-50 px-2 text-[10px] text-gray-400">
           <span>{options?.[0]?.label || "Select an option"}</span>
@@ -38,7 +63,7 @@ const FieldMockup = ({ field }) => {
         </div>
       );
       break;
-    case "radio":
+    case FIELD_TYPES.RADIO:
       input = (
         <div className="flex flex-wrap gap-3 pt-0.5">
           {(options?.length ? options : [{ label: "Yes" }, { label: "No" }]).map((o, i) => (
@@ -50,7 +75,7 @@ const FieldMockup = ({ field }) => {
         </div>
       );
       break;
-    case "checkbox":
+    case FIELD_TYPES.CHECKBOX:
       return (
         <div className="flex flex-col gap-1">
           {(isDisplayText || displayText) && displayText && (
@@ -60,7 +85,7 @@ const FieldMockup = ({ field }) => {
             <span className="mt-0.5 inline-flex h-3 w-3 shrink-0 items-center justify-center rounded border border-gray-300 bg-white" />
             <span>
               {label}
-              {required && <span className="text-red-400 ml-0.5">*</span>}
+              {showRequiredMark && <span className="text-red-400 ml-0.5">*</span>}
             </span>
           </label>
           {conditional_fields?.length > 0 && (
@@ -77,21 +102,21 @@ const FieldMockup = ({ field }) => {
           )}
         </div>
       );
-    case "date":
+    case FIELD_TYPES.DATE:
       input = (
         <div className="flex h-7 w-full items-center rounded border border-gray-200 bg-gray-50 px-2 text-[10px] text-gray-400">
           MM / DD / YYYY
         </div>
       );
       break;
-    case "file":
+    case FIELD_TYPES.FILE:
       input = (
         <div className="flex h-7 items-center gap-1.5 rounded border border-dashed border-gray-300 bg-gray-50 px-2 text-[10px] text-gray-400">
           <span>📎</span> Choose file…
         </div>
       );
       break;
-    case "range":
+    case FIELD_TYPES.RANGE:
       input = (
         <div className="flex flex-col gap-0.5">
           <input type="range" className="w-full h-1.5 cursor-default" disabled defaultValue={50} />
@@ -103,17 +128,18 @@ const FieldMockup = ({ field }) => {
         </div>
       );
       break;
-    case "number":
+    case FIELD_TYPES.NUMBER:
       input = (
         <div className="flex h-7 w-full items-center rounded border border-gray-200 bg-gray-50 px-2 text-[10px] text-gray-400">
           {placeholder || "0"}
         </div>
       );
       break;
-    case "block":
+    case FORM_BLOCK_TYPE:
       return (
-        <div className="rounded border border-dashed border-blue-200 bg-blue-50 px-2 py-1.5 text-[10px] text-blue-500">
-          + {label} (repeating block)
+        <div className="rounded border border-dashed border-blue-200 bg-blue-50/40 p-2">
+          <p className="mb-1.5 text-[10px] font-semibold text-blue-600">{label} — one card per owner</p>
+          <FieldGrid fields={OWNER_CARD_PREVIEW_FIELDS} />
         </div>
       );
     default:
@@ -131,7 +157,7 @@ const FieldMockup = ({ field }) => {
       )}
       <label className="text-[10px] font-medium text-gray-600">
         {label}
-        {required && <span className="ml-0.5 text-red-400">*</span>}
+        {showRequiredMark && <span className="ml-0.5 text-red-400">*</span>}
       </label>
       {input}
     </div>
@@ -140,95 +166,48 @@ const FieldMockup = ({ field }) => {
 
 // ── Section renderers ─────────────────────────────────────────────────────────
 
-const OtpSection = ({ section }) => (
-  <SectionCard section={section} badge={BADGES.SYSTEM_STEP}>
-    <div className="flex flex-col items-center gap-2 py-2 text-center">
-      <div className="text-2xl">✉️</div>
-      <p className="text-[10px] text-gray-500">A verification code will be sent to the applicant's email address.</p>
-      <div className="flex gap-2">
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className="h-7 w-7 rounded border border-gray-300 bg-gray-50 text-center text-xs leading-7 text-gray-400"
-          >
-            —
-          </div>
-        ))}
+const FieldGrid = ({ fields = [] }) => (
+  <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+    {fields.map((f, i) => (
+      <div key={i} className={WIDE_FIELD_TYPES.includes(f.type) ? "col-span-2" : ""}>
+        <FieldMockup field={f} />
       </div>
-      <div className="h-7 w-32 rounded bg-indigo-100 text-[10px] text-indigo-500 flex items-center justify-center">
-        Verify Code
-      </div>
-    </div>
-  </SectionCard>
+    ))}
+  </div>
 );
 
-const CompanyScrapingSection = ({ section }) => (
-  <SectionCard section={section} badge={BADGES.SYSTEM_STEP}>
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-col gap-0.5">
-        <label className="text-[10px] font-medium text-gray-600">
-          Company Name <span className="text-red-400">*</span>
-        </label>
-        <div className="flex h-7 w-full items-center rounded border border-gray-200 bg-gray-50 px-2 text-[10px] text-gray-400">
-          e.g. Acme Corp
-        </div>
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <label className="text-[10px] font-medium text-gray-600">
-          Company Website <span className="text-red-400">*</span>
-        </label>
-        <div className="flex h-7 w-full items-center rounded border border-gray-200 bg-gray-50 px-2 text-[10px] text-gray-400">
-          https://example.com
-        </div>
-      </div>
-    </div>
-  </SectionCard>
+const SignatureMockup = () => (
+  <div className="mt-2 rounded border border-dashed border-gray-300 bg-gray-50 p-3 text-center">
+    <p className="text-[10px] text-gray-400 mb-2">Applicant signature</p>
+    <div className="h-10 w-full rounded border border-gray-200 bg-white" />
+  </div>
 );
 
-const IdMissionSection = ({ section }) => (
-  <SectionCard section={section} badge={BADGES.SYSTEM_STEP}>
-    <div className="flex flex-col items-center gap-2 py-2 text-center">
-      <div className="text-2xl">🪪</div>
-      <p className="text-[10px] text-gray-500">
-        Applicant scans a government-issued ID and completes identity verification via IDMission.
-      </p>
-      <div className="h-7 w-36 rounded bg-indigo-100 text-[10px] text-indigo-500 flex items-center justify-center">
-        Start ID Verification
-      </div>
-    </div>
-  </SectionCard>
-);
-
-const AgreementSection = ({ section }) => (
+const AgreementSection = ({ section = {} }) => (
   <SectionCard section={section} badge={BADGES.SIGNATURE}>
     {section.displayText && <p className="mb-2 text-[10px] text-gray-500 italic">{section.displayText}</p>}
     {section.signDisplayText && <p className="mb-2 text-[10px] text-gray-600">{section.signDisplayText}</p>}
-    <div className="rounded border border-dashed border-gray-300 bg-gray-50 p-3 text-center">
-      <p className="text-[10px] text-gray-400 mb-2">Applicant signature</p>
-      <div className="h-10 w-full rounded border border-gray-200 bg-white" />
-    </div>
+    <SignatureMockup />
   </SectionCard>
 );
 
-const StandardSection = ({ section }) => (
-  <SectionCard
-    section={section}
-    badge={section.isHidden ? BADGES.HIDDEN : section.isBlock ? BADGES.BLOCK : BADGES.SECTION}
-  >
-    {section.displayText && <p className="mb-2 text-[10px] text-gray-500 italic">{section.displayText}</p>}
-    {section.fields?.length > 0 ? (
-      <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-        {section.fields.map((f, i) => (
-          <div key={i} className={f.type === "textarea" || f.type === "block" ? "col-span-2" : ""}>
-            <FieldMockup field={f} />
-          </div>
-        ))}
-      </div>
-    ) : (
-      <p className="text-[10px] text-gray-400 italic">No custom fields</p>
-    )}
-  </SectionCard>
-);
+const StandardSection = ({ section = {} }) => {
+  const fields = [...(section.fields ?? []), ...(SECTION_EXTRA_FIELDS[section.sectionTitle] ?? [])];
+  return (
+    <SectionCard
+      section={section}
+      badge={section.isHidden ? BADGES.HIDDEN : section.isBlock ? BADGES.BLOCK : BADGES.SECTION}
+    >
+      {section.displayText && <p className="mb-2 text-[10px] text-gray-500 italic">{section.displayText}</p>}
+      {fields.length > 0 ? (
+        <FieldGrid fields={fields} />
+      ) : (
+        <p className="text-[10px] text-gray-400 italic">No custom fields</p>
+      )}
+      {section.isSignature && <SignatureMockup />}
+    </SectionCard>
+  );
+};
 
 // ── Section card wrapper ──────────────────────────────────────────────────────
 
@@ -260,7 +239,10 @@ const SectionCard = ({ section, badge, children }) => (
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-const FormPreview = ({ formName, sections }) => {
+const FormPreview = ({ formName = "", sections = [] }) => {
+  const idSection = sections.find((section) => section.sectionTitle === SECTION_TITLES.ID_VERIFICATION);
+  const stepperSections = sections.filter((section) => !SYSTEM_SECTION_TITLES.includes(section.sectionTitle));
+
   return (
     <div className="mt-2 rounded-xl border border-indigo-100 bg-indigo-50/40 p-3">
       <div className="mb-2 flex items-center justify-between">
@@ -268,14 +250,41 @@ const FormPreview = ({ formName, sections }) => {
         <p className="text-[10px] text-gray-500 font-medium">{formName}</p>
       </div>
       <div className="flex flex-col gap-2">
-        {(sections || []).map((section, i) => {
-          const t = section.sectionTitle;
-          if (t === SECTION_KEYS.OTP) return <OtpSection key={i} section={section} />;
-          if (t === SECTION_KEYS.COMPANY_SCRAPING) return <CompanyScrapingSection key={i} section={section} />;
-          if (t === SECTION_KEYS.ID_MISSION) return <IdMissionSection key={i} section={section} />;
-          if (t === SECTION_KEYS.AGREEMENT) return <AgreementSection key={i} section={section} />;
-          return <StandardSection key={i} section={section} />;
-        })}
+        {/* Company lookup */}
+        <SectionCard section={{ sectionName: "Company Lookup" }} badge={BADGES.SYSTEM_STEP}>
+          <FieldGrid fields={COMPANY_LOOKUP_PREVIEW_FIELDS} />
+        </SectionCard>
+
+        {/* ID verification QR */}
+        <SectionCard section={{ sectionName: idSection?.sectionName || "ID Verification" }} badge={BADGES.SYSTEM_STEP}>
+          <div className="flex flex-col items-center gap-2 py-2 text-center">
+            {idSection?.displayText && <p className="text-[10px] text-gray-500 italic">{idSection.displayText}</p>}
+            <p className="flex h-20 w-20 items-center justify-center rounded border border-gray-300 bg-gray-50 text-[10px] text-gray-400">
+              QR code
+            </p>
+            <p className="flex h-7 w-36 items-center justify-center rounded bg-indigo-100 text-[10px] text-indigo-500">
+              Refresh QR Code
+            </p>
+            <p className="flex h-7 w-36 items-center justify-center rounded border border-indigo-200 text-[10px] text-indigo-500">
+              Enter ID Details Manually
+            </p>
+          </div>
+        </SectionCard>
+
+        {/* ID details */}
+        <SectionCard section={{ sectionName: "Primary Applicant Information" }} badge={BADGES.SYSTEM_STEP}>
+          <FieldGrid fields={ID_DETAILS_PREVIEW_FIELDS} />
+          <SignatureMockup />
+        </SectionCard>
+
+        {/* Form sections */}
+        {stepperSections.map((section, i) =>
+          section.sectionTitle === SECTION_TITLES.AGREEMENT ? (
+            <AgreementSection key={i} section={section} />
+          ) : (
+            <StandardSection key={i} section={section} />
+          ),
+        )}
       </div>
       <p className="mt-2 text-[9px] text-gray-400 text-center">
         Visual approximation — actual styling reflects the applied branding

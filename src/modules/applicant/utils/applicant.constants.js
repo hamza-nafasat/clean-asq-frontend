@@ -1,4 +1,4 @@
-import { FIELD_TYPES } from "@/constants";
+import { FIELD_TYPES, ID_DETAIL_FIELDS } from "@/constants";
 
 export const ID_ISSUE_STATES_AND_COUNTRIES = [
   // Countries
@@ -503,28 +503,6 @@ export const ROLE_FILLING_VALUES = {
   BOTH: "both",
 };
 
-export const ROLE_FILLING_FIELD = {
-  label: "What is the role you are filling for the company as you complete this application? ",
-  options: [
-    {
-      label:
-        "A primary company operator/controller (C-level executive, owner or other person that holds significant control over company direction and decisions)",
-      value: ROLE_FILLING_VALUES.PRIMARY_OPERATOR_AND_CONTROLLER,
-    },
-    {
-      label: "The primary contact for the company for this product or service, but not a company operator/controller ",
-      value: ROLE_FILLING_VALUES.PRIMARY_CONTACT,
-    },
-    {
-      label: "Both a company operator and the primary contact",
-      value: ROLE_FILLING_VALUES.BOTH,
-    },
-  ],
-  name: "roleFillingForCompany",
-  uniqueId: "roleFillingForCompany",
-  required: true,
-};
-
 export const SINGLE_APPLICATION_STAGES = {
   EMAIL: "email",
   IDMISSION_QR: "idmission-qr",
@@ -569,107 +547,26 @@ export const ADDRESS_AUTOCOMPLETE_OPTIONS = {
 
 export const OWNER_ADDRESS_AUTOCOMPLETE_OPTIONS = { types: ["address"], fields: ["formatted_address"] };
 
+// page-only extras for id fields
+const ID_DETAIL_FIELD_EXTRAS = {
+  idType: { suggestions: ID_TYPE_SUGGESTIONS },
+  idIssuer: { suggestions: ID_ISSUE_STATES_AND_COUNTRIES },
+  idNumber: { hasEmptyFallback: true },
+  streetAddress: { hasEmptyFallback: true, isAddressLookup: true },
+  address2: { hasEmptyFallback: true },
+  city: { suggestions: MAJOR_CITIES, hasEmptyFallback: true },
+  zipCode: { hasEmptyFallback: true },
+  state: { hasEmptyFallback: true },
+  country: { hasEmptyFallback: true },
+  companyTitle: { hasEmptyFallback: true },
+  phoneNumber: { hasEmptyFallback: true },
+};
+
 // details form fields in render order; hasEmptyFallback keeps the original `|| ""` value
-export const ID_MISSION_DETAIL_FIELDS = [
-  {
-    name: "name",
-    label: "Name:*",
-    required: true,
-    placeholder: "First name, middle name (optional), last name",
-  },
-  { name: "email", label: "Email Address:*", required: true, placeholder: "e.g. john.doe@email.com" },
-  { name: "dateOfBirth", type: "date", label: "Date of Birth:*", required: true },
-  {
-    name: "idType",
-    type: "text",
-    label: "ID Type:*",
-    required: true,
-    placeholder: 'e.g. "Driver\'s License", "State ID", "Passport"',
-    suggestions: ID_TYPE_SUGGESTIONS,
-  },
-  {
-    name: "idIssuer",
-    type: "text",
-    label: "ID Issuer:*",
-    required: true,
-    placeholder: "State/Province or Country",
-    suggestions: ID_ISSUE_STATES_AND_COUNTRIES,
-  },
-  { name: "idExpiryDate", type: "date", label: "ID Expiry Date:*", required: true },
-  { name: "issueDate", type: "date", label: "Issue Date:*", required: true },
-  {
-    name: "idNumber",
-    label: "ID Number:*",
-    required: true,
-    placeholder: "As it appears on your ID",
-    hasEmptyFallback: true,
-  },
-  {
-    name: "streetAddress",
-    type: "text",
-    label: "Street Address:*",
-    required: true,
-    placeholder: "Start typing your address",
-    hasEmptyFallback: true,
-    isAddressLookup: true,
-  },
-  {
-    name: "address2",
-    type: "text",
-    label: "Address 2 (Apt, Suite, Unit):",
-    placeholder: "Apt, Suite, Unit, Floor, etc.",
-    hasEmptyFallback: true,
-  },
-  {
-    name: "city",
-    type: "text",
-    label: "City:*",
-    required: true,
-    placeholder: "e.g. New York City",
-    suggestions: MAJOR_CITIES,
-    hasEmptyFallback: true,
-  },
-  {
-    name: "zipCode",
-    type: "text",
-    label: "Zip or Postal Code:*",
-    required: true,
-    placeholder: "e.g. 90210",
-    hasEmptyFallback: true,
-  },
-  {
-    name: "state",
-    type: "text",
-    label: "State/Province:*",
-    required: true,
-    placeholder: "e.g. California",
-    hasEmptyFallback: true,
-  },
-  {
-    name: "country",
-    type: "text",
-    label: "Country:*",
-    required: true,
-    placeholder: "e.g. United States",
-    hasEmptyFallback: true,
-  },
-  {
-    name: "companyTitle",
-    label: "Company Title:*",
-    required: true,
-    placeholder: "e.g. CEO, Owner, Director",
-    hasEmptyFallback: true,
-  },
-  {
-    name: "phoneNumber",
-    type: "text",
-    label: "Phone Number:*",
-    required: true,
-    placeholder: "e.g. 555-867-5309",
-    formatting: "3,3,4",
-    hasEmptyFallback: true,
-  },
-];
+export const ID_MISSION_DETAIL_FIELDS = ID_DETAIL_FIELDS.map((field) => ({
+  ...field,
+  ...ID_DETAIL_FIELD_EXTRAS[field.name],
+}));
 
 // fields of the details form that must not block Continue
 export const ID_MISSION_OPTIONAL_KEYS = {
@@ -682,22 +579,6 @@ export const OWNER_ROLES = {
   BENEFICIAL_OWNER: "beneficial_owner",
   BOTH: "both",
 };
-
-export const OWNER_ROLE_FIELD = {
-  label: "Role",
-  name: "role",
-  options: [
-    { label: "Primary Operator", value: OWNER_ROLES.PRIMARY_OPERATOR },
-    { label: "Beneficial Owner", value: OWNER_ROLES.BENEFICIAL_OWNER },
-    { label: "Both", value: OWNER_ROLES.BOTH },
-  ],
-  required: true,
-};
-
-export const OWNER_HAVE_DETAIL_OPTIONS = [
-  { label: "No", value: YES_NO.NO },
-  { label: "Yes", value: YES_NO.YES },
-];
 
 export const ROLLING_OWNER_SSN_FIELD = {
   label: "What is your Social Security, Tax, or National ID Number?",

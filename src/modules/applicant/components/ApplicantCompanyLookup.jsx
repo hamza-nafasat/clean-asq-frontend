@@ -21,7 +21,7 @@ import CustomLoading from "@/components/shared/CustomLoading";
 import Modal from "@/components/shared/Modal";
 import TextField from "@/components/shared/TextField";
 import ApplicantFormDisplayTextModal from "./ApplicantFormDisplayTextModal";
-import { formKeys } from "@/constants";
+import { COMPANY_LOOKUP_FIELDS, formKeys } from "@/constants";
 import {
   COMPANY_VERIFICATION_STATUSES,
   DEFAULT_HEADER_FOOTER,
@@ -259,29 +259,26 @@ const CompanyVerification = ({ formId, brandingName, draftId }) => {
               </div>
               <div className="flex flex-col space-y-4">
                 <TextField
+                  {...COMPANY_LOOKUP_FIELDS.NAME}
                   id="company-name"
-                  name="company-name"
                   data-testid="company-name-input"
-                  label="Legal company name *"
                   className="w-full rounded px-2 text-sm"
                   value={form.name}
                   onChange={isRequestBusy ? ignoreChange : (e) => setForm({ ...form, name: e.target.value })}
                 />
                 {!form.noWebsite && (
                   <TextField
+                    {...COMPANY_LOOKUP_FIELDS.URL}
                     id="company-url"
-                    name="company-url"
                     data-testid="company-url-input"
-                    label="Website URL *"
                     className="w-full rounded px-2 text-sm"
                     value={form.url}
                     onChange={isRequestBusy ? ignoreChange : (e) => setForm({ ...form, url: e.target.value })}
                   />
                 )}
                 <Checkbox
+                  {...COMPANY_LOOKUP_FIELDS.NO_WEBSITE}
                   id="noWebsite"
-                  label="This company has no website"
-                  name="noWebsite"
                   data-testid="company-no-website-checkbox"
                   checked={form.noWebsite}
                   onChange={(e) => {

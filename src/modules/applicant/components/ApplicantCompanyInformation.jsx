@@ -15,7 +15,7 @@ import DisplayText from "./ApplicantDisplayText";
 import ApplicantNaicsInput from "./ApplicantNaicsInput";
 import ApplicantSectionField from "./ApplicantSectionField";
 import { EditSectionDisplayTextFromatingModal } from "./ApplicantSectionTextModal";
-import { STATE_SUGGESTIONS } from "@/constants";
+import { NAICS_FIELD, STATE_SUGGESTIONS } from "@/constants";
 import { FIELD_NAMES, NAICS_INPUT_ID, SECTION_FIELD_INPUT_TYPES } from "../utils/applicant.constants";
 import { formatNaicsBestMatch } from "../utils/applicant.utils8";
 import {
@@ -285,7 +285,7 @@ const CompanyInformation = ({
       />
       {!hasDescriptionField && findNaicsButton}
       <div className="mt-6 flex w-full flex-col items-start">
-        <h4 className="text-textPrimary text-base font-medium lg:text-lg">NAICS Code and Description</h4>
+        <h4 className="text-textPrimary text-base font-medium lg:text-lg">{NAICS_FIELD.label}</h4>
         <div className="mt-2 flex w-full flex-col gap-4">
           <ApplicantNaicsInput
             value={naicsToMccDetails.NAICS}

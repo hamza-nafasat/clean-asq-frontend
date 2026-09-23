@@ -4,11 +4,8 @@ import { RadioInputType } from "@/components/global/DynamicField";
 import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";
 import TextField from "@/components/shared/TextField";
-import {
-  ADDRESS_AUTOCOMPLETE_OPTIONS,
-  ID_MISSION_DETAIL_FIELDS,
-  ROLE_FILLING_FIELD,
-} from "../utils/applicant.constants";
+import { ROLE_FILLING_FIELD } from "@/constants";
+import { ADDRESS_AUTOCOMPLETE_OPTIONS, ID_MISSION_DETAIL_FIELDS } from "../utils/applicant.constants";
 import { getIdMissionSignDisplayHtml } from "../utils/applicant.utils5";
 import { stripHtml } from "../utils/applicant.utils6";
 import HtmlContent from "@/components/shared/HtmlContent";
