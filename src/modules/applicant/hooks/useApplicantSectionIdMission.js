@@ -40,27 +40,33 @@ const useApplicantSectionIdMission = (sectionKey) => {
       setIdMissionVerifiedData(buildSectionIdMissionData(data?.Form_Data, { email: user?.email, createdAt, ...shape }));
     };
 
-    socket.on(ID_MISSION_SOCKET_EVENTS.PROCESSING_STARTED, () => setIsIdMissionProcessing(true));
-    socket.on(ID_MISSION_SOCKET_EVENTS.VERIFIED, async (data) => {
+    const onProcessingStarted = () => setIsIdMissionProcessing(true);
+    const onVerified = (data) => {
       if (data?.sectionKey !== sectionKey) return;
       applyResult(data);
-    });
-    socket.on(ID_MISSION_SOCKET_EVENTS.FAILED, async (data) => {
+    };
+    const onFailed = (data) => {
       if (data?.sectionKey !== sectionKey) return;
       applyResult(data, { nameField: "name", issuerField: "idIssuer", isRawStreet: true });
-    });
-    socket.on(ID_MISSION_SOCKET_EVENTS.OTHER, async (data) => {
+    };
+    const onOther = (data) => {
       if (data?.sectionKey !== sectionKey) return;
       setIsIdMissionProcessing(false);
       if (data?.Metadata?.sectionKey !== sectionKey) return;
       applyResult(data, { isRawStreet: true });
-    });
+    };
 
+    socket.on(ID_MISSION_SOCKET_EVENTS.PROCESSING_STARTED, onProcessingStarted);
+    socket.on(ID_MISSION_SOCKET_EVENTS.VERIFIED, onVerified);
+    socket.on(ID_MISSION_SOCKET_EVENTS.FAILED, onFailed);
+    socket.on(ID_MISSION_SOCKET_EVENTS.OTHER, onOther);
+
+    // remove only this hook's own listeners - socket is a shared singleton other sections stay subscribed to
     return () => {
-      socket.off(ID_MISSION_SOCKET_EVENTS.PROCESSING_STARTED);
-      socket.off(ID_MISSION_SOCKET_EVENTS.VERIFIED);
-      socket.off(ID_MISSION_SOCKET_EVENTS.FAILED);
-      socket.off(ID_MISSION_SOCKET_EVENTS.OTHER);
+      socket.off(ID_MISSION_SOCKET_EVENTS.PROCESSING_STARTED, onProcessingStarted);
+      socket.off(ID_MISSION_SOCKET_EVENTS.VERIFIED, onVerified);
+      socket.off(ID_MISSION_SOCKET_EVENTS.FAILED, onFailed);
+      socket.off(ID_MISSION_SOCKET_EVENTS.OTHER, onOther);
     };
   }, [createdAt, sectionKey, user?.email]);
 

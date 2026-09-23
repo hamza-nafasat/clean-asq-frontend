@@ -1,3 +1,5 @@
+const VPN_FETCH_TIMEOUT_MS = 5000;
+
 export const detectVPN = async () => {
   const webrtcLocalIps = [];
   let webrtcPublicIp;
@@ -10,7 +12,9 @@ export const detectVPN = async () => {
 
   // 1. Get browser IP
   try {
-    const resp = await fetch("https://api.ipify.org?format=json");
+    const resp = await fetch("https://api.ipify.org?format=json", {
+      signal: AbortSignal.timeout(VPN_FETCH_TIMEOUT_MS),
+    });
     const data = await resp.json();
     webrtcPublicIp = data.ip;
   } catch (e) {
@@ -22,8 +26,8 @@ export const detectVPN = async () => {
   try {
     const pc = new RTCPeerConnection({ iceServers: [] });
     pc.createDataChannel("");
-    const candPromise = new Promise(resolve => {
-      pc.onicecandidate = event => {
+    const candPromise = new Promise((resolve) => {
+      pc.onicecandidate = (event) => {
         if (event.candidate) {
           const cand = event.candidate.candidate;
           const parts = cand.split(" ");
@@ -34,7 +38,7 @@ export const detectVPN = async () => {
         } else resolve(null);
       };
     });
-    await pc.createOffer().then(o => pc.setLocalDescription(o));
+    await pc.createOffer().then((o) => pc.setLocalDescription(o));
     await candPromise;
     pc.close();
   } catch (e) {
@@ -44,7 +48,7 @@ export const detectVPN = async () => {
   // 3. Latency test
   try {
     const start = performance.now();
-    await fetch("https://www.cloudflare.com/cdn-cgi/trace");
+    await fetch("https://www.cloudflare.com/cdn-cgi/trace", { signal: AbortSignal.timeout(VPN_FETCH_TIMEOUT_MS) });
     connectionLatency = performance.now() - start;
   } catch (e) {
     connectionLatency = null;
@@ -56,7 +60,9 @@ export const detectVPN = async () => {
     timezoneOffset = new Date().getTimezoneOffset();
     systemTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     if (webrtcPublicIp) {
-      const geoResp = await fetch(`https://ipapi.co/${webrtcPublicIp}/json/`);
+      const geoResp = await fetch(`https://ipapi.co/${webrtcPublicIp}/json/`, {
+        signal: AbortSignal.timeout(VPN_FETCH_TIMEOUT_MS),
+      });
       const geoData = await geoResp.json();
       ipTimezoneMatch = geoData.timezone === systemTimezone;
     }
@@ -69,7 +75,7 @@ export const detectVPN = async () => {
 
   // 5. Suspicious headers
   try {
-    const hdrResp = await fetch("https://httpbin.org/headers");
+    const hdrResp = await fetch("https://httpbin.org/headers", { signal: AbortSignal.timeout(VPN_FETCH_TIMEOUT_MS) });
     const hdrs = await hdrResp.json();
     const headers = hdrs.headers || {};
     const vpnHeaders = ["x-forwarded-for", "via", "x-real-ip"];

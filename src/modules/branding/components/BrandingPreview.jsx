@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import useCopyToClipboard from "@/hooks/useCopyToClipboard";
 import Button from "@/components/shared/Button";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { setCompanyName } from "@/redux/slices/branding.slice";
 import { BRANDING_COPY_FEEDBACK_MS, BRANDING_HEADER_ALIGNMENTS, BRANDING_PREVIEW_STEPS } from "../utils/branding.constants";
 
@@ -199,14 +200,14 @@ export const EmailTemplatePreview = ({ emailHeader = "", emailFooter = "", email
 
     <div className="mt-5 rounded-md p-3 md:p-6">
       <div className="flex w-full flex-col border-4">
-        <div dangerouslySetInnerHTML={{ __html: emailHeader }} />
+        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(emailHeader) }} />
         <div
           className={`align-center flex w-full justify-center p-4 md:p-6`}
           style={{ color: emailText, background: emailBodyColor }}
         >
           Email Body will be here ...
         </div>
-        <div dangerouslySetInnerHTML={{ __html: emailFooter }} />
+        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(emailFooter) }} />
       </div>
     </div>
   </div>

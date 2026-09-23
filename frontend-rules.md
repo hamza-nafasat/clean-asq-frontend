@@ -674,6 +674,8 @@ const { pill, dot } = STATUS_STYLES[row.type] ?? STATUS_STYLES[SUBMISSION_TYPES.
   components; they are navigation aids, not decoration.
 - **A comment is one short line labelling a step** — plain words, a few words long. Never a
   multi-line explanation.
+- **A comment is 4–6 words, never longer.** Add one only where the step is not obvious from the code
+  itself — not above every line.
 - **RTK Query API files (`redux/apis/<module>.apis.js`) put a `/////` line directly above every
   endpoint.** No section headings. Add a short `//` comment only where an endpoint does something its
   `query` does not show:
