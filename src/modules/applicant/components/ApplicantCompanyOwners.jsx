@@ -55,8 +55,6 @@ const CompanyOwners = ({
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const [ownerSuggesstionsModal, setOwnerSuggesstionsModal] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
-  const [filteredOwners, setFilteredOwners] = useState([]);
-  const [suggestFor, setSuggestFor] = useState(null);
   const [loadingNext, setLoadingNext] = useState(false);
   const [form, setForm] = useState({});
   // one stable id per owner row, kept outside the data
@@ -94,24 +92,14 @@ const CompanyOwners = ({
     form?.[findFieldKeyByName(form, FIELD_NAMES.ADDITIONAL_OWNERS_25_PERCENT)]?.value === YES_NO.YES;
 
   const setOwnerVal = useCallback(
-    (fieldKey, value, index, isFilter = false) => {
-      if (fieldKey === "name") {
-        setFilteredOwners(
-          value ? ownersFromLookup.filter((o) => String(o).toLowerCase().includes(value.toLowerCase())) : [],
-        );
-        setSuggestFor(value ? index : null);
-      }
+    (fieldKey, value, index) => {
       setForm((prev) => {
         const updatedOwners = [...(prev[otherOwnersStateUniqueId]?.value || [])];
         updatedOwners[index] = { ...updatedOwners[index], [fieldKey]: value };
         return { ...prev, [otherOwnersStateUniqueId]: { name: otherOwnersStateName, value: updatedOwners } };
       });
-      if (isFilter) {
-        setFilteredOwners([]);
-        setSuggestFor(null);
-      }
     },
-    [ownersFromLookup, otherOwnersStateUniqueId, otherOwnersStateName],
+    [otherOwnersStateUniqueId, otherOwnersStateName],
   );
 
   const handleRemoveOwner = useCallback(
@@ -124,8 +112,6 @@ const CompanyOwners = ({
         return { ...prev, [otherOwnersStateUniqueId]: { name: otherOwnersStateName, value: updatedOwners } };
       });
       setRowIds((prev) => prev.filter((_, i) => i !== index));
-      setFilteredOwners([]);
-      setSuggestFor(null);
     },
     [rowIds, otherOwnersStateUniqueId, otherOwnersStateName],
   );
@@ -260,7 +246,7 @@ const CompanyOwners = ({
                       owner={owner}
                       index={index}
                       rowKey={rowKey}
-                      suggestions={suggestFor === index ? filteredOwners : []}
+                      suggestions={ownersFromLookup}
                       onChange={setOwnerVal}
                       onPlaceLoad={(autocomplete) => {
                         addressAutocompleteRefs.current[rowKey] = autocomplete;

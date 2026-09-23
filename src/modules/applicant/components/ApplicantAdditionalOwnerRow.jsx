@@ -68,20 +68,8 @@ const ApplicantAdditionalOwnerRow = ({
             placeholder="First name, middle name (optional), last name"
             value={getValue("name")}
             onChange={handleChange("name")}
+            suggestions={suggestions}
           />
-          {suggestions.length > 0 && (
-            <ul className="absolute top-20 z-40 mt-1 w-full max-w-100 rounded border bg-white shadow">
-              {suggestions.map((suggestion, i) => (
-                <li
-                  key={i}
-                  onClick={() => onChange?.("name", suggestion, index, true)}
-                  className="cursor-pointer px-2 py-1 hover:bg-gray-200"
-                >
-                  {suggestion}
-                </li>
-              ))}
-            </ul>
-          )}
           <TextField
             name="email"
             label="Email Address"
