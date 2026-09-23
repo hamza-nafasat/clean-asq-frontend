@@ -1,4 +1,5 @@
 import { CHAT_ROLES } from "@/components/shared/aiChat/constants/aiChatConstants.js";
+import { createSay } from "@/components/shared/aiChat/logic/translateMessage.js";
 
 export const getErrorDetail = (err) => err?.data?.message || err?.message || "";
 
@@ -12,24 +13,16 @@ export const postJson = async (url, body) => {
   return res.json();
 };
 
-const createToolHelpers = ({ addMessage, isVoiceModeRef, speak, wt, getScreenContext }) => {
-  // show a reply and read it aloud in voice mode
-  const say = (content) => {
-    addMessage({ role: CHAT_ROLES.ASSISTANT, content });
-    if (isVoiceModeRef.current) speak(content);
-  };
+const createToolHelpers = ({ addMessage, isVoiceModeRef, speak, wt, getScreenContext, preferredLanguageRef }) => {
+  const say = createSay({ addMessage, isVoiceModeRef, speak, preferredLanguageRef });
 
-  const reportCouldnt = (detail) =>
-    addMessage({
-      role: CHAT_ROLES.ASSISTANT,
-      content: `${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-    });
+  const reportCouldnt = (detail) => say(`${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`);
 
   // run a screen action, then confirm or report the failure
   const runActionAndSay = async (ctx, actionName, payload, explanation) => {
     try {
       if (ctx.actions[actionName]) await ctx.actions[actionName](payload);
-      say(explanation);
+      await say(explanation);
     } catch (err) {
       reportCouldnt(getErrorDetail(err));
     }

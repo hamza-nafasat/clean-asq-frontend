@@ -2,17 +2,17 @@ import { CHAT_ROLES } from "@/components/shared/aiChat/constants/aiChatConstants
 import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
 
 const createTestingDemoTools = ({ bindings, helpers }) => {
-  const { addMessage, isVoiceModeRef, speak } = bindings;
+  const { addMessage } = bindings;
   const { say } = helpers;
 
   // awaited screen action with a tool-specific failure message
   const runOrReport = async (run, explanation, failureText) => {
     try {
       await run();
-      say(explanation);
+      await say(explanation);
     } catch (err) {
       const detail = err?.message || "";
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: `${failureText}${detail ? `: ${detail}` : ""}. Please try again.` });
+      await say(`${failureText}${detail ? `: ${detail}` : ""}. Please try again.`);
     }
   };
 
@@ -24,8 +24,7 @@ const createTestingDemoTools = ({ bindings, helpers }) => {
       function_call: { name: toolName, arguments: JSON.stringify(args) },
     });
     addMessage({ role: CHAT_ROLES.FUNCTION, name: toolName, content: resultText });
-    addMessage({ role: CHAT_ROLES.ASSISTANT, content: message });
-    if (isVoiceModeRef.current) speak(message);
+    say(message);
   };
 
   return {

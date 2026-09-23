@@ -14,6 +14,7 @@ import { buildSendHistory, requestChat } from "@/components/shared/aiChat/logic/
 import { findFieldElement } from "@/components/shared/aiChat/logic/fieldValueUtils.js";
 import { buildToolResultEntries, formatFormList } from "@/components/shared/aiChat/logic/formContextUtils.js";
 import { getLanguageName } from "@/components/shared/aiChat/logic/widgetLanguage.js";
+import { createSay } from "@/components/shared/aiChat/logic/translateMessage.js";
 import { buildChatPayload } from "@/components/shared/aiChat/utils/buildChatPayload.js";
 
 const DEFAULT_LANGUAGE_CODE = "en";
@@ -51,14 +52,11 @@ const useChatMessaging = ({
   refs,
   toolBindings,
 }) => {
-  const { formLanguageRef, lastDetectedLanguageRef, translationModeRef, tooltipCacheRef } = refs;
+  const { formLanguageRef, lastDetectedLanguageRef, translationModeRef, tooltipCacheRef, preferredLanguageRef } = refs;
   const { pendingFormContinuationRef } = refs;
   const isApplicant = assistantMode === AI_ASSISTANT_MODES.APPLICANT;
 
-  const say = (content) => {
-    addMessage({ role: CHAT_ROLES.ASSISTANT, content });
-    if (isVoiceModeRef.current) speak(content);
-  };
+  const say = createSay({ addMessage, isVoiceModeRef, speak, preferredLanguageRef });
 
   // follow the language the AI detected in the user's message
   const applyDetectedLanguage = (detectedLanguage) => {
@@ -93,7 +91,12 @@ const useChatMessaging = ({
     try {
       const data = await requestChat(
         chatEndpoint,
-        buildChatPayload({ messages: toolResultHistory, ctx, assistantMode }),
+        buildChatPayload({
+          messages: toolResultHistory,
+          ctx,
+          assistantMode,
+          preferredLanguage: preferredLanguageRef.current,
+        }),
       );
       applyDetectedLanguage(data.detectedLanguage);
       if (data.type === AI_RESPONSE_TYPES.TOOL_CALL) {
@@ -101,7 +104,7 @@ const useChatMessaging = ({
         if (getScreenContext()?.screenId !== ctx?.screenId) return;
         await applyToolCall(data.tool, data.args, toolResultHistory);
       } else if (!suppressPlainTextResponse) {
-        say(data.content || toolArgs.explanation);
+        await say(data.content || toolArgs.explanation);
         // dodge toward the next field the AI will address
         if (isApplicant && ctx?.currentState?.fields) {
           const nextField = ctx.currentState.fields.find((f) => !f.filled && !f.isSignature);
@@ -110,7 +113,7 @@ const useChatMessaging = ({
         }
       }
     } catch {
-      if (!suppressPlainTextResponse) say(toolArgs.explanation);
+      if (!suppressPlainTextResponse) await say(toolArgs.explanation);
     }
   };
 
@@ -147,14 +150,11 @@ const useChatMessaging = ({
         if (data.type === AI_RESPONSE_TYPES.TOOL_CALL) {
           await applyToolCall(data.tool, data.args, continuationHistory);
         } else {
-          say(data.content);
+          await say(data.content);
         }
       } catch (err) {
         const detail = err?.message || "";
-        addMessage({
-          role: CHAT_ROLES.ASSISTANT,
-          content: `${wt("formNotLoaded")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        await say(`${wt("formNotLoaded")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`);
       } finally {
         setIsLoading(false);
       }
@@ -169,7 +169,7 @@ const useChatMessaging = ({
     if (!silent) setInput("");
 
     // include a screen change the transcript has not acknowledged yet
-    const syncMsg = syncConversationWithScreen();
+    const syncMsg = await syncConversationWithScreen();
 
     const userMsg = { role: CHAT_ROLES.USER, content };
     if (!silent) addMessage(userMsg);
@@ -192,6 +192,7 @@ const useChatMessaging = ({
           assistantMode,
           currentState: enrichedCurrentState,
           formLanguage: formLanguageRef.current,
+          preferredLanguage: preferredLanguageRef.current,
         }),
       );
       applyDetectedLanguage(data.detectedLanguage);
@@ -199,14 +200,11 @@ const useChatMessaging = ({
       if (data.type === AI_RESPONSE_TYPES.TOOL_CALL) {
         await applyToolCall(data.tool, data.args, history);
       } else {
-        say(data.content);
+        await say(data.content);
       }
     } catch (error) {
       console.error("Send message error:", error);
-      addMessage({
-        role: CHAT_ROLES.ASSISTANT,
-        content: `${wt("error")}${error.message ? `: ${error.message}` : ""}. ${wt("tryAgain")}`,
-      });
+      await say(`${wt("error")}${error.message ? `: ${error.message}` : ""}. ${wt("tryAgain")}`);
     } finally {
       setIsLoading(false);
     }

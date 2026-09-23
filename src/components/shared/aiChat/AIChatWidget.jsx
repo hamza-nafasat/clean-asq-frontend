@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAddBrandingInFormMutation } from "@/redux/apis/branding.apis";
+import { useUpdateMyProfileMutation } from "@/redux/apis/auth.apis";
+import { userExist } from "@/redux/slices/auth.slice";
 import useAiChat from "@/hooks/useAiChat";
 import useBranding from "@/hooks/useBranding";
 import ChatFab from "./components/ChatFab.jsx";
@@ -13,14 +15,13 @@ import useChatMessaging from "./hooks/useChatMessaging.js";
 import useFabNudge from "./hooks/useFabNudge.js";
 import useFieldErrorMonitor from "./hooks/useFieldErrorMonitor.js";
 import useFieldFocusDodge from "./hooks/useFieldFocusDodge.js";
-import useLanguageBanner from "./hooks/useLanguageBanner.js";
 import usePanelLayout from "./hooks/usePanelLayout.js";
 import usePreFillReview from "./hooks/usePreFillReview.js";
 import useScreenConversation from "./hooks/useScreenConversation.js";
 import useTranslationTooltip from "./hooks/useTranslationTooltip.js";
 import { AI_ASSISTANT_MODES, STORAGE_KEYS, WIDGET_CLOSED_FLAG } from "@/constants";
 import { contrastingIconColor, DEFAULT_AI_VOICE, DEFAULT_FORM_LANGUAGE } from "./constants/aiChatConstants.js";
-import { translateWidgetString } from "./logic/widgetLanguage.js";
+import { getWidgetString } from "./logic/widgetLanguage.js";
 
 const LOGIN_PATH = "/login";
 const APPLICANT_FORM_PATH_PREFIX = "/application-form/";
@@ -34,6 +35,8 @@ const AIChatWidget = () => {
   const { formDataSignal, widgetResetSignal, pushRevertable, popRevertable, signalContinuationPending } = aiChat;
   const { autoMessageSignal, pendingAutoMessageRef, assistantMode } = aiChat;
   const { user } = useSelector((s) => s.auth);
+  const dispatch = useDispatch();
+  const [updateMyProfile] = useUpdateMyProfileMutation();
   const branding = useBranding();
   const { accentColor, secondaryColor, buttonTextSecondary, fontFamily, aiVoice, aiCustomPrompt } = branding;
   const { aiLaunchButtonColor, aiHeaderColor, aiBannerColor, aiBannerTextColor, primaryColor } = branding;
@@ -51,6 +54,8 @@ const AIChatWidget = () => {
   const [translationMode, setTranslationMode] = useState(null);
   const [introButtonsDismissed, setIntroButtonsDismissed] = useState(false);
   const [adePanel, setAdePanel] = useState(null);
+  // empty until explicitly chosen
+  const [preferredLanguage, setPreferredLanguage] = useState(user?.preferredLanguage || "");
 
   const sendMessageRef = useRef(null);
   const panelRef = useRef(null);
@@ -70,7 +75,9 @@ const AIChatWidget = () => {
     pendingFollowUpRef: useRef(null),
     navTimeoutRef: useRef(null),
     pendingFormContinuationRef: useRef(null),
+    preferredLanguageRef: useRef(preferredLanguage),
   };
+  refs.preferredLanguageRef.current = preferredLanguage;
   const activatedFieldIdRef = useRef(null);
   const adePanelCallbackRef = useRef(null);
   const confirmedValuesRef = useRef({});
@@ -81,6 +88,21 @@ const AIChatWidget = () => {
   const modeExitTimerRef = useRef(null);
   const isOpenRef = useRef(isOpen);
   isOpenRef.current = isOpen;
+
+  // adopt the account's saved language
+  useEffect(() => {
+    if (user?.preferredLanguage) setPreferredLanguage(user.preferredLanguage);
+  }, [user?.preferredLanguage]);
+
+  const handleSelectPreferredLanguage = (code) => {
+    setPreferredLanguage(code);
+    if (user?._id) {
+      updateMyProfile({ preferredLanguage: code })
+        .unwrap()
+        .then(() => dispatch(userExist({ ...user, preferredLanguage: code })))
+        .catch((error) => console.error("Save preferred language error:", error));
+    }
+  };
 
   const voiceControls = useAiVoice({ assistantMode, voice: aiVoice || DEFAULT_AI_VOICE, sendMessageRef });
   const { speak, stopSpeaking, stopListening, setIsVoiceMode, isVoiceModeRef, pendingListenRef } = voiceControls;
@@ -155,9 +177,8 @@ const AIChatWidget = () => {
   }, [assistantMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fabNudged = useFabNudge({ isOpen, currentScreenId, fabRef });
-  const { bannerIdx, bannerFading } = useLanguageBanner({ assistantMode });
 
-  const wt = (key, ...args) => translateWidgetString(refs.lastDetectedLanguageRef.current, key, ...args);
+  const wt = getWidgetString;
 
   const { syncConversationWithScreen } = useScreenConversation({
     isOpen,
@@ -290,8 +311,8 @@ const AIChatWidget = () => {
           onHeaderMouseDown={panel.handleHeaderMouseDown}
           onResizeMouseDown={panel.handleResizeMouseDown}
           onClose={handleClosePanel}
-          bannerIdx={bannerIdx}
-          bannerFading={bannerFading}
+          preferredLanguage={preferredLanguage}
+          onSelectPreferredLanguage={handleSelectPreferredLanguage}
           messagesContainerRef={messagesContainerRef}
           messages={messages}
           isLoading={isLoading}

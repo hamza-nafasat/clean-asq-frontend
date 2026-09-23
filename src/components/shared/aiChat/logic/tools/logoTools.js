@@ -1,4 +1,4 @@
-import { AI_ENDPOINTS, CHAT_ROLES, SERVER_URL } from "@/components/shared/aiChat/constants/aiChatConstants.js";
+import { AI_ENDPOINTS, SERVER_URL } from "@/components/shared/aiChat/constants/aiChatConstants.js";
 import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
 import { postJson } from "@/components/shared/aiChat/logic/toolHelpers.js";
 
@@ -17,8 +17,9 @@ const LOGO_PROCESSING_PATHS = {
   [AI_TOOLS.REMOVE_BACKGROUND_FROM_LOGO]: "logo-remove-background",
 };
 
-const createLogoTools = ({ bindings }) => {
-  const { addMessage, isVoiceModeRef, speak, setIsLoading, getScreenContext } = bindings;
+const createLogoTools = ({ bindings, helpers }) => {
+  const { setIsLoading, getScreenContext } = bindings;
+  const { say } = helpers;
 
   // post a logo job, add the result to the logo panel, and confirm
   const runLogoJob = async ({ url, body, failureMessage, doneText, errorPrefix }) => {
@@ -28,10 +29,9 @@ const createLogoTools = ({ bindings }) => {
       if (!data.success) throw new Error(data.message || failureMessage);
       const freshCtx = getScreenContext();
       if (freshCtx?.actions?.addLogo) freshCtx.actions.addLogo(data.data?.url);
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: doneText });
-      if (isVoiceModeRef.current) speak(LOGO_DONE_TEXT);
+      await say(doneText);
     } catch (err) {
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: `${errorPrefix}: ${err.message || "please try again."}` });
+      await say(`${errorPrefix}: ${err.message || "please try again."}`);
     } finally {
       setIsLoading(false);
     }
@@ -39,7 +39,7 @@ const createLogoTools = ({ bindings }) => {
 
   const processLogo = (tool) => async (args) => {
     const { logoUrl, explanation, ...params } = args;
-    addMessage({ role: CHAT_ROLES.ASSISTANT, content: explanation });
+    await say(explanation);
     await runLogoJob({
       url: `${SERVER_URL}/api/ai/${LOGO_PROCESSING_PATHS[tool]}`,
       body: { logoUrl, ...params },
@@ -52,7 +52,7 @@ const createLogoTools = ({ bindings }) => {
   return {
     [AI_TOOLS.EDIT_LOGO]: async (args) => {
       const { logoUrl, instructions, explanation } = args;
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: `${explanation} — this may take up to 30 seconds…` });
+      await say(`${explanation} — this may take up to 30 seconds…`);
       await runLogoJob({
         url: AI_ENDPOINTS.LOGO_EDIT,
         body: { logoUrl, instructions },

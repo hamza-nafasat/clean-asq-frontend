@@ -1,6 +1,6 @@
 import { FIELD_TYPES } from "@/constants";
 import { findAiFieldEl } from "@/utils/discoverFormFields.js";
-import { AI_FIELD_TYPES, CHAT_ROLES, FIELD_MODES } from "@/components/shared/aiChat/constants/aiChatConstants.js";
+import { AI_FIELD_TYPES, FIELD_MODES } from "@/components/shared/aiChat/constants/aiChatConstants.js";
 import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
 
 const FIELD_FOCUS_DELAY_MS = 400;
@@ -10,24 +10,24 @@ const buildOptionsList = (fieldMeta) =>
     ? fieldMeta.options.map((o, i) => `${String.fromCharCode(97 + i)}) ${o.label} [value: ${o.value}]`).join(", ")
     : "(no options available)";
 
-// built from trusted field data only
-const buildScrollGuidanceMessage = (ctx, fieldId) => {
+// built from trusted field data only, translated via wt()
+const buildScrollGuidanceMessage = (ctx, fieldId, wt) => {
   const fields = ctx.currentState?.fields || [];
   const targetField = fields.find((f) => f.id === fieldId);
   const fieldLabel = targetField?.label || "this field";
   const isChoice = targetField?.type === FIELD_TYPES.RADIO || targetField?.type === FIELD_TYPES.SELECT;
-  const verb = targetField?.isSignature ? "sign" : isChoice ? "select" : "enter";
+  const guidanceKey = targetField?.isSignature ? "fillGuidanceSign" : isChoice ? "fillGuidanceSelect" : "fillGuidanceEnter";
   const optionsList =
     isChoice && Array.isArray(targetField?.options) && targetField.options.length
-      ? `\n\nOptions: ${targetField.options.map((o) => o.label).join(", ")}.`
+      ? `\n\n${wt("optionsLabel")}: ${targetField.options.map((o) => o.label).join(", ")}.`
       : "";
   const stillMissing = fields.filter((f) => f.required && !f.filled).map((f) => f.label);
-  const missingList = stillMissing.length > 1 ? `\n\nStill missing: ${stillMissing.join(", ")}.` : "";
-  return `I can't fill this in for you — please ${verb} **${fieldLabel}** yourself, then say **next** when you're done.${optionsList}${missingList}`;
+  const missingList = stillMissing.length > 1 ? `\n\n${wt("stillMissing", stillMissing.join(", "))}` : "";
+  return `${wt(guidanceKey, fieldLabel)}${optionsList}${missingList}`;
 };
 
 const createApplicantTools = ({ bindings, helpers }) => {
-  const { addMessage, continueAfterToolCall } = bindings;
+  const { continueAfterToolCall, wt } = bindings;
   const { dodgeForField, adePanelCallbackRef, setAdePanel } = bindings;
   const { scrollToBottom, translationModeRef, setTranslationMode, tooltipCacheRef } = bindings;
   const { say } = helpers;
@@ -69,7 +69,7 @@ const createApplicantTools = ({ bindings, helpers }) => {
         return;
       }
 
-      if (explanation) say(`Enter **${fieldLabel}** below — it's entered securely and never sent to me.`);
+      if (explanation) say(wt("securePanelHint", fieldLabel));
 
       adePanelCallbackRef.current = { args, history: currentHistory, ctx };
       setTimeout(() => scrollToBottom(), 100);
@@ -102,7 +102,7 @@ const createApplicantTools = ({ bindings, helpers }) => {
         }
       }, FIELD_FOCUS_DELAY_MS);
       // ignore the AI's own wording here
-      if (explanation) say(buildScrollGuidanceMessage(ctx, fieldId));
+      if (explanation) say(buildScrollGuidanceMessage(ctx, fieldId, wt));
     },
 
     [AI_TOOLS.ENTER_TRANSLATION_MODE]: async (args) => {
@@ -112,7 +112,7 @@ const createApplicantTools = ({ bindings, helpers }) => {
       setTranslationMode(mode);
       // drop translations cached for the previous language
       tooltipCacheRef.current = {};
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: explanation || "" });
+      say(explanation || "");
     },
   };
 };

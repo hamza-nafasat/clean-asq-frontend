@@ -1,5 +1,4 @@
 import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
-import { CHAT_ROLES } from "@/components/shared/aiChat/constants/aiChatConstants.js";
 import { getErrorDetail } from "@/components/shared/aiChat/logic/toolHelpers.js";
 
 // tools whose screen action has the same name and takes the remaining args
@@ -18,7 +17,7 @@ const PASS_THROUGH_TOOLS = [
 ];
 
 const createAdminTools = ({ bindings, helpers }) => {
-  const { addMessage, continueAfterToolCall, pushRevertable } = bindings;
+  const { continueAfterToolCall, pushRevertable } = bindings;
   const { say, reportCouldnt, runActionAndSay } = helpers;
 
   const passThrough = (tool) => async (args, { ctx }) => {
@@ -91,11 +90,7 @@ const createAdminTools = ({ bindings, helpers }) => {
     [AI_TOOLS.DRAFT_NEW_LOOKUP]: async (args, { ctx }) => {
       const { explanation, ...draftData } = args;
       if (ctx.actions.openCreateModal) ctx.actions.openCreateModal(draftData);
-      addMessage({
-        role: CHAT_ROLES.ASSISTANT,
-        content: `I've drafted a new lookup and opened it in the editor for your review.\n\n${explanation}`,
-      });
-      if (bindings.isVoiceModeRef.current) bindings.speak(explanation);
+      say(`I've drafted a new lookup and opened it in the editor for your review.\n\n${explanation}`);
     },
 
     [AI_TOOLS.CREATE_LOOKUP]: saveLookup("Lookup created successfully."),

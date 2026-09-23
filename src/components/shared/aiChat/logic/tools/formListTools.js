@@ -1,4 +1,3 @@
-import { CHAT_ROLES } from "@/components/shared/aiChat/constants/aiChatConstants.js";
 import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
 import {
   cloneBrandingStep,
@@ -12,7 +11,7 @@ import { getErrorDetail } from "@/components/shared/aiChat/logic/toolHelpers.js"
 const DISABLED_LOCATION_STATUS = "disabled";
 
 const createFormListTools = ({ bindings, helpers }) => {
-  const { addMessage, continueAfterToolCall, pushRevertable } = bindings;
+  const { continueAfterToolCall, pushRevertable } = bindings;
   const { say, reportCouldnt, runActionAndSay } = helpers;
 
   return {
@@ -38,10 +37,9 @@ const createFormListTools = ({ bindings, helpers }) => {
             await freshCtx.actions.setFormsBranding({ updates: revertUpdates });
           }
           if (skipped > 0) {
-            addMessage({
-              role: CHAT_ROLES.ASSISTANT,
-              content: `Note: ${skipped} form(s) had no branding set before this change and cannot be automatically reverted to "no branding".`,
-            });
+            say(
+              `Note: ${skipped} form(s) had no branding set before this change and cannot be automatically reverted to "no branding".`,
+            );
           }
         },
       });

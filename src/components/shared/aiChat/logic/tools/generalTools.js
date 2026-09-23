@@ -1,9 +1,4 @@
-import {
-  AI_ENDPOINTS,
-  CHAT_ROLES,
-  PAGE_LABELS,
-  PAGE_ROUTES,
-} from "@/components/shared/aiChat/constants/aiChatConstants.js";
+import { AI_ENDPOINTS, PAGE_LABELS, PAGE_ROUTES } from "@/components/shared/aiChat/constants/aiChatConstants.js";
 import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
 import { getErrorDetail, postJson } from "@/components/shared/aiChat/logic/toolHelpers.js";
 
@@ -15,7 +10,7 @@ const buildCsvMessage = (filename, content) =>
   `Here is the CSV I selected as a starting point:\n\n**File:** ${filename}\n\`\`\`\n${content}\n\`\`\``;
 
 // hidden file input that sends the chosen csv as a chat message
-const pickCsvFile = ({ sendMessageRef, addMessage, wt }) => {
+const pickCsvFile = ({ sendMessageRef, say, wt }) => {
   const input = document.createElement("input");
   input.type = "file";
   input.accept = ".csv,text/csv";
@@ -32,7 +27,7 @@ const pickCsvFile = ({ sendMessageRef, addMessage, wt }) => {
       const text = await file.text();
       if (sendMessageRef.current) await sendMessageRef.current(buildCsvMessage(file.name, text));
     } catch {
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: `${wt("errorCouldnt")}. ${wt("tryAgain")}` });
+      say(`${wt("errorCouldnt")}. ${wt("tryAgain")}`);
     }
   };
   input.addEventListener("cancel", cleanup);
@@ -40,9 +35,7 @@ const pickCsvFile = ({ sendMessageRef, addMessage, wt }) => {
 };
 
 const createGeneralTools = ({ bindings, helpers }) => {
-  const { addMessage, popRevertable, getScreenContext, wt, navigate, pendingFollowUpRef, navTimeoutRef, sendMessageRef } =
-    bindings;
-  const { isVoiceModeRef, speak } = bindings;
+  const { popRevertable, getScreenContext, wt, navigate, pendingFollowUpRef, navTimeoutRef, sendMessageRef } = bindings;
   const { say } = helpers;
 
   return {
@@ -58,22 +51,18 @@ const createGeneralTools = ({ bindings, helpers }) => {
         say(explanation);
       } catch (err) {
         const detail = getErrorDetail(err);
-        addMessage({
-          role: CHAT_ROLES.ASSISTANT,
-          content: `${wt("revertFailed")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`,
-        });
+        say(`${wt("revertFailed")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`);
       }
     },
 
     [AI_TOOLS.PREVIEW_FORM_STRUCTURE]: async (args) => {
       const { formName, sections, explanation } = args;
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: explanation, formPreview: { formName, sections } });
-      if (isVoiceModeRef.current) speak(explanation);
+      say(explanation, { formPreview: { formName, sections } });
     },
 
     [AI_TOOLS.READ_CSV_FROM_PATH]: async (args) => {
       const { filePath, explanation } = args;
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: explanation });
+      await say(explanation);
       try {
         const d = await postJson(AI_ENDPOINTS.CSV_FROM_PATH, { filePath });
         if (!d.success) throw new Error(d.message || "Could not read file");
@@ -83,13 +72,13 @@ const createGeneralTools = ({ bindings, helpers }) => {
           if (sendMessageRef.current) sendMessageRef.current(csvMessage);
         }, DEFERRED_SEND_MS);
       } catch (err) {
-        addMessage({ role: CHAT_ROLES.ASSISTANT, content: `Could not read the file: ${err.message}` });
+        say(`Could not read the file: ${err.message}`);
       }
     },
 
     [AI_TOOLS.OPEN_CSV_FILE_PICKER]: async (args) => {
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: args.explanation });
-      setTimeout(() => pickCsvFile({ sendMessageRef, addMessage, wt }), DEFERRED_SEND_MS);
+      say(args.explanation);
+      setTimeout(() => pickCsvFile({ sendMessageRef, say, wt }), DEFERRED_SEND_MS);
     },
 
     [AI_TOOLS.NAVIGATE_TO_PAGE]: async (args) => {
@@ -98,7 +87,7 @@ const createGeneralTools = ({ bindings, helpers }) => {
       const label = PAGE_LABELS[page] || page;
       if (!route) return;
 
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: `Navigating you to **${label}**. ${reason}` });
+      say(`Navigating you to **${label}**. ${reason}`);
 
       // the screen-change effect sends the follow-up
       pendingFollowUpRef.current = followUpTask;
@@ -113,22 +102,17 @@ const createGeneralTools = ({ bindings, helpers }) => {
     [AI_TOOLS.GENERATE_FORM_CSV]: async (args) => {
       const { csvContent, filename, explanation } = args;
       // saved from the message button so the browser sees a user click
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: explanation, csvDownload: { csvContent, filename } });
-      if (isVoiceModeRef.current) speak(explanation);
+      say(explanation, { csvDownload: { csvContent, filename } });
     },
 
     [AI_TOOLS.DOWNLOAD_DOCUMENT]: async (args, { ctx }) => {
-      const { explanation } = args;
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: explanation || "Creating your download…" });
-      if (isVoiceModeRef.current) speak(explanation || "Creating your download.");
+      await say(args.explanation || "Creating your download…");
       if (ctx.actions.downloadDocument) await ctx.actions.downloadDocument();
-      addMessage({
-        role: CHAT_ROLES.ASSISTANT,
-        content:
-          "Your copy of this agreement has been downloaded. " +
+      say(
+        "Your copy of this agreement has been downloaded. " +
           "If you'd like a combined download that also includes the information you entered on this page, " +
           "use the **Download** button on the form below.",
-      });
+      );
     },
   };
 };

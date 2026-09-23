@@ -56,14 +56,14 @@ const buildPastedContentSummary = ({ colors, cssVars, logoUrls, colorCount }) =>
 };
 
 const createBrandingTools = ({ bindings, helpers, getApplyToolCall }) => {
-  const { addMessage, isVoiceModeRef, speak, wt, navigate, continueAfterToolCall, pushRevertable } = bindings;
+  const { wt, navigate, continueAfterToolCall, pushRevertable } = bindings;
   const { suppressNextScreenGreetingRef, addBrandingToFormGlobal } = bindings;
   const { say, reportCouldnt, runActionAndSay } = helpers;
 
   return {
     [AI_TOOLS.FETCH_WEBSITE_BRANDING]: async (args, { ctx }) => {
       const { url, companyName: aiProvidedName } = args;
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: `Fetching **${url}**… this may take a moment.` });
+      say(`Fetching **${url}**… this may take a moment.`);
 
       // fetch branding data
       let brandingData, screenshotUrl;
@@ -73,7 +73,7 @@ const createBrandingTools = ({ bindings, helpers, getApplyToolCall }) => {
         brandingData = data.data?.brandingData;
         screenshotUrl = data.data?.screenshotUrl;
       } catch {
-        addMessage({ role: CHAT_ROLES.ASSISTANT, content: `${wt("fetchFailed")} **${url}**. ${wt("tryAgain")}` });
+        say(`${wt("fetchFailed")} **${url}**. ${wt("tryAgain")}`);
         return;
       }
 
@@ -84,10 +84,7 @@ const createBrandingTools = ({ bindings, helpers, getApplyToolCall }) => {
           JSON.stringify({ brandingData, screenshotUrl, url }),
         );
         suppressNextScreenGreetingRef.current = true;
-        addMessage({
-          role: CHAT_ROLES.ASSISTANT,
-          content: `Branding extracted from **${brandingData?.name || url}**. Opening **Create Branding** with it applied.`,
-        });
+        say(`Branding extracted from **${brandingData?.name || url}**. Opening **Create Branding** with it applied.`);
         navigate(PAGE_ROUTES[BRANDING_CREATE_PAGE_KEY]);
         return;
       }
@@ -109,29 +106,25 @@ const createBrandingTools = ({ bindings, helpers, getApplyToolCall }) => {
 
       // fixed confirmation so the AI cannot overwrite extracted values
       const displayName = brandingData?.name || displayNameFromDomain(url);
-      addMessage({
-        role: CHAT_ROLES.ASSISTANT,
-        content: `Branding extracted from **${displayName}** and applied. You can review the colors and logos above, or ask me to make any adjustments.`,
-      });
+      say(
+        `Branding extracted from **${displayName}** and applied. You can review the colors and logos above, or ask me to make any adjustments.`,
+      );
     },
 
     [AI_TOOLS.OPEN_MANUAL_EXTRACTION_FLOW]: async (args, { ctx }) => {
       const { url, explanation } = args;
-      say(explanation);
+      await say(explanation);
       const action = ctx?.actions?.openManualExtractionFlow;
       if (action) {
         action({ url });
       } else {
-        addMessage({
-          role: CHAT_ROLES.ASSISTANT,
-          content: "Open the Extract Branding modal and switch to the Manual Extract tab to continue.",
-        });
+        say("Open the Extract Branding modal and switch to the Manual Extract tab to continue.");
       }
     },
 
     [AI_TOOLS.EXTRACT_BRANDING_FROM_PASTED_CONTENT]: async (args, { ctx, chatEndpoint, currentHistory }) => {
       const { content, explanation } = args;
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: explanation });
+      await say(explanation);
       try {
         const data = await postJson(AI_ENDPOINTS.EXTRACT_BRANDING_FROM_CONTENT, { content });
         if (!data.success) throw new Error("Failed to parse content");
@@ -160,11 +153,7 @@ const createBrandingTools = ({ bindings, helpers, getApplyToolCall }) => {
           say(aiData.content);
         }
       } catch {
-        addMessage({
-          role: CHAT_ROLES.ASSISTANT,
-          content:
-            "I couldn't parse the pasted content. Try pasting just the hex color codes or CSS variables directly.",
-        });
+        say("I couldn't parse the pasted content. Try pasting just the hex color codes or CSS variables directly.");
       }
     },
 
@@ -187,8 +176,7 @@ const createBrandingTools = ({ bindings, helpers, getApplyToolCall }) => {
         const setter = ctx.actions[key];
         if (setter) setter(value);
       });
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: explanation, toolCall: { tool, changes } });
-      if (isVoiceModeRef.current) speak(explanation);
+      await say(explanation, { toolCall: { tool, changes } });
       // continue for chained tool calls only
       await continueAfterToolCall(
         tool,
@@ -204,14 +192,13 @@ const createBrandingTools = ({ bindings, helpers, getApplyToolCall }) => {
     [AI_TOOLS.SUGGEST_COLORS]: async (args, { ctx }) => {
       const { colors, explanation } = args;
       if (ctx.actions.setSuggestedColors) ctx.actions.setSuggestedColors(colors);
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: explanation, toolCall: { tool: AI_TOOLS.SUGGEST_COLORS, colors } });
-      if (isVoiceModeRef.current) speak(explanation);
+      say(explanation, { toolCall: { tool: AI_TOOLS.SUGGEST_COLORS, colors } });
     },
 
     [AI_TOOLS.SAVE_BRANDING]: async (args, { tool, ctx, chatEndpoint, currentHistory }) => {
       try {
         if (ctx.actions.saveBranding) await ctx.actions.saveBranding();
-        say(args.explanation);
+        await say(args.explanation);
         // continue for chained tool calls only
         await continueAfterToolCall(tool, args, "Branding saved successfully.", currentHistory, chatEndpoint, ctx, true);
       } catch (err) {

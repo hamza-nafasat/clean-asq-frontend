@@ -23,8 +23,8 @@ const ChatPanel = ({
   onHeaderMouseDown,
   onResizeMouseDown,
   onClose,
-  bannerIdx,
-  bannerFading,
+  preferredLanguage,
+  onSelectPreferredLanguage,
   messagesContainerRef,
   messages,
   isLoading,
@@ -94,10 +94,10 @@ const ChatPanel = ({
       </div>
 
       <LanguageBanner
-        bannerIdx={bannerIdx}
-        bannerFading={bannerFading}
         effectiveBannerColor={effectiveBannerColor}
         effectiveBannerText={effectiveBannerText}
+        preferredLanguage={preferredLanguage}
+        onSelectPreferredLanguage={onSelectPreferredLanguage}
       />
 
       <div

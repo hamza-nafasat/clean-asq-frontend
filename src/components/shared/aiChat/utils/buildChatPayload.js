@@ -2,7 +2,7 @@ import { AI_ASSISTANT_MODES } from "@/constants";
 import { DEFAULT_FORM_LANGUAGE } from "@/components/shared/aiChat/constants/aiChatConstants.js";
 
 // build the standard POST body for /api/ai/* chat endpoints
-export const buildChatPayload = ({ messages, ctx, assistantMode, currentState, formLanguage }) => {
+export const buildChatPayload = ({ messages, ctx, assistantMode, currentState, formLanguage, preferredLanguage }) => {
   const context = {
     screenId: ctx?.screenId,
     screenName: ctx?.screenName,
@@ -17,5 +17,7 @@ export const buildChatPayload = ({ messages, ctx, assistantMode, currentState, f
   if (formLanguage && formLanguage !== DEFAULT_FORM_LANGUAGE) {
     context.formLanguage = formLanguage;
   }
+  // empty means no explicit choice yet
+  if (preferredLanguage) context.preferredLanguage = preferredLanguage;
   return { messages, context };
 };

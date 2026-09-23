@@ -1,4 +1,3 @@
-import { CHAT_ROLES } from "@/components/shared/aiChat/constants/aiChatConstants.js";
 import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
 import {
   cloneBrandingStep,
@@ -13,9 +12,9 @@ import { getErrorDetail } from "@/components/shared/aiChat/logic/toolHelpers.js"
 const UNKNOWN_SECTION_ORDER = 9999;
 
 const createFormEditorTools = ({ bindings, helpers }) => {
-  const { addMessage, isVoiceModeRef, speak, getScreenContext, continueAfterToolCall } = bindings;
+  const { getScreenContext, continueAfterToolCall } = bindings;
   const { signalContinuationPending, pendingFormContinuationRef } = bindings;
-  const { reportCouldnt, addFormPreview } = helpers;
+  const { say, reportCouldnt, addFormPreview } = helpers;
 
   // apply a preview edit, let the AI summarise, then show the preview
   const previewEdit =
@@ -58,8 +57,7 @@ const createFormEditorTools = ({ bindings, helpers }) => {
         return;
       }
 
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: explanation || "Loading form details…" });
-      if (isVoiceModeRef.current) speak(explanation || "Loading form details.");
+      say(explanation || "Loading form details…");
       // treat the next load of this form as fresh
       signalContinuationPending();
       pendingFormContinuationRef.current = { toolArgs: args, history: currentHistory };
@@ -182,34 +180,22 @@ const createFormEditorTools = ({ bindings, helpers }) => {
       try {
         const result = ctx.actions.saveFormEdits ? await ctx.actions.saveFormEdits() : null;
         if (result?.saved === false) {
-          addMessage({
-            role: CHAT_ROLES.ASSISTANT,
-            content:
-              "There are no pending changes to save — your edits may have been lost. Please re-apply the changes and try again.",
-          });
+          say("There are no pending changes to save — your edits may have been lost. Please re-apply the changes and try again.");
         } else if (result === null) {
-          addMessage({
-            role: CHAT_ROLES.ASSISTANT,
-            content: "Save could not run — the form editor context was not available. Please try again.",
-          });
+          say("Save could not run — the form editor context was not available. Please try again.");
         } else {
-          addMessage({ role: CHAT_ROLES.ASSISTANT, content: explanation || "All changes have been saved to the form." });
-          if (isVoiceModeRef.current) speak(explanation || "All changes have been saved.");
+          say(explanation || "All changes have been saved to the form.");
         }
       } catch (err) {
         const detail = getErrorDetail(err);
-        addMessage({
-          role: CHAT_ROLES.ASSISTANT,
-          content: `Save failed${detail ? `: ${detail}` : ""}. Some changes may not have been applied.`,
-        });
+        say(`Save failed${detail ? `: ${detail}` : ""}. Some changes may not have been applied.`);
       }
     },
 
     [AI_TOOLS.DISCARD_FORM_EDITS]: async (args, { ctx }) => {
       const { explanation } = args;
       if (ctx.actions.discardFormEdits) ctx.actions.discardFormEdits();
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: explanation || "All pending changes have been discarded." });
-      if (isVoiceModeRef.current) speak(explanation || "Pending changes discarded.");
+      say(explanation || "All pending changes have been discarded.");
     },
 
     [AI_TOOLS.ADD_SECTION]: createAndContinue(

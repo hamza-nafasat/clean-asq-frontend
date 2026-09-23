@@ -5,7 +5,8 @@ import {
   CHAT_ROLES,
   DEFAULT_FORM_LANGUAGE,
 } from "@/components/shared/aiChat/constants/aiChatConstants.js";
-import { APPLICANT_GREETINGS } from "@/components/shared/aiChat/constants/formLanguages.js";
+import { FORM_LANG_TO_BCP47 } from "@/components/shared/aiChat/constants/formLanguages.js";
+import { translateForDisplay } from "@/components/shared/aiChat/logic/translateMessage.js";
 import { detectFormLanguage } from "@/components/shared/aiChat/logic/widgetLanguage.js";
 
 const APPLICANT_ANNOUNCE_DELAY_MS = 600;
@@ -14,7 +15,7 @@ const FOLLOW_UP_SEND_DELAY_MS = 800;
 const getStepInfo = (state) =>
   state?.currentStep != null ? ` — Step ${state.currentStep + 1} of ${state.totalSteps}` : "";
 
-const buildGreeting = (ctx, isApplicant, detectedLang) => {
+const buildGreeting = (ctx, isApplicant) => {
   const screenName = ctx?.screenName || "this screen";
   if (!isApplicant) {
     return (
@@ -24,8 +25,7 @@ const buildGreeting = (ctx, isApplicant, detectedLang) => {
   }
   return (
     ctx?.greeting ||
-    APPLICANT_GREETINGS[detectedLang] ||
-    `Hi! I'm your **application assistant**.\n\nYou're currently on **${screenName}**${getStepInfo(ctx?.currentState)}.\n\nHere's what I can do:\n- **Answer questions** about any field or requirement\n- **Explain what's needed** for each section\n- **Scroll to any field** if you're not sure where to find it\n- **Communicate in any language** — just start typing in yours\n\nFeel free to ask me anything!`
+    `Hi! I'm your **application assistant**.\n\nYou're currently on **${screenName}**${getStepInfo(ctx?.currentState)}.\n\nHere's what I can do:\n- **Answer questions** about any field or requirement\n- **Explain what's needed** for each section\n- **Scroll to any field** if you're not sure where to find it\n- **Communicate in any language** — pick yours from the language menu above\n\nFeel free to ask me anything!`
   );
 };
 
@@ -44,8 +44,15 @@ const useScreenConversation = ({
 }) => {
   const { initialGreetingShownRef, lastAnnouncedScreenIdRef, prevScreenIdRef, formLanguageRef } = refs;
   const { lastDetectedLanguageRef, suppressNextScreenGreetingRef, pendingFollowUpRef, navTimeoutRef } = refs;
-  const { translationModeRef } = refs;
+  const { translationModeRef, preferredLanguageRef } = refs;
   const isApplicant = assistantMode === AI_ASSISTANT_MODES.APPLICANT;
+
+  // post an announcement in the chosen language
+  const announce = async (content, targetLang = preferredLanguageRef.current) => {
+    const msg = { role: CHAT_ROLES.ASSISTANT, content: await translateForDisplay(content, targetLang) };
+    addMessage(msg);
+    return msg;
+  };
 
   // `resumed` means the screen changed while the panel was closed
   const buildScreenAnnouncement = (ctx, { resumed = false } = {}) => {
@@ -83,7 +90,7 @@ const useScreenConversation = ({
   };
 
   // announce a screen the transcript has not seen; returns the added message
-  const syncConversationWithScreen = () => {
+  const syncConversationWithScreen = async () => {
     const ctx = getScreenContext();
     const screenId = ctx?.screenId;
     if (!screenId) return null;
@@ -97,8 +104,7 @@ const useScreenConversation = ({
     lastAnnouncedScreenIdRef.current = screenId;
     const content = buildScreenAnnouncement(ctx, { resumed: true });
     if (!content) return null;
-    const msg = { role: CHAT_ROLES.ASSISTANT, content };
-    addMessage(msg);
+    const msg = await announce(content);
     if (isApplicant) announceScreen(ctx.screenName || screenId);
     return msg;
   };
@@ -114,9 +120,10 @@ const useScreenConversation = ({
       formLanguageRef.current = detectedLang;
       if (detectedLang !== DEFAULT_FORM_LANGUAGE) lastDetectedLanguageRef.current = detectedLang.toLowerCase().slice(0, 2);
       setIntroButtonsDismissed(true);
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: buildGreeting(ctx, true, detectedLang) });
+      // no chosen language: greet in the form's language
+      announce(buildGreeting(ctx, true), preferredLanguageRef.current || FORM_LANG_TO_BCP47[detectedLang]);
     } else {
-      addMessage({ role: CHAT_ROLES.ASSISTANT, content: buildGreeting(ctx, false) });
+      announce(buildGreeting(ctx, false));
     }
     initialGreetingShownRef.current = true;
     lastAnnouncedScreenIdRef.current = ctx?.screenId ?? null;
@@ -146,7 +153,7 @@ const useScreenConversation = ({
         if (!isOpenRef.current) return;
         if (lastAnnouncedScreenIdRef.current === guardedScreenId) return;
         lastAnnouncedScreenIdRef.current = guardedScreenId;
-        addMessage({ role: CHAT_ROLES.ASSISTANT, content: buildScreenAnnouncement(reCheckCtx) });
+        announce(buildScreenAnnouncement(reCheckCtx));
         announceScreen(reCheckCtx.screenName || guardedScreenId);
       }, APPLICANT_ANNOUNCE_DELAY_MS);
     } else {
@@ -154,7 +161,7 @@ const useScreenConversation = ({
       if (suppressNextScreenGreetingRef.current) {
         suppressNextScreenGreetingRef.current = false;
       } else {
-        addMessage({ role: CHAT_ROLES.ASSISTANT, content: buildScreenAnnouncement(ctx) });
+        announce(buildScreenAnnouncement(ctx));
       }
     }
 

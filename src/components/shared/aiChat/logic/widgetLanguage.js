@@ -8,10 +8,9 @@ import { WIDGET_STRINGS } from "@/components/shared/aiChat/constants/widgetStrin
 const DEFAULT_LANGUAGE_CODE = "en";
 const SCRIPT_SHARE_THRESHOLD = 0.12;
 
-// widget string in the detected language, falling back to english
-export const translateWidgetString = (lang, key, ...args) => {
-  const strings = WIDGET_STRINGS[lang || DEFAULT_LANGUAGE_CODE] || WIDGET_STRINGS.en;
-  const val = strings[key] ?? WIDGET_STRINGS.en[key] ?? key;
+// canonical English widget string - dynamic translation happens at display time
+export const getWidgetString = (key, ...args) => {
+  const val = WIDGET_STRINGS[key] ?? key;
   return typeof val === "function" ? val(...args) : val;
 };
 
