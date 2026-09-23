@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import DocumentModal from "@/components/modals/DocumentModal";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import DocumentModal from "@/components/modals/DocumentModal";
 import { openLinksInNewTab } from "@/utils/linkTargets";
 import { makeDocLinkHandler } from "@/utils/makeDocLinkHandler";
 
@@ -27,7 +27,7 @@ const HtmlContent = ({ html, className, linkMode = LINK_MODES.NEW_TAB, ...rest }
     return () => el.removeEventListener("click", handler, true);
   }, [html, isDocumentModal]);
 
-  // sanitize first so dangerouslySetInnerHTML always renders clean output
+  // sanitize before rendering
   const safeHtml = sanitizeHtml(html);
   const markup = linkMode === LINK_MODES.NEW_TAB ? openLinksInNewTab(safeHtml) : safeHtml;
 

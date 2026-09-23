@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import useCopyToClipboard from "@/hooks/useCopyToClipboard";
-import Button from "@/components/shared/Button";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import Button from "@/components/shared/Button";
 import { setCompanyName } from "@/redux/slices/branding.slice";
 import { BRANDING_COPY_FEEDBACK_MS, BRANDING_HEADER_ALIGNMENTS, BRANDING_PREVIEW_STEPS } from "../utils/branding.constants";
 

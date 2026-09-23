@@ -61,7 +61,7 @@ const useApplicantSectionIdMission = (sectionKey) => {
     socket.on(ID_MISSION_SOCKET_EVENTS.FAILED, onFailed);
     socket.on(ID_MISSION_SOCKET_EVENTS.OTHER, onOther);
 
-    // remove only this hook's own listeners - socket is a shared singleton other sections stay subscribed to
+    // remove only this hook's listeners
     return () => {
       socket.off(ID_MISSION_SOCKET_EVENTS.PROCESSING_STARTED, onProcessingStarted);
       socket.off(ID_MISSION_SOCKET_EVENTS.VERIFIED, onVerified);

@@ -4,7 +4,7 @@ import { AlertTriangle, Check, ChevronDown, Copy, Home, RotateCcw } from "lucide
 const HOME_PATH = "/";
 const COPY_RESET_DELAY_MS = 2000;
 
-// stack traces stay dev-only - they leak internal file and module structure
+// stack traces are dev-only
 const shouldShowErrorDetails = () => import.meta.env.DEV;
 
 const buildErrorReport = ({ boundaryName, error, componentStack }) =>

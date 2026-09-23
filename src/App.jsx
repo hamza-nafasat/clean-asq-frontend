@@ -13,7 +13,6 @@ import ProtectedRoute from "@/routes/ProtectedRoute";
 import RequirePermission from "@/routes/RequirePermission";
 import { SOCKET_EVENTS } from "@/constants";
 import { PERMISSIONS, getHomePath, isGuestRole } from "@/utils/permissions";
-import { detectVPN } from "@/utils/vpnDetection";
 
 // auth pages
 const Login = lazy(() => import("@/modules/auth/Login"));
@@ -162,10 +161,6 @@ const App = () => {
     socket.disconnect().connect();
     return () => socket.off(SOCKET_EVENTS.CONNECT, register);
   }, [user?._id]);
-
-  useEffect(() => {
-    detectVPN();
-  }, []);
 
   const isGuest = isGuestRole(user);
   if (loading || isLoading) return <CustomLoading />;

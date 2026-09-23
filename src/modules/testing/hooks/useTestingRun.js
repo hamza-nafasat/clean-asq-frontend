@@ -21,7 +21,7 @@ const useTestingRun = ({ selectedIds = [], selectedPersona, credentials, formUrl
   const eventSourceRef = useRef(null);
   const pollTimerRef = useRef(null);
 
-  // close the stream and stop polling if the user navigates away mid-run
+  // cleanup stream and polling
   useEffect(() => {
     return () => {
       eventSourceRef.current?.close();

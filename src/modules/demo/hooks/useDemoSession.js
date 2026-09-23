@@ -172,7 +172,7 @@ const createDemoActions = (dispatch) => {
     }
   };
 
-  // shared fire-and-forget sender - a network failure surfaces as a toast, not a crash
+  // shared sender - toast on failure
   const sendCommand = async (sessionId, command) => {
     try {
       await postSessionCommand(sessionId, command);
