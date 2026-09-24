@@ -1,31 +1,29 @@
-import Modal from "@/components/modals/SaveCancelModal";
+import SaveCancelModal from "@/components/modals/SaveCancelModal";
 import RoleManagementPermissionsGrid from "./RoleManagementPermissionsGrid";
-import { ROLE_STATUS, VIEW_FIELD_CLASS_NAME } from "../utils/roleManagement.constants";
-import { getDatePart } from "../utils/roleManagement.utils";
+import { getDatePart } from "@/utils/date";
 
-const RoleManagementViewModal = ({ initialData = null, allPermissions = [], isLoading = false, onClose }) => {
-  if (!initialData) return null;
+const LABEL_CLASS_NAME = "mb-1 block text-sm font-medium text-gray-700";
+const VALUE_CLASS_NAME =
+  "border-frameColor flex h-11.25 w-full items-center rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base";
+
+const RoleManagementViewModal = ({ isOpen = false, initialData = null, allPermissions = [], onClose }) => {
+  if (!isOpen) return null;
 
   return (
-    <Modal title="View Role" onClose={onClose} hideSaveButton isLoading={isLoading}>
+    <SaveCancelModal title="View Role" onClose={onClose} hideSaveButton>
       <div className="mb-4">
-        <label className="mb-1 block text-sm font-medium text-gray-700">Role Name</label>
-        <div className={VIEW_FIELD_CLASS_NAME}>{initialData.name}</div>
+        <p className={LABEL_CLASS_NAME}>Role Name</p>
+        <p className={VALUE_CLASS_NAME}>{initialData.name}</p>
       </div>
       <div className="mb-4">
-        <label className="mb-1 block text-sm font-medium text-gray-700">Status</label>
-        <div className={VIEW_FIELD_CLASS_NAME}>
-          <span className="text-textPrimary inline-flex rounded-full px-2 py-1 text-xs font-semibold">
-            {initialData.status === ROLE_STATUS.ACTIVE ? "Active" : "Inactive"}
-          </span>
-        </div>
+        <p className={LABEL_CLASS_NAME}>Created Date</p>
+        <p className={VALUE_CLASS_NAME}>{getDatePart(initialData.createdAt)}</p>
       </div>
-      <div className="mb-4">
-        <label className="mb-1 block text-sm font-medium text-gray-700">Created Date</label>
-        <div className={VIEW_FIELD_CLASS_NAME}>{getDatePart(initialData?.createdAt)}</div>
-      </div>
-      <RoleManagementPermissionsGrid allPermissions={allPermissions} permissions={initialData?.permissions} />
-    </Modal>
+      <RoleManagementPermissionsGrid
+        allPermissions={allPermissions}
+        permissionIds={(initialData.permissions ?? []).map((permission) => permission._id)}
+      />
+    </SaveCancelModal>
   );
 };
 

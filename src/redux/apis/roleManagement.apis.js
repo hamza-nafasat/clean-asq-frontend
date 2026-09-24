@@ -29,14 +29,6 @@ const roleApis = createApi({
       providesTags: [ROLE_TAGS.ROLE],
     }),
     /////
-    getSingleRole: builder.mutation({
-      query: (data) => ({
-        url: `single/${data?._id}`,
-        method: "GET",
-      }),
-      invalidatesTags: [ROLE_TAGS.ROLE],
-    }),
-    /////
     updateSingleRole: builder.mutation({
       query: ({ _id, name, permissions }) => ({
         url: `single/${_id}`,
@@ -49,7 +41,7 @@ const roleApis = createApi({
     deleteSingleRole: builder.mutation({
       query: (data) => ({
         url: `single/${data?._id}`,
-        method: "Delete",
+        method: "DELETE",
       }),
       invalidatesTags: [ROLE_TAGS.ROLE],
     }),
@@ -67,7 +59,6 @@ const roleApis = createApi({
 export const {
   useCreateRoleMutation,
   useGetAllRolesQuery,
-  useGetSingleRoleMutation,
   useUpdateSingleRoleMutation,
   useDeleteSingleRoleMutation,
   useGetAllPermissionsQuery,

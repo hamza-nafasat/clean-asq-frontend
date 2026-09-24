@@ -1,80 +1,64 @@
 import { FIELD_TYPES } from "@/constants";
+import { SYSTEM_ROLES } from "@/utils/permissions";
 
-export const getDatePart = (date) => date?.split("T")?.[0];
+export const isSystemRole = (role) => Object.values(SYSTEM_ROLES).includes(role?.name);
 
-// add form keeps permission ids
+export const isAdminRole = (role) => role?.name === SYSTEM_ROLES.ADMIN;
+
+export const toRoleForm = (role) => ({
+  _id: role._id,
+  roleName: role.name,
+  permissions: (role.permissions ?? []).map((permission) => permission._id),
+});
+
+export const getRoleNameError = (roleName) => (roleName.trim() ? "" : "Please enter a role name");
+
+export const getPermissionsError = (permissions) => (permissions.length ? "" : "Please select at least one permission");
+
+// checkbox names are permission ids
 export const applyRoleFormChange = (prev, { name, value, type, checked }) => {
   if (type !== FIELD_TYPES.CHECKBOX) return { ...prev, [name]: value };
   const permissions = checked ? [...prev.permissions, name] : prev.permissions.filter((id) => id !== name);
   return { ...prev, permissions };
 };
 
-// edit form keeps permission objects
-export const applyRolePermissionChange = (prev, { name, checked }, permission) => {
-  let permissions = prev?.permissions || [];
-  if (checked) {
-    if (!permissions.some((p) => p._id === name)) {
-      permissions = [...permissions, permission];
-    }
-  } else {
-    permissions = permissions.filter((p) => p._id !== name);
-  }
-  return { ...prev, permissions };
-};
-
-const getPermissionIds = (permissions = [], permissionNames) =>
-  permissions.filter((p) => permissionNames.includes(p.name)).map((p) => p._id);
+const getPermissionIds = (permissions, permissionNames) =>
+  permissions.filter((permission) => permissionNames.includes(permission.name)).map((permission) => permission._id);
 
 const runRoleAction = async (request, fallbackMessage, toastError) => {
   try {
     const res = await request();
     if (!res?.success) throw new Error(res?.message);
-  } catch (err) {
-    toastError(err?.data?.message || err?.message || fallbackMessage);
-    throw err;
+  } catch (error) {
+    toastError(error?.data?.message || error?.message || fallbackMessage);
+    throw error;
   }
 };
 
 export const buildRoleScreenState = (roles = [], permissions = []) => ({
-  roles: roles.map((r) => ({
-    _id: r._id,
-    name: r.name,
-    permissions: (r.permissions || []).map((p) => p.name),
+  roles: roles.map((role) => ({
+    _id: role._id,
+    name: role.name,
+    permissions: (role.permissions ?? []).map((permission) => permission.name),
   })),
-  availablePermissions: permissions.map((p) => ({ _id: p._id, name: p.name })),
+  availablePermissions: permissions.map((permission) => ({ _id: permission._id, name: permission.name })),
 });
 
-export const buildRoleScreenActions = ({
-  roles = [],
-  permissions = [],
-  createRole,
-  editRole,
-  deleteRole,
-  refreshUser,
-  toastError,
-}) => ({
+export const buildRoleScreenActions = ({ roles = [], permissions = [], createRole, editRole, deleteRole, toastError }) => ({
   createRole: ({ name, permissionNames }) =>
     runRoleAction(
-      async () => {
-        const res = await createRole({ name, permissions: getPermissionIds(permissions, permissionNames) }).unwrap();
-        if (res?.success) await refreshUser();
-        return res;
-      },
+      () => createRole({ name, permissions: getPermissionIds(permissions, permissionNames) }).unwrap(),
       "Failed to create role",
       toastError,
     ),
   updateRole: async ({ roleId, name, permissionNames }) => {
-    const role = roles.find((r) => r._id === roleId);
+    const role = roles.find((item) => item._id === roleId);
     if (!role) throw new Error("Role not found");
     const permissionIds = permissionNames
       ? getPermissionIds(permissions, permissionNames)
-      : (role.permissions || []).map((p) => p._id);
+      : (role.permissions ?? []).map((permission) => permission._id);
     return runRoleAction(
-      async () => {
-        const res = await editRole({ _id: roleId, name: name || role.name, permissions: permissionIds }).unwrap();
-        if (res?.success) await refreshUser();
-        return res;
-      },
+      () => editRole({ _id: roleId, name: name || role.name, permissions: permissionIds }).unwrap(),
       "Failed to update role",
       toastError,
     );
