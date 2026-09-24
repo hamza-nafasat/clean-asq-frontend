@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import {
   useAttachTemplateToFormMutation,
@@ -20,6 +21,7 @@ const SERVER_URL = getEnv("SERVER_URL");
 
 const Email = () => {
   const menuRef = useRef(null);
+  const { user } = useSelector((state) => state.auth);
   const [viewModalData, setViewModalData] = useState(null);
 
   const { data: applicationForms } = useGetMyAllFormsQuery();
@@ -88,8 +90,7 @@ const Email = () => {
         templateName: t.templateName,
         emailType: t.emailType,
         subject: t.subject,
-        attachedFormCount: (t.forms || []).length,
-        attachedFormNames: (t.forms || []).map((f) => f.name),
+        attachedForms: (t.forms || []).map((f) => ({ _id: f._id, name: f.name })),
       })),
       // derived from the live query so it updates after attach
       attachedForms: viewModalData?._id
@@ -111,12 +112,23 @@ const Email = () => {
         const id = latestRef.current.viewModalData?._id;
         if (!id) throw new Error("No template is currently open");
         await handleSave();
-        await attachEmailTemplate({ emailTemplateId: id, formIds }).unwrap();
+        await attachEmailTemplate({ emailTemplateId: id, formIds, attachToMe: user?.welcomeMail === id }).unwrap();
       },
-      attachToForms: async ({ formIds, templateId }) => {
-        const id = templateId || viewModalData?._id;
-        if (!id) throw new Error("No template specified");
-        await attachEmailTemplate({ emailTemplateId: id, formIds }).unwrap();
+      attachToForms: async ({ attachments = [] }) => {
+        const failedTemplates = [];
+        // sequential so earlier detaches free forms
+        for (const { templateId, formIds = [] } of attachments) {
+          const id = templateId || viewModalData?._id;
+          try {
+            if (!id) throw new Error("No template specified");
+            // keep the owner's welcome mail setting
+            await attachEmailTemplate({ emailTemplateId: id, formIds, attachToMe: user?.welcomeMail === id }).unwrap();
+          } catch (error) {
+            console.error("Attach template error:", error);
+            failedTemplates.push(templates?.find((t) => String(t._id) === String(id))?.templateName || id || "a template");
+          }
+        }
+        if (failedTemplates.length) throw new Error(`Could not update ${failedTemplates.join(", ")}`);
       },
       openTemplate: ({ templateId, mode }) => {
         openTemplate(findTemplate(templateId), mode);

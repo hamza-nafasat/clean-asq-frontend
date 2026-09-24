@@ -48,7 +48,7 @@ const createEmailTemplateTools = ({ bindings, helpers }) => {
       runActionAndSay(ctx, AI_TOOLS.SAVE_AND_ATTACH_TO_FORMS, { formIds: args.formIds }, args.explanation),
 
     [AI_TOOLS.ATTACH_TEMPLATE_TO_FORMS]: async (args, { ctx }) =>
-      runActionAndSay(ctx, "attachToForms", { formIds: args.formIds, templateId: args.templateId }, args.explanation),
+      runActionAndSay(ctx, "attachToForms", { attachments: args.attachments }, args.explanation),
 
     [AI_TOOLS.OPEN_TEMPLATE]: async (args, { ctx }) =>
       runTemplateNavigation({
