@@ -14,28 +14,32 @@ const HeaderUserMenu = ({
   keepMenuMounted = true,
 }) => (
   <div className="relative flex items-center gap-2">
-    <div className="hidden items-center gap-2 md:flex">
-      <img
-        src={`${AVATAR_BASE_URL}${user?.firstName?.[0]}${user?.lastName?.[0]}`}
-        alt="User avatar"
-        className="h-9 w-9 rounded-full border border-gray-700 object-cover"
-      />
-
-      <div>
-        <h6 className="text-sm font-semibold text-header-text">
-          {user?.firstName} {user?.middleName ? user?.middleName + " " : ""} {user?.lastName}
-        </h6>
-        <p className="text-xs opacity-75 text-header-text">{user?.email}</p>
-      </div>
-    </div>
-
-    <div
-      onClick={onToggleProfile}
+    <button
+      type="button"
       ref={profileRef}
-      className={`cursor-pointer transition-transform duration-300 ${isProfileOpen ? "rotate-180" : ""}`}
+      onClick={onToggleProfile}
+      aria-haspopup="menu"
+      aria-expanded={isProfileOpen}
+      className="flex cursor-pointer items-center gap-2 text-left"
     >
-      <HiChevronDown size={20} />
-    </div>
+      <span className="hidden items-center gap-2 md:flex">
+        <img
+          src={`${AVATAR_BASE_URL}${user?.firstName?.[0]}${user?.lastName?.[0]}`}
+          alt=""
+          className="h-9 w-9 rounded-full border border-gray-700 object-cover"
+        />
+        <span>
+          <span className="block text-sm font-semibold text-header-text">
+            {user?.firstName} {user?.middleName ? user?.middleName + " " : ""} {user?.lastName}
+          </span>
+          <span className="block text-xs opacity-75 text-header-text">{user?.email}</span>
+        </span>
+      </span>
+      <HiChevronDown
+        size={20}
+        className={`shrink-0 text-header-text transition-transform duration-300 ${isProfileOpen ? "rotate-180" : ""}`}
+      />
+    </button>
 
     {/* Dropdown */}
     <div
