@@ -146,6 +146,7 @@ const SingleApplication = () => {
     idMissionDetailsVisible,
     idMissionVerifiedData,
     isIdMissionProcessing,
+    idMissionSection,
   });
 
   const submitIdMissionData = useApplicantIdMissionSubmit({ formId, draftId, idMissionVerifiedData, setSubmiting });

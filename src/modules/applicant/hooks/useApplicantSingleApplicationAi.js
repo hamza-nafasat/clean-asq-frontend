@@ -1,6 +1,7 @@
 import { useApplicantScreenContext } from "./useApplicantScreenContext";
 import getEnv from "@/utils/env";
 import { findAiFieldEl } from "@/utils/discoverFormFields";
+import { buildPageFaqs } from "@/utils/aiHelpContext";
 import {
   AI_FIELD_IDS,
   SINGLE_APPLICATION_SCREENS,
@@ -43,6 +44,7 @@ const useApplicantSingleApplicationAi = ({
   isIdMissionProcessing,
   setEmail,
   setOtp,
+  idMissionSection,
 }) => {
   const isEmailStage = aiStage === SINGLE_APPLICATION_STAGES.EMAIL;
 
@@ -57,6 +59,7 @@ const useApplicantSingleApplicationAi = ({
         ...(isEmailStage && { otpSent, fields: buildEmailStageFields(email, otp) }),
         ...(aiStage === SINGLE_APPLICATION_STAGES.IDMISSION_QR && { webLinkAvailable: !!webLink, fields: [] }),
         ...(aiStage === SINGLE_APPLICATION_STAGES.IDMISSION_LOADING && { fields: [] }),
+        ...(aiStage === SINGLE_APPLICATION_STAGES.IDMISSION_DETAILS && { pageFaqs: buildPageFaqs(idMissionSection) }),
       },
       actions: {
         scrollToField: ({ fieldId }) => {

@@ -27,6 +27,7 @@ import {
 import { buildApplicationFormPath, collectStepFieldRows } from "./utils/applicant.utils6";
 import getEnv from "@/utils/env";
 import { findAiFieldEl } from "@/utils/discoverFormFields";
+import { buildPageFaqs } from "@/utils/aiHelpContext";
 
 const SECTION_COMPONENTS = {
   [SECTION_TITLES.COMPANY_INFORMATION]: ApplicantCompanyInformation,
@@ -80,6 +81,7 @@ const ApplicationForm = () => {
       totalSteps: stepsComps.length,
       canGoNext: currentStep < stepsComps.length - 1,
       canGoPrev: currentStep > 0,
+      pageFaqs: buildPageFaqs(renderedSections[currentStep]),
     },
     actions: {
       scrollToField: ({ fieldId }) => {
