@@ -4,7 +4,7 @@ import { useFormateTextInMarkDownMutation } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
 import DOMPurify from "dompurify";
 import { useEnterToNextField } from "../hooks/useEnterToNextField";
-import { AiHelpModal, OtherInputType } from "@/components/global/DynamicField";
+import { OtherInputType } from "@/components/global/DynamicField";
 import FileUploader from "@/components/global/FileUploader";
 import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";
@@ -47,7 +47,6 @@ const Documents = ({
   const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
   const [customizeModal, setCustomizeModal] = useState(false);
   const [aiPromptModal, setAiPromptModal] = useState(false);
-  const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const [file, setFile] = useState(null);
   const [loadingNext, setLoadingNext] = useState(false);
   const [form, setForm] = useState({});
@@ -244,19 +243,6 @@ const Documents = ({
         {fields?.map((field, index) =>
           field.type === FIELD_TYPES.FILE ? (
             <div className="flex w-full flex-col gap-4 p-6" key={index}>
-              {openAiHelpModal && (
-                <Modal onClose={() => setOpenAiHelpModal(false)}>
-                  <AiHelpModal
-                    aiPrompt={field?.aiPrompt}
-                    aiResponse={sectionKey === SECTION_KEYS.ARTICLE_OF_INCORPORATION ? aiResponse : field?.aiResponse}
-                  />
-                </Modal>
-              )}
-              {field?.aiHelp && (
-                <div className="flex w-full justify-end">
-                  <Button label="AI Help" className="text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
-                </div>
-              )}
               {field?.ai_formatting && field?.isDisplayText && (
                 <div className="flex w-full flex-col gap-4 p-4 pb-0">
                   <DisplayText className="w-full" data-ai-display-text html={field?.ai_formatting} />

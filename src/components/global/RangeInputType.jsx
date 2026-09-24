@@ -4,9 +4,10 @@ import AiFormattedText from "@/components/shared/AiFormattedText";
 import FieldLabel from "@/components/shared/FieldLabel";
 import { isEmptyValue, setSectionFieldValue } from "@/utils/fieldFormatting";
 import { FIELD_INPUT_CLASSES, getDisabledClasses, getRequiredBorderClasses } from "@/utils/fieldStyles";
+import { buildAiHelpContext } from "@/utils/aiHelpContext";
 
 const RangeInputType = ({ field = {}, className = "", form = {}, setForm, sectionKey, isPdf = false }) => {
-  const { label, name, uniqueId, required, minValue = 0, maxValue = 100, aiPrompt, isDisplayText, ai_formatting } = field;
+  const { label, name, uniqueId, required, minValue = 0, maxValue = 100, isDisplayText, ai_formatting } = field;
   const { isDisabledAllFields } = useSelector((state) => state.form);
   const rawValue = form[uniqueId]?.value;
   const numericValue = Number(rawValue) || 0;
@@ -22,7 +23,7 @@ const RangeInputType = ({ field = {}, className = "", form = {}, setForm, sectio
   return (
     <div
       className={`flex w-full flex-col items-start ${className}`}
-      data-ai-help-context={isPdf ? undefined : aiPrompt || undefined}
+      data-ai-help-context={isPdf ? undefined : buildAiHelpContext(field)}
     >
       {label && <FieldLabel label={label} required={required} />}
       {ai_formatting && isDisplayText && (

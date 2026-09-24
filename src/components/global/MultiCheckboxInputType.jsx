@@ -4,9 +4,10 @@ import AiFormattedText from "@/components/shared/AiFormattedText";
 import FieldLabel from "@/components/shared/FieldLabel";
 import { setSectionFieldValue } from "@/utils/fieldFormatting";
 import { getDisabledClasses } from "@/utils/fieldStyles";
+import { buildAiHelpContext } from "@/utils/aiHelpContext";
 
 const MultiCheckboxInputType = ({ field = {}, className = "", form = {}, setForm, sectionKey, isPdf = false }) => {
-  const { label, options, name, uniqueId, required, aiPrompt, isDisplayText, ai_formatting } = field;
+  const { label, options, name, uniqueId, required, isDisplayText, ai_formatting } = field;
   const { isDisabledAllFields } = useSelector((state) => state.form);
   const selectedValues = form?.[uniqueId]?.value;
 
@@ -28,7 +29,7 @@ const MultiCheckboxInputType = ({ field = {}, className = "", form = {}, setForm
   return (
     <div
       className={`flex w-full justify-between gap-4 ${className}`}
-      data-ai-help-context={isPdf ? undefined : aiPrompt || undefined}
+      data-ai-help-context={isPdf ? undefined : buildAiHelpContext(field)}
     >
       <FieldLabel label={label} required={required} className="text-textPrimary min-w-50lg:text-lg text-base font-medium" />
       {ai_formatting && isDisplayText && (

@@ -1,13 +1,14 @@
 import AiFormattedText from "@/components/shared/AiFormattedText";
 import FieldLabel from "@/components/shared/FieldLabel";
+import { buildAiHelpContext } from "@/utils/aiHelpContext";
 
 const SimpleRadioInputType = ({ field = {}, className = "", form = {}, setForm, onChange, disabled = false, groupName }) => {
-  const { label, options, name, required, aiPrompt, isDisplayText, ai_formatting } = field;
+  const { label, options, name, required, isDisplayText, ai_formatting } = field;
   // repeated boxes pass a unique group name so their radios do not share one group
   const radioGroupName = groupName || name;
 
   return (
-    <div className={`flex w-full flex-col items-start ${className}`} data-ai-help-context={aiPrompt || undefined}>
+    <div className={`flex w-full flex-col items-start ${className}`} data-ai-help-context={buildAiHelpContext(field)}>
       {ai_formatting && isDisplayText && (
         <AiFormattedText html={ai_formatting} className="flex h-full w-full flex-col gap-4 py-4" />
       )}

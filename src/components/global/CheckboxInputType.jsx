@@ -5,14 +5,15 @@ import FieldLabel from "@/components/shared/FieldLabel";
 import TextField from "@/components/shared/TextField";
 import { setSectionFieldValue } from "@/utils/fieldFormatting";
 import { getDisabledClasses } from "@/utils/fieldStyles";
+import { buildAiHelpContext } from "@/utils/aiHelpContext";
 
 const CheckboxInputType = ({ field = {}, className = "", form = {}, setForm, sectionKey, isPdf = false }) => {
-  const { label, name, uniqueId, required, aiPrompt, isDisplayText, ai_formatting, conditional_fields } = field;
+  const { label, name, uniqueId, required, isDisplayText, ai_formatting, conditional_fields } = field;
   const { isDisabledAllFields } = useSelector((state) => state.form);
   const isDisabled = isPdf && isDisabledAllFields;
 
   return (
-    <div className="flex flex-col gap-2" data-ai-help-context={isPdf ? undefined : aiPrompt || undefined}>
+    <div className="flex flex-col gap-2" data-ai-help-context={isPdf ? undefined : buildAiHelpContext(field)}>
       <div className={`flex flex-col justify-between ${className}`}>
         {ai_formatting && isDisplayText && <AiFormattedText html={ai_formatting} className="flex h-full w-full flex-col" />}
         <div className="flex items-center justify-between">

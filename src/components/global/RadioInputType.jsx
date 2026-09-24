@@ -4,6 +4,7 @@ import AiFormattedText from "@/components/shared/AiFormattedText";
 import FieldLabel from "@/components/shared/FieldLabel";
 import { setSectionFieldValue } from "@/utils/fieldFormatting";
 import { getDisabledClasses } from "@/utils/fieldStyles";
+import { buildAiHelpContext } from "@/utils/aiHelpContext";
 
 const RadioInputType = ({
   field = {},
@@ -16,13 +17,13 @@ const RadioInputType = ({
   sectionKey,
   isPdf = false,
 }) => {
-  const { label, options, name, uniqueId, required, aiPrompt, isDisplayText, ai_formatting } = field;
+  const { label, options, name, uniqueId, required, isDisplayText, ai_formatting } = field;
   const { isDisabledAllFields } = useSelector((state) => state.form);
 
   return (
     <div
       className={`flex w-full flex-col items-start ${className}`}
-      data-ai-help-context={isPdf ? undefined : aiPrompt || undefined}
+      data-ai-help-context={isPdf ? undefined : buildAiHelpContext(field)}
     >
       {ai_formatting && isDisplayText && (
         <AiFormattedText html={ai_formatting} className="flex h-full w-full flex-col gap-4 py-4" />

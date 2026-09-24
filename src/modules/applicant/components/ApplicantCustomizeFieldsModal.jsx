@@ -94,9 +94,7 @@ function CustomizationFieldsModal({
   }, [formateTextInMarkDown, signatureData?.formatingAiInstruction, signatureData.signDisplayText]);
 
   const getResponseFromAi = useCallback(async () => {
-    if (!signatureData?.signAiPrompt) {
-      return toast.error("Please enter formatting instruction and text to format");
-    }
+    if (!signatureData?.signAiPrompt?.trim()) return toast.error("Please enter a prompt to generate a response");
     try {
       const res = await formateTextInMarkDown({
         text: signatureData?.signAiPrompt,
@@ -268,7 +266,7 @@ function CustomizationFieldsModal({
                 name="aiPrompt"
                 onChange={(e) => setSignatureData((prev) => ({ ...prev, signAiPrompt: e.target.value }))}
               />
-              <Button variant="standard" onClick={getResponseFromAi} disabled={isFormating} className="bg-primary mt-8 text-white">
+              <Button variant="standard" onClick={getResponseFromAi} disabled={isFormating || !signatureData?.signAiPrompt?.trim()} className="bg-primary mt-8 text-white">
                 Generate
               </Button>
             </div>

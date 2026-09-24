@@ -253,7 +253,6 @@ const SingleApplication = () => {
               onCustomizeText={() => setActiveModal(SINGLE_APPLICATION_MODALS.ID_MISSION_DATA_TEXT)}
               onEnableHelp={() => setActiveModal(SINGLE_APPLICATION_MODALS.SIGNATURE_HELP)}
               onCustomizeSignature={() => setActiveModal(SINGLE_APPLICATION_MODALS.SIGNATURE)}
-              onOpenSignHelp={() => setActiveModal(SINGLE_APPLICATION_MODALS.SIGN_AI_HELP)}
               onSaveSignature={handleSignature}
               onSkip={() => navigate(buildStepperPath(formId, draftId))}
               onSubmit={submitIdMissionData}

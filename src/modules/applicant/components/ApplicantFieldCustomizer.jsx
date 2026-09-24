@@ -132,10 +132,8 @@ const MakeFieldDataCustom = ({
   }, [field?.displayTextFormattingInstructions, field.displayText, formateTextInMarkDown, index, setFieldsData, isOwner]);
 
   const getResponseFromAi = useCallback(async () => {
-    const aiPrompt = field.aiPrompt || "";
-    if (!aiPrompt) {
-      return toast.error("Please enter formatting instruction and text to format");
-    }
+    const aiPrompt = field.aiPrompt?.trim() || "";
+    if (!aiPrompt) return toast.error("Please enter a prompt to generate a response");
     try {
       const res = await formateTextInMarkDown({
         text: aiPrompt,
@@ -269,7 +267,7 @@ const MakeFieldDataCustom = ({
                 name="aiPrompt"
                 onChange={updateFieldDataField}
               />
-              <Button variant="standard" onClick={getResponseFromAi} disabled={isLoading} className="bg-primary mt-8 text-white">
+              <Button variant="standard" onClick={getResponseFromAi} disabled={isLoading || !field.aiPrompt?.trim()} className="bg-primary mt-8 text-white">
                 Generate
               </Button>
             </div>

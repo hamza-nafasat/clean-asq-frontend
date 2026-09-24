@@ -649,7 +649,6 @@ export const SINGLE_APPLICATION_MODALS = {
   ID_MISSION_SECTION_TEXT: "idMissionSectionText",
   SIGNATURE: "signature",
   SIGNATURE_HELP: "signatureHelp",
-  SIGN_AI_HELP: "signAiHelp",
 };
 
 // form document keys edited by the display text modals

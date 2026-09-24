@@ -1,4 +1,3 @@
-import AiHelpModal from "@/components/global/AiHelpModal";
 import CheckboxInputType from "@/components/global/CheckboxInputType";
 import FileInputType from "@/components/global/FileInputType";
 import MultiCheckboxInputType from "@/components/global/MultiCheckboxInputType";
@@ -148,7 +147,6 @@ const DynamicField = ({ cn, field = {}, className = "", form = {}, placeholder, 
 };
 
 export {
-  AiHelpModal,
   CheckboxInputType,
   FileInputType,
   MultiCheckboxInputType,

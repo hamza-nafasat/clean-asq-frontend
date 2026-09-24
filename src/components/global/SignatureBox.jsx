@@ -5,7 +5,6 @@ import useBranding from "@/hooks/useBranding";
 import Button from "@/components/shared/Button";
 import Modal from "@/components/shared/Modal";
 import HtmlContent from "@/components/shared/HtmlContent";
-import AiHelpModal from "@/components/global/AiHelpModal";
 import { SIGNATURE_MODES } from "@/constants";
 import { dataUrlToFile, getSignatureAiText, renderTypedSignature, SIGNATURE_LINE_WIDTH } from "@/utils/signatureCanvas";
 
@@ -22,7 +21,6 @@ const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = f
   const [mode, setMode] = useState(SIGNATURE_MODES.DRAW);
   const [typedSignature, setTypedSignature] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [openAiHelpModal, setOpenAiHelpModal] = useState(false);
   const [pendingAiFill, setPendingAiFill] = useState(false);
 
   const outerDivRef = useRef(null);
@@ -180,20 +178,10 @@ const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = f
         tabIndex: 0,
       })}
     >
-      {openAiHelpModal && (
-        <Modal onClose={() => setOpenAiHelpModal(false)}>
-          <AiHelpModal aiPrompt={step?.signAiPrompt} aiResponse={step?.signAiResponse} setOpenAiHelpModal={setOpenAiHelpModal} />
-        </Modal>
-      )}
       <div className="flex items-center gap-2">
         {step?.isSignDisplayText && (
           <div className="flex w-full items-end gap-3">
 <HtmlContent className="w-full" html={String(step?.signDisplayFormattedText || "")} linkMode="documentModal" />
-          </div>
-        )}
-        {!isPdf && step?.isSignAiHelp && (
-          <div className="flex items-center justify-end">
-            <Button label="AI Help" className="max-h-fit text-nowrap" onClick={() => setOpenAiHelpModal(true)} />
           </div>
         )}
       </div>

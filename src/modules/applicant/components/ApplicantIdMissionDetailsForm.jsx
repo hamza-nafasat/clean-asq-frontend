@@ -25,7 +25,6 @@ const ApplicantIdMissionDetailsForm = ({
   onCustomizeText,
   onEnableHelp,
   onCustomizeSignature,
-  onOpenSignHelp,
   onSaveSignature,
   onSkip,
   onSubmit,
@@ -114,7 +113,6 @@ const ApplicantIdMissionDetailsForm = ({
                   <Button label="Customize Signature" onClick={onCustomizeSignature} />
                 </div>
               )}
-              {section?.signAiResponse && <Button label="Help" onClick={onOpenSignHelp} />}
             </div>
           </div>
           <div

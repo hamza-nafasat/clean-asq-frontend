@@ -19,6 +19,7 @@ import {
   normalizeDateValue,
 } from "@/utils/fieldFormatting";
 import { FIELD_INPUT_CLASSES, getRequiredBorderClasses } from "@/utils/fieldStyles";
+import { buildAiHelpContext } from "@/utils/aiHelpContext";
 
 const FULL_DATE_LENGTH = 10;
 const MIN_AUTO_ADVANCE_YEAR = 1900;
@@ -41,7 +42,6 @@ const OtherInputType = ({
     required,
     placeholder,
     isMasked,
-    aiPrompt,
     isDisplayText,
     ai_formatting,
     suggestions: rawFieldSuggestions,
@@ -194,7 +194,7 @@ const OtherInputType = ({
   };
 
   return (
-    <div className="flex w-full flex-col items-start gap-4" data-ai-help-context={aiPrompt || undefined}>
+    <div className="flex w-full flex-col items-start gap-4" data-ai-help-context={buildAiHelpContext(field)}>
       <article className="flex w-full flex-col items-start gap-2">
         {ai_formatting && isDisplayText && (
           <AiFormattedText html={ai_formatting} className="gap-4p-4 flex h-full w-full flex-col" />

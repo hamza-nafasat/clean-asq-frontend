@@ -1,4 +1,3 @@
-import { AiHelpModal } from "@/components/global/DynamicField";
 import Modal from "@/components/shared/Modal";
 import ApplicantFormDisplayTextModal from "./ApplicantFormDisplayTextModal";
 import { EditSectionDisplayTextFromatingModal } from "./ApplicantSectionTextModal";
@@ -47,13 +46,6 @@ const ApplicantSingleApplicationModals = ({ activeModal = null, formDocument, se
     return (
       <Modal onClose={onClose}>
         <ApplicantSignatureHelpModal section={section} formRefetch={formRefetch} onClose={onClose} />
-      </Modal>
-    );
-  }
-  if (activeModal === SINGLE_APPLICATION_MODALS.SIGN_AI_HELP && section?.signAiResponse) {
-    return (
-      <Modal onClose={onClose}>
-        <AiHelpModal aiPrompt={section?.signAiPrompt} aiResponse={section?.signAiResponse} />
       </Modal>
     );
   }
