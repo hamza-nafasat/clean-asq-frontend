@@ -1,13 +1,4 @@
-export const AUTH_ROUTES = {
-  LOGIN: "/login",
-  FORGET_PASSWORD: "/forget-password",
-  RESET_MAIL_SENT: "/reset-mail-sent",
-  RESET_PASSWORD_SUCCESSFULLY: "/reset-password-successfully",
-};
-
 export const RESET_TOKEN_PARAM = "token";
-
-export const OTP_LENGTH = 4;
 
 export const MAILBOX_PROVIDERS = [
   { match: /(gmail|googlemail)\.com$/i, url: "https://mail.google.com/" },

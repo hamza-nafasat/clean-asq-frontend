@@ -42,6 +42,7 @@ const TextField = ({
   placeholder,
   borderAndBgChangeIfEmpty = true,
   id,
+  error = "",
   ...rest
 }) => {
   const [showMasked, setShowMasked] = useState(isMasked);
@@ -66,6 +67,7 @@ const TextField = ({
     !value && required && !isPdf && borderAndBgChangeIfEmpty ? "border-accent bg-highlighting border-2" : "border-frameColor";
   const disabledClasses = disabled ? "opacity-70 cursor-not-allowed" : "";
   const aiId = rest["data-ai-id"] || id;
+  const errorId = error ? `${id || name}-error` : undefined;
 
   const getDisplayValue = (raw) => {
     if (!raw) return "";
@@ -117,6 +119,11 @@ const TextField = ({
   const leftIconElement = leftIcon && (
     <span className={`absolute top-1/2 left-3 -translate-y-1/2 text-gray-500 ${cnLeft}`}>{leftIcon}</span>
   );
+  const errorElement = error && (
+    <p id={errorId} className="mt-1 text-sm text-red-600">
+      {error}
+    </p>
+  );
   const rightIconElement = rightIcon && (
     <span className={`absolute top-1/2 right-3 flex -translate-y-1/2 items-center justify-center text-gray-500 ${cnRight}`}>
       <button type="button" onClick={onClickRightIcon} className="cursor-pointer">
@@ -142,6 +149,8 @@ const TextField = ({
             disabled={disabled}
             value={value}
             autoComplete="off"
+            aria-invalid={error ? true : undefined}
+            aria-describedby={errorId}
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), BLUR_CLOSE_DELAY_MS)}
             className={`${cn} relative min-h-[${textAreaHeight}]! w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:text-base ${iconPadding} ${emptyClasses} ${disabledClasses}`}
@@ -149,6 +158,7 @@ const TextField = ({
           />
           {rightIconElement}
         </div>
+        {errorElement}
       </div>
     );
   }
@@ -188,6 +198,8 @@ const TextField = ({
             disabled={disabled}
             placeholder={placeholder}
             autoComplete="off"
+            aria-invalid={error ? true : undefined}
+            aria-describedby={errorId}
             type={showMasked ? FIELD_TYPES.PASSWORD : type}
             value={isDate ? formatDateValue(value) : getDisplayValue(value)}
             className={`${cn} relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${iconPadding} ${emptyClasses} ${disabledClasses} `}
@@ -240,6 +252,7 @@ const TextField = ({
           </span>
         )}
       </div>
+      {errorElement}
     </div>
   );
 };

@@ -53,9 +53,16 @@ export const ROW_ACTIONS = {
   DELETE: "delete",
 };
 
+export const AUTH_ROUTES = {
+  LOGIN: "/login",
+  FORGET_PASSWORD: "/forget-password",
+  RESET_MAIL_SENT: "/reset-mail-sent",
+  RESET_PASSWORD: "/reset-password",
+  RESET_PASSWORD_SUCCESSFULLY: "/reset-password-successfully",
+};
+
 export const LAYOUT_ROUTES = {
   HOME: "/",
-  LOGIN: "/login",
   MY_APPLICATIONS: "/submission",
   MY_PROFILE: "/my-profile",
   APPLICATION_FORM: "/application-form",

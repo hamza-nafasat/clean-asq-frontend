@@ -38,13 +38,6 @@ const authApis = createApi({
       }),
     }),
     /////
-    getMyProfile: builder.query({
-      query: () => ({
-        url: "/me",
-        method: "GET",
-      }),
-    }),
-    /////
     updateMyProfile: builder.mutation({
       query: (data) => ({
         url: "/me",
@@ -64,7 +57,7 @@ const authApis = createApi({
     logout: builder.mutation({
       query: () => ({
         url: "/logout",
-        method: "GET",
+        method: "POST",
       }),
     }),
   }),
@@ -74,7 +67,6 @@ export const {
   useLoginMutation,
   useForgetPasswordMutation,
   useResetPasswordMutation,
-  useGetMyProfileQuery,
   useLogoutMutation,
   useUpdateMyProfileMutation,
   useUpdateMyPasswordMutation,

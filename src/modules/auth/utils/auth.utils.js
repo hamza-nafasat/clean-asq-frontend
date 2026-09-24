@@ -14,26 +14,12 @@ export const maskEmail = (email = "") => {
   return `${local.slice(0, 2)}***@${domain}`;
 };
 
-// apply a user's branding through the useBranding setters
-export const applyUserBranding = (branding, setters) => {
-  if (!branding?.colors) return;
-  const { colors } = branding;
-  setters.setName(branding.name);
-  setters.setPrimaryColor(colors.primary);
-  setters.setSecondaryColor(colors.secondary);
-  setters.setAccentColor(colors.accent);
-  setters.setTextColor(colors.text);
-  setters.setLinkColor(colors.link);
-  setters.setBackgroundColor(colors.background);
-  setters.setFrameColor(colors.frame);
-  setters.setFontFamily(branding.fontFamily);
-  setters.setLogo(branding.selectedLogo);
-  setters.setButtonTextPrimary(colors.buttonTextPrimary);
-  setters.setButtonTextSecondary(colors.buttonTextSecondary);
-  setters.setHeaderBackground(colors.headerBackground);
-  setters.setFooterBackground(colors.footerBackground);
-  setters.setHeaderAlignment(branding.headerAlignment);
-  setters.setHeaderText(colors.headerText);
-  setters.setFooterText(colors.footerText);
-  setters.setApplicationFooterText(branding.applicationFooterText);
+export const getEmailError = (email) => (email.trim() ? "" : "Please enter your email address");
+
+export const getNewPasswordError = (newPassword) => (newPassword.trim() ? "" : "Please enter a new password");
+
+export const getConfirmPasswordError = ({ newPassword, confirmNewPassword }) => {
+  if (!confirmNewPassword.trim()) return "Please confirm your new password";
+  if (newPassword !== confirmNewPassword) return "New password and confirm password do not match";
+  return "";
 };

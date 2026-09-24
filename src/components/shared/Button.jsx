@@ -17,6 +17,11 @@ const VARIANT_CLASSES = {
       bg-[var(--secondary)]  text-buttonTextSecondary
       hover:brightness-110
     `,
+  pill: `
+      btn-branded-primary bg-[var(--primary)] text-buttonTextPrimary
+      hover:brightness-110
+      hover:bg-primary! text-textPrimary border-secondary! rounded-[20px]! border!
+    `,
 };
 
 // compact filled button used inside field customizer modals

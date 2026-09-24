@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetSavedFormMutation, useGetSingleFormQueryQuery } from "@/redux/apis/form.apis";
-import { setIdMissionData } from "@/redux/slices/auth.slice";
 import { addSavedFormData, updateFormHeaderAndFooter } from "@/redux/slices/form.slice";
 import { useApplicantScreenContext } from "./hooks/useApplicantScreenContext";
 import useApplicantStepSubmission from "./hooks/useApplicantStepSubmission";
@@ -101,7 +100,6 @@ const ApplicationForm = () => {
         getSavedFormData({ formId: form?.data?._id, draftId })
           .then((res) => {
             const data = res?.data?.data?.savedData;
-            dispatch(setIdMissionData(data?.idMission));
             if (data) dispatch(addSavedFormData(data));
           })
           .finally(() => setIsSavedApiRun(true));

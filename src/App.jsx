@@ -6,17 +6,16 @@ import "react-toastify/dist/ReactToastify.css";
 import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/auth.apis";
 import { userExist, userNotExist } from "@/redux/slices/auth.slice";
 import { socket } from "@/lib/socket";
-import useBranding from "@/hooks/useBranding";
 import useBrandingSync from "@/hooks/useBrandingSync";
 import CustomLoading from "@/components/shared/CustomLoading";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import RequirePermission from "@/routes/RequirePermission";
-import { SOCKET_EVENTS } from "@/constants";
+import { AUTH_ROUTES, LAYOUT_ROUTES, SOCKET_EVENTS } from "@/constants";
 import { PERMISSIONS, getHomePath, isGuestRole } from "@/utils/permissions";
+import { applyUserBranding } from "@/utils/userBranding";
 
 // auth pages
 const Login = lazy(() => import("@/modules/auth/Login"));
-const Otp = lazy(() => import("@/modules/auth/Otp"));
 const ForgetPassword = lazy(() => import("@/modules/auth/ForgetPassword"));
 const ResetPassword = lazy(() => import("@/modules/auth/ResetPassword"));
 const ResetMailSent = lazy(() => import("@/modules/auth/ResetMailSent"));
@@ -63,57 +62,13 @@ const App = () => {
   const [getUserProfile, { isLoading }] = useGetMyProfileFirstTimeMutation();
   const { user } = useSelector((state) => state.auth);
   useBrandingSync();
-  const {
-    setName,
-    setPrimaryColor,
-    setSecondaryColor,
-    setAccentColor,
-    setTextColor,
-    setLinkColor,
-    setBackgroundColor,
-    setFrameColor,
-    setFontFamily,
-    setLogo,
-    setButtonTextPrimary,
-    setButtonTextSecondary,
-    setHeaderAlignment,
-    setHeaderBackground,
-    setFooterBackground,
-    setHeaderText,
-    setFooterText,
-    setApplicationFooterText,
-    setAppLogoMaxWidth,
-    setAppLogoMaxHeight,
-  } = useBranding();
 
   const getUserAndSetBranding = useCallback(async () => {
     try {
       const res = await getUserProfile().unwrap();
       if (res?.success) {
         dispatch(userExist(res?.data));
-        const formBranding = res?.data?.branding;
-        if (formBranding?.colors) {
-          setName(formBranding.name);
-          setPrimaryColor(formBranding.colors.primary);
-          setSecondaryColor(formBranding.colors.secondary);
-          setAccentColor(formBranding.colors.accent);
-          setTextColor(formBranding.colors.text);
-          setLinkColor(formBranding.colors.link);
-          setBackgroundColor(formBranding.colors.background);
-          setFrameColor(formBranding.colors.frame);
-          setFontFamily(formBranding.fontFamily);
-          setLogo(formBranding.selectedLogo);
-          setButtonTextPrimary(formBranding.colors.buttonTextPrimary);
-          setButtonTextSecondary(formBranding.colors.buttonTextSecondary);
-          setHeaderBackground(formBranding.colors.headerBackground);
-          setFooterBackground(formBranding.colors.footerBackground);
-          setHeaderAlignment(formBranding.headerAlignment);
-          setHeaderText(formBranding.colors.headerText);
-          setFooterText(formBranding.colors.footerText);
-          setApplicationFooterText(formBranding.applicationFooterText);
-          setAppLogoMaxWidth(formBranding.appLogoMaxWidth);
-          setAppLogoMaxHeight(formBranding.appLogoMaxHeight);
-        }
+        applyUserBranding(res?.data?.branding, dispatch);
       } else {
         dispatch(userNotExist());
       }
@@ -123,30 +78,7 @@ const App = () => {
     } finally {
       setLoading(false);
     }
-  }, [
-    getUserProfile,
-    dispatch,
-    setName,
-    setPrimaryColor,
-    setSecondaryColor,
-    setAccentColor,
-    setTextColor,
-    setLinkColor,
-    setBackgroundColor,
-    setFrameColor,
-    setFontFamily,
-    setLogo,
-    setButtonTextPrimary,
-    setButtonTextSecondary,
-    setHeaderBackground,
-    setFooterBackground,
-    setHeaderAlignment,
-    setHeaderText,
-    setFooterText,
-    setApplicationFooterText,
-    setAppLogoMaxWidth,
-    setAppLogoMaxHeight,
-  ]);
+  }, [getUserProfile, dispatch]);
 
   useEffect(() => {
     getUserAndSetBranding();
@@ -171,7 +103,7 @@ const App = () => {
           {/* root redirects */}
           <Route
             path="/"
-            element={user ? <Navigate to={getHomePath(user)} replace /> : <Navigate to="/login" replace />}
+            element={user ? <Navigate to={getHomePath(user)} replace /> : <Navigate to={AUTH_ROUTES.LOGIN} replace />}
           />
           <Route path="singleform/pdf-view/:pdfId/:userId" element={<ApplicationPdfView />} />
 
@@ -189,16 +121,15 @@ const App = () => {
 
           {/* signed-out routes */}
           <Route element={<ProtectedRoute user={!user} redirect={getHomePath(user)} />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/otp" element={<Otp />} />
-            <Route path="/forget-password" element={<ForgetPassword />} />
-            <Route path="/reset-mail-sent" element={<ResetMailSent />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/reset-password-successfully" element={<ResetPasswordSuccessfully />} />
+            <Route path={AUTH_ROUTES.LOGIN} element={<Login />} />
+            <Route path={AUTH_ROUTES.FORGET_PASSWORD} element={<ForgetPassword />} />
+            <Route path={AUTH_ROUTES.RESET_MAIL_SENT} element={<ResetMailSent />} />
+            <Route path={AUTH_ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
+            <Route path={AUTH_ROUTES.RESET_PASSWORD_SUCCESSFULLY} element={<ResetPasswordSuccessfully />} />
           </Route>
 
           {/* signed-in routes without guests */}
-          <Route element={<ProtectedRoute user={!isGuest && user} redirect={isGuest && user ? "/submission" : "/login"} />}>
+          <Route element={<ProtectedRoute user={!isGuest && user} redirect={isGuest && user ? LAYOUT_ROUTES.MY_APPLICATIONS : AUTH_ROUTES.LOGIN} />}>
             <Route path="/" element={<AdminDashboard />}>
               <Route index element={<Navigate to={getHomePath(user)} replace />} />
               <Route

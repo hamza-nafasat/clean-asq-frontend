@@ -7,7 +7,7 @@ import { useLogoutMutation } from "@/redux/apis/auth.apis";
 import { userNotExist } from "@/redux/slices/auth.slice";
 import useAiChat from "@/hooks/useAiChat";
 import { Applications } from "@/assets/svgs/icon";
-import { LAYOUT_ROUTES } from "@/constants";
+import { AUTH_ROUTES, LAYOUT_ROUTES } from "@/constants";
 
 const HeaderProfileMenu = ({ isGuest = false, setIsProfileOpen }) => {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ const HeaderProfileMenu = ({ isGuest = false, setIsProfileOpen }) => {
         setIsOpen(false);
         await dispatch(userNotExist());
         toast.success(res.message);
-        return navigate(LAYOUT_ROUTES.LOGIN);
+        return navigate(AUTH_ROUTES.LOGIN);
       }
       setIsProfileOpen?.(false);
     } catch (error) {
