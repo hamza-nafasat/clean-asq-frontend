@@ -137,6 +137,7 @@
   --color-textSecondary: var(--textSecondary);
   --color-textLight: var(--textLight);
   --color-buttonSecondary: var(--buttonSecondary);
+  --color-cardBorder: #e8eef5;
 }
 body {
   padding: 0;

@@ -8,7 +8,7 @@ const MyProfileActions = ({ className = "", formId, isUpdating = false, onCancel
       label="Cancel"
       onClick={() => onCancel?.()}
       disabled={isUpdating}
-      className="rounded-[12px]! px-6!"
+      size="lg"
     />
     <Button
       type="submit"
@@ -16,7 +16,7 @@ const MyProfileActions = ({ className = "", formId, isUpdating = false, onCancel
       label="Update"
       loading={isUpdating}
       disabled={isUpdating}
-      className="rounded-[12px]! px-6!"
+      size="lg"
     />
   </div>
 );

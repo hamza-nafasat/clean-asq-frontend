@@ -3,10 +3,15 @@ import { cn } from "@/lib/utils";
 import Spinner from "./Spinner";
 
 const BASE_CLASSES = `
-    cursor-pointer rounded-[4px] px-[14px] py-[4px]
+    cursor-pointer py-[4px]
     font-medium transition-all duration-300
     flex border-none items-center justify-center gap-2
   `;
+
+const SIZE_CLASSES = {
+  default: "rounded-[4px] px-[14px]",
+  lg: "rounded-[12px] px-6",
+};
 
 const VARIANT_CLASSES = {
   primary: `
@@ -41,6 +46,7 @@ const Button = ({
   cnLeft,
   cnRight,
   variant = "primary",
+  size = "default",
   loading = false,
   disabled = false,
   style = {},
@@ -61,7 +67,7 @@ const Button = ({
       type={type}
       onClick={disabled || loading ? undefined : onClick}
       disabled={disabled || loading}
-      className={` ${BASE_CLASSES} ${VARIANT_CLASSES[variant] || ""} ${disabledClasses} ${className} `}
+      className={` ${BASE_CLASSES} ${SIZE_CLASSES[size] ?? SIZE_CLASSES.default} ${VARIANT_CLASSES[variant] || ""} ${disabledClasses} ${className} `}
       style={style}
       {...props}
     >

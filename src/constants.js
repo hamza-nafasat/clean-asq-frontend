@@ -5,6 +5,12 @@ export const API_TAGS = {
   USERS: "Users",
 };
 
+// matches the backend upload field names
+export const UPLOAD_FIELD_NAMES = {
+  SINGLE: "file",
+  MULTIPLE: "files",
+};
+
 export const STORAGE_KEYS = {
   BRANDING_DATA: "brandingData",
   AI_WIDGET_USER_CLOSED: "ai-widget-user-closed",

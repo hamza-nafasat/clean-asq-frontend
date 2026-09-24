@@ -3,7 +3,7 @@ import MyProfileActions from "./MyProfileActions";
 import { MY_PROFILE_FORM_ID } from "../utils/myProfile.constants";
 
 const MyProfileHeading = ({ isEditing = false, isUpdating = false, onEdit, onCancel }) => (
-  <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+  <header className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
     <div>
       <h1 className="text-textPrimary text-3xl font-bold">My Profile</h1>
       <p className="mt-1 max-w-2xl text-sm text-gray-500">
@@ -12,7 +12,7 @@ const MyProfileHeading = ({ isEditing = false, isUpdating = false, onEdit, onCan
     </div>
 
     {!isEditing ? (
-      <Button type="button" label="Edit" onClick={() => onEdit?.()} className="rounded-[12px]! px-6!" />
+      <Button type="button" label="Edit" onClick={() => onEdit?.()} size="lg" />
     ) : (
       <MyProfileActions
         className="flex flex-wrap gap-3"
@@ -21,7 +21,7 @@ const MyProfileHeading = ({ isEditing = false, isUpdating = false, onEdit, onCan
         onCancel={onCancel}
       />
     )}
-  </div>
+  </header>
 );
 
 export default MyProfileHeading;
