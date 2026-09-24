@@ -1,6 +1,6 @@
 # Frontend Code Rules
 
-Rules for the React + Tailwind app in `frontend/`. Repo-wide rules: [CLAUDE.md](./CLAUDE.md).
+Rules for the React + Tailwind app in `frontend/`. Repo-wide rules: [CLAUDE.md](../CLAUDE.md).
 
 **Goal: a developer opening this repo for the first time can guess where a file lives, what it does,
 and how it works — from its name alone.** Every rule below serves that.
@@ -44,8 +44,8 @@ names in the examples. The rest applies unchanged.
 | **Bot checks** | `react-google-recaptcha` · `react-google-recaptcha-v3` |
 | **Identity checks** | `idmission-web-sdk` |
 | **Content** | `react-markdown` + `remark-gfm` · `dompurify` (sanitise HTML) · `handlebars` (templates) |
-| **PDF and images** | `pdfmake` · `html2canvas` / `html2canvas-pro` · `qrcode.react` / `react-qr-code` |
-| **Dates** | `date-fns` · **Toasts** `react-toastify` · **Icons** `lucide-react` · `react-icons` |
+| **PDF and images** | `pdfmake` · `html2canvas-pro` (page screenshots) |
+| **Dates** | `date-fns` · **Toasts** `react-toastify` · **Icons** `react-icons` — the one icon library (§11) |
 | **Other** | `jsonl-parse-stringify` · `tinyglobby` |
 | **Tooling** | ESLint 9 (`react-hooks`, `react-refresh`) · Prettier + `prettier-plugin-tailwindcss` |
 | **Tests** | Node's built-in runner (`node --test`) · files in `src/test/**/*.test.js` · custom reporter |
@@ -125,15 +125,15 @@ src/
   constants.js                  every app-wide constant + enum
   utils/                        helpers used by 2+ modules that wrap no library
     permissions.js              every permission name + the system roles (§7)
-  routes/                       AppRoutes + the route guards (ProtectedRoute, SignedOutRoute)
+  routes/                       the route guards — ProtectedRoute, RequirePermission, RoleRedirect
   assets/
   test/                         <name>.test.js
 ```
 
-- **Every new page goes inside a route guard.** A dashboard page goes under
-  `<ProtectedRoute permission={…}>` (§7.3); a signed-out page (sign in, reset password) goes under
-  `<SignedOutRoute>`. A route outside both is open to everyone — only public pages such as the
-  application form link and the not-found page belong there.
+- **Every new page goes inside a route guard** (§7.3). A dashboard page sits under the signed-in
+  `<ProtectedRoute>` and is wrapped in `<RequirePermission permission={…}>`; a signed-out page (sign
+  in, reset password) sits under the signed-out `<ProtectedRoute>`. A route outside both is open to
+  everyone — only public pages such as the application form link belong there.
 - **There are no role folders.** Roles are data the admin creates; a module sits directly under
   `modules/`, whoever uses it.
 - A **module** is one feature area with its own pages. Keep them shallow — a module is not a
@@ -179,8 +179,9 @@ These rules have no exceptions:
   file (`date-fns`, `pdfmake`, `socket.io-client`, `dompurify` …); modules and components import that
   function, never the package. Change the library, change one file. React, Redux, React Router, icons
   and component libraries (a table, a map, an editor) are imported where they are used.
-- **A utils file past 200 lines gets a second file** — `<module>.utils.js`, then `<module>.utils2.js`.
-  Move whole functions; never split one function across the two.
+- **A utils file is named for what is inside it** — `<module>.<topic>.utils.js`, e.g.
+  `applicant.address.utils.js`; never a number. Split past 200 lines, by topic. Full rule:
+  **[CLAUDE.md §9](../CLAUDE.md)**.
 
 ## 1.3 File names
 
@@ -197,7 +198,7 @@ The module name tells a reader which module a file belongs to once it is open in
 | Filter | `<Module>Filter.jsx` | `BrandingFilter.jsx` |
 | Table | `<Module>Table.jsx` | `BrandingTable.jsx` |
 | Module modal | `components/<Module><Purpose>Modal.jsx` | `BrandingAddEditModal.jsx` |
-| Module helpers | `utils/<module>.utils.js` · `<module>.utils2.js` | `branding.utils.js` |
+| Module helpers | `utils/<module>.utils.js` · `utils/<module>.<topic>.utils.js` | `branding.utils.js`, `branding.color.utils.js` |
 | Module constants | `utils/<module>.constants.js` | `branding.constants.js` |
 | Static data | `utils/<module>.data.js` | `branding.data.js` |
 | Library wrapper | `lib/<purpose>.js` | `lib/date.js`, `lib/socket.js` |
@@ -247,29 +248,14 @@ The module name tells a reader which module a file belongs to once it is open in
 
 ## 1.6 No hard-coded strings — use a constant
 
-**Every fixed string the code compares, stores, or uses as a key or name comes from a constants
-file.** Never type it straight into a component, hook, slice, or helper. That covers permissions,
-system roles, statuses, types, tab names, route paths, `localStorage` keys, socket event names, API tag
-names, and any other value the code checks against.
+The rule is in **[CLAUDE.md §8](../CLAUDE.md)**. On the frontend:
 
-```jsx
-// ❌ hard-coded — a reader has to guess what else "draft" could be
-if (row?.type === "draft") navigate("/submission");
-socket.emit("message:new", message);
-
-// ✅ from a constant — the name says what it is, and the file lists every option
-if (row?.type === SUBMISSION_TYPES.DRAFT) navigate(ROUTES.MY_APPLICATIONS);
-socket.emit(SOCKET_EVENTS.NEW_MESSAGE, message);
-```
-
-- **A typo in a string is a silent bug; a typo in a constant crashes immediately.**
-- **Group related values in one object, named in the plural** — `SUBMISSION_TYPES.DRAFT`,
-  `SOCKET_EVENTS.NEW_MESSAGE`.
-- **Put it where it is used** — one module: `utils/<module>.constants.js`; more than one module:
-  `src/constants.js`; permissions and system roles: `src/utils/permissions.js`.
-- **Search before adding.** If the value already has a constant, use it — never define it twice.
-- **Not covered:** text shown to the user (labels, headings, placeholders, toast and error text),
-  Tailwind classes, and native attribute values such as `type="button"`.
+- **Files** — one module: `utils/<module>.constants.js`; more than one module: `src/constants.js`;
+  permissions and system roles: `src/utils/permissions.js`.
+- **Also covers** tab names, route paths, `localStorage` keys and API tag names —
+  `navigate(ROUTES.MY_APPLICATIONS)`, never `navigate("/submission")`.
+- **Not covered:** text shown to the user, Tailwind classes, and native attribute values such as
+  `type="button"`.
 
 ---
 
@@ -422,7 +408,7 @@ const Feature = () => {
   compares against (statuses, types, tabs) go in a constants file (§1.6).
 - **Keep components under ~150 lines.** Past that, something inside wants to be extracted.
   Count the *component body*, not the file — config above it does not count against the limit.
-- **Keep utils files under 200 lines.** Past that, start `<module>.utils2.js` (§1.2).
+- **Keep utils files under 200 lines.** Past that, split by topic — `<module>.<topic>.utils.js` (§1.2).
 - **Big configuration objects live above the component, not inside it.** A table's `columns` array
   goes in a `buildColumns({ onEdit, onView, onDelete })` function above the component — or its own
   file once it passes ~60 lines. A component body should read as *logic + JSX*, not a wall of config.
@@ -498,6 +484,64 @@ useEffect(() => {
   `console.error("<Action> error:", error)` — the toast comes from the store, the log is for the
   developer. A placeholder handler is a named no-op with a `// TODO:` saying what will replace it.
 
+## 6.3 Loading, empty, and error states
+
+**Every screen that fetches data renders all four states: loading, error, empty, and data.** Never
+render a blank area while a request is in flight or after it fails.
+
+```jsx
+const { data: brandings = [], isLoading, isError, refetch } = useGetBrandingsQuery();
+
+if (isLoading) return <LoadingState title="Loading brandings" />;
+if (isError) return (
+  <EmptyState title="Could not load brandings">
+    <Button type="button" onClick={refetch}>Try again</Button>
+  </EmptyState>
+);
+if (!brandings.length) return <EmptyState title="No brandings yet" />;
+
+return <BrandingTable rows={brandings} />;
+```
+
+- **Use the shared components** — `LoadingState` and `EmptyState` in `components/shared/`, and
+  `CustomLoading` for the full-page fallback. Never hand-roll a spinner or a "no data" message.
+- **Keep the order:** loading → error → empty → data, each an early return.
+- **A failed query offers a retry.** A failed mutation is toasted by the store (§6.1); the page does
+  not render it again.
+- **Disable a submit button while its mutation runs** (`isLoading` from the mutation hook), so one
+  click never sends two requests.
+
+## 6.4 Error boundaries
+
+- **`ErrorBoundary` in `components/global/` wraps the app and the AI chat widget** (`main.jsx`). A
+  render crash shows its fallback with a retry, never a white screen.
+- **A self-contained panel that can crash on its own gets its own boundary** — a canvas, a map, a
+  third-party widget, the stepper. Give it a `name` so the report says which one failed.
+- A boundary catches **render** errors only. Errors in handlers and requests are caught with
+  `try/catch` (§6.1).
+
+## 6.5 Form validation
+
+- **Validate on submit, then show the error next to its field.** One error per field, in plain words:
+  "Enter a valid email". Clear a field's error when its value changes.
+- **Hold the errors in one `errors` object in state**, keyed by field `name` — the same keys the
+  change handler uses (§6.2).
+- **Put the checks in a module utils file** as plain functions that return a message or `""`. A check
+  two modules use moves to `src/utils/` — `isValidEmail`, `isValidPhone`.
+- **Match the backend.** A rule the backend enforces (required, format, length) is checked here too,
+  so the user sees it before the request. The frontend check is for the user; the backend check is
+  the real one.
+- Mark required fields with `required` and `aria-invalid` on a field with an error, and point
+  `aria-describedby` at its message.
+
+## 6.6 Lazy-loaded routes
+
+- **Every page is imported with `lazy()` in `App.jsx`**, and the routes sit inside one `<Suspense
+  fallback={<CustomLoading />}>`. A page is never imported statically — it would ship in the first
+  bundle for every visitor.
+- **Heavy libraries load with the page that uses them** — `pdfmake`, `html2canvas-pro`, the maps and
+  the IDMission SDK. Never import them from the app shell or a shared component every page loads.
+
 ---
 
 # 7. Permissions
@@ -548,18 +592,26 @@ return (
 
 ## 7.3 Routes and the sidebar
 
-- **Every signed-in route names its permission** — `<ProtectedRoute permission={PERMISSIONS.READ_BRANDING}>`,
-  the `read_` permission of what the page shows. Without it, the account is sent to its home page.
-- **My-own-account pages take no permission** — `myProfile` and `myApplications` sit under
-  `<ProtectedRoute>` alone, so every signed-in account reaches them. Same rule as the backend's
-  my-own-account routes.
+**Three guards, one job each:**
+
+| Guard | Job |
+|---|---|
+| `ProtectedRoute` | Is the visitor allowed on this branch at all? Signed-in branch or signed-out branch; otherwise redirect |
+| `RequirePermission` | Does the account hold this page's permission? Otherwise send it to its home page |
+| `RoleRedirect` | Unmatched paths go to the account's home page (from `getHomePath`) |
+
+- **Every signed-in page names its permission** — `<RequirePermission permission={PERMISSIONS.READ_BRANDING}>`,
+  the `read_` permission of what the page shows.
+- **My-own-account pages take no permission** — `myProfile` and `myApplications` sit under the
+  signed-in `<ProtectedRoute>` alone, so every signed-in account reaches them. Same rule as the
+  backend's my-own-account routes.
 - **The sidebar renders only with `access_sidebar`.** Without it the layout has no sidebar.
 - **Each sidebar item carries the permission of the page it opens** and is hidden without it — the
   item and its route check the same permission.
 - **The home page comes from permissions, not the role:** with `access_sidebar`, the first sidebar
   page the account can read; without it, `myApplications`.
-- **Signed-out pages sit under `<SignedOutRoute>`** — named for signed-out visitors, so it is never
-  confused with the `guest` role.
+- **Signed-out pages (sign in, reset password) sit under the signed-out `<ProtectedRoute>`**, which
+  sends a signed-in account to its home page.
 
 ---
 
@@ -651,7 +703,9 @@ const { pill, dot } = STATUS_STYLES[row.type] ?? STATUS_STYLES[SUBMISSION_TYPES.
 - **For row actions, store the row and derive open state:**
   `const [rowToRemove, setRowToRemove] = useState(null)` → `isOpen={Boolean(rowToRemove)}`.
 - **Reuse one delete-confirmation modal** for every destructive action. Never hand-roll a confirm dialog.
-- The overlay and panel classes are identical in every modal. Fix them once, copy them everywhere.
+- **Every modal renders inside the one shell, `components/shared/Modal.jsx`.** It owns the overlay,
+  the panel, the title and the close button. Never write overlay or panel classes in a modal —
+  a look the shell lacks becomes a prop on the shell.
 
 ---
 
@@ -672,10 +726,7 @@ const { pill, dot } = STATUS_STYLES[row.type] ?? STATUS_STYLES[SUBMISSION_TYPES.
 
 - **Section markers in longer JSX only** — `{/* Heading */}`, `{/* Actions */}`. Skip them in short
   components; they are navigation aids, not decoration.
-- **A comment is one short line labelling a step** — plain words, a few words long. Never a
-  multi-line explanation.
-- **A comment is 4–6 words, never longer.** Add one only where the step is not obvious from the code
-  itself — not above every line.
+- **Comments follow [CLAUDE.md §6](../CLAUDE.md)** — 4–6 words, only where a step is not obvious.
 - **RTK Query API files (`redux/apis/<module>.apis.js`) put a `/////` line directly above every
   endpoint.** No section headings. Add a short `//` comment only where an endpoint does something its
   `query` does not show:
@@ -703,7 +754,8 @@ endpoints: (builder) => ({
   `@utils`, and `@pages` are not used.
 - One quote style for import paths across the whole repo.
 - No barrel (`index.js`) files — they hide where a thing actually lives and defeat tree-shaking.
-- Icons come from one icon library, with an explicit size: `<Plus size={18} />`.
+- **Icons come from `react-icons` only**, with an explicit size: `<FiPlus size={18} />`. Never import
+  `lucide-react` in new code; swap it out when you touch a file that uses it.
 
 ---
 
@@ -724,4 +776,8 @@ endpoints: (builder) => ({
 - [ ] `type` set on every button; `aria-label` on icon-only buttons
 - [ ] `min-w-0` + `truncate` + `shrink-0` where text can overflow
 - [ ] Component body under ~150 lines, big config lifted above it; no utils file past 200 lines
+- [ ] Utils files named by topic, never by number (§1.2)
+- [ ] Data screens render loading, error, empty and data states with the shared components (§6.3)
+- [ ] Form errors shown per field, checks matching the backend (§6.5)
+- [ ] New page imported with `lazy()`; modal built on the shared `Modal` shell (§6.6, §9)
 - [ ] Lint passes with **zero** problems — not "only warnings"
