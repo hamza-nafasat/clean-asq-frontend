@@ -91,6 +91,7 @@ const mapAssistantField = (f) => ({
   isMasked: f.isMasked || false,
   signature: f.signature || "",
   aiPrompt: f.aiPrompt || "",
+  hasAiResponse: Boolean(f.aiResponse),
   ai_formatting: f.ai_formatting || "",
 });
 

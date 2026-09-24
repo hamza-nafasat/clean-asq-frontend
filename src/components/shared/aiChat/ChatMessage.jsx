@@ -17,6 +17,13 @@ const mdComponents = {
     <th className="px-2 py-1 text-left font-semibold text-gray-700 border border-gray-200 whitespace-nowrap">{children}</th>
   ),
   td: ({ children }) => <td className="px-2 py-1 text-gray-600 border border-gray-200">{children}</td>,
+  h3: ({ children }) => <h3 className="mt-3 mb-1 text-[15px] font-bold text-gray-900">{children}</h3>,
+  // smaller detail text under a heading
+  blockquote: ({ children }) => (
+    <div className="mb-2 border-l-2 border-gray-200 pl-2 text-xs leading-relaxed text-gray-600 [&_ul]:list-disc [&_ul]:pl-4">
+      {children}
+    </div>
+  ),
 };
 
 const ColorSwatch = ({ color, label }) => (
