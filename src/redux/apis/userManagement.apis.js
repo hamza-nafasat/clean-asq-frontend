@@ -1,14 +1,11 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { API_TAGS } from "@/constants";
 import getEnv from "@/utils/env";
-
-const USER_TAGS = {
-  USERS: "Users",
-};
 
 const userApis = createApi({
   reducerPath: "userApi",
   baseQuery: fetchBaseQuery({ baseUrl: `${getEnv("SERVER_URL")}/api/user`, credentials: "include" }),
-  tagTypes: [USER_TAGS.USERS],
+  tagTypes: [API_TAGS.USERS],
   endpoints: (builder) => ({
     /////
     createUser: builder.mutation({
@@ -17,7 +14,7 @@ const userApis = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: [USER_TAGS.USERS],
+      invalidatesTags: [API_TAGS.USERS],
     }),
     /////
     getAllUsers: builder.query({
@@ -25,15 +22,7 @@ const userApis = createApi({
         url: "/all",
         method: "GET",
       }),
-      providesTags: [USER_TAGS.USERS],
-    }),
-    /////
-    getSingleUser: builder.mutation({
-      query: (data) => ({
-        url: `single/${data?._id}`,
-        method: "GET",
-      }),
-      invalidatesTags: [USER_TAGS.USERS],
+      providesTags: [API_TAGS.USERS],
     }),
     /////
     updateSingleUser: builder.mutation({
@@ -42,15 +31,15 @@ const userApis = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: [USER_TAGS.USERS],
+      invalidatesTags: [API_TAGS.USERS],
     }),
     /////
     deleteSingleUser: builder.mutation({
       query: (data) => ({
         url: `single/${data?._id}`,
-        method: "Delete",
+        method: "DELETE",
       }),
-      invalidatesTags: [USER_TAGS.USERS],
+      invalidatesTags: [API_TAGS.USERS],
     }),
   }),
 });
@@ -58,7 +47,6 @@ const userApis = createApi({
 export const {
   useCreateUserMutation,
   useGetAllUsersQuery,
-  useGetSingleUserMutation,
   useUpdateSingleUserMutation,
   useDeleteSingleUserMutation,
 } = userApis;

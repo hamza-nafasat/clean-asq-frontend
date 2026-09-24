@@ -2,6 +2,7 @@ export const API_TAGS = {
   BRANDINGS: "Brandings",
   SINGLE_BRANDING: "SingleBranding",
   FORM: "Form",
+  USERS: "Users",
 };
 
 export const STORAGE_KEYS = {

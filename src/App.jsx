@@ -42,7 +42,7 @@ const DraftSubmission = lazy(() => import("@/modules/myApplications/MyApplicatio
 
 // signed-in dashboard pages
 const AllRoles = lazy(() => import("@/modules/roleManagement/RoleManagement"));
-const AdminAllUsers = lazy(() => import("@/modules/userManagement/UserManagement"));
+const UserManagement = lazy(() => import("@/modules/userManagement/UserManagement"));
 const ApplicationForms = lazy(() => import("@/modules/applicationForms/ApplicationForms"));
 const Applications = lazy(() => import("@/modules/applications/Applications"));
 const OnBoarding = lazy(() => import("@/modules/underwriting/Underwriting"));
@@ -152,7 +152,7 @@ const App = () => {
                 path="all-users"
                 element={
                   <RequirePermission permission={PERMISSIONS.READ_USER}>
-                    <AdminAllUsers />
+                    <UserManagement />
                   </RequirePermission>
                 }
               />

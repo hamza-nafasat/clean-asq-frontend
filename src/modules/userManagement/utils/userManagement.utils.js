@@ -1,94 +1,16 @@
-import { FIELD_TYPES } from "@/constants";
-import {
-  BUSINESS_USER_TYPES,
-  PASSWORD_REQUIREMENTS,
-  PROMISE_STATUSES,
-  USER_FORM_FIELDS,
-  USER_TYPES,
-} from "./userManagement.constants";
+import { MODAL_MODES } from "@/constants";
+import { PROMISE_STATUSES } from "./userManagement.constants";
 
-export const validatePassword = (password) => {
-  const errors = [];
-
-  if (password.length < PASSWORD_REQUIREMENTS.minLength) {
-    errors.push(`Password must be at least ${PASSWORD_REQUIREMENTS.minLength} characters long`);
-  }
-
-  if (PASSWORD_REQUIREMENTS.requireUppercase && !/[A-Z]/.test(password)) {
-    errors.push("Password must contain at least one uppercase letter");
-  }
-
-  if (PASSWORD_REQUIREMENTS.requireLowercase && !/[a-z]/.test(password)) {
-    errors.push("Password must contain at least one lowercase letter");
-  }
-
-  if (PASSWORD_REQUIREMENTS.requireNumber && !/\d/.test(password)) {
-    errors.push("Password must contain at least one number");
-  }
-
-  if (PASSWORD_REQUIREMENTS.requireSpecialChar && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-    errors.push("Password must contain at least one special character");
-  }
-
-  return errors;
-};
-
-export const validateEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-export const validateUserForm = (formData) => {
+// returns an error message per field name
+export const validateUserForm = (formData, mode) => {
   const errors = {};
 
-  if (!formData.name.trim()) {
-    errors.name = "Name is required";
-  }
-
-  if (!formData.email.trim()) {
-    errors.email = "Email is required";
-  } else if (!validateEmail(formData.email)) {
-    errors.email = "Invalid email format";
-  }
-
-  if (!formData.type) {
-    errors.type = "Account type is required";
-  } else if (!Object.values(USER_TYPES).includes(formData.type)) {
-    errors.type = "Invalid account type";
-  }
-
-  // business name for business user types
-  if (BUSINESS_USER_TYPES.includes(formData.type) && !formData.businessName?.trim()) {
-    errors.businessName = "Business name is required for this account type";
-  }
-
-  // password required for new users
-  if (!formData.id && !formData.password) {
-    errors.password = "Password is required for new users";
-  } else if (formData.password) {
-    const passwordErrors = validatePassword(formData.password);
-    if (passwordErrors.length > 0) {
-      errors.password = passwordErrors;
-    }
-  }
-
-  // admin access setting for team members
-  if (formData.type === USER_TYPES.TEAM_MEMBER && typeof formData.allowAdminAccess !== "boolean") {
-    errors.allowAdminAccess = "Invalid admin access setting";
-  }
+  // TODO(human): fill errors for the add and edit form
 
   return errors;
 };
 
-export const formatDate = (date) => {
-  return new Date(date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
-
-export const formateDateAndTime = (date) => {
+export const formatDateAndTime = (date) => {
   if (!date) return "";
   return new Date(date).toLocaleString("en-US", {
     year: "numeric",
@@ -99,11 +21,7 @@ export const formateDateAndTime = (date) => {
   });
 };
 
-export const applyUserFormChange = (prev, { name, value, type, checked }) => ({
-  ...prev,
-  [name]: type === FIELD_TYPES.CHECKBOX ? checked : value,
-  ...(name === USER_FORM_FIELDS.TYPE && !BUSINESS_USER_TYPES.includes(value) ? { businessName: "" } : {}),
-});
+export const getUserFullName = (user) => `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim();
 
 const runUserAction = async (request, fallbackMessage, toastError) => {
   try {
@@ -129,9 +47,9 @@ export const buildUserScreenState = (users = [], roles = []) => ({
 });
 
 export const buildUserScreenActions = ({ users = [], createUser, updateUser, deleteUser, sendPasswordResetLink, toastError }) => ({
-  createUser: ({ firstName, lastName, email, roleId }) =>
+  createUser: ({ firstName, lastName, email, roleId, password }) =>
     runUserAction(
-      () => createUser({ firstName, lastName, email, role: roleId }).unwrap(),
+      () => createUser({ firstName, lastName, email, role: roleId, password }).unwrap(),
       "Failed to create user",
       toastError,
     ),

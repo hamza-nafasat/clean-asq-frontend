@@ -5,7 +5,7 @@ Rules for the React + Tailwind app in `frontend/`. Repo-wide rules: [CLAUDE.md](
 **Goal: a developer opening this repo for the first time can guess where a file lives, what it does,
 and how it works — from its name alone.** Every rule below serves that.
 
-**Reusing this file in another project:** replace §0, the home page in §7.3, and this project's
+**Reusing this file in another project:** replace §0, the home page in §7.4, and this project's
 names in the examples. The rest applies unchanged.
 
 | # | Section | |
@@ -130,7 +130,7 @@ src/
   test/                         <name>.test.js
 ```
 
-- **Every new page goes inside a route guard** (§7.3). A dashboard page sits under the signed-in
+- **Every new page goes inside a route guard** (§7.4). A dashboard page sits under the signed-in
   `<ProtectedRoute>` and is wrapped in `<RequirePermission permission={…}>`; a signed-out page (sign
   in, reset password) sits under the signed-out `<ProtectedRoute>`. A route outside both is open to
   everyone — only public pages such as the application form link belong there.
@@ -590,7 +590,19 @@ return (
   `form?.owner === user?._id`.
 - **Hiding is not security.** Every action is checked again by its API route.
 
-## 7.3 Routes and the sidebar
+## 7.3 The AI assistant — STRICT
+
+**The assistant can do only what the account using it can do.** This is a security rule with no
+exceptions.
+
+- **Every screen action the AI calls uses the same RTK Query mutation as the manual button.** Never
+  a separate AI-only request, and never a request the manual UI would not be allowed to send.
+- **The backend decides.** If the account lacks the permission, the route answers `403` and the
+  assistant reports that it could not do it. The frontend never retries with other credentials.
+- **Never pass a role or permission to the AI as something it may change.** It reads the account's
+  permissions; it never grants them.
+
+## 7.4 Routes and the sidebar
 
 **Three guards, one job each:**
 
@@ -702,7 +714,10 @@ const { pill, dot } = STATUS_STYLES[row.type] ?? STATUS_STYLES[SUBMISSION_TYPES.
   and calls the parent's `onAdd*` callback on submit.
 - **For row actions, store the row and derive open state:**
   `const [rowToRemove, setRowToRemove] = useState(null)` → `isOpen={Boolean(rowToRemove)}`.
-- **Reuse one delete-confirmation modal** for every destructive action. Never hand-roll a confirm dialog.
+- **Every delete and every update asks first.** Clicking Delete, or Save on an edit, opens
+  `ConfirmationModal`; the request is sent only after the user confirms. Creating a record needs no
+  confirmation.
+- **Reuse one confirmation modal** for every delete and update. Never hand-roll a confirm dialog.
 - **Every modal renders inside the one shell, `components/shared/Modal.jsx`.** It owns the overlay,
   the panel, the title and the close button. Never write overlay or panel classes in a modal —
   a look the shell lacks becomes a prop on the shell.
@@ -766,6 +781,7 @@ endpoints: (builder) => ({
 - [ ] Searched for the component name — it does not already exist
 - [ ] Route, sidebar item, and every create / update / delete control check their permission through `usePermission` (§7)
 - [ ] No check reads a role name; a new permission is in both apps' `permissions.js` with the same name
+- [ ] Every AI screen action uses the same mutation as its manual button, never an AI-only request (§7.3)
 - [ ] No hard-coded string used as a key, name, status, route, or comparison — it comes from a constants file (§1.6)
 - [ ] Library functions imported from `src/lib/`, never straight from the package
 - [ ] Removed every wrapper not carrying a layout class or a meaning
@@ -780,4 +796,5 @@ endpoints: (builder) => ({
 - [ ] Data screens render loading, error, empty and data states with the shared components (§6.3)
 - [ ] Form errors shown per field, checks matching the backend (§6.5)
 - [ ] New page imported with `lazy()`; modal built on the shared `Modal` shell (§6.6, §9)
+- [ ] Every delete and update opens `ConfirmationModal` before the request is sent (§9)
 - [ ] Lint passes with **zero** problems — not "only warnings"

@@ -1,257 +1,150 @@
-import { useCallback, useMemo, useState } from "react";
-import { useForgetPasswordMutation } from "@/redux/apis/auth.apis";
-import { useGetAllRolesQuery } from "@/redux/apis/roleManagement.apis";
-import {
-  useCreateUserMutation,
-  useDeleteSingleUserMutation,
-  useGetAllUsersQuery,
-  useUpdateSingleUserMutation,
-} from "@/redux/apis/userManagement.apis";
-import { Lock, Pencil, Trash } from "lucide-react";
-import { IoMdPersonAdd } from "react-icons/io";
+import { useMemo, useState } from "react";
+import { useDeleteSingleUserMutation, useUpdateSingleUserMutation } from "@/redux/apis/userManagement.apis";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { toast } from "react-toastify";
-import useDeleteConfirmation from "@/hooks/useDeleteConfirmation";
-import { useScreenContext } from "@/hooks/useScreenContext";
+import usePermission from "@/hooks/usePermission";
 import useRowActionMenu from "@/hooks/useRowActionMenu";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import AppDataTable from "@/components/shared/AppDataTable";
-import Modal from "@/components/modals/SaveCancelModal";
 import Button from "@/components/shared/Button";
+import EmptyState from "@/components/shared/EmptyState";
+import LoadingState from "@/components/shared/LoadingState";
 import RowActionMenuCell from "@/components/shared/RowActionMenuCell";
-import { FIELD_TYPES } from "@/constants";
-import getEnv from "@/utils/env";
 import UserManagementAddEditModal from "./UserManagementAddEditModal";
-import FormField from "@/components/global/FormField";
-import {
-  INITIAL_USER_FORM,
-  USER_AI_CHAT_PATH,
-  USER_FORM_FIELDS,
-  USER_FORM_FIELD_PROPS,
-  USER_MODAL_MODES,
-  USER_SCREEN_CONTEXT,
-} from "../utils/userManagement.constants";
-import {
-  applyUserFormChange,
-  buildUserScreenActions,
-  buildUserScreenState,
-  formateDateAndTime,
-} from "../utils/userManagement.utils";
+import { MODAL_MODES } from "@/constants";
+import { getDatePart } from "@/utils/date";
+import { PERMISSIONS } from "@/utils/permissions";
+import { formatDateAndTime, getUserFullName, validateUserForm } from "../utils/userManagement.utils";
 
-const SERVER_URL = getEnv("SERVER_URL");
+const STATE_CLASS_NAME = "flex flex-col items-center justify-center gap-4 py-16";
 
-const buildColumns = ({ actionMenu, getRowRef, buttons, onToggleMenu }) => [
-  { name: "Name", selector: (row) => row?.firstName + " " + row?.lastName, sortable: true },
+const buildColumns = ({ openRowId, getRowRef, buttons, onToggleMenu }) => [
+  { name: "Name", selector: (row) => getUserFullName(row), sortable: true },
   { name: "Email", selector: (row) => row?.email, sortable: true },
   { name: "Role", selector: (row) => row?.role?.name, sortable: true },
-  { name: "Last Active", selector: (row) => formateDateAndTime(row?.lastActive), sortable: true },
-  { name: "Create Date", selector: (row) => row?.createdAt?.split("T")[0], sortable: true },
-  {
-    name: "Action",
-    cell: (row) => (
-      <RowActionMenuCell
-        row={row}
-        buttons={buttons}
-        isOpen={actionMenu === row?._id}
-        onToggle={() => onToggleMenu(row?._id)}
-        rowRef={getRowRef(row?._id)}
-        buttonClassName="rounded p-1 hover:bg-gray-100 cursor-pointer"
-      />
-    ),
-  },
+  { name: "Last Active", selector: (row) => formatDateAndTime(row?.lastActive), sortable: true },
+  { name: "Create Date", selector: (row) => getDatePart(row?.createdAt), sortable: true },
+  ...(buttons.length
+    ? [
+        {
+          name: "Action",
+          cell: (row) => (
+            <RowActionMenuCell
+              row={row}
+              buttons={buttons}
+              isOpen={openRowId === row?._id}
+              onToggle={() => onToggleMenu(row?._id)}
+              rowRef={getRowRef(row?._id)}
+              buttonClassName="rounded p-1 hover:bg-gray-100 cursor-pointer"
+            />
+          ),
+        },
+      ]
+    : []),
 ];
 
-const UserManagementTable = () => {
-  const { data: users, isLoading: isLoadingUsers } = useGetAllUsersQuery();
-  const { data: userTypeOptions, isLoading: isLoadingUserTypeOptions } = useGetAllRolesQuery();
-  const [createUser, { isLoading: isCreatingUser }] = useCreateUserMutation();
-  const [deleteUser, { isLoading: isDeletingUser }] = useDeleteSingleUserMutation();
+const UserManagementTable = ({ users = [], roleOptions = [], isLoading = false, isError = false, onRetry }) => {
+  const canUpdateUser = usePermission(PERMISSIONS.UPDATE_USER);
+  const canDeleteUser = usePermission(PERMISSIONS.DELETE_USER);
   const [updateUser, { isLoading: isUpdatingUser }] = useUpdateSingleUserMutation();
-  const [sendPasswordResetLink] = useForgetPasswordMutation();
+  const [deleteUser, { isLoading: isDeletingUser }] = useDeleteSingleUserMutation();
+  const { openRowId, setOpenRowId, toggleMenu, getRowRef } = useRowActionMenu({ closeOnOutsideClick: true });
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editModalData, setEditModalData] = useState(null);
-  const [passwordModalData, setPasswordModalData] = useState(null);
-  const { openRowId: actionMenu, setOpenRowId: setActionMenu, toggleMenu, getRowRef } = useRowActionMenu({
-    closeOnOutsideClick: true,
-  });
-  const [formData, setFormData] = useState(INITIAL_USER_FORM);
-  const [formErrors, setFormErrors] = useState({});
-  const [userIdForDelete, setUserIdForDelete] = useState(null);
+  const [userToEdit, setUserToEdit] = useState(null);
+  const [editErrors, setEditErrors] = useState({});
+  const [isConfirmingUpdate, setIsConfirmingUpdate] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
-
-  useScreenContext({
-    ...USER_SCREEN_CONTEXT,
-    aiEndpoint: `${SERVER_URL}${USER_AI_CHAT_PATH}`,
-    currentState: buildUserScreenState(users?.data || [], userTypeOptions?.data || []),
-    actions: buildUserScreenActions({
-      users: users?.data || [],
-      createUser,
-      updateUser,
-      deleteUser,
-      sendPasswordResetLink,
-      toastError: toast.error,
-    }),
-    deps: { userCount: users?.data?.length, roleCount: userTypeOptions?.data?.length },
-  });
-
-  const handleInputChange = useCallback(
-    (e) => {
-      const { name } = e.target;
-      setFormData((prev) => applyUserFormChange(prev, e.target));
-      if (formErrors[name]) {
-        setFormErrors((prev) => ({ ...prev, [name]: null }));
-      }
-    },
-    [formErrors],
-  );
-
-  const handleEditInputChange = useCallback((e) => {
-    const { name, value, type, checked } = e.target;
-    setEditModalData((prev) => (prev ? { ...prev, [name]: type === FIELD_TYPES.CHECKBOX ? checked : value } : prev));
-  }, []);
-
-  const handlePasswordInputChange = useCallback((e) => {
-    const { value } = e.target;
-    setPasswordModalData((prev) => ({ ...prev, password: value }));
-  }, []);
-
-  const handleAddUser = async () => {
-    try {
-      const res = await createUser(formData).unwrap();
-      if (res.success) {
-        toast.success(res.message);
-        setIsModalOpen(false);
-        setFormData(INITIAL_USER_FORM);
-        setFormErrors({});
-      }
-    } catch (error) {
-      console.error("Create user error:", error);
-      toast.error(error?.data?.message || "Failed to create user");
-    }
-  };
-
-  const handleEditUser = async () => {
-    try {
-      const res = await updateUser(editModalData).unwrap();
-      if (res.success) {
-        toast.success(res.message);
-        setEditModalData(null);
-        setFormErrors({});
-        setActionMenu(null);
-        setIsModalOpen(false);
-      }
-    } catch (error) {
-      console.error("Update user error:", error);
-      toast.error(error?.data?.message || "Failed to update user");
-    }
-  };
-
-  // TODO: call the change password endpoint
-  const handleChangePassword = () => {
-    setPasswordModalData(null);
-    setFormErrors({});
-  };
-
-  const {
-    target: deleteConfirmation,
-    openConfirmation: setDeleteConfirmation,
-    closeConfirmation,
-    handleConfirm: handleDeleteUser,
-  } = useDeleteConfirmation({
-    onDelete: async () => {
-      try {
-        const res = await deleteUser({ _id: userIdForDelete }).unwrap();
-        if (res.success) {
-          toast.success(res?.message);
-          setActionMenu(null);
-          return true;
-        }
-      } catch (error) {
-        console.error("Delete user error:", error);
-        toast.error(error?.data?.message || "Failed to change password");
-      }
-    },
-  });
-
-  const handleCloseAddModal = () => {
-    setIsModalOpen(false);
-    setFormData(INITIAL_USER_FORM);
-    setFormErrors({});
-  };
-
-  const handleCloseEditModal = () => {
-    setEditModalData(null);
-    setFormErrors({});
-  };
-
-  const handleClosePasswordModal = () => {
-    setPasswordModalData(null);
-    setFormErrors({});
-  };
-
-  const userTypeDropdownOptions = useMemo(
-    () => userTypeOptions?.data?.map((option) => ({ value: option?._id, label: option?.name })),
-    [userTypeOptions?.data],
-  );
-
-  const ButtonsForThreeDot = useMemo(
-    () => [
-      {
-        name: "Change Password",
-        icon: <Lock size={16} className="mr-2" />,
-        onClick: (row) => {
-          setPasswordModalData({ id: row?._id, password: "" });
-          setActionMenu(null);
+  const rowButtons = useMemo(
+    () =>
+      [
+        canUpdateUser && {
+          name: "Edit",
+          icon: <FiEdit2 size={16} className="mr-2" />,
+          onClick: (row) => {
+            const { _id, firstName, lastName, email, role } = row;
+            setUserToEdit({ _id, firstName, lastName, email, role: role?._id });
+            setOpenRowId(null);
+          },
         },
-      },
-      {
-        name: "Edit",
-        icon: <Pencil size={16} className="mr-2" />,
-        onClick: (row) => {
-          setEditModalData({ ...row, role: row?.role?._id });
-          setActionMenu(null);
+        canDeleteUser && {
+          name: "Delete",
+          icon: <FiTrash2 size={16} className="mr-2" />,
+          onClick: (row) => {
+            setUserToDelete(row);
+            setOpenRowId(null);
+          },
         },
-      },
-      {
-        name: "Delete",
-        icon: <Trash size={16} className="mr-2" />,
-        onClick: (row) => {
-          setDeleteConfirmation(row);
-          setActionMenu(null);
-          setUserIdForDelete(row?._id);
-        },
-      },
-    ],
-    [setDeleteConfirmation, setActionMenu],
+      ].filter(Boolean),
+    [canUpdateUser, canDeleteUser, setOpenRowId],
   );
 
   const columns = useMemo(
-    () => buildColumns({ actionMenu, getRowRef, buttons: ButtonsForThreeDot, onToggleMenu: toggleMenu }),
-    [ButtonsForThreeDot, actionMenu, getRowRef, toggleMenu],
+    () => buildColumns({ openRowId, getRowRef, buttons: rowButtons, onToggleMenu: toggleMenu }),
+    [openRowId, getRowRef, rowButtons, toggleMenu],
   );
 
-  return (
-    <div className="mt-5" data-testid="users-page">
-      <header className="mb-5 flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-[#323332]">User Table</h2>
-        <div className="flex gap-2">
-          <Button
-            icon={IoMdPersonAdd}
-            label="Add User"
-            onClick={() => setIsModalOpen(true)}
-            disabled={isCreatingUser}
-            data-testid="invite-user-btn"
-          />
-        </div>
-      </header>
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setUserToEdit((prev) => ({ ...prev, [name]: value }));
+    setEditErrors((prev) => ({ ...prev, [name]: "" }));
+  };
 
+  const handleCloseEdit = () => {
+    setUserToEdit(null);
+    setEditErrors({});
+  };
+
+  const handleSaveEdit = () => {
+    const errors = validateUserForm(userToEdit, MODAL_MODES.EDIT);
+    if (Object.keys(errors).length) return setEditErrors(errors);
+    setIsConfirmingUpdate(true);
+  };
+
+  const handleConfirmUpdate = async () => {
+    const { _id, firstName, lastName, email, role } = userToEdit;
+    // send role only when it changed
+    const currentRoleId = users.find((user) => user._id === _id)?.role?._id;
+    const payload = { _id, firstName, lastName, email, ...(role !== currentRoleId && { role }) };
+    try {
+      const res = await updateUser(payload).unwrap();
+      toast.success(res.message);
+      setIsConfirmingUpdate(false);
+      handleCloseEdit();
+    } catch (error) {
+      console.error("Update user error:", error);
+      toast.error(error?.data?.message || "Failed to update user");
+      setIsConfirmingUpdate(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      const res = await deleteUser({ _id: userToDelete._id }).unwrap();
+      toast.success(res.message);
+      setUserToDelete(null);
+    } catch (error) {
+      console.error("Delete user error:", error);
+      toast.error(error?.data?.message || "Failed to delete user");
+    }
+  };
+
+  if (isLoading) return <LoadingState title="Loading users" className={STATE_CLASS_NAME} />;
+  if (isError)
+    return (
+      <EmptyState title="Could not load users" className={STATE_CLASS_NAME}>
+        <Button type="button" label="Try again" onClick={onRetry} />
+      </EmptyState>
+    );
+  if (!users.length) return <EmptyState title="No users found" className={STATE_CLASS_NAME} />;
+
+  return (
+    <>
       <AppDataTable
         data-testid="users-table"
         columns={columns}
-        data={users?.data || []}
+        data={users}
         pagination
-        progressPending={isLoadingUsers || isLoadingUserTypeOptions}
-        noDataComponent="No users found"
         className="rounded-t-xl!"
         highlightOnHover
         fixedHeader
@@ -260,59 +153,38 @@ const UserManagementTable = () => {
       />
 
       <UserManagementAddEditModal
-        isOpen={isModalOpen}
-        mode={USER_MODAL_MODES.ADD}
-        initialData={formData}
-        errors={formErrors}
-        roleOptions={userTypeDropdownOptions}
-        isLoading={isCreatingUser}
-        onChange={handleInputChange}
-        onClose={handleCloseAddModal}
-        onSubmit={handleAddUser}
-      />
-
-      <UserManagementAddEditModal
-        isOpen={Boolean(editModalData)}
-        mode={USER_MODAL_MODES.EDIT}
-        initialData={editModalData}
-        errors={formErrors}
-        roleOptions={userTypeDropdownOptions}
+        isOpen={Boolean(userToEdit)}
+        mode={MODAL_MODES.EDIT}
+        initialData={userToEdit}
+        errors={editErrors}
+        roleOptions={roleOptions}
         isLoading={isUpdatingUser}
-        onChange={handleEditInputChange}
-        onClose={handleCloseEditModal}
-        onSubmit={handleEditUser}
+        onChange={handleEditChange}
+        onClose={handleCloseEdit}
+        onSubmit={handleSaveEdit}
       />
-
-      {passwordModalData && (
-        <Modal
-          title="Change Password"
-          onClose={handleClosePasswordModal}
-          onSave={handleChangePassword}
-          isLoading={isUpdatingUser}
-        >
-          <FormField
-            {...USER_FORM_FIELD_PROPS}
-            field={USER_FORM_FIELDS.PASSWORD}
-            value={passwordModalData.password}
-            onChange={handlePasswordInputChange}
-            type={FIELD_TYPES.PASSWORD}
-            error={formErrors.password}
-          />
-        </Modal>
-      )}
 
       <ConfirmationModal
-        isOpen={Boolean(deleteConfirmation)}
-        onClose={closeConfirmation}
-        onConfirm={handleDeleteUser}
+        isOpen={isConfirmingUpdate}
+        onClose={() => setIsConfirmingUpdate(false)}
+        onConfirm={handleConfirmUpdate}
+        title="Update User"
+        message={`Are you sure you want to save the changes to ${getUserFullName(userToEdit)}?`}
+        isLoading={isUpdatingUser}
+        confirmButtonText="Save Changes"
+      />
+
+      <ConfirmationModal
+        isOpen={Boolean(userToDelete)}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={handleConfirmDelete}
         title="Delete User"
-        message={`Are you sure you want to delete the user ${deleteConfirmation?.name}? This action cannot be undone.`}
+        message={`Are you sure you want to delete the user ${getUserFullName(userToDelete)}? This action cannot be undone.`}
         isLoading={isDeletingUser}
         confirmButtonText="Delete User"
-        confirmButtonClassName="bg-red-500 border-none hover:bg-red-600 text-white"
         cancelButtonText="Keep User"
       />
-    </div>
+    </>
   );
 };
 

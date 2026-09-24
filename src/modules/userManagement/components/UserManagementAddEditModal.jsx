@@ -1,11 +1,11 @@
 import Modal from "@/components/modals/SaveCancelModal";
-import { FIELD_TYPES } from "@/constants";
 import FormField from "@/components/global/FormField";
-import { BUSINESS_ROLE_IDS, USER_FORM_FIELDS, USER_FORM_FIELD_PROPS, USER_MODAL_MODES } from "../utils/userManagement.constants";
+import { FIELD_TYPES, MODAL_MODES } from "@/constants";
+import { USER_FORM_FIELDS, USER_FORM_FIELD_PROPS } from "../utils/userManagement.constants";
 
 const UserManagementAddEditModal = ({
   isOpen = false,
-  mode = USER_MODAL_MODES.ADD,
+  mode = MODAL_MODES.ADD,
   initialData = null,
   errors = {},
   roleOptions = [],
@@ -15,7 +15,7 @@ const UserManagementAddEditModal = ({
   onSubmit,
 }) => {
   if (!isOpen) return null;
-  const isEditMode = mode === USER_MODAL_MODES.EDIT;
+  const isEditMode = mode === MODAL_MODES.EDIT;
 
   return (
     <Modal
@@ -48,15 +48,6 @@ const UserManagementAddEditModal = ({
         error={errors.role}
         options={roleOptions}
       />
-      {BUSINESS_ROLE_IDS.includes(initialData?.role) && (
-        <FormField
-          {...USER_FORM_FIELD_PROPS}
-          field={USER_FORM_FIELDS.BUSINESS_NAME}
-          value={initialData?.businessName}
-          onChange={onChange}
-          error={errors.businessName}
-        />
-      )}
       <FormField
         {...USER_FORM_FIELD_PROPS}
         field={USER_FORM_FIELDS.EMAIL}
