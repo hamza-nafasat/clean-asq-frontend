@@ -14,7 +14,7 @@ import { EditSectionDisplayTextFromatingModal } from "./ApplicantSectionTextModa
 import { FIELD_BLOCK_TYPE, FIELD_NAMES } from "../utils/applicant.constants";
 import { isCustomSectionValueFilled, uploadSignatureReplacing } from "../utils/applicant.utils12";
 import { isNotGuestRoleValue } from "@/utils/permissions";
-import { getSignatureUrl, isSignatureComplete, normalizeFieldEntry, normalizeSignature } from "@/utils/signatureShape";
+import { isSignatureComplete, normalizeFieldEntry, normalizeSignature } from "@/utils/signatureShape";
 import HtmlContent from "@/components/shared/HtmlContent";
 
 const CustomSection = ({
@@ -64,10 +64,10 @@ const CustomSection = ({
   const isActionDisabled = !isAllRequiredFieldsFilled || loadingNext;
   const actionClassName = isActionDisabled ? "pointer-events-none cursor-not-allowed opacity-20" : "";
 
-  const handleSignatureUpload = async (file, setIsSaving) => {
+  const handleSignatureUpload = async (file, setIsSaving, stamp) => {
     try {
       if (!file) return toast.error("Please select a file");
-      const { res, errorMessage } = await uploadSignatureReplacing(file, form?.signature?.value);
+      const { res, errorMessage } = await uploadSignatureReplacing(file, form?.signature?.value, stamp);
       if (errorMessage) return toast.error(errorMessage);
       setForm((prev) => ({ ...prev, signature: { name: FIELD_NAMES.SIGNATURE, value: res } }));
       toast.success("Signature uploaded successfully");
@@ -153,7 +153,7 @@ const CustomSection = ({
             {step?.signDisplayFormattedText && (
               <HtmlContent className="mb-4" data-ai-display-text html={String(step.signDisplayFormattedText)} linkMode="none" />
             )}
-            <SignatureBox step={step} onSave={handleSignatureUpload} oldSignatureUrl={getSignatureUrl(form?.signature)} />
+            <SignatureBox step={step} onSave={handleSignatureUpload} signature={form?.signature} />
           </>
         )}
       </div>

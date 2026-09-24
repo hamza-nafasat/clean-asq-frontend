@@ -25,7 +25,7 @@ import { collectLookupSuggestions } from "../utils/applicant.utils7";
 import { isRequiredValueFilled } from "../utils/applicant.utils8";
 import { uploadSignatureReplacing } from "../utils/applicant.utils12";
 import { isNotGuestRoleValue } from "@/utils/permissions";
-import { getSignatureUrl, isSignatureComplete, normalizeSignature } from "@/utils/signatureShape";
+import { isSignatureComplete, normalizeSignature } from "@/utils/signatureShape";
 
 const BankInfo = ({
   sectionKey,
@@ -84,10 +84,10 @@ const BankInfo = ({
       (!isSignature || isSignatureComplete(form?.signature)));
   const isNextBlocked = !isAllRequiredFieldsFilled || loadingNext || (!accMatch && !isCreator);
 
-  const handleSignatureUpload = async (file, setIsSaving) => {
+  const handleSignatureUpload = async (file, setIsSaving, stamp) => {
     try {
       if (!file) return toast.error("Please select a file");
-      const { res, errorMessage } = await uploadSignatureReplacing(file, normalizeSignature(form?.signature).value);
+      const { res, errorMessage } = await uploadSignatureReplacing(file, normalizeSignature(form?.signature).value, stamp);
       if (errorMessage) return toast.error(errorMessage);
       setForm((prev) => ({ ...prev, signature: { name: FIELD_NAMES.SIGNATURE, value: res } }));
       toast.success("Signature uploaded successfully");
@@ -296,7 +296,7 @@ const BankInfo = ({
 
         <div className="mt-4">
           {isSignature && (
-            <SignatureBox step={step} onSave={handleSignatureUpload} oldSignatureUrl={getSignatureUrl(form?.signature)} />
+            <SignatureBox step={step} onSave={handleSignatureUpload} signature={form?.signature} />
           )}
         </div>
 

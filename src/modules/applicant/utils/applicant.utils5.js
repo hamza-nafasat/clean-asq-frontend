@@ -120,13 +120,13 @@ export const areIdMissionFieldsFilled = (data) =>
   });
 
 // upload a new ID Mission signature after removing the old one
-export const uploadIdMissionSignature = async (file, oldSignature) => {
+export const uploadIdMissionSignature = async (file, oldSignature, stamp = {}) => {
   if (oldSignature?.publicId || oldSignature?.secureUrl) {
     await deleteImageFromCloudinary(oldSignature?.publicId, oldSignature?.resourceType);
   }
   const { secureUrl, publicId, resourceType } = await uploadImageOnCloudinary(file);
   if (!secureUrl || !publicId) return null;
-  return { secureUrl, publicId, resourceType };
+  return { secureUrl, publicId, resourceType, ...stamp };
 };
 
 // signature display text, form level first, then the section

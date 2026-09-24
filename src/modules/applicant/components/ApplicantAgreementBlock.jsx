@@ -1,7 +1,7 @@
 import { useEnterToNextField } from "../hooks/useEnterToNextField";
 import { updateFormState } from "@/redux/slices/form.slice";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
-import { getSignatureUrl, isSignatureComplete, normalizeFieldEntry, normalizeSignature } from "@/utils/signatureShape";
+import { isSignatureComplete, normalizeFieldEntry, normalizeSignature } from "@/utils/signatureShape";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -46,7 +46,7 @@ function AggrementBlock({
   );
   const isCreator = user?._id && user?._id == step?.owner && isNotGuestRoleValue(user);
 
-  const signatureUploadHandler = async (file, setIsSaving) => {
+  const signatureUploadHandler = async (file, setIsSaving, stamp) => {
     try {
       if (!file) return toast.error("Please select a file");
       if (file) {
@@ -58,7 +58,7 @@ function AggrementBlock({
         const res = await uploadImageOnCloudinary(file);
         if (!res.publicId || !res.secureUrl || !res.resourceType)
           return toast.error("File Not Uploaded Please Try Again");
-        const signature = { name: "signature", value: res };
+        const signature = { name: "signature", value: { ...res, ...stamp } };
         // Merge into existing section so signature-only save does not wipe fields
         const mergedSection = { ...(formData?.[sectionKey] || {}), ...form, signature };
         const action = await dispatch(updateFormState({ data: mergedSection, name: sectionKey }));
@@ -234,7 +234,7 @@ function AggrementBlock({
             <SignatureBox
               step={step}
               onSave={signatureUploadHandler}
-              oldSignatureUrl={getSignatureUrl(form?.signature)}
+              signature={form?.signature}
             />
           </>
         )}

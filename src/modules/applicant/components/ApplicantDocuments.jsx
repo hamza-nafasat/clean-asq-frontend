@@ -20,7 +20,7 @@ import { buildDocumentsAiPrompt, parseDocumentUrls } from "../utils/applicant.ut
 import { areDocumentsComplete, uploadSignatureReplacing } from "../utils/applicant.utils12";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
 import { isNotGuestRoleValue } from "@/utils/permissions";
-import { getSignatureUrl, normalizeFieldEntry, normalizeSignature } from "@/utils/signatureShape";
+import { normalizeFieldEntry, normalizeSignature } from "@/utils/signatureShape";
 
 const Documents = ({
   sectionKey,
@@ -70,10 +70,10 @@ const Documents = ({
     isCreator || areDocumentsComplete({ form, requiredNames, hasNewFile: !!file || urls.length > 0, isSignature });
   const isActionDisabled = loadingNext || !isAllRequiredFilled;
 
-  const handleSignatureUpload = async (signatureFile, setIsSaving) => {
+  const handleSignatureUpload = async (signatureFile, setIsSaving, stamp) => {
     try {
       if (!signatureFile) return toast.error("Please select a file");
-      const { res, errorMessage } = await uploadSignatureReplacing(signatureFile, form?.signature?.value);
+      const { res, errorMessage } = await uploadSignatureReplacing(signatureFile, form?.signature?.value, stamp);
       if (errorMessage) return toast.error(errorMessage);
       setForm((prev) => ({ ...prev, signature: { name: FIELD_NAMES.SIGNATURE, value: res } }));
       toast.success("Signature uploaded successfully");
@@ -264,7 +264,7 @@ const Documents = ({
       </div>
       <div className="mt-4">
         {isSignature && (
-          <SignatureBox step={step} onSave={handleSignatureUpload} oldSignatureUrl={getSignatureUrl(form?.signature)} />
+          <SignatureBox step={step} onSave={handleSignatureUpload} signature={form?.signature} />
         )}
       </div>
 

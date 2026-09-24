@@ -12,9 +12,19 @@ export const normalizeSignature = (raw) => {
       publicId: value?.publicId || "",
       secureUrl: value?.secureUrl || "",
       resourceType: value?.resourceType || "",
+      signedByName: value?.signedByName || "",
+      signedByEmail: value?.signedByEmail || "",
+      signedAt: value?.signedAt || "",
     },
   };
 };
+
+// who signed and when
+export const buildSignatureStamp = (user) => ({
+  signedByName: [user?.firstName, user?.lastName].filter(Boolean).join(" "),
+  signedByEmail: user?.email || "",
+  signedAt: new Date().toISOString(),
+});
 
 // true when a signature has both publicId and secureUrl
 export const isSignatureComplete = (raw) => {

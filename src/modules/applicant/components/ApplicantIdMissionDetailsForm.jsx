@@ -123,7 +123,7 @@ const ApplicantIdMissionDetailsForm = ({
             data-ai-value={signatureUrl}
             data-ai-text={signatureAiText}
           >
-            <SignatureBox oldSignatureUrl={signatureUrl} className="min-w-full" onSave={onSaveSignature} />
+            <SignatureBox signature={data?.signature} className="min-w-full" onSave={onSaveSignature} />
           </div>
         </div>
       </form>

@@ -5,14 +5,14 @@ import { COMPANY_OWNERSHIP_TYPES, FIELD_NAMES } from "./applicant.constants";
 import { isRequiredValueFilled } from "./applicant.utils8";
 
 // upload a new signature after removing the old one
-export const uploadSignatureReplacing = async (file, oldSign) => {
+export const uploadSignatureReplacing = async (file, oldSign, stamp = {}) => {
   if (oldSign?.publicId) {
     const deleted = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
     if (!deleted) return { errorMessage: "File Not Deleted Please Try Again" };
   }
   const res = await uploadImageOnCloudinary(file);
   if (!res.publicId || !res.secureUrl || !res.resourceType) return { errorMessage: "File Not Uploaded Please Try Again" };
-  return { res };
+  return { res: { ...res, ...stamp } };
 };
 
 // company information form, prefilled from the draft first, then the lookup data

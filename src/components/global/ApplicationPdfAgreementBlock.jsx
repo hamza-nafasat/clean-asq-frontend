@@ -39,17 +39,18 @@ const AggrementBlockPdf = ({ name, step, isSignature, formInnerData, setFormInne
             )}
             <SignatureBox
               step={step}
-              onSave={(file, setIsSaving) =>
+              onSave={(file, setIsSaving, stamp) =>
                 uploadSectionSignature({
                   file,
                   setIsSaving,
+                  stamp,
                   sectionKey,
                   formInnerData,
                   setFormInnerData,
                   onUploaded: handleSignatureUploaded,
                 })
               }
-              oldSignatureUrl={formInnerData?.[sectionKey]?.[SIGNATURE_KEY]?.value?.secureUrl || ""}
+              signature={formInnerData?.[sectionKey]?.[SIGNATURE_KEY]}
               isPdf={true}
             />
           </>

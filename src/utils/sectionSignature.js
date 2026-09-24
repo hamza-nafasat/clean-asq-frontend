@@ -7,6 +7,7 @@ import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/clou
 export const uploadSectionSignature = async ({
   file,
   setIsSaving,
+  stamp = {},
   sectionKey,
   formInnerData,
   setFormInnerData,
@@ -26,7 +27,7 @@ export const uploadSectionSignature = async ({
     if (onUploaded) await onUploaded(res);
     setFormInnerData((prev) => ({
       ...prev,
-      [sectionKey]: { ...prev?.[sectionKey], [SIGNATURE_KEY]: { name: SIGNATURE_KEY, value: res } },
+      [sectionKey]: { ...prev?.[sectionKey], [SIGNATURE_KEY]: { name: SIGNATURE_KEY, value: { ...res, ...stamp } } },
     }));
     toast.success("Signature uploaded successfully");
   } catch (error) {

@@ -31,10 +31,10 @@ const ProcessingInfoPdf = ({ name, fields, step, isSignature, formInnerData, set
         <SignatureBox
           step={step}
           isPdf={true}
-          onSave={(file, setIsSaving) =>
-            uploadSectionSignature({ file, setIsSaving, sectionKey, formInnerData, setFormInnerData })
+          onSave={(file, setIsSaving, stamp) =>
+            uploadSectionSignature({ file, setIsSaving, stamp, sectionKey, formInnerData, setFormInnerData })
           }
-          oldSignatureUrl={formInnerData?.[sectionKey]?.[SIGNATURE_KEY]?.value?.secureUrl || ""}
+          signature={formInnerData?.[sectionKey]?.[SIGNATURE_KEY]}
         />
       )}
     </div>

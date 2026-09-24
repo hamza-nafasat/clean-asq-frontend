@@ -218,11 +218,11 @@ const CompanyInformationPdf = ({
             {isSignature && (
               <SignatureBox
                 isPdf={true}
-                onSave={(file, setIsSaving) =>
-                  uploadSectionSignature({ file, setIsSaving, sectionKey, formInnerData, setFormInnerData })
+                onSave={(file, setIsSaving, stamp) =>
+                  uploadSectionSignature({ file, setIsSaving, stamp, sectionKey, formInnerData, setFormInnerData })
                 }
                 step={step}
-                oldSignatureUrl={formInnerData?.[sectionKey]?.[SIGNATURE_KEY]?.value?.secureUrl || ""}
+                signature={formInnerData?.[sectionKey]?.[SIGNATURE_KEY]}
               />
             )}
           </div>

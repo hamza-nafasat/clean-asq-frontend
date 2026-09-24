@@ -174,10 +174,10 @@ const IdMissionDataPdf = ({ formId, sectionKey, formInnerData, setFormInnerData 
           <SignatureBox
             disabled={isDisabledAllFields}
             isPdf={true}
-            oldSignatureUrl={sectionData?.[SIGNATURE_KEY]?.value?.secureUrl}
+            signature={sectionData?.[SIGNATURE_KEY]}
             className="min-w-full"
-            onSave={(file, setIsSaving) =>
-              uploadSectionSignature({ file, setIsSaving, sectionKey, formInnerData, setFormInnerData })
+            onSave={(file, setIsSaving, stamp) =>
+              uploadSectionSignature({ file, setIsSaving, stamp, sectionKey, formInnerData, setFormInnerData })
             }
           />
         </div>

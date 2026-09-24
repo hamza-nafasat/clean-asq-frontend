@@ -211,12 +211,12 @@ const CompanyOwnersPdf = ({ name, reduxData, fields, step, isSignature, formInne
             <div>
               {isSignature && (
                 <SignatureBox
-                  onSave={(file, setIsSaving) =>
-                    uploadSectionSignature({ file, setIsSaving, sectionKey, formInnerData, setFormInnerData })
+                  onSave={(file, setIsSaving, stamp) =>
+                    uploadSectionSignature({ file, setIsSaving, stamp, sectionKey, formInnerData, setFormInnerData })
                   }
                   step={step}
                   isPdf={true}
-                  oldSignatureUrl={formInnerData?.[sectionKey]?.[SIGNATURE_KEY]?.value?.secureUrl || ""}
+                  signature={formInnerData?.[sectionKey]?.[SIGNATURE_KEY]}
                 />
               )}
             </div>

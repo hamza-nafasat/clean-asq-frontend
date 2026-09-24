@@ -18,7 +18,7 @@ import Modal from "@/components/shared/Modal";
 import CustomizationFieldsModal from "./ApplicantCustomizeFieldsModal";
 import SignatureBox from "@/components/global/SignatureBox";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
-import { getSignatureUrl, isSignatureComplete, normalizeSignature } from "@/utils/signatureShape";
+import { isSignatureComplete, normalizeSignature } from "@/utils/signatureShape";
 import { toast } from "react-toastify";
 
 import { isNotGuestRoleValue } from "@/utils/permissions";
@@ -55,7 +55,7 @@ function ProcessingInfo({
 
   const isCreator = user?._id && user?._id === step?.owner && isNotGuestRoleValue(user);
 
-  const signatureUploadHandler = async (file, setIsSaving) => {
+  const signatureUploadHandler = async (file, setIsSaving, stamp) => {
     try {
       if (!file) return toast.error("Please select a file");
       if (file) {
@@ -68,7 +68,7 @@ function ProcessingInfo({
         if (!res.publicId || !res.secureUrl || !res.resourceType) {
           return toast.error("File Not Uploaded Please Try Again");
         }
-        setForm((prev) => ({ ...prev, signature: { name: "signature", value: res } }));
+        setForm((prev) => ({ ...prev, signature: { name: "signature", value: { ...res, ...stamp } } }));
         toast.success("Signature uploaded successfully");
       }
     } catch (error) {
@@ -258,7 +258,7 @@ function ProcessingInfo({
           <SignatureBox
             step={step}
             onSave={signatureUploadHandler}
-            oldSignatureUrl={getSignatureUrl(form?.signature)}
+            signature={form?.signature}
           />
         )}
       </div>

@@ -7,21 +7,29 @@ import Modal from "@/components/shared/Modal";
 import HtmlContent from "@/components/shared/HtmlContent";
 import { SIGNATURE_MODES } from "@/constants";
 import { dataUrlToFile, getSignatureAiText, renderTypedSignature, SIGNATURE_LINE_WIDTH } from "@/utils/signatureCanvas";
+import { buildSignatureStamp, normalizeSignature } from "@/utils/signatureShape";
 
 const BUTTON_CLASSES =
   "cursor-pointer rounded px-4 py-2 text-sm font-medium transition-transform duration-200 hover:scale-105 active:scale-95";
 const SIGNATURE_FILE_NAME = "signature.png";
 
+const SIGNED_AT_FORMAT = { dateStyle: "medium", timeStyle: "short" };
+
 const getModeButtonClasses = (isActive) =>
   `${BUTTON_CLASSES} flex-1 ${isActive ? "bg-primary text-buttonTextPrimary" : "bg-secondary text-buttonTextSecondary"}`;
 
-const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = false }) => {
+const SignatureBox = ({ onSave, step, signature = null, className = "", isPdf = false }) => {
   const { isDisabledAllFields } = useSelector((state) => state.form);
+  const { user } = useSelector((state) => state.auth);
+  const savedSignature = normalizeSignature(signature).value;
+  const oldSignatureUrl = savedSignature.secureUrl;
   const { textColor, fontFamily } = useBranding();
   const [mode, setMode] = useState(SIGNATURE_MODES.DRAW);
   const [typedSignature, setTypedSignature] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [pendingAiFill, setPendingAiFill] = useState(false);
+  const [isCleared, setIsCleared] = useState(false);
+  const [hasInk, setHasInk] = useState(false);
 
   const outerDivRef = useRef(null);
   const canvasRef = useRef(null);
@@ -30,6 +38,10 @@ const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = f
   const lastPoint = useRef({ x: 0, y: 0 });
 
   const isLocked = isPdf && isDisabledAllFields;
+  // a saved signature stays until cleared
+  const isSigned = Boolean(oldSignatureUrl) && !isCleared;
+  const hasNewSignature = mode === SIGNATURE_MODES.TYPE ? Boolean(typedSignature.trim()) : hasInk;
+  const canSave = !isSigned && hasNewSignature && !isSaving;
 
   const setupCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -52,7 +64,7 @@ const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = f
     ctxRef.current = ctx;
 
     // draw the saved signature as a preview
-    if (oldSignatureUrl) {
+    if (oldSignatureUrl && !isCleared) {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
@@ -60,7 +72,7 @@ const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = f
     } else {
       ctx.clearRect(0, 0, rect.width, rect.height);
     }
-  }, [textColor, oldSignatureUrl]);
+  }, [textColor, oldSignatureUrl, isCleared]);
 
   // open display text links in the document modal
   const pointerPos = (e) => {
@@ -69,8 +81,9 @@ const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = f
   };
 
   const startDraw = (e) => {
-    if (isLocked || mode !== SIGNATURE_MODES.DRAW) return;
+    if (isLocked || isSigned || mode !== SIGNATURE_MODES.DRAW) return;
     drawing.current = true;
+    setHasInk(true);
     lastPoint.current = pointerPos(e);
     try {
       canvasRef.current.setPointerCapture(e.pointerId);
@@ -112,6 +125,8 @@ const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = f
     const rect = canvasRef.current.getBoundingClientRect();
     ctxRef.current.clearRect(0, 0, rect.width, rect.height);
     setTypedSignature("");
+    setHasInk(false);
+    setIsCleared(true);
   };
 
   const handleSave = useCallback(async () => {
@@ -119,14 +134,20 @@ const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = f
       setIsSaving(true);
       const dataUrl = generateSignatureData();
       if (dataUrl) {
-        await onSave?.(dataUrlToFile(dataUrl, SIGNATURE_FILE_NAME), setIsSaving);
+        await onSave?.(dataUrlToFile(dataUrl, SIGNATURE_FILE_NAME), setIsSaving, buildSignatureStamp(user));
         setMode(SIGNATURE_MODES.DRAW);
       }
     } catch (error) {
       console.error("Save signature error:", error);
       setIsSaving(false);
     }
-  }, [generateSignatureData, onSave]);
+  }, [generateSignatureData, onSave, user]);
+
+  // a newly saved signature replaces the cleared one
+  useEffect(() => {
+    setIsCleared(false);
+    setHasInk(false);
+  }, [oldSignatureUrl]);
 
   useEffect(() => {
     setupCanvas();
@@ -141,6 +162,7 @@ const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = f
     const handler = (e) => {
       const name = e.detail?.name;
       if (!name) return;
+      setIsCleared(true);
       setMode(SIGNATURE_MODES.TYPE);
       setTypedSignature(name);
       setPendingAiFill(true);
@@ -224,6 +246,7 @@ const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = f
             style={{ fontFamily: fontFamily }}
             placeholder="Type your signature"
             value={typedSignature}
+            disabled={isSigned}
             onChange={(e) => setTypedSignature(e.target.value)}
           />
         )}
@@ -238,11 +261,23 @@ const SignatureBox = ({ onSave, step, oldSignatureUrl, className = "", isPdf = f
           <button
             type="button"
             onClick={handleSave}
-            className={`${BUTTON_CLASSES} bg-primary text-buttonTextPrimary ml-auto ${isSaving ? "pointer-events-none opacity-30" : ""}`}
+            disabled={!canSave}
+            className={`${BUTTON_CLASSES} bg-primary text-buttonTextPrimary ml-auto disabled:pointer-events-none disabled:opacity-30`}
           >
             {isSaving ? "Saving..." : "Save Signature"}
           </button>
         </div>
+      )}
+
+      {/* Signer stamp */}
+      {isSigned && savedSignature.signedByName && (
+        <p className="mt-3 text-xs leading-relaxed text-gray-600">
+          <span className="font-semibold text-gray-800">{savedSignature.signedByName}</span>
+          {savedSignature.signedByEmail && <span> ({savedSignature.signedByEmail})</span>}
+          {savedSignature.signedAt && (
+            <span> · {new Date(savedSignature.signedAt).toLocaleString("en-US", SIGNED_AT_FORMAT)}</span>
+          )}
+        </p>
       )}
     </div>
   );

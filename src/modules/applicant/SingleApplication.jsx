@@ -108,10 +108,10 @@ const SingleApplication = () => {
     signatureUrl: () => idMissionVerifiedData?.signature?.value?.secureUrl || null,
   });
 
-  const handleSignature = async (file, setIsSaving) => {
+  const handleSignature = async (file, setIsSaving, stamp) => {
     try {
       if (!file) return toast.error("Please add signature");
-      const value = await uploadIdMissionSignature(file, idMissionVerifiedData?.signature);
+      const value = await uploadIdMissionSignature(file, idMissionVerifiedData?.signature, stamp);
       if (!value) return toast.error("Something went wrong while uploading image");
       setIdMissionVerifiedData((prev) => ({ ...prev, signature: { name: "signature", value } }));
       toast.success("Signature uploaded successfully");
