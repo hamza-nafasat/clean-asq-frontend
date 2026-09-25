@@ -73,15 +73,17 @@ const ApplicationFormsRulesFilter = ({
               }}
             />
           </div>
-          <div className="flex justify-end items-end">
-            <Button
-              icon={PlusIcon}
-              className="w-40 h-13 rounded-lg"
-              label="Create Rule"
-              variant="primary"
-              onClick={onCreateRule}
-            />
-          </div>
+          {onCreateRule && (
+            <div className="flex justify-end items-end">
+              <Button
+                icon={PlusIcon}
+                className="w-40 h-13 rounded-lg"
+                label="Create Rule"
+                variant="primary"
+                onClick={onCreateRule}
+              />
+            </div>
+          )}
         </div>
       </div>
     </section>

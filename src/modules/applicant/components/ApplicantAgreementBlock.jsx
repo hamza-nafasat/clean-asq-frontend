@@ -6,6 +6,7 @@ import { unwrapResult } from "@reduxjs/toolkit";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import usePermission from "@/hooks/usePermission";
 import HtmlContent from "@/components/shared/HtmlContent";
 import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";
@@ -13,7 +14,7 @@ import { EditSectionDisplayTextFromatingModal } from "./ApplicantSectionTextModa
 import Modal from "@/components/shared/Modal";
 import CustomizationFieldsModal from "./ApplicantCustomizeFieldsModal";
 
-import { isNotGuestRoleValue } from "@/utils/permissions";
+import { PERMISSIONS } from "@/utils/permissions";
 function AggrementBlock({
   sectionKey,
   fields,
@@ -44,7 +45,9 @@ function AggrementBlock({
     () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
     [fields],
   );
-  const isCreator = user?._id && user?._id == step?.owner && isNotGuestRoleValue(user);
+  const canCustomizeForm = usePermission(PERMISSIONS.CUSTOMIZE_FORM);
+  const isOwner = Boolean(user?._id) && user?._id === step?.owner;
+  const canCustomize = isOwner && canCustomizeForm;
 
   const signatureUploadHandler = async (file, setIsSaving, stamp) => {
     try {
@@ -94,7 +97,7 @@ function AggrementBlock({
   }, [fields, isSignature, reduxData]);
 
   useEffect(() => {
-    if (isCreator) {
+    if (isOwner) {
       setIsAllRequiredFieldsFilled(true);
       return;
     }
@@ -116,7 +119,7 @@ function AggrementBlock({
     });
     const isSignatureDone = isSignature && isSignatureComplete(form?.signature);
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
-  }, [form, isCreator, isSignature, requiredNames]);
+  }, [form, isOwner, isSignature, requiredNames]);
   console.log("isAllRequiredFieldsFilled", isAllRequiredFieldsFilled);
 
   submitFromEnterRef.current = () => {
@@ -140,7 +143,7 @@ function AggrementBlock({
       </div>
       <div className="flex justify-end gap-2">
         <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={"Save my progress"} />
-        {isCreator && (
+        {canCustomize && (
           <>
             <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={"Customize"} />
             <Button onClick={() => setUpdateSectionFromatingModal(true)} label={"Update Display Text"} />

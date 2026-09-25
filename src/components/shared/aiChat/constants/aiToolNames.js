@@ -2,7 +2,6 @@ export const AI_TOOLS = {
   // general
   REVERT_LAST_ACTION: "revertLastAction",
   NAVIGATE_TO_PAGE: "navigateToPage",
-  READ_CSV_FROM_PATH: "readCsvFromPath",
   OPEN_CSV_FILE_PICKER: "openCsvFilePicker",
   GENERATE_FORM_CSV: "generateFormCsv",
   PREVIEW_FORM_STRUCTURE: "previewFormStructure",

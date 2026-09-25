@@ -497,6 +497,11 @@ export const ID_MISSION_VERIFICATION_RESULTS = {
 export const DRAFT_NOT_FOUND_MESSAGE = "Form Not Saved in draft";
 export const QR_FETCH_TIMEOUT_MS = 10000;
 
+// used when the block message has no minutes
+export const OTP_BLOCK_FALLBACK_MINUTES = 1;
+
+export const MAX_BENEFICIAL_OWNERS = 10;
+
 export const ROLE_FILLING_VALUES = {
   PRIMARY_OPERATOR_AND_CONTROLLER: "primaryOperatorAndController",
   PRIMARY_CONTACT: "primaryContact",

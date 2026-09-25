@@ -26,6 +26,7 @@ const BrandingSource = ({
   headerBackground,
   onLogoSelected,
   onOpenExtractionModal,
+  canFetchBranding = false,
 }) => {
   const [showPasteMenu, setShowPasteMenu] = useState(false);
   const [pasteTarget, setPasteTarget] = useState(null);
@@ -42,7 +43,10 @@ const BrandingSource = ({
         if (pasteTarget === BRANDING_PASTE_TARGETS.WEBSITE_IMAGE) {
           setWebsiteImage(URL.createObjectURL(blob));
         } else if (pasteTarget === BRANDING_PASTE_TARGETS.LOGO && blob) {
-          setLogos((prev) => [...prev, { url: URL.createObjectURL(blob), type: BRANDING_LOGO_TYPES.IMAGE, preview: true }]);
+          setLogos((prev) => [
+            ...prev,
+            { url: URL.createObjectURL(blob), type: BRANDING_LOGO_TYPES.IMAGE, preview: true },
+          ]);
           handleExtraLogoUpload(blob);
         }
         setPasteTarget(null);
@@ -86,21 +90,25 @@ const BrandingSource = ({
             error={websiteUrlError}
           />
         </div>
-        <Button
-          onClick={extractBranding}
-          label={"Extract"}
-          icon={IoColorPaletteOutline}
-          loading={isFetchLoading}
-          disabled={isFetchLoading}
-          size="field"
-        />
-        <Button
-          onClick={() => onOpenExtractionModal?.(BRANDING_EXTRACTION_TABS.MANUAL)}
-          label={"Protected Site?"}
-          icon={FiShield}
-          size="field"
-          title="Use this if the site blocks automated extraction"
-        />
+        {canFetchBranding && (
+          <>
+            <Button
+              onClick={extractBranding}
+              label={"Extract"}
+              icon={IoColorPaletteOutline}
+              loading={isFetchLoading}
+              disabled={isFetchLoading}
+              size="field"
+            />
+            <Button
+              onClick={() => onOpenExtractionModal?.(BRANDING_EXTRACTION_TABS.MANUAL)}
+              label={"Protected Site?"}
+              icon={FiShield}
+              size="field"
+              title="Use this if the site blocks automated extraction"
+            />
+          </>
+        )}
       </div>
       <div className="mt-3 mb-4 flex items-center justify-between gap-5">
         <p className="mt-2 text-sm text-gray-500">
@@ -144,7 +152,7 @@ const BrandingSource = ({
         onLogoSelected={onLogoSelected}
         headerBackground={headerBackground}
         handleExtraLogoUpload={handleExtraLogoUpload}
-        extractColorsFromLogosHandler={extractColorsFromLogosHandler}
+        extractColorsFromLogosHandler={canFetchBranding ? extractColorsFromLogosHandler : null}
       />
       <hr className="border-primary my-6 border-t-2" />
     </section>

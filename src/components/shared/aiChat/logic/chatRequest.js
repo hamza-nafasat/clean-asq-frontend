@@ -5,7 +5,9 @@ import { postJson } from "@/components/shared/aiChat/logic/toolHelpers.js";
 // post to a chat endpoint and return its data, throwing on failure
 export const requestChat = async (endpoint, payload) => {
   const chatResponse = await postJson(endpoint, payload);
-  if (!chatResponse.success) throw new Error(chatResponse.message || "AI request failed");
+  if (!chatResponse.success) {
+    throw Object.assign(new Error(chatResponse.message || "AI request failed"), { status: chatResponse.status });
+  }
   return chatResponse.data;
 };
 

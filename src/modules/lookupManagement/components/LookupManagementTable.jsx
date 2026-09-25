@@ -8,6 +8,7 @@ import {
 } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
 import useDeleteConfirmation from "@/hooks/useDeleteConfirmation";
+import usePermission from "@/hooks/usePermission";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import useRowActionMenu from "@/hooks/useRowActionMenu";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
@@ -17,6 +18,7 @@ import Button from "@/components/shared/Button";
 import LookupManagementAddModal from "./LookupManagementAddModal";
 import { DELETE_CLOSE_MODES } from "@/constants";
 import getEnv from "@/utils/env";
+import { PERMISSIONS } from "@/utils/permissions";
 import {
   ADD_COMPANY_IDENTIFICATION_OPTIONS,
   EDIT_COMPANY_IDENTIFICATION_OPTIONS,
@@ -37,6 +39,9 @@ const LookupManagementTable = () => {
   const { openRowId: actionMenu, setOpenRowId: setActionMenu, toggleMenu, getRowRef } = useRowActionMenu();
   const [selectedRow, setSelectedRow] = useState();
   const [aiDraftData, setAiDraftData] = useState(null);
+  const canCreateLookup = usePermission(PERMISSIONS.CREATE_LOOKUP);
+  const canUpdateLookup = usePermission(PERMISSIONS.UPDATE_LOOKUP);
+  const canDeleteLookup = usePermission(PERMISSIONS.DELETE_LOOKUP);
 
   const { data } = useGetAllSearchStrategiesQuery();
   const [createDefaultStrategies, { isLoading: isLoadingCreateDefaultStrategies }] =
@@ -96,28 +101,34 @@ const LookupManagementTable = () => {
     actionMenu,
     getRowRef,
     onToggleMenu: toggleMenu,
-    onEdit: (row) => {
-      setEditModalData(row);
-      setActionMenu(null);
-      setSelectedRow(row);
-    },
-    onDelete: (row) => {
-      setDeleteConfirmation(row);
-      setActionMenu(null);
-      setSelectedRow(row);
-    },
+    onEdit:
+      canUpdateLookup &&
+      ((row) => {
+        setEditModalData(row);
+        setActionMenu(null);
+        setSelectedRow(row);
+      }),
+    onDelete:
+      canDeleteLookup &&
+      ((row) => {
+        setDeleteConfirmation(row);
+        setActionMenu(null);
+        setSelectedRow(row);
+      }),
   });
 
   return (
     <div>
-      <div className="mb-4 flex w-full justify-end gap-3">
-        <Button onClick={() => setIsModalOpen(true)} label="Add new" />
-        <Button
-          onClick={handleCreateDefaultStrategies}
-          disabled={isLoadingCreateDefaultStrategies}
-          label="Create Default"
-        />
-      </div>
+      {canCreateLookup && (
+        <div className="mb-4 flex w-full justify-end gap-3">
+          <Button onClick={() => setIsModalOpen(true)} label="Add new" />
+          <Button
+            onClick={handleCreateDefaultStrategies}
+            disabled={isLoadingCreateDefaultStrategies}
+            label="Create Default"
+          />
+        </div>
+      )}
       <div className="mt-5 w-full lg:w-[calc(100vw-250px)] xl:w-full">
         <AppDataTable
           data={data?.data || []}

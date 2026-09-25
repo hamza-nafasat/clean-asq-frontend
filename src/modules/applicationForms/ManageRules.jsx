@@ -13,15 +13,13 @@ import {
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import CustomLoading from "@/components/shared/CustomLoading";
 import Modal from "@/components/shared/Modal";
+import usePermission from "@/hooks/usePermission";
+import { PERMISSIONS } from "@/utils/permissions";
 import { CreateRuleModal, UpdateRuleModal } from "./components/ApplicationFormsRuleEditor";
 import ApplicationFormsRulesFilter from "./components/ApplicationFormsRulesFilter";
 import ApplicationFormsRulesTable from "./components/ApplicationFormsRulesTable";
 import { buildRuleColumns } from "./utils/applicationForms.columns";
-import {
-  INITIAL_RULE_FILTERS,
-  RULE_DRAG_ACTIVATION_DISTANCE,
-  RULE_STATUSES,
-} from "./utils/applicationForms.constants";
+import { INITIAL_RULE_FILTERS, RULE_DRAG_ACTIVATION_DISTANCE, RULE_STATUSES } from "./utils/applicationForms.constants";
 
 const matchesRuleFilters = (rule, filters) => {
   const matchName = !filters.name || rule.name?.toLowerCase().includes(filters.name.toLowerCase());
@@ -45,6 +43,10 @@ const ManageRules = () => {
   const [orderedRules, setOrderedRules] = useState([]);
   const [isOrderChanged, setIsOrderChanged] = useState(false);
   const [activeDragId, setActiveDragId] = useState(null);
+
+  const canCreateRule = usePermission(PERMISSIONS.CREATE_RULE);
+  const canUpdateRule = usePermission(PERMISSIONS.UPDATE_RULE);
+  const canDeleteRule = usePermission(PERMISSIONS.DELETE_RULE);
 
   const { data: rules, isLoading, refetch } = useGetAllFormRulesQuery({ formId });
   const [deleteRule, { isLoading: isDeletingRule }] = useDeleteSingleFormRuleMutation();
@@ -159,24 +161,25 @@ const ManageRules = () => {
       setActionMenu(null);
       setOpen(true);
     };
-    return [
-      {
+    const buttons = [
+      canUpdateRule && {
         name: "Update Status",
         icon: <ToggleRight size={16} className="mr-2" />,
         onClick: openFor(setUpdateStatusRuleConfirmation),
       },
-      {
+      canUpdateRule && {
         name: "Update Rule",
         icon: <PencilIcon size={16} className="mr-2" />,
         onClick: openFor(setUpdateRuleConfirmation),
       },
-      {
+      canDeleteRule && {
         name: "Delete",
         icon: <Trash size={16} className="mr-2" />,
         onClick: openFor(setDeleteRuleConfirmation),
       },
     ];
-  }, []);
+    return buttons.filter(Boolean);
+  }, [canUpdateRule, canDeleteRule]);
 
   const columns = useMemo(
     () =>
@@ -184,8 +187,9 @@ const ManageRules = () => {
         actionMenu,
         onToggleMenu: (ruleId) => setActionMenu((prev) => (prev === ruleId ? null : ruleId)),
         menuButtons,
+        canReorder: canUpdateRule,
       }),
-    [actionMenu, menuButtons],
+    [actionMenu, menuButtons, canUpdateRule],
   );
 
   if (isLoading) return <CustomLoading />;
@@ -228,22 +232,24 @@ const ManageRules = () => {
           <ApplicationFormsRulesFilter
             filters={filters}
             setFilters={setFilters}
-            isOrderChanged={isOrderChanged}
+            isOrderChanged={canUpdateRule && isOrderChanged}
             isSavingOrder={isUpdatingRulesOrder}
             onSaveOrder={handleSaveOrder}
             onResetOrder={handleResetOrder}
-            onCreateRule={() => setOpenCreateRuleModal(true)}
+            onCreateRule={canCreateRule ? () => setOpenCreateRuleModal(true) : null}
           />
 
           {/* Rules table */}
           <section className="w-full overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="text-sm text-gray-500 px-4 pt-3 pb-2 flex items-center justify-between border-b border-gray-100">
-              <span className="inline-flex items-center gap-1">
-                <GripVertical size={14} />
-                Drag the handle (⠿) to reorder rules
-              </span>
-              {activeDragId && <span className="text-xs text-blue-600 animate-pulse">Dragging rule…</span>}
-            </div>
+            {canUpdateRule && (
+              <div className="text-sm text-gray-500 px-4 pt-3 pb-2 flex items-center justify-between border-b border-gray-100">
+                <span className="inline-flex items-center gap-1">
+                  <GripVertical size={14} />
+                  Drag the handle (⠿) to reorder rules
+                </span>
+                {activeDragId && <span className="text-xs text-blue-600 animate-pulse">Dragging rule…</span>}
+              </div>
+            )}
             <ApplicationFormsRulesTable
               columns={columns}
               data={filteredRules}

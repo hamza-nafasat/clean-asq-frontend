@@ -4,9 +4,14 @@ import { AI_FIELD_IDS, KEYBOARD_KEYS } from "../utils/applicant.constants";
 import { formatOtpDisplayHtml } from "../utils/applicant.utils6";
 import HtmlContent from "@/components/shared/HtmlContent";
 
+const OTP_ERROR_ID = "verification-otp-error";
+
 const ApplicantEmailVerification = ({
   formDocument = {},
-  isCreator = false,
+  canCustomize = false,
+  canSkip = false,
+  otpError = "",
+  isBlocked = false,
   email = "",
   otp = "",
   otpSent = false,
@@ -20,7 +25,7 @@ const ApplicantEmailVerification = ({
   onSkip,
 }) => (
   <div className="flex flex-col items-center gap-3 w-full">
-    {isCreator && (
+    {canCustomize && (
       <div className="flex w-full items-center justify-end">
         <Button label="Edit OTP Display Text" onClick={onEditDisplayText} />
       </div>
@@ -47,13 +52,13 @@ const ApplicantEmailVerification = ({
         className="max-w-125"
         autoFocus={!otpSent}
         onKeyDown={(e) => {
-          if (e.key === KEYBOARD_KEYS.ENTER) onSendOtp?.();
+          if (e.key === KEYBOARD_KEYS.ENTER && !isBlocked) onSendOtp?.();
         }}
       />
       <Button
         onClick={onSendOtp}
-        disabled={otpLoading}
-        className={`min-w-32.5 py-2 ${otpLoading && "cursor-not-allowed opacity-25"}`}
+        disabled={otpLoading || isBlocked}
+        className={`min-w-32.5 py-2 ${(otpLoading || isBlocked) && "cursor-not-allowed opacity-25"}`}
         label="Send Code"
         data-testid="verification-send-otp-btn"
       />
@@ -70,20 +75,27 @@ const ApplicantEmailVerification = ({
           onChange={(e) => onOtpChange?.(e.target.value)}
           className="max-w-125"
           autoFocus={otpSent}
+          aria-invalid={Boolean(otpError)}
+          aria-describedby={otpError ? OTP_ERROR_ID : undefined}
           onKeyDown={(e) => {
-            if (e.key === KEYBOARD_KEYS.ENTER) onVerifyOtp?.();
+            if (e.key === KEYBOARD_KEYS.ENTER && !isBlocked) onVerifyOtp?.();
           }}
         />
         <Button
           onClick={onVerifyOtp}
-          disabled={emailLoading}
-          className={`min-w-32.5 py-2 ${emailLoading && "cursor-not-allowed opacity-25"}`}
+          disabled={emailLoading || isBlocked}
+          className={`min-w-32.5 py-2 ${(emailLoading || isBlocked) && "cursor-not-allowed opacity-25"}`}
           label="Submit Code"
           data-testid="verification-submit-otp-btn"
         />
       </div>
     )}
-    {isCreator && <Button onClick={onSkip} className="w-full max-w-162.5" variant="secondary" label="Skip" />}
+    {otpError && (
+      <p id={OTP_ERROR_ID} role="alert" className="w-full max-w-162.5 text-sm text-red-600">
+        {otpError}
+      </p>
+    )}
+    {canSkip && <Button onClick={onSkip} className="w-full max-w-162.5" variant="secondary" label="Skip" />}
   </div>
 );
 

@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { clearSavedFormData } from "@/redux/slices/form.slice";
 import Button from "@/components/shared/Button";
 import { LAYOUT_ROUTES } from "@/constants";
+import usePermission from "@/hooks/usePermission";
+import { PERMISSIONS } from "@/utils/permissions";
 import {
   APPLICATION_FORMS_ROUTES,
   CREATED_DATE_OPTIONS,
@@ -30,6 +32,13 @@ const ApplicationFormsCard = ({
   const dispatch = useDispatch();
   const menuRef = useRef(null);
   const menuButtonRef = useRef(null);
+  const canUpdateForm = usePermission(PERMISSIONS.UPDATE_FORM);
+  const canUpdateBranding = usePermission(PERMISSIONS.UPDATE_BRANDING);
+  const canReadBranding = usePermission(PERMISSIONS.READ_BRANDING);
+  const canSetBranding = canUpdateBranding && canReadBranding;
+  const canReadRule = usePermission(PERMISSIONS.READ_RULE);
+  const canDeleteForm = usePermission(PERMISSIONS.DELETE_FORM);
+  const hasMenu = canUpdateForm || canSetBranding || canReadRule || canDeleteForm;
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -63,44 +72,56 @@ const ApplicationFormsCard = ({
             referrerPolicy="no-referrer"
           />
         </div>
-        <div className="relative">
-          <button
-            type="button"
-            ref={menuButtonRef}
-            onClick={() => onToggleMenu?.(form?._id)}
-            className="cursor-pointer rounded p-1 hover:bg-gray-100"
-            aria-label="Actions"
-          >
-            <MoreVertical size={18} />
-          </button>
-          {isMenuOpen && (
-            <div ref={menuRef} className="absolute right-0 mt-2 w-50 rounded border bg-white shadow-lg">
-              <button type="button" className={MENU_ITEM_CLASSES} onClick={() => onUpdateForm?.(form)}>
-                Update Form
-              </button>
-              <button type="button" className={MENU_ITEM_CLASSES} onClick={() => onSetBranding?.(form)}>
-                Set Branding
-              </button>
-              <button type="button" className={MENU_ITEM_CLASSES} onClick={() => onSetLocation?.(form)}>
-                Set Location
-              </button>
-              <button
-                type="button"
-                className={MENU_ITEM_CLASSES}
-                onClick={() => navigate(`${APPLICATION_FORMS_ROUTES.MANAGE_RULES}/${form?._id}`)}
-              >
-                Manage Rules
-              </button>
-              <button
-                type="button"
-                className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100 cursor-pointer"
-                onClick={() => onDelete?.(form?._id)}
-              >
-                Delete Form
-              </button>
-            </div>
-          )}
-        </div>
+        {hasMenu && (
+          <div className="relative">
+            <button
+              type="button"
+              ref={menuButtonRef}
+              onClick={() => onToggleMenu?.(form?._id)}
+              className="cursor-pointer rounded p-1 hover:bg-gray-100"
+              aria-label="Actions"
+            >
+              <MoreVertical size={18} />
+            </button>
+            {isMenuOpen && (
+              <div ref={menuRef} className="absolute right-0 mt-2 w-50 rounded border bg-white shadow-lg">
+                {canUpdateForm && (
+                  <button type="button" className={MENU_ITEM_CLASSES} onClick={() => onUpdateForm?.(form)}>
+                    Update Form
+                  </button>
+                )}
+                {canSetBranding && (
+                  <button type="button" className={MENU_ITEM_CLASSES} onClick={() => onSetBranding?.(form)}>
+                    Set Branding
+                  </button>
+                )}
+                {canUpdateForm && (
+                  <button type="button" className={MENU_ITEM_CLASSES} onClick={() => onSetLocation?.(form)}>
+                    Set Location
+                  </button>
+                )}
+                {canReadRule && (
+                  <button
+                    type="button"
+                    className={MENU_ITEM_CLASSES}
+                    onClick={() => navigate(`${APPLICATION_FORMS_ROUTES.MANAGE_RULES}/${form?._id}`)}
+                  >
+                    Manage Rules
+                  </button>
+                )}
+                {canDeleteForm && (
+                  <button
+                    type="button"
+                    className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100 cursor-pointer"
+                    onClick={() => onDelete?.(form?._id)}
+                  >
+                    Delete Form
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       <div className="flex items-start gap-2 md:gap-4">

@@ -4,6 +4,7 @@ import { useFindNaicAndMccMutation, useGetAllSearchStrategiesQuery } from "@/red
 import { toast } from "react-toastify";
 import { CgSpinner } from "react-icons/cg";
 import { useEnterToNextField } from "../hooks/useEnterToNextField";
+import usePermission from "@/hooks/usePermission";
 import { OtherInputType } from "@/components/global/DynamicField";
 import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";
@@ -23,7 +24,7 @@ import {
   isCompanyInformationComplete,
   uploadSignatureReplacing,
 } from "../utils/applicant.utils12";
-import { isNotGuestRoleValue } from "@/utils/permissions";
+import { PERMISSIONS } from "@/utils/permissions";
 import { normalizeSignature } from "@/utils/signatureShape";
 
 const CompanyInformation = ({
@@ -61,7 +62,8 @@ const CompanyInformation = ({
   const [naicsApiData, setNaicsApiData] = useState({ bestMatch: {}, otherMatches: [] });
   const [naicsLoading, setNaicsLoading] = useState(false);
   const [findNaicsToMccDetails] = useFindNaicAndMccMutation();
-  const { data: strategyKeysData } = useGetAllSearchStrategiesQuery();
+  const canReadLookup = usePermission(PERMISSIONS.READ_LOOKUP);
+  const { data: strategyKeysData } = useGetAllSearchStrategiesQuery(undefined, { skip: !canReadLookup });
 
   const strategyKeys = strategyKeysData?.data?.map((item) => item?.searchObjectKey) ?? [];
   const companyHasNoWebsite = formData?.company_has_no_website === true;
@@ -76,9 +78,11 @@ const CompanyInformation = ({
     () => effectiveFields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
     [effectiveFields],
   );
-  const isCreator = user?._id && user?._id === step?.owner && isNotGuestRoleValue(user);
+  const canCustomizeForm = usePermission(PERMISSIONS.CUSTOMIZE_FORM);
+  const isOwner = Boolean(user?._id) && user?._id === step?.owner;
+  const canCustomize = isOwner && canCustomizeForm;
   const isAllRequiredFieldsFilled =
-    isCreator || isCompanyInformationComplete({ form, requiredNames, naics: naicsToMccDetails.NAICS, isSignature });
+    isOwner || isCompanyInformationComplete({ form, requiredNames, naics: naicsToMccDetails.NAICS, isSignature });
   const hasDescriptionField = effectiveFields?.some((f) => f.name === FIELD_NAMES.COMPANY_DESCRIPTION);
   const sectionData = { ...form, naics: naicsToMccDetails };
 
@@ -211,7 +215,7 @@ const CompanyInformation = ({
         </p>
         <div className="flex gap-2">
           <Button onClick={() => saveInProgress({ data: sectionData, name: sectionKey })} label="Save my progress" />
-          {isCreator && (
+          {canCustomize && (
             <>
               <Button variant="secondary" onClick={() => setCustomizeModal(true)} label="Customize" />
               <Button onClick={() => setUpdateSectionFromatingModal(true)} label="Update Display Text" />

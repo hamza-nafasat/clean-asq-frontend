@@ -7,6 +7,9 @@ export const INITIAL_ROLE_FORM = {
   permissions: [],
 };
 
+// permissions outside every module group
+export const OTHER_PERMISSION_GROUP = "Other";
+
 export const ROLE_MODAL_MODES = {
   ADD: "add",
   EDIT: "edit",

@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { useGetSpecialAccessOfSectionQuery, useSubmitSpecialAccessFormMutation } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
 import { uploadFilesAndReplace } from "@/lib/utils";
+import usePermission from "@/hooks/usePermission";
 import useApplicantSectionIdMission from "./hooks/useApplicantSectionIdMission";
 import useApplyBranding from "@/hooks/useApplyBranding";
 import Button from "@/components/shared/Button";
@@ -15,7 +16,7 @@ import ApplicantSectionField from "./components/ApplicantSectionField";
 import { EditSectionDisplayTextFromatingModal } from "./components/ApplicantSectionTextModal";
 import { APPLICANT_HOME_PATH } from "./utils/applicant.constants";
 import HtmlContent from "@/components/shared/HtmlContent";
-import { isNotGuestRoleValue } from "@/utils/permissions";
+import { PERMISSIONS } from "@/utils/permissions";
 
 const FormHiddenSection = () => {
   const navigate = useNavigate();
@@ -51,7 +52,9 @@ const FormHiddenSection = () => {
   const isAllRequiredFieldsFilled = requiredFieldsUniqueIds?.length
     ? requiredFieldsUniqueIds.every((field) => form?.[field]?.value)
     : false;
-  const isCreator = user?._id && user?._id === formData?.data?.owner && isNotGuestRoleValue(user);
+  const canCustomizeForm = usePermission(PERMISSIONS.CUSTOMIZE_FORM);
+  const isOwner = Boolean(user?._id) && user?._id === formData?.data?.owner;
+  const canCustomize = isOwner && canCustomizeForm;
   const isSubmitDisabled = isSubmittingSpecialAccessForm || !isAllRequiredFieldsFilled;
 
   const handleSubmitSpecialAccessForm = useCallback(async () => {
@@ -112,7 +115,7 @@ const FormHiddenSection = () => {
       <div className="mb-10 flex items-center justify-between">
         <p className="text-textPrimary text-2xl font-semibold">{section?.name}</p>
         <div className="flex gap-2">
-          {isCreator && (
+          {canCustomize && (
             <>
               <Button variant="secondary" onClick={() => setCustomizeModal(true)} label="Customize" />
               <Button onClick={() => setUpdateSectionFromatingModal(true)} label="Update Display Text" />

@@ -13,7 +13,8 @@ import HtmlContent from "@/components/shared/HtmlContent";
 const ApplicantIdMissionDetailsForm = ({
   formDocument = {},
   section = {},
-  isCreator = false,
+  canCustomize = false,
+  canSkip = false,
   data = {},
   setData,
   formRef,
@@ -49,7 +50,7 @@ const ApplicantIdMissionDetailsForm = ({
             </h3>
           </div>
         )}
-        {isCreator && <Button className="self-end" label="Customize Display Text" onClick={onCustomizeText} />}
+        {canCustomize && <Button className="self-end" label="Customize Display Text" onClick={onCustomizeText} />}
       </div>
 
       <form ref={formRef} onKeyDown={onKeyDown} className="flex flex-wrap gap-4">
@@ -107,7 +108,7 @@ const ApplicantIdMissionDetailsForm = ({
               </div>
             )}
             <div className="flex items-center justify-end gap-2">
-              {isCreator && (
+              {canCustomize && (
                 <div className="flex items-center gap-2">
                   <Button label="Enable Help" onClick={onEnableHelp} />
                   <Button label="Customize Signature" onClick={onCustomizeSignature} />
@@ -130,7 +131,7 @@ const ApplicantIdMissionDetailsForm = ({
 
       {/* Actions */}
       <div className="flex w-full items-center justify-end gap-2 p-2">
-        {isCreator && <Button onClick={onSkip} className="mt-4" variant="secondary" label="Skip for now" />}
+        {canSkip && <Button onClick={onSkip} className="mt-4" variant="secondary" label="Skip for now" />}
         <Button
           disabled={!isAllRequiredFieldsFilled || isSubmitting}
           label={!isAllRequiredFieldsFilled ? "Some fields are missing" : "Continue to next"}

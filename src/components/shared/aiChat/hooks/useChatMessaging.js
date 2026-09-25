@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { AI_ASSISTANT_MODES } from "@/constants";
 import { discoverFormFields } from "@/utils/discoverFormFields";
 import {
-  AI_ENDPOINTS,
   AI_RESPONSE_TYPES,
   CHAT_ROLES,
   getDefaultChatEndpoint,
@@ -11,6 +10,7 @@ import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
 import { FORM_LANG_TO_BCP47 } from "@/components/shared/aiChat/constants/formLanguages.js";
 import { createApplyToolCall } from "@/components/shared/aiChat/logic/applyToolCall.js";
 import { buildSendHistory, requestChat } from "@/components/shared/aiChat/logic/chatRequest.js";
+import { getBlockedMessageKey } from "@/components/shared/aiChat/logic/toolHelpers.js";
 import { findFieldElement } from "@/components/shared/aiChat/logic/fieldValueUtils.js";
 import { buildToolResultEntries, formatFormList } from "@/components/shared/aiChat/logic/formContextUtils.js";
 import { getLanguageName } from "@/components/shared/aiChat/logic/widgetLanguage.js";
@@ -126,7 +126,7 @@ const useChatMessaging = ({
     pendingFormContinuationRef.current = null;
 
     const ctx = getScreenContext();
-    const chatEndpoint = ctx?.aiEndpoint || AI_ENDPOINTS.BRANDING_CHAT;
+    const chatEndpoint = ctx?.aiEndpoint || getDefaultChatEndpoint(assistantMode);
     const continuationHistory = [
       ...history,
       ...buildToolResultEntries(AI_TOOLS.SELECT_FORM_FOR_EDITING, toolArgs, buildFormLoadResult(ctx, toolArgs)),
@@ -153,6 +153,8 @@ const useChatMessaging = ({
           await say(data.content);
         }
       } catch (err) {
+        const blockedKey = getBlockedMessageKey(err);
+        if (blockedKey) return say(wt(blockedKey));
         const detail = err?.message || "";
         await say(`${wt("formNotLoaded")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`);
       } finally {
@@ -204,6 +206,8 @@ const useChatMessaging = ({
       }
     } catch (error) {
       console.error("Send message error:", error);
+      const blockedKey = getBlockedMessageKey(error);
+      if (blockedKey) return say(wt(blockedKey));
       await say(`${wt("error")}${error.message ? `: ${error.message}` : ""}. ${wt("tryAgain")}`);
     } finally {
       setIsLoading(false);

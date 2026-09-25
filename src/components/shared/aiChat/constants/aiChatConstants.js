@@ -41,15 +41,14 @@ export const DEFAULT_AI_VOICE = "nova";
 
 export const AI_ENDPOINTS = {
   APPLICANT_CHAT: `${SERVER_URL}/api/ai/applicant-chat`,
-  BRANDING_CHAT: `${SERVER_URL}/api/ai/branding-chat`,
+  ASSISTANT_CHAT: `${SERVER_URL}/api/ai/assistant-chat`,
   TRANSLATE: `${SERVER_URL}/api/ai/translate`,
   EXTRACT_BRANDING_FROM_CONTENT: `${SERVER_URL}/api/branding/extraction/extract-branding-from-content`,
   LOGO_EDIT: `${SERVER_URL}/api/ai/logo-edit`,
-  CSV_FROM_PATH: `${SERVER_URL}/api/form/csv-from-path`,
 };
 
 export const getDefaultChatEndpoint = (assistantMode) =>
-  assistantMode === AI_ASSISTANT_MODES.APPLICANT ? AI_ENDPOINTS.APPLICANT_CHAT : AI_ENDPOINTS.BRANDING_CHAT;
+  assistantMode === AI_ASSISTANT_MODES.APPLICANT ? AI_ENDPOINTS.APPLICANT_CHAT : AI_ENDPOINTS.ASSISTANT_CHAT;
 
 export const getViewportSize = () => {
   const vv = typeof window !== "undefined" ? window.visualViewport : null;

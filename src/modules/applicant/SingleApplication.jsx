@@ -13,6 +13,7 @@ import useApplicantIdMissionSocket from "./hooks/useApplicantIdMissionSocket";
 import useApplicantIdMissionSubmit from "./hooks/useApplicantIdMissionSubmit";
 import useApplicantSingleApplicationAi from "./hooks/useApplicantSingleApplicationAi";
 import useApplyBranding from "@/hooks/useApplyBranding";
+import usePermission from "@/hooks/usePermission";
 import { usePageDownload } from "./hooks/usePageDownload";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
@@ -41,7 +42,7 @@ import {
   collectIdMissionFieldRows,
   focusNextInputOnEnter,
 } from "./utils/applicant.utils6";
-import { isNotGuestRoleValue } from "@/utils/permissions";
+import { PERMISSIONS } from "@/utils/permissions";
 
 const SingleApplication = () => {
   const navigate = useNavigate();
@@ -78,7 +79,12 @@ const SingleApplication = () => {
   const idMissionSection = form?.data?.sections?.find(
     (sec) => sec?.title?.toLowerCase() === SECTION_TITLES.ID_VERIFICATION,
   );
-  const isCreator = user?._id && user?._id === form?.data?.owner && isNotGuestRoleValue(user);
+  const canCustomizeForm = usePermission(PERMISSIONS.CUSTOMIZE_FORM);
+  const canUseIdMission = usePermission(PERMISSIONS.ID_MISSION);
+  const canEnterIdManually = usePermission(PERMISSIONS.ENTER_ID_MANUALLY);
+  const isOwner = Boolean(user?._id) && user?._id === form?.data?.owner;
+  const canCustomize = isOwner && canCustomizeForm;
+  const isIdStepSkipped = !canUseIdMission && !canEnterIdManually;
   const isAllRequiredFieldsFilled = areIdMissionFieldsFilled(idMissionVerifiedData);
   const hasDetailsData =
     idMissionManualEntryRef.current || !!idMissionVerifiedData?.name?.value || !!idMissionVerifiedData?.idNumber?.value;
@@ -187,6 +193,13 @@ const SingleApplication = () => {
     refreshUserProfile();
   }, [refreshUserProfile]);
 
+  // no ID permission skips the ID step
+  useEffect(() => {
+    if (!emailVerified || idMissionVerified || !isIdStepSkipped || navigatingAwayRef.current) return;
+    navigatingAwayRef.current = true;
+    navigate(buildStepperPath(formId, draftId));
+  }, [draftId, emailVerified, formId, idMissionVerified, isIdStepSkipped, navigate]);
+
   useApplicantIdMissionSocket({
     idMissionScanAppliedRef,
     idMissionManualEntryRef,
@@ -242,7 +255,8 @@ const SingleApplication = () => {
             <ApplicantIdMissionDetailsForm
               formDocument={form?.data}
               section={idMissionSection}
-              isCreator={isCreator}
+              canCustomize={canCustomize}
+              canSkip={isOwner}
               data={idMissionVerifiedData}
               setData={setIdMissionVerifiedData}
               formRef={idMissionFormRef}
@@ -261,7 +275,10 @@ const SingleApplication = () => {
           ) : !emailVerified ? (
             <ApplicantEmailVerification
               formDocument={form?.data}
-              isCreator={isCreator}
+              canCustomize={canCustomize}
+              canSkip={isOwner}
+              otpError={otpFlow.otpError}
+              isBlocked={otpFlow.isOtpBlocked}
               email={email}
               otp={otp}
               otpSent={otpSent}
@@ -279,7 +296,9 @@ const SingleApplication = () => {
           ) : (
             <ApplicantIdMissionQrStep
               section={idMissionSection}
-              isCreator={isCreator}
+              canCustomize={canCustomize}
+              canUseIdMission={canUseIdMission}
+              canEnterIdManually={canEnterIdManually}
               qrCode={qrCode}
               qrFetchError={qrFlow.qrFetchError}
               onCustomizeText={() => setActiveModal(SINGLE_APPLICATION_MODALS.ID_MISSION_SECTION_TEXT)}

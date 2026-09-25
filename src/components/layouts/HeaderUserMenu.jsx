@@ -6,7 +6,6 @@ const AVATAR_BASE_URL = "https://placehold.co/600x400/white/18bc9c?text=";
 
 const HeaderUserMenu = ({
   user = {},
-  isGuest = false,
   isProfileOpen = false,
   setIsProfileOpen,
   profileRef,
@@ -45,7 +44,7 @@ const HeaderUserMenu = ({
     <div
       className={`custom-scroll absolute top-11.25 right-0 z-350 w-37.5 rounded-lg border bg-white shadow transition-all duration-300 ${isProfileOpen ? "opacity-100" : "invisible opacity-0"}`}
     >
-      {(keepMenuMounted || isProfileOpen) && <HeaderProfileMenu isGuest={isGuest} setIsProfileOpen={setIsProfileOpen} />}
+      {(keepMenuMounted || isProfileOpen) && <HeaderProfileMenu setIsProfileOpen={setIsProfileOpen} />}
     </div>
   </div>
 );

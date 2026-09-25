@@ -1,3 +1,4 @@
+import usePermission from "@/hooks/usePermission";
 import DisplayText from "./ApplicantDisplayText";
 import { FIELD_TYPES } from "@/constants";
 import { useEnterToNextField } from "../hooks/useEnterToNextField";
@@ -21,7 +22,7 @@ import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/clou
 import { isSignatureComplete, normalizeSignature } from "@/utils/signatureShape";
 import { toast } from "react-toastify";
 
-import { isNotGuestRoleValue } from "@/utils/permissions";
+import { PERMISSIONS } from "@/utils/permissions";
 function ProcessingInfo({
   sectionKey,
   name,
@@ -53,7 +54,9 @@ function ProcessingInfo({
   );
   const allNames = useMemo(() => fields.map((f) => ({ name: f.name, uniqueId: f.uniqueId })), [fields]);
 
-  const isCreator = user?._id && user?._id === step?.owner && isNotGuestRoleValue(user);
+  const canCustomizeForm = usePermission(PERMISSIONS.CUSTOMIZE_FORM);
+  const isOwner = Boolean(user?._id) && user?._id === step?.owner;
+  const canCustomize = isOwner && canCustomizeForm;
 
   const signatureUploadHandler = async (file, setIsSaving, stamp) => {
     try {
@@ -108,7 +111,7 @@ function ProcessingInfo({
 
   // check required fields
   useEffect(() => {
-    if (isCreator) {
+    if (isOwner) {
       setIsAllRequiredFieldsFilled(true);
       return;
     }
@@ -152,7 +155,7 @@ function ProcessingInfo({
 
     const isSignatureDone = !isSignature || isSignatureComplete(form?.signature);
     setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
-  }, [allNames, form, isCreator, isSignature, requiredNames]);
+  }, [allNames, form, isOwner, isSignature, requiredNames]);
 
   submitFromEnterRef.current = () => {
     if (!isAllRequiredFieldsFilled || loadingNext) return;
@@ -173,7 +176,7 @@ function ProcessingInfo({
         </h3>
         <div className="flex gap-2">
           <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={"Save my progress"} />
-          {isCreator && (
+          {canCustomize && (
             <>
               <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={"Customize"} />
               <Button onClick={() => setUpdateSectionFromatingModal(true)} label={"Update Display Text"} />

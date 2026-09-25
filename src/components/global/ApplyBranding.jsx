@@ -27,8 +27,8 @@ const ApplyBranding = ({
   initialBrandingId,
   initialOnHome,
 }) => {
-  const { data } = useGetMyAllFormsQuery();
   const isBrandingPicker = Array.isArray(brandings);
+  const { data } = useGetMyAllFormsQuery(undefined, { skip: isBrandingPicker });
   const options = isBrandingPicker ? brandings : (data?.data ?? []);
 
   useEffect(() => {

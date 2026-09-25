@@ -1,6 +1,6 @@
-import { AI_ENDPOINTS, PAGE_LABELS, PAGE_ROUTES } from "@/components/shared/aiChat/constants/aiChatConstants.js";
+import { PAGE_LABELS, PAGE_ROUTES } from "@/components/shared/aiChat/constants/aiChatConstants.js";
 import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
-import { getErrorDetail, postJson } from "@/components/shared/aiChat/logic/toolHelpers.js";
+import { getErrorDetail } from "@/components/shared/aiChat/logic/toolHelpers.js";
 
 const NAV_FOLLOW_UP_TIMEOUT_MS = 15000;
 const NAVIGATE_DELAY_MS = 300;
@@ -58,22 +58,6 @@ const createGeneralTools = ({ bindings, helpers }) => {
     [AI_TOOLS.PREVIEW_FORM_STRUCTURE]: async (args) => {
       const { formName, sections, explanation } = args;
       say(explanation, { formPreview: { formName, sections } });
-    },
-
-    [AI_TOOLS.READ_CSV_FROM_PATH]: async (args) => {
-      const { filePath, explanation } = args;
-      await say(explanation);
-      try {
-        const d = await postJson(AI_ENDPOINTS.CSV_FROM_PATH, { filePath });
-        if (!d.success) throw new Error(d.message || "Could not read file");
-        const csvMessage = buildCsvMessage(d.filename, d.content);
-        // defer so the current send finishes loading first
-        setTimeout(() => {
-          if (sendMessageRef.current) sendMessageRef.current(csvMessage);
-        }, DEFERRED_SEND_MS);
-      } catch (err) {
-        say(`Could not read the file: ${err.message}`);
-      }
     },
 
     [AI_TOOLS.OPEN_CSV_FILE_PICKER]: async (args) => {

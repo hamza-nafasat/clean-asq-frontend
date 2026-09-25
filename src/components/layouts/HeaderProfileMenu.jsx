@@ -9,7 +9,7 @@ import useAiChat from "@/hooks/useAiChat";
 import { Applications } from "@/assets/svgs/icon";
 import { AUTH_ROUTES, LAYOUT_ROUTES } from "@/constants";
 
-const HeaderProfileMenu = ({ isGuest = false, setIsProfileOpen }) => {
+const HeaderProfileMenu = ({ setIsProfileOpen }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [logout, { isLoading }] = useLogoutMutation();
@@ -34,16 +34,14 @@ const HeaderProfileMenu = ({ isGuest = false, setIsProfileOpen }) => {
 
   return (
     <div className="w-full">
-      {isGuest && (
-        <Link
-          onClick={() => setIsProfileOpen?.(false)}
-          to={LAYOUT_ROUTES.MY_APPLICATIONS}
-          className="flex items-center justify-between gap-4 rounded-t-md border bg-white px-2 py-2 hover:bg-[#b6feef]"
-        >
-          <h6 className="text-textPrimary text-xs font-medium">My Applications</h6>
-          <Applications fontSize={18} className="text-primary" />
-        </Link>
-      )}
+      <Link
+        onClick={() => setIsProfileOpen?.(false)}
+        to={LAYOUT_ROUTES.MY_APPLICATIONS}
+        className="flex items-center justify-between gap-4 rounded-t-md border bg-white px-2 py-2 hover:bg-[#b6feef]"
+      >
+        <h6 className="text-textPrimary text-xs font-medium">My Applications</h6>
+        <Applications fontSize={18} className="text-primary" />
+      </Link>
 
       <div
         data-testid="my-profile-button"

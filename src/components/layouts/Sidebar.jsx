@@ -9,17 +9,18 @@ import { PiStrategyBold } from "react-icons/pi";
 import { RiHistoryLine } from "react-icons/ri";
 import { Link, useLocation } from "react-router-dom";
 import ArrowBackIcon from "@/assets/svgs/ArrowBackIcon";
+import { LAYOUT_ROUTES } from "@/constants";
 
 // icon for each sidebar item, keyed by its path
 const SIDEBAR_ICONS = {
-  "/application-forms": <Applications />,
-  "/all-roles": <AllRoles />,
-  "/all-users": <AllUsers />,
-  "/applications": <Applicants />,
-  "/branding": <BrushIcon />,
-  "/strategies-key": <HiOutlineLightBulb />,
-  "/strategies": <PiStrategyBold />,
-  "/email": <RiHistoryLine size={20} />,
+  [LAYOUT_ROUTES.APPLICATION_FORMS]: <Applications />,
+  [LAYOUT_ROUTES.ROLE_MANAGEMENT]: <AllRoles />,
+  [LAYOUT_ROUTES.USER_MANAGEMENT]: <AllUsers />,
+  [LAYOUT_ROUTES.APPLICATIONS]: <Applicants />,
+  [LAYOUT_ROUTES.BRANDING]: <BrushIcon />,
+  [LAYOUT_ROUTES.LOOKUP_MANAGEMENT]: <HiOutlineLightBulb />,
+  [LAYOUT_ROUTES.STRATEGIES]: <PiStrategyBold />,
+  [LAYOUT_ROUTES.EMAIL]: <RiHistoryLine size={20} />,
 };
 
 const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {

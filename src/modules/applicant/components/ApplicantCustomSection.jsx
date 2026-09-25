@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import useApplicantSectionIdMission from "../hooks/useApplicantSectionIdMission";
 import { useEnterToNextField } from "../hooks/useEnterToNextField";
+import usePermission from "@/hooks/usePermission";
 import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";
 import Modal from "@/components/shared/Modal";
@@ -13,7 +14,7 @@ import ApplicantSectionField from "./ApplicantSectionField";
 import { EditSectionDisplayTextFromatingModal } from "./ApplicantSectionTextModal";
 import { FIELD_BLOCK_TYPE, FIELD_NAMES } from "../utils/applicant.constants";
 import { isCustomSectionValueFilled, uploadSignatureReplacing } from "../utils/applicant.utils12";
-import { isNotGuestRoleValue } from "@/utils/permissions";
+import { PERMISSIONS } from "@/utils/permissions";
 import { isSignatureComplete, normalizeFieldEntry, normalizeSignature } from "@/utils/signatureShape";
 import HtmlContent from "@/components/shared/HtmlContent";
 
@@ -55,10 +56,14 @@ const CustomSection = ({
     () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId, type: f.type })),
     [fields],
   );
-  const isCreator = user?._id && user?._id === step?.owner && isNotGuestRoleValue(user);
+  const canCustomizeForm = usePermission(PERMISSIONS.CUSTOMIZE_FORM);
+  const isOwner = Boolean(user?._id) && user?._id === step?.owner;
+  const canCustomize = isOwner && canCustomizeForm;
+  const canUseIdMission = usePermission(PERMISSIONS.ID_MISSION);
+  const showIdMissionQr = step?.isIdMissionQr && canUseIdMission;
   // creators can always continue
   const isAllRequiredFieldsFilled =
-    isCreator ||
+    isOwner ||
     (requiredNames.every(({ uniqueId, type }) => isCustomSectionValueFilled(form[uniqueId]?.value, type)) &&
       (!isSignature || isSignatureComplete(form?.signature)));
   const isActionDisabled = !isAllRequiredFieldsFilled || loadingNext;
@@ -95,8 +100,8 @@ const CustomSection = ({
   }, [fields, idMissionVerifiedData, isSignature, reduxData]);
 
   useEffect(() => {
-    if (step?.isIdMissionQr) loadQrCode();
-  }, [loadQrCode, step?.isIdMissionQr]);
+    if (showIdMissionQr) loadQrCode();
+  }, [loadQrCode, showIdMissionQr]);
 
   submitFromEnterRef.current = () => {
     if (isActionDisabled) return;
@@ -113,7 +118,7 @@ const CustomSection = ({
       </div>
       <div className="flex justify-end gap-2">
         <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label="Save my progress" />
-        {isCreator && (
+        {canCustomize && (
           <>
             <Button variant="secondary" onClick={() => setCustomizeModal(true)} label="Customize" />
             <Button onClick={() => setUpdateSectionFromatingModal(true)} label="Update Display Text" />
@@ -131,7 +136,7 @@ const CustomSection = ({
           <DisplayText className="mt-2 mb-4 w-full" html={step?.ai_formatting || step?.displayText} />
         </div>
       )}
-      {step?.isIdMissionQr && (
+      {showIdMissionQr && (
         <ApplicantIdMissionQrPanel
           qrCode={qrCode}
           isProcessing={isIdMissionProcessing}
@@ -171,7 +176,7 @@ const CustomSection = ({
               label={!isAllRequiredFieldsFilled ? "Some required fields are missing" : "Next"}
               data-testid="form-next-btn"
               onClick={() => {
-                if (!isCreator && !isAllRequiredFieldsFilled) return;
+                if (!isOwner && !isAllRequiredFieldsFilled) return;
                 handleNext({ data: form, name: sectionKey, setLoadingNext });
               }}
             />
@@ -182,7 +187,7 @@ const CustomSection = ({
               label={!isAllRequiredFieldsFilled ? "Some required fields are missing" : "Submit"}
               data-testid="form-submit-btn"
               onClick={() => {
-                if (!isCreator && !isAllRequiredFieldsFilled) return;
+                if (!isOwner && !isAllRequiredFieldsFilled) return;
                 handleSubmit({ data: form, name: sectionKey, setLoadingNext });
               }}
             />

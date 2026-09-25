@@ -9,6 +9,7 @@ import {
 } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
 import useDeleteConfirmation from "@/hooks/useDeleteConfirmation";
+import usePermission from "@/hooks/usePermission";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import useRowActionMenu from "@/hooks/useRowActionMenu";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
@@ -18,6 +19,7 @@ import Button from "@/components/shared/Button";
 import StrategiesFormModal from "./StrategiesFormModal";
 import { DELETE_CLOSE_MODES, MODAL_MODES } from "@/constants";
 import getEnv from "@/utils/env";
+import { PERMISSIONS } from "@/utils/permissions";
 import { STRATEGIES_SCREEN_CONTEXT } from "@/modules/strategies/utils/strategies.constants";
 import { buildStrategiesColumns } from "@/modules/strategies/utils/strategies.columns";
 import {
@@ -35,12 +37,18 @@ const StrategiesTable = () => {
   const [editModalData, setEditModalData] = useState(null);
   const { openRowId: actionMenu, setOpenRowId: setActionMenu, toggleMenu, getRowRef } = useRowActionMenu();
   const [selectedRow, setSelectedRow] = useState();
+  const canReadForm = usePermission(PERMISSIONS.READ_FORM);
+  const canReadLookup = usePermission(PERMISSIONS.READ_LOOKUP);
+  const canDeleteStrategy = usePermission(PERMISSIONS.DELETE_STRATEGY);
+  // add and edit need forms and lookups
+  const canCreateStrategy = usePermission(PERMISSIONS.CREATE_STRATEGY) && canReadForm && canReadLookup;
+  const canUpdateStrategy = usePermission(PERMISSIONS.UPDATE_STRATEGY) && canReadForm && canReadLookup;
 
   const [createFormStrategy] = useCreateFormStrategyMutation();
   const [updateFormStrategy] = useUpdateFormStrategyMutation();
-  const { data: formData } = useGetMyAllFormsQuery();
+  const { data: formData } = useGetMyAllFormsQuery(undefined, { skip: !canReadForm });
   const [deleteFormStrategy] = useDeleteFormStrategyMutation();
-  const { data: allStrategies } = useGetAllSearchStrategiesQuery();
+  const { data: allStrategies } = useGetAllSearchStrategiesQuery(undefined, { skip: !canReadLookup });
   const { data: allFormStrategies } = useGetAllFormStrategiesQuery();
 
   useScreenContext({
@@ -105,27 +113,33 @@ const StrategiesTable = () => {
   });
 
   const columns = buildStrategiesColumns({
-    forms: formData?.data,
+    forms: canReadForm ? formData?.data : null,
     actionMenu,
     getRowRef,
     onToggleMenu: toggleMenu,
-    onEdit: (row) => {
-      setEditModalData(row);
-      setActionMenu(null);
-      setSelectedRow(row);
-    },
-    onDelete: (row) => {
-      setDeleteConfirmation(row);
-      setActionMenu(null);
-      setSelectedRow(row);
-    },
+    onEdit:
+      canUpdateStrategy &&
+      ((row) => {
+        setEditModalData(row);
+        setActionMenu(null);
+        setSelectedRow(row);
+      }),
+    onDelete:
+      canDeleteStrategy &&
+      ((row) => {
+        setDeleteConfirmation(row);
+        setActionMenu(null);
+        setSelectedRow(row);
+      }),
   });
 
   return (
     <div>
-      <div className="mt-5 mb-4 flex w-full justify-end gap-3">
-        <Button onClick={() => setIsModalOpen(true)} label="Add new" />
-      </div>
+      {canCreateStrategy && (
+        <div className="mt-5 mb-4 flex w-full justify-end gap-3">
+          <Button onClick={() => setIsModalOpen(true)} label="Add new" />
+        </div>
+      )}
       <AppDataTable
         data={allFormStrategies?.data || []}
         columns={columns}

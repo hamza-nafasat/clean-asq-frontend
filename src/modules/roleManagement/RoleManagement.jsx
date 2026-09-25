@@ -34,6 +34,7 @@ import {
   getRoleNameError,
   isAdminRole,
   isSystemRole,
+  setRolePermissions,
   toRoleForm,
 } from "./utils/roleManagement.utils";
 
@@ -104,6 +105,11 @@ const RoleManagement = () => {
     setErrors({});
   };
 
+  const handleToggleMany = (ids, checked) => {
+    setRoleForm((prev) => setRolePermissions(prev, ids, checked));
+    setErrors({});
+  };
+
   const handleSubmit = async () => {
     const nextErrors = {
       roleName: getRoleNameError(roleForm.roleName),
@@ -163,6 +169,7 @@ const RoleManagement = () => {
         isNameLocked={isEditMode && isSystemRole(roleBeingEdited)}
         isLoading={isCreatingRole || isEditingRole}
         onChange={handleChange}
+        onToggleMany={handleToggleMany}
         onClose={() => setModalMode(null)}
         onSubmit={handleSubmit}
       />

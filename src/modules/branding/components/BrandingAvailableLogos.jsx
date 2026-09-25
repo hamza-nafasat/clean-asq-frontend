@@ -46,11 +46,13 @@ const BrandingAvailableLogos = ({
           Available Logos
         </h3>
         <div className="flex items-center gap-2">
-          <Button
-            label={"Extract New Colors"}
-            icon={IoColorPaletteOutline}
-            onClick={() => extractColorsFromLogosHandler?.()}
-          />
+          {extractColorsFromLogosHandler && (
+            <Button
+              label={"Extract New Colors"}
+              icon={IoColorPaletteOutline}
+              onClick={() => extractColorsFromLogosHandler()}
+            />
+          )}
           <Button label={"Upload Logo"} icon={FiUpload} onClick={() => logoFileInputRef.current?.click()} />
         </div>
       </div>

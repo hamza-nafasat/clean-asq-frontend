@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
 import { useGetIdMissionSessionMutation } from "@/redux/apis/applicant.apis";
+import usePermission from "@/hooks/usePermission";
 import { QR_FETCH_TIMEOUT_MS } from "@/modules/applicant/utils/applicant.constants";
+import { PERMISSIONS } from "@/utils/permissions";
 
 // IDMission QR code and web link for the applicant ID check
 const useApplicantIdMissionQr = () => {
@@ -9,8 +11,10 @@ const useApplicantIdMissionQr = () => {
   const [qrFetchError, setQrFetchError] = useState(false);
   const [qrLoading, setQrLoading] = useState(false);
   const [getIdMissionSession] = useGetIdMissionSessionMutation();
+  const canUseIdMission = usePermission(PERMISSIONS.ID_MISSION);
 
   const getQrAndWebLink = useCallback(async () => {
+    if (!canUseIdMission) return;
     setQrLoading(true);
     setQrFetchError(false);
     let timedOut = false;
@@ -39,7 +43,7 @@ const useApplicantIdMissionQr = () => {
     } finally {
       setQrLoading(false);
     }
-  }, [getIdMissionSession]);
+  }, [canUseIdMission, getIdMissionSession]);
 
   return { webLink, qrCode, qrFetchError, qrLoading, setQrLoading, setQrFetchError, getQrAndWebLink };
 };

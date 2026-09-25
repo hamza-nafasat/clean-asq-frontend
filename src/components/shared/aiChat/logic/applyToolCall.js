@@ -31,9 +31,8 @@ export const createApplyToolCall = (bindings) => {
 
   applyToolCall = async (tool, args, currentHistory) => {
     const ctx = bindings.getScreenContext();
-    if (!ctx?.actions) return;
+    if (!ctx?.actions || !Object.hasOwn(handlers, tool)) return helpers.say(bindings.wt("cantDoOnPage"));
     const chatEndpoint = ctx.aiEndpoint || getDefaultChatEndpoint(bindings.assistantMode);
-    if (!Object.hasOwn(handlers, tool)) return;
     await handlers[tool](args, { tool, ctx, chatEndpoint, currentHistory });
   };
 

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import usePermission from "@/hooks/usePermission";
+import { PERMISSIONS } from "@/utils/permissions";
 import useTestingCases from "./hooks/useTestingCases";
 import useTestingRun from "./hooks/useTestingRun";
 import useTestingScreenContext from "./hooks/useTestingScreenContext";
@@ -22,6 +24,10 @@ const Testing = () => {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingCase, setEditingCase] = useState(null);
   const [helpOpen, setHelpOpen] = useState(false);
+  const canRunTesting = usePermission(PERMISSIONS.RUN_TESTING);
+  const canCreateTesting = usePermission(PERMISSIONS.CREATE_TESTING);
+  const canUpdateTesting = usePermission(PERMISSIONS.UPDATE_TESTING);
+  const canDeleteTesting = usePermission(PERMISSIONS.DELETE_TESTING);
 
   const cases = useTestingCases();
   const { testCases, selectedIds } = cases;
@@ -74,9 +80,9 @@ const Testing = () => {
         canRun={!(run.isRunning || !selectedIds.length || cases.metaLoading)}
         selectedCount={selectedIds.length}
         onToggleHelp={() => setHelpOpen((v) => !v)}
-        onRun={run.handleRun}
-        onSeed={cases.seedFromStatic}
-        onStop={run.handleStop}
+        onRun={canRunTesting ? run.handleRun : null}
+        onSeed={canCreateTesting ? cases.seedFromStatic : null}
+        onStop={canRunTesting ? run.handleStop : null}
       />
 
       {helpOpen && <TestingHelpPanel onClose={() => setHelpOpen(false)} />}
@@ -134,11 +140,11 @@ const Testing = () => {
             testCases={testCases}
             filterArea={filterArea}
             onFilterArea={setFilterArea}
-            onEdit={openEditor}
-            onDuplicate={cases.duplicateTestCase}
-            onToggleActive={cases.toggleTestCaseActive}
-            onDelete={cases.deleteTestCase}
-            onNew={() => openEditor(null)}
+            onEdit={canUpdateTesting ? openEditor : null}
+            onDuplicate={canCreateTesting ? cases.duplicateTestCase : null}
+            onToggleActive={canUpdateTesting ? cases.toggleTestCaseActive : null}
+            onDelete={canDeleteTesting ? cases.deleteTestCase : null}
+            onNew={canCreateTesting ? () => openEditor(null) : null}
             loading={cases.tcLoading}
             areas={sortedAreas}
           />

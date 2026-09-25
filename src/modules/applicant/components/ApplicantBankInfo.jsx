@@ -4,6 +4,7 @@ import { useGetBankLookupMutation } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
 import { CheckCircle, XCircle } from "lucide-react";
 import { useEnterToNextField } from "../hooks/useEnterToNextField";
+import usePermission from "@/hooks/usePermission";
 import { OtherInputType } from "@/components/global/DynamicField";
 import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";
@@ -24,7 +25,7 @@ import {
 import { collectLookupSuggestions } from "../utils/applicant.utils7";
 import { isRequiredValueFilled } from "../utils/applicant.utils8";
 import { uploadSignatureReplacing } from "../utils/applicant.utils12";
-import { isNotGuestRoleValue } from "@/utils/permissions";
+import { PERMISSIONS } from "@/utils/permissions";
 import { isSignatureComplete, normalizeSignature } from "@/utils/signatureShape";
 
 const BankInfo = ({
@@ -60,7 +61,9 @@ const BankInfo = ({
   const [getBankLookup, { isLoading }] = useGetBankLookupMutation();
   bankModalRef.current = bankModal;
 
-  const isCreator = user?._id && user?._id === step?.owner && isNotGuestRoleValue(user);
+  const canCustomizeForm = usePermission(PERMISSIONS.CUSTOMIZE_FORM);
+  const isOwner = Boolean(user?._id) && user?._id === step?.owner;
+  const canCustomize = isOwner && canCustomizeForm;
   const requiredNames = useMemo(
     () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
     [fields],
@@ -79,10 +82,10 @@ const BankInfo = ({
     form[confirmAccountNumberId]?.value &&
     form[accountNumberId]?.value === form[confirmAccountNumberId]?.value;
   const isAllRequiredFieldsFilled =
-    isCreator ||
+    isOwner ||
     (requiredNames.every(({ uniqueId }) => isRequiredValueFilled(form[uniqueId]?.value)) &&
       (!isSignature || isSignatureComplete(form?.signature)));
-  const isNextBlocked = !isAllRequiredFieldsFilled || loadingNext || (!accMatch && !isCreator);
+  const isNextBlocked = !isAllRequiredFieldsFilled || loadingNext || (!accMatch && !isOwner);
 
   const handleSignatureUpload = async (file, setIsSaving, stamp) => {
     try {
@@ -272,7 +275,7 @@ const BankInfo = ({
           </h3>
           <div className="flex gap-2">
             <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label="Save my progress" />
-            {isCreator && (
+            {canCustomize && (
               <>
                 <Button variant="secondary" onClick={() => setCustomizeModal(true)} label="Customize" />
                 <Button onClick={() => setOwnerSuggesstionsModal(true)} label="Owner's Suggestions" />
@@ -311,7 +314,7 @@ const BankInfo = ({
                 onClick={() => handleNext({ data: form, name: sectionKey, setLoadingNext })}
                 className={`${isNextBlocked && "pointer-events-none cursor-not-allowed opacity-20"}`}
                 disabled={isNextBlocked}
-                label={!isAllRequiredFieldsFilled || (!accMatch && !isCreator) ? "Some Required Fields are Missing" : "Next"}
+                label={!isAllRequiredFieldsFilled || (!accMatch && !isOwner) ? "Some Required Fields are Missing" : "Next"}
                 data-testid="form-next-btn"
               />
             ) : (

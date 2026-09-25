@@ -88,19 +88,23 @@ const APPLICANT_TABLE_COLUMNS = [
   },
 ];
 
-export const buildApplicantColumns = ({ actionMenu, onToggleMenu, getRowRef, submittedButtons, draftButtons }) => [
+export const buildApplicantColumns = ({ actionMenu, onToggleMenu, getRowRef, getRowButtons }) => [
   ...APPLICANT_TABLE_COLUMNS,
   {
     name: "Action",
-    cell: (row) => (
-      <RowActionMenuCell
-        row={row}
-        buttons={row?.type === APPLICANT_TYPE.SUBMITTED ? submittedButtons : draftButtons}
-        isOpen={actionMenu === row._id}
-        onToggle={() => onToggleMenu(row?._id)}
-        rowRef={getRowRef(row?._id)}
-        buttonClassName="cursor-pointer rounded p-1 hover:bg-gray-100"
-      />
-    ),
+    cell: (row) => {
+      const buttons = getRowButtons(row);
+      if (!buttons.length) return null;
+      return (
+        <RowActionMenuCell
+          row={row}
+          buttons={buttons}
+          isOpen={actionMenu === row._id}
+          onToggle={() => onToggleMenu(row?._id)}
+          rowRef={getRowRef(row?._id)}
+          buttonClassName="cursor-pointer rounded p-1 hover:bg-gray-100"
+        />
+      );
+    },
   },
 ];

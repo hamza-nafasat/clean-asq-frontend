@@ -3,7 +3,9 @@ import HtmlContent from "@/components/shared/HtmlContent";
 
 const ApplicantIdMissionQrStep = ({
   section = {},
-  isCreator = false,
+  canCustomize = false,
+  canUseIdMission = false,
+  canEnterIdManually = false,
   qrCode = "",
   qrFetchError = false,
   onCustomizeText,
@@ -11,7 +13,7 @@ const ApplicantIdMissionQrStep = ({
   onManualEntry,
 }) => (
   <div className="flex flex-col items-center gap-3">
-    {isCreator && (
+    {canCustomize && (
       <div className="flex w-full items-center justify-end p-4">
         <Button onClick={onCustomizeText} label="Customize Display Text" />
       </div>
@@ -21,35 +23,42 @@ const ApplicantIdMissionQrStep = ({
         <HtmlContent className="w-full" data-ai-display-text html={section?.ai_formatting || section?.displayText} />
       </div>
     )}
-    <div className="mt-4 flex w-full flex-col items-center gap-4">
-      {qrCode ? (
-        <img
-          data-testid="idmission-qr-code"
-          className="h-57.5 w-57.5"
-          src={`data:image/jpeg;base64,${qrCode}`}
-          alt="qr code "
-        />
-      ) : qrFetchError ? (
-        <p className="max-w-57.5 text-center text-sm text-gray-500">
-          QR code could not be loaded. Use the refresh button to try again, or enter your ID details manually below.
-        </p>
-      ) : null}
-    </div>
-    <div className="mt-4 flex w-full flex-col items-center gap-4">
+    {canUseIdMission && (
+      <>
+        <div className="mt-4 flex w-full flex-col items-center gap-4">
+          {qrCode ? (
+            <img
+              data-testid="idmission-qr-code"
+              className="h-57.5 w-57.5"
+              src={`data:image/jpeg;base64,${qrCode}`}
+              alt="qr code "
+            />
+          ) : qrFetchError ? (
+            <p className="max-w-57.5 text-center text-sm text-gray-500">
+              QR code could not be loaded. Use the refresh button to try again
+              {canEnterIdManually ? ", or enter your ID details manually below." : "."}
+            </p>
+          ) : null}
+        </div>
+        <div className="mt-4 flex w-full flex-col items-center gap-4">
+          <Button
+            data-testid="idmission-refresh-qr-btn"
+            className="w-full max-w-57.5"
+            label="Refresh QR Code"
+            onClick={onRefresh}
+          />
+        </div>
+      </>
+    )}
+    {canEnterIdManually && (
       <Button
-        data-testid="idmission-refresh-qr-btn"
+        onClick={onManualEntry}
         className="w-full max-w-57.5"
-        label="Refresh QR Code"
-        onClick={onRefresh}
+        variant="secondary"
+        data-testid="idmission-manual-entry-btn"
+        label="Enter ID Details Manually"
       />
-    </div>
-    <Button
-      onClick={onManualEntry}
-      className="w-full max-w-57.5"
-      variant="secondary"
-      data-testid="idmission-manual-entry-btn"
-      label="Enter ID Details Manually"
-    />
+    )}
   </div>
 );
 

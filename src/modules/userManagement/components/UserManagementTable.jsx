@@ -47,6 +47,8 @@ const buildColumns = ({ openRowId, getRowRef, buttons, onToggleMenu }) => [
 const UserManagementTable = ({ users = [], roleOptions = [], isLoading = false, isError = false, onRetry }) => {
   const canUpdateUser = usePermission(PERMISSIONS.UPDATE_USER);
   const canDeleteUser = usePermission(PERMISSIONS.DELETE_USER);
+  // role picker needs the roles list
+  const canReadRole = usePermission(PERMISSIONS.READ_ROLE);
   const [updateUser, { isLoading: isUpdatingUser }] = useUpdateSingleUserMutation();
   const [deleteUser, { isLoading: isDeletingUser }] = useDeleteSingleUserMutation();
   const { openRowId, setOpenRowId, toggleMenu, getRowRef } = useRowActionMenu({ closeOnOutsideClick: true });
@@ -59,15 +61,16 @@ const UserManagementTable = ({ users = [], roleOptions = [], isLoading = false, 
   const rowButtons = useMemo(
     () =>
       [
-        canUpdateUser && {
-          name: "Edit",
-          icon: <FiEdit2 size={16} className="mr-2" />,
-          onClick: (row) => {
-            const { _id, firstName, lastName, email, role } = row;
-            setUserToEdit({ _id, firstName, lastName, email, role: role?._id });
-            setOpenRowId(null);
+        canUpdateUser &&
+          canReadRole && {
+            name: "Edit",
+            icon: <FiEdit2 size={16} className="mr-2" />,
+            onClick: (row) => {
+              const { _id, firstName, lastName, email, role } = row;
+              setUserToEdit({ _id, firstName, lastName, email, role: role?._id });
+              setOpenRowId(null);
+            },
           },
-        },
         canDeleteUser && {
           name: "Delete",
           icon: <FiTrash2 size={16} className="mr-2" />,
@@ -77,7 +80,7 @@ const UserManagementTable = ({ users = [], roleOptions = [], isLoading = false, 
           },
         },
       ].filter(Boolean),
-    [canUpdateUser, canDeleteUser, setOpenRowId],
+    [canUpdateUser, canReadRole, canDeleteUser, setOpenRowId],
   );
 
   const columns = useMemo(

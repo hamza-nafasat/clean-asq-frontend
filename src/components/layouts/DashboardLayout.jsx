@@ -1,16 +1,14 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
-import { useSelector } from "react-redux";
-
+import usePermission from "@/hooks/usePermission";
 import AdminHeader from "@/components/layouts/Header";
 import AdminAside from "@/components/layouts/Sidebar";
 import Footer from "@/components/layouts/Footer";
-import { PERMISSIONS, hasPermission } from "@/utils/permissions";
+import { PERMISSIONS } from "@/utils/permissions";
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user } = useSelector((state) => state.auth);
-  const showSidebar = hasPermission(user, PERMISSIONS.ACCESS_SIDEBAR);
+  const showSidebar = usePermission(PERMISSIONS.ACCESS_SIDEBAR);
 
   return (
     <div>

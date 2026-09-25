@@ -22,8 +22,10 @@ import {
   useUpdateFormSectionMutation,
 } from "@/redux/apis/form.apis";
 import useBranding from "@/hooks/useBranding";
+import usePermission from "@/hooks/usePermission";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import getEnv from "@/utils/env";
+import { PERMISSIONS } from "@/utils/permissions";
 import { executeBrandingAssignments, getBrandingSettersFromHook } from "@/utils/executeBrandingAssignment";
 import { APPLICATION_FORMS_SCREEN } from "@/modules/applicationForms/utils/applicationForms.constants";
 import { buildFormsAssistantState } from "@/modules/applicationForms/utils/applicationForms.utils";
@@ -51,18 +53,28 @@ const useApplicationFormsScreenContext = ({ onOpenCreateForm }) => {
   const pendingFormEditsRef = useRef(null);
   const singleFormDataRef = useRef(null);
 
+  const canReadBranding = usePermission(PERMISSIONS.READ_BRANDING);
+  const canReadEmail = usePermission(PERMISSIONS.READ_EMAIL);
+  const canReadLookup = usePermission(PERMISSIONS.READ_LOOKUP);
+  const canReadStrategy = usePermission(PERMISSIONS.READ_STRATEGY);
+  const canReadRule = usePermission(PERMISSIONS.READ_RULE);
+
   const { data: forms, refetch } = useGetMyAllFormsQuery();
-  const { data: brandings } = useGetAllBrandingsQuery();
-  const { data: allEmailTemplates, refetch: refetchEmailTemplates } = useGetAllEmailTemplatesQuery();
-  const { data: searchStrategies } = useGetAllSearchStrategiesQuery();
-  const { data: formStrategies, refetch: refetchFormStrategies } = useGetAllFormStrategiesQuery();
+  const { data: brandings } = useGetAllBrandingsQuery(undefined, { skip: !canReadBranding });
+  const { data: allEmailTemplates, refetch: refetchEmailTemplates } = useGetAllEmailTemplatesQuery(undefined, {
+    skip: !canReadEmail,
+  });
+  const { data: searchStrategies } = useGetAllSearchStrategiesQuery(undefined, { skip: !canReadLookup });
+  const { data: formStrategies, refetch: refetchFormStrategies } = useGetAllFormStrategiesQuery(undefined, {
+    skip: !canReadStrategy,
+  });
   const { data: singleFormData, isError: singleFormError } = useGetSingleFormQueryQuery(
     { _id: selectedFormForEditing },
     { skip: !selectedFormForEditing, refetchOnMountOrArgChange: true },
   );
   const { data: formRulesData } = useGetAllFormRulesQuery(
     { formId: selectedFormForEditing },
-    { skip: !selectedFormForEditing, refetchOnMountOrArgChange: true },
+    { skip: !selectedFormForEditing || !canReadRule, refetchOnMountOrArgChange: true },
   );
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const [addFromBranding] = useAddBrandingInFormMutation();
@@ -258,7 +270,11 @@ const useApplicationFormsScreenContext = ({ onOpenCreateForm }) => {
           name: newName,
         }).unwrap();
         if (!res?.success) throw new Error(res?.message);
-        await Promise.all([refetch(), refetchEmailTemplates(), refetchFormStrategies()]);
+        await Promise.all([
+          refetch(),
+          canReadEmail && refetchEmailTemplates(),
+          canReadStrategy && refetchFormStrategies(),
+        ]);
         return res.data;
       },
       cloneRules: async ({ sourceFormId, targetFormId }) => {

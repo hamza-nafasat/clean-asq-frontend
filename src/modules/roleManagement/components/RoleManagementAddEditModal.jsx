@@ -12,6 +12,7 @@ const RoleManagementAddEditModal = ({
   isNameLocked = false,
   isLoading = false,
   onChange,
+  onToggleMany,
   onClose,
   onSubmit,
 }) => {
@@ -35,6 +36,7 @@ const RoleManagementAddEditModal = ({
         permissionIds={initialData?.permissions}
         error={errors.permissions}
         onChange={onChange}
+        onToggleMany={onToggleMany}
       />
     </SaveCancelModal>
   );

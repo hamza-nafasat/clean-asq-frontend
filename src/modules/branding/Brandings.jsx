@@ -24,8 +24,9 @@ const Brandings = () => {
   const canCreateBranding = usePermission(PERMISSIONS.CREATE_BRANDING);
   const canUpdateBranding = usePermission(PERMISSIONS.UPDATE_BRANDING);
   const canDeleteBranding = usePermission(PERMISSIONS.DELETE_BRANDING);
+  const canReadForm = usePermission(PERMISSIONS.READ_FORM);
 
-  const { data: allFormsData } = useGetMyAllFormsQuery();
+  const { data: allFormsData } = useGetMyAllFormsQuery(undefined, { skip: !canReadForm });
   const { data: brandings = [], isLoading: isBrandingsLoading, isError, refetch } = useGetAllBrandingsQuery();
   const [deleteBranding, { isLoading: isDeleting }] = useDeleteSingleBrandingMutation();
   const deleteConfirm = useBrandingConfirm();
@@ -48,11 +49,12 @@ const Brandings = () => {
       disabled: isDeleting,
       onClick: (row) => deleteConfirm.open({ rows: [row] }),
     },
-    canUpdateBranding && {
-      name: BRANDING_ROW_ACTIONS.APPLY,
-      icon: <FaExchangeAlt size={16} className="mr-2" />,
-      onClick: (row) => apply.openApplyModal(row),
-    },
+    canUpdateBranding &&
+      canReadForm && {
+        name: BRANDING_ROW_ACTIONS.APPLY,
+        icon: <FaExchangeAlt size={16} className="mr-2" />,
+        onClick: (row) => apply.openApplyModal(row),
+      },
   ].filter(Boolean);
 
   const onConfirmDelete = async () => {

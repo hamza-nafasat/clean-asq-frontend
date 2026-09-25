@@ -6,7 +6,9 @@ import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/auth.apis";
 import { useSendOtpMutation, useVerifyEmailMutation } from "@/redux/apis/applicant.apis";
 import { userExist, userNotExist } from "@/redux/slices/auth.slice";
 import { updateEmailVerified } from "@/redux/slices/form.slice";
+import { HTTP_STATUSES } from "@/constants";
 import { AI_FIELD_IDS } from "@/modules/applicant/utils/applicant.constants";
+import { getOtpBlockedUntil } from "@/modules/applicant/utils/applicant.otp.utils";
 import { buildVerificationPath } from "@/modules/applicant/utils/applicant.utils6";
 
 // email + one-time code verification for the applicant
@@ -16,6 +18,8 @@ const useApplicantEmailOtp = ({ formId, draftId, brandingName, navigatingAwayRef
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [blockedUntil, setBlockedUntil] = useState(0);
   const [loadingForValidatingOtp, setLoadingForValidatingOtp] = useState(false);
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const [sendOtp, { isLoading: otpLoading }] = useSendOtpMutation();
@@ -32,19 +36,26 @@ const useApplicantEmailOtp = ({ formId, draftId, brandingName, navigatingAwayRef
     [dispatch, getUserProfile],
   );
 
+  const showOtpError = useCallback((error, fallbackMessage) => {
+    const message = error?.data?.message || fallbackMessage;
+    setOtpError(message);
+    if (error?.status === HTTP_STATUSES.TOO_MANY_REQUESTS) setBlockedUntil(getOtpBlockedUntil(message));
+  }, []);
+
   const handleSendOtp = useCallback(async () => {
     try {
       if (!email) return toast.error("Please enter your email");
       const res = await sendOtp({ email, formId }).unwrap();
       if (res.success) {
+        setOtpError("");
         setOtpSent(true);
         toast.success(res.message);
       }
     } catch (error) {
       console.error("Send OTP error:", error);
-      toast.error(error?.data?.message || "Failed to send OTP");
+      showOtpError(error, "Failed to send code");
     }
-  }, [email, formId, sendOtp]);
+  }, [email, formId, sendOtp, showOtpError]);
 
   const handleVerifyOtp = useCallback(async () => {
     try {
@@ -52,6 +63,7 @@ const useApplicantEmailOtp = ({ formId, draftId, brandingName, navigatingAwayRef
       setLoadingForValidatingOtp(true);
       const res = await verifyEmail({ email, otp, formId }).unwrap();
       if (res.success) {
+        setOtpError("");
         await dispatch(updateEmailVerified(true));
         await refreshUserProfile();
         // company verification comes next, it returns here for the QR code
@@ -60,11 +72,33 @@ const useApplicantEmailOtp = ({ formId, draftId, brandingName, navigatingAwayRef
       }
     } catch (error) {
       console.error("Verify email error:", error);
-      toast.error(error?.data?.message || "Failed to send OTP");
+      showOtpError(error, "Failed to verify code");
     } finally {
       setLoadingForValidatingOtp(false);
     }
-  }, [brandingName, dispatch, draftId, email, formId, navigate, navigatingAwayRef, otp, refreshUserProfile, verifyEmail]);
+  }, [
+    brandingName,
+    dispatch,
+    draftId,
+    email,
+    formId,
+    navigate,
+    navigatingAwayRef,
+    otp,
+    refreshUserProfile,
+    showOtpError,
+    verifyEmail,
+  ]);
+
+  // unblock once the wait is over
+  useEffect(() => {
+    if (!blockedUntil) return;
+    const timer = setTimeout(() => {
+      setBlockedUntil(0);
+      setOtpError("");
+    }, blockedUntil - Date.now());
+    return () => clearTimeout(timer);
+  }, [blockedUntil]);
 
   // focus the code field once it appears
   useEffect(() => {
@@ -78,6 +112,8 @@ const useApplicantEmailOtp = ({ formId, draftId, brandingName, navigatingAwayRef
     setOtp,
     otpSent,
     setOtpSent,
+    otpError,
+    isOtpBlocked: Boolean(blockedUntil),
     loadingForValidatingOtp,
     setLoadingForValidatingOtp,
     otpLoading,

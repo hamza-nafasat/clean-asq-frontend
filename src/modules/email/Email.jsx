@@ -9,6 +9,7 @@ import {
   useUpdateSingleEmailTemplateMutation,
 } from "@/redux/apis/email.apis";
 import { useGetMyAllFormsQuery } from "@/redux/apis/form.apis";
+import usePermission from "@/hooks/usePermission";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import Button from "@/components/shared/Button";
 import EmailAttachFormsModal from "@/modules/email/components/EmailAttachFormsModal";
@@ -16,6 +17,7 @@ import EmailTemplateCard from "@/modules/email/components/EmailTemplateCard";
 import EmailTemplateModal from "@/modules/email/components/EmailTemplateModal";
 import { INITIAL_EDIT_DATA, TEMPLATE_KEYWORDS, TEMPLATE_OPEN_MODES } from "@/modules/email/utils/email.constants";
 import getEnv from "@/utils/env";
+import { PERMISSIONS } from "@/utils/permissions";
 
 const SERVER_URL = getEnv("SERVER_URL");
 
@@ -24,7 +26,11 @@ const Email = () => {
   const { user } = useSelector((state) => state.auth);
   const [viewModalData, setViewModalData] = useState(null);
 
-  const { data: applicationForms } = useGetMyAllFormsQuery();
+  const canCreateEmail = usePermission(PERMISSIONS.CREATE_EMAIL);
+  const canUpdateEmail = usePermission(PERMISSIONS.UPDATE_EMAIL);
+  const canDeleteEmail = usePermission(PERMISSIONS.DELETE_EMAIL);
+  const canReadForm = usePermission(PERMISSIONS.READ_FORM);
+  const { data: applicationForms } = useGetMyAllFormsQuery(undefined, { skip: !canReadForm });
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [editData, setEditData] = useState(INITIAL_EDIT_DATA);
   const [isEdit, setIsEdit] = useState(false);
@@ -125,7 +131,9 @@ const Email = () => {
             await attachEmailTemplate({ emailTemplateId: id, formIds, attachToMe: user?.welcomeMail === id }).unwrap();
           } catch (error) {
             console.error("Attach template error:", error);
-            failedTemplates.push(templates?.find((t) => String(t._id) === String(id))?.templateName || id || "a template");
+            failedTemplates.push(
+              templates?.find((t) => String(t._id) === String(id))?.templateName || id || "a template",
+            );
           }
         }
         if (failedTemplates.length) throw new Error(`Could not update ${failedTemplates.join(", ")}`);
@@ -277,7 +285,9 @@ const Email = () => {
 
       <div className="flex items-center justify-between">
         <h1 className="mb-6 text-2xl font-semibold">Email Templates</h1>
-        <Button label="Create Email Template" onClick={handleCreate} data-testid="email-create-btn" />
+        {canCreateEmail && (
+          <Button label="Create Email Template" onClick={handleCreate} data-testid="email-create-btn" />
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -288,9 +298,9 @@ const Email = () => {
             isMenuOpen={menuOpenId === item._id}
             menuRef={menuRef}
             onToggleMenu={handleToggleMenu}
-            onEdit={handleEdit}
-            onAttach={handleAttachForms}
-            onDelete={handleDelete}
+            onEdit={canUpdateEmail ? handleEdit : null}
+            onAttach={canUpdateEmail && canReadForm ? handleAttachForms : null}
+            onDelete={canDeleteEmail ? handleDelete : null}
             onView={handleView}
           />
         ))}

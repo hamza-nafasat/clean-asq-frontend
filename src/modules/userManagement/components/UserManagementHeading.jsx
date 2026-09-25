@@ -12,6 +12,8 @@ import { validateUserForm } from "../utils/userManagement.utils";
 
 const UserManagementHeading = ({ roleOptions = [] }) => {
   const canCreateUser = usePermission(PERMISSIONS.CREATE_USER);
+  // role picker needs the roles list
+  const canReadRole = usePermission(PERMISSIONS.READ_ROLE);
   const [createUser, { isLoading: isCreatingUser }] = useCreateUserMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState(INITIAL_USER_FORM);
@@ -46,7 +48,7 @@ const UserManagementHeading = ({ roleOptions = [] }) => {
     <>
       <header className="mb-5 flex items-center justify-between">
         <h1 className="text-textPrimary text-xl font-semibold">User Table</h1>
-        {canCreateUser && (
+        {canCreateUser && canReadRole && (
           <Button
             type="button"
             icon={IoMdPersonAdd}

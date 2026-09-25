@@ -3,12 +3,17 @@ import { useSelector } from "react-redux";
 import { CgSpinner } from "react-icons/cg";
 import { CiMenuKebab } from "react-icons/ci";
 import { useGeneratePdfFormMutation } from "@/redux/apis/form.apis";
+import usePermission from "@/hooks/usePermission";
 import Button from "@/components/shared/Button";
 import Modal from "@/components/shared/Modal";
 import MyApplicationsSpecialAccessModal from "./MyApplicationsSpecialAccessModal";
 import MyApplicationsStatusBadge from "./MyApplicationsStatusBadge";
 import { APPLICATION_STATUS } from "@/utils/applicationStatus";
-import { CARD_CLASS, MENU_CONTAINER_SELECTOR } from "../utils/myApplications.constants";
+import { PERMISSIONS } from "@/utils/permissions";
+import {
+  CARD_CLASS,
+  MENU_CONTAINER_SELECTOR,
+} from "../utils/myApplications.constants";
 import {
   buildBrandedButtonStyle,
   dimOnHover,
@@ -25,6 +30,7 @@ const MyApplicationsSubmissions = ({ forms = [] }) => {
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
   const { user } = useSelector((state) => state.auth);
   const [generatePdfForm] = useGeneratePdfFormMutation();
+  const canInviteOwner = usePermission(PERMISSIONS.INVITE_OWNER);
 
   const handleDownload = async (formId, userId) => {
     try {
@@ -45,7 +51,12 @@ const MyApplicationsSubmissions = ({ forms = [] }) => {
 
   const handleForwardBeneficial = (totalOwners) => {
     setOpenSpecialAccessModal(true);
-    setAllBeneficials(totalOwners?.map((item) => ({ value: item?.email, option: `${item?.name}` })));
+    setAllBeneficials(
+      totalOwners?.map((item) => ({
+        value: item?.email,
+        option: `${item?.name}`,
+      })),
+    );
   };
 
   useEffect(() => {
@@ -63,7 +74,10 @@ const MyApplicationsSubmissions = ({ forms = [] }) => {
   return (
     <>
       {openSpecialAccessModal && (
-        <Modal title="Forward Beneficial" onClose={() => setOpenSpecialAccessModal(false)}>
+        <Modal
+          title="Forward Beneficial"
+          onClose={() => setOpenSpecialAccessModal(false)}
+        >
           <MyApplicationsSpecialAccessModal
             allBeneficials={allBeneficials}
             formId={selectedForm}
@@ -88,37 +102,45 @@ const MyApplicationsSubmissions = ({ forms = [] }) => {
                     >
                       {form?.name}
                     </h2>
-                    <p className="mt-1 text-xs text-gray-500">Submitted {formatLongDate(form?.createdAt)}</p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Submitted {formatLongDate(form?.createdAt)}
+                    </p>
                   </div>
 
                   <div className="flex shrink-0 items-center gap-2">
-                    <MyApplicationsStatusBadge status={APPLICATION_STATUS.submitted} />
+                    <MyApplicationsStatusBadge
+                      status={APPLICATION_STATUS.submitted}
+                    />
 
-                    <div className="menu-container relative">
-                      <button
-                        type="button"
-                        aria-label="Application actions"
-                        className="rounded-md p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
-                        onClick={() => {
-                          setIsMenuOpen(!isMenuOpen);
-                          setSelectedForm(form?._id);
-                        }}
-                      >
-                        <CiMenuKebab />
-                      </button>
+                    {canInviteOwner && (
+                      <div className="menu-container relative">
+                        <button
+                          type="button"
+                          aria-label="Application actions"
+                          className="rounded-md p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+                          onClick={() => {
+                            setIsMenuOpen(!isMenuOpen);
+                            setSelectedForm(form?._id);
+                          }}
+                        >
+                          <CiMenuKebab />
+                        </button>
 
-                      {isMenuOpen && selectedForm === form?._id && (
-                        <div className="absolute top-9 right-0 z-10 w-52 rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg">
-                          <Button
-                            type="button"
-                            label="Forward Beneficial"
-                            variant="icon"
-                            className="w-full p-2 text-sm"
-                            onClick={() => handleForwardBeneficial(totalOwners)}
-                          />
-                        </div>
-                      )}
-                    </div>
+                        {isMenuOpen && selectedForm === form?._id && (
+                          <div className="absolute top-9 right-0 z-10 w-52 rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg">
+                            <Button
+                              type="button"
+                              label="Forward Beneficial"
+                              variant="icon"
+                              className="w-full p-2 text-sm"
+                              onClick={() =>
+                                handleForwardBeneficial(totalOwners)
+                              }
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -126,12 +148,15 @@ const MyApplicationsSubmissions = ({ forms = [] }) => {
                 <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                   <div className="min-w-0">
                     <dt className="text-xs text-gray-500">Sections</dt>
-                    <dd className="font-medium text-gray-800">{form?.sections?.length ?? 0}</dd>
+                    <dd className="font-medium text-gray-800">
+                      {form?.sections?.length ?? 0}
+                    </dd>
                   </div>
                   <div className="min-w-0">
                     <dt className="text-xs text-gray-500">Beneficial owners</dt>
                     <dd className="font-medium text-gray-800">
-                      {filledOwners?.length ?? 0} of {totalOwners?.length ?? 0} completed
+                      {filledOwners?.length ?? 0} of {totalOwners?.length ?? 0}{" "}
+                      completed
                     </dd>
                   </div>
                 </dl>
@@ -155,7 +180,9 @@ const MyApplicationsSubmissions = ({ forms = [] }) => {
             );
           })
         ) : (
-          <div className="col-span-full flex items-center justify-center">No submissions found</div>
+          <div className="col-span-full flex items-center justify-center">
+            No submissions found
+          </div>
         )}
       </div>
     </>

@@ -4,6 +4,7 @@ import { useFormateTextInMarkDownMutation } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
 import DOMPurify from "dompurify";
 import { useEnterToNextField } from "../hooks/useEnterToNextField";
+import usePermission from "@/hooks/usePermission";
 import { OtherInputType } from "@/components/global/DynamicField";
 import FileUploader from "@/components/global/FileUploader";
 import SignatureBox from "@/components/global/SignatureBox";
@@ -19,7 +20,7 @@ import { FIELD_NAMES, SECTION_KEYS } from "../utils/applicant.constants";
 import { buildDocumentsAiPrompt, parseDocumentUrls } from "../utils/applicant.utils8";
 import { areDocumentsComplete, uploadSignatureReplacing } from "../utils/applicant.utils12";
 import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
-import { isNotGuestRoleValue } from "@/utils/permissions";
+import { PERMISSIONS } from "@/utils/permissions";
 import { normalizeFieldEntry, normalizeSignature } from "@/utils/signatureShape";
 
 const Documents = ({
@@ -55,7 +56,9 @@ const Documents = ({
   const [showRequiredDocs, setShowRequiredDocs] = useState(true);
   const [formateTextInMarkDown] = useFormateTextInMarkDownMutation();
 
-  const isCreator = user?._id && user?._id === step?.owner && isNotGuestRoleValue(user);
+  const canCustomizeForm = usePermission(PERMISSIONS.CUSTOMIZE_FORM);
+  const isOwner = Boolean(user?._id) && user?._id === step?.owner;
+  const canCustomize = isOwner && canCustomizeForm;
   const requiredNames = useMemo(
     () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId, type: f.type })),
     [fields],
@@ -67,7 +70,7 @@ const Documents = ({
   const urls = parseDocumentUrls(form?.[urlsFieldId]?.value ?? form?.[urlsFieldId]);
   // creators can always continue
   const isAllRequiredFilled =
-    isCreator || areDocumentsComplete({ form, requiredNames, hasNewFile: !!file || urls.length > 0, isSignature });
+    isOwner || areDocumentsComplete({ form, requiredNames, hasNewFile: !!file || urls.length > 0, isSignature });
   const isActionDisabled = loadingNext || !isAllRequiredFilled;
 
   const handleSignatureUpload = async (signatureFile, setIsSaving, stamp) => {
@@ -91,7 +94,7 @@ const Documents = ({
 
   // check a file, a url or a stored file exists; returns false to stop
   const canContinue = (oldFileData) => {
-    if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl) && !isCreator) {
+    if (!file && !urls.length && (!oldFileData?.publicId || !oldFileData?.secureUrl) && !isOwner) {
       toast.error("Please select a file or Enter a URL");
       return false;
     }
@@ -111,7 +114,7 @@ const Documents = ({
 
   const handleNextStep = async () => {
     try {
-      if (!isCreator && !isAllRequiredFilled) return toast.error("Please fill all required fields");
+      if (!isOwner && !isAllRequiredFilled) return toast.error("Please fill all required fields");
       setLoadingNext(true);
       if (!fileFieldUniqueId) return toast.error("Please refresh the page once and try again");
       const oldFileData = form?.[fileFieldUniqueId]?.value || form?.[fileFieldUniqueId];
@@ -133,7 +136,7 @@ const Documents = ({
   };
 
   const handleSubmitStep = async () => {
-    if (!isCreator && !isAllRequiredFilled) return toast.error("Please fill all required fields");
+    if (!isOwner && !isAllRequiredFilled) return toast.error("Please fill all required fields");
     if (!fileFieldName || !fileFieldUniqueId) return toast.error("Please refresh the page once and try again");
     const oldFileData = form?.[fileFieldUniqueId]?.value || form?.[fileFieldUniqueId];
     if (!canContinue(oldFileData)) return;
@@ -197,7 +200,7 @@ const Documents = ({
             {saveInProgress && (
               <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label="Save my progress" />
             )}
-            {isCreator && (
+            {canCustomize && (
               <>
                 <Button variant="secondary" onClick={() => setCustomizeModal(true)} label="Customize" />
                 <Button onClick={() => setAiPromptModal(true)} label="Customize Prompt" />

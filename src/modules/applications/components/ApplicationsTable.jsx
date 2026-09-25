@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { ArrowRight, Eye, Trash, UserIcon } from "lucide-react";
 import PropTypes from "prop-types";
@@ -16,7 +16,7 @@ import CustomLoading from "@/components/shared/CustomLoading";
 import ApplicationsFilter from "./ApplicationsFilter";
 import { buildApplicantColumns } from "./ApplicationsTableColumns";
 import { PERMISSIONS } from "@/utils/permissions";
-import { APPLICATIONS_ROUTES } from "../utils/applications.constants";
+import { APPLICANT_TYPE, APPLICATIONS_ROUTES } from "../utils/applications.constants";
 import { getFullName } from "../utils/applications.utils";
 
 const ApplicationsTable = ({
@@ -33,12 +33,21 @@ const ApplicationsTable = ({
 }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { openRowId: actionMenu, setOpenRowId: setActionMenu, toggleMenu, getRowRef } = useRowActionMenu({
+  const {
+    openRowId: actionMenu,
+    setOpenRowId: setActionMenu,
+    toggleMenu,
+    getRowRef,
+  } = useRowActionMenu({
     closeOnOutsideClick: true,
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [getSavedFormData] = useGetSavedFormMutation();
-  const hasUnderwritingPermission = usePermission(PERMISSIONS.UNDERWRITING);
+  const user = useSelector((state) => state.auth.user);
+  const canUnderwrite = usePermission(PERMISSIONS.UNDERWRITING);
+  const canDeleteApplication = usePermission(PERMISSIONS.DELETE_APPLICATION);
+  const canShareApplication = usePermission(PERMISSIONS.SHARE_APPLICATION);
+  const canSubmitForm = usePermission(PERMISSIONS.SUBMIT_FORM);
 
   // resume draft from where the applicant left off
   const continueDraftHandler = useCallback(
@@ -102,84 +111,88 @@ const ApplicationsTable = ({
     [applicants, filters, searchTerm],
   );
 
-  const draftButtons = useMemo(
-    () => [
-      {
-        name: "Delete",
-        icon: <Trash size={16} className="mr-2" />,
-        onClick: (row) => {
-          setDeleteConfirmation({ id: row?._id, type: row?.type });
-          setActionMenu(null);
-        },
+  const deleteButton = useMemo(
+    () => ({
+      name: "Delete",
+      icon: <Trash size={16} className="mr-2" />,
+      onClick: (row) => {
+        setDeleteConfirmation({ id: row?._id, type: row?.type });
+        setActionMenu(null);
       },
-      {
-        name: "Continue",
-        icon: <ArrowRight size={16} className="mr-2" />,
-        onClick: (row) => {
-          setActionMenu(null);
-          continueDraftHandler(row);
-        },
+    }),
+    [setDeleteConfirmation, setActionMenu],
+  );
+
+  const continueButton = useMemo(
+    () => ({
+      name: "Continue",
+      icon: <ArrowRight size={16} className="mr-2" />,
+      onClick: (row) => {
+        setActionMenu(null);
+        continueDraftHandler(row);
       },
-    ],
-    [continueDraftHandler, setDeleteConfirmation, setActionMenu],
+    }),
+    [continueDraftHandler, setActionMenu],
   );
 
   const submittedButtons = useMemo(
-    () => [
-      {
-        name: "View Pdf",
-        icon: <Eye size={16} className="mr-2" />,
-        onClick: (row) => {
-          onView?.(row);
-          setActionMenu(null);
+    () =>
+      [
+        {
+          name: "View Pdf",
+          icon: <Eye size={16} className="mr-2" />,
+          onClick: (row) => {
+            onView?.(row);
+            setActionMenu(null);
+          },
         },
-      },
-      {
-        name: "Delete",
-        icon: <Trash size={16} className="mr-2" />,
-        onClick: (row) => {
-          setDeleteConfirmation({ id: row?._id, type: row?.type });
-          setActionMenu(null);
+        canDeleteApplication && deleteButton,
+        canShareApplication && {
+          name: "Forward a form",
+          icon: <ArrowRight size={16} className="mr-2" />,
+          onClick: (row) => {
+            setOpenSpecialAccess?.(true);
+            setSelectedIdForSpecialAccessModal?.(row?._id);
+            setSelectedFormId?.(row?.form?._id);
+            setActionMenu(null);
+          },
         },
-      },
-      {
-        name: "Forward a form",
-        icon: <ArrowRight size={16} className="mr-2" />,
-        onClick: (row) => {
-          setOpenSpecialAccess?.(true);
-          setSelectedIdForSpecialAccessModal?.(row?._id);
-          setSelectedFormId?.(row?.form?._id);
-          setActionMenu(null);
+        canUnderwrite && {
+          name: "Underwriting",
+          icon: <UserIcon size={16} className="mr-2" />,
+          onClick: (row) => {
+            navigate(`${APPLICATIONS_ROUTES.UNDERWRITING}/${row?._id}`);
+            setActionMenu(null);
+          },
         },
-      },
-      ...(hasUnderwritingPermission
-        ? [
-            {
-              name: "Underwriting",
-              icon: <UserIcon size={16} className="mr-2" />,
-              onClick: (row) => {
-                navigate(`${APPLICATIONS_ROUTES.UNDERWRITING}/${row?._id}`);
-                setActionMenu(null);
-              },
-            },
-          ]
-        : []),
-    ],
+      ].filter(Boolean),
     [
-      hasUnderwritingPermission,
+      canUnderwrite,
+      canDeleteApplication,
+      canShareApplication,
+      deleteButton,
       onView,
       setOpenSpecialAccess,
       setSelectedIdForSpecialAccessModal,
       setSelectedFormId,
       navigate,
-      setDeleteConfirmation,
       setActionMenu,
     ],
   );
 
+  // only the owner can resume a draft
+  const getRowButtons = useCallback(
+    (row) => {
+      if (row?.type === APPLICANT_TYPE.SUBMITTED) return submittedButtons;
+      const isOwnDraft = (row?.user?._id || row?.user) === user?._id;
+      return [canDeleteApplication && deleteButton, canSubmitForm && isOwnDraft && continueButton].filter(Boolean);
+    },
+    [submittedButtons, canDeleteApplication, deleteButton, canSubmitForm, continueButton, user?._id],
+  );
+
   const columns = useMemo(
-    () => buildApplicantColumns({ actionMenu, onToggleMenu: toggleMenu, getRowRef, submittedButtons, draftButtons }),
-    [draftButtons, submittedButtons, actionMenu, getRowRef, toggleMenu],
+    () => buildApplicantColumns({ actionMenu, onToggleMenu: toggleMenu, getRowRef, getRowButtons }),
+    [getRowButtons, actionMenu, getRowRef, toggleMenu],
   );
 
   return (

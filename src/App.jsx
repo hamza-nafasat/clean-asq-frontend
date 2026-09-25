@@ -10,8 +10,9 @@ import useBrandingSync from "@/hooks/useBrandingSync";
 import CustomLoading from "@/components/shared/CustomLoading";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import RequirePermission from "@/routes/RequirePermission";
+import ApplicantSubmitPermissionGate from "@/modules/applicant/components/ApplicantSubmitPermissionGate";
 import { AUTH_ROUTES, LAYOUT_ROUTES, SOCKET_EVENTS } from "@/constants";
-import { PERMISSIONS, getHomePath, isGuestRole } from "@/utils/permissions";
+import { PERMISSIONS, getHomePath } from "@/utils/permissions";
 import { applyUserBranding } from "@/utils/userBranding";
 
 // auth pages
@@ -23,7 +24,6 @@ const ResetPasswordSuccessfully = lazy(() => import("@/modules/auth/ResetPasswor
 
 // layouts
 const AdminDashboard = lazy(() => import("@/components/layouts/DashboardLayout"));
-const UserApplicationForms = lazy(() => import("@/components/layouts/ApplicationFormLayout"));
 
 // public and shared application pages
 const SingleApplication = lazy(() => import("@/modules/applicant/SingleApplication"));
@@ -84,6 +84,22 @@ const App = () => {
     getUserAndSetBranding();
   }, [getUserAndSetBranding]);
 
+  // pick up role changes on return
+  useEffect(() => {
+    if (!user?._id) return;
+    const refreshPermissions = async () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const res = await getUserProfile().unwrap();
+        if (res?.data) dispatch(userExist(res.data));
+      } catch (error) {
+        console.error("Refresh profile error:", error);
+      }
+    };
+    document.addEventListener("visibilitychange", refreshPermissions);
+    return () => document.removeEventListener("visibilitychange", refreshPermissions);
+  }, [user?._id, getUserProfile, dispatch]);
+
   useEffect(() => {
     const userId = user?._id;
     if (!userId) return;
@@ -94,7 +110,6 @@ const App = () => {
     return () => socket.off(SOCKET_EVENTS.CONNECT, register);
   }, [user?._id]);
 
-  const isGuest = isGuestRole(user);
   if (loading || isLoading) return <CustomLoading />;
   return (
     <>
@@ -109,14 +124,33 @@ const App = () => {
 
           {/* public routes */}
           <Route path="/" element={<AdminDashboard />}>
-            <Route path="application-form/:brandingName/:formId" element={<SingleApplication />} />
+            <Route
+              path="application-form/:brandingName/:formId"
+              element={
+                <ApplicantSubmitPermissionGate>
+                  <SingleApplication />
+                </ApplicantSubmitPermissionGate>
+              }
+            />
             <Route path="hidden/:formId/:sectionKey" element={<FormHiddenSection />} />
             <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
             <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
-            <Route path="singleform/stepper/:formId" element={<ApplicationForm />} />
-            <Route path="verification" element={<Verification />} />
-            <Route path="submission" element={<DraftSubmission />} />
-            <Route path="my-profile" element={<MyProfile />} />
+            <Route
+              path="singleform/stepper/:formId"
+              element={
+                <ApplicantSubmitPermissionGate>
+                  <ApplicationForm />
+                </ApplicantSubmitPermissionGate>
+              }
+            />
+            <Route
+              path="verification"
+              element={
+                <ApplicantSubmitPermissionGate>
+                  <Verification />
+                </ApplicantSubmitPermissionGate>
+              }
+            />
           </Route>
 
           {/* signed-out routes */}
@@ -128,20 +162,22 @@ const App = () => {
             <Route path={AUTH_ROUTES.RESET_PASSWORD_SUCCESSFULLY} element={<ResetPasswordSuccessfully />} />
           </Route>
 
-          {/* signed-in routes without guests */}
-          <Route element={<ProtectedRoute user={!isGuest && user} redirect={isGuest && user ? LAYOUT_ROUTES.MY_APPLICATIONS : AUTH_ROUTES.LOGIN} />}>
+          {/* signed-in routes, each page checks its permission */}
+          <Route element={<ProtectedRoute user={user} redirect={AUTH_ROUTES.LOGIN} />}>
             <Route path="/" element={<AdminDashboard />}>
               <Route index element={<Navigate to={getHomePath(user)} replace />} />
+              <Route path={LAYOUT_ROUTES.MY_APPLICATIONS} element={<DraftSubmission />} />
+              <Route path={LAYOUT_ROUTES.MY_PROFILE} element={<MyProfile />} />
               <Route
-                path="manage-rules/:formId"
+                path={`${LAYOUT_ROUTES.MANAGE_RULES}/:formId`}
                 element={
-                  <RequirePermission permission={PERMISSIONS.UNDERWRITING}>
+                  <RequirePermission permission={PERMISSIONS.READ_RULE}>
                     <ManageRules />
                   </RequirePermission>
                 }
               />
               <Route
-                path="all-roles"
+                path={LAYOUT_ROUTES.ROLE_MANAGEMENT}
                 element={
                   <RequirePermission permission={PERMISSIONS.READ_ROLE}>
                     <AllRoles />
@@ -149,7 +185,7 @@ const App = () => {
                 }
               />
               <Route
-                path="all-users"
+                path={LAYOUT_ROUTES.USER_MANAGEMENT}
                 element={
                   <RequirePermission permission={PERMISSIONS.READ_USER}>
                     <UserManagement />
@@ -157,7 +193,7 @@ const App = () => {
                 }
               />
               <Route
-                path="application-forms"
+                path={LAYOUT_ROUTES.APPLICATION_FORMS}
                 element={
                   <RequirePermission permission={PERMISSIONS.READ_FORM}>
                     <ApplicationForms />
@@ -165,15 +201,15 @@ const App = () => {
                 }
               />
               <Route
-                path="applications"
+                path={LAYOUT_ROUTES.APPLICATIONS}
                 element={
-                  <RequirePermission permission={PERMISSIONS.UNDERWRITING}>
+                  <RequirePermission permission={PERMISSIONS.READ_APPLICATION}>
                     <Applications />
                   </RequirePermission>
                 }
               />
               <Route
-                path="underwriting/:applicantId"
+                path={`${LAYOUT_ROUTES.UNDERWRITING}/:applicantId`}
                 element={
                   <RequirePermission permission={PERMISSIONS.UNDERWRITING}>
                     <OnBoarding />
@@ -181,7 +217,7 @@ const App = () => {
                 }
               />
               <Route
-                path="branding"
+                path={LAYOUT_ROUTES.BRANDING}
                 element={
                   <RequirePermission permission={PERMISSIONS.READ_BRANDING}>
                     <Brandings />
@@ -189,7 +225,7 @@ const App = () => {
                 }
               />
               <Route
-                path="branding/create"
+                path={LAYOUT_ROUTES.BRANDING_CREATE}
                 element={
                   <RequirePermission permission={PERMISSIONS.CREATE_BRANDING}>
                     <CreateBranding />
@@ -197,7 +233,7 @@ const App = () => {
                 }
               />
               <Route
-                path="branding/single/:brandingId"
+                path={`${LAYOUT_ROUTES.BRANDING_SINGLE}/:brandingId`}
                 element={
                   <RequirePermission permission={PERMISSIONS.UPDATE_BRANDING}>
                     <CreateBranding />
@@ -205,15 +241,15 @@ const App = () => {
                 }
               />
               <Route
-                path="strategies-key"
+                path={LAYOUT_ROUTES.LOOKUP_MANAGEMENT}
                 element={
-                  <RequirePermission permission={PERMISSIONS.READ_STRATEGY}>
+                  <RequirePermission permission={PERMISSIONS.READ_LOOKUP}>
                     <FormStrategies />
                   </RequirePermission>
                 }
               />
               <Route
-                path="verification-test"
+                path={LAYOUT_ROUTES.VERIFICATION_TEST}
                 element={
                   <RequirePermission permission={PERMISSIONS.READ_TESTING}>
                     <VerificationTest />
@@ -221,7 +257,7 @@ const App = () => {
                 }
               />
               <Route
-                path="strategies"
+                path={LAYOUT_ROUTES.STRATEGIES}
                 element={
                   <RequirePermission permission={PERMISSIONS.READ_STRATEGY}>
                     <Strategies />
@@ -229,7 +265,7 @@ const App = () => {
                 }
               />
               <Route
-                path="email"
+                path={LAYOUT_ROUTES.EMAIL}
                 element={
                   <RequirePermission permission={PERMISSIONS.READ_EMAIL}>
                     <Email />
@@ -237,18 +273,13 @@ const App = () => {
                 }
               />
               <Route
-                path="testing"
+                path={LAYOUT_ROUTES.TESTING}
                 element={
                   <RequirePermission permission={PERMISSIONS.READ_TESTING}>
                     <Testing />
                   </RequirePermission>
                 }
               />
-            </Route>
-
-            {/* application layout without the sidebar */}
-            <Route path="/user-application-forms" element={<UserApplicationForms />}>
-              <Route index element={<Navigate to="application-verification" replace />} />
             </Route>
           </Route>
 

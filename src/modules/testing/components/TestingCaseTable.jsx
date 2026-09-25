@@ -90,13 +90,15 @@ const TestingCaseTable = ({
           aria-label="Search test cases"
           className="ml-auto h-8 rounded border border-gray-300 bg-white px-3 text-xs text-gray-700 outline-none focus:border-primary w-40"
         />
-        <button
-          type="button"
-          onClick={() => onNew?.()}
-          className="h-8 rounded-lg bg-primary px-3 text-xs font-medium text-white hover:bg-primary/90"
-        >
-          + New
-        </button>
+        {onNew && (
+          <button
+            type="button"
+            onClick={() => onNew()}
+            className="h-8 rounded-lg bg-primary px-3 text-xs font-medium text-white hover:bg-primary/90"
+          >
+            + New
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -144,9 +146,10 @@ const TestingCaseTable = ({
                     <button
                       type="button"
                       onClick={() => onToggleActive?.(tc._id, tc.isActive)}
+                      disabled={!onToggleActive}
                       aria-label="Toggle active"
                       aria-pressed={!!tc.isActive}
-                      className={`relative inline-flex h-4 w-8 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                      className={`relative inline-flex h-4 w-8 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors disabled:cursor-not-allowed ${
                         tc.isActive ? "bg-primary" : "bg-gray-300"
                       }`}
                     >
@@ -159,15 +162,25 @@ const TestingCaseTable = ({
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-1 justify-end">
-                      <ActionBtn onClick={() => onEdit?.(tc)} title="Edit">
-                        ✎
-                      </ActionBtn>
-                      <ActionBtn onClick={() => onDuplicate?.(tc)} title="Duplicate">
-                        ⧉
-                      </ActionBtn>
-                      <ActionBtn onClick={() => setConfirmDelete({ id: tc._id, name: tc.name })} title="Delete" danger>
-                        ×
-                      </ActionBtn>
+                      {onEdit && (
+                        <ActionBtn onClick={() => onEdit(tc)} title="Edit">
+                          ✎
+                        </ActionBtn>
+                      )}
+                      {onDuplicate && (
+                        <ActionBtn onClick={() => onDuplicate(tc)} title="Duplicate">
+                          ⧉
+                        </ActionBtn>
+                      )}
+                      {onDelete && (
+                        <ActionBtn
+                          onClick={() => setConfirmDelete({ id: tc._id, name: tc.name })}
+                          title="Delete"
+                          danger
+                        >
+                          ×
+                        </ActionBtn>
+                      )}
                     </div>
                   </td>
                 </tr>

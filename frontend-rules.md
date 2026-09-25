@@ -78,8 +78,8 @@ their permissions. Three **system roles** always exist:
 | Role | What it sees | Admin may change it? |
 |---|---|---|
 | `admin` | every permission — the sidebar and every page | no |
-| `guest` | no sidebar. Lands on `myApplications`: the application flow and every step of the stepper, their own drafts and submitted forms, `myProfile` | yes |
-| `user` | every permission except `underwriting`, with the sidebar | yes |
+| `guest` | the **Applying** group, no sidebar. Lands on `myApplications`: the application flow and every step of the stepper, their own drafts and submitted forms, `myProfile` | yes |
+| `user` | every permission except **User Management**, **Role Management** and the review side (`underwriting`, **Form Rules**, **Applications**), with the sidebar | yes |
 
 The permission rules are in §7. The backend enforces the same permissions (backend-rules.md §7).
 
@@ -589,6 +589,11 @@ return (
 - **Ownership is not a permission.** "Is this my form" stays an id comparison —
   `form?.owner === user?._id`.
 - **Hiding is not security.** Every action is checked again by its API route.
+- **A page loads only what the account may read.** Another module's data used by an optional
+  feature is fetched with RTK `skip` when the account lacks that module's `read_` permission, and the
+  feature is hidden — never a silent `403`.
+- **The application flow hides steps, it never fails at them.** Without `lookup_company` the company
+  step is skipped; without `id_mission` the QR is hidden; without `invite_owner` owners cannot be added.
 
 ## 7.3 The AI assistant — STRICT
 
@@ -598,7 +603,10 @@ exceptions.
 - **Every screen action the AI calls uses the same RTK Query mutation as the manual button.** Never
   a separate AI-only request, and never a request the manual UI would not be allowed to send.
 - **The backend decides.** If the account lacks the permission, the route answers `403` and the
-  assistant reports that it could not do it. The frontend never retries with other credentials.
+  assistant says "You don't have permission to do that." — never "something went wrong, try again".
+  The frontend never retries with other credentials.
+- **Every signed-in account sees the assistant.** A screen without its own chat uses
+  `/ai/assistant-chat`, never another module's chat.
 - **Never pass a role or permission to the AI as something it may change.** It reads the account's
   permissions; it never grants them.
 
@@ -617,7 +625,8 @@ exceptions.
 - **My-own-account pages take no permission** — `myProfile` and `myApplications` sit under the
   signed-in `<ProtectedRoute>` alone, so every signed-in account reaches them. Same rule as the
   backend's my-own-account routes.
-- **The sidebar renders only with `access_sidebar`.** Without it the layout has no sidebar.
+- **`access_sidebar` decides the layout.** With it: the sidebar and the dashboard header. Without it:
+  no sidebar and the branded header. Nothing else — never the role name — decides layout.
 - **Each sidebar item carries the permission of the page it opens** and is hidden without it — the
   item and its route check the same permission.
 - **The home page comes from permissions, not the role:** with `access_sidebar`, the first sidebar

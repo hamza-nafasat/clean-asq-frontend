@@ -13,6 +13,8 @@ import { SelectInputType } from "@/components/global/DynamicField";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
 import TextField from "@/components/shared/TextField";
+import usePermission from "@/hooks/usePermission";
+import { PERMISSIONS } from "@/utils/permissions";
 import ApplicationFormsRuleAiControls from "./ApplicationFormsRuleAiControls";
 import ApplicationFormsRuleEmailFields from "./ApplicationFormsRuleEmailFields";
 import ApplicationFormsRulePreview from "./ApplicationFormsRulePreview";
@@ -69,7 +71,10 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
   const [getFormRuleFromAi, { isLoading: isGettingFormRuleFromAi }] = useGetFormRuleFromAiMutation();
   const [checkFormRuleFromAi, { isLoading: isCheckingFormRuleFromAi }] = useCheckFormRuleFromAiMutation();
   const { data: formData, isLoading: isLoadingFormData } = useFormDataWhichUseToCreateFormsQuery({ formId });
-  const { data: emailTemplates, isLoading: isLoadingEmailTemplates } = useGetAllEmailTemplatesQuery();
+  const canReadEmail = usePermission(PERMISSIONS.READ_EMAIL);
+  const { data: emailTemplates, isLoading: isLoadingEmailTemplates } = useGetAllEmailTemplatesQuery(undefined, {
+    skip: !canReadEmail,
+  });
 
   const updateRule = (name, value) => setRule((prev) => ({ ...prev, [name]: value }));
 
@@ -205,15 +210,17 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
             value={rule.prompt}
             onChange={(e) => updateRule("prompt", e.target.value)}
           />
-          <ApplicationFormsRuleEmailFields
-            emailTemplates={emailTemplates?.data}
-            isEmailSentOn={isEmailSentOn}
-            setIsEmailSentOn={setIsEmailSentOn}
-            recieverEmail={recieverEmail}
-            setRecieverEmail={setRecieverEmail}
-            emailTemplateId={emailTemplateId}
-            setEmailTemplateId={setEmailTemplateId}
-          />
+          {canReadEmail && (
+            <ApplicationFormsRuleEmailFields
+              emailTemplates={emailTemplates?.data}
+              isEmailSentOn={isEmailSentOn}
+              setIsEmailSentOn={setIsEmailSentOn}
+              recieverEmail={recieverEmail}
+              setRecieverEmail={setRecieverEmail}
+              emailTemplateId={emailTemplateId}
+              setEmailTemplateId={setEmailTemplateId}
+            />
+          )}
           <ApplicationFormsRuleAiControls
             formData={formData?.data}
             isGenerating={isGettingFormRuleFromAi}
@@ -254,11 +261,15 @@ const UpdateRuleModal = ({ ruleData = null, setModal, refetch }) => {
   const [isEmailSentOn, setIsEmailSentOn] = useState(ruleData?.isEmailSentOn);
   const [recieverEmail, setRecieverEmail] = useState(ruleData?.recieverEmail);
   const [updateRuleMutation, { isLoading: isUpdatingRule }] = useUpdateSingleFormRuleMutation();
+  const canCreateRule = usePermission(PERMISSIONS.CREATE_RULE);
   const [getFormRuleFromAi, { isLoading: isGettingFormRuleFromAi }] = useGetFormRuleFromAiMutation();
   const { data: formData, isLoading: isLoadingFormData } = useFormDataWhichUseToCreateFormsQuery({
     formId: ruleData?.formId,
   });
-  const { data: emailTemplates, isLoading: isLoadingEmailTemplates } = useGetAllEmailTemplatesQuery();
+  const canReadEmail = usePermission(PERMISSIONS.READ_EMAIL);
+  const { data: emailTemplates, isLoading: isLoadingEmailTemplates } = useGetAllEmailTemplatesQuery(undefined, {
+    skip: !canReadEmail,
+  });
 
   const updateRule = (name, value) => setRule((prev) => ({ ...prev, [name]: value }));
 
@@ -352,21 +363,25 @@ const UpdateRuleModal = ({ ruleData = null, setModal, refetch }) => {
             value={rule.prompt}
             onChange={(e) => updateRule("prompt", e.target.value)}
           />
-          <ApplicationFormsRuleEmailFields
-            emailTemplates={emailTemplates?.data}
-            isEmailSentOn={isEmailSentOn}
-            setIsEmailSentOn={setIsEmailSentOn}
-            recieverEmail={recieverEmail}
-            setRecieverEmail={setRecieverEmail}
-            emailTemplateId={emailTemplateId}
-            setEmailTemplateId={setEmailTemplateId}
-          />
-          <ApplicationFormsRuleAiControls
-            formData={formData?.data}
-            isGenerating={isGettingFormRuleFromAi}
-            canGenerate={!!(rule.prompt && rule.name && rule.category)}
-            onGenerate={handleGetRuleFromAi}
-          />
+          {canReadEmail && (
+            <ApplicationFormsRuleEmailFields
+              emailTemplates={emailTemplates?.data}
+              isEmailSentOn={isEmailSentOn}
+              setIsEmailSentOn={setIsEmailSentOn}
+              recieverEmail={recieverEmail}
+              setRecieverEmail={setRecieverEmail}
+              emailTemplateId={emailTemplateId}
+              setEmailTemplateId={setEmailTemplateId}
+            />
+          )}
+          {canCreateRule && (
+            <ApplicationFormsRuleAiControls
+              formData={formData?.data}
+              isGenerating={isGettingFormRuleFromAi}
+              canGenerate={!!(rule.prompt && rule.name && rule.category)}
+              onGenerate={handleGetRuleFromAi}
+            />
+          )}
         </div>
 
         <ApplicationFormsRulePreview {...rule} />

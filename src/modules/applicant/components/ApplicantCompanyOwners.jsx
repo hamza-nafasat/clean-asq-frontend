@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { GoPlus } from "react-icons/go";
 import { useEnterToNextField } from "../hooks/useEnterToNextField";
+import usePermission from "@/hooks/usePermission";
 import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";
 import Modal from "@/components/shared/Modal";
@@ -12,7 +13,13 @@ import DisplayText from "./ApplicantDisplayText";
 import ApplicantOwnerSuggestionsModal from "./ApplicantOwnerSuggestionsModal";
 import ApplicantSectionField from "./ApplicantSectionField";
 import { EditSectionDisplayTextFromatingModal } from "./ApplicantSectionTextModal";
-import { DEFAULT_OWNER_SUGGESTION_KEYS, FIELD_BLOCK_TYPE, FIELD_NAMES, YES_NO } from "../utils/applicant.constants";
+import {
+  DEFAULT_OWNER_SUGGESTION_KEYS,
+  FIELD_BLOCK_TYPE,
+  FIELD_NAMES,
+  MAX_BENEFICIAL_OWNERS,
+  YES_NO,
+} from "../utils/applicant.constants";
 import { findFieldKeyByName } from "../utils/applicant.utils3";
 import { requiresOtherOperators, resolveOtherOperatorsAnswer } from "../utils/applicant.utils4";
 import { collectLookupSuggestions } from "../utils/applicant.utils7";
@@ -26,7 +33,7 @@ import {
   mergeFormShape,
 } from "../utils/applicant.utils11";
 import { uploadSignatureReplacing } from "../utils/applicant.utils12";
-import { isNotGuestRoleValue } from "@/utils/permissions";
+import { PERMISSIONS } from "@/utils/permissions";
 
 const CompanyOwners = ({
   sectionKey,
@@ -59,7 +66,10 @@ const CompanyOwners = ({
   // one stable id per owner row, kept outside the data
   const [rowIds, setRowIds] = useState([]);
 
-  const isCreator = user?._id && user?._id === step?.owner && isNotGuestRoleValue(user);
+  const canCustomizeForm = usePermission(PERMISSIONS.CUSTOMIZE_FORM);
+  const isOwner = Boolean(user?._id) && user?._id === step?.owner;
+  const canCustomize = isOwner && canCustomizeForm;
+  const canInviteOwner = usePermission(PERMISSIONS.INVITE_OWNER);
   const ownersBlock = useMemo(() => fields?.find(isAdditionalOwnersBlock), [fields]);
   const otherOwnersStateUniqueId = ownersBlock?.uniqueId || "";
   const otherOwnersStateName = ownersBlock?.name || "";
@@ -84,9 +94,10 @@ const CompanyOwners = ({
     () => formFields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
     [formFields],
   );
-  const { isValid: isAllRequiredFieldsFilled, message: submitButtonText } = isCreator
+  const { isValid: isAllRequiredFieldsFilled, message: submitButtonText } = isOwner
     ? { isValid: true, message: "" }
     : getOwnersValidation({ form, owners, requiredNames, isSignature, idMissionRoleValue });
+  const isOwnerLimitReached = owners.length >= MAX_BENEFICIAL_OWNERS;
   const showAdditionalOwners =
     form?.[findFieldKeyByName(form, FIELD_NAMES.ADDITIONAL_OWNERS_25_PERCENT)]?.value === YES_NO.YES;
 
@@ -210,7 +221,7 @@ const CompanyOwners = ({
         </h3>
         <div className="flex gap-2">
           <Button onClick={onSaveProgress} label="Save my progress" />
-          {isCreator && (
+          {canCustomize && (
             <>
               <Button onClick={() => setCustomizeModal(true)} label="Customize" />
               <Button onClick={() => setOwnerSuggesstionsModal(true)} label="Owner's Suggestions" />
@@ -256,14 +267,20 @@ const CompanyOwners = ({
                     />
                   );
                 })}
-                <div className="flex w-full justify-end">
-                  <Button
-                    onClick={handleAddOwner}
-                    icon={GoPlus}
-                    className="text-textPrimary! rounded-lg! border! border-[#D5D8DD]! bg-[#F5F5F5]! font-medium! hover:bg-gray-200!"
-                    label="Add additional owner or operator"
-                  />
-                </div>
+                {canInviteOwner && (
+                  <div className="flex w-full flex-col items-end gap-1">
+                    <Button
+                      onClick={handleAddOwner}
+                      icon={GoPlus}
+                      disabled={isOwnerLimitReached}
+                      className="text-textPrimary! rounded-lg! border! border-[#D5D8DD]! bg-[#F5F5F5]! font-medium! hover:bg-gray-200!"
+                      label="Add additional owner or operator"
+                    />
+                    {isOwnerLimitReached && (
+                      <p className="text-xs text-gray-500">You can add up to {MAX_BENEFICIAL_OWNERS} owners.</p>
+                    )}
+                  </div>
+                )}
               </div>
             ) : null}
 

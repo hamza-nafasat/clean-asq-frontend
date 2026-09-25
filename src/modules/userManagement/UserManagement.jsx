@@ -7,10 +7,12 @@ import {
   useUpdateSingleUserMutation,
 } from "@/redux/apis/userManagement.apis";
 import { toast } from "react-toastify";
+import usePermission from "@/hooks/usePermission";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import UserManagementHeading from "./components/UserManagementHeading";
 import UserManagementTable from "./components/UserManagementTable";
 import getEnv from "@/utils/env";
+import { PERMISSIONS } from "@/utils/permissions";
 import { USER_AI_CHAT_PATH, USER_SCREEN_CONTEXT } from "./utils/userManagement.constants";
 import { buildUserScreenActions, buildUserScreenState } from "./utils/userManagement.utils";
 
@@ -18,7 +20,8 @@ const SERVER_URL = getEnv("SERVER_URL");
 
 const UserManagement = () => {
   const { data: users, isLoading: isLoadingUsers, isError, refetch } = useGetAllUsersQuery();
-  const { data: roles, isLoading: isLoadingRoles } = useGetAllRolesQuery();
+  const canReadRole = usePermission(PERMISSIONS.READ_ROLE);
+  const { data: roles, isLoading: isLoadingRoles } = useGetAllRolesQuery(undefined, { skip: !canReadRole });
   const [createUser] = useCreateUserMutation();
   const [updateUser] = useUpdateSingleUserMutation();
   const [deleteUser] = useDeleteSingleUserMutation();

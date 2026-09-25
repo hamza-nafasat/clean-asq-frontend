@@ -4,11 +4,14 @@ import { X } from "lucide-react";
 import { useGetAllSearchStrategiesQuery, useUpdateFormSectionMutation } from "@/redux/apis/form.apis";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
+import usePermission from "@/hooks/usePermission";
+import { PERMISSIONS } from "@/utils/permissions";
 
 const ApplicantOwnerSuggestionsModal = ({ selectedSuggesstions = [], sectionId, onClose }) => {
   const [selectedOwners, setSelectedOwners] = useState(Array.isArray(selectedSuggesstions) ? selectedSuggesstions : []);
   const [suggesstions, setSuggesstions] = useState([]);
-  const { data, isLoading } = useGetAllSearchStrategiesQuery();
+  const canReadLookup = usePermission(PERMISSIONS.READ_LOOKUP);
+  const { data, isLoading } = useGetAllSearchStrategiesQuery(undefined, { skip: !canReadLookup });
   const [updateFormSection, { isLoading: isUpdating }] = useUpdateFormSectionMutation();
 
   const handleSave = async () => {

@@ -14,6 +14,7 @@ import { GoCheckCircle } from "react-icons/go";
 import { useApplicantScreenContext } from "../hooks/useApplicantScreenContext";
 import useApplicantFocusFirstInput from "../hooks/useApplicantFocusFirstInput";
 import { useEnterToNextField } from "../hooks/useEnterToNextField";
+import usePermission from "@/hooks/usePermission";
 import LocationStatusModal from "@/components/modals/LocationStatusModal";
 import Button from "@/components/shared/Button";
 import Checkbox from "@/components/shared/Checkbox";
@@ -31,7 +32,7 @@ import {
 import { buildApplicationFormPath } from "../utils/applicant.utils6";
 import { buildLookupData } from "../utils/applicant.utils7";
 import getEnv from "@/utils/env";
-import { isNotGuestRoleValue } from "@/utils/permissions";
+import { PERMISSIONS } from "@/utils/permissions";
 import HtmlContent from "@/components/shared/HtmlContent";
 
 // inputs stay read-only while a company request runs
@@ -57,9 +58,11 @@ const CompanyVerification = ({ formId, brandingName, draftId }) => {
   const [saveFormInDraft, { isLoading: isSavingFormInDraft }] = useSaveFormInDraftMutation();
 
   const formDocument = formBackendData?.data;
-  const isCreator = Boolean(
-    user && formBackendData && user?._id && user?._id === formDocument?.owner && isNotGuestRoleValue(user),
-  );
+  const canCustomizeForm = usePermission(PERMISSIONS.CUSTOMIZE_FORM);
+  const canLookupCompany = usePermission(PERMISSIONS.LOOKUP_COMPANY);
+  const skipStartedRef = useRef(false);
+  const isOwner = Boolean(user?._id) && user?._id === formDocument?.owner;
+  const canCustomize = isOwner && canCustomizeForm;
   const isRequestBusy = verifyCompanyLoading || lookupCompanyLoading;
   const isContinueDisabled = loading || isSavingFormInDraft || isRequestBusy;
 
@@ -211,6 +214,13 @@ const CompanyVerification = ({ formId, brandingName, draftId }) => {
 
   useApplicantFocusFirstInput(companyFormRef, !isLoading);
 
+  // no lookup permission skips this step
+  useEffect(() => {
+    if (canLookupCompany || skipStartedRef.current) return;
+    skipStartedRef.current = true;
+    goToApplicationWithDraft({ createIfMissing: true });
+  }, [canLookupCompany, goToApplicationWithDraft]);
+
   return (
     <>
       {isDisplayTextModalOpen && formDocument && (
@@ -225,7 +235,7 @@ const CompanyVerification = ({ formId, brandingName, draftId }) => {
         </Modal>
       )}
       <div ref={companyFormRef} data-testid="company-verification-page" className="flex flex-col space-y-8">
-        {isLoading ? (
+        {isLoading || !canLookupCompany ? (
           <CustomLoading />
         ) : (
           <>
@@ -247,7 +257,7 @@ const CompanyVerification = ({ formId, brandingName, draftId }) => {
                     <HtmlContent html={formDocument?.companyVerificationDisplayFormatedText} />
                   </div>
                 )}
-                {isCreator && (
+                {canCustomize && (
                   <div className="flex w-full justify-end">
                     <Button
                       className="h-fit"
@@ -312,7 +322,7 @@ const CompanyVerification = ({ formId, brandingName, draftId }) => {
               </div>
             </div>
 
-            {isCreator && (
+            {isOwner && (
               <Button
                 disabled={isContinueDisabled}
                 onClick={() => goToApplicationWithDraft({ createIfMissing: true })}

@@ -40,7 +40,7 @@ const HeaderBranded = ({
         </>
       );
     }
-    if (headerAlignment == HEADER_ALIGNMENTS.LEFT) {
+    if (headerAlignment === HEADER_ALIGNMENTS.LEFT) {
       return (
         <>
           {logoBox}

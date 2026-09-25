@@ -133,7 +133,13 @@ export const LAYOUT_ROUTES = {
   BRANDING: "/branding",
   LOOKUP_MANAGEMENT: "/strategies-key",
   STRATEGIES: "/strategies",
-  EMAIL: "email",
+  EMAIL: "/email",
+  UNDERWRITING: "/underwriting",
+  MANAGE_RULES: "/manage-rules",
+  VERIFICATION_TEST: "/verification-test",
+  TESTING: "/testing",
+  BRANDING_CREATE: "/branding/create",
+  BRANDING_SINGLE: "/branding/single",
 };
 
 export const HEADER_ALIGNMENTS = {
@@ -505,6 +511,11 @@ export const STATE_SUGGESTIONS = [
 export const DELETE_CLOSE_MODES = {
   FINALLY: "finally",
   RESULT: "result",
+};
+
+export const HTTP_STATUSES = {
+  FORBIDDEN: 403,
+  TOO_MANY_REQUESTS: 429,
 };
 
 export const KEYBOARD_KEYS = {

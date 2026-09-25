@@ -4,6 +4,8 @@ import { FaRegEye } from "react-icons/fa";
 import { FiEdit } from "react-icons/fi";
 import { toast } from "react-toastify";
 import Button from "@/components/shared/Button";
+import usePermission from "@/hooks/usePermission";
+import { PERMISSIONS } from "@/utils/permissions";
 import CustomLoading from "@/components/shared/CustomLoading";
 import LookupManagementExtractionCards from "./LookupManagementExtractionCards";
 import {
@@ -20,6 +22,7 @@ const closeEdit = (_name, _prompt, _id, setIsEdit) => setIsEdit(false);
 
 const LookupManagementExtractionContext = () => {
   const [activeTab, setActiveTab] = useState(EXTRACTION_TABS.EDIT);
+  const canUpdateLookup = usePermission(PERMISSIONS.UPDATE_LOOKUP);
   const { data: promptsData, isLoading, refetch } = useGetAllPromptsQuery();
   const { data: searchStrategyData } = useGetAllSearchStrategiesQuery();
   const [extractionPrompt, setExtractionPrompt] = useState("");
@@ -92,6 +95,7 @@ const LookupManagementExtractionContext = () => {
                 subtitle={subtitle}
                 prompt={extractionPrompt}
                 handler={closeEdit}
+                isPreview={!canUpdateLookup}
               />
             ) : (
               <LookupManagementExtractionCards
@@ -104,6 +108,7 @@ const LookupManagementExtractionContext = () => {
                 prompt={prompts?.[label]}
                 handler={updatePrompts}
                 setPrompts={setPrompts}
+                isPreview={!canUpdateLookup}
               />
             ),
           )}

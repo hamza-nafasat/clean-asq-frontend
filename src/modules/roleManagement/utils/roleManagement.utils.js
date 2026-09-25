@@ -1,5 +1,6 @@
 import { FIELD_TYPES } from "@/constants";
-import { SYSTEM_ROLES } from "@/utils/permissions";
+import { PERMISSION_GROUPS, SYSTEM_ROLES } from "@/utils/permissions";
+import { OTHER_PERMISSION_GROUP } from "./roleManagement.constants";
 
 export const isSystemRole = (role) => Object.values(SYSTEM_ROLES).includes(role?.name);
 
@@ -20,6 +21,24 @@ export const applyRoleFormChange = (prev, { name, value, type, checked }) => {
   if (type !== FIELD_TYPES.CHECKBOX) return { ...prev, [name]: value };
   const permissions = checked ? [...prev.permissions, name] : prev.permissions.filter((id) => id !== name);
   return { ...prev, permissions };
+};
+
+// add or remove many ids at once
+export const setRolePermissions = (prev, ids, checked) => {
+  const rest = prev.permissions.filter((id) => !ids.includes(id));
+  return { ...prev, permissions: checked ? [...rest, ...ids] : rest };
+};
+
+// permission records in their module groups
+export const groupPermissions = (permissions = []) => {
+  const byName = new Map(permissions.map((permission) => [permission.name, permission]));
+  const groupedNames = new Set(PERMISSION_GROUPS.flatMap((group) => group.permissions));
+  const groups = PERMISSION_GROUPS.map((group) => ({
+    name: group.name,
+    permissions: group.permissions.map((name) => byName.get(name)).filter(Boolean),
+  }));
+  const other = permissions.filter((permission) => !groupedNames.has(permission.name));
+  return [...groups, { name: OTHER_PERMISSION_GROUP, permissions: other }].filter((group) => group.permissions.length);
 };
 
 const getPermissionIds = (permissions, permissionNames) =>

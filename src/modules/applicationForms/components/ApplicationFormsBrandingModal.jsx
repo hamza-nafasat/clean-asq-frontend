@@ -13,7 +13,7 @@ const ApplicationFormsBrandingModal = ({ isOpen = false, formId = null, onClose,
   const dispatch = useDispatch();
   const brandingSetters = getBrandingSettersFromHook(useBranding());
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
-  const { data: brandings, isLoading: isLoadingBrandings } = useGetAllBrandingsQuery();
+  const { data: brandings, isLoading: isLoadingBrandings } = useGetAllBrandingsQuery(undefined, { skip: !isOpen });
   const [addFromBranding, { isLoading: isAddingFromBranding }] = useAddBrandingInFormMutation();
   const [selectedBranding, setSelectedBranding] = useState(null);
   const [onHome, setOnHome] = useState(false);

@@ -103,6 +103,8 @@ const BrandingEditor = ({ brandingId }) => {
   const branding = useBranding();
   const canCreateBranding = usePermission(PERMISSIONS.CREATE_BRANDING);
   const canUpdateBranding = usePermission(PERMISSIONS.UPDATE_BRANDING);
+  const canFetchBranding = usePermission(PERMISSIONS.FETCH_BRANDING);
+  const canReadForm = usePermission(PERMISSIONS.READ_FORM);
   const { values, setters, patchValues } = useBrandingEditorForm();
   const [image, setImage] = useState(null);
 
@@ -113,7 +115,7 @@ const BrandingEditor = ({ brandingId }) => {
     isError: isBrandingError,
     refetch: refetchBranding,
   } = useGetSingleBrandingQuery(brandingId, { skip: !brandingId });
-  const { data: allFormsResponse } = useGetMyAllFormsQuery();
+  const { data: allFormsResponse } = useGetMyAllFormsQuery(undefined, { skip: !canReadForm });
 
   const extraction = useBrandingEditorExtraction({ values, setters, patchValues });
   const save = useBrandingEditorSave({ brandingId, values, branding });
@@ -181,10 +183,11 @@ const BrandingEditor = ({ brandingId }) => {
             headerBackground={values.headerBackground}
             onLogoSelected={extraction.handleLogoSelected}
             onOpenExtractionModal={extraction.openExtractionModal}
+            canFetchBranding={canFetchBranding}
           />
 
           <BrandingManualExtractionModal
-            isOpen={extraction.isExtractionModalOpen}
+            isOpen={canFetchBranding && extraction.isExtractionModalOpen}
             onClose={extraction.closeExtractionModal}
             initialUrl={values.websiteUrl}
             initialTab={extraction.extractionModalTab}

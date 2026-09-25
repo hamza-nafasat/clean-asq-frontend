@@ -30,10 +30,10 @@ const TestingHeading = ({
       >
         ?
       </button>
-      {activeTab === TESTING_TABS.CONFIGURE && (
+      {onRun && activeTab === TESTING_TABS.CONFIGURE && (
         <button
           type="button"
-          onClick={() => onRun?.()}
+          onClick={() => onRun()}
           disabled={!canRun}
           data-testid="run-tests-btn"
           className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white shadow hover:opacity-90 disabled:opacity-40"
@@ -41,19 +41,19 @@ const TestingHeading = ({
           Run {selectedCount} test{selectedCount !== 1 ? "s" : ""}
         </button>
       )}
-      {activeTab === TESTING_TABS.TEST_CASES && (
+      {onSeed && activeTab === TESTING_TABS.TEST_CASES && (
         <button
           type="button"
-          onClick={() => onSeed?.()}
+          onClick={() => onSeed()}
           className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
           Seed from static
         </button>
       )}
-      {isRunning && (
+      {onStop && isRunning && (
         <button
           type="button"
-          onClick={() => onStop?.()}
+          onClick={() => onStop()}
           className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
         >
           Stop
