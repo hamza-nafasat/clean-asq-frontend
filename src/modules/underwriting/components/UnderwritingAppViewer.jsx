@@ -12,6 +12,8 @@ const UnderwritingAppViewer = ({ data = null }) => {
       <ApplicationPdfViewCommonProps
         userId={userId}
         pdfId={pdfId}
+        initialSubmitData={data?.submitData}
+        submittedFormId={data?._id}
         className="rounded-lg!"
         isEditAble={canUpdateApplication}
       />

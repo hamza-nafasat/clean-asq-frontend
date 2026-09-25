@@ -91,6 +91,7 @@ export const ApplicationPdfViewCommonProps = ({
       }
     } catch (error) {
       console.error("Update submitted form error:", error);
+      toast.error(error?.data?.message || "Failed to save the application");
     } finally {
       setIsUpdatingSubmittedForm(false);
     }

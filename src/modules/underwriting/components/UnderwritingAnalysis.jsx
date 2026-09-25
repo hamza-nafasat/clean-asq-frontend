@@ -4,6 +4,8 @@ import { useApplyRulesOnFormMutation } from "@/redux/apis/form.apis";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import Button from "@/components/shared/Button";
 import AppDataTable from "@/components/shared/AppDataTable";
+import EmptyState from "@/components/shared/EmptyState";
+import { FiAlertCircle } from "react-icons/fi";
 import { ALERT_CATEGORIES } from "../utils/underwriting.constants";
 
 const buildAlertColumns = () => [
@@ -33,7 +35,7 @@ const numberRows = (rows) => rows.map((item, index) => ({ ...item, number: index
 
 const UnderwritingAnalysis = ({ submitFormData = null }) => {
   const submittedFormId = submitFormData?._id;
-  const [applyRulesOnForm, { data: alertsData, isLoading: isApplyingRules }] = useApplyRulesOnFormMutation();
+  const [applyRulesOnForm, { data: alertsData, isLoading: isApplyingRules, isError, error }] = useApplyRulesOnFormMutation();
 
   const handleApplyRules = async () => {
     try {
@@ -68,6 +70,16 @@ const UnderwritingAnalysis = ({ submitFormData = null }) => {
           icon={isApplyingRules ? CgSpinner : undefined}
         />
       </div>
+      {isError && !isApplyingRules && (
+        <EmptyState
+          variant="panel"
+          icon={<FiAlertCircle size={28} />}
+          title="Could not apply the rules"
+          description={error?.data?.message || "Please try again."}
+        >
+          <Button type="button" label="Try again" onClick={handleApplyRules} />
+        </EmptyState>
+      )}
       <div className="w-full gap-4 flex flex-col ">
         <section className="flex w-full flex-col gap-2 overflow-x-auto">
           <h2 className="text-textPrimary text-xl font-medium p-4">

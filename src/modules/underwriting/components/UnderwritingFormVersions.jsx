@@ -16,7 +16,8 @@ const UnderwritingFormVersions = ({ submittedFormId = "", submitForm = null }) =
   const { openRowId: actionMenu, setOpenRowId, toggleMenu } = useRowActionMenu();
   const { data: versioning, isLoading: isLoadingVersioning } = useGetFormVersionsQuery(
     { submittedFormId },
-    { skip: !submittedFormId },
+    // always show the newest versions
+    { skip: !submittedFormId, refetchOnMountOrArgChange: true },
   );
 
   const menuButtons = useMemo(
