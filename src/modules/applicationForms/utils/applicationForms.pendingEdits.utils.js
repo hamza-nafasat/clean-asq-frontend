@@ -10,6 +10,11 @@ const SECTION_UPDATE_KEYS = [
   "signAiPrompt",
   "ownerSuggestions",
   "isHidden",
+  "isSignature",
+  "isSignDisplayText",
+  "signDisplayTextFormattingInstructions",
+  "signAiResponse",
+  "isIdMissionQr",
 ];
 
 export const FIELD_UPDATE_KEYS = [
@@ -17,11 +22,19 @@ export const FIELD_UPDATE_KEYS = [
   "name",
   "displayText",
   "isDisplayText",
+  "displayTextFormattingInstructions",
   "placeholder",
   "aiHelp",
   "aiPrompt",
   "aiResponse",
   "ai_formatting",
+  "type",
+  "required",
+  "options",
+  "suggestions",
+  "minValue",
+  "maxValue",
+  "defaultValue",
 ];
 
 // copy only the provided keys
@@ -34,6 +47,7 @@ export const createEmptyPendingEdits = (formId) => ({
   fieldUpdates: {},
   sectionOrder: null,
   deletedSections: [],
+  deletedFields: {},
 });
 
 export const mergeSectionUpdates = (base, updates) => {
@@ -71,6 +85,16 @@ export const markSectionDeleted = (base, sectionId) => {
   return { ...base, deletedSections };
 };
 
+export const markFieldDeleted = (base, sectionId, fieldId) => {
+  const sectionFieldIds = base.deletedFields?.[String(sectionId)] || [];
+  if (sectionFieldIds.includes(String(fieldId))) return base;
+  const deletedFields = { ...base.deletedFields, [String(sectionId)]: [...sectionFieldIds, String(fieldId)] };
+  return { ...base, deletedFields };
+};
+
+export const countDeletedFields = (pending) =>
+  Object.values(pending?.deletedFields || {}).reduce((total, fieldIds) => total + fieldIds.length, 0);
+
 // apply pending edits to the form
 export const applyPendingEdits = (formData, pending) => {
   if (!formData || !pending) return formData;
@@ -95,6 +119,11 @@ export const applyPendingEdits = (formData, pending) => {
     return upd ? { ...s, ...upd } : s;
   });
   sections = sections.map((s) => {
+    const deletedFieldIds = pending.deletedFields?.[String(s._id)];
+    if (!deletedFieldIds) return s;
+    return { ...s, fields: (s.fields || []).filter((f) => !deletedFieldIds.includes(String(f._id))) };
+  });
+  sections = sections.map((s) => {
     const fieldMap = pending.fieldUpdates?.[String(s._id)];
     if (!fieldMap) return s;
     return {
@@ -115,7 +144,8 @@ export const hasPendingEdits = (pending) =>
       (Object.keys(pending.sectionUpdates || {}).length ||
         Object.keys(pending.fieldUpdates || {}).length ||
         pending.sectionOrder ||
-        pending.deletedSections?.length),
+        pending.deletedSections?.length ||
+        countDeletedFields(pending)),
   );
 
 // plain summary for the save confirmation
@@ -125,6 +155,7 @@ export const describePendingEdits = (pending) =>
     Object.keys(pending?.fieldUpdates || {}).length && `update fields in ${Object.keys(pending.fieldUpdates).length} section(s)`,
     pending?.sectionOrder && "reorder the sections",
     pending?.deletedSections?.length && `delete ${pending.deletedSections.length} section(s)`,
+    countDeletedFields(pending) && `delete ${countDeletedFields(pending)} field(s)`,
   ]
     .filter(Boolean)
     .join(", ");

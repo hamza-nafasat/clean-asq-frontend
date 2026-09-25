@@ -1,6 +1,12 @@
 import { toast } from "react-toastify";
-import { useFetchWebsiteBrandingMutation } from "@/redux/apis/branding.apis";
+import {
+  useClearDefaultBrandingMutation,
+  useFetchWebsiteBrandingMutation,
+  useSetDefaultBrandingMutation,
+} from "@/redux/apis/branding.apis";
 import { useScreenContext } from "@/hooks/useScreenContext";
+import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
+import confirmOrCancel from "@/utils/confirmOrCancel";
 import getEnv from "@/utils/env";
 import { BRANDING_AI_PATHS, BRANDING_LIST_SCREEN_CONTEXT } from "../utils/branding.constants";
 import { BRANDING_LIST_ASSISTANT_COPY } from "../utils/branding.data";
@@ -11,6 +17,7 @@ const toAssistantBranding = (b) => ({
   url: b.url || "",
   fontFamily: b.fontFamily || "",
   logoCount: b.logos?.length || 0,
+  isDefault: Boolean(b.isDefault),
   colors: {
     primary: b.colors?.primary || "",
     secondary: b.colors?.secondary || "",
@@ -26,12 +33,14 @@ const useBrandingListAssistant = ({
   forms,
   deleteBranding,
   askToDelete,
-  askToApply,
+  askConfirm,
   applyToTargets,
   openBranding,
   openCreateBranding,
 }) => {
   const [fetchWebsiteBranding] = useFetchWebsiteBrandingMutation();
+  const [setDefaultBranding] = useSetDefaultBrandingMutation();
+  const [clearDefaultBranding] = useClearDefaultBrandingMutation();
   const findBranding = (brandingId) => brandings.find((b) => b._id === brandingId) || { _id: brandingId };
 
   const deleteBrandings = async ({ brandingIds }) => {
@@ -54,11 +63,32 @@ const useBrandingListAssistant = ({
   const applyBrandingToForms = async ({ brandingId, formIds = [], onHome }) => {
     if (!formIds.length && !onHome) throw new Error("No forms or website to apply the branding to");
     const target = `${formIds.length} form(s)${onHome ? " and the website" : ""}`;
-    const isConfirmed = await askToApply({
+    await confirmOrCancel(askConfirm, {
+      title: "Apply Branding",
       message: `Are you sure you want to apply ${findBranding(brandingId).name || brandingId} to ${target}?`,
+      confirmButtonText: "Apply Branding",
     });
-    if (!isConfirmed) throw new Error("The user cancelled applying the branding");
     await applyToTargets({ brandingId, formIds, onHome });
+  };
+
+  const makeDefaultBranding = async ({ brandingId }) => {
+    await confirmOrCancel(askConfirm, {
+      title: "Set Default Branding",
+      message: `Make ${findBranding(brandingId).name || brandingId} the default for everyone? Accounts without their own branding will see it.`,
+      confirmButtonText: "Set Default",
+    });
+    await setDefaultBranding(brandingId).unwrap();
+  };
+
+  const removeDefaultBranding = async () => {
+    const defaultBranding = brandings.find((b) => b.isDefault);
+    if (!defaultBranding) throw new Error("No branding is the default right now");
+    await confirmOrCancel(askConfirm, {
+      title: "Clear Default Branding",
+      message: `Stop using ${defaultBranding.name} as the default for everyone?`,
+      confirmButtonText: "Clear Default",
+    });
+    await clearDefaultBranding().unwrap();
   };
 
   useScreenContext({
@@ -74,6 +104,8 @@ const useBrandingListAssistant = ({
     actions: {
       deleteBrandings,
       applyBrandingToForms,
+      [AI_TOOLS.SET_DEFAULT_BRANDING]: makeDefaultBranding,
+      [AI_TOOLS.CLEAR_DEFAULT_BRANDING]: removeDefaultBranding,
       fetchWebsiteBranding: async ({ url }) => (await fetchWebsiteBranding({ url }).unwrap()).data,
       openEditBranding: ({ brandingId }) => openBranding(brandingId),
       openCreateBranding,

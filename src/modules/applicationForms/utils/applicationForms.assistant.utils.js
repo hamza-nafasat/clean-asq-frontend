@@ -1,18 +1,18 @@
 import { LOCATION_STATUSES } from "@/constants";
-import { DEFAULT_HEADER_TEXT_SIZE, LOCATION_FIELDS } from "./applicationForms.constants";
+import { DEFAULT_HEADER_TEXT_SIZE } from "./applicationForms.constants";
 import { applyPendingEdits, hasPendingEdits } from "./applicationForms.pendingEdits.utils";
 
 // names of the targeted forms
 export const getFormNames = (forms, formIds) =>
   formIds.map((formId) => forms?.find((form) => form._id === formId)?.name || formId).join(", ");
 
-// new status, keep the form's message
-export const buildLocationData = (form, locationStatus) => ({
-  [LOCATION_FIELDS.STATUS]: locationStatus,
-  [LOCATION_FIELDS.MESSAGE]: form?.locationMessage || "",
-  [LOCATION_FIELDS.FORMATTED_MESSAGE]: form?.formatedLocationMessage || "",
-  [LOCATION_FIELDS.INSTRUCTIONS]: form?.formateTextInstructions || "",
-});
+// forms and website a branding change targets
+export const getBrandingTargetNames = (forms, updates) => {
+  const formIds = updates.map((update) => update.formId).filter(Boolean);
+  const names = formIds.length ? [getFormNames(forms, formIds)] : [];
+  if (updates.some((update) => update.applyToHome)) names.push("the website");
+  return names.join(" and ");
+};
 
 const findLinkedStrategy = (formStrategies, formId) =>
   (formStrategies || []).find((fs) => (fs.forms || []).some((f) => String(f._id ?? f) === String(formId))) || null;
@@ -34,6 +34,8 @@ const mapAssistantForm = (f, formStrategies, emailTemplates) => {
         }
       : null,
     locationStatus: f.locationStatus || LOCATION_STATUSES.DISABLED,
+    locationMessage: f.locationMessage || "",
+    locationFormattingInstructions: f.formateTextInstructions || "",
     createdAt: f.createdAt?.split("T")[0],
     emailTemplates: (emailTemplates || [])
       .filter((t) => (t.forms || []).some((tf) => tf._id === f._id))
@@ -78,12 +80,17 @@ const mapAssistantSection = (s) => ({
   isHidden: s.isHidden || false,
   isBlock: s.isBlock || false,
   isSignature: s.isSignature || false,
+  isIdMissionQr: s.isIdMissionQr || false,
   displayText: s.displayText || "",
+  displayTextFormattingInstructions: s.displayTextFormattingInstructions || "",
   signDisplayText: s.signDisplayText || s.signDisplayFormattedText || "",
+  isSignDisplayText: s.isSignDisplayText || false,
+  signDisplayTextFormattingInstructions: s.signDisplayTextFormattingInstructions || "",
   aiCustomizablePrompt: s.aiCustomizablePrompt || "",
   ai_formatting: s.aiFormatting ?? s.ai_formatting ?? "",
   isSignAiHelp: s.isSignAiHelp || false,
   signAiPrompt: s.signAiPrompt || "",
+  hasSignAiResponse: Boolean(s.signAiResponse),
   ownerSuggestions: s.ownerSuggestions ?? s.ownerSuggesstions ?? [],
   fields: (s.fields || []).map(mapAssistantField),
 });
@@ -97,6 +104,12 @@ const mapDetailedForm = ({ formData, pendingFormEdits, formStrategies, formId, r
     name: effectiveData.name,
     headerText: effectiveData.headerText || "",
     redirectUrl: effectiveData.redirectUrl || "",
+    otpDisplayText: effectiveData.otpDisplayText || "",
+    otpDisplayFormatingInstructions: effectiveData.otpDisplayFormatingInstructions || "",
+    idMissionDataDisplayText: effectiveData.idMissionDataDisplayText || "",
+    idMissionDataDisplayFormatingInstructions: effectiveData.idMissionDataDisplayFormatingInstructions || "",
+    companyVerificationDisplayText: effectiveData.companyVerificationDisplayText || "",
+    companyVerificationDisplayFormatingInstructions: effectiveData.companyVerificationDisplayFormatingInstructions || "",
     ruleCount,
     linkedStrategy: linkedStrategy
       ? {

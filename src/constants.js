@@ -191,6 +191,25 @@ export const LOCATION_STATUSES = {
   DISABLED: "disabled",
 };
 
+// form document keys of each form-level display text
+export const FORM_DISPLAY_TEXT_FIELDS = {
+  OTP: {
+    text: "otpDisplayText",
+    instructions: "otpDisplayFormatingInstructions",
+    formatted: "otpDisplayFormatedText",
+  },
+  ID_MISSION_DATA: {
+    text: "idMissionDataDisplayText",
+    instructions: "idMissionDataDisplayFormatingInstructions",
+    formatted: "idMissionDataDisplayFormatedText",
+  },
+  COMPANY_VERIFICATION: {
+    text: "companyVerificationDisplayText",
+    instructions: "companyVerificationDisplayFormatingInstructions",
+    formatted: "companyVerificationDisplayFormatedText",
+  },
+};
+
 export const SIGNATURE_MODES = {
   DRAW: "draw",
   TYPE: "type",

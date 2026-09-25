@@ -2,12 +2,29 @@ import { useCallback, useState } from "react";
 import { toast } from "react-toastify";
 import {
   useDeleteSingleSubmitOrDraftFormMutation,
+  useGeneratePdfFormMutation,
   useGetAllSubmitOrDraftFormsQuery,
+  useGiveSpecialAccessToUserMutation,
 } from "@/redux/apis/form.apis";
+import useConfirm from "@/hooks/useConfirm";
+import usePermission from "@/hooks/usePermission";
+import { useScreenContext } from "@/hooks/useScreenContext";
+import useApplicationsForms from "./hooks/useApplicationsForms";
 import { ApplicationPdfViewCommonProps } from "@/components/global/ApplicationPdfView";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Modal from "@/components/shared/Modal";
 import ApplicationsSpecialAccessModal from "./components/ApplicationsSpecialAccessModal";
 import ApplicationsTable from "./components/ApplicationsTable";
+import getEnv from "@/utils/env";
+import { PERMISSIONS } from "@/utils/permissions";
+import { APPLICATIONS_AI_CHAT_PATH, APPLICATIONS_SCREEN_CONTEXT } from "./utils/applications.constants";
+import {
+  buildApplicationsAssistantActions,
+  buildApplicationsScreenState,
+  getSubmittedFormIds,
+} from "./utils/applications.assistant.utils";
+
+const SERVER_URL = getEnv("SERVER_URL");
 
 const initialFilters = {
   dateRange: { start: "", end: "" },
@@ -27,6 +44,27 @@ const Applications = () => {
   const [pdfData, setPdfData] = useState(null);
   const [filters, setFilters] = useState(initialFilters);
   const applicants = data?.data || [];
+
+  const aiConfirm = useConfirm();
+  const canShareApplication = usePermission(PERMISSIONS.SHARE_APPLICATION);
+  const [giveSpecialAccessToUser] = useGiveSpecialAccessToUserMutation();
+  const [generatePdfForm] = useGeneratePdfFormMutation();
+  const forms = useApplicationsForms(canShareApplication ? getSubmittedFormIds(applicants) : []);
+
+  useScreenContext({
+    ...APPLICATIONS_SCREEN_CONTEXT,
+    aiEndpoint: `${SERVER_URL}${APPLICATIONS_AI_CHAT_PATH}`,
+    currentState: buildApplicationsScreenState({ applications: applicants, forms }),
+    actions: buildApplicationsAssistantActions({
+      applications: applicants,
+      forms,
+      deleteApplication: deleteSubmitForm,
+      giveSpecialAccessToUser,
+      generatePdfForm,
+      askConfirm: aiConfirm.ask,
+    }),
+    deps: { applicationCount: applicants.length, formCount: forms.length },
+  });
 
   const handleViewApplicant = useCallback((row) => {
     setPdfData(row);
@@ -100,6 +138,15 @@ const Applications = () => {
           </Modal>
         )}
       </div>
+
+      <ConfirmationModal
+        isOpen={aiConfirm.isOpen}
+        title={aiConfirm.pending?.title}
+        message={aiConfirm.pending?.message}
+        confirmButtonText={aiConfirm.pending?.confirmButtonText}
+        onConfirm={aiConfirm.resolveAsked}
+        onClose={aiConfirm.close}
+      />
     </>
   );
 };

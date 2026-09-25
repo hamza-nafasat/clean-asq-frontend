@@ -18,6 +18,8 @@ export const AI_TOOLS = {
   DELETE_BRANDINGS: "deleteBrandings",
   OPEN_EDIT_BRANDING: "openEditBranding",
   OPEN_CREATE_BRANDING: "openCreateBranding",
+  SET_DEFAULT_BRANDING: "setDefaultBranding",
+  CLEAR_DEFAULT_BRANDING: "clearDefaultBranding",
   // logos
   EDIT_LOGO: "editLogo",
   RESIZE_LOGO: "resizeLogo",
@@ -30,6 +32,7 @@ export const AI_TOOLS = {
   ADD_LOGO_PADDING: "addLogoPadding",
   TRIM_LOGO: "trimLogo",
   REMOVE_BACKGROUND_FROM_LOGO: "removeBackgroundFromLogo",
+  REMOVE_LOGOS: "removeLogos",
   // email templates
   UPDATE_EMAIL_TEMPLATE: "updateEmailTemplate",
   SAVE_EMAIL_TEMPLATE: "saveEmailTemplate",
@@ -41,6 +44,7 @@ export const AI_TOOLS = {
   CLOSE_TEMPLATE: "closeTemplate",
   SWITCH_TEMPLATE: "switchTemplate",
   SAVE_AND_OPEN_TEMPLATE: "saveAndOpenTemplate",
+  ATTACH_TEMPLATE_TO_ME: "attachTemplateToMe",
   // strategies, users, roles, lookups
   CREATE_STRATEGY: "createStrategy",
   LINK_STRATEGY_TO_FORM: "linkStrategyToForm",
@@ -53,6 +57,12 @@ export const AI_TOOLS = {
   SEND_PASSWORD_RESET_LINKS: "sendPasswordResetLinks",
   DELETE_USER: "deleteUser",
   DELETE_USERS: "deleteUsers",
+  // applications, my applications
+  DELETE_APPLICATIONS: "deleteApplications",
+  FORWARD_APPLICATION_SECTION: "forwardApplicationSection",
+  DOWNLOAD_APPLICATION_PDF: "downloadApplicationPdf",
+  DELETE_DRAFTS: "deleteDrafts",
+  INVITE_BENEFICIAL_OWNER: "inviteBeneficialOwner",
   CREATE_ROLE: "createRole",
   UPDATE_ROLE: "updateRole",
   DELETE_ROLE: "deleteRole",
@@ -63,6 +73,15 @@ export const AI_TOOLS = {
   DELETE_LOOKUPS: "deleteLookups",
   CREATE_DEFAULT_LOOKUPS: "createDefaultLookups",
   UPDATE_EXTRACTION_PROMPT: "updateExtractionPrompt",
+  // form rules
+  CREATE_FORM_RULE: "createFormRule",
+  UPDATE_FORM_RULE: "updateFormRule",
+  SET_FORM_RULES_ACTIVE: "setFormRulesActive",
+  REORDER_FORM_RULES: "reorderFormRules",
+  DELETE_FORM_RULES: "deleteFormRules",
+  // underwriting, my profile
+  APPLY_RULES_TO_APPLICATION: "applyRulesToApplication",
+  UPDATE_MY_PROFILE: "updateMyProfile",
   // form list
   UPDATE_FORMS: "updateForms",
   SET_FORMS_BRANDING: "setFormsBranding",
@@ -79,6 +98,7 @@ export const AI_TOOLS = {
   UPDATE_FIELD_SETTINGS: "updateFieldSettings",
   REORDER_SECTIONS: "reorderSections",
   DELETE_SECTION: "deleteSection",
+  DELETE_FIELD: "deleteField",
   SAVE_FORM_EDITS: "saveFormEdits",
   DISCARD_FORM_EDITS: "discardFormEdits",
   ADD_SECTION: "addSection",

@@ -18,6 +18,18 @@ export const ALERT_CATEGORIES = {
   DISPLAY: "display",
 };
 
+// shares rule results across the page
+export const UNDERWRITING_RULES_CACHE_KEY = "underwritingRules";
+
+export const UNDERWRITING_SCREEN_CONTEXT = {
+  screenId: "underwriting",
+  screenName: "Underwriting",
+  assistantName: "Underwriting Assistant",
+  description:
+    "The Underwriting screen shows one submitted application for review: its history, the output of the form's rules, the submitted answers and every saved version.",
+  greeting: `Hi! I'm your **Underwriting Assistant**.\n\nI can help you:\n- **Answer questions** about this application — its applicant, status and version\n- **Explain the rule results** shown in Application Analysis\n- **Re-run the rules** on this application\n\nWhat would you like to know?`,
+};
+
 export const DATE_TIME_OPTIONS = {
   year: "numeric",
   month: "short",

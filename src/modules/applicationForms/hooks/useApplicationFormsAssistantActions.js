@@ -21,10 +21,16 @@ import useBranding from "@/hooks/useBranding";
 import usePermission from "@/hooks/usePermission";
 import { PERMISSIONS } from "@/utils/permissions";
 import { executeBrandingAssignments, getBrandingSettersFromHook } from "@/utils/executeBrandingAssignment";
-import { buildLocationData, getFormNames } from "../utils/applicationForms.assistant.utils";
+import { getBrandingTargetNames, getFormNames } from "../utils/applicationForms.assistant.utils";
 import { createUserRefreshDispatcher } from "../utils/applicationForms.branding.utils";
 import {
+  buildFormDisplayTextData,
+  buildLocationData,
+  formatDisplayText,
+} from "../utils/applicationForms.displayText.utils";
+import {
   describePendingEdits,
+  markFieldDeleted,
   markSectionDeleted,
   mergeFieldUpdates,
   mergeSectionUpdates,
@@ -66,6 +72,8 @@ const useApplicationFormsAssistantActions = ({
   const [deleteFormSectionMutation] = useDeleteFormSectionMutation();
 
   const getForms = () => latestDataRef.current.forms;
+  const findForm = (formId) => getForms()?.find((form) => form._id === formId);
+  const formatText = (text, instructions) => formatDisplayText(formateTextInMarkDown, text, instructions);
 
   // confirm before an ai change
   const confirmOrCancel = async (details) => {
@@ -112,6 +120,7 @@ const useApplicationFormsAssistantActions = ({
     updateFieldSettings: ({ updates }) => pending.set(mergeFieldUpdates(pending.getBase(), updates)),
     reorderSections: ({ sectionOrder }) => pending.set({ ...pending.getBase(), sectionOrder }),
     deleteSection: ({ sectionId }) => pending.set(markSectionDeleted(pending.getBase(), sectionId)),
+    deleteField: ({ sectionId, fieldId }) => pending.set(markFieldDeleted(pending.getBase(), sectionId, fieldId)),
     discardFormEdits: () => pending.set(null),
     addSection: async ({ formId, title, name, key, isHidden, position }) => {
       const res = await addFormSectionMutation({ formId, title, name, key, isHidden, position }).unwrap();
@@ -139,13 +148,12 @@ const useApplicationFormsAssistantActions = ({
       });
       const errors = await commitPendingFormEdits({
         edits,
-        canFormat,
+        formatText: canFormat ? formatText : null,
         getSections: () => latestDataRef.current.singleForm?.sections,
         mutations: {
           deleteFormSection: deleteFormSectionMutation,
           reorderFormSections: reorderFormSectionsMutation,
           updateFormSection,
-          formateTextInMarkDown,
           updateFormFields: updateDeleteCreateFormFields,
         },
       });
@@ -159,10 +167,23 @@ const useApplicationFormsAssistantActions = ({
     },
     updateForms: async ({ updates }) => {
       await confirmFormsUpdate(updates, "Update the settings");
-      await updateEachForm(updates, ({ formId, ...data }) => updateForm({ _id: formId, data }).unwrap(), "");
+      await updateEachForm(
+        updates,
+        async ({ formId, headerText, headerTextSize, redirectUrl, ...displayTexts }) => {
+          // form display texts need their formatted html
+          const displayTextData = await buildFormDisplayTextData(findForm(formId), displayTexts, formatText);
+          const data = { headerText, headerTextSize, redirectUrl, ...displayTextData };
+          return updateForm({ _id: formId, data }).unwrap();
+        },
+        "",
+      );
     },
     setFormsBranding: async ({ updates }) => {
-      await confirmFormsUpdate(updates, "Change the branding");
+      await confirmOrCancel({
+        title: "Update Branding",
+        message: `Change the branding on ${getBrandingTargetNames(getForms(), updates)}?`,
+        confirmButtonText: "Update",
+      });
       await executeBrandingAssignments({
         updates,
         addBrandingMutation: addFromBranding,
@@ -176,9 +197,9 @@ const useApplicationFormsAssistantActions = ({
       await confirmFormsUpdate(updates, "Change the location setting");
       await updateEachForm(
         updates,
-        ({ formId, locationStatus }) => {
-          const form = getForms()?.find((item) => item._id === formId);
-          return updateFormLocation({ _id: formId, data: buildLocationData(form, locationStatus) }).unwrap();
+        async (update) => {
+          const data = await buildLocationData(findForm(update.formId), update, canFormat ? formatText : null);
+          return updateFormLocation({ _id: update.formId, data }).unwrap();
         },
         "location on ",
       );

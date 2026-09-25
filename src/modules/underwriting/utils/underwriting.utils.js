@@ -1,6 +1,9 @@
-import { DATE_TIME_OPTIONS } from "./underwriting.constants";
+import { DATE_TIME_OPTIONS, UNDERWRITING_RULES_CACHE_KEY } from "./underwriting.constants";
 
 export const formatDateTime = (date) => new Date(date || "").toLocaleString("en-US", DATE_TIME_OPTIONS);
+
+// one rule result per application
+export const getRulesCacheKey = (submittedFormId) => `${UNDERWRITING_RULES_CACHE_KEY}-${submittedFormId}`;
 
 export const buildHistoryColumns = () => [
   { name: "Date/Time", selector: (row) => formatDateTime(row?.updatedAt), sortable: true, wrap: true },

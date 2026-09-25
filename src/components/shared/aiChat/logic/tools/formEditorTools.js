@@ -175,6 +175,22 @@ const createFormEditorTools = ({ bindings, helpers }) => {
         sections.filter((s) => String(s._id) !== String(sectionId)).map((s) => toPreviewSection(s)),
     }),
 
+    [AI_TOOLS.DELETE_FIELD]: previewEdit({
+      apply: ({ sectionId, fieldId }, ctx) => {
+        const liveCtx = getScreenContext() ?? ctx;
+        if (liveCtx.actions?.deleteField) liveCtx.actions.deleteField({ sectionId, fieldId });
+      },
+      resultSummary:
+        'Field marked for deletion in preview. Summarise what changed, then end with: "Say **save** to apply these changes to the live form, or **discard** to cancel."',
+      shouldPreview: ({ fieldId }) => fieldId,
+      mapSections: (sections, { sectionId, fieldId }) =>
+        sections.map((s) =>
+          String(s._id) === String(sectionId)
+            ? toPreviewSection({ ...s, fields: (s.fields || []).filter((f) => String(f._id) !== String(fieldId)) })
+            : toPreviewSection(s),
+        ),
+    }),
+
     [AI_TOOLS.SAVE_FORM_EDITS]: async (args, { ctx }) => {
       const { explanation } = args;
       try {

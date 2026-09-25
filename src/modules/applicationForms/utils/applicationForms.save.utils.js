@@ -11,6 +11,11 @@ const SECTION_PAYLOAD_KEYS = [
   "signAiPrompt",
   "isHidden",
   "aiFormatting",
+  "isSignature",
+  "isSignDisplayText",
+  "signDisplayTextFormattingInstructions",
+  "signAiResponse",
+  "isIdMissionQr",
 ];
 
 const findSection = (sections, sectionId) => sections?.find((s) => String(s._id) === String(sectionId));
@@ -34,10 +39,21 @@ export const collectFailures = async (items, request) => {
   return failures;
 };
 
-const buildSectionPayload = async ({ update, currentSection, formateTextInMarkDown, canFormat }) => {
+const buildSectionPayload = async ({ update, currentSection, formatText }) => {
   const payload = pickDefinedKeys(update, SECTION_PAYLOAD_KEYS);
   if (update.ownerSuggestions?.length) payload.ownerSuggesstions = update.ownerSuggestions;
-  if (!canFormat) return payload;
+  if (!formatText) return payload;
+
+  // reformat changed sign display text
+  const signText = update.signDisplayText ?? currentSection?.signDisplayText ?? "";
+  const isSignTextChanged =
+    update.signDisplayText !== undefined || update.signDisplayTextFormattingInstructions !== undefined;
+  if (isSignTextChanged && signText) {
+    const signInstructions =
+      update.signDisplayTextFormattingInstructions ?? currentSection?.signDisplayTextFormattingInstructions ?? "";
+    payload.signDisplayFormattedText = await formatText(signText, signInstructions);
+  }
+
   if (update.displayText === undefined && update.displayTextFormattingInstructions === undefined) return payload;
 
   // reformat changed display text
@@ -46,15 +62,20 @@ const buildSectionPayload = async ({ update, currentSection, formateTextInMarkDo
     update.displayTextFormattingInstructions ?? currentSection?.displayTextFormattingInstructions ?? "";
   if (!text) return payload;
   try {
-    const formatRes = await formateTextInMarkDown({
-      text,
-      instructions,
-    }).unwrap();
-    if (formatRes?.data) payload.aiFormatting = formatRes.data;
+    payload.aiFormatting = await formatText(text, instructions);
   } catch (error) {
     console.error("Format display text error:", error);
   }
   return payload;
+};
+
+// field with its changes, display text reformatted
+const buildFieldData = async (field, update, formatText) => {
+  if (!update) return field;
+  const data = { ...field, ...pickDefinedKeys(update, FIELD_UPDATE_KEYS) };
+  const isTextChanged = update.displayText !== undefined || update.displayTextFormattingInstructions !== undefined;
+  if (!formatText || !isTextChanged || update.ai_formatting !== undefined || !data.displayText) return data;
+  return { ...data, ai_formatting: await formatText(data.displayText, data.displayTextFormattingInstructions || "") };
 };
 
 const autoHideSectionsAfterAgreement = async ({ order, getSections, updateFormSection }) => {
@@ -81,9 +102,8 @@ const autoHideSectionsAfterAgreement = async ({ order, getSections, updateFormSe
 };
 
 // save pending edits to the form
-export const commitPendingFormEdits = async ({ edits, getSections, mutations, canFormat }) => {
-  const { deleteFormSection, reorderFormSections, updateFormSection, formateTextInMarkDown, updateFormFields } =
-    mutations;
+export const commitPendingFormEdits = async ({ edits, getSections, mutations, formatText }) => {
+  const { deleteFormSection, reorderFormSections, updateFormSection, updateFormFields } = mutations;
   const errors = [];
   const deleted = edits.deletedSections || [];
 
@@ -119,12 +139,7 @@ export const commitPendingFormEdits = async ({ edits, getSections, mutations, ca
     if (deleted.includes(String(sectionId))) continue;
     try {
       const currentSection = findSection(getSections(), sectionId);
-      const payload = await buildSectionPayload({
-        update,
-        currentSection,
-        formateTextInMarkDown,
-        canFormat,
-      });
+      const payload = await buildSectionPayload({ update, currentSection, formatText });
       const res = await updateFormSection({
         _id: sectionId,
         data: payload,
@@ -136,15 +151,20 @@ export const commitPendingFormEdits = async ({ edits, getSections, mutations, ca
     }
   }
 
-  for (const [sectionId, fieldMap] of Object.entries(edits.fieldUpdates || {})) {
+  const fieldSectionIds = new Set([...Object.keys(edits.fieldUpdates || {}), ...Object.keys(edits.deletedFields || {})]);
+  for (const sectionId of fieldSectionIds) {
     if (deleted.includes(String(sectionId))) continue;
     try {
       const section = findSection(getSections(), sectionId);
       if (!section) continue;
-      const fieldsData = (section.fields || []).map((field) => {
-        const update = fieldMap[String(field._id)];
-        return update ? { ...field, ...pickDefinedKeys(update, FIELD_UPDATE_KEYS) } : field;
-      });
+      const fieldMap = edits.fieldUpdates?.[sectionId] || {};
+      const deletedFieldIds = edits.deletedFields?.[sectionId] || [];
+      // fields left out are deleted
+      const fieldsData = [];
+      for (const field of section.fields || []) {
+        if (deletedFieldIds.includes(String(field._id))) continue;
+        fieldsData.push(await buildFieldData(field, fieldMap[String(field._id)], formatText));
+      }
       const res = await updateFormFields({ sectionId, fieldsData }).unwrap();
       if (!res?.success) throw new Error(res?.message);
     } catch (err) {

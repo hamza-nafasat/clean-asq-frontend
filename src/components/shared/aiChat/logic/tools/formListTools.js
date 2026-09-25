@@ -20,15 +20,20 @@ const createFormListTools = ({ bindings, helpers }) => {
       const updates = args.updates || [];
       // snapshot each form's branding before overwriting
       const forms = ctx.currentState?.forms || [];
-      const snapshot = updates.map(({ formId }) => {
-        const form = forms.find((f) => f._id === formId);
-        return { formId, oldBrandingId: form?.branding?._id ?? null };
-      });
+      const snapshot = updates
+        .filter(({ formId }) => formId)
+        .map(({ formId }) => {
+          const form = forms.find((f) => f._id === formId);
+          return { formId, oldBrandingId: form?.branding?._id ?? null };
+        });
       const isApplied = await runActionAndSay(ctx, AI_TOOLS.SET_FORMS_BRANDING, { updates }, args.explanation);
       if (!isApplied) return;
       pushRevertable({
         description: `Applied branding to ${updates.length} form(s)`,
         revertFn: async (freshCtx) => {
+          if (updates.some((update) => update.applyToHome)) {
+            say("Note: the website branding cannot be reverted automatically.");
+          }
           const revertUpdates = snapshot
             .filter((s) => s.oldBrandingId !== null)
             .map((s) => ({ formId: s.formId, brandingId: s.oldBrandingId }));
@@ -49,18 +54,27 @@ const createFormListTools = ({ bindings, helpers }) => {
       const updates = args.updates || [];
       // snapshot each form's location setting
       const forms = ctx.currentState?.forms || [];
-      const snapshot = updates.map(({ formId }) => {
+      const snapshot = updates.map(({ formId, locationMessage, locationFormattingInstructions }) => {
         const form = forms.find((f) => f._id === formId);
-        return { formId, oldLocationStatus: form?.locationStatus ?? LOCATION_STATUSES.DISABLED };
+        const isTextChanged = locationMessage !== undefined || locationFormattingInstructions !== undefined;
+        return {
+          formId,
+          locationStatus: form?.locationStatus ?? LOCATION_STATUSES.DISABLED,
+          // restore the old message if any
+          ...(isTextChanged &&
+            form?.locationMessage && {
+              locationMessage: form.locationMessage,
+              locationFormattingInstructions: form.locationFormattingInstructions ?? "",
+            }),
+        };
       });
       const isApplied = await runActionAndSay(ctx, AI_TOOLS.SET_FORMS_LOCATION, { updates }, args.explanation);
       if (!isApplied) return;
       pushRevertable({
         description: `Changed location setting on ${updates.length} form(s)`,
         revertFn: async (freshCtx) => {
-          const revertUpdates = snapshot.map((s) => ({ formId: s.formId, locationStatus: s.oldLocationStatus }));
           if (freshCtx?.actions?.setFormsLocation) {
-            await freshCtx.actions.setFormsLocation({ updates: revertUpdates });
+            await freshCtx.actions.setFormsLocation({ updates: snapshot });
           }
         },
       });

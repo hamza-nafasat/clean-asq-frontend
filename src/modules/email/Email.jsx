@@ -9,14 +9,18 @@ import {
   useUpdateSingleEmailTemplateMutation,
 } from "@/redux/apis/email.apis";
 import { useGetMyAllFormsQuery } from "@/redux/apis/form.apis";
+import useConfirm from "@/hooks/useConfirm";
 import usePermission from "@/hooks/usePermission";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import { FiMail } from "react-icons/fi";
+import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
 import EmptyState from "@/components/shared/EmptyState";
 import EmailAttachFormsModal from "@/modules/email/components/EmailAttachFormsModal";
 import EmailTemplateCard from "@/modules/email/components/EmailTemplateCard";
 import EmailTemplateModal from "@/modules/email/components/EmailTemplateModal";
+import useEmailAttachToMe from "@/modules/email/hooks/useEmailAttachToMe";
 import { INITIAL_EDIT_DATA, TEMPLATE_KEYWORDS, TEMPLATE_OPEN_MODES } from "@/modules/email/utils/email.constants";
 import getEnv from "@/utils/env";
 import { PERMISSIONS } from "@/utils/permissions";
@@ -51,6 +55,8 @@ const Email = () => {
   const [attachEmailTemplate] = useAttachTemplateToFormMutation();
 
   const templates = emailTemplates?.data;
+  const aiConfirm = useConfirm();
+  const attachTemplateToMe = useEmailAttachToMe({ templates, askConfirm: aiConfirm.ask });
 
   const findTemplate = (templateId) => {
     const template = (templates || []).find((t) => String(t._id) === String(templateId));
@@ -99,6 +105,7 @@ const Email = () => {
         emailType: t.emailType,
         subject: t.subject,
         attachedForms: (t.forms || []).map((f) => ({ _id: f._id, name: f.name })),
+        isAttachedToMe: user?.welcomeMail === t._id,
       })),
       // derived from the live query so it updates after attach
       attachedForms: viewModalData?._id
@@ -140,6 +147,7 @@ const Email = () => {
         }
         if (failedTemplates.length) throw new Error(`Could not update ${failedTemplates.join(", ")}`);
       },
+      [AI_TOOLS.ATTACH_TEMPLATE_TO_ME]: attachTemplateToMe,
       openTemplate: ({ templateId, mode }) => {
         openTemplate(findTemplate(templateId), mode);
       },
@@ -284,6 +292,14 @@ const Email = () => {
           onInsertKeyword={handleInsertKeyword}
         />
       )}
+      <ConfirmationModal
+        isOpen={aiConfirm.isOpen}
+        title={aiConfirm.pending?.title}
+        message={aiConfirm.pending?.message}
+        confirmButtonText={aiConfirm.pending?.confirmButtonText}
+        onConfirm={aiConfirm.resolveAsked}
+        onClose={aiConfirm.close}
+      />
 
       <div className="flex items-center justify-between">
         <h1 className="mb-6 text-2xl font-semibold">Email Templates</h1>

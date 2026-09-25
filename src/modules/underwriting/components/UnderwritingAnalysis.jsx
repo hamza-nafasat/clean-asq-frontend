@@ -7,6 +7,7 @@ import AppDataTable from "@/components/shared/AppDataTable";
 import EmptyState from "@/components/shared/EmptyState";
 import { FiAlertCircle } from "react-icons/fi";
 import { ALERT_CATEGORIES } from "../utils/underwriting.constants";
+import { getRulesCacheKey } from "../utils/underwriting.utils";
 
 const buildAlertColumns = () => [
   { name: "Rule No", selector: (row) => row?.number, sortable: true, width: "110px" },
@@ -35,7 +36,9 @@ const numberRows = (rows) => rows.map((item, index) => ({ ...item, number: index
 
 const UnderwritingAnalysis = ({ submitFormData = null }) => {
   const submittedFormId = submitFormData?._id;
-  const [applyRulesOnForm, { data: alertsData, isLoading: isApplyingRules, isError, error }] = useApplyRulesOnFormMutation();
+  const [applyRulesOnForm, { data: alertsData, isLoading: isApplyingRules, isError, error }] = useApplyRulesOnFormMutation({
+    fixedCacheKey: getRulesCacheKey(submittedFormId),
+  });
 
   const handleApplyRules = async () => {
     try {

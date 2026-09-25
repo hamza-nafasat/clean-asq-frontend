@@ -24,6 +24,15 @@ export const EMPTY_PASSWORD_FORM = {
 
 export const MY_PROFILE_FORM_ID = "my-profile-form";
 
+export const MY_PROFILE_SCREEN_CONTEXT = {
+  screenId: "my-profile",
+  screenName: "My Profile",
+  assistantName: "Profile Assistant",
+  description:
+    "The My Profile screen shows the signed-in user's own account details — name, contact number and address — and lets them update those details or change their password.",
+  greeting: `Hi! I'm your **Profile Assistant**.\n\nI can help you:\n- **Update your details** — first, middle and last name, contact number and address\n- **Answer questions** about your saved profile\n\nWhat would you like to change?`,
+};
+
 export const IMAGE_MIME_PREFIX = "image/";
 
 // matches the backend upload limit

@@ -1,15 +1,11 @@
 import TextField from "@/components/shared/TextField";
 import BrandingEmailLogoSelect from "./BrandingEmailLogoSelect";
+import { toSenderEmail } from "../utils/branding.utils";
 
 const BrandingEmailSettings = ({ values = {}, setters = {}, defaultSelectedLogo = null }) => {
-  const emailDomain = window.location.hostname;
   const senderLocalPart = (values.senderEmail || "").split("@")[0];
 
-  // keep only the part before @
-  const handleSenderChange = (e) => {
-    const localPart = e.target.value.split("@")[0];
-    setters.senderEmail(localPart && emailDomain ? `${localPart}@${emailDomain}` : localPart);
-  };
+  const handleSenderChange = (e) => setters.senderEmail(toSenderEmail(e.target.value));
 
   return (
     <>

@@ -25,6 +25,13 @@ export const isTruthy = (value) => Boolean(value);
 
 export const isDefined = (value) => value !== undefined;
 
+// sender name on this site's domain
+export const toSenderEmail = (value) => {
+  const localPart = String(value ?? "").split("@")[0];
+  const emailDomain = window.location.hostname;
+  return localPart && emailDomain ? `${localPart}@${emailDomain}` : localPart;
+};
+
 const toFontKey = (name) => name.trim().toLowerCase().replace(/[\s_]+/g, "-");
 
 // match stored font to option name

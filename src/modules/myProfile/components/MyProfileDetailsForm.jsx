@@ -3,16 +3,28 @@ import { useDispatch } from "react-redux";
 import { useUpdateMyProfileMutation } from "@/redux/apis/auth.apis";
 import { userExist } from "@/redux/slices/auth.slice";
 import { toast } from "react-toastify";
+import useConfirm from "@/hooks/useConfirm";
+import { useScreenContext } from "@/hooks/useScreenContext";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import MyProfileActions from "./MyProfileActions";
 import MyProfileDetailsFields from "./MyProfileDetailsFields";
 import MyProfileHeading from "./MyProfileHeading";
 import MyProfileSummary from "./MyProfileSummary";
-import { IMAGE_MIME_PREFIX, MAX_IMAGE_SIZE_BYTES, MY_PROFILE_FORM_ID } from "../utils/myProfile.constants";
+import getEnv from "@/utils/env";
+import {
+  IMAGE_MIME_PREFIX,
+  MAX_IMAGE_SIZE_BYTES,
+  MY_PROFILE_FORM_ID,
+  MY_PROFILE_SCREEN_CONTEXT,
+} from "../utils/myProfile.constants";
+import { buildProfileAssistantActions } from "../utils/myProfile.assistant.utils";
 import { buildProfileFormData, buildProfileFromUser, validateProfile } from "../utils/myProfile.utils";
+
+const SERVER_URL = getEnv("SERVER_URL");
 
 const MyProfileDetailsForm = ({ user = null }) => {
   const dispatch = useDispatch();
+  const aiConfirm = useConfirm();
   const [updateMyProfile, { isLoading: isUpdating }] = useUpdateMyProfileMutation();
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState(() => buildProfileFromUser(user));
@@ -62,13 +74,31 @@ const MyProfileDetailsForm = ({ user = null }) => {
     setIsConfirmingUpdate(true);
   };
 
+  // store and show the saved profile
+  const applySavedUser = (savedUser) => {
+    dispatch(userExist(savedUser));
+    setProfile(buildProfileFromUser(savedUser));
+    setImageFile(null);
+    setIsEditing(false);
+  };
+
+  useScreenContext({
+    ...MY_PROFILE_SCREEN_CONTEXT,
+    aiEndpoint: `${SERVER_URL}/api/ai/profile-chat`,
+    currentState: buildProfileFromUser(user),
+    actions: buildProfileAssistantActions({
+      user,
+      updateMyProfile,
+      onProfileSaved: applySavedUser,
+      askConfirm: aiConfirm.ask,
+    }),
+    deps: { user },
+  });
+
   const handleConfirmUpdate = async () => {
     try {
       const res = await updateMyProfile(buildProfileFormData(profile, imageFile)).unwrap();
-      dispatch(userExist(res.data));
-      setProfile(buildProfileFromUser(res.data));
-      setImageFile(null);
-      setIsEditing(false);
+      applySavedUser(res.data);
       toast.success(res.message);
     } catch (error) {
       console.error("Update profile error:", error);
@@ -120,6 +150,15 @@ const MyProfileDetailsForm = ({ user = null }) => {
         message="Are you sure you want to save the changes to your profile?"
         isLoading={isUpdating}
         confirmButtonText="Update"
+      />
+
+      <ConfirmationModal
+        isOpen={aiConfirm.isOpen}
+        title={aiConfirm.pending?.title}
+        message={aiConfirm.pending?.message}
+        confirmButtonText={aiConfirm.pending?.confirmButtonText}
+        onConfirm={aiConfirm.resolveAsked}
+        onClose={aiConfirm.close}
       />
     </>
   );

@@ -8,7 +8,7 @@ import {
 import Button from "@/components/shared/Button";
 import CustomizableSelect from "@/components/shared/CustomizableSelect";
 import TextField from "@/components/shared/TextField";
-import { BENEFICIAL_SECTION_KEY } from "../utils/applications.constants";
+import { getForwardableSections } from "../utils/applications.utils";
 
 const ApplicationsSpecialAccessModal = ({ formId = null, setModal, submittedFormId = null }) => {
   const { data: submittedFormUsers } = useGetSubmittedFormUsersQuery({ formId: formId });
@@ -16,9 +16,10 @@ const ApplicationsSpecialAccessModal = ({ formId = null, setModal, submittedForm
   const { data: formData } = useGetSingleFormQueryQuery({ _id: formId });
   const [form, setForm] = useState({ email: "", sectionKey: "" });
 
-  const specialSections = (formData?.data?.sections || [])
-    .filter((section) => section?.isHidden && section?.key !== BENEFICIAL_SECTION_KEY)
-    .map((section) => ({ option: section?.name, value: section?.key }));
+  const specialSections = getForwardableSections(formData?.data).map((section) => ({
+    option: section?.name,
+    value: section?.key,
+  }));
 
   const selectedUsers = (submittedFormUsers?.data || []).map((submitForm) => ({
     option: `${submitForm?.user?.firstName} ${submitForm?.user?.middleName ? " " : ""} ${submitForm?.user?.lastName}`,

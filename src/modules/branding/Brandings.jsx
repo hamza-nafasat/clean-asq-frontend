@@ -28,7 +28,7 @@ const Brandings = () => {
   const { data: brandings = [], isLoading: isBrandingsLoading, isError, refetch } = useGetAllBrandingsQuery();
   const [deleteBranding, { isLoading: isDeleting }] = useDeleteSingleBrandingMutation();
   const deleteConfirm = useConfirm();
-  const applyConfirm = useConfirm();
+  const aiConfirm = useConfirm();
   const apply = useBrandingListApply();
   const brandingList = brandings?.data || [];
 
@@ -77,7 +77,7 @@ const Brandings = () => {
     forms: allFormsData?.data || [],
     deleteBranding,
     askToDelete: (rows) => deleteConfirm.ask({ rows }),
-    askToApply: applyConfirm.ask,
+    askConfirm: aiConfirm.ask,
     applyToTargets: apply.applyToTargets,
     openBranding,
     openCreateBranding,
@@ -116,12 +116,12 @@ const Brandings = () => {
         />
       )}
       <ConfirmationModal
-        isOpen={applyConfirm.isOpen}
-        title="Apply Branding"
-        message={applyConfirm.pending?.message}
-        confirmButtonText="Apply Branding"
-        onConfirm={applyConfirm.resolveAsked}
-        onClose={applyConfirm.close}
+        isOpen={aiConfirm.isOpen}
+        title={aiConfirm.pending?.title}
+        message={aiConfirm.pending?.message}
+        confirmButtonText={aiConfirm.pending?.confirmButtonText}
+        onConfirm={aiConfirm.resolveAsked}
+        onClose={aiConfirm.close}
       />
       <ConfirmationModal
         isOpen={deleteConfirm.isOpen}

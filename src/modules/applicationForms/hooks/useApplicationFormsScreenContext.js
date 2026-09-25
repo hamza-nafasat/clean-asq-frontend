@@ -15,7 +15,7 @@ import { PERMISSIONS } from "@/utils/permissions";
 import useApplicationFormsAssistantActions from "./useApplicationFormsAssistantActions";
 import { APPLICATION_FORMS_SCREEN } from "../utils/applicationForms.constants";
 import { buildFormsAssistantState } from "../utils/applicationForms.assistant.utils";
-import { createEmptyPendingEdits } from "../utils/applicationForms.pendingEdits.utils";
+import { countDeletedFields, createEmptyPendingEdits } from "../utils/applicationForms.pendingEdits.utils";
 
 const SERVER_URL = getEnv("SERVER_URL");
 
@@ -39,6 +39,7 @@ const buildScreenContextDeps = ({ forms, brandings, emailTemplates, searchStrate
     pendingFieldUpdateCount: countKeys(rest.pendingFormEdits?.fieldUpdates),
     pendingHasSectionOrder: Boolean(rest.pendingFormEdits?.sectionOrder),
     pendingDeletedSectionCount: rest.pendingFormEdits?.deletedSections?.length ?? 0,
+    pendingDeletedFieldCount: countDeletedFields(rest.pendingFormEdits),
   });
 
 const useApplicationFormsScreenContext = ({ onOpenCreateForm, askConfirm }) => {

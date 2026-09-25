@@ -3,7 +3,7 @@ export const APPLICATION_FORMS_SCREEN = {
   NAME: "Application Forms",
   ASSISTANT_NAME: "Form Management Assistant",
   AI_ENDPOINT_PATH: "/api/ai/form-chat",
-  GREETING: `Hi! I'm your **Form Management Assistant**.\n\nI can help you:\n- **Create or delete forms**\n- **Clone a form**\n- **Reorder or delete sections** in a form\n- **Preview a form**\n- **Check form readiness**\n- **Change branding, email templates, header text, redirect URLs, and location settings**\n\n> **Note:** Editing section display text, field labels, or AI prompts must be done in the form editor UI directly.\n\nWhat would you like to do?`,
+  GREETING: `Hi! I'm your **Form Management Assistant**.\n\nI can help you:\n- **Create, clone or delete forms**\n- **Preview a form** and **check its readiness**\n- **Change branding** on forms or your website, plus **email templates, header text, redirect URLs, location settings and step display texts**\n- **Edit a form's content** — add, reorder or delete sections and fields; change display text, signature settings, field labels, types, options, required and AI prompts\n\nContent edits are previewed first — say **save** to apply them.\n\nWhat would you like to do?`,
 };
 
 export const SEARCH_MODES = {

@@ -30,7 +30,7 @@ export const buildOwnerInvitationPath = (invite) =>
 // beneficial owners with an email, and the completed ones
 export const getBeneficialOwners = (form) => {
   const ownersSection = form?.submitData?.[formKeys.beneficial_owners_key];
-  const additionalOwnerKey = Object.keys(ownersSection)?.find(
+  const additionalOwnerKey = Object.keys(ownersSection ?? {}).find(
     (key) => ownersSection?.[key]?.name == formFieldsStaticKeys.additional_owners_key,
   );
   const totalOwners = ownersSection?.[additionalOwnerKey]?.value?.filter((item) => item?.email);

@@ -1,22 +1,64 @@
-import { useGetMyAllDraftsAndSubmittionsQuery } from "@/redux/apis/form.apis";
+import { useSelector } from "react-redux";
+import {
+  useApplicantGiveSpecialAccessToBeneficialOwnerMutation,
+  useGeneratePdfFormMutation,
+  useGetMyAllDraftsAndSubmittionsQuery,
+  useRemoveSavedFormMutation,
+} from "@/redux/apis/form.apis";
+import useConfirm from "@/hooks/useConfirm";
 import usePermission from "@/hooks/usePermission";
+import { useScreenContext } from "@/hooks/useScreenContext";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
 import EmptyState from "@/components/shared/EmptyState";
 import MyApplicationsTabs from "./components/MyApplicationsTabs";
+import getEnv from "@/utils/env";
 import { PERMISSIONS } from "@/utils/permissions";
 import { FiAlertCircle, FiLock } from "react-icons/fi";
+import { MY_APPLICATIONS_AI_CHAT_PATH, MY_APPLICATIONS_SCREEN_CONTEXT } from "./utils/myApplications.constants";
+import {
+  buildMyApplicationsAssistantActions,
+  buildMyApplicationsScreenState,
+} from "./utils/myApplications.assistant.utils";
+
+const SERVER_URL = getEnv("SERVER_URL");
 
 const MyApplications = () => {
+  const aiConfirm = useConfirm();
+  const user = useSelector((state) => state.auth.user);
   const canSubmitForm = usePermission(PERMISSIONS.SUBMIT_FORM);
   const { data, isLoading, isError, refetch } = useGetMyAllDraftsAndSubmittionsQuery(undefined, {
     skip: !canSubmitForm,
+  });
+  const [removeSavedForm] = useRemoveSavedFormMutation();
+  const [inviteBeneficialOwner] = useApplicantGiveSpecialAccessToBeneficialOwnerMutation();
+  const [generatePdfForm] = useGeneratePdfFormMutation();
+  const drafts = data?.data?.saved || [];
+  const submissions = data?.data?.submitted || [];
+  const invitations = data?.data?.pendingOwnerForms || [];
+
+  useScreenContext({
+    ...MY_APPLICATIONS_SCREEN_CONTEXT,
+    enabled: canSubmitForm,
+    aiEndpoint: `${SERVER_URL}${MY_APPLICATIONS_AI_CHAT_PATH}`,
+    currentState: buildMyApplicationsScreenState({ drafts, submissions, invitations }),
+    actions: buildMyApplicationsAssistantActions({
+      drafts,
+      submissions,
+      userId: user?._id,
+      removeSavedForm,
+      inviteBeneficialOwner,
+      generatePdfForm,
+      askConfirm: aiConfirm.ask,
+    }),
+    deps: { draftCount: drafts.length, submissionCount: submissions.length, invitationCount: invitations.length },
   });
 
   if (!canSubmitForm)
     return (
       <EmptyState variant="panel" icon={<FiLock size={28} />} title="You don't have permission to submit applications" />
-    );;
+    );
   if (isLoading) return <CustomLoading />;
   if (isError) {
     return (
@@ -27,7 +69,16 @@ const MyApplications = () => {
   }
   return (
     <div>
-      <MyApplicationsTabs forms={data?.data} invitations={data?.data?.pendingOwnerForms} />
+      <MyApplicationsTabs forms={data?.data} invitations={invitations} />
+
+      <ConfirmationModal
+        isOpen={aiConfirm.isOpen}
+        title={aiConfirm.pending?.title}
+        message={aiConfirm.pending?.message}
+        confirmButtonText={aiConfirm.pending?.confirmButtonText}
+        onConfirm={aiConfirm.resolveAsked}
+        onClose={aiConfirm.close}
+      />
     </div>
   );
 };

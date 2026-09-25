@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useFetchWebsiteBrandingMutation } from "@/redux/apis/branding.apis";
 import { useScreenContext } from "@/hooks/useScreenContext";
+import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
+import confirmOrCancel from "@/utils/confirmOrCancel";
 import { toHttpsUrl } from "@/utils/websiteUrl";
 import getEnv from "@/utils/env";
 import {
@@ -14,7 +16,9 @@ import {
   BRANDING_ROUTES,
 } from "../utils/branding.constants";
 import { BRANDING_EDITOR_ASSISTANT_COPY } from "../utils/branding.data";
+import { getLogoUrl } from "../utils/branding.logo.utils";
 import { pickFields, toFormsList } from "../utils/branding.mapping.utils";
+import { toSenderEmail } from "../utils/branding.utils";
 
 // register editor with ai assistant
 const useBrandingEditorScreenContext = ({
@@ -36,6 +40,14 @@ const useBrandingEditorScreenContext = ({
   const confirmUpdate = async (message) => {
     const isConfirmed = await askToConfirmUpdate({ message });
     if (!isConfirmed) throw new Error("The user cancelled the update");
+  };
+
+  const removeLogos = async ({ logoUrls = [] }) => {
+    const isRemoved = (logo) => logoUrls.includes(getLogoUrl(logo));
+    const removedCount = values.logos.filter(isRemoved).length;
+    if (!removedCount) throw new Error("None of those logos are on this branding");
+    await confirmOrCancel(askToConfirmUpdate, { message: `Remove ${removedCount} logo(s) from this branding?` });
+    setters.logos((prev) => prev.filter((logo) => !isRemoved(logo)));
   };
 
   const saveBranding = (skipNavigation) =>
@@ -68,14 +80,18 @@ const useBrandingEditorScreenContext = ({
     currentState: {
       ...pickFields(values, BRANDING_AI_FIELDS),
       selectedLogo: values.selectedLogo || null,
+      selectedEmailLogo: values.selectedEmailLogo || null,
       forms: formsList,
     },
     actions: {
       ...pickFields(setters, BRANDING_AI_FIELDS),
+      senderEmail: (value) => setters.senderEmail(toSenderEmail(value)),
       selectedLogo: setters.selectedLogo,
+      selectedEmailLogo: setters.selectedEmailLogo,
       setSuggestedColors: setters.suggestedColors,
       addLogo: (url) => setters.logos((prev) => [...prev, { url, type: BRANDING_LOGO_TYPES.IMAGE, invert: false }]),
       setLogos: setters.logos,
+      [AI_TOOLS.REMOVE_LOGOS]: removeLogos,
       setWebsiteImage: setters.websiteImage,
       applyExtractedBranding,
       openManualExtractionFlow: ({ url } = {}) => {

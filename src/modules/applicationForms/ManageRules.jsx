@@ -17,6 +17,7 @@ import ApplicationFormsRuleModal from "./components/ApplicationFormsRuleModal";
 import ApplicationFormsRulesFilter from "./components/ApplicationFormsRulesFilter";
 import ApplicationFormsRulesHeading from "./components/ApplicationFormsRulesHeading";
 import ApplicationFormsRulesTable from "./components/ApplicationFormsRulesTable";
+import useApplicationFormsRuleAssistant from "./hooks/useApplicationFormsRuleAssistant";
 import useApplicationFormsRuleOrder from "./hooks/useApplicationFormsRuleOrder";
 import { MODAL_MODES } from "@/constants";
 import { PERMISSIONS } from "@/utils/permissions";
@@ -61,6 +62,7 @@ const ManageRules = () => {
   const [updateStatusRule, { isLoading: isUpdatingStatusRule }] = useUpdateStatusSingleFormRuleMutation();
 
   const order = useApplicationFormsRuleOrder({ rules: rules?.data });
+  const aiConfirm = useApplicationFormsRuleAssistant({ formId, rules: rules?.data });
   const filteredRules = order.orderedRules.filter((rule) => matchesRuleFilters(rule, filters));
 
   const selectedRule = selected?.rule;
@@ -153,6 +155,14 @@ const ManageRules = () => {
         title="Update Rules Order"
         message="Save the new order of these rules?"
         confirmButtonText="Save"
+      />
+      <ConfirmationModal
+        isOpen={aiConfirm.isOpen}
+        onClose={aiConfirm.close}
+        onConfirm={aiConfirm.resolveAsked}
+        title={aiConfirm.pending?.title}
+        message={aiConfirm.pending?.message}
+        confirmButtonText={aiConfirm.pending?.confirmButtonText}
       />
 
       <ApplicationFormsRulesHeading
