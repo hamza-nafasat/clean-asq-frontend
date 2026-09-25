@@ -10,4 +10,9 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  test: {
+    environment: "jsdom",
+    include: ["src/testCases/**/*.test.{js,jsx}"],
+    reporters: ["default", "./src/testCases/summary.reporter.js"],
+  },
 });
