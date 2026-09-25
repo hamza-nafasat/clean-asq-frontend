@@ -3,6 +3,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import { RULE_DROP_ANIMATION } from "../utils/applicationForms.constants";
+import EmptyState from "@/components/shared/EmptyState";
 
 const SortableRow = ({ row, columns = [] }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row._id });
@@ -94,8 +95,12 @@ const ApplicationFormsRulesTable = ({
         <tbody>
           {data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="text-center py-12 text-gray-400">
-                No rules found
+              <td colSpan={columns.length} className="p-4">
+                <EmptyState
+                  variant="panel"
+                  title="No rules yet"
+                  description="Create a rule to check applications automatically."
+                />
               </td>
             </tr>
           ) : (

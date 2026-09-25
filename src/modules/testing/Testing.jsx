@@ -1,5 +1,6 @@
 import { useState } from "react";
 import usePermission from "@/hooks/usePermission";
+import EmptyState from "@/components/shared/EmptyState";
 import { PERMISSIONS } from "@/utils/permissions";
 import useTestingCases from "./hooks/useTestingCases";
 import useTestingRun from "./hooks/useTestingRun";
@@ -130,9 +131,7 @@ const Testing = () => {
           (run.report ? (
             <TestingReport report={run.report} />
           ) : (
-            <div className="flex items-center justify-center h-40 text-sm text-gray-400">
-              No report yet — run tests first.
-            </div>
+            <EmptyState variant="panel" title="No report yet" description="Run tests to see a report here." />
           ))}
 
         {activeTab === TESTING_TABS.TEST_CASES && (

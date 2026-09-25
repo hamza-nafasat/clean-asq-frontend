@@ -147,13 +147,11 @@ const ApplicationsCard = () => {
           ))
         ) : (
           <EmptyState
+            variant="panel"
             icon={<FiFileText size={28} />}
             title="No application forms yet"
             description="Create a form to start collecting applications."
-            className="col-span-full flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-gray-300 bg-white py-16"
-            iconClassName="bg-primary/10 text-primary rounded-full p-4"
-            textClassName="text-center [&>p:first-child]:text-base"
-            descriptionClassName="mt-1 text-sm text-gray-500"
+            className="col-span-full"
           />
         )}
       </section>

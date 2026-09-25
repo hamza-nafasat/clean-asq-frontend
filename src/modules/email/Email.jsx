@@ -11,7 +11,9 @@ import {
 import { useGetMyAllFormsQuery } from "@/redux/apis/form.apis";
 import usePermission from "@/hooks/usePermission";
 import { useScreenContext } from "@/hooks/useScreenContext";
+import { FiMail } from "react-icons/fi";
 import Button from "@/components/shared/Button";
+import EmptyState from "@/components/shared/EmptyState";
 import EmailAttachFormsModal from "@/modules/email/components/EmailAttachFormsModal";
 import EmailTemplateCard from "@/modules/email/components/EmailTemplateCard";
 import EmailTemplateModal from "@/modules/email/components/EmailTemplateModal";
@@ -304,6 +306,15 @@ const Email = () => {
             onView={handleView}
           />
         ))}
+        {templates && !templates.length && (
+          <EmptyState
+            variant="panel"
+            className="col-span-full"
+            icon={<FiMail size={28} />}
+            title="No email templates yet"
+            description="Create a template to send branded emails."
+          />
+        )}
       </div>
     </div>
   );

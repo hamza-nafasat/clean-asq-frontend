@@ -3,7 +3,7 @@ import { useDeleteSingleBrandingMutation, useGetAllBrandingsQuery } from "@/redu
 import { useGetMyAllFormsQuery } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
 import { FaExchangeAlt } from "react-icons/fa";
-import { FiEdit2, FiTrash2 } from "react-icons/fi";
+import { FiAlertCircle, FiEdit2, FiDroplet, FiTrash2 } from "react-icons/fi";
 import usePermission from "@/hooks/usePermission";
 import ApplyBranding from "@/components/global/ApplyBranding";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
@@ -88,7 +88,7 @@ const Brandings = () => {
   if (isBrandingsLoading) return <LoadingState title="Loading brandings" className={STATE_CLASS_NAME} />;
   if (isError)
     return (
-      <EmptyState title="Could not load brandings" className={STATE_CLASS_NAME}>
+      <EmptyState variant="panel" icon={<FiAlertCircle size={28} />} title="Could not load brandings">
         <Button type="button" label="Try again" onClick={refetch} />
       </EmptyState>
     );
@@ -143,7 +143,12 @@ const Brandings = () => {
         {brandingList.length ? (
           <BrandingTable brandings={brandingList} rowButtons={rowButtons} />
         ) : (
-          <EmptyState title="No brandings yet" className={STATE_CLASS_NAME} />
+          <EmptyState
+            variant="panel"
+            icon={<FiDroplet size={28} />}
+            title="No brandings yet"
+            description="Create a branding to style your forms and website."
+          />
         )}
       </section>
     </article>

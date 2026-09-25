@@ -145,7 +145,8 @@ const StrategiesTable = () => {
         columns={columns}
         pagination
         highlightOnHover
-        noDataComponent="No data found"
+        noDataComponent="No strategies yet"
+        emptyDescription="Create a strategy to bundle lookup keys for your forms."
         className="rounded-lg!"
       />
 

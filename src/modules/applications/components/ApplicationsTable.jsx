@@ -212,11 +212,8 @@ const ApplicationsTable = ({
           columns={columns}
           data={filteredApplicants}
           progressPending={isLoading}
-          noDataComponent={
-            <div className="flex items-center justify-center h-full flex-col gap-2 p-10">
-              <h3 className="text-textPrimary text-xl font-bold">No applicants found</h3>
-            </div>
-          }
+          noDataComponent="No applications yet"
+          emptyDescription="Submitted applications and drafts will appear here."
           progressPendingMessage={<CustomLoading className="w-10 h-10" />}
           highlightOnHover
           fixedHeader

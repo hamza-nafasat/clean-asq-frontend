@@ -21,6 +21,7 @@ import {
   getBeneficialOwners,
   undimOnLeave,
 } from "../utils/myApplications.utils";
+import EmptyState from "@/components/shared/EmptyState";
 
 const MyApplicationsSubmissions = ({ forms = [] }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -180,9 +181,12 @@ const MyApplicationsSubmissions = ({ forms = [] }) => {
             );
           })
         ) : (
-          <div className="col-span-full flex items-center justify-center">
-            No submissions found
-          </div>
+          <EmptyState
+            variant="panel"
+            className="col-span-full"
+            title="No submissions yet"
+            description="Applications you submit will appear here."
+          />
         )}
       </div>
     </>

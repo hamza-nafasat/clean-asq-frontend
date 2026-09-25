@@ -61,6 +61,8 @@ const BrandingTable = ({ brandings = [], rowButtons = [] }) => {
       persistTableHead
       responsive
       pagination
+      noDataComponent="No brandings yet"
+      emptyDescription="Create a branding to style your forms and website."
     />
   );
 };

@@ -83,7 +83,8 @@ const UnderwritingAnalysis = ({ submitFormData = null }) => {
               columns={buildAlertColumns()}
               highlightOnHover
               progressPending={isLoadingAlertsData}
-              noDataComponent="No History found"
+              noDataComponent="No key info yet"
+              emptyDescription="Display rule results for this application will appear here."
               className="rounded-t-xl!"
             />
           </div>
@@ -98,7 +99,8 @@ const UnderwritingAnalysis = ({ submitFormData = null }) => {
               columns={buildAlertColumns()}
               highlightOnHover
               progressPending={isLoadingAlertsData}
-              noDataComponent="No History found"
+              noDataComponent="No alerts yet"
+              emptyDescription="Alert rule results for this application will appear here."
               className="rounded-t-xl!"
             />
           </div>

@@ -135,7 +135,8 @@ const LookupManagementTable = () => {
           columns={columns}
           pagination
           highlightOnHover
-          noDataComponent="No data found"
+          noDataComponent="No lookup keys yet"
+          emptyDescription="Add a lookup key or create the default set."
           className="rounded-lg!"
         />
       </div>

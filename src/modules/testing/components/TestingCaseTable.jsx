@@ -1,4 +1,5 @@
 import { useState } from "react";
+import EmptyState from "@/components/shared/EmptyState";
 import { ALL_AREAS_FILTER } from "../utils/testing.constants";
 
 const BADGE_COLORS = {
@@ -105,9 +106,11 @@ const TestingCaseTable = ({
       {loading ? (
         <p className="py-8 text-center text-sm text-gray-400">Loading…</p>
       ) : visibleCases.length === 0 ? (
-        <p className="py-8 text-center text-sm text-gray-400">
-          {testCases.length === 0 ? "No test cases yet. Create one or seed from static files." : "No matches."}
-        </p>
+        <EmptyState
+          variant="panel"
+          title={testCases.length === 0 ? "No test cases yet" : "No matches"}
+          description={testCases.length === 0 ? "Create one or seed from static files." : "Try a different search or area."}
+        />
       ) : (
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <table className="w-full text-xs">

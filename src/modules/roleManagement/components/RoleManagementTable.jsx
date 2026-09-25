@@ -1,4 +1,5 @@
 import useRowActionMenu from "@/hooks/useRowActionMenu";
+import { FiAlertCircle } from "react-icons/fi";
 import AppDataTable from "@/components/shared/AppDataTable";
 import Button from "@/components/shared/Button";
 import EmptyState from "@/components/shared/EmptyState";
@@ -37,8 +38,8 @@ const RoleManagementTable = ({ roles = [], isLoading = false, isError = false, o
 
   if (isError) {
     return (
-      <EmptyState title="Could not load roles">
-        <Button type="button" label="Try again" onClick={onRetry} className="mx-auto mt-3" />
+      <EmptyState variant="panel" icon={<FiAlertCircle size={28} />} title="Could not load roles">
+        <Button type="button" label="Try again" onClick={onRetry} />
       </EmptyState>
     );
   }
@@ -51,7 +52,8 @@ const RoleManagementTable = ({ roles = [], isLoading = false, isError = false, o
       pagination
       highlightOnHover
       progressPending={isLoading}
-      noDataComponent="No roles found"
+      noDataComponent="No roles yet"
+      emptyDescription="Create a role to control what people can do."
       className="rounded-t-xl!"
     />
   );

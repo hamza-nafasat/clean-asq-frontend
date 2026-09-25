@@ -18,6 +18,7 @@ import {
   formatLongDate,
   undimOnLeave,
 } from "../utils/myApplications.utils";
+import EmptyState from "@/components/shared/EmptyState";
 
 const MyApplicationsDrafts = ({ forms = [] }) => {
   const dispatch = useDispatch();
@@ -115,7 +116,12 @@ const MyApplicationsDrafts = ({ forms = [] }) => {
           );
         })
       ) : (
-        <div className="items-cetner col-span-full flex justify-center">No draft found</div>
+        <EmptyState
+          variant="panel"
+          className="col-span-full"
+          title="No drafts yet"
+          description="Applications you start will appear here."
+        />
       )}
       <ConfirmationModal
         isOpen={!!deleteTarget}

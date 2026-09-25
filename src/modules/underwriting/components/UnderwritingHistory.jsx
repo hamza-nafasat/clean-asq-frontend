@@ -16,7 +16,8 @@ const UnderwritingHistory = ({ submittedFormId = "" }) => {
         pagination
         highlightOnHover
         progressPending={isLoadingHistory}
-        noDataComponent="No History found"
+        noDataComponent="No history yet"
+        emptyDescription="Changes to this application will appear here."
         className="rounded-t-xl!"
       />
     </div>

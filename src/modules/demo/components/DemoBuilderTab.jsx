@@ -9,12 +9,10 @@ const DemoBuilderTab = ({ features = [], activePreset = null, builder = {}, onGo
   if (!builderFeatureId) {
     return (
       <EmptyState
-        className="h-full overflow-y-auto p-6 flex flex-col items-center justify-center text-center gap-4 py-20"
-        iconClassName="rounded-full bg-gray-100 p-5"
-        icon={<FiZap size={28} className="text-gray-400" />}
+        variant="panel"
+        className="m-6 w-auto"
+        icon={<FiZap size={28} />}
         title="No active builder target"
-        textClassName="max-w-sm"
-        descriptionClassName="text-xs text-gray-400 mt-2 leading-relaxed"
         description={
           <>
             Click <strong>"Build Demo"</strong> on any feature in the Configure tab's Presentation Outline to start
@@ -71,13 +69,12 @@ const DemoBuilderTab = ({ features = [], activePreset = null, builder = {}, onGo
           onParamChange={builder.setProposedParam}
         />
       ) : (
-        <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center">
-          <FiZap size={24} className="mx-auto text-gray-300 mb-3" />
-          <p className="text-sm font-semibold text-gray-600">No action built yet</p>
-          <p className="text-xs text-gray-400 mt-1">
-            Use the AI chat widget (bottom right) to describe what you want to demonstrate for this level.
-          </p>
-        </div>
+        <EmptyState
+          variant="panel"
+          icon={<FiZap size={28} />}
+          title="No action built yet"
+          description="Use the AI chat widget (bottom right) to describe what you want to demonstrate for this level."
+        />
       )}
     </div>
   );

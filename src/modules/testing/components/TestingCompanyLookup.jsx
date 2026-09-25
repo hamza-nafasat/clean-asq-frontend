@@ -170,6 +170,8 @@ const TestingCompanyLookup = ({ formId = null }) => {
               columns={LOOKUP_COLUMNS}
               data={lookupRows}
               customStyles={tableStyles}
+              noDataComponent="No company lookups yet"
+              emptyDescription="Run a company lookup to see verification results here."
             />
           </div>
           <div className="border"></div>

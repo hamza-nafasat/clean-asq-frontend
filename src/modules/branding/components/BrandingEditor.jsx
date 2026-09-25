@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { FiAlertCircle } from "react-icons/fi";
 import { useAddBrandingInFormMutation, useGetSingleBrandingQuery } from "@/redux/apis/branding.apis";
 import { useGetMyAllFormsQuery } from "@/redux/apis/form.apis";
 import useBranding from "@/hooks/useBranding";
@@ -148,7 +149,7 @@ const BrandingEditor = ({ brandingId }) => {
   if (brandingId && isBrandingLoading) return <LoadingState title="Loading branding" className={STATE_CLASS_NAME} />;
   if (brandingId && isBrandingError)
     return (
-      <EmptyState title="Could not load branding" className={STATE_CLASS_NAME}>
+      <EmptyState variant="panel" icon={<FiAlertCircle size={28} />} title="Could not load branding">
         <Button type="button" label="Try again" onClick={refetchBranding} />
       </EmptyState>
     );

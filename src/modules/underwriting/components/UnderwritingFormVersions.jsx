@@ -105,7 +105,8 @@ const UnderwritingFormVersions = ({ submittedFormId = "", submitForm = null }) =
           fixedHeader
           persistTableHead
           responsive
-          noDataComponent="No History found"
+          noDataComponent="No form versions yet"
+          emptyDescription="Saved versions of this application form will appear here."
           className="rounded-t-xl!"
         />
       </div>

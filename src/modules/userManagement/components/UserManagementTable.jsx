@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useDeleteSingleUserMutation, useUpdateSingleUserMutation } from "@/redux/apis/userManagement.apis";
-import { FiEdit2, FiTrash2 } from "react-icons/fi";
+import { FiAlertCircle, FiEdit2, FiTrash2, FiUsers } from "react-icons/fi";
 import { toast } from "react-toastify";
 import usePermission from "@/hooks/usePermission";
 import useRowActionMenu from "@/hooks/useRowActionMenu";
@@ -136,11 +136,19 @@ const UserManagementTable = ({ users = [], roleOptions = [], isLoading = false, 
   if (isLoading) return <LoadingState title="Loading users" className={STATE_CLASS_NAME} />;
   if (isError)
     return (
-      <EmptyState title="Could not load users" className={STATE_CLASS_NAME}>
+      <EmptyState variant="panel" icon={<FiAlertCircle size={28} />} title="Could not load users">
         <Button type="button" label="Try again" onClick={onRetry} />
       </EmptyState>
     );
-  if (!users.length) return <EmptyState title="No users found" className={STATE_CLASS_NAME} />;
+  if (!users.length)
+    return (
+      <EmptyState
+        variant="panel"
+        icon={<FiUsers size={28} />}
+        title="No users yet"
+        description="Add a user to give someone access."
+      />
+    );
 
   return (
     <>
@@ -154,6 +162,8 @@ const UserManagementTable = ({ users = [], roleOptions = [], isLoading = false, 
         fixedHeader
         persistTableHead
         responsive
+        noDataComponent="No users yet"
+        emptyDescription="Add a user to give someone access."
       />
 
       <UserManagementAddEditModal

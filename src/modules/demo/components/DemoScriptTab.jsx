@@ -73,9 +73,8 @@ const DemoScriptTab = ({
 
       {!isGenerating && displayScript.length === 0 && (
         <EmptyState
-          className="flex flex-col items-center justify-center py-20 gap-4"
-          iconClassName="rounded-full bg-gray-100 p-5"
-          icon={<HiOutlineSparkles size={28} className="text-gray-400" />}
+          variant="panel"
+          icon={<HiOutlineSparkles size={28} />}
           title="No script yet"
           description={
             hasSelection

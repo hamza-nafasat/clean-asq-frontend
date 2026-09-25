@@ -1,3 +1,4 @@
+import EmptyState from "@/components/shared/EmptyState";
 import MyApplicationsDrafts from "./MyApplicationsDrafts";
 import MyApplicationsOwnerInvitations from "./MyApplicationsOwnerInvitations";
 import MyApplicationsSubmissions from "./MyApplicationsSubmissions";
@@ -10,12 +11,11 @@ const MyApplicationsTabs = ({ forms = {}, invitations = [] }) => {
   return (
     <div className="w-full space-y-8">
       {hasNothing && (
-        <div className="rounded-lg border bg-white/80 p-8 text-center shadow-sm">
-          <p className="text-textPrimary text-lg font-semibold">You have no applications yet</p>
-          <p className="mt-1 text-sm text-gray-500">
-            Once you start an application it will appear here, whether it is finished or not.
-          </p>
-        </div>
+        <EmptyState
+          variant="panel"
+          title="You have no applications yet"
+          description="Once you start an application it will appear here, whether it is finished or not."
+        />
       )}
 
       {invitations.length > 0 && (

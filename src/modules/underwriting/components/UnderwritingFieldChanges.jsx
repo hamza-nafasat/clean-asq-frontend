@@ -1,3 +1,5 @@
+import EmptyState from "@/components/shared/EmptyState";
+
 const formatValue = (value) => {
   if (value === null || value === undefined || value === "") return "—";
   if (typeof value === "object") return JSON.stringify(value, null, 2);
@@ -16,9 +18,11 @@ const UnderwritingFieldChanges = ({ selectedVersion = null }) => {
   const diffs = selectedVersion?.diff || [];
   if (!diffs.length) {
     return (
-      <div className="w-full rounded-xl border border-gray-200 bg-white p-6 text-center">
-        <p className="text-sm text-gray-500">No field changes found for this version.</p>
-      </div>
+      <EmptyState
+        variant="panel"
+        title="No field changes"
+        description="This version did not change any fields."
+      />
     );
   }
   const groupedDiffs = groupBySection(diffs);
