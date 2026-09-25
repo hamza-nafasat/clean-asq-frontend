@@ -107,6 +107,7 @@ export const BRANDING_LOGO_TYPES = {
 };
 
 export const BRANDING_AI_PATHS = {
+  EDITOR_CHAT: "/api/ai/branding-chat",
   LIST_CHAT: "/api/ai/branding-list-chat",
   TTS: "/api/ai/tts",
 };

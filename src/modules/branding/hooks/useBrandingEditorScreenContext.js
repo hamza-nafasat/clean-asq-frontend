@@ -2,9 +2,11 @@ import { useNavigate } from "react-router-dom";
 import { useFetchWebsiteBrandingMutation } from "@/redux/apis/branding.apis";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import { toHttpsUrl } from "@/utils/websiteUrl";
+import getEnv from "@/utils/env";
 import {
   BRANDING_AI_DEP_FIELDS,
   BRANDING_AI_FIELDS,
+  BRANDING_AI_PATHS,
   BRANDING_EDITOR_SCREEN_CONTEXT,
   BRANDING_EXTRACTION_TABS,
   BRANDING_LOGO_TYPES,
@@ -58,6 +60,7 @@ const useBrandingEditorScreenContext = ({
       : BRANDING_EDITOR_SCREEN_CONTEXT.NEW_SCREEN_ID,
     screenName: brandingId ? `Global Branding — ${values.companyName || brandingId}` : "Global Branding (New)",
     assistantName: BRANDING_EDITOR_SCREEN_CONTEXT.ASSISTANT_NAME,
+    aiEndpoint: `${getEnv("SERVER_URL")}${BRANDING_AI_PATHS.EDITOR_CHAT}`,
     greeting: BRANDING_EDITOR_ASSISTANT_COPY.GREETING,
     description: BRANDING_EDITOR_ASSISTANT_COPY.DESCRIPTION,
     brandingId: brandingId || null,
