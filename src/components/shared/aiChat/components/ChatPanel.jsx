@@ -5,6 +5,7 @@ import PanelResizeHandles from "./PanelResizeHandles.jsx";
 import LanguageBanner from "./LanguageBanner.jsx";
 import { AI_ASSISTANT_MODES } from "@/constants";
 import { CHAT_ROLES } from "@/components/shared/aiChat/constants/aiChatConstants.js";
+import { toFontVariable } from "@/utils/fontVariable";
 
 const ChatPanel = ({
   panelRef,
@@ -56,7 +57,7 @@ const ChatPanel = ({
         maxWidth: `calc(100vw - ${Math.max(0, position.left)}px - 8px)`,
         maxHeight: `calc(100dvh - ${Math.max(0, position.top)}px - 8px)`,
         background: "#fff",
-        fontFamily: fontFamily ? `var(--font-${fontFamily.toLowerCase()})` : undefined,
+        fontFamily: fontFamily ? toFontVariable(fontFamily) : undefined,
         transition:
           dragRef.current.isDragging || resizeRef.current.isResizing
             ? "none"

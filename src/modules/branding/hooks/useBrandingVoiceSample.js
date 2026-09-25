@@ -1,9 +1,9 @@
 import { useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { BRANDING_VOICE_SAMPLE_TEXT } from "@/modules/branding/utils/branding.constants";
 import getEnv from "@/utils/env";
+import { BRANDING_AI_PATHS, BRANDING_VOICE_SAMPLE_TEXT } from "../utils/branding.constants";
 
-// plays a short text-to-speech sample of the chosen ai voice
+// play a sample of the voice
 const useBrandingVoiceSample = (voice) => {
   const [isSamplePlaying, setIsSamplePlaying] = useState(false);
   const sampleAudioRef = useRef(null);
@@ -20,7 +20,7 @@ const useBrandingVoiceSample = (voice) => {
     if (stopSample()) return;
     setIsSamplePlaying(true);
     try {
-      const res = await fetch(`${getEnv("SERVER_URL")}/api/ai/tts`, {
+      const res = await fetch(`${getEnv("SERVER_URL")}${BRANDING_AI_PATHS.TTS}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { getLogoUrl, isPreviewLogo } from "@/modules/branding/utils/branding.utils3";
+import { getLogoUrl, isPreviewLogo } from "../utils/branding.logo.utils";
 
-// keeps the selected logo index in step with the logos list
+// sync selected logo index
 const useBrandingLogoSelection = ({ logos, selectedLogo, setSelectedLogo, setLogos, defaultSelectedLogo, onLogoSelected }) => {
   const [selectedLogoIndex, setSelectedLogoIndex] = useState(null);
 
@@ -27,7 +27,7 @@ const useBrandingLogoSelection = ({ logos, selectedLogo, setSelectedLogo, setLog
     }
   }, [logos, onLogoSelected, selectedLogo, selectedLogoIndex, setSelectedLogo]);
 
-  // initial load with the saved branding's logo
+  // select saved logo on load
   useEffect(() => {
     if (!defaultSelectedLogo || !logos?.length || selectedLogo) return;
     const index = logos.findIndex((logo) => getLogoUrl(logo) === defaultSelectedLogo);

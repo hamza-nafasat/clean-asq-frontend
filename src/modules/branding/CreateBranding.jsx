@@ -1,9 +1,9 @@
 import { useParams } from "react-router-dom";
-import GlobalBrandingPage from "./components/BrandingEditor";
+import BrandingEditor from "./components/BrandingEditor";
 
 const CreateBranding = () => {
-  const brandingId = useParams()?.brandingId;
-  return <div>{brandingId ? <GlobalBrandingPage brandingId={brandingId} /> : <GlobalBrandingPage />}</div>;
+  const { brandingId } = useParams();
+  return <BrandingEditor brandingId={brandingId} />;
 };
 
 export default CreateBranding;

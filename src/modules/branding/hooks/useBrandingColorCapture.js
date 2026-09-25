@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { handleChange } from "@/modules/branding/utils/branding.utils";
+import { captureBrandingScreenshot } from "../utils/branding.screenshot.utils";
 
-// "show colors" screenshot state shared by the colour inputs
+// screenshot state for colour inputs
 const useBrandingColorCapture = ({ image, setImage, setColor }) => {
   const colorPickerRef = useRef(null);
   const [ssLoading, setSSLoading] = useState(false);
@@ -10,7 +10,7 @@ const useBrandingColorCapture = ({ image, setImage, setColor }) => {
 
   const captureColors = async () => {
     if (image) return;
-    await handleChange({
+    await captureBrandingScreenshot({
       e: { target: { value: colorPicker } },
       setSSLoading,
       setColorPicker,

@@ -1,39 +1,50 @@
-import Button from "@/components/shared/Button";
+import { useEffect, useMemo } from "react";
+import { FiX } from "react-icons/fi";
 import BrandingAppFooterSection from "./BrandingAppFooterSection";
 import BrandingAppFormSection from "./BrandingAppFormSection";
 import BrandingAppHeaderSection from "./BrandingAppHeaderSection";
 import { BRANDING_STORAGE_KEYS } from "../utils/branding.constants";
 
-export { default as ColorInput } from "./BrandingColorInput";
-export { default as GradientOrSolidInput } from "./BrandingGradientInput";
+const BrandingElementAssignment = ({ image = null, setImage, ...fieldProps }) => {
+  const imageUrl = useMemo(() => (image ? URL.createObjectURL(image) : null), [image]);
 
-const BrandElementAssignment = ({ image = null, setImage, ...fieldProps }) => (
-  <div className="mt-6">
-    <h2 className="mb-4 text-xl font-semibold text-gray-800">Assign Brand Element</h2>
+  useEffect(() => {
+    if (!imageUrl) return;
+    return () => URL.revokeObjectURL(imageUrl);
+  }, [imageUrl]);
 
-    <BrandingAppHeaderSection image={image} setImage={setImage} {...fieldProps} />
-    <BrandingAppFormSection image={image} setImage={setImage} {...fieldProps} />
-    <BrandingAppFooterSection image={image} setImage={setImage} {...fieldProps} />
+  const handleRemoveScreenshot = () => {
+    setImage?.(null);
+    try {
+      localStorage.removeItem(BRANDING_STORAGE_KEYS.LAST_SCREENSHOT);
+    } catch {
+      // storage may be blocked
+    }
+  };
 
-    {image && (
-      <div className="fixed top-4 right-0 z-50 max-h-[95vh] bg-white p-4 shadow-2xl">
-        <Button
-          label={"  ×"}
-          aria-label="Remove screenshot"
-          onClick={() => {
-            setImage?.(null);
-            localStorage.removeItem(BRANDING_STORAGE_KEYS.LAST_SCREENSHOT);
-          }}
-          className="absolute top-2 right-4 flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-700"
-        />
-        <img
-          src={URL.createObjectURL(image)}
-          alt="Preview"
-          style={{ width: "30vw", height: "auto", borderRadius: 8, objectFit: "contain", marginRight: 16 }}
-        />
-      </div>
-    )}
-  </div>
-);
+  return (
+    <div className="mt-6">
+      <h2 className="mb-4 text-xl font-semibold text-gray-800">Assign Brand Element</h2>
 
-export default BrandElementAssignment;
+      <BrandingAppHeaderSection image={image} setImage={setImage} {...fieldProps} />
+      <BrandingAppFormSection image={image} setImage={setImage} {...fieldProps} />
+      <BrandingAppFooterSection image={image} setImage={setImage} {...fieldProps} />
+
+      {imageUrl && (
+        <div className="fixed top-4 right-0 z-50 max-h-[95vh] bg-white p-4 shadow-2xl">
+          <button
+            type="button"
+            aria-label="Remove screenshot"
+            onClick={handleRemoveScreenshot}
+            className="absolute top-2 right-4 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-700"
+          >
+            <FiX size={16} />
+          </button>
+          <img src={imageUrl} alt="Preview" className="mr-4 h-auto w-[30vw] rounded-lg object-contain" />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default BrandingElementAssignment;

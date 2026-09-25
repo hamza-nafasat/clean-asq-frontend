@@ -7,7 +7,8 @@ import pdfFonts from "pdfmake/build/vfs_fonts";
 import useAiChat from "@/hooks/useAiChat";
 import useBranding from "@/hooks/useBranding";
 import { DOCUMENT_STATUSES } from "@/constants";
-import { buildDocumentPdfDefinition, extractReadableText, getContrastColor } from "@/utils/documentPdf";
+import { getContrastColor } from "@/utils/contrastColor";
+import { buildDocumentPdfDefinition, extractReadableText } from "@/utils/documentPdf";
 import getEnv from "@/utils/env";
 
 pdfMake.vfs = pdfFonts.vfs;

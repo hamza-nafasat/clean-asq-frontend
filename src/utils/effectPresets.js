@@ -2,18 +2,27 @@ const cl = (v) => Math.min(Math.max(v, 0), 1);
 const p = (n) => n.toFixed(1);
 const a = (n) => cl(n).toFixed(3);
 
-// Vector pointing toward the light source in CSS coords
+// vector toward the light source
 const toLightX = (deg, d) => -Math.cos((deg * Math.PI) / 180) * d;
 const toLightY = (deg, d) => Math.sin((deg * Math.PI) / 180) * d;
 
+export const EFFECT_NAMES = {
+  NONE: "none",
+  BEVEL: "bevel",
+  GLOW: "glow",
+  SOFT_SHADOW: "soft-shadow",
+  SOFT_EDGES: "soft-edges",
+  REFLECTION: "reflection",
+};
+
 export const EFFECT_PRESETS = {
-  none: {
+  [EFFECT_NAMES.NONE]: {
     label: "None",
     icon: "○",
     boxShadow: () => "",
   },
 
-  bevel: {
+  [EFFECT_NAMES.BEVEL]: {
     label: "Bevel",
     icon: "⬡",
     boxShadow(i = 1, deg = 135) {
@@ -30,10 +39,9 @@ export const EFFECT_PRESETS = {
     },
   },
 
-  glow: {
+  [EFFECT_NAMES.GLOW]: {
     label: "Outer Glow",
     icon: "✦",
-    // Omnidirectional — angle has no effect
     boxShadow(i = 1) {
       return [
         `0 0 ${p(18 * i)}px rgba(255,255,255,${a(0.3 * i)})`,
@@ -42,7 +50,7 @@ export const EFFECT_PRESETS = {
     },
   },
 
-  "soft-shadow": {
+  [EFFECT_NAMES.SOFT_SHADOW]: {
     label: "Soft Shadow",
     icon: "▣",
     boxShadow(i = 1, deg = 135) {
@@ -58,7 +66,7 @@ export const EFFECT_PRESETS = {
     },
   },
 
-  "soft-edges": {
+  [EFFECT_NAMES.SOFT_EDGES]: {
     label: "Soft Edges",
     icon: "▢",
     boxShadow(i = 1, deg = 90) {
@@ -70,7 +78,7 @@ export const EFFECT_PRESETS = {
     },
   },
 
-  reflection: {
+  [EFFECT_NAMES.REFLECTION]: {
     label: "Reflection",
     icon: "◈",
     boxShadow(i = 1, deg = 90) {
@@ -96,9 +104,7 @@ export const EFFECT_OPTIONS = Object.entries(EFFECT_PRESETS).map(([value, { labe
   icon,
 }));
 
-// ── Serialization ─────────────────────────────────────────────────────────────
-
-// parse any stored effect value → { effects: { name: intensity }, angle: number }
+// stored effect value to state
 export const parseEffectState = (value) => {
   if (!value || value === "none") return { effects: {}, angle: 135 };
   if (value.startsWith("{")) {
@@ -106,10 +112,10 @@ export const parseEffectState = (value) => {
       const parsed = JSON.parse(value);
       return { effects: parsed.effects ?? {}, angle: parsed.angle ?? 135 };
     } catch {
-      /* fall through to legacy */
+      // fall through to legacy
     }
   }
-  // Legacy: "effectName" or "effectName:intensity"
+  // legacy "name" or "name:intensity"
   const colonIdx = value.indexOf(":");
   const name = colonIdx === -1 ? value : value.slice(0, colonIdx);
   const intensity = colonIdx === -1 ? 1 : parseFloat(value.slice(colonIdx + 1)) || 1;
@@ -117,13 +123,13 @@ export const parseEffectState = (value) => {
   return { effects: { [name]: intensity }, angle: 135 };
 };
 
-// serialize effect state → stored string
+// effect state to stored string
 export const encodeEffectState = ({ effects, angle }) => {
   if (!effects || Object.keys(effects).length === 0) return "none";
   return JSON.stringify({ effects, angle });
 };
 
-// convert any stored effect value to a CSS box-shadow string
+// stored effect to css box-shadow
 export const effectToBoxShadow = (value) => {
   const { effects, angle } = parseEffectState(value);
   const parts = [];
@@ -137,23 +143,19 @@ export const effectToBoxShadow = (value) => {
   return parts.join(", ");
 };
 
-// ── Material / gloss ─────────────────────────────────────────────────────────
-
-// convert a material value (0 = matte, 100 = high-gloss) into a CSS gradient
+// material value to gloss gradient
 export const materialToGloss = (material, lightAngle = 90) => {
   if (!material || material <= 0) return null;
   const t = material / 100;
-  // Convert "where light comes from" angle to CSS gradient direction angle.
-  // CSS 0deg = bottom→top, 180deg = top→bottom.
-  // Light from top (90°) → gloss highlight at top → gradient top→bottom = 180deg.
+  // light angle to css gradient angle
   const cssAngle = (((270 - lightAngle) % 360) + 360) % 360;
-  const a1 = Math.min(0.6 * t, 1).toFixed(3); // top highlight
-  const a2 = Math.min(0.08 * t, 1).toFixed(3); // fade
-  const a3 = Math.min(0.18 * t, 1).toFixed(3); // bottom shadow
+  const a1 = Math.min(0.6 * t, 1).toFixed(3);
+  const a2 = Math.min(0.08 * t, 1).toFixed(3);
+  const a3 = Math.min(0.18 * t, 1).toFixed(3);
   return `linear-gradient(${cssAngle}deg, rgba(255,255,255,${a1}) 0%, rgba(255,255,255,${a2}) 48%, rgba(0,0,0,0) 52%, rgba(0,0,0,${a3}) 100%)`;
 };
 
-// human-readable material name for a 0–100 value
+// readable name for material value
 export const materialName = (v) => {
   if (!v || v <= 0) return "Matte";
   if (v <= 20) return "Eggshell";
@@ -163,7 +165,7 @@ export const materialName = (v) => {
   return "High-gloss";
 };
 
-// @deprecated Use parseEffectState. Kept for backward compat
+// TODO: replace with parseEffectState
 export const parseEffectValue = (value) => {
   const { effects } = parseEffectState(value);
   const entries = Object.entries(effects);

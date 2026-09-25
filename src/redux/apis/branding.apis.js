@@ -17,6 +17,10 @@ const brandingApis = createApi({
       query: ({ url }) => ({ url: "/extract", method: "POST", body: { url } }),
     }),
     /////
+    fetchWebsiteBranding: builder.mutation({
+      query: ({ url }) => ({ url: "/extraction/fetch-website-branding", method: "POST", body: { url } }),
+    }),
+    /////
     createBranding: builder.mutation({
       query: (data) => ({ url: "/create", method: "POST", body: data }),
       invalidatesTags: [API_TAGS.BRANDINGS],
@@ -58,7 +62,7 @@ const brandingApis = createApi({
         API_TAGS.BRANDINGS,
         { type: API_TAGS.SINGLE_BRANDING, id: brandingId },
       ],
-      // the form list shows its branding, so refresh it too
+      // also refresh the form list
       async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;
@@ -77,7 +81,11 @@ const brandingApis = createApi({
       query: ({ url }) => ({ url: "/extract-colors-from-logo-url", method: "POST", body: { url } }),
     }),
     /////
-    // the script only changes on a backend deploy, so it stays cached
+    processManualBranding: builder.mutation({
+      query: ({ domData }) => ({ url: "/extraction/process-manual-branding", method: "POST", body: { domData } }),
+    }),
+    /////
+    // cached until a backend deploy
     getManualExtractionScript: builder.query({
       query: () => "/manual-extraction-script",
     }),
@@ -86,6 +94,7 @@ const brandingApis = createApi({
 
 export const {
   useFetchBrandingMutation,
+  useFetchWebsiteBrandingMutation,
   useCreateBrandingMutation,
   useGetSingleBrandingQuery,
   useUpdateSingleBrandingMutation,
@@ -95,5 +104,6 @@ export const {
   useExtractColorsFromLogosMutation,
   useExtractColorsFromLogoUrlMutation,
   useGetManualExtractionScriptQuery,
+  useProcessManualBrandingMutation,
 } = brandingApis;
 export default brandingApis;

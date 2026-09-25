@@ -1,28 +1,17 @@
-import { BRANDING_DEFAULT_FOOTER_TEXT, BRANDING_DEFAULT_TAB_TITLE } from "./branding.constants";
-import { toHexColor } from "./branding.utils2";
+import {
+  BRANDING_DEFAULT_FOOTER_TEXT,
+  BRANDING_DEFAULT_TAB_TITLE,
+  BRANDING_EMAIL_CONTENT_FIELDS,
+  BRANDING_EMAIL_SIZE_FIELDS,
+} from "./branding.constants";
+import { toSetterName } from "@/utils/setterName";
+import { toHexColor } from "./branding.color.utils";
+import { getFirstLogoColor, getLogoUrl } from "./branding.logo.utils";
+import { isDefined, isTruthy, normalizeFontFamily } from "./branding.utils";
 
-export const toSetterName = (key) => `set${key[0].toUpperCase()}${key.slice(1)}`;
+export const pickFields = (source, fields) => Object.fromEntries(fields.map((field) => [field, source[field]]));
 
-export const getLogoUrl = (logo) => (typeof logo === "string" ? logo : logo?.url);
-
-export const isPreviewLogo = (logo) => typeof logo === "object" && logo?.preview === true;
-
-const isLogoPaletteEntry = (entry) => typeof entry === "object" && entry?.source?.toLowerCase().includes("logo");
-
-// swap logo-sourced palette entries for freshly extracted colours
-export const replaceLogoColors = (palette, colors) => {
-  let newIdx = 0;
-  return palette.map((entry) => (isLogoPaletteEntry(entry) && newIdx < colors.length ? colors[newIdx++] : entry));
-};
-
-const getFirstLogoColor = (palette = []) => {
-  const logoEntry = palette.find(isLogoPaletteEntry);
-  if (logoEntry?.hex) return logoEntry.hex;
-  const first = palette[0];
-  return (typeof first === "string" ? first : first?.hex) || null;
-};
-
-// { value, setValue } props for the given fields
+// value and setter prop pairs
 export const toFieldProps = (values, setters, fields) =>
   Object.fromEntries(fields.flatMap((field) => [[field, values[field]], [toSetterName(field), setters[field]]]));
 
@@ -31,16 +20,13 @@ const copyWhen = (patch, source, keys, test) =>
     if (test(source?.[key])) patch[key] = source[key];
   });
 
-const isTruthy = (value) => Boolean(value);
-const isDefined = (value) => value !== undefined;
-
 // form values from an extraction result
 export const mapExtractedBranding = (data) => {
   const colors = data?.colors;
   const patch = {};
   if (data?.url) patch.websiteUrl = data.url;
   Object.assign(patch, {
-    fontFamily: data?.fontFamily || "",
+    fontFamily: normalizeFontFamily(data?.fontFamily) || "",
     logos: data?.logos || [],
     primaryColor: colors?.primary,
     secondaryColor: colors?.secondary,
@@ -87,7 +73,7 @@ export const mapExtractedBranding = (data) => {
 
 const getFirstLogo = (logos) => (logos?.length > 0 ? getLogoUrl(logos[0]) : undefined);
 
-// form values from a saved branding record
+// form values from saved branding
 export const mapSingleBranding = (branding) => {
   const colors = branding.colors;
   const patch = {
@@ -109,7 +95,7 @@ export const mapSingleBranding = (branding) => {
     headerText: colors.headerText,
     footerText: colors.footerText,
     applicationFooterText: branding.applicationFooterText,
-    fontFamily: branding.fontFamily,
+    fontFamily: normalizeFontFamily(branding.fontFamily),
     buttonTextPrimary: colors.buttonTextPrimary,
     buttonTextSecondary: colors.buttonTextSecondary,
   };
@@ -118,35 +104,14 @@ export const mapSingleBranding = (branding) => {
   copyWhen(
     patch,
     branding,
-    [
-      "emailHeader",
-      "emailFooter",
-      "headerHeading",
-      "headerDescription",
-      "footerHeading",
-      "footerDescription",
-      "emailHeadingColor",
-      "emailTextColor",
-      "emailBodyColor",
-      "emailHeaderColor",
-      "emailFooterColor",
-      "emailHeaderTextColor",
-      "emailFooterTextColor",
-    ],
+    BRANDING_EMAIL_CONTENT_FIELDS,
     () => true,
   );
   copyWhen(
     patch,
     branding,
     [
-      "headerHeadingSize",
-      "headerDescriptionSize",
-      "footerHeadingSize",
-      "footerDescriptionSize",
-      "emailHeaderPadding",
-      "emailFooterPadding",
-      "emailHeaderSpacing",
-      "emailFooterSpacing",
+      ...BRANDING_EMAIL_SIZE_FIELDS,
       "appLogoMaxWidth",
       "appLogoMaxHeight",
       "emailLogoMaxWidth",
@@ -194,3 +159,10 @@ export const mapSingleBranding = (branding) => {
   if (branding.screenshotUrl) patch.websiteImage = branding.screenshotUrl;
   return patch;
 };
+
+export const toFormsList = (forms = []) =>
+  forms.map((f) => ({
+    _id: f._id,
+    name: f.name || f.headerText || "Untitled",
+    branding: f.branding ? { _id: f.branding._id || f.branding, name: f.branding.name } : null,
+  }));

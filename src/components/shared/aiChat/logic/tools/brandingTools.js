@@ -1,19 +1,20 @@
 import {
   AI_ENDPOINTS,
   AI_RESPONSE_TYPES,
+  BRANDING_PAGE_KEYS,
   CHAT_ROLES,
   PAGE_ROUTES,
 } from "@/components/shared/aiChat/constants/aiChatConstants.js";
-import { STORAGE_KEYS } from "@/constants";
+import { STORAGE_KEYS, URL_PREFIXES } from "@/constants";
 import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
 import { getErrorDetail, postJson } from "@/components/shared/aiChat/logic/toolHelpers.js";
+import { toHttpsUrl } from "@/utils/websiteUrl";
 
-const BRANDING_PAGE_KEY = "branding";
-const BRANDING_CREATE_PAGE_KEY = "branding-create";
-const ON_HOME = { YES: "yes", NO: "no" };
-
-const getDomainBase = (url) =>
-  new URL(url.startsWith("http") ? url : `https://${url}`).hostname.replace(/^www\./, "").split(".")[0];
+const getDomainBase = (url) => {
+  const { hostname } = new URL(toHttpsUrl(url));
+  const host = hostname.startsWith(URL_PREFIXES.WWW) ? hostname.slice(URL_PREFIXES.WWW.length) : hostname;
+  return host.split(".")[0];
+};
 
 const nameFromDomain = (url) => {
   try {
@@ -32,7 +33,7 @@ const displayNameFromDomain = (url) => {
   }
 };
 
-// text handed back to the AI after parsing pasted content
+// pasted content summary for ai
 const buildPastedContentSummary = ({ colors, cssVars, logoUrls, colorCount }) => {
   const cssVarCount = Object.keys(cssVars).length;
   const parts = [
@@ -57,27 +58,28 @@ const buildPastedContentSummary = ({ colors, cssVars, logoUrls, colorCount }) =>
 
 const createBrandingTools = ({ bindings, helpers, getApplyToolCall }) => {
   const { wt, navigate, continueAfterToolCall, pushRevertable } = bindings;
-  const { suppressNextScreenGreetingRef, addBrandingToFormGlobal } = bindings;
+  const { suppressNextScreenGreetingRef } = bindings;
   const { say, reportCouldnt, runActionAndSay } = helpers;
 
   return {
     [AI_TOOLS.FETCH_WEBSITE_BRANDING]: async (args, { ctx }) => {
       const { url, companyName: aiProvidedName } = args;
+      if (!ctx.actions.fetchWebsiteBranding) {
+        reportCouldnt("website extraction is only available on the branding pages");
+        return;
+      }
       say(`Fetching **${url}**… this may take a moment.`);
 
       // fetch branding data
       let brandingData, screenshotUrl;
       try {
-        const data = await postJson(AI_ENDPOINTS.FETCH_WEBSITE_BRANDING, { url });
-        if (!data.success) throw new Error(data.message || "Failed");
-        brandingData = data.data?.brandingData;
-        screenshotUrl = data.data?.screenshotUrl;
+        ({ brandingData, screenshotUrl } = await ctx.actions.fetchWebsiteBranding({ url }));
       } catch {
         say(`${wt("fetchFailed")} **${url}**. ${wt("tryAgain")}`);
         return;
       }
 
-      // not on an editor: the create page applies the stored extraction
+      // no editor: create page applies it
       if (!ctx.actions.applyExtractedBranding) {
         sessionStorage.setItem(
           STORAGE_KEYS.PENDING_BRANDING_DATA,
@@ -85,13 +87,13 @@ const createBrandingTools = ({ bindings, helpers, getApplyToolCall }) => {
         );
         suppressNextScreenGreetingRef.current = true;
         say(`Branding extracted from **${brandingData?.name || url}**. Opening **Create Branding** with it applied.`);
-        navigate(PAGE_ROUTES[BRANDING_CREATE_PAGE_KEY]);
+        navigate(PAGE_ROUTES[BRANDING_PAGE_KEYS.CREATE]);
         return;
       }
       ctx.actions.applyExtractedBranding(brandingData);
       if (screenshotUrl && ctx.actions.setWebsiteImage) ctx.actions.setWebsiteImage(screenshotUrl);
 
-      // company name: AI-given name, then a pre-filled name, then extraction or domain
+      // pick the company name
       if (ctx.actions.companyName) {
         const existingName = ctx.currentState?.companyName;
         if (aiProvidedName) {
@@ -104,7 +106,7 @@ const createBrandingTools = ({ bindings, helpers, getApplyToolCall }) => {
 
       if (!ctx.currentState?.websiteUrl && ctx.actions.websiteUrl) ctx.actions.websiteUrl(url);
 
-      // fixed confirmation so the AI cannot overwrite extracted values
+      // fixed reply keeps extracted values
       const displayName = brandingData?.name || displayNameFromDomain(url);
       say(
         `Branding extracted from **${displayName}** and applied. You can review the colors and logos above, or ask me to make any adjustments.`,
@@ -207,33 +209,13 @@ const createBrandingTools = ({ bindings, helpers, getApplyToolCall }) => {
     },
 
     [AI_TOOLS.APPLY_BRANDING_TO_FORMS]: async (args, { ctx }) => {
-      const { formIds, onHome, brandingId: argBrandingId, explanation } = args;
+      const { formIds, onHome, brandingId, explanation } = args;
+      const targets = { formIds: formIds || [], onHome: !!onHome };
       try {
         if (ctx.actions.saveAndApplyBrandingToForms) {
-          await ctx.actions.saveAndApplyBrandingToForms({ formIds: formIds || [], onHome: !!onHome });
-        } else if (argBrandingId && ((formIds || []).length > 0 || onHome)) {
-          // branding already saved: apply it directly
-          const errors = [];
-          if (onHome) {
-            try {
-              await addBrandingToFormGlobal({ brandingId: argBrandingId, onHome: ON_HOME.YES }).unwrap();
-            } catch {
-              errors.push("website");
-            }
-          }
-          for (const formId of formIds || []) {
-            try {
-              await addBrandingToFormGlobal({ brandingId: argBrandingId, formId, onHome: ON_HOME.NO }).unwrap();
-            } catch {
-              errors.push(formId);
-            }
-          }
-          if (errors.length) throw new Error(`Failed to set branding on ${errors.length} target(s)`);
-          if (onHome) {
-            window.location.href = PAGE_ROUTES[BRANDING_PAGE_KEY];
-          } else {
-            navigate(PAGE_ROUTES[BRANDING_PAGE_KEY]);
-          }
+          await ctx.actions.saveAndApplyBrandingToForms(targets);
+        } else if (ctx.actions.applyBrandingToForms && brandingId) {
+          await ctx.actions.applyBrandingToForms({ ...targets, brandingId });
         } else {
           throw new Error("applyBrandingToForms action not available on this screen");
         }

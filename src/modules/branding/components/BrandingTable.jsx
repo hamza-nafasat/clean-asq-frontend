@@ -1,6 +1,7 @@
 import useRowActionMenu from "@/hooks/useRowActionMenu";
 import AppDataTable from "@/components/shared/AppDataTable";
 import RowActionMenuCell from "@/components/shared/RowActionMenuCell";
+import { TABLE_WRAPPER_RADII } from "@/utils/tableStyles";
 
 const buildColumns = ({ actionMenu, onToggleMenu, getRowRef, rowButtons }) => [
   { name: "Name", selector: (row) => row?.name, sortable: true },
@@ -22,7 +23,7 @@ const buildColumns = ({ actionMenu, onToggleMenu, getRowRef, rowButtons }) => [
   },
 ];
 
-const BrandingTable = ({ brandings = [], rowButtons = [], isLoading = false }) => {
+const BrandingTable = ({ brandings = [], rowButtons = [] }) => {
   const {
     openRowId: actionMenu,
     setOpenRowId: setActionMenu,
@@ -42,9 +43,7 @@ const BrandingTable = ({ brandings = [], rowButtons = [], isLoading = false }) =
     <AppDataTable
       data={brandings}
       columns={buildColumns({ actionMenu, onToggleMenu: toggleMenu, getRowRef, rowButtons: buttonsWithClose })}
-      progressPending={isLoading}
-      noDataComponent="No Brandings Found"
-      className="rounded-md!"
+      wrapperRadius={TABLE_WRAPPER_RADII.MD}
       highlightOnHover
       fixedHeader
       persistTableHead

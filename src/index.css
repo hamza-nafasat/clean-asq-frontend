@@ -138,6 +138,10 @@
   --color-textLight: var(--textLight);
   --color-buttonSecondary: var(--buttonSecondary);
   --color-cardBorder: #e8eef5;
+  --color-softBorder: #F0F0F0;
+  --color-fieldBackground: #FAFBFF;
+  --color-swatchBorder: #e0e0e0;
+  --color-chatBackground: #f8f9ff;
 }
 body {
   padding: 0;

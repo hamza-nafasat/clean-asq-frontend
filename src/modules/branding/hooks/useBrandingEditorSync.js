@@ -1,18 +1,9 @@
 import { useEffect } from "react";
-import Handlebars from "handlebars";
-import {
-  BRANDING_DEFAULT_TAB_TITLE,
-  BRANDING_STORAGE_KEYS,
-  EMAIL_FOOTER_TEMPLATE,
-  EMAIL_HEADER_TEMPLATE,
-} from "@/modules/branding/utils/branding.constants";
-import { mapSingleBranding } from "@/modules/branding/utils/branding.utils3";
-import { safeImageUrl } from "@/utils/safeImageUrl";
+import { STORAGE_KEYS } from "@/constants";
+import { BRANDING_DEFAULT_TAB_TITLE } from "../utils/branding.constants";
+import { mapSingleBranding } from "../utils/branding.mapping.utils";
 
-const compileHeader = Handlebars.compile(EMAIL_HEADER_TEMPLATE);
-const compileFooter = Handlebars.compile(EMAIL_FOOTER_TEMPLATE);
-
-// loads saved or pending branding, compiles the email templates, restores ai colours on leave
+// sync editor and live theme
 const useBrandingEditorSync = ({
   brandingId,
   singleBrandingData,
@@ -33,19 +24,19 @@ const useBrandingEditorSync = ({
     setTabTitle,
   } = branding;
 
-  // pending extraction handed over from another page
+  // apply pending extraction data
   useEffect(() => {
     if (brandingId) return;
-    const pending = sessionStorage.getItem(BRANDING_STORAGE_KEYS.PENDING_BRANDING_DATA);
+    const pending = sessionStorage.getItem(STORAGE_KEYS.PENDING_BRANDING_DATA);
     if (!pending) return;
     try {
       const { brandingData, screenshotUrl, url } = JSON.parse(pending);
-      sessionStorage.removeItem(BRANDING_STORAGE_KEYS.PENDING_BRANDING_DATA);
+      sessionStorage.removeItem(STORAGE_KEYS.PENDING_BRANDING_DATA);
       if (brandingData) applyExtractedBranding({ ...brandingData, screenshotUrl });
       if (url) setters.websiteUrl(url);
       if (brandingData?.name && !values.companyName) setters.companyName(brandingData.name);
     } catch {
-      sessionStorage.removeItem(BRANDING_STORAGE_KEYS.PENDING_BRANDING_DATA);
+      sessionStorage.removeItem(STORAGE_KEYS.PENDING_BRANDING_DATA);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -73,68 +64,7 @@ const useBrandingEditorSync = ({
     patchValues,
   ]);
 
-  // compile the email header and footer from the current values
-  useEffect(() => {
-    const context = {
-      emailTextColor: values.emailTextColor,
-      emailHeadingColor: values.emailHeadingColor,
-      emailHeaderColor: values.emailHeaderColor,
-      emailFooterColor: values.emailFooterColor,
-      emailBodyColor: values.emailBodyColor,
-      companyName: values.companyName,
-      headerHeading: values.headerHeading,
-      headerDescription: values.headerDescription,
-      footerHeading: values.footerHeading,
-      footerDescription: values.footerDescription,
-      headerAlignment: values.headerAlignment,
-      emailHeaderTextColor: values.emailHeaderTextColor,
-      emailFooterTextColor: values.emailFooterTextColor,
-      logo: safeImageUrl(values.selectedEmailLogo || values.selectedLogo),
-      headerHeadingSize: values.headerHeadingSize,
-      headerDescriptionSize: values.headerDescriptionSize,
-      footerHeadingSize: values.footerHeadingSize,
-      footerDescriptionSize: values.footerDescriptionSize,
-      emailHeaderPadding: values.emailHeaderPadding,
-      emailFooterPadding: values.emailFooterPadding,
-      emailHeaderSpacing: values.emailHeaderSpacing,
-      emailFooterSpacing: values.emailFooterSpacing,
-      emailLogoMaxWidth: values.emailLogoMaxWidth,
-      emailLogoMaxHeight: values.emailLogoMaxHeight,
-    };
-    setters.emailHeader(compileHeader(context));
-    setters.emailFooter(compileFooter(context));
-  }, [
-    setters,
-    values.emailHeader,
-    values.emailFooter,
-    values.companyName,
-    values.emailTextColor,
-    values.emailHeadingColor,
-    values.selectedLogo,
-    values.headerHeading,
-    values.headerDescription,
-    values.footerHeading,
-    values.footerDescription,
-    values.emailHeaderColor,
-    values.emailFooterColor,
-    values.emailBodyColor,
-    values.headerAlignment,
-    values.selectedEmailLogo,
-    values.emailHeaderTextColor,
-    values.emailFooterTextColor,
-    values.headerHeadingSize,
-    values.headerDescriptionSize,
-    values.footerHeadingSize,
-    values.footerDescriptionSize,
-    values.emailHeaderPadding,
-    values.emailFooterPadding,
-    values.emailHeaderSpacing,
-    values.emailFooterSpacing,
-    values.emailLogoMaxWidth,
-    values.emailLogoMaxHeight,
-  ]);
-
-  // restore the home branding ai colours when leaving
+  // restore home ai colours on leave
   useEffect(() => {
     return () => {
       const homeBranding = user?.branding;

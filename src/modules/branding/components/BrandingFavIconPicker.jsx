@@ -1,19 +1,22 @@
 import { useEffect, useState } from "react";
+import { FiAlertTriangle, FiCheck } from "react-icons/fi";
 import { BRANDING_FAVICON_MAX_DIM } from "../utils/branding.constants";
+
+const NO_LOGOS = [];
 
 const getLogoSource = (logo) => {
   if (!logo) return null;
   return typeof logo === "string" ? logo : logo.url || logo.preview || null;
 };
 
-// resolves the url when the image is icon sized
+// url when image is icon sized
 const checkFaviconSize = (url) => {
   if (/\.ico(\?|$)/i.test(url)) return Promise.resolve(url);
   return new Promise((resolve) => {
     const img = new window.Image();
     img.onload = () => {
       const { naturalWidth: w, naturalHeight: h } = img;
-      // some svgs report 0 x 0 and still scale
+      // svgs may report zero size
       const pass = (w === 0 && h === 0) || (w <= BRANDING_FAVICON_MAX_DIM && h <= BRANDING_FAVICON_MAX_DIM);
       resolve(pass ? url : null);
     };
@@ -22,7 +25,7 @@ const checkFaviconSize = (url) => {
   });
 };
 
-const FaviconPicker = ({ logos = [], value = "", onChange }) => {
+const BrandingFavIconPicker = ({ logos = NO_LOGOS, value = "", onChange }) => {
   const [candidates, setCandidates] = useState([]);
   const [isChecking, setIsChecking] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
@@ -34,18 +37,23 @@ const FaviconPicker = ({ logos = [], value = "", onChange }) => {
       setIsChecked(true);
       return;
     }
+    let isCancelled = false;
     setIsChecking(true);
     setIsChecked(false);
     Promise.all(urls.map(checkFaviconSize)).then((results) => {
+      if (isCancelled) return;
       setCandidates(results.filter(Boolean));
       setIsChecking(false);
       setIsChecked(true);
     });
+    return () => {
+      isCancelled = true;
+    };
   }, [logos]);
 
   return (
     <div className="flex flex-col gap-2" data-testid="branding-favicon-picker">
-      <label className="text-sm font-medium text-gray-700">Favicon</label>
+      <p className="text-sm font-medium text-gray-700">Favicon</p>
       <p className="text-xs text-gray-400">
         Select a small logo to use as the browser tab icon. Only icon-sized images (≤{BRANDING_FAVICON_MAX_DIM}px) are
         shown.
@@ -55,7 +63,7 @@ const FaviconPicker = ({ logos = [], value = "", onChange }) => {
 
       {isChecked && candidates.length === 0 && (
         <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
-          <span className="mt-0.5 text-amber-500 shrink-0">⚠</span>
+          <FiAlertTriangle size={14} className="mt-0.5 shrink-0 text-amber-500" aria-hidden="true" />
           <p className="text-xs text-amber-700 leading-relaxed">
             No logos of small enough size were found. Ask the branding assistant to create one — e.g.{" "}
             <em>"Create a 32×32 favicon icon for me"</em>.
@@ -88,8 +96,8 @@ const FaviconPicker = ({ logos = [], value = "", onChange }) => {
                   }}
                 />
                 {isSelected && (
-                  <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white leading-none">
-                    ✓
+                  <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-white">
+                    <FiCheck size={10} aria-hidden="true" />
                   </span>
                 )}
               </button>
@@ -99,15 +107,17 @@ const FaviconPicker = ({ logos = [], value = "", onChange }) => {
       )}
 
       <div className="mt-1 flex flex-col gap-1">
-        <label className="text-xs text-gray-500">Or enter a custom favicon URL</label>
+        <label htmlFor="branding-favicon-url" className="text-xs text-gray-500">
+          Or enter a custom favicon URL
+        </label>
         <div className="flex items-center gap-2">
           <input
+            id="branding-favicon-url"
             type="url"
             value={value}
-            aria-label="Custom favicon URL"
             onChange={(e) => onChange?.(e.target.value)}
             placeholder="https://example.com/favicon.ico"
-            className="h-9 flex-1 rounded-lg border border-gray-300 bg-[#FAFBFF] px-3 text-xs text-gray-700 outline-none focus:border-primary"
+            className="h-9 flex-1 rounded-lg border border-gray-300 bg-fieldBackground px-3 text-xs text-gray-700 outline-none focus:border-primary"
           />
           {value && (
             <img
@@ -126,4 +136,4 @@ const FaviconPicker = ({ logos = [], value = "", onChange }) => {
   );
 };
 
-export default FaviconPicker;
+export default BrandingFavIconPicker;

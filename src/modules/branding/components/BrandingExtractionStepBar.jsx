@@ -1,3 +1,5 @@
+import { FiCheck } from "react-icons/fi";
+
 const dotClass = (isActive, isDone) => {
   if (isDone) return "border-green-500 bg-green-500 text-white";
   if (isActive) return "border-primary bg-primary text-white";
@@ -10,13 +12,11 @@ const BrandingExtractionStepBar = ({ current = 1, total = 1 }) => (
       const isDone = current > i + 1;
       return (
         <div key={i} className="flex items-center">
-          <div className="flex items-center gap-1">
-            <div
-              className={`flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors ${dotClass(current === i + 1, isDone)}`}
-            >
-              {isDone ? "✓" : i + 1}
-            </div>
-          </div>
+          <span
+            className={`flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors ${dotClass(current === i + 1, isDone)}`}
+          >
+            {isDone ? <FiCheck size={14} /> : i + 1}
+          </span>
           {i < total - 1 && <div className={`mx-1 h-0.5 w-8 ${isDone ? "bg-green-500" : "bg-gray-200"}`} />}
         </div>
       );

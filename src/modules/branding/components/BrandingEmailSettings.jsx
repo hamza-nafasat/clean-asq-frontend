@@ -3,23 +3,30 @@ import BrandingEmailLogoSelect from "./BrandingEmailLogoSelect";
 
 const BrandingEmailSettings = ({ values = {}, setters = {}, defaultSelectedLogo = null }) => {
   const emailDomain = window.location.hostname;
+  const senderLocalPart = (values.senderEmail || "").split("@")[0];
+
+  // keep only the part before @
+  const handleSenderChange = (e) => {
+    const localPart = e.target.value.split("@")[0];
+    setters.senderEmail(localPart && emailDomain ? `${localPart}@${emailDomain}` : localPart);
+  };
 
   return (
     <>
       <section className="my-6 flex w-full flex-col gap-2">
         <h3 className="border-b-2 text-lg font-semibold text-gray-800">Email Sending Settings</h3>
-        <div className="grid gap-x-6 gap-y-1" style={{ gridTemplateColumns: "1fr 1fr" }}>
+        <div className="grid grid-cols-[1fr_1fr] gap-x-6 gap-y-1">
           <TextField
-            label={"Sender Email Address"}
-            labelCs="text-sm!"
+            label="Sender Email Address"
+            labelSize="sm"
             type="text"
-            placeholder="e.g. noreply "
-            value={values.senderEmail.includes("@") ? values.senderEmail.split("@")[0] : values.senderEmail}
-            onChange={(e) => setters.senderEmail(e.target.value + (emailDomain ? `@${emailDomain}` : ""))}
+            placeholder="e.g. noreply"
+            value={senderLocalPart}
+            onChange={handleSenderChange}
           />
           <TextField
-            label={"Reply-To Email Address"}
-            labelCs="text-sm!"
+            label="Reply-To Email Address"
+            labelSize="sm"
             type="email"
             placeholder="e.g. support@jira-instance.atlassian.net"
             value={values.replyToEmail}
@@ -37,10 +44,10 @@ const BrandingEmailSettings = ({ values = {}, setters = {}, defaultSelectedLogo 
           defaultSelectedLogo={defaultSelectedLogo}
           headerBackground={values.headerBackground}
         />
-        <div className="mt-2 grid gap-x-6 gap-y-1" style={{ gridTemplateColumns: "repeat(2, max-content)" }}>
+        <div className="mt-2 grid grid-cols-[repeat(2,max-content)] gap-x-6 gap-y-1">
           <TextField
-            label={"Logo Max Width (px)"}
-            labelCs="text-sm!"
+            label="Logo Max Width (px)"
+            labelSize="sm"
             type="number"
             min={20}
             max={600}
@@ -48,8 +55,8 @@ const BrandingEmailSettings = ({ values = {}, setters = {}, defaultSelectedLogo 
             onChange={(e) => setters.emailLogoMaxWidth(Number(e.target.value))}
           />
           <TextField
-            label={"Logo Max Height (px)"}
-            labelCs="text-sm!"
+            label="Logo Max Height (px)"
+            labelSize="sm"
             type="number"
             min={20}
             max={300}

@@ -43,8 +43,7 @@ export const AI_ENDPOINTS = {
   APPLICANT_CHAT: `${SERVER_URL}/api/ai/applicant-chat`,
   BRANDING_CHAT: `${SERVER_URL}/api/ai/branding-chat`,
   TRANSLATE: `${SERVER_URL}/api/ai/translate`,
-  FETCH_WEBSITE_BRANDING: `${SERVER_URL}/api/ai/fetch-website-branding`,
-  EXTRACT_BRANDING_FROM_CONTENT: `${SERVER_URL}/api/ai/extract-branding-from-content`,
+  EXTRACT_BRANDING_FROM_CONTENT: `${SERVER_URL}/api/branding/extraction/extract-branding-from-content`,
   LOGO_EDIT: `${SERVER_URL}/api/ai/logo-edit`,
   CSV_FROM_PATH: `${SERVER_URL}/api/form/csv-from-path`,
 };
@@ -97,10 +96,15 @@ export const clampPanelToViewport = ({ top, left, width, height }, margin = PANE
   return { top: nextTop, left: nextLeft, width: nextWidth, height: nextHeight };
 };
 
+export const BRANDING_PAGE_KEYS = {
+  LIST: "branding",
+  CREATE: "branding-create",
+};
+
 export const PAGE_ROUTES = {
   "application-forms": "/application-forms",
-  branding: "/branding",
-  "branding-create": "/branding/create",
+  [BRANDING_PAGE_KEYS.LIST]: "/branding",
+  [BRANDING_PAGE_KEYS.CREATE]: "/branding/create",
   strategies: "/strategies",
   "lookup-management": "/strategies-key",
   "role-management": "/all-roles",
@@ -112,8 +116,8 @@ export const PAGE_ROUTES = {
 
 export const PAGE_LABELS = {
   "application-forms": "Application Forms",
-  branding: "Branding Management",
-  "branding-create": "Create New Branding",
+  [BRANDING_PAGE_KEYS.LIST]: "Branding Management",
+  [BRANDING_PAGE_KEYS.CREATE]: "Create New Branding",
   strategies: "Strategies",
   "lookup-management": "Lookup Management",
   "role-management": "Role Management",

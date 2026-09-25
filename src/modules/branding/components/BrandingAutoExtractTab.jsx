@@ -29,7 +29,7 @@ const BrandingAutoExtractTab = ({ onSwitchToManual, onApply, onClose }) => {
   };
 
   return (
-    <div className="space-y-4">
+    <section className="space-y-4">
       <p className="text-sm text-gray-500">
         Enter a website URL and we'll extract its colors, logos, and fonts automatically.
       </p>
@@ -49,11 +49,11 @@ const BrandingAutoExtractTab = ({ onSwitchToManual, onApply, onClose }) => {
           onClick={handleExtract}
           loading={isLoading}
           disabled={isLoading}
-          className="h-12.5!"
+          size="field"
         />
       </div>
       {failed && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <p className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           Extraction failed — this site may be blocking automated access.{" "}
           <button
             type="button"
@@ -62,9 +62,9 @@ const BrandingAutoExtractTab = ({ onSwitchToManual, onApply, onClose }) => {
           >
             Try Manual Extraction →
           </button>
-        </div>
+        </p>
       )}
-    </div>
+    </section>
   );
 };
 

@@ -20,6 +20,59 @@ export const STORAGE_KEYS = {
 // value stored under AI_WIDGET_USER_CLOSED once the applicant closes the widget
 export const WIDGET_CLOSED_FLAG = "1";
 
+// display name to css font slug
+export const FONT_OPTIONS = [
+  { value: "Inter", slug: "inter" },
+  { value: "Roboto", slug: "roboto" },
+  { value: "Open Sans", slug: "open-sans" },
+  { value: "Montserrat", slug: "montserrat" },
+  { value: "Poppins", slug: "poppins" },
+  { value: "Lato", slug: "lato" },
+  { value: "Source Sans Pro", slug: "source-sans" },
+  { value: "Nunito", slug: "nunito" },
+  { value: "Playfair Display", slug: "playfair" },
+  { value: "Merriweather", slug: "merriweather" },
+  { value: "Alex Brush", slug: "alex-brush" },
+  { value: "Raleway", slug: "raleway" },
+  { value: "Ubuntu", slug: "ubuntu" },
+  { value: "Oswald", slug: "oswald" },
+  { value: "Roboto Slab", slug: "roboto-slab" },
+  { value: "PT Sans", slug: "pt-sans" },
+  { value: "Noto Sans", slug: "noto-sans" },
+  { value: "Work Sans", slug: "work-sans" },
+  { value: "Quicksand", slug: "quicksand" },
+  { value: "Rubik", slug: "rubik" },
+  { value: "Mulish", slug: "mulish" },
+  { value: "Josefin Sans", slug: "josefin-sans" },
+  { value: "DM Sans", slug: "dm-sans" },
+  { value: "Manrope", slug: "manrope" },
+  { value: "Plus Jakarta Sans", slug: "plus-jakarta-sans" },
+  { value: "Figtree", slug: "figtree" },
+  { value: "Space Grotesk", slug: "space-grotesk" },
+  { value: "Sora", slug: "sora" },
+  { value: "General Sans", slug: "general-sans" },
+  { value: "Cabinet Grotesk", slug: "cabinet-grotesk" },
+  { value: "Clash Display", slug: "clash-display" },
+  { value: "Clash Grotesk", slug: "clash-grotesk" },
+  { value: "Satoshi", slug: "satoshi" },
+  { value: "Switzer", slug: "switzer" },
+  { value: "Chillax", slug: "chillax" },
+  { value: "Ranade", slug: "ranade" },
+  { value: "Zodiak", slug: "zodiak" },
+  { value: "Gambarino", slug: "gambarino" },
+  { value: "Sentient", slug: "sentient" },
+  { value: "Author", slug: "author" },
+  { value: "Panchang", slug: "panchang" },
+  { value: "Melodrama", slug: "melodrama" },
+  { value: "Boska", slug: "boska" },
+];
+
+export const URL_PREFIXES = {
+  HTTP: "http",
+  HTTPS: "https://",
+  WWW: "www.",
+};
+
 export const MODAL_MODES = {
   ADD: "add",
   EDIT: "edit",
@@ -86,6 +139,14 @@ export const LAYOUT_ROUTES = {
 export const HEADER_ALIGNMENTS = {
   LEFT: "left",
   CENTER: "center",
+};
+
+// fallback theme text before a branding loads
+export const DEFAULT_BRANDING_TEXT = {
+  FOOTER: "©{year} Fintainium, All Rights Reserved",
+  TAB_TITLE: "Online-application",
+  PRIVACY_POLICY_URL: "https://fintainium.com/pp/",
+  TERMS_OF_SERVICE_URL: "https://fintainium.com/t&c/",
 };
 
 export const LOCATION_STATUSES = {
@@ -444,4 +505,8 @@ export const STATE_SUGGESTIONS = [
 export const DELETE_CLOSE_MODES = {
   FINALLY: "finally",
   RESULT: "result",
+};
+
+export const KEYBOARD_KEYS = {
+  ESCAPE: "Escape",
 };

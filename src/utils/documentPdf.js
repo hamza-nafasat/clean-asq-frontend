@@ -11,18 +11,6 @@ const DOCUMENT_PDF_STYLES = {
   body: { fontSize: 10, lineHeight: 1.6, color: "#111111", margin: [0, 0, 0, 8] },
 };
 
-// "#000000" or "#ffffff", whichever contrasts better with the background
-export const getContrastColor = (hex = "#000000") => {
-  const h = (hex || "").replace("#", "");
-  if (h.length < 6) return "#ffffff";
-  const r = parseInt(h.slice(0, 2), 16) / 255;
-  const g = parseInt(h.slice(2, 4), 16) / 255;
-  const b = parseInt(h.slice(4, 6), 16) / 255;
-  const toLinear = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
-  const L = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
-  return L > 0.179 ? "#000000" : "#ffffff";
-};
-
 // readable text of an html node, or null when too short
 export const extractReadableText = (root) => {
   root.querySelectorAll(NON_TEXT_SELECTOR).forEach((el) => el.remove());

@@ -191,7 +191,7 @@ const App = () => {
               <Route
                 path="branding/create"
                 element={
-                  <RequirePermission permission={PERMISSIONS.READ_BRANDING}>
+                  <RequirePermission permission={PERMISSIONS.CREATE_BRANDING}>
                     <CreateBranding />
                   </RequirePermission>
                 }
@@ -199,7 +199,7 @@ const App = () => {
               <Route
                 path="branding/single/:brandingId"
                 element={
-                  <RequirePermission permission={PERMISSIONS.READ_BRANDING}>
+                  <RequirePermission permission={PERMISSIONS.UPDATE_BRANDING}>
                     <CreateBranding />
                   </RequirePermission>
                 }

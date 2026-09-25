@@ -1,21 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { BsGlobe2 } from "react-icons/bs";
-import { FiShield, FiUpload, FiX } from "react-icons/fi";
-import { GrImage } from "react-icons/gr";
+import { FiShield, FiUpload } from "react-icons/fi";
 import { IoColorPaletteOutline } from "react-icons/io5";
-import useBrandingLogoSelection from "../hooks/useBrandingLogoSelection";
 import Button from "@/components/shared/Button";
 import TextField from "@/components/shared/TextField";
-import BrandingLogoGrid from "./BrandingLogoGrid";
-import { BRANDING_EXTRACTION_TABS, BRANDING_PASTE_TARGETS } from "../utils/branding.constants";
-import { detectLogo } from "../utils/branding.utils2";
-
-export { default as SelectLogoForEmail } from "./BrandingEmailLogoSelect";
+import BrandingAvailableLogos from "./BrandingAvailableLogos";
+import BrandingWebsiteImage from "./BrandingWebsiteImage";
+import { BRANDING_EXTRACTION_TABS, BRANDING_LOGO_TYPES, BRANDING_PASTE_TARGETS } from "../utils/branding.constants";
 
 const BrandingSource = ({
   websiteUrl = "",
   setWebsiteUrl,
+  websiteUrlError = "",
   websiteImage = null,
   setWebsiteImage,
   logos = [],
@@ -34,17 +30,8 @@ const BrandingSource = ({
   const [showPasteMenu, setShowPasteMenu] = useState(false);
   const [pasteTarget, setPasteTarget] = useState(null);
   const fileInputRef = useRef(null);
-  const logoFileInputRef = useRef(null);
-  const { selectedLogoIndex, handleLogoSelect, handleRemoveLogo } = useBrandingLogoSelection({
-    logos,
-    selectedLogo,
-    setSelectedLogo,
-    setLogos,
-    defaultSelectedLogo,
-    onLogoSelected,
-  });
 
-  // paste an image from the clipboard into the chosen target
+  // paste clipboard image into target
   useEffect(() => {
     if (!pasteTarget) return;
     const handlePaste = (e) => {
@@ -55,7 +42,7 @@ const BrandingSource = ({
         if (pasteTarget === BRANDING_PASTE_TARGETS.WEBSITE_IMAGE) {
           setWebsiteImage(URL.createObjectURL(blob));
         } else if (pasteTarget === BRANDING_PASTE_TARGETS.LOGO && blob) {
-          setLogos((prev) => [...prev, { url: URL.createObjectURL(blob), type: "img", preview: true }]);
+          setLogos((prev) => [...prev, { url: URL.createObjectURL(blob), type: BRANDING_LOGO_TYPES.IMAGE, preview: true }]);
           handleExtraLogoUpload(blob);
         }
         setPasteTarget(null);
@@ -83,29 +70,20 @@ const BrandingSource = ({
     toast.success("Use Ctrl+V to paste");
   };
 
-  const handleLogoFileUpload = async (e) => {
-    const newLogos = Array.from(e.target.files)
-      .filter((file) => file.type.startsWith("image/"))
-      .map((file) => ({ file, preview: URL.createObjectURL(file) }));
-    const detect = await detectLogo(newLogos[0]?.preview);
-    setLogos((prev) => [...prev, { url: newLogos[0]?.preview, type: "img", preview: true, invert: detect }]);
-    if (newLogos.length > 0) handleExtraLogoUpload(newLogos[0]?.file);
-  };
-
   return (
-    <div className="mb-6">
-      <div className="flex justify-between">
-        <p className="text-base font-semibold text-gray-500 md:text-xl">Choose Your Branding Source</p>
-      </div>
+    <section className="mb-6">
+      <h2 className="text-base font-semibold text-gray-500 md:text-xl">Choose Your Branding Source</h2>
       <div className="mt-6 flex items-end space-x-4">
         <div className="grow">
           <TextField
             type="url"
             id="website-url"
             value={websiteUrl}
+            name="websiteUrl"
             onChange={(e) => setWebsiteUrl(e.target.value)}
             placeholder="https://example.com"
-            label={"Enter Website URL"}
+            label="Enter Website URL"
+            error={websiteUrlError}
           />
         </div>
         <Button
@@ -114,13 +92,13 @@ const BrandingSource = ({
           icon={IoColorPaletteOutline}
           loading={isFetchLoading}
           disabled={isFetchLoading}
-          className="h-12.5!"
+          size="field"
         />
         <Button
           onClick={() => onOpenExtractionModal?.(BRANDING_EXTRACTION_TABS.MANUAL)}
           label={"Protected Site?"}
           icon={FiShield}
-          className="h-12.5!"
+          size="field"
           title="Use this if the site blocks automated extraction"
         />
       </div>
@@ -152,77 +130,24 @@ const BrandingSource = ({
           </div>
         </div>
       </div>
-      <div className="border-primary my-6 border-t-2"></div>
+      <hr className="border-primary my-6 border-t-2" />
 
-      {/* Website image */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-4">
-          <div>
-            <BsGlobe2 className="text-primary size-6" />
-          </div>
-          <div className="text-textPrimary">Website / Image Preview</div>
-        </div>
-        <div
-          className={`relative mt-4 w-full rounded-md border p-4 ${websiteImage ? "max-h-125 overflow-y-auto" : "flex items-center justify-center"}`}
-        >
-          {websiteImage ? (
-            <>
-              <img src={websiteImage} alt="Website Preview" className="mt-2 w-3/4 rounded border object-contain p-2" />
-              <Button
-                label={`${(
-                  <FiX
-                    size={18}
-                    type="button"
-                    onClick={() => setWebsiteImage(null)}
-                    className="absolute top-2 right-2 z-10 cursor-pointer rounded-full bg-white p-1 text-gray-500 shadow transition-transform duration-200 hover:scale-110 hover:text-red-500"
-                    aria-label="Remove screenshot"
-                  />
-                )}`}
-              />
-            </>
-          ) : (
-            <span className="text-gray-400">No website image uploaded or pasted.</span>
-          )}
-        </div>
-      </div>
-      <div className="border-primary my-6 border-t-2"></div>
+      <BrandingWebsiteImage websiteImage={websiteImage} onRemove={() => setWebsiteImage(null)} />
+      <hr className="border-primary my-6 border-t-2" />
 
-      {/* Logos */}
-      <div className="flex flex-col items-center justify-between space-x-2">
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center justify-between gap-4 space-x-2">
-            <GrImage className="text-primary size-5" />
-            Available Logos
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              label={"Extract New Colors"}
-              icon={IoColorPaletteOutline}
-              onClick={() => extractColorsFromLogosHandler?.()}
-            />
-            <Button label={"Upload Logo"} icon={FiUpload} onClick={() => logoFileInputRef.current?.click()} />
-          </div>
-        </div>
-        <div className="mt-8 w-full items-center justify-center overflow-auto">
-          <input
-            type="file"
-            ref={logoFileInputRef}
-            onChange={handleLogoFileUpload}
-            accept="image/*"
-            multiple
-            className="hidden"
-          />
-          <BrandingLogoGrid
-            logos={logos}
-            selectedLogoIndex={selectedLogoIndex}
-            headerBackground={headerBackground}
-            onSelect={handleLogoSelect}
-            onRemove={handleRemoveLogo}
-          />
-        </div>
-      </div>
-      <div className="border-primary my-6 border-t-2"></div>
-    </div>
+      <BrandingAvailableLogos
+        logos={logos}
+        setLogos={setLogos}
+        selectedLogo={selectedLogo}
+        setSelectedLogo={setSelectedLogo}
+        defaultSelectedLogo={defaultSelectedLogo}
+        onLogoSelected={onLogoSelected}
+        headerBackground={headerBackground}
+        handleExtraLogoUpload={handleExtraLogoUpload}
+        extractColorsFromLogosHandler={extractColorsFromLogosHandler}
+      />
+      <hr className="border-primary my-6 border-t-2" />
+    </section>
   );
 };
 

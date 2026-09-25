@@ -1,208 +1,145 @@
-import { useState } from "react";
-import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import { Pencil, Trash } from "lucide-react";
-import { FaExchangeAlt } from "react-icons/fa";
-import useBranding from "@/hooks/useBranding";
-import { useScreenContext } from "@/hooks/useScreenContext";
-import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/auth.apis";
-import {
-  useAddBrandingInFormMutation,
-  useDeleteSingleBrandingMutation,
-  useGetAllBrandingsQuery,
-} from "@/redux/apis/branding.apis";
+import { useDeleteSingleBrandingMutation, useGetAllBrandingsQuery } from "@/redux/apis/branding.apis";
 import { useGetMyAllFormsQuery } from "@/redux/apis/form.apis";
-import { userExist, userNotExist } from "@/redux/slices/auth.slice";
+import { toast } from "react-toastify";
+import { FaExchangeAlt } from "react-icons/fa";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
+import usePermission from "@/hooks/usePermission";
 import ApplyBranding from "@/components/global/ApplyBranding";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
-import CustomLoading from "@/components/shared/CustomLoading";
+import EmptyState from "@/components/shared/EmptyState";
+import LoadingState from "@/components/shared/LoadingState";
 import BrandingTable from "./components/BrandingTable";
-import {
-  BRANDING_LIST_SCREEN_CONTEXT,
-  BRANDING_ROUTES,
-  BRANDING_ROW_ACTIONS,
-} from "./utils/branding.constants";
-import { executeBrandingAssignment, getBrandingSettersFromHook } from "@/utils/executeBrandingAssignment";
-import getEnv from "@/utils/env";
+import useBrandingConfirm from "./hooks/useBrandingConfirm";
+import useBrandingListApply from "./hooks/useBrandingListApply";
+import useBrandingListAssistant from "./hooks/useBrandingListAssistant";
+import { PERMISSIONS } from "@/utils/permissions";
+import { BRANDING_ROUTES, BRANDING_ROW_ACTIONS } from "./utils/branding.constants";
+
+const STATE_CLASS_NAME = "flex flex-col items-center justify-center gap-4 py-16";
 
 const Brandings = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const branding = useBranding();
-  const [applyModal, setApplyModal] = useState(false);
-  const [selectedId, setSelectedId] = useState(null);
-  const [onHome, setOnHome] = useState(false);
-  const [selectedBranding, setSelectedBranding] = useState(null);
+  const canCreateBranding = usePermission(PERMISSIONS.CREATE_BRANDING);
+  const canUpdateBranding = usePermission(PERMISSIONS.UPDATE_BRANDING);
+  const canDeleteBranding = usePermission(PERMISSIONS.DELETE_BRANDING);
 
-  const { data: allFormsData, refetch: formRefetch } = useGetMyAllFormsQuery();
-  const { data: brandings = [], isLoading: isBrandingsLoading, refetch } = useGetAllBrandingsQuery();
+  const { data: allFormsData } = useGetMyAllFormsQuery();
+  const { data: brandings = [], isLoading: isBrandingsLoading, isError, refetch } = useGetAllBrandingsQuery();
   const [deleteBranding, { isLoading: isDeleting }] = useDeleteSingleBrandingMutation();
-  const [addFromBranding] = useAddBrandingInFormMutation();
-  const [getUserProfile] = useGetMyProfileFirstTimeMutation();
+  const deleteConfirm = useBrandingConfirm();
+  const applyConfirm = useBrandingConfirm();
+  const apply = useBrandingListApply();
+  const brandingList = brandings?.data || [];
 
   const openBranding = (brandingId) => navigate(`${BRANDING_ROUTES.SINGLE}/${brandingId}`);
-
-  const removeBranding = async (brandingId) => {
-    const res = await deleteBranding(brandingId).unwrap();
-    if (!res?.success) throw new Error(res?.message);
-    return res;
-  };
+  const openCreateBranding = () => navigate(BRANDING_ROUTES.CREATE);
 
   const rowButtons = [
-    {
+    canUpdateBranding && {
       name: BRANDING_ROW_ACTIONS.EDIT,
-      icon: <Pencil size={16} className="mr-2" />,
+      icon: <FiEdit2 size={16} className="mr-2" />,
       onClick: (row) => openBranding(row?._id),
     },
-    {
+    canDeleteBranding && {
       name: BRANDING_ROW_ACTIONS.DELETE,
-      icon: <Trash size={16} className="mr-2" />,
+      icon: <FiTrash2 size={16} className="mr-2" />,
       disabled: isDeleting,
-      onClick: async (row) => {
-        try {
-          if (!row?._id) toast.error("Branding ID is missing");
-          await removeBranding(row?._id);
-          await refetch();
-          toast.success(row?.message || "Branding deleted successfully");
-        } catch (error) {
-          console.error("Delete branding error:", error);
-          toast.error(error?.data?.message || "Failed to delete branding");
-        }
-      },
+      onClick: (row) => deleteConfirm.open({ rows: [row] }),
     },
-    {
+    canUpdateBranding && {
       name: BRANDING_ROW_ACTIONS.APPLY,
       icon: <FaExchangeAlt size={16} className="mr-2" />,
-      onClick: (row) => {
-        setApplyModal(true);
-        setSelectedBranding(row?._id);
-      },
+      onClick: (row) => apply.openApplyModal(row),
     },
-  ];
+  ].filter(Boolean);
 
-  const dispatchUserRefresh = async (profileRes) => {
-    if (profileRes?.success) dispatch(userExist(profileRes.data));
-    else dispatch(userNotExist());
-  };
-
-  const closeApplyModal = () => {
-    setApplyModal(false);
-    setSelectedId(null);
-    setSelectedBranding(null);
-    setOnHome(false);
-  };
-
-  const onConfirmApply = async () => {
-    if (!selectedBranding) {
+  const onConfirmDelete = async () => {
+    if (deleteConfirm.resolveAsked()) return;
+    const brandingId = deleteConfirm.pending.rows[0]?._id;
+    if (!brandingId) {
       toast.error("Branding ID is missing");
       return;
     }
-    if (!selectedId && !onHome) {
-      toast.error("Form ID is required if onHome is not provided");
-      return;
-    }
     try {
-      const res = await executeBrandingAssignment({
-        addBrandingMutation: addFromBranding,
-        getUserProfile,
-        brandingSetters: getBrandingSettersFromHook(branding),
-        dispatchUserRefresh,
-        assignment: { brandingId: selectedBranding, formId: selectedId || undefined, applyToHome: onHome },
-      });
-      await formRefetch();
-      toast?.success(res?.message || "Branding applied successfully");
+      const res = await deleteBranding(brandingId).unwrap();
+      toast.success(res?.message || "Branding deleted successfully");
+      deleteConfirm.close();
     } catch (error) {
-      console.error("Apply branding error:", error);
-      toast.error(error?.message || error?.data?.message || "Failed to apply branding");
-    } finally {
-      closeApplyModal();
+      console.error("Delete branding error:", error);
+      toast.error(error?.data?.message || "Failed to delete branding");
     }
   };
 
-  useScreenContext({
-    screenId: BRANDING_LIST_SCREEN_CONTEXT.SCREEN_ID,
-    screenName: BRANDING_LIST_SCREEN_CONTEXT.SCREEN_NAME,
-    assistantName: BRANDING_LIST_SCREEN_CONTEXT.ASSISTANT_NAME,
-    aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/branding-list-chat`,
-    greeting: BRANDING_LIST_SCREEN_CONTEXT.GREETING,
-    currentState: {
-      forms: (allFormsData?.data || []).map((f) => ({ _id: f._id, name: f.name || f.headerText || "Untitled" })),
-      brandings: (brandings?.data || []).map((b) => ({
-        _id: b._id,
-        name: b.name,
-        url: b.url || "",
-        fontFamily: b.fontFamily || "",
-        logoCount: b.logos?.length || 0,
-        colors: {
-          primary: b.colors?.primary || "",
-          secondary: b.colors?.secondary || "",
-          accent: b.colors?.accent || "",
-          text: b.colors?.text || "",
-          background: b.colors?.background || "",
-        },
-      })),
-    },
-    actions: {
-      deleteBrandings: async ({ brandingIds }) => {
-        const errors = [];
-        for (const brandingId of brandingIds) {
-          try {
-            await removeBranding(brandingId);
-          } catch {
-            errors.push(brandingId);
-          }
-        }
-        await refetch();
-        if (errors.length) {
-          toast.error(`Failed to delete ${errors.length} of ${brandingIds.length} brandings`);
-          throw new Error(`Failed to delete ${errors.length} brandings`);
-        }
-      },
-      openEditBranding: ({ brandingId }) => openBranding(brandingId),
-      openCreateBranding: () => navigate(BRANDING_ROUTES.CREATE),
-    },
-    deps: [brandings?.data?.length, allFormsData?.data?.length],
+  useBrandingListAssistant({
+    brandings: brandingList,
+    forms: allFormsData?.data || [],
+    deleteBranding,
+    askToDelete: (rows) => deleteConfirm.ask({ rows }),
+    askToApply: applyConfirm.ask,
+    applyToTargets: apply.applyToTargets,
+    openBranding,
+    openCreateBranding,
   });
 
-  if (isBrandingsLoading) return <CustomLoading />;
+  if (isBrandingsLoading) return <LoadingState title="Loading brandings" className={STATE_CLASS_NAME} />;
+  if (isError)
+    return (
+      <EmptyState title="Could not load brandings" className={STATE_CLASS_NAME}>
+        <Button type="button" label="Try again" onClick={refetch} />
+      </EmptyState>
+    );
+
+  const deleteNames = (deleteConfirm.pending?.rows || []).map((row) => row?.name || row?._id).join(", ");
 
   return (
     <article className="mt-5 w-full" data-testid="branding-page">
-      {applyModal && (
+      {apply.isApplyModalOpen && (
         <ConfirmationModal
-          isOpen={!!applyModal}
+          isOpen={apply.isApplyModalOpen}
           message={
             <ApplyBranding
-              setSelectedId={setSelectedId}
-              selectedId={selectedId}
-              onConfirm={onConfirmApply}
-              setOnHome={setOnHome}
-              onHome={onHome}
+              setSelectedId={apply.setSelectedId}
+              selectedId={apply.selectedId}
+              setOnHome={apply.setOnHome}
+              onHome={apply.onHome}
             />
           }
           confirmButtonText="Apply Branding"
-          confirmButtonClassName=" border-none hover:bg-red-600 text-white"
-          cancelButtonText="cancel"
-          onConfirm={onConfirmApply}
-          onClose={() => setApplyModal(false)}
-          title={"Apply Branding"}
+          onConfirm={apply.confirmApply}
+          onClose={apply.closeApplyModal}
+          title="Apply Branding"
         />
       )}
-      <header className="mb-4 flex justify-end">
-        <Button
-          label={"Create Branding"}
-          onClick={() => navigate(BRANDING_ROUTES.CREATE)}
-          data-testid="branding-create-btn"
-        />
-      </header>
-      <section className="mt-5 w-full h-full overflow-y-auto lg:w-[calc(100vw-350px)]! xl:w-full">
-        <BrandingTable
-          brandings={brandings?.data || []}
-          rowButtons={rowButtons}
-          isLoading={isBrandingsLoading}
-        />
+      <ConfirmationModal
+        isOpen={applyConfirm.isOpen}
+        title="Apply Branding"
+        message={applyConfirm.pending?.message}
+        confirmButtonText="Apply Branding"
+        onConfirm={applyConfirm.resolveAsked}
+        onClose={applyConfirm.close}
+      />
+      <ConfirmationModal
+        isOpen={deleteConfirm.isOpen}
+        title="Delete Branding"
+        message={`Are you sure you want to delete ${deleteNames}? This action cannot be undone.`}
+        confirmButtonText="Delete Branding"
+        isLoading={isDeleting}
+        onConfirm={onConfirmDelete}
+        onClose={deleteConfirm.close}
+      />
+      {canCreateBranding && (
+        <header className="mb-4 flex justify-end">
+          <Button label="Create Branding" onClick={openCreateBranding} data-testid="branding-create-btn" />
+        </header>
+      )}
+      <section className="mt-5 w-full h-full overflow-y-auto lg:w-[calc(100vw-350px)] xl:w-full">
+        {brandingList.length ? (
+          <BrandingTable brandings={brandingList} rowButtons={rowButtons} />
+        ) : (
+          <EmptyState title="No brandings yet" className={STATE_CLASS_NAME} />
+        )}
       </section>
     </article>
   );

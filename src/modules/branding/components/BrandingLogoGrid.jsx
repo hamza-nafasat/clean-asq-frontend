@@ -1,17 +1,21 @@
 import { useState } from "react";
 import { FiX } from "react-icons/fi";
-import { getLogoUrl, isPreviewLogo } from "../utils/branding.utils3";
+import { BRANDING_LOGO_CARD_STATES } from "../utils/branding.constants";
+import { getLogoUrl, isPreviewLogo } from "../utils/branding.logo.utils";
 
-const cardClass = (isPreview, isSelected) =>
-  `relative flex h-32.5 w-50 flex-col items-center justify-center gap-2 rounded-md border-2 transition-all duration-200 ${
-    isPreview ? "cursor-not-allowed opacity-50 grayscale" : "cursor-pointer"
-  } ${
-    isPreview
-      ? "border-gray-300"
-      : isSelected
-        ? "ring-opacity-50 border-green-500 ring-2 ring-green-500"
-        : "border-gray-200 hover:border-gray-300"
-  }`;
+const CARD_CLASS = "relative flex h-32.5 w-50 flex-col items-center justify-center gap-2 rounded-md border-2 transition-all duration-200";
+
+const CARD_STATE_CLASSES = {
+  [BRANDING_LOGO_CARD_STATES.PREVIEW]: "cursor-not-allowed opacity-50 grayscale border-gray-300",
+  [BRANDING_LOGO_CARD_STATES.SELECTED]: "cursor-pointer ring-opacity-50 border-green-500 ring-2 ring-green-500",
+  [BRANDING_LOGO_CARD_STATES.IDLE]: "cursor-pointer border-gray-200 hover:border-gray-300",
+};
+
+const getCardState = (isPreview, isSelected) => {
+  if (isPreview) return BRANDING_LOGO_CARD_STATES.PREVIEW;
+  if (isSelected) return BRANDING_LOGO_CARD_STATES.SELECTED;
+  return BRANDING_LOGO_CARD_STATES.IDLE;
+};
 
 const BrandingLogoGrid = ({ logos = [], selectedLogoIndex = null, headerBackground, onSelect, onRemove }) => {
   const [hoveredLogoIndex, setHoveredLogoIndex] = useState(null);
@@ -28,45 +32,45 @@ const BrandingLogoGrid = ({ logos = [], selectedLogoIndex = null, headerBackgrou
           return (
             <div
               key={idx}
-              onClick={() => onSelect?.(idx, logoUrl)}
               onMouseEnter={() => setHoveredLogoIndex(idx)}
               onMouseLeave={() => setHoveredLogoIndex(null)}
-              className={cardClass(isPreview, isSelected)}
+              className={`${CARD_CLASS} ${CARD_STATE_CLASSES[getCardState(isPreview, isSelected)]}`}
             >
               {isPreview && isHovered && (
-                <div className="absolute bottom-0 z-999 rounded-t-md bg-gray-950! px-3 py-2 text-sm font-semibold text-white shadow-lg before:absolute before:top-full before:left-1/2 before:-translate-x-1/2 before:border-4 before:border-transparent before:border-t-gray-950">
-                  You'll need to update branding before you'll be able to select this logo.
-                </div>
+                <p className="absolute bottom-0 z-999 rounded-t-md bg-gray-950 px-3 py-2 text-sm font-semibold text-white shadow-lg before:absolute before:top-full before:left-1/2 before:-translate-x-1/2 before:border-4 before:border-transparent before:border-t-gray-950">
+                  You&apos;ll need to update branding before you&apos;ll be able to select this logo.
+                </p>
               )}
               {!isPreview && isHovered && logoDimensions[idx] && (
-                <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center">
-                  <div className="rounded-t-md bg-gray-800 px-2 py-1 text-[11px] font-medium text-white">
+                <div className="absolute right-0 bottom-0 left-0 z-10 flex justify-center">
+                  <span className="rounded-t-md bg-gray-800 px-2 py-1 text-[11px] font-medium text-white">
                     {logoDimensions[idx].h} × {logoDimensions[idx].w} px
-                  </div>
+                  </span>
                 </div>
               )}
               {isSelected && !isPreview && (
-                <div className="absolute top-0 left-0 rounded-bl-md px-2 py-1 text-xs font-medium text-green-500">
+                <span className="absolute top-0 left-0 rounded-bl-md px-2 py-1 text-xs font-medium text-green-500">
                   Selected
-                </div>
+                </span>
               )}
               <button
                 type="button"
                 aria-label="Remove logo"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemove?.(idx);
-                }}
+                onClick={() => onRemove?.(idx)}
                 className="bg-primary absolute top-1 right-1 z-10 cursor-pointer rounded-full p-1 text-gray-500 transition-transform duration-200 hover:scale-110 hover:text-red-500"
               >
                 <FiX size={18} className="text-buttonTextPrimary hover:text-buttonTextSecondary" />
               </button>
 
-              <div
+              <button
+                type="button"
+                aria-label={`Select logo ${idx + 1}`}
+                aria-pressed={isSelected}
+                onClick={() => onSelect?.(idx, logoUrl)}
                 className={`flex h-25 w-[80%] flex-col items-center justify-center rounded-md ${
                   isPreview ? "cursor-not-allowed" : "cursor-pointer"
-                }`}
-                style={{ background: headerBackground || "#f3f4f6" }}
+                } ${headerBackground ? "" : "bg-gray-100"}`}
+                style={headerBackground ? { background: headerBackground } : undefined}
               >
                 <img
                   src={logoUrl}
@@ -80,8 +84,8 @@ const BrandingLogoGrid = ({ logos = [], selectedLogoIndex = null, headerBackgrou
                     }))
                   }
                 />
-                <div>logo</div>
-              </div>
+                <span>logo</span>
+              </button>
             </div>
           );
         })

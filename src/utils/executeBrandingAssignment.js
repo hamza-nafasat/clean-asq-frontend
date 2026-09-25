@@ -1,3 +1,5 @@
+import { YES_NO_VALUES } from "@/constants";
+
 // apply a userBranding profile object to the branding store setters
 export const applyUserBrandingToContext = (userBranding, setters) => {
   if (!userBranding?.colors) return;
@@ -115,7 +117,7 @@ export const executeBrandingAssignment = async ({
   const res = await addBrandingMutation({
     brandingId,
     formId: formId || undefined,
-    onHome: applyToHome ? "yes" : "no",
+    onHome: applyToHome ? YES_NO_VALUES.YES : YES_NO_VALUES.NO,
   }).unwrap();
 
   if (!res?.success) throw new Error(res?.message || "Failed to apply branding");

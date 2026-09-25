@@ -27,10 +27,11 @@ const BrandingAppFooterSection = ({
   setFooterEffect,
   footerMaterial,
   setFooterMaterial,
+  errors = {},
 }) => {
   const footerTextRef = useRef(null);
 
-  // insert a wildcard token at the caret
+  // insert wildcard at the caret
   const insertWildcard = (token) => {
     const input = footerTextRef.current;
     if (!input) return;
@@ -48,23 +49,23 @@ const BrandingAppFooterSection = ({
     <section className="my-6 flex w-full flex-col gap-2">
       <h3 className="border-b-2 text-lg font-semibold text-gray-800">Application Footer</h3>
       <div className="flex flex-wrap gap-x-6 gap-y-4 items-end">
-        <div className="flex flex-col gap-1">
-          <BrandingGradientInput
-            setImage={setImage}
-            image={image}
-            setColor={setFooterBackground}
-            label="Background"
-            value={footerBackground}
-            onChange={setFooterBackground}
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <BrandingColorInput setImage={setImage} image={image} label="Text" color={footerText} setColor={setFooterText} />
-        </div>
+        <BrandingGradientInput
+          setImage={setImage}
+          image={image}
+          setColor={setFooterBackground}
+          label="Background"
+          value={footerBackground}
+          error={errors.footerBackground}
+          onChange={setFooterBackground}
+        />
+        <BrandingColorInput setImage={setImage} image={image} label="Text" color={footerText}
+          setColor={setFooterText}
+          error={errors.footerText}
+        />
         <div className="flex flex-col gap-1">
           <TextField
-            label={"Padding (px)"}
-            labelCs="text-sm!"
+            label="Padding (px)"
+            labelSize="sm"
             type="number"
             min={0}
             max={100}
@@ -73,18 +74,19 @@ const BrandingAppFooterSection = ({
           />
         </div>
       </div>
-      <div className="mt-2 grid gap-x-3 gap-y-1" style={{ gridTemplateColumns: "1fr max-content" }}>
+      <div className="mt-2 grid grid-cols-[1fr_max-content] gap-x-3 gap-y-1">
         <TextField
-          label={"Application Footer Text"}
-          labelCs="text-sm!"
+          label="Application Footer Text"
+          labelSize="sm"
           ref={footerTextRef}
           type="text"
           value={applicationFooterText}
+          error={errors.applicationFooterText}
           onChange={(e) => setApplicationFooterText?.(e.target.value)}
         />
         <TextField
-          label={"Size (px)"}
-          labelCs="text-sm!"
+          label="Size (px)"
+          labelSize="sm"
           type="number"
           min={8}
           max={72}
@@ -96,30 +98,30 @@ const BrandingAppFooterSection = ({
         <Button
           type="button"
           onClick={() => insertWildcard(FOOTER_WILDCARDS.year)}
-          className="mt-1 self-start rounded-md border  px-2.5 py-1"
+          className="mt-1 self-start rounded-md border px-2.5 py-1"
           title="Insert current year wildcard at cursor"
           label={"+ {Year}"}
         />
         <Button
           type="button"
           onClick={() => insertWildcard(FOOTER_WILDCARDS.company)}
-          className="mt-1 self-start rounded-md border  px-2.5 py-1"
+          className="mt-1 self-start rounded-md border px-2.5 py-1"
           title="Insert company name wildcard at cursor"
           label={"+ {Company}"}
         />
       </div>
-      <div className="mt-3 grid gap-x-6 gap-y-1" style={{ gridTemplateColumns: "1fr 1fr" }}>
+      <div className="mt-3 grid grid-cols-[1fr_1fr] gap-x-6 gap-y-1">
         <TextField
-          label={"Privacy Policy URL"}
-          labelCs="text-sm!"
+          label="Privacy Policy URL"
+          labelSize="sm"
           type="url"
           placeholder="https://example.com/privacy"
           value={privacyPolicyUrl}
           onChange={(e) => setPrivacyPolicyUrl?.(e.target.value)}
         />
         <TextField
-          label={"Terms of Service URL"}
-          labelCs="text-sm!"
+          label="Terms of Service URL"
+          labelSize="sm"
           type="url"
           placeholder="https://example.com/terms"
           value={termsOfServiceUrl}

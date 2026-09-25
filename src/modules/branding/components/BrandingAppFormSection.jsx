@@ -1,9 +1,11 @@
 import Button from "@/components/shared/Button";
 import BrandingColorInput from "./BrandingColorInput";
 import BrandingEffectPicker from "./BrandingEffectPicker";
+import BrandingFieldError from "./BrandingFieldError";
 import BrandingFontPicker from "./BrandingFontPicker";
 import BrandingGradientInput from "./BrandingGradientInput";
 import { BRANDING_DEFAULT_FONT } from "../utils/branding.constants";
+import { normalizeFontFamily } from "../utils/branding.utils";
 
 const BrandingAppFormSection = ({
   image = null,
@@ -38,9 +40,17 @@ const BrandingAppFormSection = ({
   setHighlightingColor,
   fontFamily = "",
   setFontFamily,
+  errors = {},
 }) => {
-  const colorInput = (label, color, setColor) => (
-    <BrandingColorInput setImage={setImage} image={image} label={label} color={color} setColor={setColor} />
+  const colorInput = (label, color, setColor, error) => (
+    <BrandingColorInput
+      setImage={setImage}
+      image={image}
+      label={label}
+      color={color}
+      setColor={setColor}
+      error={error}
+    />
   );
 
   return (
@@ -51,9 +61,9 @@ const BrandingAppFormSection = ({
       <div>
         <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Primary Button</h4>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-          {colorInput("Button Color", primaryColor, setPrimaryColor)}
+          {colorInput("Button Color", primaryColor, setPrimaryColor, errors.primaryColor)}
           {colorInput("Border Color", buttonBorderPrimary, setButtonBorderPrimary)}
-          {colorInput("Text Color", buttonTextPrimary, setButtonTextPrimary)}
+          {colorInput("Text Color", buttonTextPrimary, setButtonTextPrimary, errors.buttonTextPrimary)}
         </div>
       </div>
 
@@ -61,9 +71,9 @@ const BrandingAppFormSection = ({
       <div>
         <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Secondary Button</h4>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-          {colorInput("Button Color", secondaryColor, setSecondaryColor)}
+          {colorInput("Button Color", secondaryColor, setSecondaryColor, errors.secondaryColor)}
           {colorInput("Border Color", buttonBorderSecondary, setButtonBorderSecondary)}
-          {colorInput("Text Color", buttonTextSecondary, setButtonTextSecondary)}
+          {colorInput("Text Color", buttonTextSecondary, setButtonTextSecondary, errors.buttonTextSecondary)}
         </div>
       </div>
 
@@ -81,19 +91,20 @@ const BrandingAppFormSection = ({
       <div>
         <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Form Colors</h4>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {colorInput("Accent Color", accentColor, setAccentColor)}
+          {colorInput("Accent Color", accentColor, setAccentColor, errors.accentColor)}
           <BrandingGradientInput
             setImage={setImage}
             image={image}
             setColor={setBackgroundColor}
             label="Background Color"
             value={backgroundColor}
+            error={errors.backgroundColor}
             onChange={setBackgroundColor}
           />
-          {colorInput("Text Color", textColor, setTextColor)}
-          {colorInput("Link Color", linkColor, setLinkColor)}
-          {colorInput("Frame Color (Input Fields, Borders)", frameColor, setFrameColor)}
-          {colorInput("Highlighting Color", highlightingColor, setHighlightingColor)}
+          {colorInput("Text Color", textColor, setTextColor, errors.textColor)}
+          {colorInput("Link Color", linkColor, setLinkColor, errors.linkColor)}
+          {colorInput("Frame Color (Input Fields, Borders)", frameColor, setFrameColor, errors.frameColor)}
+          {colorInput("Highlighting Color", highlightingColor, setHighlightingColor, errors.highlightingColor)}
         </div>
       </div>
 
@@ -104,15 +115,20 @@ const BrandingAppFormSection = ({
 
         <div className="mt-3 flex items-center space-x-2">
           <span className="rounded bg-gray-100 px-4 py-3 text-lg font-semibold">Aa</span>
-          <BrandingFontPicker value={fontFamily.toLowerCase()} onChange={(value) => setFontFamily?.(value)} />
+          <BrandingFontPicker
+            id="primary-font"
+            value={normalizeFontFamily(fontFamily)}
+            onChange={(value) => setFontFamily?.(value)}
+          />
 
           <Button
             type="button"
-            label={"Reset"}
-            className="rounded-sm border px-4 py-3.25 text-s shadow-sm"
+            label="Reset"
+            className="rounded-sm border px-4 py-3.25 text-sm shadow-sm"
             onClick={() => setFontFamily?.(BRANDING_DEFAULT_FONT)}
           />
         </div>
+        <BrandingFieldError message={errors.fontFamily} />
       </div>
     </section>
   );

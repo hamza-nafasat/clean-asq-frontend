@@ -1,8 +1,24 @@
-import { BRANDING_REQUIRED_FIELDS } from "./branding.constants";
-import { toSetterName } from "./branding.utils3";
+import { UPLOAD_FIELD_NAMES, URL_PREFIXES } from "@/constants";
+import {
+  BRANDING_EMAIL_CONTENT_FIELDS,
+  BRANDING_EMAIL_SIZE_FIELDS,
+  BRANDING_REQUIRED_FIELDS,
+} from "./branding.constants";
+import { toSetterName } from "@/utils/setterName";
+import { isDefined, isTruthy } from "./branding.utils";
 
-export const hasMissingBrandingFields = (values) =>
-  !values.colorPalette?.length || BRANDING_REQUIRED_FIELDS.some((field) => !values[field]);
+const FIELD_ERROR_MESSAGES = {
+  companyName: "Enter a company name",
+  websiteUrl: "Enter a website URL",
+  colorPalette: "Add at least one palette color",
+};
+
+// required field name to message
+export const getMissingFieldErrors = (values) => {
+  const missing = BRANDING_REQUIRED_FIELDS.filter((field) => !values[field]);
+  if (!values.colorPalette?.length) missing.push("colorPalette");
+  return Object.fromEntries(missing.map((field) => [field, FIELD_ERROR_MESSAGES[field] || "This field is required"]));
+};
 
 const buildBrandingColors = (values) => ({
   primary: values.primaryColor,
@@ -23,29 +39,7 @@ const buildBrandingColors = (values) => ({
   footerText: values.footerText,
 });
 
-const EMAIL_FORM_FIELDS = [
-  "emailHeader",
-  "emailFooter",
-  "headerHeading",
-  "headerDescription",
-  "footerHeading",
-  "footerDescription",
-  "emailHeadingColor",
-  "emailTextColor",
-  "emailHeaderColor",
-  "emailFooterColor",
-  "emailBodyColor",
-  "emailHeaderTextColor",
-  "emailFooterTextColor",
-  "headerHeadingSize",
-  "headerDescriptionSize",
-  "footerHeadingSize",
-  "footerDescriptionSize",
-  "emailHeaderPadding",
-  "emailFooterPadding",
-  "emailHeaderSpacing",
-  "emailFooterSpacing",
-];
+const EMAIL_FORM_FIELDS = [...BRANDING_EMAIL_CONTENT_FIELDS, ...BRANDING_EMAIL_SIZE_FIELDS];
 
 const SIZE_FORM_FIELDS = [
   "applicationFooterText",
@@ -73,27 +67,20 @@ const EFFECT_FORM_FIELDS = [
   "emailFooterMaterial",
 ];
 
-// multipart body for create and update, in the order the api has always received
-export const buildBrandingFormData = (values, { isCreate = false } = {}) => {
+// multipart body for create and update
+export const buildBrandingFormData = (values) => {
   const formData = new FormData();
   const append = (key, value) => formData.append(key, value);
-  const appendFiles = () => values.extraLogos.forEach((file) => append("files", file));
 
   append("name", values.companyName);
-  if (isCreate) {
-    append("headerAlignment", values.headerAlignment);
-    append("url", values.websiteUrl);
-  } else {
-    append("url", values.websiteUrl);
-    append("headerAlignment", values.headerAlignment);
-  }
+  append("url", values.websiteUrl);
+  append("headerAlignment", values.headerAlignment);
   append("fontFamily", values.fontFamily);
   append("selectedLogo", values.selectedLogo);
   append("colorPalette", JSON.stringify(values.colorPalette));
   append("colors", JSON.stringify(buildBrandingColors(values)));
   append("logos", JSON.stringify(values.logos.filter((logo) => !logo.preview)));
   SIZE_FORM_FIELDS.forEach((field) => append(field, values[field]));
-  if (isCreate) appendFiles();
 
   EMAIL_FORM_FIELDS.forEach((field) => append(field, values[field]));
   if (values.selectedEmailLogo) append("selectedEmailLogo", values.selectedEmailLogo);
@@ -109,8 +96,8 @@ export const buildBrandingFormData = (values, { isCreate = false } = {}) => {
   append("aiBannerTextColor", values.aiBannerTextColor || values.headerText);
   append("aiUseCustomIcon", String(values.aiUseCustomIcon));
   EFFECT_FORM_FIELDS.forEach((field) => append(field, values[field]));
-  if (values.websiteImage && values.websiteImage.startsWith("https://")) append("screenshotUrl", values.websiteImage);
-  if (!isCreate) appendFiles();
+  if (values.websiteImage && values.websiteImage.startsWith(URL_PREFIXES.HTTPS)) append("screenshotUrl", values.websiteImage);
+  values.extraLogos.forEach((file) => append(UPLOAD_FIELD_NAMES.MULTIPLE, file));
 
   return formData;
 };
@@ -120,17 +107,14 @@ const callSetters = (branding, source, keys, test) =>
     if (test(source?.[key])) branding[toSetterName(key)](source[key]);
   });
 
-const isTruthy = (value) => Boolean(value);
-const isDefined = (value) => value !== undefined;
-
-// ai colours of the branding just saved, straight into the live theme
+// saved ai colours to theme
 export const applySavedAiToGlobal = (saved, branding) => {
   callSetters(branding, saved, ["aiLaunchButtonColor", "aiHeaderColor", "aiBannerColor", "aiBannerTextColor"], isDefined);
   branding.setAiUseCustomIcon(saved?.aiUseCustomIcon !== false);
   callSetters(branding, saved, ["favicon", "tabTitle"], isDefined);
 };
 
-// the account's home branding into the live theme
+// home branding to live theme
 export const applyUserBrandingToGlobal = (userBranding, branding) => {
   const colors = userBranding.colors;
   branding.setPrimaryColor(colors.primary);
@@ -175,10 +159,3 @@ export const applyUserBrandingToGlobal = (userBranding, branding) => {
     isDefined,
   );
 };
-
-export const toFormsList = (forms = []) =>
-  forms.map((f) => ({
-    _id: f._id,
-    name: f.name || f.headerText || "Untitled",
-    branding: f.branding ? { _id: f.branding._id || f.branding, name: f.branding.name } : null,
-  }));

@@ -1,4 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { DEFAULT_AI_VOICE } from "@/components/shared/aiChat/constants/aiChatConstants";
+import { DEFAULT_BRANDING_TEXT, HEADER_ALIGNMENTS } from "@/constants";
+import { EFFECT_NAMES } from "@/utils/effectPresets";
 
 const DEFAULT_COLORS = {
   primaryColor: "#066969",
@@ -36,16 +39,16 @@ export const DEFAULT_BRANDING_THEME = {
   buttonTextSecondary: DEFAULT_COLORS.buttonTextSecondary,
   headerBackground: DEFAULT_COLORS.headerBackgroundColor,
   footerBackground: DEFAULT_COLORS.footerBackgroundColor,
-  headerAlignment: "left",
+  headerAlignment: HEADER_ALIGNMENTS.LEFT,
   headerText: DEFAULT_COLORS.headerText,
   footerText: DEFAULT_COLORS.footerText,
-  applicationFooterText: "Fintainium All rights reserved",
+  applicationFooterText: DEFAULT_BRANDING_TEXT.FOOTER,
   applicationFooterTextSize: 20,
   appHeaderPadding: 8,
   appFooterPadding: 16,
   appLogoMaxWidth: 300,
   appLogoMaxHeight: 100,
-  aiVoice: "nova",
+  aiVoice: DEFAULT_AI_VOICE,
   aiCustomPrompt: "",
   aiLaunchButtonColor: "",
   aiHeaderColor: "",
@@ -53,15 +56,15 @@ export const DEFAULT_BRANDING_THEME = {
   aiBannerTextColor: "",
   aiUseCustomIcon: true,
   aiSliderColor: "",
-  privacyPolicyUrl: "https://fintainium.com/pp/",
-  termsOfServiceUrl: "https://fintainium.com/t&c/",
+  privacyPolicyUrl: DEFAULT_BRANDING_TEXT.PRIVACY_POLICY_URL,
+  termsOfServiceUrl: DEFAULT_BRANDING_TEXT.TERMS_OF_SERVICE_URL,
   favicon: "",
-  tabTitle: "Online-application",
-  headerEffect: "none",
-  footerEffect: "none",
-  emailHeaderEffect: "none",
-  emailFooterEffect: "none",
-  buttonEffect: "none",
+  tabTitle: DEFAULT_BRANDING_TEXT.TAB_TITLE,
+  headerEffect: EFFECT_NAMES.NONE,
+  footerEffect: EFFECT_NAMES.NONE,
+  emailHeaderEffect: EFFECT_NAMES.NONE,
+  emailFooterEffect: EFFECT_NAMES.NONE,
+  buttonEffect: EFFECT_NAMES.NONE,
   headerMaterial: 0,
   footerMaterial: 0,
   buttonMaterial: 0,
@@ -90,7 +93,6 @@ const TRUTHY_SAVED_KEYS = [
 const DEFINED_SAVED_KEYS = ["headerMaterial", "footerMaterial", "buttonMaterial", "emailHeaderMaterial", "emailFooterMaterial"];
 
 const initialState = {
-  companyName: null,
   theme: DEFAULT_BRANDING_THEME,
 };
 
@@ -98,9 +100,6 @@ const brandingSlice = createSlice({
   name: "branding",
   initialState,
   reducers: {
-    setCompanyName: (state, action) => {
-      state.companyName = action.payload;
-    },
     setBrandingValue: (state, action) => {
       state.theme[action.payload.key] = action.payload.value;
     },
@@ -121,10 +120,10 @@ const brandingSlice = createSlice({
       theme.buttonTextSecondary = saved.buttonTextSecondary || DEFAULT_COLORS.buttonTextSecondary;
       theme.headerBackground = saved.headerBackground || DEFAULT_COLORS.headerBackground;
       theme.footerBackground = saved.footerBackground || DEFAULT_COLORS.footerBackground;
-      theme.headerAlignment = saved.headerAlignment || "left";
+      theme.headerAlignment = saved.headerAlignment || HEADER_ALIGNMENTS.LEFT;
       theme.headerText = saved.headerText || DEFAULT_COLORS.headerText;
       theme.footerText = saved.footerText || DEFAULT_COLORS.footerText;
-      theme.applicationFooterText = saved.applicationFooterText || " ©{year} Fintainium, All Rights Reserved";
+      theme.applicationFooterText = saved.applicationFooterText || DEFAULT_BRANDING_TEXT.FOOTER;
       theme.applicationFooterTextSize = saved.applicationFooterTextSize || 20;
       theme.appHeaderPadding = saved.appHeaderPadding || 8;
       theme.appFooterPadding = saved.appFooterPadding || 16;
@@ -142,6 +141,6 @@ const brandingSlice = createSlice({
   },
 });
 
-export const { setCompanyName, setBrandingValue, loadSavedBranding } = brandingSlice.actions;
+export const { setBrandingValue, loadSavedBranding } = brandingSlice.actions;
 
 export default brandingSlice;

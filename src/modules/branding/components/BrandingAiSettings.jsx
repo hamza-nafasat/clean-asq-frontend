@@ -1,8 +1,9 @@
-import useBrandingVoiceSample from "../hooks/useBrandingVoiceSample";
+import { FiPlay, FiSquare } from "react-icons/fi";
 import Checkbox from "@/components/shared/Checkbox";
+import useBrandingVoiceSample from "../hooks/useBrandingVoiceSample";
 import BrandingAiWidgetPreview from "./BrandingAiWidgetPreview";
 import BrandingColorInput from "./BrandingColorInput";
-import { BRANDING_AI_VOICE_OPTIONS } from "../utils/branding.constants";
+import { BRANDING_AI_VOICE_OPTIONS } from "../utils/branding.data";
 
 const BrandingAiSettings = ({ values = {}, setters = {}, image = null, setImage }) => {
   const { isSamplePlaying, playSample, stopSample } = useBrandingVoiceSample(values.aiVoice);
@@ -12,11 +13,11 @@ const BrandingAiSettings = ({ values = {}, setters = {}, image = null, setImage 
   const bannerColor = values.aiBannerColor || values.headerBackground;
   const bannerTextColor = values.aiBannerTextColor || values.headerText;
 
-  const resetButtons = [
-    ["Launch Button", setters.aiLaunchButtonColor],
-    ["Header/Bubble", setters.aiHeaderColor],
-    ["Banners", setters.aiBannerColor],
-    ["Banner Text", setters.aiBannerTextColor],
+  const colorFields = [
+    { label: "Launch Button", color: launchColor, setColor: setters.aiLaunchButtonColor },
+    { label: "Header / Bubble", color: headerColor, setColor: setters.aiHeaderColor },
+    { label: "Banner Background", color: bannerColor, setColor: setters.aiBannerColor },
+    { label: "Banner Text", color: bannerTextColor, setColor: setters.aiBannerTextColor },
   ];
 
   return (
@@ -25,19 +26,21 @@ const BrandingAiSettings = ({ values = {}, setters = {}, image = null, setImage 
 
       {/* Voice */}
       <div className="flex flex-col gap-1 max-w-sm">
-        <label className="text-sm font-medium text-gray-700">AI Assistant Voice</label>
+        <label htmlFor="branding-ai-voice" className="text-sm font-medium text-gray-700">
+          AI Assistant Voice
+        </label>
         <p className="text-xs text-gray-400">
           The voice used when the AI assistant speaks to applicants using this branding profile.
         </p>
         <div className="mt-1 flex items-center gap-2">
           <select
+            id="branding-ai-voice"
             value={values.aiVoice}
-            aria-label="AI Assistant Voice"
             onChange={(e) => {
               setters.aiVoice(e.target.value);
               stopSample();
             }}
-            className="h-10 flex-1 rounded-lg border border-gray-300 bg-[#FAFBFF] px-3 text-sm text-gray-700 outline-none focus:border-purple-400"
+            className="h-10 flex-1 rounded-lg border border-gray-300 bg-fieldBackground px-3 text-sm text-gray-700 outline-none focus:border-purple-400"
           >
             {BRANDING_AI_VOICE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -52,35 +55,38 @@ const BrandingAiSettings = ({ values = {}, setters = {}, image = null, setImage 
             className={`flex items-center gap-1.5 rounded-lg border px-3 h-10 text-sm font-medium transition-all whitespace-nowrap ${
               isSamplePlaying
                 ? "border-purple-400 bg-purple-50 text-purple-700"
-                : "border-gray-300 bg-[#FAFBFF] text-gray-600 hover:border-purple-300 hover:text-purple-600"
+                : "border-gray-300 bg-fieldBackground text-gray-600 hover:border-purple-300 hover:text-purple-600"
             }`}
           >
-            {isSamplePlaying ? "◼ Stop" : "▶ Play sample"}
+            {isSamplePlaying ? <FiSquare size={12} aria-hidden="true" /> : <FiPlay size={12} aria-hidden="true" />}
+            {isSamplePlaying ? "Stop" : "Play sample"}
           </button>
         </div>
       </div>
 
       {/* Personality */}
       <div className="flex flex-col gap-1 max-w-2xl">
-        <label className="text-sm font-medium text-gray-700">Custom Personality Settings</label>
+        <label htmlFor="branding-ai-personality" className="text-sm font-medium text-gray-700">
+          Custom Personality Settings
+        </label>
         <p className="text-xs text-gray-400">
           Customise the assistant&apos;s tone, word choice, and personality for this branding profile. This field can
           only affect <em>how</em> the assistant communicates — not what it does, what tasks it performs, or any other
           behaviour. The branding assistant can suggest and write this for you.
         </p>
         <textarea
+          id="branding-ai-personality"
           value={values.aiCustomPrompt}
-          aria-label="Custom Personality Settings"
           onChange={(e) => setters.aiCustomPrompt(e.target.value)}
           placeholder="e.g. Use a warm, encouraging tone. Be concise — keep responses under three sentences. Occasionally use light humour to keep the experience friendly."
           rows={4}
-          className="mt-1 rounded-lg border border-gray-300 bg-[#FAFBFF] px-3 py-2 text-sm text-gray-700 outline-none focus:border-purple-400 resize-y"
+          className="mt-1 rounded-lg border border-gray-300 bg-fieldBackground px-3 py-2 text-sm text-gray-700 outline-none focus:border-purple-400 resize-y"
         />
       </div>
 
       <div className="flex items-center gap-2">
         <Checkbox
-          label={"Use custom AI button icon"}
+          label="Use custom AI button icon"
           type="checkbox"
           id="aiUseCustomIcon"
           checked={values.aiUseCustomIcon}
@@ -96,41 +102,23 @@ const BrandingAiSettings = ({ values = {}, setters = {}, image = null, setImage 
             Leave unchanged to use the matching branding color as the default.
           </p>
           <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-            <BrandingColorInput
-              image={image}
-              setImage={setImage}
-              label="Launch Button"
-              color={launchColor}
-              setColor={setters.aiLaunchButtonColor}
-            />
-            <BrandingColorInput
-              image={image}
-              setImage={setImage}
-              label="Header / Bubble"
-              color={headerColor}
-              setColor={setters.aiHeaderColor}
-            />
-            <BrandingColorInput
-              image={image}
-              setImage={setImage}
-              label="Banner Background"
-              color={bannerColor}
-              setColor={setters.aiBannerColor}
-            />
-            <BrandingColorInput
-              image={image}
-              setImage={setImage}
-              label="Banner Text"
-              color={bannerTextColor}
-              setColor={setters.aiBannerTextColor}
-            />
+            {colorFields.map(({ label, color, setColor }) => (
+              <BrandingColorInput
+                key={label}
+                image={image}
+                setImage={setImage}
+                label={label}
+                color={color}
+                setColor={setColor}
+              />
+            ))}
           </div>
           <div className="flex flex-wrap gap-2 mt-1">
-            {resetButtons.map(([label, setter]) => (
+            {colorFields.map(({ label, setColor }) => (
               <button
                 key={label}
                 type="button"
-                onClick={() => setter("")}
+                onClick={() => setColor("")}
                 className="text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2"
               >
                 Reset {label}

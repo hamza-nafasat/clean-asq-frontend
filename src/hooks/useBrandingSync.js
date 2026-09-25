@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { loadSavedBranding } from "@/redux/slices/branding.slice";
 import { STORAGE_KEYS } from "@/constants";
 import { effectToBoxShadow, materialToGloss, parseEffectState } from "@/utils/effectPresets";
+import { toFontVariable } from "@/utils/fontVariable";
 
 const setDocumentFavicon = (href) => {
   let link = document.querySelector("link[rel~='icon']");
@@ -42,7 +43,7 @@ const applyBrandingToDocument = (theme) => {
   root.setProperty("--color-button-text-primary", theme.buttonTextPrimary);
   root.setProperty("--color-button-text-secondary", theme.buttonTextSecondary);
 
-  // header and footer backgrounds carry an optional material gloss
+  // header and footer material gloss
   const headerGloss = materialToGloss(theme.headerMaterial, parseEffectState(theme.headerEffect).angle);
   const footerGloss = materialToGloss(theme.footerMaterial, parseEffectState(theme.footerEffect).angle);
   root.setProperty(
@@ -55,7 +56,7 @@ const applyBrandingToDocument = (theme) => {
   );
   root.setProperty("--color-header-text", theme.headerText);
   root.setProperty("--color-footer-text", theme.footerText);
-  root.setProperty("--font-primary", `var(--font-${theme.fontFamily?.toLowerCase()})`);
+  root.setProperty("--font-primary", toFontVariable(theme.fontFamily));
 
   // effect shadows and the button gloss
   root.setProperty("--header-box-shadow", effectToBoxShadow(theme.headerEffect) || "none");

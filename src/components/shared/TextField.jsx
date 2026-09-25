@@ -16,6 +16,11 @@ import {
 const TEL_TYPE = "tel";
 const BLUR_CLOSE_DELAY_MS = 150;
 
+const LABEL_SIZE_CLASSES = {
+  default: "text-textPrimary text-base font-medium lg:text-lg",
+  sm: "text-textPrimary text-sm font-medium",
+};
+
 const TextField = ({
   isPdf = false,
   cn,
@@ -38,7 +43,7 @@ const TextField = ({
   rows,
   cols,
   labelCs = "",
-  textAreaHeight = "45px",
+  labelSize = "default",
   placeholder,
   borderAndBgChangeIfEmpty = true,
   id,
@@ -114,7 +119,7 @@ const TextField = ({
   };
 
   const labelElement = label && (
-    <h4 className={`text-textPrimary text-base font-medium lg:text-lg ${labelCs && labelCs}`}>{label}</h4>
+    <h4 className={`${LABEL_SIZE_CLASSES[labelSize] ?? LABEL_SIZE_CLASSES.default} ${labelCs && labelCs}`}>{label}</h4>
   );
   const leftIconElement = leftIcon && (
     <span className={`absolute top-1/2 left-3 -translate-y-1/2 text-gray-500 ${cnLeft}`}>{leftIcon}</span>
@@ -153,7 +158,7 @@ const TextField = ({
             aria-describedby={errorId}
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), BLUR_CLOSE_DELAY_MS)}
-            className={`${cn} relative min-h-[${textAreaHeight}]! w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:text-base ${iconPadding} ${emptyClasses} ${disabledClasses}`}
+            className={`${cn} relative w-full rounded-lg border bg-fieldBackground px-4 text-sm text-gray-600 outline-none md:text-base ${iconPadding} ${emptyClasses} ${disabledClasses}`}
             {...rest}
           />
           {rightIconElement}
@@ -184,7 +189,7 @@ const TextField = ({
             placeholder={placeholder}
             value={value}
             onChange={(val) => onChange?.({ target: { name, value: val } })}
-            className={`${cn} relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${iconPadding} ${
+            className={`${cn} relative h-11.25 w-full rounded-lg border bg-fieldBackground px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${iconPadding} ${
               required && value && !isValidPhoneNumber(value) ? "border-red-500 border-2" : "border-frameColor"
             } ${emptyClasses} ${disabledClasses}`}
           />
@@ -202,7 +207,7 @@ const TextField = ({
             aria-describedby={errorId}
             type={showMasked ? FIELD_TYPES.PASSWORD : type}
             value={isDate ? formatDateValue(value) : getDisplayValue(value)}
-            className={`${cn} relative h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${iconPadding} ${emptyClasses} ${disabledClasses} `}
+            className={`${cn} relative h-11.25 w-full rounded-lg border bg-fieldBackground px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base ${iconPadding} ${emptyClasses} ${disabledClasses} `}
             {...rest}
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => setTimeout(closeSuggestions, BLUR_CLOSE_DELAY_MS)}

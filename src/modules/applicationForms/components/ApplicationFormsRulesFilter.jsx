@@ -26,8 +26,8 @@ const ApplicationFormsRulesFilter = ({
           <h3 className="text-textPrimary text-lg font-semibold">Manage Rules</h3>
           {isOrderChanged && (
             <div className="flex items-center gap-2">
-              <Button label="Update Order" variant="primary" loading={isSavingOrder} size="sm" onClick={onSaveOrder} />
-              <Button label="Reset Order" variant="secondary" size="sm" onClick={onResetOrder} />
+              <Button label="Update Order" variant="primary" loading={isSavingOrder} onClick={onSaveOrder} />
+              <Button label="Reset Order" variant="secondary" onClick={onResetOrder} />
             </div>
           )}
         </header>

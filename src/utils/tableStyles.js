@@ -42,3 +42,8 @@ export const getTableStyles = ({ textColor, secondaryColor }) => ({
     },
   },
 });
+
+export const TABLE_WRAPPER_RADII = {
+  MD: "calc(var(--radius) - 2px)",
+  TOP_XL: "calc(var(--radius) + 4px) calc(var(--radius) + 4px) 0 0",
+};

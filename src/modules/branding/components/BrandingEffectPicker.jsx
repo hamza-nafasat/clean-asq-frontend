@@ -1,8 +1,9 @@
+import { IoColorPaletteOutline } from "react-icons/io5";
 import BrandingAngleDial from "./BrandingAngleDial";
 import { BRANDING_DIRECTIONAL_EFFECTS, BRANDING_EFFECT_NONE } from "../utils/branding.constants";
 import { EFFECT_OPTIONS, encodeEffectState, materialName, parseEffectState } from "@/utils/effectPresets";
 
-const EffectPicker = ({ label = "", value, onChange, material = 0, onMaterialChange }) => {
+const BrandingEffectPicker = ({ label = "", value, onChange, material = 0, onMaterialChange }) => {
   const { effects, angle } = parseEffectState(value);
   const activeNames = Object.keys(effects);
   const hasAnyEffect = activeNames.length > 0;
@@ -29,7 +30,7 @@ const EffectPicker = ({ label = "", value, onChange, material = 0, onMaterialCha
 
   return (
     <div className="flex flex-col gap-2">
-      {label && <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">{label}</label>}
+      {label && <p className="text-xs font-medium tracking-wide text-gray-600 uppercase">{label}</p>}
 
       {/* Effect toggles */}
       <div className="flex flex-wrap gap-1">
@@ -74,8 +75,7 @@ const EffectPicker = ({ label = "", value, onChange, material = 0, onMaterialCha
                   value={intensity}
                   aria-label={`${opt.label} intensity`}
                   onChange={(e) => setIntensity(opt.value, parseFloat(e.target.value))}
-                  className="flex-1 min-w-20 max-w-45"
-                  style={{ accentColor: "var(--primary, #6366f1)" }}
+                  className="accent-primary max-w-45 min-w-20 flex-1"
                 />
                 <span className="text-[10px] text-gray-400 shrink-0">Strong</span>
                 <span className="w-7 shrink-0 text-right text-[10px] text-gray-500">{intensity.toFixed(1)}×</span>
@@ -88,7 +88,10 @@ const EffectPicker = ({ label = "", value, onChange, material = 0, onMaterialCha
       {/* Material */}
       {onMaterialChange && (
         <div className="flex items-center gap-2 pl-1 pt-0.5">
-          <span className="w-24 shrink-0 text-xs text-gray-500">🎨 Material</span>
+          <span className="flex w-24 shrink-0 items-center gap-1 text-xs text-gray-500">
+            <IoColorPaletteOutline size={12} aria-hidden="true" />
+            Material
+          </span>
           <span className="text-[10px] text-gray-400 shrink-0">Matte</span>
           <input
             type="range"
@@ -98,8 +101,7 @@ const EffectPicker = ({ label = "", value, onChange, material = 0, onMaterialCha
             value={material}
             aria-label="Material"
             onChange={(e) => onMaterialChange(Number(e.target.value))}
-            className="flex-1 min-w-20 max-w-45"
-            style={{ accentColor: "var(--primary, #6366f1)" }}
+            className="accent-primary max-w-45 min-w-20 flex-1"
           />
           <span className="text-[10px] text-gray-400 shrink-0">Glossy</span>
           <span className="w-16 shrink-0 text-right text-[10px] text-gray-500">{materialName(material)}</span>
@@ -115,4 +117,4 @@ const EffectPicker = ({ label = "", value, onChange, material = 0, onMaterialCha
   );
 };
 
-export default EffectPicker;
+export default BrandingEffectPicker;

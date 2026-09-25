@@ -1,7 +1,8 @@
 import { MdColorize } from "react-icons/md";
 import Button from "@/components/shared/Button";
-import { BRANDING_COLOR_MODES, BRANDING_CUSTOM_SWATCH_INDEX, BRANDING_SLIDER_ENDS } from "../utils/branding.constants";
-import { isValidHex } from "../utils/branding.utils2";
+import { BRANDING_COLOR_MODES, BRANDING_CUSTOM_SWATCH_INDEX } from "../utils/branding.constants";
+import { isValidHex } from "../utils/branding.color.utils";
+import { BRANDING_SLIDER_ENDS } from "../utils/branding.data";
 
 const BrandingColorAdjustPanel = ({
   activeIndex = 0,
@@ -43,14 +44,14 @@ const BrandingColorAdjustPanel = ({
         {!isCustomSwatch && (
           <Button
             variant={activeMode === BRANDING_COLOR_MODES.SLIDER ? "primary" : "secondary"}
-            label={"Slider"}
+            label="Slider"
             type="button"
             onClick={() => onSwitchMode?.(BRANDING_COLOR_MODES.SLIDER)}
           />
         )}
         <Button
           variant={activeMode === BRANDING_COLOR_MODES.CUSTOM ? "primary" : "secondary"}
-          label={"Custom"}
+          label="Custom"
           type="button"
           onClick={() => onSwitchMode?.(BRANDING_COLOR_MODES.CUSTOM)}
         />
@@ -87,6 +88,7 @@ const BrandingColorAdjustPanel = ({
               <input
                 type="color"
                 value={customColor}
+                aria-label="Colour picker"
                 onChange={(e) => onPickerChange?.(e.target.value)}
                 className="h-10 w-14 cursor-pointer rounded-md border border-gray-300 p-0.5"
                 title="Open color picker"

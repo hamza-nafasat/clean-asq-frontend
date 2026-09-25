@@ -1,18 +1,32 @@
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
 import useCopyToClipboard from "@/hooks/useCopyToClipboard";
-import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import Button from "@/components/shared/Button";
-import { setCompanyName } from "@/redux/slices/branding.slice";
-import { BRANDING_COPY_FEEDBACK_MS, BRANDING_HEADER_ALIGNMENTS, BRANDING_PREVIEW_STEPS } from "../utils/branding.constants";
+import BrandingPreviewStepper from "./BrandingPreviewStepper";
+import { URL_PREFIXES } from "@/constants";
+import { BRANDING_HEADER_ALIGNMENTS } from "../utils/branding.constants";
 
-const LOGO_JUSTIFY = {
-  [BRANDING_HEADER_ALIGNMENTS.RIGHT]: "flex-end",
-  [BRANDING_HEADER_ALIGNMENTS.CENTER]: "center",
-  [BRANDING_HEADER_ALIGNMENTS.LEFT]: "flex-start",
+const LOGO_JUSTIFY_CLASSES = {
+  [BRANDING_HEADER_ALIGNMENTS.RIGHT]: "justify-end",
+  [BRANDING_HEADER_ALIGNMENTS.CENTER]: "justify-center",
+  [BRANDING_HEADER_ALIGNMENTS.LEFT]: "justify-start",
 };
 
-const Preview = ({
+const FALLBACK_COLORS = {
+  accent: "#6366f1",
+  background: "#ffffff",
+  text: "#000000",
+  link: "#0000EE",
+  frame: "#D1D5DB",
+  highlighting: "rgba(99,102,241,0.20)",
+  button: "#E5E7EB",
+  buttonTextPrimary: "#ffffff",
+  buttonTextSecondary: "#000000",
+  headerBackground: "#ffffff",
+  headerText: "#000000",
+  footerBackground: "#1f2937",
+  footerText: "#ffffff",
+};
+
+const BrandingPreview = ({
   primaryColor,
   companyName = "",
   selectedLogo,
@@ -33,130 +47,99 @@ const Preview = ({
   appLogoMaxWidth,
   appLogoMaxHeight,
 }) => {
-  const dispatch = useDispatch();
   const { isCopied: copied, copy: handleCopy } = useCopyToClipboard(1500);
 
-  useEffect(() => {
-    dispatch(setCompanyName(companyName));
-  }, [companyName, dispatch]);
-
-  const logoJustify = LOGO_JUSTIFY[headerAlignment] ?? LOGO_JUSTIFY[BRANDING_HEADER_ALIGNMENTS.LEFT];
+  const logoJustify = LOGO_JUSTIFY_CLASSES[headerAlignment] ?? LOGO_JUSTIFY_CLASSES[BRANDING_HEADER_ALIGNMENTS.LEFT];
+  const accent = accentColor || FALLBACK_COLORS.accent;
+  const background = backgroundColor || FALLBACK_COLORS.background;
+  const text = textColor || FALLBACK_COLORS.text;
+  const displayName = companyName || "Company Name";
   const companySlug = (companyName || "")
     .toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "");
-  const previewUrl = `https://${window.location.hostname}/${companySlug || "company-name"}`;
+  const previewUrl = `${URL_PREFIXES.HTTPS}${window.location.hostname}/${companySlug || "company-name"}`;
 
   return (
-    <div className="mt-6 rounded-xl border border-[#F0F0F0] p-3 shadow-sm md:p-6">
+    <div className="border-softBorder mt-6 rounded-xl border p-3 shadow-sm md:p-6">
       <h2 className="text-textPrimary text-[18px] font-medium">Preview</h2>
 
       <div className="mt-4 flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-500 whitespace-nowrap">Application URL</span>
-        <div
-          className="flex flex-1 items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 font-mono cursor-pointer hover:bg-gray-100"
+        <span className="text-sm font-medium whitespace-nowrap text-gray-500">Application URL</span>
+        <button
+          type="button"
+          aria-label="Copy application URL"
           onClick={() => handleCopy(previewUrl)}
+          className="flex flex-1 cursor-pointer items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-sm text-gray-700 hover:bg-gray-100"
         >
           {previewUrl}
-        </div>
-        {copied && <span className="text-xs text-green-600 whitespace-nowrap">Copied!</span>}
+        </button>
+        {copied && <span className="text-xs whitespace-nowrap text-green-600">Copied!</span>}
       </div>
 
       <div className="mt-5 overflow-hidden rounded-md border border-gray-200">
         {/* Header */}
         <div
-          style={{ backgroundColor: headerBackground || "#ffffff", color: headerText || "#000000" }}
-          className="flex items-center px-6 py-4"
+          style={{
+            backgroundColor: headerBackground || FALLBACK_COLORS.headerBackground,
+            color: headerText || FALLBACK_COLORS.headerText,
+          }}
+          className={`flex w-full items-center px-6 py-4 ${logoJustify}`}
         >
-          <div style={{ display: "flex", width: "100%", justifyContent: logoJustify }}>
-            {selectedLogo ? (
-              <img
-                src={selectedLogo}
-                alt="logo"
-                referrerPolicy="no-referrer"
-                style={{
-                  maxWidth: appLogoMaxWidth || 300,
-                  maxHeight: appLogoMaxHeight || 100,
-                  objectFit: "contain",
-                  display: "block",
-                }}
-              />
-            ) : (
-              <span style={{ fontWeight: 600, fontSize: 18 }}>{companyName || "Company Name"}</span>
-            )}
-          </div>
+          {selectedLogo ? (
+            <img
+              src={selectedLogo}
+              alt="logo"
+              referrerPolicy="no-referrer"
+              className="block object-contain"
+              style={{ maxWidth: appLogoMaxWidth || 300, maxHeight: appLogoMaxHeight || 100 }}
+            />
+          ) : (
+            <span className="text-[18px] font-semibold">{displayName}</span>
+          )}
         </div>
 
-        {/* Stepper */}
-        <div style={{ backgroundColor: backgroundColor || "#ffffff" }} className="px-6 py-3">
-          <div className="flex items-center gap-0">
-            {BRANDING_PREVIEW_STEPS.map((step, i) => (
-              <div key={step} className="flex flex-1 items-center">
-                <div className="flex flex-col items-center gap-1">
-                  <div
-                    style={{
-                      backgroundColor: i === 0 ? accentColor || "#6366f1" : "transparent",
-                      borderColor: accentColor || "#6366f1",
-                      color: i === 0 ? "#ffffff" : accentColor || "#6366f1",
-                    }}
-                    className="flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-bold"
-                  >
-                    {i + 1}
-                  </div>
-                  <span style={{ color: accentColor || "#6366f1", fontSize: 10, whiteSpace: "nowrap" }}>{step}</span>
-                </div>
-                {i < BRANDING_PREVIEW_STEPS.length - 1 && (
-                  <div
-                    style={{ backgroundColor: accentColor || "#6366f1", opacity: 0.3, height: 2, marginBottom: 18 }}
-                    className="flex-1"
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+        <BrandingPreviewStepper accent={accent} background={background} activeTextColor={FALLBACK_COLORS.background} />
 
         {/* Form body */}
-        <div style={{ backgroundColor: backgroundColor || "#ffffff" }} className="px-6 py-5">
-          <p className="mb-4 text-sm font-medium" style={{ color: textColor || "#000000" }}>
+        <div style={{ backgroundColor: background }} className="px-6 py-5">
+          <p className="mb-4 text-sm font-medium" style={{ color: text }}>
             Please complete the fields below.{" "}
-            <a href="#" className="underline" style={{ color: linkColor || "#0000EE" }}>
+            <a href="#" className="underline" style={{ color: linkColor || FALLBACK_COLORS.link }}>
               Need help?
             </a>
           </p>
 
           <div className="mb-4">
-            <label className="mb-1 block text-xs font-medium" style={{ color: textColor || "#000000" }}>
+            <label htmlFor="branding-preview-name" className="mb-1 block text-xs font-medium" style={{ color: text }}>
               Business Name
             </label>
             <input
+              id="branding-preview-name"
               readOnly
               value="Acme Corporation"
-              style={{
-                borderColor: frameColor || "#D1D5DB",
-                color: textColor || "#000000",
-                backgroundColor: backgroundColor || "#ffffff",
-                width: "100%",
-              }}
-              className="rounded-md border px-3 py-2 text-sm outline-none"
+              style={{ borderColor: frameColor || FALLBACK_COLORS.frame, color: text, backgroundColor: background }}
+              className="w-full rounded-md border px-3 py-2 text-sm outline-none"
             />
           </div>
 
           <div className="mb-5">
-            <label className="mb-1 block text-xs font-medium" style={{ color: textColor || "#000000" }}>
-              Business Email <span style={{ color: accentColor || "#6366f1", fontSize: 10 }}>← focused</span>
+            <label htmlFor="branding-preview-email" className="mb-1 block text-xs font-medium" style={{ color: text }}>
+              Business Email{" "}
+              <span className="text-[10px]" style={{ color: accent }}>
+                ← focused
+              </span>
             </label>
             <input
+              id="branding-preview-email"
               readOnly
               value="hello@acmecorp.com"
               style={{
-                borderColor: accentColor || "#6366f1",
-                borderWidth: 2,
-                backgroundColor: highlightingColor || "rgba(99,102,241,0.20)",
-                color: textColor || "#000000",
-                width: "100%",
+                borderColor: accent,
+                backgroundColor: highlightingColor || FALLBACK_COLORS.highlighting,
+                color: text,
               }}
-              className="rounded-md border px-3 py-2 text-sm outline-none"
+              className="w-full rounded-md border-2 px-3 py-2 text-sm outline-none"
             />
           </div>
 
@@ -164,53 +147,35 @@ const Preview = ({
             <Button
               label="Next Step"
               style={{
-                color: buttonTextPrimary || "#ffffff",
-                backgroundColor: primaryColor || "#E5E7EB",
-                border: `1px solid ${primaryColor || "#E5E7EB"}`,
+                color: buttonTextPrimary || FALLBACK_COLORS.buttonTextPrimary,
+                backgroundColor: primaryColor || FALLBACK_COLORS.button,
+                border: `1px solid ${primaryColor || FALLBACK_COLORS.button}`,
               }}
             />
             <Button
               variant="secondary"
               label="Save & Exit"
-              className="border-none!"
               style={{
-                color: buttonTextSecondary || "#000000",
-                backgroundColor: secondaryColor || "#E5E7EB",
-                border: `1px solid ${secondaryColor || "#E5E7EB"}`,
+                color: buttonTextSecondary || FALLBACK_COLORS.buttonTextSecondary,
+                backgroundColor: secondaryColor || FALLBACK_COLORS.button,
               }}
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div
-          style={{ backgroundColor: footerBackground || "#1f2937", color: footerText || "#ffffff" }}
+        <p
+          style={{
+            backgroundColor: footerBackground || FALLBACK_COLORS.footerBackground,
+            color: footerText || FALLBACK_COLORS.footerText,
+          }}
           className="px-6 py-4 text-center text-xs"
         >
-          © {new Date().getFullYear()} {companyName || "Company Name"}. All rights reserved.
-        </div>
+          © {new Date().getFullYear()} {displayName}. All rights reserved.
+        </p>
       </div>
     </div>
   );
 };
 
-export const EmailTemplatePreview = ({ emailHeader = "", emailFooter = "", emailText, emailBodyColor }) => (
-  <div className="rounded-xlp-3 mt-6 md:p-6">
-    <h2 className="text-textPrimary text-[18px] font-medium">Email Preview</h2>
-
-    <div className="mt-5 rounded-md p-3 md:p-6">
-      <div className="flex w-full flex-col border-4">
-        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(emailHeader) }} />
-        <div
-          className={`align-center flex w-full justify-center p-4 md:p-6`}
-          style={{ color: emailText, background: emailBodyColor }}
-        >
-          Email Body will be here ...
-        </div>
-        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(emailFooter) }} />
-      </div>
-    </div>
-  </div>
-);
-
-export default Preview;
+export default BrandingPreview;

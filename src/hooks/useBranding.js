@@ -1,10 +1,9 @@
 import { useMemo } from "react";
 import { useDispatch, useSelector, useStore } from "react-redux";
 import { DEFAULT_BRANDING_THEME, setBrandingValue } from "@/redux/slices/branding.slice";
+import { toSetterName } from "@/utils/setterName";
 
 const BRANDING_KEYS = Object.keys(DEFAULT_BRANDING_THEME);
-
-const toSetterName = (key) => `set${key.charAt(0).toUpperCase()}${key.slice(1)}`;
 
 const useBranding = () => {
   const dispatch = useDispatch();

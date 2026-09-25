@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { FiExternalLink } from "react-icons/fi";
+import { useProcessManualBrandingMutation } from "@/redux/apis/branding.apis";
 import Button from "@/components/shared/Button";
 import TextField from "@/components/shared/TextField";
 import BrandingExtractionStepBar from "./BrandingExtractionStepBar";
@@ -12,20 +13,18 @@ import {
   BRANDING_MANUAL_EXTRACTION_STEPS,
 } from "../utils/branding.constants";
 import { copyTextToClipboard } from "../utils/branding.utils";
-import getEnv from "@/utils/env";
-
-const SERVER_URL = getEnv("SERVER_URL");
+import { toHttpsUrl } from "@/utils/websiteUrl";
 
 const BrandingManualExtractTab = ({ initialUrl = "", script = null, onApply, onClose }) => {
   const [step, setStep] = useState(BRANDING_MANUAL_EXTRACTION_STEPS.URL);
   const [url, setUrl] = useState(initialUrl || "");
   const [domData, setDomData] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
   const [isCopied, setIsCopied] = useState(false);
   const waitingRef = useRef(false);
+  const [processManualBranding, { isLoading: isProcessing }] = useProcessManualBrandingMutation();
 
-  // must run from a click so the clipboard is allowed
+  // clipboard needs a user click
   const copyScript = useCallback(() => {
     if (!script) return;
     copyTextToClipboard(script).then((ok) => {
@@ -38,7 +37,7 @@ const BrandingManualExtractTab = ({ initialUrl = "", script = null, onApply, onC
     });
   }, [script]);
 
-  // results posted back from the opened site
+  // results from the opened site
   useEffect(() => {
     const handler = (event) => {
       if (!waitingRef.current) return;
@@ -62,7 +61,7 @@ const BrandingManualExtractTab = ({ initialUrl = "", script = null, onApply, onC
       toast.error("Please enter a website URL");
       return;
     }
-    const fullUrl = url.startsWith("http") ? url : `https://${url}`;
+    const fullUrl = toHttpsUrl(url);
     copyScript();
     // keep the opener so postMessage works
     window.open(fullUrl, "_blank", "noopener=no,noreferrer=no");
@@ -72,25 +71,15 @@ const BrandingManualExtractTab = ({ initialUrl = "", script = null, onApply, onC
 
   const handleApply = async () => {
     if (!domData) return;
-    setIsProcessing(true);
     setError(null);
     try {
-      const res = await fetch(`${SERVER_URL}/api/ai/process-manual-branding`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ domData }),
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.message || "Processing failed");
-      onApply?.({ ...data.data?.brandingData, screenshotUrl: data.data?.screenshotUrl });
+      const res = await processManualBranding({ domData }).unwrap();
+      onApply?.({ ...res.data?.brandingData, screenshotUrl: res.data?.screenshotUrl });
       toast.success("Branding extracted successfully!");
       onClose?.();
     } catch (err) {
       console.error("Process manual branding error:", err);
-      setError(err.message || "Failed to process the extracted data. Please try again.");
-    } finally {
-      setIsProcessing(false);
+      setError(err?.data?.message || "Failed to process the extracted data. Please try again.");
     }
   };
 
@@ -112,7 +101,7 @@ const BrandingManualExtractTab = ({ initialUrl = "", script = null, onApply, onC
   }
 
   return (
-    <div className="space-y-5">
+    <section className="space-y-5">
       <BrandingExtractionStepBar
         current={BRANDING_MANUAL_EXTRACTION_STEPS.URL}
         total={BRANDING_MANUAL_EXTRACTION_STEPS.RESULTS}
@@ -137,11 +126,11 @@ const BrandingManualExtractTab = ({ initialUrl = "", script = null, onApply, onC
           onClick={handleOpenSite}
           loading={!script}
           disabled={!url || !script}
-          className="h-12.5!"
+          size="field"
           title={!script ? "Loading extraction script…" : undefined}
         />
       </div>
-    </div>
+    </section>
   );
 };
 

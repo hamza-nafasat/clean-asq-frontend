@@ -203,7 +203,6 @@ const CreateRuleModal = ({ formId, setModal, refetch }) => {
             type="textarea"
             placeholder="Enter prompt for rule creation"
             value={rule.prompt}
-            textAreaHeight="100px"
             onChange={(e) => updateRule("prompt", e.target.value)}
           />
           <ApplicationFormsRuleEmailFields
@@ -351,7 +350,6 @@ const UpdateRuleModal = ({ ruleData = null, setModal, refetch }) => {
             type="textarea"
             placeholder="Enter prompt for rule creation"
             value={rule.prompt}
-            textAreaHeight="100px"
             onChange={(e) => updateRule("prompt", e.target.value)}
           />
           <ApplicationFormsRuleEmailFields

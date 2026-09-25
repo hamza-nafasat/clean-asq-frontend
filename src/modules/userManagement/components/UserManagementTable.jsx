@@ -14,6 +14,7 @@ import UserManagementAddEditModal from "./UserManagementAddEditModal";
 import { MODAL_MODES } from "@/constants";
 import { getDatePart } from "@/utils/date";
 import { PERMISSIONS } from "@/utils/permissions";
+import { TABLE_WRAPPER_RADII } from "@/utils/tableStyles";
 import { formatDateAndTime, getUserFullName, validateUserForm } from "../utils/userManagement.utils";
 
 const STATE_CLASS_NAME = "flex flex-col items-center justify-center gap-4 py-16";
@@ -145,7 +146,7 @@ const UserManagementTable = ({ users = [], roleOptions = [], isLoading = false, 
         columns={columns}
         data={users}
         pagination
-        className="rounded-t-xl!"
+        wrapperRadius={TABLE_WRAPPER_RADII.TOP_XL}
         highlightOnHover
         fixedHeader
         persistTableHead

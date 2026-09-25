@@ -1,18 +1,20 @@
 import { useNavigate } from "react-router-dom";
+import { useFetchWebsiteBrandingMutation } from "@/redux/apis/branding.apis";
 import { useScreenContext } from "@/hooks/useScreenContext";
+import { toHttpsUrl } from "@/utils/websiteUrl";
 import {
   BRANDING_AI_DEP_FIELDS,
   BRANDING_AI_FIELDS,
   BRANDING_EDITOR_SCREEN_CONTEXT,
   BRANDING_EXTRACTION_TABS,
+  BRANDING_LOGO_TYPES,
   BRANDING_ON_HOME,
   BRANDING_ROUTES,
-} from "@/modules/branding/utils/branding.constants";
-import { toFormsList } from "@/modules/branding/utils/branding.utils4";
+} from "../utils/branding.constants";
+import { BRANDING_EDITOR_ASSISTANT_COPY } from "../utils/branding.data";
+import { pickFields, toFormsList } from "../utils/branding.mapping.utils";
 
-const pick = (source, fields) => Object.fromEntries(fields.map((field) => [field, source[field]]));
-
-// registers the branding editor with the ai assistant
+// register editor with ai assistant
 const useBrandingEditorScreenContext = ({
   brandingId,
   values,
@@ -23,23 +25,31 @@ const useBrandingEditorScreenContext = ({
   openExtractionModal,
   createBrandingHandler,
   updateBrandingHandler,
+  askToConfirmUpdate,
 }) => {
   const navigate = useNavigate();
+  const [fetchWebsiteBranding] = useFetchWebsiteBrandingMutation();
   const formsList = toFormsList(forms);
 
-  const saveBranding = (skipNavigation) =>
-    brandingId ? updateBrandingHandler(brandingId, skipNavigation) : createBrandingHandler(skipNavigation);
+  const confirmUpdate = async (message) => {
+    const isConfirmed = await askToConfirmUpdate({ message });
+    if (!isConfirmed) throw new Error("The user cancelled the update");
+  };
 
-  const applyToTargets = async (targets) => {
-    const errors = [];
-    for (const { label, body } of targets) {
+  const saveBranding = (skipNavigation) =>
+    brandingId ? updateBrandingHandler(skipNavigation) : createBrandingHandler(skipNavigation);
+
+  // count failed apply requests
+  const applyToTargets = async (bodies) => {
+    let failedCount = 0;
+    for (const body of bodies) {
       try {
         await addBrandingToForm(body).unwrap();
       } catch {
-        errors.push(label);
+        failedCount += 1;
       }
     }
-    return errors;
+    return failedCount;
   };
 
   useScreenContext({
@@ -48,48 +58,49 @@ const useBrandingEditorScreenContext = ({
       : BRANDING_EDITOR_SCREEN_CONTEXT.NEW_SCREEN_ID,
     screenName: brandingId ? `Global Branding — ${values.companyName || brandingId}` : "Global Branding (New)",
     assistantName: BRANDING_EDITOR_SCREEN_CONTEXT.ASSISTANT_NAME,
-    greeting: BRANDING_EDITOR_SCREEN_CONTEXT.GREETING,
-    description: BRANDING_EDITOR_SCREEN_CONTEXT.DESCRIPTION,
+    greeting: BRANDING_EDITOR_ASSISTANT_COPY.GREETING,
+    description: BRANDING_EDITOR_ASSISTANT_COPY.DESCRIPTION,
     brandingId: brandingId || null,
     forms: formsList,
     currentState: {
-      ...pick(values, BRANDING_AI_FIELDS),
+      ...pickFields(values, BRANDING_AI_FIELDS),
       selectedLogo: values.selectedLogo || null,
       forms: formsList,
     },
     actions: {
-      ...pick(setters, BRANDING_AI_FIELDS),
+      ...pickFields(setters, BRANDING_AI_FIELDS),
       selectedLogo: setters.selectedLogo,
       setSuggestedColors: setters.suggestedColors,
-      addLogo: (url) => setters.logos((prev) => [...prev, { url, type: "img", invert: false }]),
+      addLogo: (url) => setters.logos((prev) => [...prev, { url, type: BRANDING_LOGO_TYPES.IMAGE, invert: false }]),
       setLogos: setters.logos,
       setWebsiteImage: setters.websiteImage,
       applyExtractedBranding,
       openManualExtractionFlow: ({ url } = {}) => {
-        if (url) setters.websiteUrl(url.startsWith("http") ? url : `https://${url}`);
+        if (url) setters.websiteUrl(toHttpsUrl(url));
         openExtractionModal(BRANDING_EXTRACTION_TABS.MANUAL);
       },
-      saveBranding: () => saveBranding(),
-      setFormsBranding: async ({ updates }) => {
-        const errors = await applyToTargets(
-          updates.map(({ formId, brandingId: bId }) => ({
-            label: formId,
-            body: { brandingId: bId, formId, onHome: BRANDING_ON_HOME.NO },
-          })),
-        );
-        if (errors.length) throw new Error(`Failed to set branding on ${errors.length} form(s)`);
+      fetchWebsiteBranding: async ({ url }) => (await fetchWebsiteBranding({ url }).unwrap()).data,
+      saveBranding: async () => {
+        if (brandingId) await confirmUpdate();
+        return saveBranding();
       },
-      saveAndApplyBrandingToForms: async ({ formIds, onHome }) => {
+      setFormsBranding: async ({ updates }) => {
+        await confirmUpdate(`Are you sure you want to change the branding on ${updates.length} form(s)?`);
+        const failedCount = await applyToTargets(
+          updates.map(({ formId, brandingId: bId }) => ({ brandingId: bId, formId, onHome: BRANDING_ON_HOME.NO })),
+        );
+        if (failedCount) throw new Error(`Failed to set branding on ${failedCount} form(s)`);
+      },
+      saveAndApplyBrandingToForms: async ({ formIds = [], onHome }) => {
+        const target = `${formIds.length} form(s)${onHome ? " and the website" : ""}`;
+        await confirmUpdate(`Are you sure you want to save this branding and apply it to ${target}?`);
         const savedId = await saveBranding(true);
         if (!savedId) throw new Error("Branding save did not return an ID");
-        const targets = (formIds || []).map((formId) => ({
-          label: formId,
-          body: { brandingId: savedId, formId, onHome: BRANDING_ON_HOME.NO },
-        }));
-        if (onHome) targets.unshift({ label: "website", body: { brandingId: savedId, onHome: BRANDING_ON_HOME.YES } });
-        const errors = await applyToTargets(targets);
-        if (errors.length) throw new Error(`Failed to set branding on ${errors.length} target(s)`);
-        // full reload when the home branding changed
+        const bodies = formIds.map((formId) => ({ brandingId: savedId, formId, onHome: BRANDING_ON_HOME.NO }));
+        if (onHome) bodies.unshift({ brandingId: savedId, onHome: BRANDING_ON_HOME.YES });
+        const failedCount = await applyToTargets(bodies);
+        if (failedCount) throw new Error(`Failed to set branding on ${failedCount} target(s)`);
+        // reload when home branding changed
         if (onHome) window.location.href = BRANDING_ROUTES.LIST;
         else navigate(BRANDING_ROUTES.LIST);
       },
@@ -98,7 +109,7 @@ const useBrandingEditorScreenContext = ({
     colorPalette: values.colorPalette.map((c) => (typeof c === "string" ? c : c?.hex)).filter(Boolean),
     deps: {
       brandingId,
-      ...pick(values, BRANDING_AI_DEP_FIELDS),
+      ...pickFields(values, BRANDING_AI_DEP_FIELDS),
       logosCount: values.logos.length,
       formsCount: forms.length,
     },

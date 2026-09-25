@@ -13,25 +13,25 @@ const BrandingBrowserTab = ({ values = {}, setters = {} }) => (
     <div className="grid max-w-2xl grid-cols-1 gap-5 rounded-xl border border-gray-200 bg-white p-4 sm:grid-cols-2">
       <div className="flex flex-col gap-2">
         <TextField
-          label={"Tab Title"}
-          labelCs="text-sm!"
+          label="Tab Title"
+          labelSize="sm"
           type="text"
           value={values.tabTitle}
           onChange={(e) => setters.tabTitle(e.target.value)}
           placeholder="e.g. Apply Now — Acme Financial"
         />
 
-        <span className="text-[11px] text-gray-400">This title will appear in the browser tab.</span>
+        <p className="text-[11px] text-gray-400">This title will appear in the browser tab.</p>
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-gray-700">Browser Icon</label>
+        <h4 className="text-sm font-medium text-gray-700">Browser Icon</h4>
 
-        <div className="rounded-lg border border-gray-200 bg-[#FAFBFF] p-3">
+        <div className="rounded-lg border border-gray-200 bg-fieldBackground p-3">
           <BrandingFavIconPicker logos={values.logos} value={values.favicon} onChange={setters.favicon} />
         </div>
 
-        <span className="text-[11px] text-gray-400">Choose the icon shown beside the tab title.</span>
+        <p className="text-[11px] text-gray-400">Choose the icon shown beside the tab title.</p>
       </div>
     </div>
   </section>

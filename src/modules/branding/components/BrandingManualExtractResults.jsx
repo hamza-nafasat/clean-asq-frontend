@@ -1,3 +1,4 @@
+import { FiCheckCircle } from "react-icons/fi";
 import { IoColorPaletteOutline } from "react-icons/io5";
 import Button from "@/components/shared/Button";
 import BrandingExtractionStepBar from "./BrandingExtractionStepBar";
@@ -13,9 +14,12 @@ const BrandingManualExtractResults = ({ domData = {}, error = null, isProcessing
         current={BRANDING_MANUAL_EXTRACTION_STEPS.RESULTS}
         total={BRANDING_MANUAL_EXTRACTION_STEPS.RESULTS}
       />
-      <div className="rounded-md border border-green-100 bg-green-50 px-4 py-3 text-sm text-green-800">
-        ✅ Results received from <strong>{domData.title || domData.url}</strong>
-      </div>
+      <p className="flex items-center gap-2 rounded-md border border-green-100 bg-green-50 px-4 py-3 text-sm text-green-800">
+        <FiCheckCircle size={16} className="shrink-0" />
+        <span>
+          Results received from <strong>{domData.title || domData.url}</strong>
+        </span>
+      </p>
 
       {previewLogos.length > 0 && (
         <div>
@@ -46,7 +50,7 @@ const BrandingManualExtractResults = ({ domData = {}, error = null, isProcessing
           <div className="flex flex-wrap gap-2">
             {previewColors.map((hex, i) => (
               <div key={i} className="flex flex-col items-center gap-1">
-                <div className="h-8 w-8 rounded border border-gray-200 shadow-sm" style={{ background: hex }} title={hex} />
+                <span className="h-8 w-8 rounded border border-gray-200 shadow-sm" style={{ background: hex }} title={hex} />
                 <span className="text-[10px] text-gray-400">{hex}</span>
               </div>
             ))}

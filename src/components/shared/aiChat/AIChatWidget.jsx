@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAddBrandingInFormMutation } from "@/redux/apis/branding.apis";
 import { useUpdateMyProfileMutation } from "@/redux/apis/auth.apis";
 import { userExist } from "@/redux/slices/auth.slice";
 import useAiChat from "@/hooks/useAiChat";
@@ -49,7 +48,6 @@ const AIChatWidget = () => {
 
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const [addBrandingToFormGlobal] = useAddBrandingInFormMutation();
   const [input, setInput] = useState("");
   const [translationMode, setTranslationMode] = useState(null);
   const [introButtonsDismissed, setIntroButtonsDismissed] = useState(false);
@@ -234,7 +232,6 @@ const AIChatWidget = () => {
       suppressChatFocusRef,
       setTranslationMode,
       sendMessageRef,
-      addBrandingToFormGlobal,
     },
   });
   // conversation-mode callbacks always call the latest send

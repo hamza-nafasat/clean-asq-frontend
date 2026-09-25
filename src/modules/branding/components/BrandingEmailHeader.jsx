@@ -2,23 +2,24 @@ import TextField from "@/components/shared/TextField";
 import BrandingEffectPicker from "./BrandingEffectPicker";
 import BrandingGradientInput from "./BrandingGradientInput";
 
-const BrandingEmailHeader = ({ values = {}, setters = {}, image = null, setImage }) => (
+const BrandingEmailHeader = ({ values = {}, setters = {}, image = null, setImage, errors = {} }) => (
   <section className="my-6 flex w-full flex-col gap-2">
     <h3 className="border-b-2 text-lg font-semibold text-gray-800">Email Header</h3>
 
-    <div className="grid gap-x-6 gap-y-1" style={{ gridTemplateColumns: "repeat(3, max-content)" }}>
+    <div className="grid grid-cols-[repeat(3,max-content)] gap-x-6 gap-y-1">
       <BrandingGradientInput
         image={image}
         setImage={setImage}
-        label={"Background Gradient"}
+        label="Background Gradient"
         value={values.emailHeaderColor}
+        error={errors.emailHeaderColor}
         onChange={setters.emailHeaderColor}
         setColor={setters.emailHeaderColor}
       />
 
       <TextField
-        label={"Height (px)"}
-        labelCs="text-sm!"
+        label="Height (px)"
+        labelSize="sm"
         type="number"
         min={0}
         max={200}
@@ -36,17 +37,18 @@ const BrandingEmailHeader = ({ values = {}, setters = {}, image = null, setImage
       />
     </div>
     <div className="flex flex-col gap-2">
-      <div className="grid gap-x-3 gap-y-1" style={{ gridTemplateColumns: "1fr max-content max-content" }}>
+      <div className="grid grid-cols-[1fr_max-content_max-content] gap-x-3 gap-y-1">
         <TextField
-          label={"Header Headline Text"}
-          labelCs="text-sm!"
+          label="Header Headline Text"
+          labelSize="sm"
           type="textarea"
           value={values.headerHeading}
+          error={errors.headerHeading}
           onChange={(e) => setters.headerHeading(e.target.value)}
         />
         <TextField
-          label={"Font Size (px)"}
-          labelCs="text-sm!"
+          label="Font Size (px)"
+          labelSize="sm"
           type="number"
           min={8}
           max={72}
@@ -54,8 +56,8 @@ const BrandingEmailHeader = ({ values = {}, setters = {}, image = null, setImage
           onChange={(e) => setters.headerHeadingSize(Number(e.target.value))}
         />
         <TextField
-          label={"Spacing (px)"}
-          labelCs="text-sm!"
+          label="Spacing (px)"
+          labelSize="sm"
           type="number"
           min={0}
           max={100}
@@ -63,17 +65,18 @@ const BrandingEmailHeader = ({ values = {}, setters = {}, image = null, setImage
           onChange={(e) => setters.emailHeaderSpacing(Number(e.target.value))}
         />
       </div>
-      <div className="grid gap-x-3 gap-y-1" style={{ gridTemplateColumns: "1fr max-content" }}>
+      <div className="grid grid-cols-[1fr_max-content] gap-x-3 gap-y-1">
         <TextField
-          label={"Content"}
-          labelCs="text-sm!"
+          label="Content"
+          labelSize="sm"
           type="textarea"
           value={values.headerDescription}
+          error={errors.headerDescription}
           onChange={(e) => setters.headerDescription(e.target.value)}
         />
         <TextField
-          label={"Font Size (px)"}
-          labelCs="text-sm!"
+          label="Font Size (px)"
+          labelSize="sm"
           type="number"
           min={8}
           max={72}
