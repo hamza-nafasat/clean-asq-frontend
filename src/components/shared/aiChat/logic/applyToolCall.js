@@ -10,6 +10,8 @@ import createGeneralTools from "./tools/generalTools.js";
 import createLogoTools from "./tools/logoTools.js";
 import createDemoTools from "./tools/demoTools.js";
 
+const NO_SCREEN_CONTEXT = Object.freeze({ actions: {} });
+
 const TOOL_GROUPS = [
   createGeneralTools,
   createBrandingTools,
@@ -30,8 +32,9 @@ export const createApplyToolCall = (bindings) => {
   const handlers = Object.assign({}, ...TOOL_GROUPS.map((createGroup) => createGroup(deps)));
 
   applyToolCall = async (tool, args, currentHistory) => {
-    const ctx = bindings.getScreenContext();
-    if (!ctx?.actions || !Object.hasOwn(handlers, tool)) return helpers.say(bindings.wt("cantDoOnPage"));
+    // pages without a screen context still get navigation and translation
+    const ctx = bindings.getScreenContext() ?? NO_SCREEN_CONTEXT;
+    if (!Object.hasOwn(handlers, tool)) return helpers.say(bindings.wt("cantDoOnPage"));
     const chatEndpoint = ctx.aiEndpoint || getDefaultChatEndpoint(bindings.assistantMode);
     await handlers[tool](args, { tool, ctx, chatEndpoint, currentHistory });
   };

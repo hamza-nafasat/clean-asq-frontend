@@ -1,10 +1,16 @@
 import { toast } from "react-toastify";
 import confirmOrCancel from "@/utils/confirmOrCancel";
 import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
+import { EXTRACTION_SECTION_CARDS } from "./lookupManagement.constants";
 
 const UPDATE_CONFIRM_TEXT = "Update";
+const DELETE_CONFIRM_TEXT = "Delete";
 
-export const buildLookupScreenState = (lookups) => ({
+// section number the prompt card saves with
+const findSectionId = (name) => EXTRACTION_SECTION_CARDS.find((card) => card.label === name)?.id;
+
+export const buildLookupScreenState = (lookups, prompts) => ({
+  extractionPrompts: (prompts || []).map(({ name, prompt }) => ({ name, prompt })),
   lookups: (lookups || []).map((l) => ({
     _id: l._id,
     searchObjectKey: l.searchObjectKey,
@@ -30,9 +36,55 @@ export const buildLookupAssistantActions = ({
   lookups,
   createSearchStrategy,
   updateSearchStrategy,
+  deleteSearchStrategy,
+  createDefaultLookups,
+  updatePrompt,
   onOpenCreateModal,
   askConfirm,
 }) => ({
+  [AI_TOOLS.DELETE_LOOKUPS]: async ({ searchObjectKeys = [] }) => {
+    const toDelete = searchObjectKeys.map((key) => {
+      const lookup = lookups?.find((l) => l.searchObjectKey === key);
+      if (!lookup) throw new Error(`Lookup key "${key}" not found`);
+      return lookup;
+    });
+    await confirmOrCancel(askConfirm, {
+      title: "Delete Lookup Keys",
+      message: `Permanently delete ${toDelete.map((l) => l.searchObjectKey).join(", ")}? They will also be removed from every strategy.`,
+      confirmButtonText: DELETE_CONFIRM_TEXT,
+    });
+    for (const lookup of toDelete) {
+      try {
+        await deleteSearchStrategy({ SearchStrategyId: lookup._id }).unwrap();
+      } catch (err) {
+        toast.error(err?.data?.message || `Failed to delete ${lookup.searchObjectKey}`);
+        throw err;
+      }
+    }
+  },
+  [AI_TOOLS.CREATE_DEFAULT_LOOKUPS]: async () => {
+    try {
+      await createDefaultLookups().unwrap();
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to create default lookup keys");
+      throw err;
+    }
+  },
+  [AI_TOOLS.UPDATE_EXTRACTION_PROMPT]: async ({ name, prompt }) => {
+    const section = findSectionId(name);
+    if (!section) throw new Error(`Prompt section "${name}" not found`);
+    await confirmOrCancel(askConfirm, {
+      title: "Update Prompt",
+      message: `Save the suggested changes to the ${name} section?`,
+      confirmButtonText: UPDATE_CONFIRM_TEXT,
+    });
+    try {
+      await updatePrompt({ name, prompt, section }).unwrap();
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to update prompt");
+      throw err;
+    }
+  },
   [AI_TOOLS.SET_LOOKUP_ACTIVE]: async ({ updates = [] }) => {
     const changes = updates.map(({ searchObjectKey, isActive }) => {
       const lookup = lookups?.find((l) => l.searchObjectKey === searchObjectKey);

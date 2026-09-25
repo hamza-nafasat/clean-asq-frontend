@@ -1,5 +1,6 @@
 import {
   useCreateFormStrategyMutation,
+  useDeleteFormStrategyMutation,
   useGetAllFormStrategiesQuery,
   useGetAllSearchStrategiesQuery,
   useGetMyAllFormsQuery,
@@ -29,6 +30,7 @@ const Strategies = () => {
 
   const [createFormStrategy] = useCreateFormStrategyMutation();
   const [updateFormStrategy] = useUpdateFormStrategyMutation();
+  const [deleteFormStrategy] = useDeleteFormStrategyMutation();
   const { data: formData } = useGetMyAllFormsQuery(undefined, {
     skip: !canReadForm,
   });
@@ -52,6 +54,7 @@ const Strategies = () => {
       formStrategies,
       createFormStrategy,
       updateFormStrategy,
+      deleteFormStrategy,
       askConfirm: aiConfirm.ask,
     }),
     deps: {

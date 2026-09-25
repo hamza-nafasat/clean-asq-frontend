@@ -46,6 +46,8 @@ export const AI_TOOLS = {
   LINK_STRATEGY_TO_FORM: "linkStrategyToForm",
   MOVE_FORM_TO_STRATEGY: "moveFormToStrategy",
   CREATE_STRATEGY_AND_MOVE_FORM: "createStrategyAndMoveForm",
+  UPDATE_STRATEGY: "updateStrategy",
+  DELETE_STRATEGIES: "deleteStrategies",
   CREATE_USER: "createUser",
   UPDATE_USER: "updateUser",
   SEND_PASSWORD_RESET_LINKS: "sendPasswordResetLinks",
@@ -58,6 +60,9 @@ export const AI_TOOLS = {
   DRAFT_NEW_LOOKUP: "draftNewLookup",
   CREATE_LOOKUP: "createLookup",
   UPDATE_LOOKUP: "updateLookup",
+  DELETE_LOOKUPS: "deleteLookups",
+  CREATE_DEFAULT_LOOKUPS: "createDefaultLookups",
+  UPDATE_EXTRACTION_PROMPT: "updateExtractionPrompt",
   // form list
   UPDATE_FORMS: "updateForms",
   SET_FORMS_BRANDING: "setFormsBranding",

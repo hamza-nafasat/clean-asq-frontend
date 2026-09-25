@@ -1,7 +1,11 @@
 import { useState } from "react";
 import {
+  useCreateSearchStrategyDefaultMutation,
   useCreateSearchStrategyMutation,
+  useDeleteSearchStrategyMutation,
+  useGetAllPromptsQuery,
   useGetAllSearchStrategiesQuery,
+  useUpdatePromptMutation,
   useUpdateSearchStrategyMutation,
 } from "@/redux/apis/form.apis";
 import useConfirm from "@/hooks/useConfirm";
@@ -24,7 +28,12 @@ const LookupManagement = () => {
   const { data, isLoading, isError, refetch } = useGetAllSearchStrategiesQuery();
   const [createSearchStrategy] = useCreateSearchStrategyMutation();
   const [updateSearchStrategy] = useUpdateSearchStrategyMutation();
+  const [deleteSearchStrategy] = useDeleteSearchStrategyMutation();
+  const [createDefaultLookups] = useCreateSearchStrategyDefaultMutation();
+  const [updatePrompt] = useUpdatePromptMutation();
+  const { data: promptsData } = useGetAllPromptsQuery();
   const lookups = data?.data || [];
+  const prompts = promptsData?.data || [];
 
   // new key remounts the form
   const openAddModal = (draft = null) => setAddModal((prev) => ({ draft, key: (prev?.key ?? 0) + 1 }));
@@ -32,11 +41,14 @@ const LookupManagement = () => {
   useScreenContext({
     ...LOOKUP_SCREEN_CONTEXT,
     aiEndpoint: `${SERVER_URL}/api/ai/lookup-chat`,
-    currentState: buildLookupScreenState(lookups),
+    currentState: buildLookupScreenState(lookups, prompts),
     actions: buildLookupAssistantActions({
       lookups,
       createSearchStrategy,
       updateSearchStrategy,
+      deleteSearchStrategy,
+      createDefaultLookups,
+      updatePrompt,
       onOpenCreateModal: openAddModal,
       askConfirm: aiConfirm.ask,
     }),

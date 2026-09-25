@@ -4,6 +4,7 @@ import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
 import { getLookupIds } from "./strategies.utils";
 
 const UPDATE_CONFIRM_TEXT = "Update";
+const DELETE_CONFIRM_TEXT = "Delete";
 
 const findStrategy = (formStrategies, strategyId) => formStrategies?.find((s) => s._id === strategyId);
 
@@ -51,6 +52,7 @@ export const buildStrategyAssistantActions = ({
   formStrategies,
   createFormStrategy,
   updateFormStrategy,
+  deleteFormStrategy,
   askConfirm,
 }) => {
   const removeForms = (strategy, formIds) =>
@@ -147,6 +149,46 @@ export const buildStrategyAssistantActions = ({
       } catch (err) {
         toast.error(err?.data?.message || err?.message || "Failed to move form");
         throw err;
+      }
+    },
+    [AI_TOOLS.UPDATE_STRATEGY]: async ({ strategyId, name, searchStrategyIds }) => {
+      const strategy = findStrategy(formStrategies, strategyId);
+      if (!strategy) throw new Error("Strategy not found");
+      await confirmOrCancel(askConfirm, {
+        title: "Update Strategy",
+        message: `Save the changes to "${strategy.name}"?`,
+        confirmButtonText: UPDATE_CONFIRM_TEXT,
+      });
+      try {
+        const res = await updateFormStrategy({
+          FormStrategyId: strategyId,
+          data: {
+            name: name || strategy.name,
+            form: (strategy.forms || []).map((f) => f._id),
+            searchStrategies: searchStrategyIds || getLookupIds(strategy),
+          },
+        }).unwrap();
+        if (!res.success) throw new Error(res.message);
+      } catch (err) {
+        toast.error(err?.data?.message || err?.message || "Failed to update strategy");
+        throw err;
+      }
+    },
+    [AI_TOOLS.DELETE_STRATEGIES]: async ({ strategyIds }) => {
+      const strategies = (strategyIds || []).map((id) => findStrategy(formStrategies, id)).filter(Boolean);
+      if (!strategies.length) throw new Error("Strategy not found");
+      await confirmOrCancel(askConfirm, {
+        title: "Delete Strategies",
+        message: `Permanently delete ${strategies.map((s) => `"${s.name}"`).join(", ")}? Their forms will no longer be linked to any strategy.`,
+        confirmButtonText: DELETE_CONFIRM_TEXT,
+      });
+      for (const strategy of strategies) {
+        try {
+          await deleteFormStrategy({ FormStrategyId: strategy._id }).unwrap();
+        } catch (err) {
+          toast.error(err?.data?.message || `Failed to delete "${strategy.name}"`);
+          throw err;
+        }
       }
     },
     [AI_TOOLS.LINK_STRATEGY_TO_FORM]: async ({ strategyId, formIds }) => {
