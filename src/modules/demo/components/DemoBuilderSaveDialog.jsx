@@ -5,10 +5,7 @@ const DemoBuilderSaveDialog = ({
   isOpen = false,
   featureName = "",
   presetLabel = "",
-  proposedTestCase = null,
-  saveAsTest = true,
   isSaving = false,
-  onSaveAsTestChange,
   onClose,
   onConfirm,
 }) => {
@@ -21,24 +18,6 @@ const DemoBuilderSaveDialog = ({
         <p className="text-sm text-gray-500 mb-4">
           Saving "{featureName}" demo action to preset <strong>{presetLabel}</strong>.
         </p>
-
-        <label className="flex items-start gap-3 cursor-pointer mb-4">
-          <input
-            type="checkbox"
-            checked={saveAsTest}
-            onChange={(e) => onSaveAsTestChange?.(e.target.checked)}
-            disabled={!proposedTestCase}
-            className="mt-0.5"
-          />
-          <div>
-            <span className="text-sm font-medium text-gray-700">Also create test case</span>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {proposedTestCase
-                ? `Will create "${proposedTestCase.name}" in the test suite.`
-                : "No proposed test case yet — continue the interview to generate one."}
-            </p>
-          </div>
-        </label>
 
         <footer className="flex justify-end gap-2">
           <button

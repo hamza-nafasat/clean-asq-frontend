@@ -52,11 +52,6 @@ export const PERMISSIONS = Object.freeze({
   UPDATE_DEMO: "update_demo",
   DELETE_DEMO: "delete_demo",
   PRESENT_DEMO: "present_demo",
-  CREATE_TESTING: "create_testing",
-  READ_TESTING: "read_testing",
-  UPDATE_TESTING: "update_testing",
-  DELETE_TESTING: "delete_testing",
-  RUN_TESTING: "run_testing",
   ACCESS_SIDEBAR: "access_sidebar",
 });
 
@@ -144,16 +139,6 @@ export const PERMISSION_GROUPS = Object.freeze([
       PERMISSIONS.PRESENT_DEMO,
     ],
   },
-  {
-    name: "Automated Testing",
-    permissions: [
-      PERMISSIONS.READ_TESTING,
-      PERMISSIONS.CREATE_TESTING,
-      PERMISSIONS.UPDATE_TESTING,
-      PERMISSIONS.DELETE_TESTING,
-      PERMISSIONS.RUN_TESTING,
-    ],
-  },
 ]);
 
 export const SYSTEM_ROLES = Object.freeze({ ADMIN: "admin", GUEST: "guest", USER: "user" });
@@ -172,7 +157,6 @@ export const SIDEBAR_ITEMS = [
   { title: "Lookup management", path: LAYOUT_ROUTES.LOOKUP_MANAGEMENT, permission: PERMISSIONS.READ_LOOKUP },
   { title: "Strategies", path: LAYOUT_ROUTES.STRATEGIES, permission: PERMISSIONS.READ_STRATEGY },
   { title: "Email", path: LAYOUT_ROUTES.EMAIL, permission: PERMISSIONS.READ_EMAIL },
-  { title: "Automated Testing", path: LAYOUT_ROUTES.TESTING, permission: PERMISSIONS.READ_TESTING },
   { title: "My Applications", path: LAYOUT_ROUTES.MY_APPLICATIONS, permission: PERMISSIONS.SUBMIT_FORM },
 ];
 

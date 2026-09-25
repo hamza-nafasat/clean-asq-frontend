@@ -17,7 +17,6 @@ const DemoBuilderChat = ({ featureId, featureName = "", presetId, presetName = "
 
   const [demoAction, setDemoAction] = useState({ steps: [], paramOverrides: {} });
   const [narration, setNarration] = useState("");
-  const [proposedTestCase, setProposedTestCase] = useState(null);
   const [isReady, setIsReady] = useState(false);
 
   const [previewResults, setPreviewResults] = useState([]);
@@ -25,7 +24,6 @@ const DemoBuilderChat = ({ featureId, featureName = "", presetId, presetName = "
   const [previewIdx, setPreviewIdx] = useState(-1);
 
   const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [saveAsTest, setSaveAsTest] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   const sendToAI = async (history) => {
@@ -38,7 +36,6 @@ const DemoBuilderChat = ({ featureId, featureName = "", presetId, presetName = "
 
       if (d.data?.demoAction?.steps?.length) setDemoAction(d.data.demoAction);
       if (d.data?.narration) setNarration(d.data.narration);
-      if (d.data?.proposedTestCase) setProposedTestCase(d.data.proposedTestCase);
       if (d.data?.ready) setIsReady(true);
     } catch (err) {
       toast.error(err.message || "Something went wrong");
@@ -104,16 +101,10 @@ const DemoBuilderChat = ({ featureId, featureName = "", presetId, presetName = "
           featureId,
           narration,
           demoAction,
-          saveAsTestCase: saveAsTest,
-          proposedTestCase: saveAsTest ? proposedTestCase : null,
         },
       });
       if (!d.success) throw new Error(d.message);
-      toast.success(
-        saveAsTest && d.data?.testCase
-          ? `Saved demo + test case "${d.data.testCase.name}"`
-          : `Saved demo action for "${featureName}"`,
-      );
+      toast.success(`Saved demo action for "${featureName}"`);
       setShowSaveDialog(false);
       onSaved?.();
     } catch (err) {
@@ -137,7 +128,6 @@ const DemoBuilderChat = ({ featureId, featureName = "", presetId, presetName = "
       <DemoBuilderDraft
         demoAction={demoAction}
         narration={narration}
-        proposedTestCase={proposedTestCase}
         isReady={isReady}
         isRunning={isRunning}
         previewIdx={previewIdx}
@@ -149,10 +139,7 @@ const DemoBuilderChat = ({ featureId, featureName = "", presetId, presetName = "
         isOpen={showSaveDialog}
         featureName={featureName}
         presetLabel={presetName || presetId}
-        proposedTestCase={proposedTestCase}
-        saveAsTest={saveAsTest}
         isSaving={isSaving}
-        onSaveAsTestChange={setSaveAsTest}
         onClose={() => setShowSaveDialog(false)}
         onConfirm={handleSave}
       />

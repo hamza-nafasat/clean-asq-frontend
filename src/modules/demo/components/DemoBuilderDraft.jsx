@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FiCheck, FiChevronDown, FiChevronUp, FiPlay, FiSave, FiZap } from "react-icons/fi";
+import { FiChevronDown, FiChevronUp, FiPlay, FiSave, FiZap } from "react-icons/fi";
 import { HiOutlineSparkles } from "react-icons/hi";
 import DemoBuilderStepRow from "./DemoBuilderStepRow";
 import { DEMO_STEP_RESULTS } from "../utils/demo.constants";
@@ -8,7 +8,6 @@ import Spinner from "@/components/shared/Spinner";
 const DemoBuilderDraft = ({
   demoAction = { steps: [], paramOverrides: {} },
   narration = "",
-  proposedTestCase = null,
   isReady = false,
   isRunning = false,
   previewIdx = -1,
@@ -115,19 +114,6 @@ const DemoBuilderDraft = ({
               Answer the AI's questions on the left
               <br />
               and action steps will appear here.
-            </p>
-          </div>
-        )}
-
-        {proposedTestCase && (
-          <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-            <div className="flex items-center gap-1.5 mb-1">
-              <FiCheck size={11} className="text-green-600" />
-              <span className="text-[10px] font-semibold text-green-700 uppercase tracking-wide">Proposed Test Case</span>
-            </div>
-            <p className="text-xs text-gray-700 font-medium">{proposedTestCase.name}</p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {proposedTestCase.steps?.length || 0} steps · area: {proposedTestCase.area}
             </p>
           </div>
         )}

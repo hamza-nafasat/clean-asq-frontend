@@ -50,10 +50,8 @@ const OnBoarding = lazy(() => import("@/modules/underwriting/Underwriting"));
 const Brandings = lazy(() => import("@/modules/branding/Brandings"));
 const CreateBranding = lazy(() => import("@/modules/branding/CreateBranding"));
 const FormStrategies = lazy(() => import("@/modules/lookupManagement/LookupManagement"));
-const VerificationTest = lazy(() => import("@/modules/testing/VerificationTest"));
 const Strategies = lazy(() => import("@/modules/strategies/Strategies"));
 const Email = lazy(() => import("@/modules/email/Email"));
-const Testing = lazy(() => import("@/modules/testing/Testing"));
 const MyProfile = lazy(() => import("@/modules/myProfile/MyProfile"));
 const RoleRedirect = lazy(() => import("@/routes/RoleRedirect"));
 
@@ -251,14 +249,6 @@ const App = () => {
                 }
               />
               <Route
-                path={LAYOUT_ROUTES.VERIFICATION_TEST}
-                element={
-                  <RequirePermission permission={PERMISSIONS.READ_TESTING}>
-                    <VerificationTest />
-                  </RequirePermission>
-                }
-              />
-              <Route
                 path={LAYOUT_ROUTES.STRATEGIES}
                 element={
                   <RequirePermission permission={PERMISSIONS.READ_STRATEGY}>
@@ -271,14 +261,6 @@ const App = () => {
                 element={
                   <RequirePermission permission={PERMISSIONS.READ_EMAIL}>
                     <Email />
-                  </RequirePermission>
-                }
-              />
-              <Route
-                path={LAYOUT_ROUTES.TESTING}
-                element={
-                  <RequirePermission permission={PERMISSIONS.READ_TESTING}>
-                    <Testing />
                   </RequirePermission>
                 }
               />

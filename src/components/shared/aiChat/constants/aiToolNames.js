@@ -82,14 +82,6 @@ export const AI_TOOLS = {
   OPEN_FIELD_PANEL: "openFieldPanel",
   SCROLL_TO_FIELD: "scrollToField",
   ENTER_TRANSLATION_MODE: "enterTranslationMode",
-  // testing
-  CREATE_TEST_CASE: "createTestCase",
-  UPDATE_TEST_CASE: "updateTestCase",
-  DELETE_TEST_CASES: "deleteTestCases",
-  DUPLICATE_TEST_CASE: "duplicateTestCase",
-  OPEN_EDITOR: "openEditor",
-  SET_FILTER_AREA: "setFilterArea",
-  SEED_FROM_STATIC: "seedFromStatic",
   // demo builder
   UPDATE_BUILDER_STEPS: "updateBuilderSteps",
   ADD_STEP_TO_BUILDER: "addStepToBuilder",

@@ -4,7 +4,7 @@ import { SIDEBAR_ITEMS, getHomePath, hasPermission } from "@/utils/permissions";
 import { BrushIcon } from "lucide-react";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { FiCheckSquare, FiFileText } from "react-icons/fi";
+import { FiFileText } from "react-icons/fi";
 import { HiOutlineLightBulb } from "react-icons/hi";
 import { PiStrategyBold } from "react-icons/pi";
 import { RiHistoryLine } from "react-icons/ri";
@@ -22,7 +22,6 @@ const SIDEBAR_ICONS = {
   [LAYOUT_ROUTES.LOOKUP_MANAGEMENT]: <HiOutlineLightBulb />,
   [LAYOUT_ROUTES.STRATEGIES]: <PiStrategyBold />,
   [LAYOUT_ROUTES.EMAIL]: <RiHistoryLine size={20} />,
-  [LAYOUT_ROUTES.TESTING]: <FiCheckSquare size={20} />,
   [LAYOUT_ROUTES.MY_APPLICATIONS]: <FiFileText size={20} />,
 };
 

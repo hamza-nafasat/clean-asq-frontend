@@ -162,8 +162,6 @@ export const LAYOUT_ROUTES = {
   EMAIL: "/email",
   UNDERWRITING: "/underwriting",
   MANAGE_RULES: "/manage-rules",
-  VERIFICATION_TEST: "/verification-test",
-  TESTING: "/testing",
   BRANDING_CREATE: "/branding/create",
   BRANDING_SINGLE: "/branding/single",
 };

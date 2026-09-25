@@ -1,7 +1,7 @@
 import { CHAT_ROLES } from "@/components/shared/aiChat/constants/aiChatConstants.js";
 import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
 
-const createTestingDemoTools = ({ bindings, helpers }) => {
+const createDemoTools = ({ bindings, helpers }) => {
   const { addMessage } = bindings;
   const { say } = helpers;
 
@@ -28,75 +28,6 @@ const createTestingDemoTools = ({ bindings, helpers }) => {
   };
 
   return {
-    // testing assistant
-    [AI_TOOLS.CREATE_TEST_CASE]: async (args, { ctx }) => {
-      const { explanation, ...fields } = args;
-      await runOrReport(
-        async () => {
-          if (ctx.actions.createTestCase) await ctx.actions.createTestCase({ explanation, ...fields });
-        },
-        explanation,
-        "Couldn't create the test case",
-      );
-    },
-
-    [AI_TOOLS.UPDATE_TEST_CASE]: async (args, { ctx }) => {
-      const { explanation, ...fields } = args;
-      await runOrReport(
-        async () => {
-          if (ctx.actions.updateTestCase) await ctx.actions.updateTestCase({ explanation, ...fields });
-        },
-        explanation,
-        "Couldn't update the test case",
-      );
-    },
-
-    [AI_TOOLS.DELETE_TEST_CASES]: async (args, { ctx }) => {
-      const { testCaseIds, explanation } = args;
-      await runOrReport(
-        async () => {
-          if (ctx.actions.deleteTestCases) await ctx.actions.deleteTestCases({ testCaseIds, explanation });
-        },
-        explanation,
-        "Couldn't delete the test case(s)",
-      );
-    },
-
-    [AI_TOOLS.DUPLICATE_TEST_CASE]: async (args, { ctx }) => {
-      const { explanation, testCaseId, newName } = args;
-      await runOrReport(
-        async () => {
-          if (ctx.actions.duplicateTestCase) await ctx.actions.duplicateTestCase({ testCaseId, newName, explanation });
-        },
-        explanation,
-        "Couldn't duplicate the test case",
-      );
-    },
-
-    [AI_TOOLS.OPEN_EDITOR]: async (args, { ctx }) => {
-      const { testCaseId, explanation } = args;
-      if (ctx.actions.openEditor) ctx.actions.openEditor({ testCaseId, explanation });
-      say(explanation);
-    },
-
-    [AI_TOOLS.SET_FILTER_AREA]: async (args, { ctx }) => {
-      const { area, explanation } = args;
-      if (ctx.actions.setFilterArea) ctx.actions.setFilterArea({ area, explanation });
-      say(explanation);
-    },
-
-    [AI_TOOLS.SEED_FROM_STATIC]: async (args, { ctx }) => {
-      const { explanation } = args;
-      await runOrReport(
-        async () => {
-          if (ctx.actions.seedFromStatic) await ctx.actions.seedFromStatic({ explanation });
-        },
-        explanation,
-        "Couldn't seed from static files",
-      );
-    },
-
-    // demo builder
     [AI_TOOLS.UPDATE_BUILDER_STEPS]: async (args, { ctx }) => {
       const { message, ...stepsData } = args;
       if (ctx.actions.updateBuilderSteps) ctx.actions.updateBuilderSteps(stepsData);
@@ -151,4 +82,4 @@ const createTestingDemoTools = ({ bindings, helpers }) => {
   };
 };
 
-export default createTestingDemoTools;
+export default createDemoTools;

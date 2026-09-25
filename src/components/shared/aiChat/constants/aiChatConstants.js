@@ -110,7 +110,6 @@ export const PAGE_ROUTES = {
   "user-management": "/all-users",
   email: "/email",
   applications: "/applications",
-  testing: "/testing",
 };
 
 export const PAGE_LABELS = {
@@ -123,7 +122,6 @@ export const PAGE_LABELS = {
   "user-management": "User Management",
   email: "Email Templates",
   applications: "Applications",
-  testing: "Automated Testing",
 };
 
 export const contrastingIconColor = (hex = "#000000") => {
