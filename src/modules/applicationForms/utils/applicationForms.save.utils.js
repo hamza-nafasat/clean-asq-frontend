@@ -1,6 +1,6 @@
 import { apiErrorMessage } from "@/utils/apiError";
 import { SECTION_TITLES } from "@/constants";
-import { FIELD_UPDATE_KEYS, pickDefinedKeys } from "./applicationForms.utils2";
+import { FIELD_UPDATE_KEYS, pickDefinedKeys } from "./applicationForms.pendingEdits.utils";
 
 const SECTION_PAYLOAD_KEYS = [
   "displayText",
@@ -10,30 +10,37 @@ const SECTION_PAYLOAD_KEYS = [
   "isSignAiHelp",
   "signAiPrompt",
   "isHidden",
+  "aiFormatting",
 ];
 
 const findSection = (sections, sectionId) => sections?.find((s) => String(s._id) === String(sectionId));
 
-// run one request per item and collect the failures
+// one error keeping the first status
+export const toStatusError = (message, errors) => Object.assign(new Error(message), { status: errors[0]?.status });
+
+const toLabelledError = (label, err) => toStatusError(`${label}: ${apiErrorMessage(err)}`, [err]);
+
+// collect each failed request's error
 export const collectFailures = async (items, request) => {
   const failures = [];
   for (const item of items) {
     try {
       const res = await request(item);
       if (!res?.success) throw new Error(res?.message);
-    } catch {
-      failures.push(item);
+    } catch (err) {
+      failures.push(err);
     }
   }
   return failures;
 };
 
-const buildSectionPayload = async ({ update, currentSection, formateTextInMarkDown }) => {
+const buildSectionPayload = async ({ update, currentSection, formateTextInMarkDown, canFormat }) => {
   const payload = pickDefinedKeys(update, SECTION_PAYLOAD_KEYS);
   if (update.ownerSuggestions?.length) payload.ownerSuggesstions = update.ownerSuggestions;
+  if (!canFormat) return payload;
   if (update.displayText === undefined && update.displayTextFormattingInstructions === undefined) return payload;
 
-  // regenerate formatted html when the display text changes
+  // reformat changed display text
   const text = update.displayText ?? currentSection?.displayText ?? "";
   const instructions =
     update.displayTextFormattingInstructions ?? currentSection?.displayTextFormattingInstructions ?? "";
@@ -73,8 +80,8 @@ const autoHideSectionsAfterAgreement = async ({ order, getSections, updateFormSe
   }
 };
 
-// write every pending preview edit to the database
-export const commitPendingFormEdits = async ({ edits, getSections, mutations }) => {
+// save pending edits to the form
+export const commitPendingFormEdits = async ({ edits, getSections, mutations, canFormat }) => {
   const { deleteFormSection, reorderFormSections, updateFormSection, formateTextInMarkDown, updateFormFields } =
     mutations;
   const errors = [];
@@ -85,7 +92,7 @@ export const commitPendingFormEdits = async ({ edits, getSections, mutations }) 
       const res = await deleteFormSection({ sectionId }).unwrap();
       if (!res?.success) throw new Error(res?.message);
     } catch (err) {
-      errors.push(`Delete section: ${apiErrorMessage(err)}`);
+      errors.push(toLabelledError("Delete section", err));
     }
   }
 
@@ -99,7 +106,7 @@ export const commitPendingFormEdits = async ({ edits, getSections, mutations }) 
       if (!res?.success) throw new Error(res?.message);
     } catch (err) {
       console.error("Reorder form sections error:", err);
-      errors.push(`Reorder: ${apiErrorMessage(err)}`);
+      errors.push(toLabelledError("Reorder", err));
     }
     await autoHideSectionsAfterAgreement({
       order,
@@ -116,6 +123,7 @@ export const commitPendingFormEdits = async ({ edits, getSections, mutations }) 
         update,
         currentSection,
         formateTextInMarkDown,
+        canFormat,
       });
       const res = await updateFormSection({
         _id: sectionId,
@@ -124,7 +132,7 @@ export const commitPendingFormEdits = async ({ edits, getSections, mutations }) 
       if (!res?.success) throw new Error(res?.message);
     } catch (err) {
       console.error("Update form section error:", err);
-      errors.push(`Section ${sectionId}: ${apiErrorMessage(err)}`);
+      errors.push(toLabelledError(`Section ${sectionId}`, err));
     }
   }
 
@@ -140,20 +148,20 @@ export const commitPendingFormEdits = async ({ edits, getSections, mutations }) 
       const res = await updateFormFields({ sectionId, fieldsData }).unwrap();
       if (!res?.success) throw new Error(res?.message);
     } catch (err) {
-      errors.push(`Fields ${sectionId}: ${apiErrorMessage(err)}`);
+      errors.push(toLabelledError(`Fields ${sectionId}`, err));
     }
   }
 
   return errors;
 };
 
-// attach or detach one form on each email template
+// set one form on each template
 export const updateTemplateForms = async ({ templates, templateIds, formId, attach, attachTemplate }) => {
   const errors = [];
   for (const templateId of templateIds) {
     const template = (templates || []).find((t) => t._id === templateId);
     if (!template) {
-      errors.push(templateId);
+      errors.push(new Error(`Template ${templateId} not found`));
       continue;
     }
     const currentFormIds = (template.forms || []).map((f) => f._id);
@@ -163,8 +171,8 @@ export const updateTemplateForms = async ({ templates, templateIds, formId, atta
         emailTemplateId: templateId,
         formIds: attach ? [...currentFormIds, formId] : currentFormIds.filter((id) => id !== formId),
       }).unwrap();
-    } catch {
-      errors.push(templateId);
+    } catch (err) {
+      errors.push(err);
     }
   }
   return errors;

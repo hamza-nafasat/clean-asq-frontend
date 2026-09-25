@@ -4,7 +4,7 @@ import { createSay } from "@/components/shared/aiChat/logic/translateMessage.js"
 
 export const getErrorDetail = (err) => err?.data?.message || err?.message || "";
 
-// widget string key for a refused request
+// widget key for refused requests
 const BLOCKED_STATUS_KEYS = {
   [HTTP_STATUSES.FORBIDDEN]: "noPermission",
   [HTTP_STATUSES.TOO_MANY_REQUESTS]: "tooManyRequests",
@@ -29,20 +29,31 @@ const createToolHelpers = ({ addMessage, isVoiceModeRef, speak, wt, getScreenCon
 
   const reportCouldnt = (detail) => say(`${wt("errorCouldnt")}${detail ? `: ${detail}` : ""}. ${wt("tryAgain")}`);
 
-  // run a screen action, then confirm or report the failure
+  // cancelled, blocked, or failed action
+  const reportActionError = (err) => {
+    if (err?.isCancelled) return say(wt("cancelledChange"));
+    const blockedKey = getBlockedMessageKey(err);
+    if (blockedKey) return say(wt(blockedKey));
+    return reportCouldnt(getErrorDetail(err));
+  };
+
+  // run action; true on success
   const runActionAndSay = async (ctx, actionName, payload, explanation) => {
-    if (!ctx.actions?.[actionName]) return say(wt("cantDoOnPage"));
+    if (!ctx.actions?.[actionName]) {
+      say(wt("cantDoOnPage"));
+      return false;
+    }
     try {
       await ctx.actions[actionName](payload);
       await say(explanation);
+      return true;
     } catch (err) {
-      const blockedKey = getBlockedMessageKey(err);
-      if (blockedKey) return say(wt(blockedKey));
-      reportCouldnt(getErrorDetail(err));
+      reportActionError(err);
+      return false;
     }
   };
 
-  // append a form preview built from the freshest matching screen
+  // append preview from freshest screen
   const addFormPreview = (ctx, mapSections) => {
     const nowCtx = getScreenContext();
     const baseForm = (nowCtx?.screenId === ctx.screenId ? nowCtx : ctx).currentState?.detailedForm;
@@ -54,7 +65,7 @@ const createToolHelpers = ({ addMessage, isVoiceModeRef, speak, wt, getScreenCon
     });
   };
 
-  return { say, reportCouldnt, runActionAndSay, addFormPreview };
+  return { say, reportCouldnt, reportActionError, runActionAndSay, addFormPreview };
 };
 
 export default createToolHelpers;

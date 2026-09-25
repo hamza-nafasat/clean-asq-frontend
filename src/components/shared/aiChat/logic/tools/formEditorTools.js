@@ -7,16 +7,16 @@ import {
 } from "@/components/shared/aiChat/logic/cloneFormSteps.js";
 import { formatFormList } from "@/components/shared/aiChat/logic/formContextUtils.js";
 import { toPreviewSection } from "@/components/shared/aiChat/logic/formPreviewUtils.js";
-import { getErrorDetail } from "@/components/shared/aiChat/logic/toolHelpers.js";
+import { getBlockedMessageKey, getErrorDetail } from "@/components/shared/aiChat/logic/toolHelpers.js";
 
 const UNKNOWN_SECTION_ORDER = 9999;
 
 const createFormEditorTools = ({ bindings, helpers }) => {
   const { getScreenContext, continueAfterToolCall } = bindings;
   const { signalContinuationPending, pendingFormContinuationRef } = bindings;
-  const { say, reportCouldnt, addFormPreview } = helpers;
+  const { say, reportActionError, addFormPreview } = helpers;
 
-  // apply a preview edit, let the AI summarise, then show the preview
+  // apply edit, summarise, show preview
   const previewEdit =
     ({ apply, resultSummary, shouldPreview, mapSections }) =>
     async (args, { tool, ctx, chatEndpoint, currentHistory }) => {
@@ -25,17 +25,17 @@ const createFormEditorTools = ({ bindings, helpers }) => {
         await continueAfterToolCall(tool, args, resultSummary, currentHistory, chatEndpoint, ctx);
         if (shouldPreview(args)) addFormPreview(ctx, (sections) => mapSections(sections, args));
       } catch (err) {
-        reportCouldnt(getErrorDetail(err));
+        reportActionError(err);
       }
     };
 
-  // create a section or field, then let the AI continue
+  // create section or field, continue
   const createAndContinue = (resultSummary) => async (args, { tool, ctx, chatEndpoint, currentHistory }) => {
     try {
       if (ctx.actions[tool]) await ctx.actions[tool](args);
       await continueAfterToolCall(tool, args, resultSummary, currentHistory, chatEndpoint, ctx);
     } catch (err) {
-      reportCouldnt(getErrorDetail(err));
+      reportActionError(err);
     }
   };
 
@@ -58,7 +58,7 @@ const createFormEditorTools = ({ bindings, helpers }) => {
       }
 
       say(explanation || "Loading form details…");
-      // treat the next load of this form as fresh
+      // next load counts as fresh
       signalContinuationPending();
       pendingFormContinuationRef.current = { toolArgs: args, history: currentHistory };
       if (ctx.actions.selectFormForEditing) ctx.actions.selectFormForEditing({ formId });
@@ -77,7 +77,7 @@ const createFormEditorTools = ({ bindings, helpers }) => {
         await cloneEmailTemplatesStep({ ctx, sourceForm, targetForm, targetFormId, results });
       }
 
-      // read the live screen so a just-loaded form is used
+      // use the freshly loaded form
       let validUpdates = [];
       try {
         const liveCtx = getScreenContext() ?? ctx;
@@ -187,6 +187,8 @@ const createFormEditorTools = ({ bindings, helpers }) => {
           say(explanation || "All changes have been saved to the form.");
         }
       } catch (err) {
+        if (err?.isCancelled) return say("Save cancelled — your pending changes are still in the preview.");
+        if (getBlockedMessageKey(err)) return reportActionError(err);
         const detail = getErrorDetail(err);
         say(`Save failed${detail ? `: ${detail}` : ""}. Some changes may not have been applied.`);
       }

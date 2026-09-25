@@ -1,151 +1,99 @@
 import { useCallback, useState } from "react";
 import { toast } from "react-toastify";
-import { FiFileText } from "react-icons/fi";
-import { useDeleteSingleFormMutation, useGetMyAllFormsQuery } from "@/redux/apis/form.apis";
-import useApplicationFormsScreenContext from "../hooks/useApplicationFormsScreenContext";
+import { FiFileText, FiSearch } from "react-icons/fi";
+import { useDeleteSingleFormMutation } from "@/redux/apis/form.apis";
 import useBranding from "@/hooks/useBranding";
-import { LocationModalComponent } from "@/components/modals/LocationStatusModal";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
-import CustomLoading from "@/components/shared/CustomLoading";
 import EmptyState from "@/components/shared/EmptyState";
-import Modal from "@/components/shared/Modal";
 import ApplicationFormsBrandingModal from "./ApplicationFormsBrandingModal";
 import ApplicationFormsCard from "./ApplicationFormsCard";
 import ApplicationFormsConfigurationModal from "./ApplicationFormsConfigurationModal";
-import ApplicationFormsCreateModal from "./ApplicationFormsCreateModal";
-import ApplicationFormsFilter from "./ApplicationFormsFilter";
-import ApplicationFormsHeading from "./ApplicationFormsHeading";
-import { INITIAL_FORM_FILTERS, INITIAL_FORM_LOCATION_DATA } from "../utils/applicationForms.constants";
+import ApplicationFormsLocationModal from "./ApplicationFormsLocationModal";
 
-const ApplicationsCard = () => {
+const ApplicationFormsCards = ({ forms = [], isFiltering = false }) => {
   const { logo } = useBranding();
-  const { data: forms, refetch, isLoading: isLoadingForms } = useGetMyAllFormsQuery();
-  const [deleteForm] = useDeleteSingleFormMutation();
-
-  const [filters, setFilters] = useState(INITIAL_FORM_FILTERS);
+  const [deleteForm, { isLoading: isDeletingForm }] = useDeleteSingleFormMutation();
   const [actionMenu, setActionMenu] = useState(null);
-  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
-  const [brandingFormId, setBrandingFormId] = useState(null);
-  const [isBrandingOpen, setIsBrandingOpen] = useState(false);
+  const [formToBrand, setFormToBrand] = useState(null);
   const [formToUpdate, setFormToUpdate] = useState(null);
-  const [locationModal, setLocationModal] = useState(false);
-  const [formLocationData, setFormLocationData] = useState(INITIAL_FORM_LOCATION_DATA);
-  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
-  const [isDeletingForm, setIsDeletingForm] = useState(false);
-
-  const handleOpenCreateForm = () => setIsCreateFormOpen(true);
-
-  useApplicationFormsScreenContext({ onOpenCreateForm: handleOpenCreateForm });
+  const [formToLocate, setFormToLocate] = useState(null);
+  const [formToDelete, setFormToDelete] = useState(null);
 
   const handleCloseMenu = useCallback(() => setActionMenu(null), []);
 
   const handleToggleMenu = (formId) => setActionMenu((prev) => (prev === formId ? null : formId));
 
-  const handleSetBranding = (form) => {
-    setBrandingFormId(form?._id);
-    setIsBrandingOpen(true);
-  };
-
   const handleBrandingApplied = () => {
-    setIsBrandingOpen(false);
-    setBrandingFormId(null);
+    setFormToBrand(null);
     setActionMenu(null);
-  };
-
-  const handleSetLocation = (form) => {
-    setLocationModal(form?._id);
-    setFormLocationData({
-      title: form?.locationTitle,
-      subtitle: form?.locationSubtitle,
-      status: form?.locationStatus,
-      message: form?.locationMessage,
-      formatedText: form?.formatedLocationMessage,
-      formatingTextInstructions: form?.formateTextInstructions,
-    });
   };
 
   const handleDeleteForm = async () => {
     try {
-      if (!deleteConfirmation) return;
-      setIsDeletingForm(true);
-      const res = await deleteForm({ _id: deleteConfirmation }).unwrap();
-      if (res?.success) {
-        await refetch();
-        toast?.success(res?.message || "Form deleted successfully");
-      }
+      const res = await deleteForm({ _id: formToDelete }).unwrap();
+      toast.success(res?.message || "Form deleted successfully");
+      setFormToDelete(null);
     } catch (error) {
       console.error("Delete form error:", error);
       toast.error(error?.data?.message || "Failed to delete form");
-    } finally {
-      setDeleteConfirmation(null);
-      setIsDeletingForm(false);
     }
   };
 
-  if (isLoadingForms) return <CustomLoading />;
-
   return (
-    <article className="bg-backgroundColor  rounded-md p-5 shadow" data-testid="forms-page">
-      {/* Modals */}
+    <>
       <ConfirmationModal
-        isOpen={!!deleteConfirmation}
-        onClose={() => setDeleteConfirmation(null)}
+        isOpen={Boolean(formToDelete)}
+        onClose={() => setFormToDelete(null)}
         onConfirm={handleDeleteForm}
         isLoading={isDeletingForm}
         title="Delete Form"
-        message={`Are you sure you want to delete this form?`}
+        message="Are you sure you want to delete this form?"
         confirmButtonText="Delete"
-        confirmButtonClassName="bg-red-500 text-white"
       />
       <ApplicationFormsBrandingModal
-        isOpen={isBrandingOpen}
-        formId={brandingFormId}
-        onClose={() => setIsBrandingOpen(false)}
+        isOpen={Boolean(formToBrand)}
+        formId={formToBrand}
+        onClose={() => setFormToBrand(null)}
         onApplied={handleBrandingApplied}
-        refetch={refetch}
       />
-      {formToUpdate && (
-        <Modal onClose={() => setFormToUpdate(null)} title="Update Form">
-          <ApplicationFormsConfigurationModal
-            form={formToUpdate}
-            refetch={refetch}
-            setModal={() => setFormToUpdate(null)}
-          />
-        </Modal>
-      )}
-      {locationModal && (
-        <Modal onClose={() => setLocationModal(false)} title="Set Location">
-          <LocationModalComponent
-            locationModal={locationModal}
-            setLocationModal={setLocationModal}
-            refetch={refetch}
-            formLocationData={formLocationData}
-          />
-        </Modal>
-      )}
-      {isCreateFormOpen && <ApplicationFormsCreateModal onClose={() => setIsCreateFormOpen(false)} refetch={refetch} />}
+      <ApplicationFormsConfigurationModal
+        key={formToUpdate?._id}
+        isOpen={Boolean(formToUpdate)}
+        initialData={formToUpdate}
+        onClose={() => setFormToUpdate(null)}
+      />
+      <ApplicationFormsLocationModal
+        key={formToLocate?._id}
+        isOpen={Boolean(formToLocate)}
+        initialData={formToLocate}
+        onClose={() => setFormToLocate(null)}
+      />
 
-      <ApplicationFormsHeading onCreateForm={handleOpenCreateForm} />
-      <ApplicationFormsFilter filters={filters} setFilters={setFilters} />
-
-      {/* Cards */}
-      <section className="p- sm:p- md:p- grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 w-full ">
-        {forms?.data?.length > 0 ? (
-          forms?.data?.map((form, index) => (
-            <ApplicationFormsCard
-              key={form?._id ?? index}
-              form={form}
-              logo={logo}
-              isMenuOpen={actionMenu === form?._id}
-              onToggleMenu={handleToggleMenu}
-              onCloseMenu={handleCloseMenu}
-              onUpdateForm={setFormToUpdate}
-              onSetBranding={handleSetBranding}
-              onSetLocation={handleSetLocation}
-              onDelete={setDeleteConfirmation}
-            />
-          ))
-        ) : (
+      <section className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {forms.map((form) => (
+          <ApplicationFormsCard
+            key={form?._id}
+            form={form}
+            logo={logo}
+            isMenuOpen={actionMenu === form?._id}
+            onToggleMenu={handleToggleMenu}
+            onCloseMenu={handleCloseMenu}
+            onUpdateForm={setFormToUpdate}
+            onSetBranding={(selected) => setFormToBrand(selected?._id)}
+            onSetLocation={setFormToLocate}
+            onDelete={setFormToDelete}
+          />
+        ))}
+        {!forms.length && isFiltering && (
+          <EmptyState
+            variant="panel"
+            icon={<FiSearch size={28} />}
+            title="No forms match your search"
+            description="Try a different name or date range."
+            className="col-span-full"
+          />
+        )}
+        {!forms.length && !isFiltering && (
           <EmptyState
             variant="panel"
             icon={<FiFileText size={28} />}
@@ -155,10 +103,8 @@ const ApplicationsCard = () => {
           />
         )}
       </section>
-    </article>
+    </>
   );
 };
 
-export { default as FormConfigurationModal } from "./ApplicationFormsConfigurationModal";
-
-export default ApplicationsCard;
+export default ApplicationFormsCards;

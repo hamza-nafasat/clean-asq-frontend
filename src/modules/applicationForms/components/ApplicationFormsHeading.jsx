@@ -13,16 +13,14 @@ const ApplicationFormsHeading = ({ onCreateForm }) => {
           Dynamic application forms with AI-assisted completion and automated data lookup
         </p>
       </div>
-      <div className="mt-10 flex gap-6 md:mt-0">
-        {canCreateForm && (
-          <Button
-            label={"Create Form"}
-            onClick={() => onCreateForm?.()}
-            className="truncate text-sm! md:text-base!"
-            data-testid="forms-create-btn"
-          />
-        )}
-      </div>
+      {canCreateForm && (
+        <Button
+          label="Create Form"
+          onClick={() => onCreateForm?.()}
+          className="mt-10 truncate text-sm md:mt-0 md:text-base"
+          data-testid="forms-create-btn"
+        />
+      )}
     </header>
   );
 };

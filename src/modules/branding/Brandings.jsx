@@ -4,6 +4,7 @@ import { useGetMyAllFormsQuery } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
 import { FaExchangeAlt } from "react-icons/fa";
 import { FiAlertCircle, FiEdit2, FiDroplet, FiTrash2 } from "react-icons/fi";
+import useConfirm from "@/hooks/useConfirm";
 import usePermission from "@/hooks/usePermission";
 import ApplyBranding from "@/components/global/ApplyBranding";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
@@ -11,7 +12,6 @@ import Button from "@/components/shared/Button";
 import EmptyState from "@/components/shared/EmptyState";
 import LoadingState from "@/components/shared/LoadingState";
 import BrandingTable from "./components/BrandingTable";
-import useBrandingConfirm from "./hooks/useBrandingConfirm";
 import useBrandingListApply from "./hooks/useBrandingListApply";
 import useBrandingListAssistant from "./hooks/useBrandingListAssistant";
 import { PERMISSIONS } from "@/utils/permissions";
@@ -29,8 +29,8 @@ const Brandings = () => {
   const { data: allFormsData } = useGetMyAllFormsQuery(undefined, { skip: !canReadForm });
   const { data: brandings = [], isLoading: isBrandingsLoading, isError, refetch } = useGetAllBrandingsQuery();
   const [deleteBranding, { isLoading: isDeleting }] = useDeleteSingleBrandingMutation();
-  const deleteConfirm = useBrandingConfirm();
-  const applyConfirm = useBrandingConfirm();
+  const deleteConfirm = useConfirm();
+  const applyConfirm = useConfirm();
   const apply = useBrandingListApply();
   const brandingList = brandings?.data || [];
 

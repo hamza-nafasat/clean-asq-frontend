@@ -30,7 +30,7 @@ export const buildRuleColumns = ({ actionMenu, onToggleMenu, menuButtons, canReo
       cell: (row) => (
         <ReadOnlyTextCell
           value={row.prompt}
-          className="text-textPrimary border border-frameColor w-full resize-none rounded-md bg-[#FAFBFF] p-2 text-sm"
+          className="text-textPrimary border border-frameColor w-full resize-none rounded-md bg-fieldBackground p-2 text-sm"
         />
       ),
     },

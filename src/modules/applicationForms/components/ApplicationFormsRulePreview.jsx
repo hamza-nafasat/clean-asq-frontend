@@ -2,8 +2,8 @@ const ApplicationFormsRulePreview = ({ formula = "", example = "", explanation =
   if (!formula || !example) return null;
 
   return (
-    <section className="flex flex-col gap-4 mt-4 border border-gray-200 rounded-xl p-4 bg-[#FAFBFF]">
-      <h4 className="text-lg font-semibold text-gray-800">Rule Preview</h4>
+    <section className="flex flex-col gap-4 mt-4 border border-gray-200 rounded-xl p-4 bg-fieldBackground">
+      <h3 className="text-lg font-semibold text-gray-800">Rule Preview</h3>
       {explanation && (
         <div>
           <p className="text-sm font-medium text-gray-600 mb-1">Explanation</p>

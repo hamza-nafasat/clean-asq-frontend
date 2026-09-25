@@ -2,6 +2,14 @@ export const API_TAGS = {
   BRANDINGS: "Brandings",
   SINGLE_BRANDING: "SingleBranding",
   FORM: "Form",
+  SINGLE_FORM: "SingleForm",
+  FORM_CREATION_DATA: "FormCreationData",
+  FORM_RULES: "FormRules",
+  STRATEGY: "Strategy",
+  PROMPTS: "Prompts",
+  SUBMIT_FORM: "SubmitForm",
+  SUBMIT_FORM_VERSIONS: "SubmitFormVersions",
+  HISTORY: "History",
   USERS: "Users",
 };
 

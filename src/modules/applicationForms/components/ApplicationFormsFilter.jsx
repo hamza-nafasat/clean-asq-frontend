@@ -1,66 +1,65 @@
 import { CiSearch } from "react-icons/ci";
 import Button from "@/components/shared/Button";
 import TextField from "@/components/shared/TextField";
-import { SEARCH_MODES } from "../utils/applicationForms.constants";
+import { FORM_FILTER_KEYS, SEARCH_MODES } from "../utils/applicationForms.constants";
 
-const ACTIVE_MODE_CLASSES = "bg-primary! text-white!";
-const INACTIVE_MODE_CLASSES = "bg-gray-200! text-gray-600!";
+const SEARCH_MODE_BUTTONS = [
+  { mode: SEARCH_MODES.CLIENT, label: "BY CLIENT#" },
+  { mode: SEARCH_MODES.NAME, label: "BY NAME#" },
+];
 
+// filters apply as the user types
 const ApplicationFormsFilter = ({ filters = {}, setFilters }) => {
-  const isClientMode = filters.searchMode === SEARCH_MODES.CLIENT;
+  const isClientMode = filters[FORM_FILTER_KEYS.SEARCH_MODE] === SEARCH_MODES.CLIENT;
+  const queryKey = isClientMode ? FORM_FILTER_KEYS.CLIENT_QUERY : FORM_FILTER_KEYS.NAME_QUERY;
 
-  const updateFilter = (name, value) => setFilters?.((prev) => ({ ...prev, [name]: value }));
+  const handleChange = ({ target: { name, value } }) => setFilters?.((prev) => ({ ...prev, [name]: value }));
 
   return (
-    <section className="mb-6 grid w-full grid-cols-1 items-end gap-2 xl:grid-cols-2">
-      {/* Search */}
-      <div className="w-full rounded-lg">
-        <TextField
-          label={"Advance search"}
-          type="text"
-          className="bg-backgroundColor border-none text-sm outline-none"
-          placeholder={isClientMode ? "Search From" : "Search Name"}
-          value={isClientMode ? filters.clientQuery : filters.nameQuery}
-          onChange={(e) => updateFilter(isClientMode ? "clientQuery" : "nameQuery", e.target.value)}
-          leftIcon={<CiSearch />}
-          rightIcon={
-            <div className="flex gap-x-2">
+    <section className="mb-6 grid w-full grid-cols-1 items-end gap-4 xl:grid-cols-2">
+      <TextField
+        label="Advance search"
+        type="text"
+        id={queryKey}
+        name={queryKey}
+        className="bg-backgroundColor border-none text-sm outline-none"
+        placeholder={isClientMode ? "Search From" : "Search Name"}
+        value={filters[queryKey]}
+        onChange={handleChange}
+        leftIcon={<CiSearch size={18} />}
+        rightIcon={
+          <span className="flex gap-x-2">
+            {SEARCH_MODE_BUTTONS.map(({ mode, label }) => (
               <Button
-                className={`border-none! ${isClientMode ? ACTIVE_MODE_CLASSES : INACTIVE_MODE_CLASSES}`}
-                onClick={() => updateFilter("searchMode", SEARCH_MODES.CLIENT)}
-                label={"BY CLIENT#"}
+                key={mode}
+                label={label}
+                variant={filters[FORM_FILTER_KEYS.SEARCH_MODE] === mode ? "primary" : "secondary"}
+                aria-pressed={filters[FORM_FILTER_KEYS.SEARCH_MODE] === mode}
+                onClick={() => handleChange({ target: { name: FORM_FILTER_KEYS.SEARCH_MODE, value: mode } })}
               />
-              <Button
-                className={`border-none! ${filters.searchMode === SEARCH_MODES.NAME ? ACTIVE_MODE_CLASSES : INACTIVE_MODE_CLASSES}`}
-                onClick={() => updateFilter("searchMode", SEARCH_MODES.NAME)}
-                label={"BY NAME#"}
-              />
-            </div>
-          }
-        />
-      </div>
+            ))}
+          </span>
+        }
+      />
 
       {/* Dates */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
-        <div className="col-span-6 md:col-span-5 xl:col-span-5">
-          <TextField
-            label={"From"}
-            type="date"
-            value={filters.dateFrom}
-            onChange={(e) => updateFilter("dateFrom", e.target.value)}
-          />
-        </div>
-        <div className="col-span-6 md:col-span-4 xl:col-span-4">
-          <TextField
-            label={"To"}
-            type="date"
-            value={filters.dateTo}
-            onChange={(e) => updateFilter("dateTo", e.target.value)}
-          />
-        </div>
-        <div className="col-span-6 flex items-end justify-end md:col-span-3 xl:col-span-3">
-          <Button icon={CiSearch} label={"Search"} className="mt-0 h-12.5! md:mt-8 md:w-full!" />
-        </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <TextField
+          label="From"
+          type="date"
+          id={FORM_FILTER_KEYS.DATE_FROM}
+          name={FORM_FILTER_KEYS.DATE_FROM}
+          value={filters[FORM_FILTER_KEYS.DATE_FROM]}
+          onChange={handleChange}
+        />
+        <TextField
+          label="To"
+          type="date"
+          id={FORM_FILTER_KEYS.DATE_TO}
+          name={FORM_FILTER_KEYS.DATE_TO}
+          value={filters[FORM_FILTER_KEYS.DATE_TO]}
+          onChange={handleChange}
+        />
       </div>
     </section>
   );

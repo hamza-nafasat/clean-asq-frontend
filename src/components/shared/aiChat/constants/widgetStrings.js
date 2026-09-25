@@ -4,6 +4,7 @@ export const WIDGET_STRINGS = {
   errorCouldnt: "Sorry, I wasn't able to do that",
   tryAgain: "Please try again.",
   noPermission: "You don't have permission to do that.",
+  cancelledChange: "Okay, I cancelled that change.",
   tooManyRequests: "You're sending requests too fast. Please wait a moment.",
   cantDoOnPage: "I can't do that on this page.",
   revertFailed: "Sorry, the revert failed",

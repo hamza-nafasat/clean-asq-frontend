@@ -68,7 +68,7 @@ const brandingApis = createApi({
       async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;
-          dispatch(formApis.util.invalidateTags([API_TAGS.FORM]));
+          dispatch(formApis.util.invalidateTags([API_TAGS.FORM, API_TAGS.SINGLE_FORM]));
         } catch (error) {
           console.error("Add branding in form error:", error);
         }

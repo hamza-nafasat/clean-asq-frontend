@@ -1,113 +1,149 @@
-import { CopyIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { FiCopy } from "react-icons/fi";
 import { useUpdateFormMutation } from "@/redux/apis/form.apis";
+import useCopyToClipboard from "@/hooks/useCopyToClipboard";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
+import Modal from "@/components/shared/Modal";
 import TextField from "@/components/shared/TextField";
 import { LAYOUT_ROUTES } from "@/constants";
-import { DEFAULT_HEADER_TEXT_SIZE } from "../utils/applicationForms.constants";
+import {
+  COPY_RESET_MS,
+  DEFAULT_HEADER_TEXT_SIZE,
+  FORM_CONFIG_FIELDS,
+  HEADER_TEXT_SIZE_LIMITS,
+} from "../utils/applicationForms.constants";
+import { validateFormConfig } from "../utils/applicationForms.validation.utils";
 
-const ApplicationFormsConfigurationModal = ({ form = null, refetch, setModal }) => {
-  const [redirectUrl, setRedirectUrl] = useState(form?.redirectUrl || "");
-  const [headerText, setHeaderText] = useState(form?.headerText || "");
-  const [headerTextSize, setHeaderTextSize] = useState(form?.headerTextSize || DEFAULT_HEADER_TEXT_SIZE);
+const getInitialValues = (form) => ({
+  [FORM_CONFIG_FIELDS.REDIRECT_URL]: form?.redirectUrl || "",
+  [FORM_CONFIG_FIELDS.HEADER_TEXT]: form?.headerText || "",
+  [FORM_CONFIG_FIELDS.HEADER_TEXT_SIZE]: form?.headerTextSize || DEFAULT_HEADER_TEXT_SIZE,
+});
+
+const ApplicationFormsConfigurationModal = ({ isOpen = false, onClose, initialData = null }) => {
+  const [values, setValues] = useState(() => getInitialValues(initialData));
+  const [errors, setErrors] = useState({});
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [updateForm, { isLoading: isUpdatingForm }] = useUpdateFormMutation();
+  const { copy } = useCopyToClipboard(COPY_RESET_MS);
 
-  const formUrl = `${window.location.origin}${LAYOUT_ROUTES.APPLICATION_FORM}/${form?.branding?.name}/${form?._id}`;
+  if (!isOpen) return null;
 
-  const handleFormUpdate = async () => {
+  const formUrl = `${window.location.origin}${LAYOUT_ROUTES.APPLICATION_FORM}/${initialData?.branding?.name}/${initialData?._id}`;
+
+  const handleChange = ({ target: { name, value } }) => {
+    setValues((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handleSave = () => {
+    const nextErrors = validateFormConfig(values);
+    setErrors(nextErrors);
+    if (!Object.keys(nextErrors).length) setIsConfirmOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
     try {
       const res = await updateForm({
-        _id: form?._id,
-        data: { redirectUrl, headerText, headerTextSize },
+        _id: initialData?._id,
+        data: { ...values, [FORM_CONFIG_FIELDS.HEADER_TEXT_SIZE]: Number(values[FORM_CONFIG_FIELDS.HEADER_TEXT_SIZE]) },
       }).unwrap();
-      if (res?.success) {
-        await refetch?.();
-        toast?.success(res?.message || "Form updated successfully");
-        setModal?.(false);
-      }
+      toast.success(res?.message || "Form updated successfully");
+      setIsConfirmOpen(false);
+      onClose?.();
     } catch (error) {
       console.error("Update form error:", error);
       toast.error(error?.data?.message || "Failed to update form");
     }
   };
 
-  const handleCopyUrl = () => {
-    navigator.clipboard.writeText(formUrl);
-    toast.success("Copied to clipboard");
+  const handleCopyUrl = async () => {
+    try {
+      await copy(formUrl);
+      toast.success("Copied to clipboard");
+    } catch (error) {
+      console.error("Copy form url error:", error);
+      toast.error("Could not copy the link");
+    }
   };
 
   return (
-    <div className="flex items-center justify-center p-4">
-      <div className="flex w-full max-w-2xl flex-col gap-6">
-        <h3 className="text-center text-lg font-semibold text-gray-800">Form Configuration</h3>
-
+    <Modal onClose={onClose} title="Update Form">
+      <ConfirmationModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleConfirmSave}
+        isLoading={isUpdatingForm}
+        title="Update Form"
+        message="Save these settings for this form?"
+        confirmButtonText="Save"
+      />
+      <section className="flex flex-col gap-6 p-4">
         {/* Form url */}
         <div className="flex items-center gap-2">
           <TextField
             label="Form URL"
-            id="redirect-url"
+            id={FORM_CONFIG_FIELDS.FORM_URL}
+            name={FORM_CONFIG_FIELDS.FORM_URL}
             value={formUrl}
             readOnly
-            onChange={() => {}}
-            name="redirect-url"
           />
           <Button
-            label={"Copy"}
+            label="Copy"
             variant="secondary"
+            size="field"
             onClick={handleCopyUrl}
-            className=" self-end! h-12!"
-            rightIcon={CopyIcon}
-            cnRight={"h-5! w-5!"}
+            className="self-end"
+            rightIcon={FiCopy}
+            cnRight="h-5 w-5"
           />
         </div>
 
-        {/* Redirect url */}
-        <div className="flex flex-col gap-2">
-          <TextField
-            label="Redirect URL"
-            id="redirect-url"
-            placeholder="Enter redirect URL"
-            value={redirectUrl}
-            onChange={(e) => setRedirectUrl(e.target.value)}
-            name="redirect-url"
-          />
-        </div>
+        <TextField
+          label="Redirect URL"
+          id={FORM_CONFIG_FIELDS.REDIRECT_URL}
+          name={FORM_CONFIG_FIELDS.REDIRECT_URL}
+          placeholder="Enter redirect URL"
+          value={values[FORM_CONFIG_FIELDS.REDIRECT_URL]}
+          onChange={handleChange}
+          error={errors[FORM_CONFIG_FIELDS.REDIRECT_URL]}
+        />
 
         {/* Header text */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-end gap-3">
-            <div className="flex-1">
-              <TextField
-                label="Header Text"
-                id="header-text"
-                placeholder="Enter header text"
-                value={headerText}
-                onChange={(e) => setHeaderText(e.target.value)}
-                name="header-text"
-                style={{ fontSize: `${headerTextSize}px` }}
-              />
-            </div>
-            <div className="flex flex-col gap-1 pb-1">
-              <TextField
-                type="number"
-                min={8}
-                label={"Size (px)"}
-                max={72}
-                value={headerTextSize}
-                onChange={(e) => setHeaderTextSize(Number(e.target.value))}
-              />
-            </div>
+        <div className="flex items-start gap-3">
+          <TextField
+            label="Header Text"
+            id={FORM_CONFIG_FIELDS.HEADER_TEXT}
+            name={FORM_CONFIG_FIELDS.HEADER_TEXT}
+            placeholder="Enter header text"
+            value={values[FORM_CONFIG_FIELDS.HEADER_TEXT]}
+            onChange={handleChange}
+            className="flex-1"
+            style={{ fontSize: `${values[FORM_CONFIG_FIELDS.HEADER_TEXT_SIZE]}px` }}
+          />
+          <div className="w-32 shrink-0">
+            <TextField
+              type="number"
+              label="Size (px)"
+              id={FORM_CONFIG_FIELDS.HEADER_TEXT_SIZE}
+              name={FORM_CONFIG_FIELDS.HEADER_TEXT_SIZE}
+              min={HEADER_TEXT_SIZE_LIMITS.MIN}
+              max={HEADER_TEXT_SIZE_LIMITS.MAX}
+              value={values[FORM_CONFIG_FIELDS.HEADER_TEXT_SIZE]}
+              onChange={handleChange}
+              error={errors[FORM_CONFIG_FIELDS.HEADER_TEXT_SIZE]}
+            />
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex w-full justify-end gap-2">
-          <Button label="Cancel" variant="secondary" onClick={() => setModal?.(false)} />
-          <Button disabled={isUpdatingForm} label="Save" variant="primary" onClick={handleFormUpdate} />
-        </div>
-      </div>
-    </div>
+        <footer className="flex w-full justify-end gap-2">
+          <Button label="Cancel" variant="secondary" onClick={onClose} />
+          <Button disabled={isUpdatingForm} label="Save" variant="primary" onClick={handleSave} />
+        </footer>
+      </section>
+    </Modal>
   );
 };
 

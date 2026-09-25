@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { CgSpinner } from "react-icons/cg";
-import { useApplyRulesOnFormQuery } from "@/redux/apis/form.apis";
+import { useApplyRulesOnFormMutation } from "@/redux/apis/form.apis";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import Button from "@/components/shared/Button";
 import AppDataTable from "@/components/shared/AppDataTable";
@@ -32,14 +32,21 @@ const buildAlertColumns = () => [
 const numberRows = (rows) => rows.map((item, index) => ({ ...item, number: index + 1 }));
 
 const UnderwritingAnalysis = ({ submitFormData = null }) => {
-  const [isApplyingRules, setIsApplyingRules] = useState(false);
-  const {
-    data: alertsData,
-    refetch: refetchAlertsData,
-    isLoading: isLoadingAlertsData,
-  } = useApplyRulesOnFormQuery(submitFormData?._id, {
-    skip: !submitFormData?._id,
-  });
+  const submittedFormId = submitFormData?._id;
+  const [applyRulesOnForm, { data: alertsData, isLoading: isApplyingRules }] = useApplyRulesOnFormMutation();
+
+  const handleApplyRules = async () => {
+    try {
+      await applyRulesOnForm(submittedFormId).unwrap();
+    } catch (error) {
+      console.error("Apply rules error:", error);
+    }
+  };
+
+  // apply rules when the submission loads
+  useEffect(() => {
+    if (submittedFormId) applyRulesOnForm(submittedFormId);
+  }, [submittedFormId, applyRulesOnForm]);
 
   const filteredRules = useMemo(() => {
     const data = alertsData?.data || [];
@@ -48,17 +55,6 @@ const UnderwritingAnalysis = ({ submitFormData = null }) => {
       otherAllCategoryAlertWithNumber: numberRows(data.filter((item) => item.category !== ALERT_CATEGORIES.DISPLAY)),
     };
   }, [alertsData?.data]);
-
-  const handleApplyRules = async () => {
-    try {
-      setIsApplyingRules(true);
-      await refetchAlertsData(submitFormData?._id);
-      setIsApplyingRules(false);
-    } catch (error) {
-      console.error("Apply rules error:", error);
-      setIsApplyingRules(false);
-    }
-  };
 
   return (
     <div className="flex w-full p-2 items-center justify-center gap-4 flex-col">
@@ -82,7 +78,7 @@ const UnderwritingAnalysis = ({ submitFormData = null }) => {
               data={filteredRules.allDisplayAlertWithNumber}
               columns={buildAlertColumns()}
               highlightOnHover
-              progressPending={isLoadingAlertsData}
+              progressPending={isApplyingRules}
               noDataComponent="No key info yet"
               emptyDescription="Display rule results for this application will appear here."
               className="rounded-t-xl!"
@@ -98,7 +94,7 @@ const UnderwritingAnalysis = ({ submitFormData = null }) => {
               data={filteredRules.otherAllCategoryAlertWithNumber}
               columns={buildAlertColumns()}
               highlightOnHover
-              progressPending={isLoadingAlertsData}
+              progressPending={isApplyingRules}
               noDataComponent="No alerts yet"
               emptyDescription="Alert rule results for this application will appear here."
               className="rounded-t-xl!"

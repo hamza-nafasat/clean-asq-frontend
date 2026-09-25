@@ -1,16 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { API_TAGS } from "@/constants";
 import getEnv from "@/utils/env";
-
-const FORM_TAGS = {
-  FORM: "Form",
-  STRATEGY: "Strategy",
-  PROMPTS: "Prompts",
-  FORM_STRATEGY: "FormStrategy",
-  SUBMIT_FORM: "SubmitForm",
-  HISTORY: "History",
-  FORM_RULES: "FormRules",
-  SUBMIT_FORM_VERSIONS: "SubmitFormVersions",
-};
 
 const formApis = createApi({
   reducerPath: "formApi",
@@ -18,12 +8,12 @@ const formApis = createApi({
     baseUrl: `${getEnv("SERVER_URL")}/api/form`,
     credentials: "include",
   }),
-  tagTypes: Object.values(FORM_TAGS),
+  tagTypes: Object.values(API_TAGS),
   endpoints: (builder) => ({
     /////
     createForm: builder.mutation({
       query: (data) => ({ url: "/create", method: "POST", body: data }),
-      invalidatesTags: [FORM_TAGS.FORM],
+      invalidatesTags: [API_TAGS.FORM],
     }),
     /////
     updateForm: builder.mutation({
@@ -32,7 +22,7 @@ const formApis = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: [FORM_TAGS.FORM],
+      invalidatesTags: (result, error, { _id }) => [API_TAGS.FORM, { type: API_TAGS.SINGLE_FORM, id: _id }],
     }),
     /////
     updateFormLocation: builder.mutation({
@@ -41,17 +31,17 @@ const formApis = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: [FORM_TAGS.FORM],
+      invalidatesTags: (result, error, { _id }) => [API_TAGS.FORM, { type: API_TAGS.SINGLE_FORM, id: _id }],
     }),
     /////
     getMyAllForms: builder.query({
       query: () => ({ url: "/my", method: "GET" }),
-      providesTags: [FORM_TAGS.FORM],
+      providesTags: [API_TAGS.FORM],
     }),
     /////
     getSingleFormQuery: builder.query({
       query: (data) => ({ url: `single/${data?._id}`, method: "GET" }),
-      providesTags: [FORM_TAGS.FORM],
+      providesTags: (result, error, data) => [{ type: API_TAGS.SINGLE_FORM, id: data?._id }],
     }),
     /////
     cloneForm: builder.mutation({
@@ -60,17 +50,17 @@ const formApis = createApi({
         method: "POST",
         body: name ? { name } : {},
       }),
-      invalidatesTags: [FORM_TAGS.FORM, FORM_TAGS.STRATEGY],
+      invalidatesTags: [API_TAGS.FORM, API_TAGS.STRATEGY],
     }),
     /////
     deleteSingleForm: builder.mutation({
       query: (data) => ({ url: `single/${data?._id}`, method: "Delete" }),
-      invalidatesTags: [FORM_TAGS.FORM],
+      invalidatesTags: (result, error, data) => [API_TAGS.FORM, { type: API_TAGS.SINGLE_FORM, id: data?._id }],
     }),
     /////
     submitForm: builder.mutation({
       query: (data) => ({ url: "/submit", method: "POST", body: data }),
-      invalidatesTags: [FORM_TAGS.FORM, FORM_TAGS.SUBMIT_FORM, FORM_TAGS.SUBMIT_FORM_VERSIONS],
+      invalidatesTags: [API_TAGS.SINGLE_FORM, API_TAGS.FORM, API_TAGS.SUBMIT_FORM, API_TAGS.SUBMIT_FORM_VERSIONS],
     }),
     /////
     updateSubmittedForm: builder.mutation({
@@ -79,7 +69,7 @@ const formApis = createApi({
         method: "PUT",
         body: { submittedFormId, formData },
       }),
-      invalidatesTags: [FORM_TAGS.SUBMIT_FORM, FORM_TAGS.HISTORY, FORM_TAGS.SUBMIT_FORM_VERSIONS],
+      invalidatesTags: [API_TAGS.SUBMIT_FORM, API_TAGS.HISTORY, API_TAGS.SUBMIT_FORM_VERSIONS],
     }),
     /////
     getSubmittedFormUsers: builder.query({
@@ -95,7 +85,7 @@ const formApis = createApi({
         method: "POST",
         body: { email, sectionKey },
       }),
-      invalidatesTags: [FORM_TAGS.HISTORY],
+      invalidatesTags: [API_TAGS.HISTORY],
     }),
     /////
     applicantGiveSpecialAccessToBeneficialOwner: builder.mutation({
@@ -104,7 +94,7 @@ const formApis = createApi({
         method: "POST",
         body: { email },
       }),
-      invalidatesTags: [FORM_TAGS.HISTORY, FORM_TAGS.SUBMIT_FORM],
+      invalidatesTags: [API_TAGS.HISTORY, API_TAGS.SUBMIT_FORM],
     }),
     /////
     getSpecialAccessOfSection: builder.query({
@@ -112,7 +102,7 @@ const formApis = createApi({
         url: `/special-access-of-section/${formId}?token=${token}&sectionKey=${sectionKey}`,
         method: "GET",
       }),
-      providesTags: [FORM_TAGS.FORM],
+      providesTags: [API_TAGS.FORM],
     }),
     /////
     submitSpecialAccessForm: builder.mutation({
@@ -121,12 +111,12 @@ const formApis = createApi({
         method: "PUT",
         body: { sectionKey, formData, token },
       }),
-      invalidatesTags: [FORM_TAGS.HISTORY],
+      invalidatesTags: [API_TAGS.HISTORY],
     }),
     /////
     saveFormInDraft: builder.mutation({
       query: (data) => ({ url: "/save-in-draft", method: "POST", body: data }),
-      invalidatesTags: [FORM_TAGS.FORM],
+      invalidatesTags: [API_TAGS.SINGLE_FORM, API_TAGS.FORM],
     }),
     /////
     generatePdfForm: builder.mutation({
@@ -143,7 +133,7 @@ const formApis = createApi({
         url: `/get-saved/${formId}${draftId ? `?draftId=${draftId}` : ""}`,
         method: "GET",
       }),
-      invalidatesTags: [FORM_TAGS.SUBMIT_FORM],
+      invalidatesTags: [API_TAGS.SUBMIT_FORM],
     }),
     /////
     getFormHistory: builder.query({
@@ -151,7 +141,7 @@ const formApis = createApi({
         url: `/get-history/${formSubmittedId}`,
         method: "GET",
       }),
-      providesTags: [FORM_TAGS.HISTORY],
+      providesTags: [API_TAGS.HISTORY],
     }),
     /////
     getSavedFormByUserId: builder.mutation({
@@ -161,7 +151,7 @@ const formApis = createApi({
           : `/get-submitted-form/${formId}/${userId}`,
         method: "GET",
       }),
-      invalidatesTags: [FORM_TAGS.SUBMIT_FORM],
+      invalidatesTags: [API_TAGS.SUBMIT_FORM],
     }),
     /////
     removeSavedForm: builder.mutation({
@@ -169,12 +159,12 @@ const formApis = createApi({
         url: `/remove-saved/${formId}${draftId ? `?draftId=${draftId}` : ""}`,
         method: "DELETE",
       }),
-      invalidatesTags: [FORM_TAGS.FORM],
+      invalidatesTags: [API_TAGS.SINGLE_FORM, API_TAGS.FORM],
     }),
     /////
     getMyAllDraftsAndSubmittions: builder.query({
       query: () => ({ url: "/draft-and-submitions", method: "GET" }),
-      providesTags: [FORM_TAGS.FORM],
+      providesTags: [API_TAGS.FORM],
     }),
     /////
     reorderFormSections: builder.mutation({
@@ -183,7 +173,7 @@ const formApis = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: [FORM_TAGS.FORM],
+      invalidatesTags: [API_TAGS.FORM, API_TAGS.SINGLE_FORM, API_TAGS.FORM_CREATION_DATA],
     }),
     /////
     addFormSection: builder.mutation({
@@ -192,7 +182,7 @@ const formApis = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: [FORM_TAGS.FORM],
+      invalidatesTags: [API_TAGS.FORM, API_TAGS.SINGLE_FORM, API_TAGS.FORM_CREATION_DATA],
     }),
     /////
     deleteFormSection: builder.mutation({
@@ -200,7 +190,7 @@ const formApis = createApi({
         url: `/delete-form-section/${sectionId}`,
         method: "DELETE",
       }),
-      invalidatesTags: [FORM_TAGS.FORM],
+      invalidatesTags: [API_TAGS.FORM, API_TAGS.SINGLE_FORM, API_TAGS.FORM_CREATION_DATA],
     }),
     /////
     updateFormSection: builder.mutation({
@@ -209,7 +199,7 @@ const formApis = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: [FORM_TAGS.FORM],
+      invalidatesTags: [API_TAGS.FORM, API_TAGS.SINGLE_FORM, API_TAGS.FORM_CREATION_DATA],
     }),
     /////
     updateDeleteCreateFormFields: builder.mutation({
@@ -218,7 +208,16 @@ const formApis = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: [FORM_TAGS.FORM],
+      invalidatesTags: [API_TAGS.FORM, API_TAGS.SINGLE_FORM, API_TAGS.FORM_CREATION_DATA],
+    }),
+    /////
+    addFormField: builder.mutation({
+      query: (data) => ({
+        url: "/create-field",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: [API_TAGS.FORM, API_TAGS.SINGLE_FORM, API_TAGS.FORM_CREATION_DATA],
     }),
     /////
     formateTextInMarkDown: builder.mutation({
@@ -250,7 +249,7 @@ const formApis = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: [FORM_TAGS.STRATEGY],
+      invalidatesTags: [API_TAGS.STRATEGY],
     }),
     /////
     createSearchStrategyDefault: builder.mutation({
@@ -259,12 +258,12 @@ const formApis = createApi({
         method: "POST",
         body: {},
       }),
-      invalidatesTags: [FORM_TAGS.STRATEGY],
+      invalidatesTags: [API_TAGS.STRATEGY],
     }),
     /////
     getAllSearchStrategies: builder.query({
       query: () => ({ url: "/search-strategy/all", method: "GET" }),
-      providesTags: [FORM_TAGS.STRATEGY],
+      providesTags: [API_TAGS.STRATEGY],
     }),
     /////
     updateSearchStrategy: builder.mutation({
@@ -273,7 +272,7 @@ const formApis = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: [FORM_TAGS.STRATEGY],
+      invalidatesTags: [API_TAGS.STRATEGY],
     }),
     /////
     deleteSearchStrategy: builder.mutation({
@@ -281,7 +280,7 @@ const formApis = createApi({
         url: `/search-strategy/single/${SearchStrategyId}`,
         method: "DELETE",
       }),
-      invalidatesTags: [FORM_TAGS.STRATEGY],
+      invalidatesTags: [API_TAGS.STRATEGY],
     }),
     /////
     createPrompt: builder.mutation({
@@ -290,7 +289,7 @@ const formApis = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: [FORM_TAGS.PROMPTS],
+      invalidatesTags: [API_TAGS.PROMPTS],
     }),
     /////
     updatePrompt: builder.mutation({
@@ -299,12 +298,12 @@ const formApis = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: [FORM_TAGS.PROMPTS],
+      invalidatesTags: [API_TAGS.PROMPTS],
     }),
     /////
     getAllPrompts: builder.query({
       query: () => ({ url: "/get-my-prompts", method: "GET" }),
-      providesTags: [FORM_TAGS.PROMPTS],
+      providesTags: [API_TAGS.PROMPTS],
     }),
     /////
     createFormStrategy: builder.mutation({
@@ -313,12 +312,12 @@ const formApis = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: [FORM_TAGS.STRATEGY],
+      invalidatesTags: [API_TAGS.STRATEGY],
     }),
     /////
     getAllFormStrategies: builder.query({
       query: () => ({ url: "/form-strategy/all", method: "GET" }),
-      providesTags: [FORM_TAGS.STRATEGY],
+      providesTags: [API_TAGS.STRATEGY],
     }),
     /////
     updateFormStrategy: builder.mutation({
@@ -327,7 +326,7 @@ const formApis = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: [FORM_TAGS.STRATEGY],
+      invalidatesTags: [API_TAGS.STRATEGY],
     }),
     /////
     deleteFormStrategy: builder.mutation({
@@ -335,7 +334,7 @@ const formApis = createApi({
         url: `/form-strategy/single/${FormStrategyId}`,
         method: "DELETE",
       }),
-      invalidatesTags: [FORM_TAGS.STRATEGY],
+      invalidatesTags: [API_TAGS.STRATEGY],
     }),
     /////
     getBankLookup: builder.mutation({
@@ -367,7 +366,7 @@ const formApis = createApi({
     /////
     getAllSubmitOrDraftForms: builder.query({
       query: () => ({ url: "/all-submit-or-draft", method: "GET" }),
-      providesTags: [FORM_TAGS.SUBMIT_FORM],
+      providesTags: [API_TAGS.SUBMIT_FORM],
     }),
     /////
     getSingleSubmitFormQuery: builder.query({
@@ -375,7 +374,7 @@ const formApis = createApi({
         url: `single-submit-or-draft/${data?._id}`,
         method: "GET",
       }),
-      providesTags: [FORM_TAGS.SUBMIT_FORM],
+      providesTags: [API_TAGS.SUBMIT_FORM],
     }),
     /////
     deleteSingleSubmitOrDraftForm: builder.mutation({
@@ -383,7 +382,7 @@ const formApis = createApi({
         url: `single-submit-or-draft/${_id}?type=${type}`,
         method: "Delete",
       }),
-      invalidatesTags: [FORM_TAGS.SUBMIT_FORM],
+      invalidatesTags: [API_TAGS.SUBMIT_FORM],
     }),
     /////
     createFormRule: builder.mutation({
@@ -392,7 +391,7 @@ const formApis = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: [FORM_TAGS.FORM_RULES],
+      invalidatesTags: [API_TAGS.FORM_RULES],
     }),
     /////
     cloneFormRules: builder.mutation({
@@ -401,15 +400,15 @@ const formApis = createApi({
         method: "POST",
         body: { sourceFormId, targetFormId },
       }),
-      invalidatesTags: [FORM_TAGS.FORM_RULES],
+      invalidatesTags: [API_TAGS.FORM_RULES],
     }),
     /////
-    applyRulesOnForm: builder.query({
+    applyRulesOnForm: builder.mutation({
       query: (formSubmittedId) => ({
         url: `/apply-rules-on-form/${formSubmittedId}`,
-        method: "GET",
+        method: "POST",
       }),
-      invalidatesTags: [FORM_TAGS.SUBMIT_FORM],
+      invalidatesTags: [API_TAGS.SUBMIT_FORM],
     }),
     /////
     getFormVersions: builder.query({
@@ -417,7 +416,7 @@ const formApis = createApi({
         url: `/form-versions/${submittedFormId}`,
         method: "GET",
       }),
-      providesTags: [FORM_TAGS.SUBMIT_FORM_VERSIONS],
+      providesTags: [API_TAGS.SUBMIT_FORM_VERSIONS],
     }),
     /////
     getAllFormRules: builder.query({
@@ -425,7 +424,7 @@ const formApis = createApi({
         url: `/all-rules?formId=${formId}`,
         method: "GET",
       }),
-      providesTags: [FORM_TAGS.FORM_RULES],
+      providesTags: [API_TAGS.FORM_RULES],
     }),
     /////
     deleteSingleFormRule: builder.mutation({
@@ -433,7 +432,7 @@ const formApis = createApi({
         url: `/single/rule/${ruleId}`,
         method: "DELETE",
       }),
-      invalidatesTags: [FORM_TAGS.FORM_RULES],
+      invalidatesTags: [API_TAGS.FORM_RULES],
     }),
     /////
     updateSingleFormRule: builder.mutation({
@@ -442,7 +441,7 @@ const formApis = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: [FORM_TAGS.FORM_RULES],
+      invalidatesTags: [API_TAGS.FORM_RULES],
     }),
     /////
     updateStatusSingleFormRule: builder.mutation({
@@ -451,7 +450,7 @@ const formApis = createApi({
         method: "PUT",
         body: { isActive },
       }),
-      invalidatesTags: [FORM_TAGS.FORM_RULES],
+      invalidatesTags: [API_TAGS.FORM_RULES],
     }),
     /////
     getFormRuleFromAi: builder.mutation({
@@ -468,7 +467,7 @@ const formApis = createApi({
         method: "PUT",
         body: { rulesData: data },
       }),
-      invalidatesTags: [FORM_TAGS.FORM_RULES],
+      invalidatesTags: [API_TAGS.FORM_RULES],
     }),
     /////
     formDataWhichUseToCreateForms: builder.query({
@@ -476,6 +475,7 @@ const formApis = createApi({
         url: `/form-data-which-use-to-create-forms/${formId}`,
         method: "GET",
       }),
+      providesTags: (result, error, { formId }) => [{ type: API_TAGS.FORM_CREATION_DATA, id: formId }],
     }),
     /////
     checkFormRuleFromAi: builder.mutation({
@@ -494,7 +494,6 @@ export const {
   useUpdateFormMutation,
   useUpdateFormLocationMutation,
   useGetMyAllFormsQuery,
-  useGetSingleFormMutation,
   useGetSingleFormQueryQuery,
   useDeleteSingleFormMutation,
   useSubmitFormMutation,
@@ -517,6 +516,7 @@ export const {
   useDeleteFormSectionMutation,
   useUpdateFormSectionMutation,
   useUpdateDeleteCreateFormFieldsMutation,
+  useAddFormFieldMutation,
   useFormateTextInMarkDownMutation,
   useGetBeneficialOwnersDataQuery,
   useUpdateBeneficialOwnersMutation,
@@ -542,7 +542,7 @@ export const {
   useDeleteSingleSubmitOrDraftFormMutation,
   useCreateFormRuleMutation,
   useCloneFormRulesMutation,
-  useApplyRulesOnFormQuery,
+  useApplyRulesOnFormMutation,
   useGetAllFormRulesQuery,
   useDeleteSingleFormRuleMutation,
   useUpdateSingleFormRuleMutation,

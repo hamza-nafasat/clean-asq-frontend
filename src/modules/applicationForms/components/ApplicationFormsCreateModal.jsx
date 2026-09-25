@@ -4,18 +4,18 @@ import { toast } from "react-toastify";
 import { useAddBrandingInFormMutation } from "@/redux/apis/branding.apis";
 import { useCreateFormMutation, useUpdateFormMutation } from "@/redux/apis/form.apis";
 import useAiChat from "@/hooks/useAiChat";
+import usePermission from "@/hooks/usePermission";
 import { mapHomeBranding } from "@/utils/executeBrandingAssignment";
+import { PERMISSIONS } from "@/utils/permissions";
 import FileUploader from "@/components/global/FileUploader";
 import Button from "@/components/shared/Button";
 import Modal from "@/components/shared/Modal";
 import TextField from "@/components/shared/TextField";
 import { YES_NO_VALUES } from "@/constants";
 import { ASSISTANT_ROLE, FORM_UPLOAD_ACCEPT, FORM_UPLOAD_FIELDS } from "../utils/applicationForms.constants";
-import { getDuplicateFormName, isDuplicateFormError } from "../utils/applicationForms.utils2";
+import { getDuplicateFormName, isDuplicateFormError } from "../utils/applicationForms.duplicate.utils";
 
-const DISABLED_CLASSES = "pointer-events-none cursor-not-allowed opacity-50";
-
-const ApplicationFormsCreateModal = ({ onClose, refetch }) => {
+const ApplicationFormsCreateModal = ({ isOpen = false, onClose }) => {
   const user = useSelector((state) => state.auth.user);
   const { addMessage, setIsOpen } = useAiChat();
   const [createForm, { isLoading }] = useCreateFormMutation();
@@ -24,27 +24,36 @@ const ApplicationFormsCreateModal = ({ onClose, refetch }) => {
   const [file, setFile] = useState(null);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [pendingFormName, setPendingFormName] = useState("");
+  const canUpdateForm = usePermission(PERMISSIONS.UPDATE_FORM);
+  const canUpdateBranding = usePermission(PERMISSIONS.UPDATE_BRANDING);
 
   const homeBranding = mapHomeBranding(user);
+  const shouldApplyBranding = canUpdateBranding && Boolean(homeBranding?._id);
 
-  const finalizeFormCreation = async (res) => {
-    if (!res.data?._id || !res.data?.name) return;
-    await updateForm({
-      _id: res.data._id,
-      data: { headerText: res.data.name },
-    }).unwrap();
-    if (homeBranding?._id) {
-      await addFromBranding({
-        brandingId: homeBranding._id,
-        formId: res.data._id,
-        onHome: YES_NO_VALUES.NO,
-      }).unwrap();
+  const handleClose = () => {
+    setFile(null);
+    setIsRenameOpen(false);
+    setPendingFormName("");
+    onClose?.();
+  };
+
+  // follow-up steps; the form already exists
+  const finalizeFormCreation = async (form) => {
+    if (!form?._id || !form?.name) return;
+    try {
+      if (canUpdateForm) await updateForm({ _id: form._id, data: { headerText: form.name } }).unwrap();
+      if (shouldApplyBranding) {
+        await addFromBranding({ brandingId: homeBranding._id, formId: form._id, onHome: YES_NO_VALUES.NO }).unwrap();
+      }
+    } catch (error) {
+      console.error("Finish form setup error:", error);
+      toast.warning("The form was created, but its header or default branding could not be set. Update it from the form menu.");
+      return;
     }
-    await refetch?.();
     setIsOpen(true);
     addMessage({
       role: ASSISTANT_ROLE,
-      content: `Form **"${res.data.name}"** was created successfully${homeBranding?._id ? " and the default branding has been applied" : ""}. You can now configure its sections, fields, AI prompts, and email templates — just let me know what you'd like to do next.`,
+      content: `Form **"${form.name}"** was created successfully${shouldApplyBranding ? " and the default branding has been applied" : ""}. You can now configure its sections, fields, AI prompts, and email templates — just let me know what you'd like to do next.`,
     });
   };
 
@@ -56,8 +65,8 @@ const ApplicationFormsCreateModal = ({ onClose, refetch }) => {
       const res = await createForm(formData).unwrap();
       if (res.success) {
         toast.success(res.message);
-        await finalizeFormCreation(res);
-        onClose?.();
+        await finalizeFormCreation(res.data);
+        handleClose();
       }
     } catch (error) {
       console.error("Create form error:", error);
@@ -66,7 +75,7 @@ const ApplicationFormsCreateModal = ({ onClose, refetch }) => {
         setIsRenameOpen(true);
       } else {
         toast.error(error?.data?.message || "Failed to create form");
-        onClose?.();
+        handleClose();
       }
     }
   };
@@ -80,10 +89,8 @@ const ApplicationFormsCreateModal = ({ onClose, refetch }) => {
       const res = await createForm(formData).unwrap();
       if (res.success) {
         toast.success(res.message);
-        await finalizeFormCreation(res);
-        setIsRenameOpen(false);
-        setPendingFormName("");
-        onClose?.();
+        await finalizeFormCreation(res.data);
+        handleClose();
       }
     } catch (error) {
       console.error("Create form error:", error);
@@ -92,31 +99,23 @@ const ApplicationFormsCreateModal = ({ onClose, refetch }) => {
     }
   };
 
-  const handleCloseRename = () => {
-    setIsRenameOpen(false);
-    setPendingFormName("");
-    onClose?.();
-  };
-
   const handleRenameSubmit = (e) => {
     e.preventDefault();
     if (pendingFormName.trim() && !isLoading) handleCreateWithName();
   };
 
+  if (!isOpen) return null;
+
   return (
     <>
-      <Modal onClose={onClose} title="">
+      <Modal onClose={handleClose} title="Create Form">
         <FileUploader label="Upload Image / PDF / CSV" accept={FORM_UPLOAD_ACCEPT} onFileSelect={setFile} />
         <div className="my-2 flex items-center justify-end">
-          <Button
-            className={`${(!file || isLoading) && DISABLED_CLASSES}`}
-            label={"Create "}
-            onClick={handleCreateForm}
-          />
+          <Button label="Create" onClick={handleCreateForm} disabled={!file || isLoading} loading={isLoading} />
         </div>
       </Modal>
       {isRenameOpen && (
-        <Modal onClose={handleCloseRename} title="Form Name Already Exists">
+        <Modal onClose={handleClose} title="Form Name Already Exists">
           <form className="flex flex-col gap-4 p-4" onSubmit={handleRenameSubmit}>
             <p className="text-sm text-gray-600">
               A form with this name already exists. Please enter a different name to continue.
@@ -134,12 +133,12 @@ const ApplicationFormsCreateModal = ({ onClose, refetch }) => {
               }}
             />
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="secondary" label="Cancel" onClick={handleCloseRename} />
+              <Button type="button" variant="secondary" label="Cancel" onClick={handleClose} />
               <Button
                 type="submit"
                 label="Create"
                 loading={isLoading}
-                className={`${(!pendingFormName.trim() || isLoading) && DISABLED_CLASSES}`}
+                disabled={!pendingFormName.trim() || isLoading}
               />
             </div>
           </form>

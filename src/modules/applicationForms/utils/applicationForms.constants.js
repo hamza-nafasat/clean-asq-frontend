@@ -1,7 +1,3 @@
-export const APPLICATION_FORMS_ROUTES = {
-  MANAGE_RULES: "/manage-rules",
-};
-
 export const APPLICATION_FORMS_SCREEN = {
   ID: "application-forms",
   NAME: "Application Forms",
@@ -15,30 +11,46 @@ export const SEARCH_MODES = {
   NAME: "name",
 };
 
-export const INITIAL_FORM_FILTERS = {
-  clientQuery: "",
-  nameQuery: "",
-  dateFrom: "",
-  dateTo: "",
-  searchMode: SEARCH_MODES.CLIENT,
+export const FORM_FILTER_KEYS = {
+  CLIENT_QUERY: "clientQuery",
+  NAME_QUERY: "nameQuery",
+  SEARCH_MODE: "searchMode",
+  DATE_FROM: "dateFrom",
+  DATE_TO: "dateTo",
 };
 
-export const INITIAL_FORM_LOCATION_DATA = {
-  title: "",
-  subtitle: "",
-  message: "",
-  status: "",
-  formatedText: "",
-  formatingTextInstructions: "",
+export const INITIAL_FORM_FILTERS = {
+  [FORM_FILTER_KEYS.CLIENT_QUERY]: "",
+  [FORM_FILTER_KEYS.NAME_QUERY]: "",
+  [FORM_FILTER_KEYS.DATE_FROM]: "",
+  [FORM_FILTER_KEYS.DATE_TO]: "",
+  [FORM_FILTER_KEYS.SEARCH_MODE]: SEARCH_MODES.CLIENT,
 };
 
 export const DEFAULT_HEADER_TEXT_SIZE = 24;
 
-export const DEFAULT_FORM_BUTTON_COLOR = "#066969";
+export const HEADER_TEXT_SIZE_LIMITS = { MIN: 8, MAX: 72 };
+
+export const FORM_CONFIG_FIELDS = {
+  FORM_URL: "formUrl",
+  REDIRECT_URL: "redirectUrl",
+  HEADER_TEXT: "headerText",
+  HEADER_TEXT_SIZE: "headerTextSize",
+};
+
+export const LOCATION_FIELDS = {
+  STATUS: "locationStatus",
+  MESSAGE: "locationMessage",
+  FORMATTED_MESSAGE: "formatedLocationMessage",
+  INSTRUCTIONS: "formateTextInstructions",
+};
+
+export const COPY_RESET_MS = 2000;
+
+// app theme colour, overridden by branding
+export const DEFAULT_FORM_BUTTON_COLOR = "var(--primary)";
 
 export const DEFAULT_BUTTON_EFFECT = "none";
-
-export const DEFAULT_HEADER_BACKGROUND = "#f3f4f6";
 
 export const DUPLICATE_FORM_NAME_PREFIX = "same name: ";
 
@@ -70,7 +82,7 @@ export const RULE_STATUSES = {
   INACTIVE: "inactive",
 };
 
-export const RULE_CATEGORIES = {
+const RULE_CATEGORIES = {
   ALERT: "alert",
   DISPLAY: "display",
   UPDATE_STATUS: "update_status",
@@ -81,15 +93,25 @@ export const RULE_FILTER_CATEGORY_OPTIONS = [
   { label: "Display", value: RULE_CATEGORIES.DISPLAY },
 ];
 
-export const RULE_EDITOR_CATEGORY_OPTIONS = [
+const RULE_EDITOR_CATEGORY_OPTIONS = [
   ...RULE_FILTER_CATEGORY_OPTIONS,
   { label: "Update Status", value: RULE_CATEGORIES.UPDATE_STATUS },
 ];
 
+export const RULE_FIELDS = {
+  NAME: "name",
+  CATEGORY: "category",
+  PROMPT: "prompt",
+  IS_EMAIL_SENT_ON: "isEmailSentOn",
+  RECIEVER_EMAIL: "recieverEmail",
+  EMAIL_TEMPLATE_ID: "emailTemplateId",
+};
+
 export const RULE_CATEGORIES_FIELD = {
   label: "Category",
+  name: RULE_FIELDS.CATEGORY,
   options: RULE_EDITOR_CATEGORY_OPTIONS,
-  uniqueId: "category",
+  uniqueId: RULE_FIELDS.CATEGORY,
 };
 
 export const RULE_STATUS_OPTIONS = [
@@ -97,7 +119,7 @@ export const RULE_STATUS_OPTIONS = [
   { label: "Inactive", value: RULE_STATUSES.INACTIVE },
 ];
 
-export const RULE_RECIPIENTS = {
+const RULE_RECIPIENTS = {
   BENEFICIAL_OWNERS: "beneficial_owners_key",
   APPLICANT: "applicant",
   ALL: "all",
@@ -109,12 +131,28 @@ export const RECIPIENT_EMAIL_OPTIONS = [
   { label: "All", value: RULE_RECIPIENTS.ALL },
 ];
 
-export const INITIAL_RULE_FILTERS = { name: "", category: "", status: "" };
-
 export const RULE_FILTER_KEYS = {
   NAME: "name",
   CATEGORY: "category",
   STATUS: "status",
+};
+
+export const INITIAL_RULE_FILTERS = {
+  [RULE_FILTER_KEYS.NAME]: "",
+  [RULE_FILTER_KEYS.CATEGORY]: "",
+  [RULE_FILTER_KEYS.STATUS]: "",
+};
+
+export const RULE_ROW_ACTIONS = {
+  STATUS: "status",
+  EDIT: "edit",
+  DELETE: "delete",
+};
+
+export const RULE_FILTER_IDS = {
+  NAME: "rule-filter-name",
+  CATEGORY: "rule-filter-category",
+  STATUS: "rule-filter-status",
 };
 
 export const RULE_DRAG_ACTIVATION_DISTANCE = 5;
@@ -122,4 +160,18 @@ export const RULE_DRAG_ACTIVATION_DISTANCE = 5;
 export const RULE_DROP_ANIMATION = {
   duration: 200,
   easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
+};
+
+export const INITIAL_RULE = {
+  prompt: "",
+  name: "",
+  category: "",
+  order: "",
+  handler: "",
+  formula: "",
+  example: "",
+  explanation: "",
+  isEmailSentOn: false,
+  recieverEmail: RULE_RECIPIENTS.APPLICANT,
+  emailTemplateId: "",
 };

@@ -23,8 +23,8 @@ const ApplicationFormsRuleAiControls = ({ formData = null, isGenerating = false,
         />
       </div>
       {showAiContext && formData && (
-        <section className="flex flex-col gap-3 mt-4 border border-gray-200 rounded-xl p-4 bg-[#FAFBFF]">
-          <h4 className="text-lg font-semibold text-gray-800">The data ai use to create the rules</h4>
+        <section className="flex flex-col gap-3 mt-4 border border-gray-200 rounded-xl p-4 bg-fieldBackground">
+          <h3 className="text-lg font-semibold text-gray-800">The data ai use to create the rules</h3>
           <div className="overflow-x-auto overflow-y-auto max-h-75">
             <pre className="text-xs bg-black text-green-400 p-3 rounded-md mt-2 overflow-x-auto">
               {JSON.stringify(formData, null, 2)}

@@ -7,9 +7,9 @@ import useBranding from "@/hooks/useBranding";
 import { executeBrandingAssignment, getBrandingSettersFromHook } from "@/utils/executeBrandingAssignment";
 import ApplyBranding from "@/components/global/ApplyBranding";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
-import { createUserRefreshDispatcher } from "../utils/applicationForms.utils2";
+import { createUserRefreshDispatcher } from "../utils/applicationForms.branding.utils";
 
-const ApplicationFormsBrandingModal = ({ isOpen = false, formId = null, onClose, onApplied, refetch }) => {
+const ApplicationFormsBrandingModal = ({ isOpen = false, formId = null, onClose, onApplied }) => {
   const dispatch = useDispatch();
   const brandingSetters = getBrandingSettersFromHook(useBranding());
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
@@ -20,13 +20,19 @@ const ApplicationFormsBrandingModal = ({ isOpen = false, formId = null, onClose,
 
   if (!isOpen) return null;
 
+  const handleClose = () => {
+    setSelectedBranding(null);
+    setOnHome(false);
+    onClose?.();
+  };
+
   const handleApply = async () => {
     if (!selectedBranding) {
-      toast.error("Branding ID is missing");
+      toast.error("Select a branding");
       return;
     }
     if (!formId && !onHome) {
-      toast.error("Form ID is required if onHome is not provided");
+      toast.error("Choose a form or apply the branding to home");
       return;
     }
     try {
@@ -41,15 +47,13 @@ const ApplicationFormsBrandingModal = ({ isOpen = false, formId = null, onClose,
           applyToHome: onHome,
         },
       });
-      await refetch?.();
-      toast?.success(res?.message || "Branding applied successfully");
-    } catch (error) {
-      console.error("Apply branding error:", error);
-      toast.error(error?.message || error?.data?.message || "Failed to apply branding");
-    } finally {
+      toast.success(res?.message || "Branding applied successfully");
       setSelectedBranding(null);
       setOnHome(false);
       onApplied?.();
+    } catch (error) {
+      console.error("Apply branding error:", error);
+      toast.error(error?.data?.message || error?.message || "Failed to apply branding");
     }
   };
 
@@ -68,7 +72,7 @@ const ApplicationFormsBrandingModal = ({ isOpen = false, formId = null, onClose,
       }
       confirmButtonText="Apply Branding"
       onConfirm={handleApply}
-      onClose={onClose}
+      onClose={handleClose}
       title={"Apply Branding"}
     />
   );

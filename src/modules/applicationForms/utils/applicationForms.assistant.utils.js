@@ -1,43 +1,18 @@
 import { LOCATION_STATUSES } from "@/constants";
-import { DEFAULT_HEADER_TEXT_SIZE, UNKNOWN_ORDER_INDEX } from "./applicationForms.constants";
+import { DEFAULT_HEADER_TEXT_SIZE, LOCATION_FIELDS } from "./applicationForms.constants";
+import { applyPendingEdits, hasPendingEdits } from "./applicationForms.pendingEdits.utils";
 
-// merge pending ai edits on top of the loaded form
-export const applyPendingEdits = (formData, pending) => {
-  if (!formData || !pending) return formData;
-  let sections = [...(formData.sections || [])];
+// names of the targeted forms
+export const getFormNames = (forms, formIds) =>
+  formIds.map((formId) => forms?.find((form) => form._id === formId)?.name || formId).join(", ");
 
-  if (pending.deletedSections?.length) {
-    sections = sections.filter((s) => !pending.deletedSections.includes(String(s._id)));
-  }
-  if (pending.sectionOrder?.length) {
-    const orderMap = {};
-    pending.sectionOrder.forEach((id, idx) => {
-      orderMap[String(id)] = idx;
-    });
-    sections = [...sections].sort((a, b) => {
-      const ai = orderMap[String(a._id)] ?? UNKNOWN_ORDER_INDEX;
-      const bi = orderMap[String(b._id)] ?? UNKNOWN_ORDER_INDEX;
-      return ai - bi;
-    });
-  }
-  sections = sections.map((s) => {
-    const upd = pending.sectionUpdates?.[String(s._id)];
-    return upd ? { ...s, ...upd } : s;
-  });
-  sections = sections.map((s) => {
-    const fieldMap = pending.fieldUpdates?.[String(s._id)];
-    if (!fieldMap) return s;
-    return {
-      ...s,
-      fields: (s.fields || []).map((f) => {
-        const upd = fieldMap[String(f._id)];
-        return upd ? { ...f, ...upd } : f;
-      }),
-    };
-  });
-
-  return { ...formData, sections };
-};
+// new status, keep the form's message
+export const buildLocationData = (form, locationStatus) => ({
+  [LOCATION_FIELDS.STATUS]: locationStatus,
+  [LOCATION_FIELDS.MESSAGE]: form?.locationMessage || "",
+  [LOCATION_FIELDS.FORMATTED_MESSAGE]: form?.formatedLocationMessage || "",
+  [LOCATION_FIELDS.INSTRUCTIONS]: form?.formateTextInstructions || "",
+});
 
 const findLinkedStrategy = (formStrategies, formId) =>
   (formStrategies || []).find((fs) => (fs.forms || []).some((f) => String(f._id ?? f) === String(formId))) || null;
@@ -106,10 +81,10 @@ const mapAssistantSection = (s) => ({
   displayText: s.displayText || "",
   signDisplayText: s.signDisplayText || s.signDisplayFormattedText || "",
   aiCustomizablePrompt: s.aiCustomizablePrompt || "",
-  ai_formatting: s.ai_formatting || "",
+  ai_formatting: s.aiFormatting ?? s.ai_formatting ?? "",
   isSignAiHelp: s.isSignAiHelp || false,
   signAiPrompt: s.signAiPrompt || "",
-  ownerSuggestions: s.ownerSuggesstions || [],
+  ownerSuggestions: s.ownerSuggestions ?? s.ownerSuggesstions ?? [],
   fields: (s.fields || []).map(mapAssistantField),
 });
 
@@ -134,7 +109,7 @@ const mapDetailedForm = ({ formData, pendingFormEdits, formStrategies, formId, r
   };
 };
 
-// build the state the form assistant reads
+// state the form assistant reads
 export const buildFormsAssistantState = ({
   forms,
   brandings,
@@ -168,13 +143,7 @@ export const buildFormsAssistantState = ({
     lookupKeys: (s.searchStrategies || []).map((l) => l.searchObjectKey).filter(Boolean),
   })),
   validLookupKeys: (searchStrategies || []).map((s) => s.searchObjectKey).filter(Boolean),
-  hasPendingEdits: !!(
-    pendingFormEdits &&
-    (Object.keys(pendingFormEdits.sectionUpdates || {}).length ||
-      Object.keys(pendingFormEdits.fieldUpdates || {}).length ||
-      pendingFormEdits.sectionOrder ||
-      pendingFormEdits.deletedSections?.length)
-  ),
+  hasPendingEdits: hasPendingEdits(pendingFormEdits),
   detailedForm:
     selectedFormId && singleForm
       ? mapDetailedForm({

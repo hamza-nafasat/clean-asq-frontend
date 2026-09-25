@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 // confirmation modal state, awaitable by ai
-const useBrandingConfirm = () => {
+const useConfirm = () => {
   const [pending, setPending] = useState(null);
 
   const open = (details = {}) => setPending(details);
@@ -24,4 +24,4 @@ const useBrandingConfirm = () => {
   return { pending, isOpen: Boolean(pending), open, ask, close, resolveAsked };
 };
 
-export default useBrandingConfirm;
+export default useConfirm;

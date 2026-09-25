@@ -6,7 +6,6 @@ import { toast } from "react-toastify";
 import { updateEmailVerified } from "@/redux/slices/form.slice";
 import Button from "@/components/shared/Button";
 import Modal from "@/components/shared/Modal";
-import LocationSettingsModal from "@/components/modals/LocationSettingsModal";
 import { LAYOUT_ROUTES, LOCATION_STATUSES } from "@/constants";
 import getEnv from "@/utils/env";
 import HtmlContent from "@/components/shared/HtmlContent";
@@ -61,7 +60,5 @@ const LocationStatusModal = ({
     </Modal>
   );
 };
-
-export { LocationSettingsModal as LocationModalComponent };
 
 export default LocationStatusModal;

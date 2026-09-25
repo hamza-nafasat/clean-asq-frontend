@@ -1,10 +1,18 @@
+import { WIDGET_STRINGS } from "@/components/shared/aiChat/constants/widgetStrings.js";
+import { getBlockedMessageKey } from "@/components/shared/aiChat/logic/toolHelpers.js";
+
 const NOT_SET = "(not set)";
 
-const failureLine = (label, err) => `**${label}:** failed — ${err?.message || "unknown error"} ✗`;
+const failureLine = (label, err) => {
+  if (err?.isCancelled) return `**${label}:** skipped (cancelled)`;
+  const blockedKey = getBlockedMessageKey(err);
+  if (blockedKey) return `**${label}:** failed — ${WIDGET_STRINGS[blockedKey]} ✗`;
+  return `**${label}:** failed — ${err?.message || "unknown error"} ✗`;
+};
 
 const isEmptySetting = (value) => !value || value === NOT_SET;
 
-// true when a section update would change something on the target section
+// section update changes the target
 export const hasSectionChanges = (update, existing) => {
   if (!existing) return false;
   if (

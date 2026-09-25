@@ -1,9 +1,9 @@
 import { closestCenter, defaultDropAnimation, DndContext, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
-import { RULE_DROP_ANIMATION } from "../utils/applicationForms.constants";
+import { MdDragIndicator } from "react-icons/md";
 import EmptyState from "@/components/shared/EmptyState";
+import { RULE_DROP_ANIMATION } from "../utils/applicationForms.constants";
 
 const SortableRow = ({ row, columns = [] }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row._id });
@@ -31,8 +31,9 @@ const SortableRow = ({ row, columns = [] }) => {
                 {...listeners}
                 className="inline-flex cursor-grab active:cursor-grabbing rounded p-1 hover:bg-gray-200 transition-colors"
                 title="Drag to reorder"
+                aria-label={`Drag to reorder ${row.name}`}
               >
-                <GripVertical size={18} className="text-gray-400" />
+                <MdDragIndicator size={18} className="text-gray-400" />
               </div>
             </td>
           );
@@ -51,10 +52,10 @@ const SortableRow = ({ row, columns = [] }) => {
 const DragOverlayRow = ({ row = null }) => (
   <div className="bg-white shadow-xl rounded-lg border border-blue-200 p-3 min-w-[320px]">
     <div className="flex items-center gap-3">
-      <GripVertical size={20} className="text-gray-400" />
-      <div className="flex-1">
-        <div className="font-semibold text-sm">{row?.name}</div>
-        <div className="text-xs text-gray-500">ID: {row?._id?.slice(-6)}</div>
+      <MdDragIndicator size={20} className="shrink-0 text-gray-400" />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold">{row?.name}</p>
+        <p className="text-xs text-gray-500">ID: {row?._id?.slice(-6)}</p>
       </div>
       <span className="text-xs text-gray-500">#{row?.order}</span>
     </div>
@@ -69,6 +70,7 @@ const ApplicationFormsRulesTable = ({
   onDragEnd,
   onDragCancel,
   activeDragId = null,
+  isFiltering = false,
 }) => (
   <DndContext
     sensors={sensors}
@@ -98,8 +100,12 @@ const ApplicationFormsRulesTable = ({
               <td colSpan={columns.length} className="p-4">
                 <EmptyState
                   variant="panel"
-                  title="No rules yet"
-                  description="Create a rule to check applications automatically."
+                  title={isFiltering ? "No rules match your filters" : "No rules yet"}
+                  description={
+                    isFiltering
+                      ? "Try a different name, category or status."
+                      : "Create a rule to check applications automatically."
+                  }
                 />
               </td>
             </tr>

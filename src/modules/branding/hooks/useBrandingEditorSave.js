@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/auth.apis";
 import { useCreateBrandingMutation, useUpdateSingleBrandingMutation } from "@/redux/apis/branding.apis";
 import { userExist } from "@/redux/slices/auth.slice";
-import useBrandingConfirm from "./useBrandingConfirm";
+import useConfirm from "@/hooks/useConfirm";
 import { BRANDING_REQUIRED_FIELDS_WITHOUT_INPUT, BRANDING_ROUTES } from "../utils/branding.constants";
 import {
   applySavedAiToGlobal,
@@ -20,7 +20,7 @@ const useBrandingEditorSave = ({ brandingId, values, branding }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [submittedErrors, setSubmittedErrors] = useState({});
-  const updateConfirm = useBrandingConfirm();
+  const updateConfirm = useConfirm();
   const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const [createBranding, { isLoading: isCreateLoading }] = useCreateBrandingMutation();
   const [updateBranding, { isLoading: isUpdateLoading }] = useUpdateSingleBrandingMutation();

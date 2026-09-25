@@ -1,60 +1,54 @@
 import { SelectInputType } from "@/components/global/DynamicField";
 import Checkbox from "@/components/shared/Checkbox";
 import { EMAIL_TEMPLATE_TYPES } from "@/constants";
-import { RECIPIENT_EMAIL_OPTIONS } from "../utils/applicationForms.constants";
+import { RECIPIENT_EMAIL_OPTIONS, RULE_FIELDS } from "../utils/applicationForms.constants";
 
-const ApplicationFormsRuleEmailFields = ({
-  emailTemplates = [],
-  isEmailSentOn = false,
-  setIsEmailSentOn,
-  recieverEmail = "",
-  setRecieverEmail,
-  emailTemplateId = "",
-  setEmailTemplateId,
-}) => {
+const ERROR_CLASSES = "mt-1 text-sm text-red-600";
+
+const ApplicationFormsRuleEmailFields = ({ emailTemplates = [], rule = {}, errors = {}, onChange }) => {
   const templateOptions = emailTemplates
     ?.filter((template) => template?.emailType === EMAIL_TEMPLATE_TYPES.RULE_TRIGGERED)
-    ?.map((template) => ({
-      label: template?.templateName,
-      value: template?._id,
-    }));
+    ?.map((template) => ({ label: template?.templateName, value: template?._id }));
 
   return (
     <>
       <Checkbox
-        id="isEmailSentOn"
-        name="isEmailSentOn"
+        id={RULE_FIELDS.IS_EMAIL_SENT_ON}
+        name={RULE_FIELDS.IS_EMAIL_SENT_ON}
         label="Send Email"
-        checked={isEmailSentOn}
-        onChange={() => setIsEmailSentOn?.((prev) => !prev)}
+        checked={Boolean(rule.isEmailSentOn)}
+        onChange={(e) => onChange?.({ target: { name: RULE_FIELDS.IS_EMAIL_SENT_ON, value: e.target.checked } })}
       />
-      {isEmailSentOn && (
+      {rule.isEmailSentOn && (
         <>
           <SelectInputType
             field={{
-              label: "Reciever's Email:",
+              label: "Receiver's Email",
               options: RECIPIENT_EMAIL_OPTIONS,
-              uniqueId: "recieverEmail",
+              uniqueId: RULE_FIELDS.RECIEVER_EMAIL,
+              name: RULE_FIELDS.RECIEVER_EMAIL,
             }}
-            onChange={(e) => setRecieverEmail?.(e.target.value)}
-            form={{
-              recieverEmail: { name: "recieverEmail", value: recieverEmail },
-            }}
+            onChange={onChange}
+            form={{ [RULE_FIELDS.RECIEVER_EMAIL]: { name: RULE_FIELDS.RECIEVER_EMAIL, value: rule.recieverEmail } }}
           />
+          {errors[RULE_FIELDS.RECIEVER_EMAIL] && (
+            <p className={ERROR_CLASSES}>{errors[RULE_FIELDS.RECIEVER_EMAIL]}</p>
+          )}
           <SelectInputType
             field={{
-              label: "Email Template:",
+              label: "Email Template",
               options: templateOptions,
-              uniqueId: "emailTemplateId",
+              uniqueId: RULE_FIELDS.EMAIL_TEMPLATE_ID,
+              name: RULE_FIELDS.EMAIL_TEMPLATE_ID,
             }}
-            onChange={(e) => setEmailTemplateId?.(e.target.value)}
+            onChange={onChange}
             form={{
-              emailTemplateId: {
-                name: "emailTemplateId",
-                value: emailTemplateId,
-              },
+              [RULE_FIELDS.EMAIL_TEMPLATE_ID]: { name: RULE_FIELDS.EMAIL_TEMPLATE_ID, value: rule.emailTemplateId },
             }}
           />
+          {errors[RULE_FIELDS.EMAIL_TEMPLATE_ID] && (
+            <p className={ERROR_CLASSES}>{errors[RULE_FIELDS.EMAIL_TEMPLATE_ID]}</p>
+          )}
         </>
       )}
     </>

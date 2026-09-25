@@ -6,13 +6,11 @@ import {
   hasSectionChanges,
   pushStepFailure,
 } from "@/components/shared/aiChat/logic/cloneFormSteps.js";
-import { getErrorDetail } from "@/components/shared/aiChat/logic/toolHelpers.js";
-
-const DISABLED_LOCATION_STATUS = "disabled";
+import { LOCATION_STATUSES } from "@/constants";
 
 const createFormListTools = ({ bindings, helpers }) => {
   const { continueAfterToolCall, pushRevertable } = bindings;
-  const { say, reportCouldnt, runActionAndSay } = helpers;
+  const { say, reportActionError, runActionAndSay } = helpers;
 
   return {
     [AI_TOOLS.UPDATE_FORMS]: async (args, { ctx }) =>
@@ -26,6 +24,8 @@ const createFormListTools = ({ bindings, helpers }) => {
         const form = forms.find((f) => f._id === formId);
         return { formId, oldBrandingId: form?.branding?._id ?? null };
       });
+      const isApplied = await runActionAndSay(ctx, AI_TOOLS.SET_FORMS_BRANDING, { updates }, args.explanation);
+      if (!isApplied) return;
       pushRevertable({
         description: `Applied branding to ${updates.length} form(s)`,
         revertFn: async (freshCtx) => {
@@ -43,7 +43,6 @@ const createFormListTools = ({ bindings, helpers }) => {
           }
         },
       });
-      await runActionAndSay(ctx, AI_TOOLS.SET_FORMS_BRANDING, { updates }, args.explanation);
     },
 
     [AI_TOOLS.SET_FORMS_LOCATION]: async (args, { ctx }) => {
@@ -52,8 +51,10 @@ const createFormListTools = ({ bindings, helpers }) => {
       const forms = ctx.currentState?.forms || [];
       const snapshot = updates.map(({ formId }) => {
         const form = forms.find((f) => f._id === formId);
-        return { formId, oldLocationStatus: form?.locationStatus ?? DISABLED_LOCATION_STATUS };
+        return { formId, oldLocationStatus: form?.locationStatus ?? LOCATION_STATUSES.DISABLED };
       });
+      const isApplied = await runActionAndSay(ctx, AI_TOOLS.SET_FORMS_LOCATION, { updates }, args.explanation);
+      if (!isApplied) return;
       pushRevertable({
         description: `Changed location setting on ${updates.length} form(s)`,
         revertFn: async (freshCtx) => {
@@ -63,7 +64,6 @@ const createFormListTools = ({ bindings, helpers }) => {
           }
         },
       });
-      await runActionAndSay(ctx, AI_TOOLS.SET_FORMS_LOCATION, { updates }, args.explanation);
     },
 
     [AI_TOOLS.DELETE_FORMS]: async (args, { ctx }) =>
@@ -88,7 +88,7 @@ const createFormListTools = ({ bindings, helpers }) => {
           ctx,
         );
       } catch (err) {
-        reportCouldnt(getErrorDetail(err));
+        reportActionError(err);
       }
     },
 
@@ -102,7 +102,7 @@ const createFormListTools = ({ bindings, helpers }) => {
       const sourceForm = forms.find((f) => String(f._id) === String(sourceFormId));
       const targetForm = forms.find((f) => String(f._id) === String(targetFormId));
 
-      // each step runs even when an earlier one fails
+      // every step runs despite failures
       await cloneBrandingStep({ ctx, sourceForm, targetForm, targetFormId, results });
       await cloneEmailTemplatesStep({ ctx, sourceForm, targetForm, targetFormId, results });
 
@@ -150,7 +150,7 @@ const createFormListTools = ({ bindings, helpers }) => {
           ctx,
         );
       } catch (err) {
-        reportCouldnt(getErrorDetail(err));
+        reportActionError(err);
       }
     },
 
