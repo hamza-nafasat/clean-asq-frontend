@@ -60,11 +60,16 @@ const createEmailTemplateTools = ({ bindings, helpers }) => {
         errorDetail: plainDetail,
       }),
 
-    [AI_TOOLS.CREATE_TEMPLATE]: async (args, { ctx }) => {
-      suppressNextScreenGreetingRef.current = true;
-      if (ctx.actions.createTemplate) ctx.actions.createTemplate();
-      say(args.explanation);
-    },
+    [AI_TOOLS.CREATE_TEMPLATE]: async (args, { ctx }) =>
+      runTemplateNavigation({
+        run: () => {
+          if (ctx.actions.createTemplate) ctx.actions.createTemplate();
+        },
+        explanation: args.explanation,
+        followUp:
+          "The new template editor is open. Based on the conversation history, if the user asked for specific content, name, or type for this template, write it now. Otherwise just wait for their next instruction.",
+        errorDetail: plainDetail,
+      }),
 
     [AI_TOOLS.DELETE_TEMPLATE]: async (args, { ctx }) =>
       runTemplateNavigation({
