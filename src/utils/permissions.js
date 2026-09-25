@@ -42,6 +42,7 @@ export const PERMISSIONS = Object.freeze({
   DELETE_BRANDING: "delete_branding",
   READ_BRANDING: "read_branding",
   FETCH_BRANDING: "fetch_branding",
+  SET_DEFAULT_BRANDING: "set_default_branding",
   CREATE_EMAIL: "create_email",
   READ_EMAIL: "read_email",
   UPDATE_EMAIL: "update_email",
@@ -126,6 +127,7 @@ export const PERMISSION_GROUPS = Object.freeze([
       PERMISSIONS.UPDATE_BRANDING,
       PERMISSIONS.DELETE_BRANDING,
       PERMISSIONS.FETCH_BRANDING,
+      PERMISSIONS.SET_DEFAULT_BRANDING,
     ],
   },
   {
@@ -170,6 +172,8 @@ export const SIDEBAR_ITEMS = [
   { title: "Lookup management", path: LAYOUT_ROUTES.LOOKUP_MANAGEMENT, permission: PERMISSIONS.READ_LOOKUP },
   { title: "Strategies", path: LAYOUT_ROUTES.STRATEGIES, permission: PERMISSIONS.READ_STRATEGY },
   { title: "Email", path: LAYOUT_ROUTES.EMAIL, permission: PERMISSIONS.READ_EMAIL },
+  { title: "Automated Testing", path: LAYOUT_ROUTES.TESTING, permission: PERMISSIONS.READ_TESTING },
+  { title: "My Applications", path: LAYOUT_ROUTES.MY_APPLICATIONS, permission: PERMISSIONS.SUBMIT_FORM },
 ];
 
 // first readable sidebar page, else my-applications

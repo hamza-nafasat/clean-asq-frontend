@@ -102,10 +102,13 @@ const Brandings = () => {
           isOpen={apply.isApplyModalOpen}
           message={
             <ApplyBranding
-              setSelectedId={apply.setSelectedId}
-              selectedId={apply.selectedId}
+              brandingId={apply.brandingId}
+              selectedFormIds={apply.selectedFormIds}
+              setSelectedFormIds={apply.setSelectedFormIds}
               setOnHome={apply.setOnHome}
               onHome={apply.onHome}
+              setIsDefault={apply.setIsDefault}
+              isDefault={apply.isDefault}
             />
           }
           confirmButtonText="Apply Branding"

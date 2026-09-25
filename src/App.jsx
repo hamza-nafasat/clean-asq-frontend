@@ -7,6 +7,7 @@ import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/auth.apis";
 import { userExist, userNotExist } from "@/redux/slices/auth.slice";
 import { socket } from "@/lib/socket";
 import useBrandingSync from "@/hooks/useBrandingSync";
+import useDefaultBranding from "@/hooks/useDefaultBranding";
 import CustomLoading from "@/components/shared/CustomLoading";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import RequirePermission from "@/routes/RequirePermission";
@@ -62,6 +63,7 @@ const App = () => {
   const [getUserProfile, { isLoading }] = useGetMyProfileFirstTimeMutation();
   const { user } = useSelector((state) => state.auth);
   useBrandingSync();
+  useDefaultBranding(user);
 
   const getUserAndSetBranding = useCallback(async () => {
     try {

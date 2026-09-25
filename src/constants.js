@@ -142,6 +142,12 @@ export const LAYOUT_ROUTES = {
   BRANDING_SINGLE: "/branding/single",
 };
 
+// tag id of the default branding
+export const DEFAULT_BRANDING_TAG_ID = "default";
+
+// pages that show the form's branding
+export const FORM_BRANDING_PATHS = ["/application-form", "/singleform", "/hidden", "/verification"];
+
 export const HEADER_ALIGNMENTS = {
   LEFT: "left",
   CENTER: "center",

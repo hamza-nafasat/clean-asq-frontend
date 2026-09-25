@@ -1,9 +1,10 @@
 import { AllRoles, AllUsers, Applicants, Applications } from "@/assets/svgs/icon";
 import useBranding from "@/hooks/useBranding";
-import { SIDEBAR_ITEMS, hasPermission } from "@/utils/permissions";
+import { SIDEBAR_ITEMS, getHomePath, hasPermission } from "@/utils/permissions";
 import { BrushIcon } from "lucide-react";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
+import { FiCheckSquare, FiFileText } from "react-icons/fi";
 import { HiOutlineLightBulb } from "react-icons/hi";
 import { PiStrategyBold } from "react-icons/pi";
 import { RiHistoryLine } from "react-icons/ri";
@@ -21,6 +22,8 @@ const SIDEBAR_ICONS = {
   [LAYOUT_ROUTES.LOOKUP_MANAGEMENT]: <HiOutlineLightBulb />,
   [LAYOUT_ROUTES.STRATEGIES]: <PiStrategyBold />,
   [LAYOUT_ROUTES.EMAIL]: <RiHistoryLine size={20} />,
+  [LAYOUT_ROUTES.TESTING]: <FiCheckSquare size={20} />,
+  [LAYOUT_ROUTES.MY_APPLICATIONS]: <FiFileText size={20} />,
 };
 
 const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
@@ -54,7 +57,7 @@ const AdminAside = ({ sidebarOpen, setSidebarOpen }) => {
         <div className="py-4">
           <div className={`mb-5 flex w-full items-center justify-center xl:mb-12`}>
             {" "}
-            <Link to="/application-forms" className="flex min-w-10 items-center justify-center">
+            <Link to={getHomePath(user)} className="flex min-w-10 items-center justify-center">
               <img
                 src={logo || ""}
                 alt="logo"

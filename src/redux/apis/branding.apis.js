@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import formApis from "@/redux/apis/form.apis";
-import { API_TAGS } from "@/constants";
+import { API_TAGS, DEFAULT_BRANDING_TAG_ID } from "@/constants";
 import getEnv from "@/utils/env";
 
 const brandingApis = createApi({
@@ -36,6 +36,7 @@ const brandingApis = createApi({
       invalidatesTags: (result, error, { brandingId }) => [
         API_TAGS.BRANDINGS,
         { type: API_TAGS.SINGLE_BRANDING, id: brandingId },
+        { type: API_TAGS.SINGLE_BRANDING, id: DEFAULT_BRANDING_TAG_ID },
       ],
     }),
     /////
@@ -44,6 +45,7 @@ const brandingApis = createApi({
       invalidatesTags: (result, error, brandingId) => [
         API_TAGS.BRANDINGS,
         { type: API_TAGS.SINGLE_BRANDING, id: brandingId },
+        { type: API_TAGS.SINGLE_BRANDING, id: DEFAULT_BRANDING_TAG_ID },
       ],
     }),
     /////
@@ -71,6 +73,21 @@ const brandingApis = createApi({
           console.error("Add branding in form error:", error);
         }
       },
+    }),
+    /////
+    getDefaultBranding: builder.query({
+      query: () => "/default",
+      providesTags: [{ type: API_TAGS.SINGLE_BRANDING, id: DEFAULT_BRANDING_TAG_ID }],
+    }),
+    /////
+    setDefaultBranding: builder.mutation({
+      query: (brandingId) => ({ url: `/default/${brandingId}`, method: "PUT" }),
+      invalidatesTags: [API_TAGS.BRANDINGS, { type: API_TAGS.SINGLE_BRANDING, id: DEFAULT_BRANDING_TAG_ID }],
+    }),
+    /////
+    clearDefaultBranding: builder.mutation({
+      query: () => ({ url: "/default", method: "DELETE" }),
+      invalidatesTags: [API_TAGS.BRANDINGS, { type: API_TAGS.SINGLE_BRANDING, id: DEFAULT_BRANDING_TAG_ID }],
     }),
     /////
     extractColorsFromLogos: builder.mutation({
@@ -105,5 +122,8 @@ export const {
   useExtractColorsFromLogoUrlMutation,
   useGetManualExtractionScriptQuery,
   useProcessManualBrandingMutation,
+  useGetDefaultBrandingQuery,
+  useSetDefaultBrandingMutation,
+  useClearDefaultBrandingMutation,
 } = brandingApis;
 export default brandingApis;

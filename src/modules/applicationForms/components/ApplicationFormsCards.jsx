@@ -1,11 +1,13 @@
 import { useCallback, useState } from "react";
 import { toast } from "react-toastify";
+import { FiFileText } from "react-icons/fi";
 import { useDeleteSingleFormMutation, useGetMyAllFormsQuery } from "@/redux/apis/form.apis";
 import useApplicationFormsScreenContext from "../hooks/useApplicationFormsScreenContext";
 import useBranding from "@/hooks/useBranding";
 import { LocationModalComponent } from "@/components/modals/LocationStatusModal";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import CustomLoading from "@/components/shared/CustomLoading";
+import EmptyState from "@/components/shared/EmptyState";
 import Modal from "@/components/shared/Modal";
 import ApplicationFormsBrandingModal from "./ApplicationFormsBrandingModal";
 import ApplicationFormsCard from "./ApplicationFormsCard";
@@ -144,9 +146,15 @@ const ApplicationsCard = () => {
             />
           ))
         ) : (
-          <div className="flex w-full justify-center">
-            <p className="text-gray-500 font-bold text-2xl">No data found</p>
-          </div>
+          <EmptyState
+            icon={<FiFileText size={28} />}
+            title="No application forms yet"
+            description="Create a form to start collecting applications."
+            className="col-span-full flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-gray-300 bg-white py-16"
+            iconClassName="bg-primary/10 text-primary rounded-full p-4"
+            textClassName="text-center [&>p:first-child]:text-base"
+            descriptionClassName="mt-1 text-sm text-gray-500"
+          />
         )}
       </section>
     </article>

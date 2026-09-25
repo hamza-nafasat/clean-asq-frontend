@@ -4,7 +4,19 @@ import RowActionMenuCell from "@/components/shared/RowActionMenuCell";
 import { TABLE_WRAPPER_RADII } from "@/utils/tableStyles";
 
 const buildColumns = ({ actionMenu, onToggleMenu, getRowRef, rowButtons }) => [
-  { name: "Name", selector: (row) => row?.name, sortable: true },
+  {
+    name: "Name",
+    selector: (row) => row?.name,
+    sortable: true,
+    cell: (row) => (
+      <span className="flex items-center gap-2">
+        {row?.name}
+        {row?.isDefault && (
+          <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-medium">Default</span>
+        )}
+      </span>
+    ),
+  },
   { name: "Url", selector: (row) => row?.url || "N/A", sortable: true },
   { name: "logos", selector: (row) => row?.logos?.length || 0, sortable: true },
   { name: "Font family", selector: (row) => row?.fontFamily || "N/A", sortable: true },
