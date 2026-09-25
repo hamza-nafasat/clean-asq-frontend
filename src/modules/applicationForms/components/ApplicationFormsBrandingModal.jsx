@@ -67,8 +67,6 @@ const ApplicationFormsBrandingModal = ({ isOpen = false, formId = null, onClose,
         />
       }
       confirmButtonText="Apply Branding"
-      confirmButtonClassName="border-none hover:bg-red-600 text-white"
-      cancelButtonText="cancel"
       onConfirm={handleApply}
       onClose={onClose}
       title={"Apply Branding"}

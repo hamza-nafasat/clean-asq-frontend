@@ -6,5 +6,6 @@ const toSlug = (name) => name.trim().toLowerCase().replace(/\s+/g, "-");
 export const toFontVariable = (fontFamily) => {
   const name = toSlug(String(fontFamily));
   const slug = FONT_OPTIONS.find((font) => toSlug(font.value) === name)?.slug ?? name;
-  return `var(--font-${slug})`;
+  // unknown font falls back to inter
+  return `var(--font-${slug}, var(--font-inter))`;
 };
