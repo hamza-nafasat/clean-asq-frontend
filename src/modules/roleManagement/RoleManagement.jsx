@@ -154,6 +154,7 @@ const RoleManagement = () => {
 
       <RoleManagementTable
         roles={roles}
+        totalPermissions={permissions.length}
         isLoading={rolesQuery.isLoading || permissionsQuery.isLoading}
         isError={rolesQuery.isError || permissionsQuery.isError}
         onRetry={handleRetry}

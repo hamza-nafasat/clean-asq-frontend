@@ -1,10 +1,14 @@
 import { FIELD_TYPES } from "@/constants";
 import { PERMISSION_GROUPS, SYSTEM_ROLES } from "@/utils/permissions";
-import { OTHER_PERMISSION_GROUP } from "./roleManagement.constants";
+import { CREATED_DATE_OPTIONS, DATE_LOCALE, OTHER_PERMISSION_GROUP } from "./roleManagement.constants";
 
 export const isSystemRole = (role) => Object.values(SYSTEM_ROLES).includes(role?.name);
 
 export const isAdminRole = (role) => role?.name === SYSTEM_ROLES.ADMIN;
+
+export const formatCreatedDate = (date) => (date ? new Date(date).toLocaleDateString(DATE_LOCALE, CREATED_DATE_OPTIONS) : "");
+
+export const getPermissionPercent = (count, total) => (total ? Math.min(100, Math.round((count / total) * 100)) : 0);
 
 export const toRoleForm = (role) => ({
   _id: role._id,

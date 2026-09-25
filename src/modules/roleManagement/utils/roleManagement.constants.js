@@ -23,6 +23,10 @@ export const ROLE_ACTION_NAMES = {
 
 export const ROLE_AI_CHAT_PATH = "/api/ai/role-chat";
 
+export const DATE_LOCALE = "en-US";
+
+export const CREATED_DATE_OPTIONS = { month: "short", day: "numeric", year: "numeric" };
+
 export const ROLE_SCREEN_CONTEXT = {
   screenId: "role-management",
   screenName: "Role Management",
