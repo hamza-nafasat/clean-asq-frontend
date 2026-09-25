@@ -9,9 +9,11 @@ const LookupManagementExtractionCards = ({
   id,
   subtitle = "",
   prompt = "",
-  handler,
+  onUpdate,
+  onCancel,
   setPrompts,
   isPreview = false,
+  isUpdating = false,
 }) => {
   const textareaRef = useRef(null);
   const [isEdit, setIsEdit] = useState(false);
@@ -25,15 +27,24 @@ const LookupManagementExtractionCards = ({
     }
   }, [prompt]);
 
+  const handleUpdate = async () => {
+    const isSaved = await onUpdate?.(label, prompt, id);
+    if (isSaved) setIsEdit(false);
+  };
+
+  const handleCancel = () => {
+    onCancel?.(label);
+    setIsEdit(false);
+  };
+
   return (
-    <div className="bg-backgroundColor border-frameColor rounded-xl border p-4 shadow-xl transition-shadow duration-300 hover:shadow-2xl">
-      {/* Header */}
-      <div className="flex items-start justify-between">
+    <article className="bg-backgroundColor border-frameColor rounded-xl border p-4">
+      <header className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
-            <h2 className="text-textPrimary text-2xl font-semibold">{title}</h2>
+            <h3 className="text-textPrimary text-lg font-semibold">{title}</h3>
             {section && (
-              <span className="bg-backgroundColor text-textPrimary border-frameColor flex h-6 items-center rounded-full border px-3 text-xs font-medium">
+              <span className="text-textPrimary border-frameColor flex h-6 shrink-0 items-center rounded-full border px-3 text-xs font-medium">
                 {section}
               </span>
             )}
@@ -41,46 +52,33 @@ const LookupManagementExtractionCards = ({
           <p className="text-textPrimary text-sm opacity-80">{subtitle}</p>
         </div>
 
-        {/* Actions */}
         {!isPreview &&
           (!isEdit ? (
             <button
               onClick={() => setIsEdit(true)}
               type="button"
-              aria-label="Edit prompt"
-              className="hover:bg-backgroundColor rounded-lg p-2 transition-colors"
+              aria-label={`Edit ${title}`}
+              className="cursor-pointer rounded-lg p-2 transition-colors hover:bg-gray-100"
             >
-              <FiEdit className="text-textPrimary cursor-pointer text-lg" />
+              <FiEdit size={18} className="text-textPrimary" />
             </button>
           ) : (
-            <div className="flex gap-4">
-              <Button
-                label="Update"
-                onClick={() => handler?.(label, prompt, id, setIsEdit)}
-                type="button"
-                className="hover:bg-backgroundColor rounded-lg p-2 transition-colors"
-              />
-              <Button
-                onClick={() => setIsEdit(false)}
-                type="button"
-                label="Cancel"
-                className="hover:bg-backgroundColor rounded-lg p-2 transition-colors"
-              />
+            <div className="flex gap-3">
+              <Button variant="secondary" label="Cancel" onClick={handleCancel} disabled={isUpdating} />
+              <Button label="Update" onClick={handleUpdate} loading={isUpdating} />
             </div>
           ))}
-      </div>
+      </header>
 
-      {/* Textarea */}
-      <div className="bg-backgroundColor mt-6 rounded-xl p-3">
-        <textarea
-          ref={textareaRef}
-          className="text-textPrimary border-frameColor max-h-56 min-h-8 w-full resize-none overflow-y-auto rounded-lg border bg-transparent p-2 placeholder-gray-400 outline-none"
-          defaultValue={prompt}
-          readOnly={!isEdit || !label}
-          onChange={label ? (e) => setPrompts?.({ ...prompt, [label]: e.target.value }) : null}
-        />
-      </div>
-    </div>
+      <textarea
+        ref={textareaRef}
+        aria-label={title}
+        className="text-textPrimary border-frameColor mt-4 max-h-56 min-h-8 w-full resize-none overflow-y-auto rounded-lg border bg-transparent p-2 placeholder-gray-400 outline-none"
+        value={prompt}
+        readOnly={!isEdit || !label}
+        onChange={(e) => setPrompts?.((prev) => ({ ...prev, [label]: e.target.value }))}
+      />
+    </article>
   );
 };
 

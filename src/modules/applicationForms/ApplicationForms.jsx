@@ -14,8 +14,6 @@ import useApplicationFormsScreenContext from "./hooks/useApplicationFormsScreenC
 import { INITIAL_FORM_FILTERS } from "./utils/applicationForms.constants";
 import { filterForms, hasActiveFormFilters } from "./utils/applicationForms.filter.utils";
 
-const STATE_CLASS_NAME = "flex flex-col items-center justify-center gap-4 py-16";
-
 const ApplicationForms = () => {
   const { data: forms, isLoading, isError, refetch } = useGetMyAllFormsQuery();
   const [filters, setFilters] = useState(INITIAL_FORM_FILTERS);
@@ -27,7 +25,7 @@ const ApplicationForms = () => {
     askConfirm: aiConfirm.ask,
   });
 
-  if (isLoading) return <LoadingState title="Loading forms" className={STATE_CLASS_NAME} />;
+  if (isLoading) return <LoadingState title="Loading forms" />;
   if (isError)
     return (
       <EmptyState variant="panel" icon={<FiAlertCircle size={28} />} title="Could not load forms">

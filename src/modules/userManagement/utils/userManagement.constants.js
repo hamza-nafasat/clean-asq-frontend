@@ -1,3 +1,5 @@
+import { FORM_FIELD_CHECKBOX_VARIANTS, FORM_FIELD_TEXT_SOURCES } from "@/constants";
+
 export const USER_FORM_FIELDS = {
   FIRST_NAME: "firstName",
   LAST_NAME: "lastName",
@@ -35,6 +37,6 @@ export const USER_FORM_FIELD_PROPS = {
   selectBaseClassName:
     "border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base",
   selectDefaultClassName: "border-gray-300",
-  placeholderOption: "label",
-  checkboxVariant: "shared",
+  placeholderOption: FORM_FIELD_TEXT_SOURCES.LABEL,
+  checkboxVariant: FORM_FIELD_CHECKBOX_VARIANTS.SHARED,
 };

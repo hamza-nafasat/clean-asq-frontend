@@ -5,7 +5,8 @@ export const API_TAGS = {
   SINGLE_FORM: "SingleForm",
   FORM_CREATION_DATA: "FormCreationData",
   FORM_RULES: "FormRules",
-  STRATEGY: "Strategy",
+  SEARCH_STRATEGIES: "SearchStrategies",
+  FORM_STRATEGIES: "FormStrategies",
   PROMPTS: "Prompts",
   SUBMIT_FORM: "SubmitForm",
   SUBMIT_FORM_VERSIONS: "SubmitFormVersions",
@@ -79,6 +80,23 @@ export const URL_PREFIXES = {
   HTTP: "http",
   HTTPS: "https://",
   WWW: "www.",
+};
+
+// how FormField reports a change
+export const FORM_FIELD_CHANGE_SHAPES = {
+  EVENT: "event",
+  FIELD: "field",
+};
+
+export const FORM_FIELD_CHECKBOX_VARIANTS = {
+  NATIVE: "native",
+  SHARED: "shared",
+};
+
+// where FormField takes placeholder text
+export const FORM_FIELD_TEXT_SOURCES = {
+  LABEL: "label",
+  FIELD: "field",
 };
 
 export const MODAL_MODES = {

@@ -17,8 +17,6 @@ import { PERMISSIONS } from "@/utils/permissions";
 import { TABLE_WRAPPER_RADII } from "@/utils/tableStyles";
 import { formatDateAndTime, getUserFullName, validateUserForm } from "../utils/userManagement.utils";
 
-const STATE_CLASS_NAME = "flex flex-col items-center justify-center gap-4 py-16";
-
 const buildColumns = ({ openRowId, getRowRef, buttons, onToggleMenu }) => [
   { name: "Name", selector: (row) => getUserFullName(row), sortable: true },
   { name: "Email", selector: (row) => row?.email, sortable: true },
@@ -133,7 +131,7 @@ const UserManagementTable = ({ users = [], roleOptions = [], isLoading = false, 
     }
   };
 
-  if (isLoading) return <LoadingState title="Loading users" className={STATE_CLASS_NAME} />;
+  if (isLoading) return <LoadingState title="Loading users" />;
   if (isError)
     return (
       <EmptyState variant="panel" icon={<FiAlertCircle size={28} />} title="Could not load users">

@@ -1,6 +1,10 @@
 import Spinner from "./Spinner";
 
-const LoadingState = ({ title = "", description = null, className = "" }) => (
+const LoadingState = ({
+  title = "",
+  description = null,
+  className = "flex flex-col items-center justify-center gap-4 py-16",
+}) => (
   <div className={className}>
     <Spinner as="div" size="xl" />
     <div className="text-center">

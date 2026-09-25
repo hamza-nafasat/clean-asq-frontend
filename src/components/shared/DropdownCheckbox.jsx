@@ -28,6 +28,8 @@ const DropdownCheckbox = memo(
     mainClassName,
     readOnly = false,
     selected = [],
+    id,
+    hasError = false,
   }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedValues, setSelectedValues] = useState(
@@ -158,7 +160,8 @@ const DropdownCheckbox = memo(
       shadow && "shadow-input",
       readOnly ? "cursor-not-allowed" : "border-[#E0E0E9]",
       mainClassName,
-      "flex items-center justify-between border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base",
+      hasError ? "border-red-500" : "border-frameColor",
+      "flex items-center justify-between h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base",
     ]
       .filter(Boolean)
       .join(" ");
@@ -209,14 +212,15 @@ const DropdownCheckbox = memo(
     return (
       <div className={`relative ${width || "w-full"}`} ref={dropdownRef}>
         {label && (
-          <label htmlFor={idRef.current} className="mb-1 block text-sm font-medium text-[#666666] lg:text-base">
+          <label htmlFor={id ?? idRef.current} className="mb-1 block text-sm font-medium text-[#666666] lg:text-base">
             {label}
           </label>
         )}
         <button
-          id={idRef.current}
+          id={id ?? idRef.current}
           type="button"
           aria-expanded={isOpen}
+          aria-invalid={hasError || undefined}
           aria-label={`Dropdown for ${label || "options"}`}
           className={buttonClasses}
           onClick={toggleDropdown}

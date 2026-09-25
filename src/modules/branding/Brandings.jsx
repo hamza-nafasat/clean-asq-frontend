@@ -17,8 +17,6 @@ import useBrandingListAssistant from "./hooks/useBrandingListAssistant";
 import { PERMISSIONS } from "@/utils/permissions";
 import { BRANDING_ROUTES, BRANDING_ROW_ACTIONS } from "./utils/branding.constants";
 
-const STATE_CLASS_NAME = "flex flex-col items-center justify-center gap-4 py-16";
-
 const Brandings = () => {
   const navigate = useNavigate();
   const canCreateBranding = usePermission(PERMISSIONS.CREATE_BRANDING);
@@ -85,7 +83,7 @@ const Brandings = () => {
     openCreateBranding,
   });
 
-  if (isBrandingsLoading) return <LoadingState title="Loading brandings" className={STATE_CLASS_NAME} />;
+  if (isBrandingsLoading) return <LoadingState title="Loading brandings" />;
   if (isError)
     return (
       <EmptyState variant="panel" icon={<FiAlertCircle size={28} />} title="Could not load brandings">

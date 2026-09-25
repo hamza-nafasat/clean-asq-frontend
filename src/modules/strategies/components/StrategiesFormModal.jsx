@@ -1,86 +1,107 @@
 import { useState } from "react";
-import { useCreateFormStrategyMutation, useUpdateFormStrategyMutation } from "@/redux/apis/form.apis";
-import { toast } from "react-toastify";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
+import Modal from "@/components/shared/Modal";
 import FormField from "@/components/global/FormField";
 import { FIELD_TYPES, MODAL_MODES } from "@/constants";
-import { STRATEGY_FORM_FIELDS, STRATEGY_FORM_FIELD_PROPS } from "@/modules/strategies/utils/strategies.constants";
-import { getInitialEditForm } from "@/modules/strategies/utils/strategies.utils";
+import { STRATEGY_FORM_FIELDS, STRATEGY_FORM_FIELD_PROPS, STRATEGY_FORM_LABELS } from "../utils/strategies.constants";
+import { getInitialStrategyForm, validateStrategyForm } from "../utils/strategies.utils";
 
-const StrategiesFormModal = ({ mode = MODAL_MODES.ADD, selectedRow = null, onClose, forms = [], formKeys = [] }) => {
+const MODAL_WIDTH = "w-[90%] max-w-3xl";
+
+const StrategiesForm = ({ mode, initialData, onSubmit, isLoading, forms, formKeys }) => {
   const isEdit = mode === MODAL_MODES.EDIT;
-  const [form, setForm] = useState(() =>
-    isEdit ? getInitialEditForm(selectedRow) : { name: "", form: [], searchStrategies: [] }
-  );
-  const [createFormStrategy, { isLoading: isCreating }] = useCreateFormStrategyMutation();
-  const [updateFormStrategy, { isLoading: isUpdating }] = useUpdateFormStrategyMutation();
-  const isLoading = isEdit ? isUpdating : isCreating;
+  const [form, setForm] = useState(() => getInitialStrategyForm(initialData));
+  const [errors, setErrors] = useState({});
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleCreate = async () => {
-    if (!form.name || !form.searchStrategies.length) return toast.error("Please fill all the fields");
-    try {
-      const res = await createFormStrategy(form).unwrap();
-      if (res.success) {
-        toast.success(res.message);
-        onClose?.(false);
-        setForm({ name: "", form: "", searchStrategies: [] });
-      }
-    } catch (error) {
-      console.error("Create strategy error:", error);
-      toast.error(error?.data?.message || "Failed to create form strategy");
-    }
-  };
-
-  const handleUpdate = async () => {
-    try {
-      const res = await updateFormStrategy({ FormStrategyId: selectedRow._id, data: form }).unwrap();
-      if (res?.success) {
-        toast.success(res.message);
-        onClose?.(false);
-      }
-    } catch (error) {
-      console.error("Update strategy error:", error);
-      toast.error(error?.data?.message || "Failed to update form strategy");
-    }
+    setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    return isEdit ? handleUpdate() : handleCreate();
+    const nextErrors = validateStrategyForm(form);
+    if (Object.values(nextErrors).some(Boolean)) return setErrors(nextErrors);
+    if (isEdit) return setIsConfirmOpen(true);
+    onSubmit?.(form);
+  };
+
+  const handleConfirmUpdate = () => {
+    setIsConfirmOpen(false);
+    onSubmit?.(form);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <FormField {...STRATEGY_FORM_FIELD_PROPS} field={STRATEGY_FORM_FIELDS.NAME} value={form.name} onChange={handleChange} />
-      <FormField
-        {...STRATEGY_FORM_FIELD_PROPS}
-        field={STRATEGY_FORM_FIELDS.FORM}
-        value={form.form}
-        onChange={handleChange}
-        type={FIELD_TYPES.MULTI_SELECT}
-        options={forms}
-      />
-      <FormField
-        {...STRATEGY_FORM_FIELD_PROPS}
-        field={STRATEGY_FORM_FIELDS.SEARCH_STRATEGIES}
-        value={form.searchStrategies}
-        onChange={handleChange}
-        type={FIELD_TYPES.MULTI_SELECT}
-        options={formKeys}
-      />
-      <div className="flex w-full justify-end">
-        <Button
-          type="submit"
-          label="Save"
-          disabled={isLoading}
-          className={isLoading ? "cursor-not-allowed opacity-50" : ""}
+    <>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <FormField
+          {...STRATEGY_FORM_FIELD_PROPS}
+          field={STRATEGY_FORM_FIELDS.NAME}
+          value={form.name}
+          onChange={handleChange}
+          error={errors.name}
         />
-      </div>
-    </form>
+        <FormField
+          {...STRATEGY_FORM_FIELD_PROPS}
+          field={STRATEGY_FORM_FIELDS.FORM}
+          label={STRATEGY_FORM_LABELS[STRATEGY_FORM_FIELDS.FORM]}
+          value={form.form}
+          onChange={handleChange}
+          type={FIELD_TYPES.MULTI_SELECT}
+          options={forms}
+        />
+        <FormField
+          {...STRATEGY_FORM_FIELD_PROPS}
+          field={STRATEGY_FORM_FIELDS.SEARCH_STRATEGIES}
+          label={STRATEGY_FORM_LABELS[STRATEGY_FORM_FIELDS.SEARCH_STRATEGIES]}
+          value={form.searchStrategies}
+          onChange={handleChange}
+          type={FIELD_TYPES.MULTI_SELECT}
+          options={formKeys}
+          error={errors.searchStrategies}
+        />
+        <div className="flex w-full justify-end">
+          <Button type="submit" label={isEdit ? "Update" : "Create"} loading={isLoading} />
+        </div>
+      </form>
+      <ConfirmationModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleConfirmUpdate}
+        title="Update Strategy"
+        message={`Save changes to "${initialData?.name}"?`}
+        confirmButtonText="Update"
+      />
+    </>
+  );
+};
+
+const StrategiesFormModal = ({
+  isOpen = false,
+  onClose,
+  onSubmit,
+  initialData = null,
+  mode = MODAL_MODES.ADD,
+  isLoading = false,
+  forms = [],
+  formKeys = [],
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <Modal title={mode === MODAL_MODES.EDIT ? "Edit Strategy" : "Add Strategy"} onClose={onClose} width={MODAL_WIDTH}>
+      <StrategiesForm
+        key={initialData?._id}
+        mode={mode}
+        initialData={initialData}
+        onSubmit={onSubmit}
+        isLoading={isLoading}
+        forms={forms}
+        formKeys={formKeys}
+      />
+    </Modal>
   );
 };
 

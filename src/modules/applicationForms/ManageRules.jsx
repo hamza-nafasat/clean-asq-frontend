@@ -24,8 +24,6 @@ import { INITIAL_RULE_FILTERS, RULE_ROW_ACTIONS } from "./utils/applicationForms
 import { hasActiveRuleFilters, matchesRuleFilters } from "./utils/applicationForms.filter.utils";
 import { buildRuleColumns } from "./utils/applicationForms.ruleColumns";
 
-const STATE_CLASS_NAME = "flex flex-col items-center justify-center gap-4 py-16";
-
 // row menu for the rules table
 const buildMenuButtons = ({ canUpdateRule, canDeleteRule, onSelect }) =>
   [
@@ -99,7 +97,7 @@ const ManageRules = () => {
     canReorder: canUpdateRule,
   });
 
-  if (isLoading) return <LoadingState title="Loading rules" className={STATE_CLASS_NAME} />;
+  if (isLoading) return <LoadingState title="Loading rules" />;
   if (isError)
     return (
       <EmptyState variant="panel" icon={<FiAlertCircle size={28} />} title="Could not load rules">

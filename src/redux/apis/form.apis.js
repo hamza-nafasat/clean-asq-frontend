@@ -50,12 +50,16 @@ const formApis = createApi({
         method: "POST",
         body: name ? { name } : {},
       }),
-      invalidatesTags: [API_TAGS.FORM, API_TAGS.STRATEGY],
+      invalidatesTags: [API_TAGS.FORM, API_TAGS.FORM_STRATEGIES],
     }),
     /////
     deleteSingleForm: builder.mutation({
       query: (data) => ({ url: `single/${data?._id}`, method: "Delete" }),
-      invalidatesTags: (result, error, data) => [API_TAGS.FORM, { type: API_TAGS.SINGLE_FORM, id: data?._id }],
+      invalidatesTags: (result, error, data) => [
+        API_TAGS.FORM,
+        { type: API_TAGS.SINGLE_FORM, id: data?._id },
+        API_TAGS.FORM_STRATEGIES,
+      ],
     }),
     /////
     submitForm: builder.mutation({
@@ -249,7 +253,7 @@ const formApis = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: [API_TAGS.STRATEGY],
+      invalidatesTags: [API_TAGS.SEARCH_STRATEGIES, API_TAGS.FORM_STRATEGIES],
     }),
     /////
     createSearchStrategyDefault: builder.mutation({
@@ -258,12 +262,12 @@ const formApis = createApi({
         method: "POST",
         body: {},
       }),
-      invalidatesTags: [API_TAGS.STRATEGY],
+      invalidatesTags: [API_TAGS.SEARCH_STRATEGIES, API_TAGS.FORM_STRATEGIES],
     }),
     /////
     getAllSearchStrategies: builder.query({
       query: () => ({ url: "/search-strategy/all", method: "GET" }),
-      providesTags: [API_TAGS.STRATEGY],
+      providesTags: [API_TAGS.SEARCH_STRATEGIES],
     }),
     /////
     updateSearchStrategy: builder.mutation({
@@ -272,7 +276,7 @@ const formApis = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: [API_TAGS.STRATEGY],
+      invalidatesTags: [API_TAGS.SEARCH_STRATEGIES, API_TAGS.FORM_STRATEGIES],
     }),
     /////
     deleteSearchStrategy: builder.mutation({
@@ -280,16 +284,7 @@ const formApis = createApi({
         url: `/search-strategy/single/${SearchStrategyId}`,
         method: "DELETE",
       }),
-      invalidatesTags: [API_TAGS.STRATEGY],
-    }),
-    /////
-    createPrompt: builder.mutation({
-      query: ({ data }) => ({
-        url: "/create-prompt",
-        method: "POST",
-        body: data,
-      }),
-      invalidatesTags: [API_TAGS.PROMPTS],
+      invalidatesTags: [API_TAGS.SEARCH_STRATEGIES, API_TAGS.FORM_STRATEGIES],
     }),
     /////
     updatePrompt: builder.mutation({
@@ -312,12 +307,12 @@ const formApis = createApi({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: [API_TAGS.STRATEGY],
+      invalidatesTags: [API_TAGS.FORM_STRATEGIES],
     }),
     /////
     getAllFormStrategies: builder.query({
       query: () => ({ url: "/form-strategy/all", method: "GET" }),
-      providesTags: [API_TAGS.STRATEGY],
+      providesTags: [API_TAGS.FORM_STRATEGIES],
     }),
     /////
     updateFormStrategy: builder.mutation({
@@ -326,7 +321,7 @@ const formApis = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: [API_TAGS.STRATEGY],
+      invalidatesTags: [API_TAGS.FORM_STRATEGIES],
     }),
     /////
     deleteFormStrategy: builder.mutation({
@@ -334,7 +329,7 @@ const formApis = createApi({
         url: `/form-strategy/single/${FormStrategyId}`,
         method: "DELETE",
       }),
-      invalidatesTags: [API_TAGS.STRATEGY],
+      invalidatesTags: [API_TAGS.FORM_STRATEGIES],
     }),
     /////
     getBankLookup: builder.mutation({
@@ -529,7 +524,6 @@ export const {
   useGetAllFormStrategiesQuery,
   useUpdateFormStrategyMutation,
   useDeleteFormStrategyMutation,
-  useCreatePromptMutation,
   useUpdatePromptMutation,
   useGetAllPromptsQuery,
   useGetBankLookupMutation,

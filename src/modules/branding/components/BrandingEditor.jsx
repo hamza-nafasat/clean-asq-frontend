@@ -96,8 +96,6 @@ const PREVIEW_FIELDS = [
   "buttonMaterial",
 ];
 
-const STATE_CLASS_NAME = "flex flex-col items-center justify-center gap-4 py-16";
-
 const BrandingEditor = ({ brandingId }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
@@ -146,7 +144,7 @@ const BrandingEditor = ({ brandingId }) => {
     askToConfirmUpdate: save.updateConfirm.ask,
   });
 
-  if (brandingId && isBrandingLoading) return <LoadingState title="Loading branding" className={STATE_CLASS_NAME} />;
+  if (brandingId && isBrandingLoading) return <LoadingState title="Loading branding" />;
   if (brandingId && isBrandingError)
     return (
       <EmptyState variant="panel" icon={<FiAlertCircle size={28} />} title="Could not load branding">

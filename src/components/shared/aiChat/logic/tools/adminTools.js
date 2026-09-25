@@ -1,7 +1,6 @@
 import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
-import { getErrorDetail } from "@/components/shared/aiChat/logic/toolHelpers.js";
 
-// tools whose screen action has the same name and takes the remaining args
+// tools passing args straight through
 const PASS_THROUGH_TOOLS = [
   AI_TOOLS.CREATE_STRATEGY,
   AI_TOOLS.LINK_STRATEGY_TO_FORM,
@@ -18,21 +17,21 @@ const PASS_THROUGH_TOOLS = [
 
 const createAdminTools = ({ bindings, helpers }) => {
   const { continueAfterToolCall, pushRevertable } = bindings;
-  const { say, reportCouldnt, runActionAndSay } = helpers;
+  const { say, reportActionError, runActionAndSay } = helpers;
 
   const passThrough = (tool) => async (args, { ctx }) => {
     const { explanation, ...actionArgs } = args;
     await runActionAndSay(ctx, tool, actionArgs, explanation);
   };
 
-  // save a lookup, then let the AI continue
+  // save lookup then continue chat
   const saveLookup = (resultSummary) => async (args, { tool, ctx, chatEndpoint, currentHistory }) => {
     const { explanation: _explanation, ...lookupData } = args;
     try {
       if (ctx.actions[tool]) await ctx.actions[tool](lookupData);
       await continueAfterToolCall(tool, args, resultSummary, currentHistory, chatEndpoint, ctx);
     } catch (err) {
-      reportCouldnt(getErrorDetail(err));
+      reportActionError(err);
     }
   };
 
@@ -41,7 +40,7 @@ const createAdminTools = ({ bindings, helpers }) => {
 
     [AI_TOOLS.UPDATE_ROLE]: async (args, { ctx }) => {
       const { explanation, ...roleArgs } = args;
-      // snapshot the old role so it can be reverted
+      // snapshot old role for revert
       const roles = ctx.currentState?.roles || [];
       const oldRole = roles.find((r) => r._id === roleArgs.roleId);
       if (oldRole) {
@@ -63,33 +62,28 @@ const createAdminTools = ({ bindings, helpers }) => {
 
     [AI_TOOLS.SET_LOOKUP_ACTIVE]: async (args, { ctx }) => {
       const { updates, explanation } = args;
-      // snapshot each lookup's active flag
       const lookups = ctx.currentState?.lookups || [];
-      const snapshot = updates.map(({ searchObjectKey }) => {
-        const lookup = lookups.find((l) => l.searchObjectKey === searchObjectKey);
-        return { searchObjectKey, wasActive: lookup?.isActive ?? false };
-      });
+      const revertUpdates = updates.map(({ searchObjectKey }) => ({
+        searchObjectKey,
+        isActive: lookups.find((l) => l.searchObjectKey === searchObjectKey)?.isActive ?? false,
+      }));
+      try {
+        await ctx.actions[AI_TOOLS.SET_LOOKUP_ACTIVE]({ updates });
+      } catch (err) {
+        return reportActionError(err);
+      }
       pushRevertable({
         description: `Changed active status on ${updates.length} lookup(s)`,
         revertFn: async (freshCtx) => {
-          if (freshCtx?.actions?.setLookupActive) {
-            for (const { searchObjectKey, wasActive } of snapshot) {
-              await freshCtx.actions.setLookupActive({ searchObjectKey, isActive: wasActive });
-            }
-          }
+          await freshCtx?.actions?.[AI_TOOLS.SET_LOOKUP_ACTIVE]?.({ updates: revertUpdates });
         },
       });
-      if (ctx.actions.setLookupActive) {
-        for (const update of updates) {
-          await ctx.actions.setLookupActive(update);
-        }
-      }
       say(explanation);
     },
 
     [AI_TOOLS.DRAFT_NEW_LOOKUP]: async (args, { ctx }) => {
       const { explanation, ...draftData } = args;
-      if (ctx.actions.openCreateModal) ctx.actions.openCreateModal(draftData);
+      ctx.actions[AI_TOOLS.DRAFT_NEW_LOOKUP]?.(draftData);
       say(`I've drafted a new lookup and opened it in the editor for your review.\n\n${explanation}`);
     },
 

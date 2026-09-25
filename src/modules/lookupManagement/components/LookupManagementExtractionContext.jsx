@@ -1,92 +1,100 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { FiAlertCircle } from "react-icons/fi";
 import { useGetAllPromptsQuery, useGetAllSearchStrategiesQuery, useUpdatePromptMutation } from "@/redux/apis/form.apis";
-import { FaRegEye } from "react-icons/fa";
-import { FiEdit } from "react-icons/fi";
 import { toast } from "react-toastify";
-import Button from "@/components/shared/Button";
+import useConfirm from "@/hooks/useConfirm";
 import usePermission from "@/hooks/usePermission";
-import { PERMISSIONS } from "@/utils/permissions";
-import CustomLoading from "@/components/shared/CustomLoading";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import Button from "@/components/shared/Button";
+import EmptyState from "@/components/shared/EmptyState";
+import LoadingState from "@/components/shared/LoadingState";
 import LookupManagementExtractionCards from "./LookupManagementExtractionCards";
-import {
-  EXTRACTION_SECTION_CARDS,
-  EXTRACTION_TABS,
-  OUTPUT_FORMAT_SECTION_ID,
-  PROMPT_NAMES,
-} from "@/modules/lookupManagement/utils/lookupManagement.constants";
-import { buildFullPrompt, generateExtractionDetails } from "@/modules/lookupManagement/utils/lookupManagement.utils";
+import LookupManagementExtractionHeading from "./LookupManagementExtractionHeading";
+import { PERMISSIONS } from "@/utils/permissions";
+import { EXTRACTION_SECTION_CARDS, EXTRACTION_SECTION_IDS, EXTRACTION_TABS } from "../utils/lookupManagement.constants";
+import { buildFullPrompt, generateExtractionDetails } from "../utils/lookupManagement.prompt.utils";
 
-const initialPrompts = Object.values(PROMPT_NAMES).reduce((acc, name) => ({ ...acc, [name]: "" }), {});
-
-const closeEdit = (_name, _prompt, _id, setIsEdit) => setIsEdit(false);
+// latest updatedAt across the prompts
+const getLastUpdated = (prompts) => {
+  const times = (prompts || []).map((p) => new Date(p?.updatedAt).getTime()).filter(Boolean);
+  return times.length ? new Date(Math.max(...times)).toLocaleString() : "";
+};
 
 const LookupManagementExtractionContext = () => {
   const [activeTab, setActiveTab] = useState(EXTRACTION_TABS.EDIT);
+  const [prompts, setPrompts] = useState({});
   const canUpdateLookup = usePermission(PERMISSIONS.UPDATE_LOOKUP);
-  const { data: promptsData, isLoading, refetch } = useGetAllPromptsQuery();
-  const { data: searchStrategyData } = useGetAllSearchStrategiesQuery();
-  const [extractionPrompt, setExtractionPrompt] = useState("");
-  const [fullPrompt, setFullPrompt] = useState("");
-  const [updatePrompt] = useUpdatePromptMutation();
-  const [prompts, setPrompts] = useState(initialPrompts);
+  const updateConfirm = useConfirm();
+  const promptsQuery = useGetAllPromptsQuery();
+  const strategiesQuery = useGetAllSearchStrategiesQuery();
+  const [updatePrompt, { isLoading: isUpdating }] = useUpdatePromptMutation();
 
-  const updatePrompts = async (name, prompt, id, setIsEdit) => {
-    if (!name || !prompt) return toast.error("Please enter a name and prompt");
+  const savedPrompts = promptsQuery.data?.data;
+  const lookups = strategiesQuery.data?.data;
+  const extractionPrompt = lookups ? generateExtractionDetails(lookups) : "";
+  const fullPrompt = buildFullPrompt(savedPrompts, lookups);
+  const getPrompt = (name) => prompts[name] ?? savedPrompts?.find((p) => p.name === name)?.prompt ?? "";
+
+  const discardDraft = (name) =>
+    setPrompts((prev) => {
+      const { [name]: _discarded, ...rest } = prev;
+      return rest;
+    });
+
+  // true once the prompt is saved
+  const updatePrompts = async (name, prompt, id) => {
+    if (!prompt) {
+      toast.error("Enter a prompt before saving");
+      return false;
+    }
+    const isConfirmed = await updateConfirm.ask({
+      title: "Update Prompt",
+      message: "Save changes to this section?",
+    });
+    if (!isConfirmed) return false;
     try {
       const res = await updatePrompt({ name, prompt, section: id }).unwrap();
       if (res.success) toast.success(res.message);
-      await refetch();
+      return true;
     } catch (error) {
       console.error("Update prompt error:", error);
-      toast.error(error?.data?.message || "Error while updating prompt");
-    } finally {
-      setIsEdit?.(false);
+      toast.error(error?.data?.message || "Failed to update prompt");
+      return false;
     }
   };
 
-  // generation toasts on missing data, so it stays in an effect
-  useEffect(() => {
-    if (promptsData?.data && !isLoading) {
-      promptsData?.data?.forEach((prompt) => {
-        setPrompts((prevState) => ({
-          ...prevState,
-          [prompt.name]: prompt.prompt,
-        }));
-      });
-      if (searchStrategyData?.data) {
-        setExtractionPrompt(generateExtractionDetails(searchStrategyData?.data));
-        setFullPrompt(buildFullPrompt([...promptsData.data], [...searchStrategyData.data]));
-      }
-    }
-  }, [isLoading, promptsData, searchStrategyData?.data]);
+  const handleRetry = () => {
+    promptsQuery.refetch();
+    strategiesQuery.refetch();
+  };
 
-  if (isLoading) return <CustomLoading />;
+  if (promptsQuery.isLoading || strategiesQuery.isLoading) return <LoadingState title="Loading extraction context" />;
+  if (promptsQuery.isError || strategiesQuery.isError)
+    return (
+      <EmptyState variant="panel" icon={<FiAlertCircle size={28} />} title="Could not load extraction context">
+        <Button type="button" label="Try again" onClick={handleRetry} />
+      </EmptyState>
+    );
 
   return (
-    <div className="px-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-textPrimary text-3xl font-bold">Manage Extraction Context</h2>
-          <p className="text-textPrimary text-base">
-            Configure the Perplexity AI prompt sections for intelligent data extraction
-          </p>
-          <p className="text-textPrimary text-base">Last updated: 8/11/2025, 8:06:04 AM</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div>
-            <Button icon={FiEdit} label="Edit Sections" onClick={() => setActiveTab(EXTRACTION_TABS.EDIT)} />
-          </div>
-          <div>
-            <Button icon={FaRegEye} label="Preview Full Prompt" onClick={() => setActiveTab(EXTRACTION_TABS.PREVIEW)} />
-          </div>
-        </div>
-      </div>
+    <>
+      <LookupManagementExtractionHeading
+        lastUpdated={getLastUpdated(savedPrompts)}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
-      {/* Tabs */}
-      {activeTab === EXTRACTION_TABS.EDIT && (
-        <div className="mt-8 flex flex-col gap-8">
-          {EXTRACTION_SECTION_CARDS.map(({ id, title, label, subtitle }) =>
-            id === OUTPUT_FORMAT_SECTION_ID ? (
+      <div className="flex flex-col gap-8">
+        {activeTab === EXTRACTION_TABS.PREVIEW ? (
+          <LookupManagementExtractionCards
+            title="Complete Extraction Prompt"
+            subtitle="This is the complete prompt that will be sent to Perplexity AI for data extraction (all sections with dynamic content resolved)"
+            prompt={fullPrompt}
+            isPreview
+          />
+        ) : (
+          EXTRACTION_SECTION_CARDS.map(({ id, title, label, subtitle }) =>
+            id === EXTRACTION_SECTION_IDS.OUTPUT_FORMAT ? (
               <LookupManagementExtractionCards
                 key={id}
                 title={title}
@@ -94,8 +102,7 @@ const LookupManagementExtractionContext = () => {
                 id={id}
                 subtitle={subtitle}
                 prompt={extractionPrompt}
-                handler={closeEdit}
-                isPreview={!canUpdateLookup}
+                isPreview
               />
             ) : (
               <LookupManagementExtractionCards
@@ -105,29 +112,27 @@ const LookupManagementExtractionContext = () => {
                 id={id}
                 label={label}
                 subtitle={subtitle}
-                prompt={prompts?.[label]}
-                handler={updatePrompts}
+                prompt={getPrompt(label)}
+                onUpdate={updatePrompts}
+                onCancel={discardDraft}
                 setPrompts={setPrompts}
                 isPreview={!canUpdateLookup}
+                isUpdating={isUpdating}
               />
             ),
-          )}
-        </div>
-      )}
+          )
+        )}
+      </div>
 
-      {activeTab === EXTRACTION_TABS.PREVIEW && (
-        <div className="mt-8 flex flex-col gap-8">
-          <LookupManagementExtractionCards
-            title="Complete Extraction Prompt"
-            section=""
-            subtitle="This is the complete prompt that will be sent to OpenAI for data extraction (all sections with dynamic content resolved)"
-            prompt={fullPrompt}
-            handler={closeEdit}
-            isPreview={true}
-          />
-        </div>
-      )}
-    </div>
+      <ConfirmationModal
+        isOpen={updateConfirm.isOpen}
+        title={updateConfirm.pending?.title}
+        message={updateConfirm.pending?.message}
+        confirmButtonText="Update"
+        onConfirm={updateConfirm.resolveAsked}
+        onClose={updateConfirm.close}
+      />
+    </>
   );
 };
 

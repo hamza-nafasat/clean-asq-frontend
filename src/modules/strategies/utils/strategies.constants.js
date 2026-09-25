@@ -1,3 +1,5 @@
+import { FORM_FIELD_CHANGE_SHAPES } from "@/constants";
+
 export const STRATEGIES_SCREEN_CONTEXT = {
   screenId: "strategies",
   screenName: "Strategies",
@@ -13,13 +15,24 @@ export const STRATEGY_FORM_FIELDS = {
   SEARCH_STRATEGIES: "searchStrategies",
 };
 
-// props that give the shared FormField this module's look
+// this module's FormField look
 export const STRATEGY_FORM_FIELD_PROPS = {
   labelClassName: "text-textPrimary mb-1 block text-sm font-medium",
   selectBaseClassName:
-    "border-frameColor h-11.25 w-full rounded-lg border bg-[#FAFBFF] px-4 text-sm text-gray-600 outline-none md:h-12.5  md:text-base",
+    "border-frameColor h-11.25 w-full rounded-lg border bg-fieldBackground px-4 text-sm text-gray-600 outline-none md:h-12.5 md:text-base",
   selectDefaultClassName: "border-frameColor",
   placeholderOption: "Choose an option",
-  onChangeShape: "field",
+  onChangeShape: FORM_FIELD_CHANGE_SHAPES.FIELD,
   inputClassName: "w-full rounded border p-2 text-sm",
+};
+
+export const STRATEGY_FORM_LABELS = {
+  [STRATEGY_FORM_FIELDS.FORM]: "Forms",
+  [STRATEGY_FORM_FIELDS.SEARCH_STRATEGIES]: "Lookup Keys",
+};
+
+export const INITIAL_STRATEGY_FORM = {
+  [STRATEGY_FORM_FIELDS.NAME]: "",
+  [STRATEGY_FORM_FIELDS.FORM]: [],
+  [STRATEGY_FORM_FIELDS.SEARCH_STRATEGIES]: [],
 };

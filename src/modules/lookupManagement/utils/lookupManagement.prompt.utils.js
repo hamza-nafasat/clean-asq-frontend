@@ -1,19 +1,15 @@
-import { toast } from "react-toastify";
-import { NO_OUTPUT_EXTRACT_AS, PROMPT_NAMES } from "./lookupManagement.constants";
+import { EXTRACT_AS_TYPES, NO_OUTPUT_EXTRACT_AS, PROMPT_NAMES } from "./lookupManagement.constants";
 
 const EXAMPLE_VALUES = {
-  Number: "123",
-  List: '["item1", "item2", "item3"]',
-  Address: "123 Main St, City, State 12345",
-  Date: "2025-01-07",
+  [EXTRACT_AS_TYPES.NUMBER]: "123",
+  [EXTRACT_AS_TYPES.LIST]: '["item1", "item2", "item3"]',
+  [EXTRACT_AS_TYPES.ADDRESS]: "123 Main St, City, State 12345",
+  [EXTRACT_AS_TYPES.DATE]: "2025-01-07",
 };
 
-// build the output format section from active lookups
-export const generateExtractionDetails = (strategiesData) => {
-  if (!strategiesData) return toast.error("No search strategies found. Please configure search strategies first.");
-
-  const activeStrategiesWithPrompts = strategiesData
-    ?.filter(
+const getActiveStrategiesWithPrompts = (strategiesData) =>
+  (strategiesData || [])
+    .filter(
       (strategy) =>
         strategy?.isActive &&
         strategy?.extractionPrompt &&
@@ -22,15 +18,15 @@ export const generateExtractionDetails = (strategiesData) => {
     )
     .sort((a, b) => a.order - b.order);
 
-  if (activeStrategiesWithPrompts.length === 0) {
-    return toast.error(
-      "No active search strategies with extraction prompts found. Please configure search strategies first.",
-    );
-  }
+// output format from active lookups
+export const generateExtractionDetails = (strategiesData) => {
+  const activeStrategiesWithPrompts = getActiveStrategiesWithPrompts(strategiesData);
+  if (!activeStrategiesWithPrompts.length)
+    return "No active search strategies with extraction prompts found. Please configure search strategies first.";
 
   const instructions = activeStrategiesWithPrompts
     .map((strategy, index) => {
-      const extractType = strategy?.extractAs || "Simple text";
+      const extractType = strategy?.extractAs || EXTRACT_AS_TYPES.SIMPLE_TEXT;
       return `${index + 1}. **${strategy?.searchObjectKey}** (Extract as: ${extractType})
    ${strategy?.extractionPrompt}`;
     })
@@ -39,7 +35,7 @@ export const generateExtractionDetails = (strategiesData) => {
   // value and source field per lookup
   const jsonFields = activeStrategiesWithPrompts.reduce((acc, strategy) => {
     const fieldName = strategy?.searchObjectKey;
-    const extractType = strategy?.extractAs || "Simple text";
+    const extractType = strategy?.extractAs || EXTRACT_AS_TYPES.SIMPLE_TEXT;
     acc[fieldName] = EXAMPLE_VALUES[extractType] ?? "example text";
     acc[`${fieldName}_source`] =
       "Copy the exact 'Title Source Attribution' or 'Snippet Source Attribution' text from the search evidence where you found this information";
@@ -82,18 +78,16 @@ ${jsonFormat}
 };
 
 export const buildFullPrompt = (promptData, strategiesData) => {
-  if (!promptData || !strategiesData) return toast.error("promptData or strategiesData is empty");
+  if (!promptData || !strategiesData) return "";
+  const extractionDetails = generateExtractionDetails(strategiesData);
 
-  return promptData
-    ?.sort((a, b) => Number(a?.section) - Number(b?.section))
+  return [...promptData]
+    .sort((a, b) => Number(a?.section) - Number(b?.section))
     .map((doc) => {
-      let content = doc.prompt;
-      content = content.replace("{companyName}", "Test Company");
-      if (doc.name === PROMPT_NAMES.OUTPUT_FORMAT) {
-        content = generateExtractionDetails(strategiesData);
-      }
-      content = content.replace("{dynamicExtractionDetails}", generateExtractionDetails(strategiesData));
-      return content;
+      if (doc.name === PROMPT_NAMES.OUTPUT_FORMAT) return extractionDetails;
+      return doc.prompt
+        .replace("{companyName}", "Test Company")
+        .replace("{dynamicExtractionDetails}", extractionDetails);
     })
     .join("\n\n");
 };
