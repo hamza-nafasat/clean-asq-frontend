@@ -26,13 +26,13 @@ const Modal = ({ title, onClose, children, width, headingIcon, unpadded = false 
 
   return (
     <div
-      className="modal fixed inset-0 top-0 left-0 z-99 flex items-center justify-center bg-[#000000c5] p-6"
+      className="modal modal-overlay fixed inset-0 top-0 left-0 z-99 flex items-center justify-center bg-[#000000c5] p-6"
       onClick={(e) => e.target === e.currentTarget && onClose?.()}
     >
       <div
         role="dialog"
         aria-modal="true"
-        className={`custom-scroll shadow-card h-fit max-h-full overflow-y-auto rounded-[12px] bg-white ${unpadded ? "flex flex-col" : "p-4 md:p-6"} ${width ? width : "w-[4000px] md:w-[500px] lg:w-[700px] xl:w-[900px]"
+        className={`custom-scroll shadow-card relative h-fit max-h-full overflow-y-auto rounded-[12px] bg-white ${unpadded ? "flex flex-col" : "p-4 md:p-6"} ${width ? width : "w-[4000px] md:w-[500px] lg:w-[700px] xl:w-[900px]"
           }`}
         onClick={e => e.stopPropagation()}
       >

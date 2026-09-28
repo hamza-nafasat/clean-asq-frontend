@@ -339,6 +339,11 @@ body {
   }
 }
 
+/* no page scroll behind an open modal */
+body:has(.modal-overlay) {
+  overflow: hidden;
+}
+
 .montserrat-font {
   font-family: var(--font-montserrat);
 }

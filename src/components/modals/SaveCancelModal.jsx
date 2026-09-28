@@ -17,9 +17,9 @@ const Modal = memo(
   }) => {
     return (
       <div
-        className="fixed inset-0 z-50 flex h-full items-center justify-center overflow-auto bg-black/50"
+        className="modal-overlay fixed inset-0 z-50 flex h-full items-center justify-center overflow-auto bg-black/50"
       >
-        <div className="scroll-0 max-h-[70%] w-[90%] max-w-3xl overflow-auto rounded-md bg-white p-6 shadow-lg">
+        <div className="scroll-0 relative max-h-[70%] w-[90%] max-w-3xl overflow-auto rounded-md bg-white p-6 shadow-lg">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-textPrimary text-lg font-semibold">{title}</h2>
             <button type="button" aria-label="Close modal" onClick={onClose} className="cursor-pointer text-gray-400 hover:text-gray-500" disabled={isLoading}>
