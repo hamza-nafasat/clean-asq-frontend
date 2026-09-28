@@ -100,6 +100,22 @@ export const BRANDING_PAGE_KEYS = {
   CREATE: "branding-create",
 };
 
+// same names as the backend query tool
+export const QUERY_OPERATORS = {
+  EQUALS: "equals",
+  NOT_EQUALS: "notEquals",
+  CONTAINS: "contains",
+  IN: "in",
+  IS_EMPTY: "isEmpty",
+  IS_NOT_EMPTY: "isNotEmpty",
+  GREATER_THAN: "greaterThan",
+  LESS_THAN: "lessThan",
+};
+
+export const SORT_DIRECTIONS = { ASC: "asc", DESC: "desc" };
+
+export const QUERY_RESULT_LIMITS = { DEFAULT: 100, MAX: 500 };
+
 export const PAGE_ROUTES = {
   "application-forms": "/application-forms",
   [BRANDING_PAGE_KEYS.LIST]: "/branding",

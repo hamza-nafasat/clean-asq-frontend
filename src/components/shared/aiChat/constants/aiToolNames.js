@@ -1,4 +1,5 @@
 export const AI_TOOLS = {
+  QUERY_PAGE_DATA: "queryPageData",
   // general
   REVERT_LAST_ACTION: "revertLastAction",
   NAVIGATE_TO_PAGE: "navigateToPage",

@@ -1,6 +1,7 @@
 import { PAGE_LABELS, PAGE_ROUTES } from "@/components/shared/aiChat/constants/aiChatConstants.js";
 import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
 import { getErrorDetail } from "@/components/shared/aiChat/logic/toolHelpers.js";
+import { queryPageData } from "@/components/shared/aiChat/logic/queryPageData.js";
 
 const NAV_FOLLOW_UP_TIMEOUT_MS = 15000;
 const NAVIGATE_DELAY_MS = 300;
@@ -36,10 +37,16 @@ const pickCsvFile = ({ sendMessageRef, say, wt }) => {
 
 const createGeneralTools = ({ bindings, helpers }) => {
   const { popRevertable, getScreenContext, wt, navigate, pendingFollowUpRef, navTimeoutRef, sendMessageRef } = bindings;
-  const { suppressNextScreenGreetingRef } = bindings;
+  const { suppressNextScreenGreetingRef, continueAfterToolCall } = bindings;
   const { say, reportActionError } = helpers;
 
   return {
+    // exact matches go back to the model
+    [AI_TOOLS.QUERY_PAGE_DATA]: async (args, { tool, ctx, chatEndpoint, currentHistory }) => {
+      const result = queryPageData(ctx.currentState, args);
+      await continueAfterToolCall(tool, args, JSON.stringify(result), currentHistory, chatEndpoint, ctx);
+    },
+
     [AI_TOOLS.REVERT_LAST_ACTION]: async (args) => {
       const { explanation } = args;
       const entry = popRevertable();
