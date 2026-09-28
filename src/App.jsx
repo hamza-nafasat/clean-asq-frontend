@@ -58,7 +58,7 @@ const RoleRedirect = lazy(() => import("@/routes/RoleRedirect"));
 const App = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
-  const [getUserProfile, { isLoading }] = useGetMyProfileFirstTimeMutation();
+  const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const { user } = useSelector((state) => state.auth);
   useBrandingSync();
   useDefaultBranding(user);
@@ -84,22 +84,6 @@ const App = () => {
     getUserAndSetBranding();
   }, [getUserAndSetBranding]);
 
-  // pick up role changes on return
-  useEffect(() => {
-    if (!user?._id) return;
-    const refreshPermissions = async () => {
-      if (document.visibilityState !== "visible") return;
-      try {
-        const res = await getUserProfile().unwrap();
-        if (res?.data) dispatch(userExist(res.data));
-      } catch (error) {
-        console.error("Refresh profile error:", error);
-      }
-    };
-    document.addEventListener("visibilitychange", refreshPermissions);
-    return () => document.removeEventListener("visibilitychange", refreshPermissions);
-  }, [user?._id, getUserProfile, dispatch]);
-
   useEffect(() => {
     const userId = user?._id;
     if (!userId) return;
@@ -110,7 +94,7 @@ const App = () => {
     return () => socket.off(SOCKET_EVENTS.CONNECT, register);
   }, [user?._id]);
 
-  if (loading || isLoading) return <CustomLoading />;
+  if (loading) return <CustomLoading />;
   return (
     <>
       <Suspense fallback={<CustomLoading />}>
