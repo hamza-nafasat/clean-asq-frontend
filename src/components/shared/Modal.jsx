@@ -32,16 +32,22 @@ const Modal = ({ title, onClose, children, width, headingIcon, unpadded = false 
       <div
         role="dialog"
         aria-modal="true"
-        className={`custom-scroll shadow-card relative h-fit max-h-full overflow-y-auto rounded-[12px] bg-white ${unpadded ? "flex flex-col" : "p-4 md:p-6"} ${width ? width : "w-[4000px] md:w-[500px] lg:w-[700px] xl:w-[900px]"
-          }`}
-        onClick={e => e.stopPropagation()}
+        className={`custom-scroll shadow-card relative h-fit max-h-full overflow-y-auto rounded-[12px] bg-white ${unpadded ? "flex flex-col" : "p-4 md:p-6"} ${
+          width ? width : "w-1000 md:w-125 lg:w-175 xl:w-225"
+        }`}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className={`flex items-center justify-between ${unpadded ? "border-b px-6 py-4" : ""}`}>
           <span className="flex gap-1">
             {headingIcon && <span>{headingIcon}</span>}
             <h2 className="text-textPrimary text-base font-semibold md:text-xl">{title}</h2>
           </span>
-          <button type="button" aria-label="Close modal" className="bg-primary hover:bg-secondary cursor-pointer rounded-full p-2" onClick={onClose}>
+          <button
+            type="button"
+            aria-label="Close modal"
+            className="bg-primary hover:bg-secondary cursor-pointer rounded-full p-2"
+            onClick={onClose}
+          >
             <RxCross2 color="#fff" />
           </button>
         </div>
