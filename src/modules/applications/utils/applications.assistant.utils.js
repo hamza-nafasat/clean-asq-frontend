@@ -2,7 +2,7 @@ import confirmOrCancel from "@/utils/confirmOrCancel";
 import downloadBlob from "@/utils/downloadBlob";
 import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
 import { APPLICANT_TYPE } from "./applications.constants";
-import { getForwardableSections, getFullName } from "./applications.utils";
+import { getDisplayStatus, getForwardableSections, getFullName } from "./applications.utils";
 
 const isSubmitted = (application) => application?.type === APPLICANT_TYPE.SUBMITTED;
 
@@ -24,7 +24,7 @@ export const buildApplicationsScreenState = ({ applications, forms }) => ({
   applications: applications.map((application) => ({
     _id: application._id,
     type: application.type,
-    status: application.status,
+    status: getDisplayStatus(application),
     applicantName: getFullName(application.user),
     applicantEmail: application.user?.email,
     applicantRole: application.user?.role?.name,
