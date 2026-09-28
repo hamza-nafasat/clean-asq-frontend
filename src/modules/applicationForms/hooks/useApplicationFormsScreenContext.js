@@ -7,6 +7,7 @@ import {
   useGetAllSearchStrategiesQuery,
   useGetMyAllFormsQuery,
   useGetSingleFormQueryQuery,
+  useLazyGetSingleFormQueryQuery,
 } from "@/redux/apis/form.apis";
 import usePermission from "@/hooks/usePermission";
 import { useScreenContext } from "@/hooks/useScreenContext";
@@ -15,7 +16,8 @@ import { PERMISSIONS } from "@/utils/permissions";
 import useApplicationFormsAssistantActions from "./useApplicationFormsAssistantActions";
 import { APPLICATION_FORMS_SCREEN } from "../utils/applicationForms.constants";
 import { buildFormsAssistantState } from "../utils/applicationForms.assistant.utils";
-import { countDeletedFields, createEmptyPendingEdits } from "../utils/applicationForms.pendingEdits.utils";
+import { applyPendingEdits, countDeletedFields, createEmptyPendingEdits } from "../utils/applicationForms.pendingEdits.utils";
+import { toFormPreview } from "../utils/applicationForms.preview.utils";
 
 const SERVER_URL = getEnv("SERVER_URL");
 
@@ -68,6 +70,7 @@ const useApplicationFormsScreenContext = ({ onOpenCreateForm, askConfirm }) => {
     { _id: selectedFormForEditing },
     { skip: !selectedFormForEditing, refetchOnMountOrArgChange: true },
   );
+  const [fetchSingleForm] = useLazyGetSingleFormQueryQuery();
   const { data: formRulesData } = useGetAllFormRulesQuery(
     { formId: selectedFormForEditing },
     { skip: !selectedFormForEditing || !canReadRule, refetchOnMountOrArgChange: true },
@@ -94,6 +97,13 @@ const useApplicationFormsScreenContext = ({ onOpenCreateForm, askConfirm }) => {
       setPendingFormEdits(next);
     },
     getBase: () => pendingFormEditsRef.current || createEmptyPendingEdits(selectedFormForEditing),
+  };
+
+  // preview built from data, not written by the model
+  const previewForm = async ({ formId }) => {
+    const res = await fetchSingleForm({ _id: formId }, true).unwrap();
+    const edits = pendingFormEditsRef.current?.formId === formId ? pendingFormEditsRef.current : null;
+    return toFormPreview(applyPendingEdits(res.data, edits));
   };
 
   const actions = useApplicationFormsAssistantActions({
@@ -128,7 +138,7 @@ const useApplicationFormsScreenContext = ({ onOpenCreateForm, askConfirm }) => {
     aiEndpoint: `${SERVER_URL}${APPLICATION_FORMS_SCREEN.AI_ENDPOINT_PATH}`,
     greeting: APPLICATION_FORMS_SCREEN.GREETING,
     currentState: buildFormsAssistantState(screenData),
-    actions,
+    actions: { ...actions, previewForm },
     deps: buildScreenContextDeps(screenData),
   });
 };

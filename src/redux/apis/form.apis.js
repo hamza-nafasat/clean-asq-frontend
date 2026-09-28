@@ -490,6 +490,7 @@ export const {
   useUpdateFormLocationMutation,
   useGetMyAllFormsQuery,
   useGetSingleFormQueryQuery,
+  useLazyGetSingleFormQueryQuery,
   useDeleteSingleFormMutation,
   useSubmitFormMutation,
   useUpdateSubmittedFormMutation,

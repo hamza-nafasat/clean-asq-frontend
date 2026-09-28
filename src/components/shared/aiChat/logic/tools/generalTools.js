@@ -37,7 +37,7 @@ const pickCsvFile = ({ sendMessageRef, say, wt }) => {
 const createGeneralTools = ({ bindings, helpers }) => {
   const { popRevertable, getScreenContext, wt, navigate, pendingFollowUpRef, navTimeoutRef, sendMessageRef } = bindings;
   const { suppressNextScreenGreetingRef } = bindings;
-  const { say } = helpers;
+  const { say, reportActionError } = helpers;
 
   return {
     [AI_TOOLS.REVERT_LAST_ACTION]: async (args) => {
@@ -56,9 +56,15 @@ const createGeneralTools = ({ bindings, helpers }) => {
       }
     },
 
-    [AI_TOOLS.PREVIEW_FORM_STRUCTURE]: async (args) => {
-      const { formName, sections, explanation } = args;
-      say(explanation, { formPreview: { formName, sections } });
+    [AI_TOOLS.PREVIEW_FORM_STRUCTURE]: async (args, { ctx }) => {
+      const { formId, formName, sections, explanation } = args;
+      if (!formId) return say(explanation, { formPreview: { formName, sections } });
+      if (!ctx.actions.previewForm) return say(wt("cantDoOnPage"));
+      try {
+        say(explanation, { formPreview: await ctx.actions.previewForm({ formId }) });
+      } catch (err) {
+        reportActionError(err);
+      }
     },
 
     [AI_TOOLS.OPEN_CSV_FILE_PICKER]: async (args) => {
