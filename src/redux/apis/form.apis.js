@@ -76,13 +76,6 @@ const formApis = createApi({
       invalidatesTags: [API_TAGS.SUBMIT_FORM, API_TAGS.HISTORY, API_TAGS.SUBMIT_FORM_VERSIONS],
     }),
     /////
-    getSubmittedFormUsers: builder.query({
-      query: ({ formId }) => ({
-        url: `/submitted-users/${formId}`,
-        method: "GET",
-      }),
-    }),
-    /////
     giveSpecialAccessToUser: builder.mutation({
       query: ({ formId, submittedFormId, email, sectionKey }) => ({
         url: `/special-access-of-section/${formId}?submittedFormId=${submittedFormId}`,
@@ -124,8 +117,9 @@ const formApis = createApi({
     }),
     /////
     generatePdfForm: builder.mutation({
-      query: ({ _id, userId }) => ({
+      query: ({ _id, userId, submissionId }) => ({
         url: `/generate-pdf/${_id}/${userId}`,
+        params: { submissionId: submissionId || undefined },
         method: "GET",
         // read the pdf as a blob, not json
         responseHandler: (response) => response.blob(),
@@ -149,10 +143,12 @@ const formApis = createApi({
     }),
     /////
     getSavedFormByUserId: builder.mutation({
-      query: ({ formId, userId, pdfToken }) => ({
+      query: ({ formId, userId, pdfToken, submissionId }) => ({
         url: pdfToken
           ? `/pdf-submitted-form/${formId}/${userId}?pdfToken=${encodeURIComponent(pdfToken)}`
           : `/get-submitted-form/${formId}/${userId}`,
+        // only the pdf page reads one exact submission
+        params: pdfToken ? { submissionId: submissionId || undefined } : undefined,
         method: "GET",
       }),
       invalidatesTags: [API_TAGS.SUBMIT_FORM],
@@ -495,7 +491,6 @@ export const {
   useSubmitFormMutation,
   useUpdateSubmittedFormMutation,
   useGetFormVersionsQuery,
-  useGetSubmittedFormUsersQuery,
   useGiveSpecialAccessToUserMutation,
   useApplicantGiveSpecialAccessToBeneficialOwnerMutation,
   useGetSpecialAccessOfSectionQuery,

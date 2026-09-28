@@ -104,6 +104,9 @@ export const MODAL_MODES = {
   EDIT: "edit",
 };
 
+// query names on the pdf view page
+export const PDF_VIEW_PARAMS = { PDF_TOKEN: "pdfToken", SUBMISSION_ID: "submissionId" };
+
 export const SOCKET_EVENTS = {
   CONNECT: "connect",
   REGISTER_USER: "register_user",

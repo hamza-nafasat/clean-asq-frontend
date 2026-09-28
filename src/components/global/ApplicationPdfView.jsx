@@ -25,7 +25,7 @@ import ProcessingInfoPdf from "@/components/global/ApplicationPdfProcessingInfo"
 import BrandLogo from "@/components/shared/BrandLogo";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
-import { SECTION_TITLES } from "@/constants";
+import { PDF_VIEW_PARAMS, SECTION_TITLES } from "@/constants";
 import { sectionsForPdf } from "@/utils/sectionCompletion";
 
 const ID_MISSION_SECTION_KEY = "idMission";
@@ -99,7 +99,7 @@ export const ApplicationPdfViewCommonProps = ({
 
   const handleDownload = async (formId, applicantId) => {
     try {
-      const blob = await generatePdfForm({ _id: formId, userId: applicantId }).unwrap();
+      const blob = await generatePdfForm({ _id: formId, userId: applicantId, submissionId: submittedFormId }).unwrap();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -125,7 +125,7 @@ export const ApplicationPdfViewCommonProps = ({
 
     const fetchSavedFormData = async () => {
       try {
-        const res = await getSavedFormData({ formId: pdfId, userId, pdfToken }).unwrap();
+        const res = await getSavedFormData({ formId: pdfId, userId, pdfToken, submissionId: submittedFormIdProp }).unwrap();
         if (res.success) {
           const submitData = res?.data?.submitData ?? {};
           setFormInnerData(submitData);
@@ -140,7 +140,7 @@ export const ApplicationPdfViewCommonProps = ({
     };
     setDataLoaded(false);
     fetchSavedFormData();
-  }, [dispatch, getSavedFormData, pdfId, pdfToken, userId, usesPrefilledData]);
+  }, [dispatch, getSavedFormData, pdfId, pdfToken, submittedFormIdProp, userId, usesPrefilledData]);
 
   useEffect(() => {
     return () => {
@@ -232,7 +232,13 @@ const ApplicationPdfView = () => {
   const [searchParams] = useSearchParams();
   useApplyBranding({ formId: pdfId });
   return (
-    <ApplicationPdfViewCommonProps userId={userId} pdfId={pdfId} pdfToken={searchParams.get("pdfToken")} isPdf={true} />
+    <ApplicationPdfViewCommonProps
+      userId={userId}
+      pdfId={pdfId}
+      pdfToken={searchParams.get(PDF_VIEW_PARAMS.PDF_TOKEN)}
+      submittedFormId={searchParams.get(PDF_VIEW_PARAMS.SUBMISSION_ID)}
+      isPdf={true}
+    />
   );
 };
 

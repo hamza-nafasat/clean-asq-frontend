@@ -2,16 +2,17 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import {
   useGetSingleFormQueryQuery,
-  useGetSubmittedFormUsersQuery,
+  useGetSingleSubmitFormQueryQuery,
   useGiveSpecialAccessToUserMutation,
 } from "@/redux/apis/form.apis";
 import Button from "@/components/shared/Button";
 import CustomizableSelect from "@/components/shared/CustomizableSelect";
 import TextField from "@/components/shared/TextField";
-import { getForwardableSections } from "../utils/applications.utils";
+import { getForwardableSections, getFullName } from "../utils/applications.utils";
 
 const ApplicationsSpecialAccessModal = ({ formId = null, setModal, submittedFormId = null }) => {
-  const { data: submittedFormUsers } = useGetSubmittedFormUsersQuery({ formId: formId });
+  // this application's applicant, not every applicant of the form
+  const { data: submission } = useGetSingleSubmitFormQueryQuery({ _id: submittedFormId }, { skip: !submittedFormId });
   const [giveSpecialAccessToUser, { isLoading: isGivingSpecialAccess }] = useGiveSpecialAccessToUserMutation();
   const { data: formData } = useGetSingleFormQueryQuery({ _id: formId });
   const [form, setForm] = useState({ email: "", sectionKey: "" });
@@ -21,10 +22,8 @@ const ApplicationsSpecialAccessModal = ({ formId = null, setModal, submittedForm
     value: section?.key,
   }));
 
-  const selectedUsers = (submittedFormUsers?.data || []).map((submitForm) => ({
-    option: `${submitForm?.user?.firstName} ${submitForm?.user?.middleName ? " " : ""} ${submitForm?.user?.lastName}`,
-    value: submitForm?.user?.email,
-  }));
+  const applicant = submission?.data?.user;
+  const selectedUsers = applicant?.email ? [{ option: getFullName(applicant), value: applicant.email }] : [];
 
   const handleGiveSpecialAccess = async () => {
     try {
