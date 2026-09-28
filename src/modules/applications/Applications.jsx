@@ -131,6 +131,8 @@ const Applications = () => {
             <ApplicationPdfViewCommonProps
               userId={pdfData?.user?._id || pdfData?.user}
               pdfId={pdfData?.form?._id || pdfData?.form}
+              initialSubmitData={pdfData?.submitData}
+              submittedFormId={pdfData?._id}
               className="rounded-lg!"
               isPdf={true}
               isDownloadAble={true}
