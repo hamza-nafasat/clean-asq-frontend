@@ -1,6 +1,7 @@
 import { FIELD_TYPES } from "@/constants";
 import { PERMISSION_GROUPS, SYSTEM_ROLES } from "@/utils/permissions";
-import { CREATED_DATE_OPTIONS, DATE_LOCALE, OTHER_PERMISSION_GROUP } from "./roleManagement.constants";
+import { DATE_LOCALE } from "@/constants";
+import { CREATED_DATE_OPTIONS, OTHER_PERMISSION_GROUP } from "./roleManagement.constants";
 
 export const isSystemRole = (role) => Object.values(SYSTEM_ROLES).includes(role?.name);
 

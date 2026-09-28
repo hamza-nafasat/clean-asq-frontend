@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { CheckCircle, XCircle } from "lucide-react";
 import { toast } from "react-toastify";
@@ -18,8 +18,9 @@ const ROUTING_NOT_VERIFIED_MESSAGE =
   "we’re unable to verify this routing number, if you are sure it’s correct please continue. Otherwise correct any errors before moving forward.";
 
 const BankInfoPdf = ({ name, fields, step, isSignature, formInnerData, setFormInnerData, sectionKey }) => {
-  const { formData, isDisabledAllFields } = useSelector((state) => state?.form);
-  const [ownersFromLookup, setOwnersFromLookup] = useState([]);
+  const { isDisabledAllFields } = useSelector((state) => state?.form);
+  // owners from the lookup as account holder suggestions
+  const ownersFromLookup = collectLookupOwners(formInnerData, step?.ownerSuggesstions);
   const [bankModal, setBankModal] = useState(null);
   const [getBankLookup, { isLoading }] = useGetBankLookupMutation();
 
@@ -58,11 +59,6 @@ const BankInfoPdf = ({ name, fields, step, isSignature, formInnerData, setFormIn
     });
     setBankModal(null);
   };
-
-  // owners from the lookup as account holder suggestions
-  useEffect(() => {
-    if (formData) setOwnersFromLookup(collectLookupOwners(formData, step?.ownerSuggesstions));
-  }, [formData, step?.ownerSuggesstions]);
 
   const renderField = (field, index) => {
     const inputProps = { field, form: formInnerData?.[sectionKey], setForm: setFormInnerData, sectionKey };

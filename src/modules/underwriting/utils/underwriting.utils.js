@@ -1,25 +1,16 @@
-import { DATE_TIME_OPTIONS, UNDERWRITING_RULES_CACHE_KEY } from "./underwriting.constants";
+import { HISTORY_SECTION_NAMES } from "./underwriting.constants";
 
-export const formatDateTime = (date) => new Date(date || "").toLocaleString("en-US", DATE_TIME_OPTIONS);
+export const orDash = (value) => (value === undefined || value === null || value === "" ? "—" : value);
 
-// one rule result per application
-export const getRulesCacheKey = (submittedFormId) => `${UNDERWRITING_RULES_CACHE_KEY}-${submittedFormId}`;
+// section key → its display name
+export const buildSectionNames = (sections = []) => ({
+  ...HISTORY_SECTION_NAMES,
+  ...Object.fromEntries(sections.map((section) => [section.key, section.name])),
+});
 
-export const buildHistoryColumns = () => [
-  { name: "Date/Time", selector: (row) => formatDateTime(row?.updatedAt), sortable: true, wrap: true },
-  { name: "User", selector: (row) => `${row?.email}`, sortable: true, wrap: true },
-  { name: "User Type", selector: (row) => `${row?.role}`, sortable: true, wrap: true },
-  { name: "Section", selector: (row) => row?.sectionKey, sortable: true, wrap: true },
-  { name: "Action/Status", selector: (row) => row?.status, sortable: true, wrap: true },
-  { name: "Comment/Details", selector: (row) => row?.comment, sortable: true, wrap: true },
-];
+export const getSectionName = (sectionNames, key = "") => sectionNames[key] ?? key.replaceAll("_", " ");
 
-export const buildVersionColumns = () => [
-  { name: "Date/Time", selector: (row) => formatDateTime(row?.updatedAt), sortable: true, wrap: true },
-  { name: "User Name", selector: (row) => `${row?.actor?.name}`, sortable: true },
-  { name: "email", selector: (row) => `${row?.actor?.email}`, sortable: true, wrap: true },
-  { name: "Role", selector: (row) => `${row?.actor?.role}`, sortable: true },
-  { name: "Form Name", selector: (row) => row?.form?.name, sortable: true },
-  { name: "Version", selector: (row) => row?.version, sortable: true },
-  { name: "Fields Changed", selector: (row) => row?.diff?.length, sortable: true, wrap: true },
-];
+// everyone the rule emails would reach
+export const countEmailRecipients = (emailPlans = []) => new Set(emailPlans.flatMap((plan) => plan.recipients)).size;
+
+export const numberRows = (rows) => rows.map((row, index) => ({ ...row, number: index + 1 }));

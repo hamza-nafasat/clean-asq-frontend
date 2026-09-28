@@ -1,106 +1,56 @@
 import { useMemo, useState } from "react";
-import { Diff, Eye } from "lucide-react";
 import { useGetFormVersionsQuery } from "@/redux/apis/form.apis";
+import { FiAlertCircle, FiEye, FiGitPullRequest } from "react-icons/fi";
 import useRowActionMenu from "@/hooks/useRowActionMenu";
-import Modal from "@/components/shared/Modal";
 import AppDataTable from "@/components/shared/AppDataTable";
-import RowActionMenuCell from "@/components/shared/RowActionMenuCell";
+import Button from "@/components/shared/Button";
+import EmptyState from "@/components/shared/EmptyState";
+import LoadingState from "@/components/shared/LoadingState";
+import Modal from "@/components/shared/Modal";
 import UnderwritingFieldChanges from "./UnderwritingFieldChanges";
 import UnderwritingVersionDetails from "./UnderwritingVersionDetails";
-import { buildVersionColumns } from "../utils/underwriting.utils";
+import { buildVersionColumns } from "../utils/underwriting.columns";
 
-const UnderwritingFormVersions = ({ submittedFormId = "", submitForm = null }) => {
-  const [selectedVersion, setSelectedVersion] = useState(null);
-  const [viewDetailsModal, setViewDetailsModal] = useState(false);
-  const [fieldChanges, setFieldChanges] = useState(null);
-  const { openRowId: actionMenu, setOpenRowId, toggleMenu } = useRowActionMenu();
-  const { data: versioning, isLoading: isLoadingVersioning } = useGetFormVersionsQuery(
-    { submittedFormId },
+const UnderwritingFormVersions = ({ submissionId = "", submission = null, sectionNames = {} }) => {
+  const [versionToView, setVersionToView] = useState(null);
+  const [versionToCompare, setVersionToCompare] = useState(null);
+  const { openRowId, setOpenRowId, toggleMenu, getRowRef } = useRowActionMenu({ closeOnOutsideClick: true });
+  const { data, isLoading, isError, refetch } = useGetFormVersionsQuery(
+    { submittedFormId: submissionId },
     // always show the newest versions
-    { skip: !submittedFormId, refetchOnMountOrArgChange: true },
+    { skip: !submissionId, refetchOnMountOrArgChange: true },
   );
 
-  const menuButtons = useMemo(
-    () => [
-      {
-        name: "Version Details",
-        icon: <Eye size={16} className="mr-2" />,
-        onClick: (row) => {
-          setSelectedVersion(row);
-          setViewDetailsModal(true);
-          setOpenRowId(null);
-        },
-      },
+  const columns = useMemo(() => {
+    // close the menu, then open the view
+    const fromMenu = (open) => (row) => {
+      setOpenRowId(null);
+      open(row);
+    };
+    const buttons = [
+      { name: "Version Details", icon: <FiEye size={16} className="mr-2" />, onClick: fromMenu(setVersionToView) },
       {
         name: "Field Differences",
-        icon: <Diff size={16} className="mr-2" />,
-        onClick: (row) => {
-          setSelectedVersion(row);
-          setFieldChanges(true);
-          setOpenRowId(null);
-        },
+        icon: <FiGitPullRequest size={16} className="mr-2" />,
+        onClick: fromMenu(setVersionToCompare),
       },
-    ],
-    [setOpenRowId],
-  );
+    ];
+    return buildVersionColumns({ openRowId, getRowRef, onToggleMenu: toggleMenu, buttons });
+  }, [openRowId, getRowRef, toggleMenu, setOpenRowId]);
 
-  const columns = useMemo(
-    () => [
-      ...buildVersionColumns(),
-      {
-        name: "Action",
-        cell: (row) => (
-          <RowActionMenuCell
-            row={row}
-            buttons={menuButtons}
-            isOpen={actionMenu === row._id}
-            onToggle={() => toggleMenu(row?._id)}
-            buttonClassName="cursor-pointer rounded p-1 hover:bg-gray-100"
-          />
-        ),
-      },
-    ],
-    [menuButtons, actionMenu, toggleMenu],
-  );
-
-  const handleCloseDetails = () => {
-    setViewDetailsModal(false);
-    setSelectedVersion(null);
-  };
+  if (isLoading) return <LoadingState title="Loading versions" />;
+  if (isError)
+    return (
+      <EmptyState variant="panel" icon={<FiAlertCircle size={28} />} title="Could not load the versions">
+        <Button type="button" label="Try again" onClick={refetch} />
+      </EmptyState>
+    );
 
   return (
-    <div className="w-full overflow-x-auto">
-      {fieldChanges && (
-        <Modal
-          title="Field Changes"
-          isOpen={fieldChanges}
-          onClose={() => setFieldChanges(null)}
-          hideSaveButton={true}
-          hideCancelButton={true}
-        >
-          <UnderwritingFieldChanges selectedVersion={selectedVersion} />
-        </Modal>
-      )}
-      {viewDetailsModal && (
-        <Modal
-          width="min-w-[75vw] max-w-2xl"
-          title="Version Details"
-          isOpen={viewDetailsModal}
-          onClose={handleCloseDetails}
-          hideSaveButton={true}
-          hideCancelButton={true}
-        >
-          <UnderwritingVersionDetails
-            key={selectedVersion?._id}
-            selectedVersion={selectedVersion}
-            submitForm={submitForm}
-          />
-        </Modal>
-      )}
-      <div className="w-full overflow-x-auto">
+    <>
+      <section className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
         <AppDataTable
-          progressPending={isLoadingVersioning}
-          data={versioning?.data || []}
+          data={data?.data ?? []}
           columns={columns}
           highlightOnHover
           fixedHeader
@@ -108,10 +58,20 @@ const UnderwritingFormVersions = ({ submittedFormId = "", submitForm = null }) =
           responsive
           noDataComponent="No form versions yet"
           emptyDescription="Saved versions of this application form will appear here."
-          className="rounded-t-xl!"
         />
-      </div>
-    </div>
+      </section>
+
+      {versionToCompare && (
+        <Modal title="Field Changes" onClose={() => setVersionToCompare(null)}>
+          <UnderwritingFieldChanges version={versionToCompare} sectionNames={sectionNames} />
+        </Modal>
+      )}
+      {versionToView && (
+        <Modal width="min-w-[75vw]" title="Version Details" onClose={() => setVersionToView(null)}>
+          <UnderwritingVersionDetails key={versionToView._id} version={versionToView} submission={submission} />
+        </Modal>
+      )}
+    </>
   );
 };
 

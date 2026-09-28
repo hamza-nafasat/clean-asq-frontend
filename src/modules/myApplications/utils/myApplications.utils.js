@@ -1,5 +1,5 @@
-import { formFieldsStaticKeys, formKeys } from "@/constants";
-import { DATE_LOCALE, LONG_DATE_OPTIONS, MY_APPLICATIONS_ROUTES } from "./myApplications.constants";
+import { DATE_LOCALE, formFieldsStaticKeys, formKeys } from "@/constants";
+import { LONG_DATE_OPTIONS, MY_APPLICATIONS_ROUTES } from "./myApplications.constants";
 
 export const formatLongDate = (value) => new Date(value).toLocaleDateString(DATE_LOCALE, LONG_DATE_OPTIONS);
 

@@ -1,13 +1,5 @@
 import { FORM_FIELD_TEXT_SOURCES } from "@/constants";
 
-// statuses with their own pill colour
-export const APPLICATION_STATUSES = {
-  PENDING: "pending",
-  REVIEWING: "reviewing",
-  APPROVED: "approved",
-  REJECTED: "rejected",
-};
-
 export const APPLICATION_FILTER_FIELDS = {
   NAME: "name",
   ROLE: "role",
@@ -40,15 +32,6 @@ export const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // formats a local date as yyyy-mm-dd
 export const LOCAL_DAY_LOCALE = "en-CA";
-
-export const DATE_TIME_OPTIONS = {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-};
 
 export const APPLICATIONS_AI_CHAT_PATH = "/api/ai/applications-chat";
 

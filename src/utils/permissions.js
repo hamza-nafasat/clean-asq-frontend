@@ -19,10 +19,11 @@ export const PERMISSIONS = Object.freeze({
   UPDATE_RULE: "update_rule",
   DELETE_RULE: "delete_rule",
   READ_APPLICATION: "read_application",
-  UPDATE_APPLICATION: "update_application",
   DELETE_APPLICATION: "delete_application",
   SHARE_APPLICATION: "share_application",
-  UNDERWRITING: "underwriting",
+  READ_UNDERWRITING: "read_underwriting",
+  UPDATE_UNDERWRITING: "update_underwriting",
+  APPLY_UNDERWRITING_RULES: "apply_underwriting_rules",
   SUBMIT_FORM: "submit_form",
   UPDATE_SUBMISSION: "update_submission",
   LOOKUP_COMPANY: "lookup_company",
@@ -84,12 +85,18 @@ export const PERMISSION_GROUPS = Object.freeze([
     name: "Applications",
     permissions: [
       PERMISSIONS.READ_APPLICATION,
-      PERMISSIONS.UPDATE_APPLICATION,
       PERMISSIONS.DELETE_APPLICATION,
       PERMISSIONS.SHARE_APPLICATION,
     ],
   },
-  { name: "Underwriting", permissions: [PERMISSIONS.UNDERWRITING] },
+  {
+    name: "Underwriting",
+    permissions: [
+      PERMISSIONS.READ_UNDERWRITING,
+      PERMISSIONS.UPDATE_UNDERWRITING,
+      PERMISSIONS.APPLY_UNDERWRITING_RULES,
+    ],
+  },
   {
     name: "Applying",
     permissions: [

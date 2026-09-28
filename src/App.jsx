@@ -46,7 +46,7 @@ const AllRoles = lazy(() => import("@/modules/roleManagement/RoleManagement"));
 const UserManagement = lazy(() => import("@/modules/userManagement/UserManagement"));
 const ApplicationForms = lazy(() => import("@/modules/applicationForms/ApplicationForms"));
 const Applications = lazy(() => import("@/modules/applications/Applications"));
-const OnBoarding = lazy(() => import("@/modules/underwriting/Underwriting"));
+const Underwriting = lazy(() => import("@/modules/underwriting/Underwriting"));
 const Brandings = lazy(() => import("@/modules/branding/Brandings"));
 const CreateBranding = lazy(() => import("@/modules/branding/CreateBranding"));
 const FormStrategies = lazy(() => import("@/modules/lookupManagement/LookupManagement"));
@@ -193,10 +193,13 @@ const App = () => {
                 }
               />
               <Route
-                path={`${LAYOUT_ROUTES.UNDERWRITING}/:applicantId`}
+                path={`${LAYOUT_ROUTES.UNDERWRITING}/:submissionId`}
                 element={
-                  <RequirePermission permission={PERMISSIONS.UNDERWRITING}>
-                    <OnBoarding />
+                  <RequirePermission permission={PERMISSIONS.READ_UNDERWRITING}>
+                    {/* page also reads the application */}
+                    <RequirePermission permission={PERMISSIONS.READ_APPLICATION}>
+                      <Underwriting />
+                    </RequirePermission>
                   </RequirePermission>
                 }
               />

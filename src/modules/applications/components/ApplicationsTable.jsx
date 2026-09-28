@@ -38,7 +38,7 @@ const ApplicationsTable = ({
   const currentUserId = useSelector((state) => state.auth.user?._id);
   const canDeleteApplication = usePermission(PERMISSIONS.DELETE_APPLICATION);
   const canShareApplication = usePermission(PERMISSIONS.SHARE_APPLICATION);
-  const canUnderwrite = usePermission(PERMISSIONS.UNDERWRITING);
+  const canUnderwrite = usePermission(PERMISSIONS.READ_UNDERWRITING);
   const canSubmitForm = usePermission(PERMISSIONS.SUBMIT_FORM);
   const resumeDraft = useResumeDraft();
   const [deleteApplication, { isLoading: isDeleting }] = useDeleteSingleSubmitOrDraftFormMutation();

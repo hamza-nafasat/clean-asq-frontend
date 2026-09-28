@@ -1,26 +1,36 @@
-import AppDataTable from "@/components/shared/AppDataTable";
 import { useGetFormHistoryQuery } from "@/redux/apis/form.apis";
-import { buildHistoryColumns } from "../utils/underwriting.utils";
+import { FiAlertCircle } from "react-icons/fi";
+import AppDataTable from "@/components/shared/AppDataTable";
+import Button from "@/components/shared/Button";
+import EmptyState from "@/components/shared/EmptyState";
+import LoadingState from "@/components/shared/LoadingState";
+import { buildHistoryColumns } from "../utils/underwriting.columns";
 
-const UnderwritingHistory = ({ submittedFormId = "" }) => {
-  const { data: historyData, isLoading: isLoadingHistory } = useGetFormHistoryQuery(
-    { formSubmittedId: submittedFormId },
-    { skip: !submittedFormId },
+const UnderwritingHistory = ({ submissionId = "", sectionNames = {} }) => {
+  const { data, isLoading, isError, refetch } = useGetFormHistoryQuery(
+    { formSubmittedId: submissionId },
+    { skip: !submissionId },
   );
 
+  if (isLoading) return <LoadingState title="Loading history" />;
+  if (isError)
+    return (
+      <EmptyState variant="panel" icon={<FiAlertCircle size={28} />} title="Could not load the history">
+        <Button type="button" label="Try again" onClick={refetch} />
+      </EmptyState>
+    );
+
   return (
-    <div>
+    <section className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
       <AppDataTable
-        data={historyData?.data?.history || []}
-        columns={buildHistoryColumns()}
+        data={data?.data?.history ?? []}
+        columns={buildHistoryColumns({ sectionNames })}
         pagination
         highlightOnHover
-        progressPending={isLoadingHistory}
         noDataComponent="No history yet"
         emptyDescription="Changes to this application will appear here."
-        className="rounded-t-xl!"
       />
-    </div>
+    </section>
   );
 };
 

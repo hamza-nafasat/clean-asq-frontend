@@ -1,23 +1,22 @@
-import { ApplicationPdfViewCommonProps } from "@/components/global/ApplicationPdfView";
 import usePermission from "@/hooks/usePermission";
+import { ApplicationPdfViewCommonProps } from "@/components/global/ApplicationPdfView";
+import ErrorBoundary from "@/components/global/ErrorBoundary";
 import { PERMISSIONS } from "@/utils/permissions";
 
-const UnderwritingAppViewer = ({ data = null }) => {
-  const canUpdateApplication = usePermission(PERMISSIONS.UPDATE_APPLICATION);
-  const userId = data?.user?._id;
-  const pdfId = data?.form?._id;
+const UnderwritingAppViewer = ({ submission = null }) => {
+  const canUpdateUnderwriting = usePermission(PERMISSIONS.UPDATE_UNDERWRITING);
 
   return (
-    <div className="flex w-full min-h-screen justify-center items-center">
+    <ErrorBoundary name="UnderwritingApplication">
       <ApplicationPdfViewCommonProps
-        userId={userId}
-        pdfId={pdfId}
-        initialSubmitData={data?.submitData}
-        submittedFormId={data?._id}
-        className="rounded-lg!"
-        isEditAble={canUpdateApplication}
+        userId={submission?.user?._id}
+        pdfId={submission?.form?._id}
+        initialSubmitData={submission?.submitData}
+        submittedFormId={submission?._id}
+        className="rounded-lg"
+        isEditAble={canUpdateUnderwriting}
       />
-    </div>
+    </ErrorBoundary>
   );
 };
 

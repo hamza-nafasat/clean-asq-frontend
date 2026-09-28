@@ -175,6 +175,31 @@ export const LAYOUT_ROUTES = {
 // tag id of the default branding
 export const DEFAULT_BRANDING_TAG_ID = "default";
 
+export const DATE_LOCALE = "en-US";
+
+export const DATE_TIME_OPTIONS = {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+};
+
+export const FORM_RULE_CATEGORIES = {
+  ALERT: "alert",
+  DISPLAY: "display",
+  UPDATE_STATUS: "update_status",
+};
+
+// statuses with their own pill colour
+export const APPLICATION_STATUSES = {
+  PENDING: "pending",
+  REVIEWING: "reviewing",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+};
+
 export const SUBMISSION_TYPES = {
   SUBMITTED: "submitted",
   DRAFT: "draft",
@@ -575,6 +600,7 @@ export const DELETE_CLOSE_MODES = {
 
 export const HTTP_STATUSES = {
   FORBIDDEN: 403,
+  NOT_FOUND: 404,
   TOO_MANY_REQUESTS: 429,
 };
 

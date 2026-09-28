@@ -1,13 +1,5 @@
-import { SUBMISSION_TYPES, formKeys } from "@/constants";
-import {
-  APPLICATION_STATUSES,
-  DATE_TIME_OPTIONS,
-  EMAIL_FORMAT,
-  FORWARD_FORM_FIELDS,
-  LOCAL_DAY_LOCALE,
-} from "./applications.constants";
-
-export const formatDateTime = (date) => new Date(date || "").toLocaleString("en-US", DATE_TIME_OPTIONS);
+import { APPLICATION_STATUSES, SUBMISSION_TYPES, formKeys } from "@/constants";
+import { EMAIL_FORMAT, FORWARD_FORM_FIELDS, LOCAL_DAY_LOCALE } from "./applications.constants";
 
 export const capitalize = (value = "") => value.charAt(0).toUpperCase() + value.slice(1);
 

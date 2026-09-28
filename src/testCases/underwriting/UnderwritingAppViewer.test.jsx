@@ -17,7 +17,7 @@ const OPENED_SUBMISSION = {
 
 // props the application viewer received
 const renderAppViewer = () => {
-  render(<UnderwritingAppViewer data={OPENED_SUBMISSION} />);
+  render(<UnderwritingAppViewer submission={OPENED_SUBMISSION} />);
   return ApplicationPdfViewCommonProps.mock.lastCall[0];
 };
 

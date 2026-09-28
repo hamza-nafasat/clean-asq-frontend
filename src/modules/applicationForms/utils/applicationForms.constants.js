@@ -1,3 +1,5 @@
+import { FORM_RULE_CATEGORIES } from "@/constants";
+
 export const APPLICATION_FORMS_SCREEN = {
   ID: "application-forms",
   NAME: "Application Forms",
@@ -64,8 +66,6 @@ export const CREATED_DATE_OPTIONS = {
   day: "numeric",
 };
 
-export const DATE_LOCALE = "en-US";
-
 export const FORM_UPLOAD_ACCEPT = ".pdf,image/*,.csv";
 
 export const FORM_UPLOAD_FIELDS = {
@@ -82,20 +82,14 @@ export const RULE_STATUSES = {
   INACTIVE: "inactive",
 };
 
-const RULE_CATEGORIES = {
-  ALERT: "alert",
-  DISPLAY: "display",
-  UPDATE_STATUS: "update_status",
-};
-
 export const RULE_FILTER_CATEGORY_OPTIONS = [
-  { label: "Alert", value: RULE_CATEGORIES.ALERT },
-  { label: "Display", value: RULE_CATEGORIES.DISPLAY },
+  { label: "Alert", value: FORM_RULE_CATEGORIES.ALERT },
+  { label: "Display", value: FORM_RULE_CATEGORIES.DISPLAY },
 ];
 
 const RULE_EDITOR_CATEGORY_OPTIONS = [
   ...RULE_FILTER_CATEGORY_OPTIONS,
-  { label: "Update Status", value: RULE_CATEGORIES.UPDATE_STATUS },
+  { label: "Update Status", value: FORM_RULE_CATEGORIES.UPDATE_STATUS },
 ];
 
 export const RULE_FIELDS = {

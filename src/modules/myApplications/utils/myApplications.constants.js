@@ -8,8 +8,6 @@ export const LONG_DATE_OPTIONS = {
   day: "numeric",
 };
 
-export const DATE_LOCALE = "en-US";
-
 export const MENU_CONTAINER_SELECTOR = ".menu-container";
 
 export const CARD_CLASS =

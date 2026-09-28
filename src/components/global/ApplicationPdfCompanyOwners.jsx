@@ -19,10 +19,14 @@ import { uploadSectionSignature } from "@/utils/sectionSignature";
 import HtmlContent from "@/components/shared/HtmlContent";
 
 const CompanyOwnersPdf = ({ name, reduxData, fields, step, isSignature, formInnerData, setFormInnerData, sectionKey }) => {
-  const { formData, isDisabledAllFields } = useSelector((state) => state?.form);
+  const { isDisabledAllFields } = useSelector((state) => state?.form);
   const addressAutocompleteRefs = useRef({});
 
-  const [ownersFromLookup, setOwnersFromLookup] = useState([]);
+  const lookupData = formInnerData?.company_lookup_data;
+  const ownersFromLookup = useMemo(
+    () => collectLookupOwners({ company_lookup_data: lookupData }, step?.ownerSuggesstions),
+    [lookupData, step?.ownerSuggesstions],
+  );
   const [filteredOwners, setFilteredOwners] = useState([]);
   const [suggestFor, setSuggestFor] = useState(null);
   const [rowIds, setRowIds] = useState([]);
@@ -39,7 +43,7 @@ const CompanyOwnersPdf = ({ name, reduxData, fields, step, isSignature, formInne
     [otherOwnersStateUniqueId, sectionForm],
   );
 
-  const idMissionData = formData?.idMission || formInnerData?.idMission;
+  const idMissionData = formInnerData?.idMission;
   const idMissionRoleValue = idMissionData?.roleFillingForCompany?.value || idMissionData?.roleFillingForCompany;
   const isRollingOwner = sectionForm?.[FIELD_NAMES.ROLLING_OWNER_IS_ALSO_OWNER]?.value === YES_NO_VALUES.YES;
 
@@ -124,11 +128,6 @@ const CompanyOwnersPdf = ({ name, reduxData, fields, step, isSignature, formInne
     if (!place?.formatted_address) return;
     handleOwnerValueChange("address", place.formatted_address, index);
   };
-
-  useEffect(() => {
-    if (!formData) return;
-    setOwnersFromLookup(collectLookupOwners(formData, step?.ownerSuggesstions));
-  }, [formData, step?.ownerSuggesstions]);
 
   useEffect(() => {
     if (!formFields?.length) return;

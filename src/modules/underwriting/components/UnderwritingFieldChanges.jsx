@@ -1,74 +1,76 @@
 import EmptyState from "@/components/shared/EmptyState";
+import { UNGROUPED_SECTION_KEY } from "../utils/underwriting.constants";
+import { getSectionName } from "../utils/underwriting.utils";
 
-const formatValue = (value) => {
-  if (value === null || value === undefined || value === "") return "—";
-  if (typeof value === "object") return JSON.stringify(value, null, 2);
-  return String(value);
+const VALUE_CLASSES = "max-h-75 overflow-auto rounded-lg bg-white p-3 text-sm text-gray-800";
+
+// files show as a link, the rest as text
+const FieldValue = ({ value }) => {
+  if (value === null || value === undefined || value === "") return <p className={VALUE_CLASSES}>—</p>;
+  if (value?.secureUrl)
+    return (
+      <a
+        href={value.secureUrl}
+        target="_blank"
+        rel="noreferrer"
+        className={`${VALUE_CLASSES} block text-blue-600 underline`}
+      >
+        View file
+      </a>
+    );
+  const text = typeof value === "object" ? JSON.stringify(value, null, 2) : String(value);
+  return <pre className={`${VALUE_CLASSES} font-mono wrap-break-word whitespace-pre-wrap`}>{text}</pre>;
 };
 
 const groupBySection = (diffs) =>
-  diffs.reduce((acc, item) => {
-    const sectionKey = item?.sectionKey || "unknown_section";
-    if (!acc[sectionKey]) acc[sectionKey] = [];
-    acc[sectionKey].push(item);
-    return acc;
+  diffs.reduce((groups, item) => {
+    const sectionKey = item?.sectionKey || UNGROUPED_SECTION_KEY;
+    (groups[sectionKey] ??= []).push(item);
+    return groups;
   }, {});
 
-const UnderwritingFieldChanges = ({ selectedVersion = null }) => {
-  const diffs = selectedVersion?.diff || [];
-  if (!diffs.length) {
+const UnderwritingFieldChanges = ({ version = null, sectionNames = {} }) => {
+  const diffs = version?.diff ?? [];
+  if (!diffs.length)
     return (
-      <EmptyState
-        variant="panel"
-        title="No field changes"
-        description="This version did not change any fields."
-      />
+      <EmptyState variant="panel" title="No field changes" description="This version did not change any fields." />
     );
-  }
-  const groupedDiffs = groupBySection(diffs);
 
   return (
     <div className="space-y-6">
-      {Object.entries(groupedDiffs).map(([sectionKey, sectionDiffs]) => (
+      {Object.entries(groupBySection(diffs)).map(([sectionKey, sectionDiffs]) => (
         <section key={sectionKey} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          {/* Section Header */}
           <header className="border-b border-gray-100 bg-gray-50 px-5 py-4">
-            <h2 className="text-base font-semibold text-gray-900">{sectionKey}</h2>
+            <h3 className="text-base font-semibold text-gray-900 capitalize">
+              {getSectionName(sectionNames, sectionKey)}
+            </h3>
             <p className="mt-1 text-sm text-gray-500">
-              {sectionDiffs.length} field
-              {sectionDiffs.length > 1 ? "s" : ""} changed
+              {sectionDiffs.length} {sectionDiffs.length === 1 ? "field" : "fields"} changed
             </p>
           </header>
-          {/* Fields */}
           <div className="divide-y divide-gray-100">
             {sectionDiffs.map((item, index) => (
-              <div key={`${item?.fieldKey}-${index}`} className="p-5">
-                {/* Field Header */}
-                <div className="mb-4 flex items-center justify-between">
+              <article key={`${item?.fieldKey}-${index}`} className="p-5">
+                <header className="mb-4 flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900">
+                    <h4 className="text-sm font-semibold text-gray-900">
                       {item?.displayLabel || item?.fieldName || item?.fieldKey}
-                    </h3>
+                    </h4>
                     <p className="mt-1 text-xs text-gray-500">{item?.fieldKey}</p>
                   </div>
-                  <div className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">Changed</div>
-                </div>
-                {/* Values */}
+                  <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">Changed</span>
+                </header>
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-red-700">Previous Value</p>
-                    <div className="max-h-75 overflow-auto rounded-lg bg-white p-3 text-sm text-gray-800">
-                      <pre className="whitespace-pre-wrap wrap-break-word font-mono">{formatValue(item?.oldValue)}</pre>
-                    </div>
+                    <p className="mb-2 text-xs font-semibold tracking-wide text-red-700 uppercase">Previous Value</p>
+                    <FieldValue value={item?.oldValue} />
                   </div>
                   <div className="rounded-xl border border-green-200 bg-green-50 p-4">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-green-700">New Value</p>
-                    <div className="max-h-75 overflow-auto rounded-lg bg-white p-3 text-sm text-gray-800">
-                      <pre className="whitespace-pre-wrap wrap-break-word font-mono">{formatValue(item?.newValue)}</pre>
-                    </div>
+                    <p className="mb-2 text-xs font-semibold tracking-wide text-green-700 uppercase">New Value</p>
+                    <FieldValue value={item?.newValue} />
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </section>

@@ -9,9 +9,10 @@ import {
   useGeneratePdfFormMutation,
   useGetSavedFormByUserIdMutation,
   useGetSingleFormQueryQuery,
+  useUpdateApplicationMutation,
   useUpdateSubmittedFormMutation,
 } from "@/redux/apis/form.apis";
-import { addSavedFormData, updateIsDisabledAllFields } from "@/redux/slices/form.slice";
+import { updateIsDisabledAllFields } from "@/redux/slices/form.slice";
 import useApplyBranding from "@/hooks/useApplyBranding";
 import useBranding from "@/hooks/useBranding";
 import { uploadFilesAndReplace } from "@/lib/utils";
@@ -20,6 +21,7 @@ import BankInfoPdf from "@/components/global/ApplicationPdfBankInfo";
 import CompanyInformationPdf from "@/components/global/ApplicationPdfCompanyInformation";
 import CompanyOwnersPdf from "@/components/global/ApplicationPdfCompanyOwners";
 import CustomSectionPdf from "@/components/global/ApplicationPdfCustomSection";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import DocumentsPdf from "@/components/global/ApplicationPdfDocuments";
 import IdMissionDataPdf from "@/components/global/ApplicationPdfIdMission";
 import ProcessingInfoPdf from "@/components/global/ApplicationPdfProcessingInfo";
@@ -70,7 +72,10 @@ export const ApplicationPdfViewCommonProps = ({
   const [formInnerData, setFormInnerData] = useState(() => (usesPrefilledData ? initialSubmitData : {}));
   const [dataLoaded, setDataLoaded] = useState(usesPrefilledData);
   const [isUpdatingSubmittedForm, setIsUpdatingSubmittedForm] = useState(false);
+  const [isConfirmingSave, setIsConfirmingSave] = useState(false);
   const [updateSubmittedForm] = useUpdateSubmittedFormMutation();
+  const [updateApplication] = useUpdateApplicationMutation();
+  const isOwnApplication = userId === currentUserId;
   const { data: form, isLoading: formLoading, refetch: formRefetch } = useGetSingleFormQueryQuery(
     { _id: pdfId, pdfToken: pdfToken || undefined },
     { skip: !pdfId },
@@ -87,12 +92,13 @@ export const ApplicationPdfViewCommonProps = ({
       for (const key of Object.keys(formInnerData)) {
         updatedFormData[key] = await uploadFilesAndReplace(formInnerData[key]);
       }
-      const res = await updateSubmittedForm({ submittedFormId: submittedFormId, formData: updatedFormData }).unwrap();
-      if (res.success) {
-        dispatch(updateIsDisabledAllFields(true));
-        dispatch(addSavedFormData(updatedFormData));
-        toast.success(res.message);
-      }
+      // someone else's application: reviewer route
+      const res = isOwnApplication
+        ? await updateSubmittedForm({ submittedFormId, formData: updatedFormData }).unwrap()
+        : await updateApplication({ submissionId: submittedFormId, formData: updatedFormData }).unwrap();
+      dispatch(updateIsDisabledAllFields(true));
+      setIsConfirmingSave(false);
+      toast.success(res.message);
     } catch (error) {
       console.error("Update submitted form error:", error);
       toast.error(error?.data?.message || "Failed to save the application");
@@ -105,7 +111,7 @@ export const ApplicationPdfViewCommonProps = ({
     try {
       // someone else's application: reviewer route
       const blob =
-        applicantId === currentUserId
+        isOwnApplication
           ? await generatePdfForm({ _id: formId, userId: applicantId, submissionId: submittedFormId }).unwrap()
           : await generateApplicationPdf({ submissionId: submittedFormId }).unwrap();
       const url = window.URL.createObjectURL(blob);
@@ -135,9 +141,7 @@ export const ApplicationPdfViewCommonProps = ({
       try {
         const res = await getSavedFormData({ formId: pdfId, userId, pdfToken, submissionId: submittedFormIdProp }).unwrap();
         if (res.success) {
-          const submitData = res?.data?.submitData ?? {};
-          setFormInnerData(submitData);
-          dispatch(addSavedFormData(submitData));
+          setFormInnerData(res?.data?.submitData ?? {});
           setSubmittedFormId(res?.data?._id);
         }
       } catch (error) {
@@ -148,7 +152,7 @@ export const ApplicationPdfViewCommonProps = ({
     };
     setDataLoaded(false);
     fetchSavedFormData();
-  }, [dispatch, getSavedFormData, pdfId, pdfToken, submittedFormIdProp, userId, usesPrefilledData]);
+  }, [getSavedFormData, pdfId, pdfToken, submittedFormIdProp, userId, usesPrefilledData]);
 
   useEffect(() => {
     return () => {
@@ -186,10 +190,19 @@ export const ApplicationPdfViewCommonProps = ({
               rightIcon={isUpdatingSubmittedForm && CgSpinner}
               cnRight={isUpdatingSubmittedForm ? "animate-spin h-5 w-5" : ""}
               label="Save"
-              onClick={handleUpdateSubmittedForm}
+              onClick={() => setIsConfirmingSave(true)}
             />
           </div>
         )}
+        <ConfirmationModal
+          isOpen={isConfirmingSave}
+          onClose={() => setIsConfirmingSave(false)}
+          onConfirm={handleUpdateSubmittedForm}
+          title="Save Changes"
+          message="Save your changes to this application? They are kept as a new version."
+          isLoading={isUpdatingSubmittedForm}
+          confirmButtonText="Save"
+        />
         {isDownloadAble && (
           <div className="flex justify-end">
             <Button

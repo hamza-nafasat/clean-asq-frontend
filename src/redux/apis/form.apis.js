@@ -81,6 +81,11 @@ const formApis = createApi({
       invalidatesTags: [API_TAGS.SUBMIT_FORM, API_TAGS.HISTORY, API_TAGS.SUBMIT_FORM_VERSIONS],
     }),
     /////
+    updateApplication: builder.mutation({
+      query: ({ submissionId, formData }) => ({ url: `/application/${submissionId}`, method: "PUT", body: { formData } }),
+      invalidatesTags: [API_TAGS.SUBMIT_FORM, API_TAGS.HISTORY, API_TAGS.SUBMIT_FORM_VERSIONS],
+    }),
+    /////
     giveSpecialAccessToUser: builder.mutation({
       query: ({ formId, submittedFormId, email, sectionKey }) => ({
         url: `/special-access-of-section/${formId}?submittedFormId=${submittedFormId}`,
@@ -408,12 +413,19 @@ const formApis = createApi({
       invalidatesTags: [API_TAGS.FORM_RULES],
     }),
     /////
+    previewRulesOnForm: builder.query({
+      query: (formSubmittedId) => ({ url: `/preview-rules-on-form/${formSubmittedId}`, method: "GET" }),
+      // who would be emailed changes with every edit
+      keepUnusedDataFor: 0,
+    }),
+    /////
     applyRulesOnForm: builder.mutation({
-      query: (formSubmittedId) => ({
+      query: ({ formSubmittedId, sendEmails }) => ({
         url: `/apply-rules-on-form/${formSubmittedId}`,
         method: "POST",
+        body: { sendEmails },
       }),
-      invalidatesTags: [API_TAGS.SUBMIT_FORM],
+      invalidatesTags: [API_TAGS.SUBMIT_FORM, API_TAGS.HISTORY],
     }),
     /////
     getFormVersions: builder.query({
@@ -504,6 +516,7 @@ export const {
   useDeleteSingleFormMutation,
   useSubmitFormMutation,
   useUpdateSubmittedFormMutation,
+  useUpdateApplicationMutation,
   useGetFormVersionsQuery,
   useGiveSpecialAccessToUserMutation,
   useApplicantGiveSpecialAccessToBeneficialOwnerMutation,
@@ -548,6 +561,7 @@ export const {
   useCreateFormRuleMutation,
   useCloneFormRulesMutation,
   useApplyRulesOnFormMutation,
+  useLazyPreviewRulesOnFormQuery,
   useGetAllFormRulesQuery,
   useDeleteSingleFormRuleMutation,
   useUpdateSingleFormRuleMutation,

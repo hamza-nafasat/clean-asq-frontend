@@ -35,7 +35,7 @@ const CompanyInformationPdf = ({
 }) => {
   const prevRef = useRef(null);
   const naicsInputRef = useRef(null);
-  const { formData, isDisabledAllFields } = useSelector((state) => state?.form);
+  const { isDisabledAllFields } = useSelector((state) => state?.form);
   const [naicsToMccDetails, setNaicsToMccDetails] = useState({
     NAICS: reduxData?.naics?.NAICS || "",
     NAICS_Description: reduxData?.naics?.NAICS_Description || "",
@@ -107,7 +107,7 @@ const CompanyInformationPdf = ({
   // find naics from the lookup description once it changes
   useEffect(() => {
     const prev = prevRef.current;
-    const curr = formData?.company_lookup_data;
+    const curr = formInnerData?.company_lookup_data;
     if (JSON.stringify(prev) === JSON.stringify(curr)) return;
     prevRef.current = curr;
     if (!Array.isArray(curr)) return;
@@ -126,7 +126,7 @@ const CompanyInformationPdf = ({
         setNaicsLoading(false);
       }
     })();
-  }, [findNaicsToMccDetails, formData?.company_lookup_data, naicsToMccDetails?.NAICS]);
+  }, [findNaicsToMccDetails, formInnerData?.company_lookup_data, naicsToMccDetails?.NAICS]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
