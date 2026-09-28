@@ -34,9 +34,11 @@ const formSlice = createSlice({
     updateIsDisabledAllFields: (state, action) => {
       state.isDisabledAllFields = action.payload;
     },
-    clearSavedFormData: (state) => {
+    // a new application verifies its email again
+    resetApplicationProgress: (state) => {
       state.formData = {};
       state.currentDraftId = null;
+      state.emailVerified = false;
     },
   },
 });
@@ -48,7 +50,7 @@ export const {
   setCurrentDraftId,
   updateFormHeaderAndFooter,
   updateIsDisabledAllFields,
-  clearSavedFormData,
+  resetApplicationProgress,
 } = formSlice.actions;
 
 export default formSlice;

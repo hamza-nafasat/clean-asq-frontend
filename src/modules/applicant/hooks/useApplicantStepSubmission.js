@@ -5,7 +5,7 @@ import { unwrapResult } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import { uploadFilesAndReplace } from "@/lib/utils";
 import { useSaveFormInDraftMutation, useSubmitFormMutation } from "@/redux/apis/form.apis";
-import { clearSavedFormData, setCurrentDraftId, updateFormState } from "@/redux/slices/form.slice";
+import { resetApplicationProgress, setCurrentDraftId, updateFormState } from "@/redux/slices/form.slice";
 import { buildSubmissionSuccessPath } from "@/modules/applicant/utils/applicant.utils6";
 import { buildUpdatedBy, resolveCreatedAt } from "@/modules/applicant/utils/applicant.utils8";
 
@@ -97,7 +97,7 @@ const useApplicantStepSubmission = ({ formDocumentId, draftId, formData, user, c
           }).unwrap();
           if (res.success) {
             toast.success(res.message);
-            dispatch(clearSavedFormData());
+            dispatch(resetApplicationProgress());
             navigate(buildSubmissionSuccessPath(formDocumentId));
           }
         }

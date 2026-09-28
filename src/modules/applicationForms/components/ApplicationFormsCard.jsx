@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { clearSavedFormData } from "@/redux/slices/form.slice";
+import { resetApplicationProgress } from "@/redux/slices/form.slice";
 import { FiMoreVertical } from "react-icons/fi";
 import { cn } from "@/lib/utils";
 import usePermission from "@/hooks/usePermission";
@@ -55,7 +55,7 @@ const ApplicationFormsCard = ({
   }, [isMenuOpen, onCloseMenu]);
 
   const handleStartApplication = () => {
-    dispatch(clearSavedFormData());
+    dispatch(resetApplicationProgress());
     navigate(`${LAYOUT_ROUTES.APPLICATION_FORM}/${form?.branding?.name}/${form?._id}`);
   };
 
