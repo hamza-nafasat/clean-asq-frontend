@@ -1,28 +1,20 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/auth.apis";
 import { useAddBrandingInFormMutation, useGetAllBrandingsQuery } from "@/redux/apis/branding.apis";
-import useBranding from "@/hooks/useBranding";
-import { executeBrandingAssignment, getBrandingSettersFromHook } from "@/utils/executeBrandingAssignment";
+import { executeBrandingAssignment } from "@/utils/executeBrandingAssignment";
 import ApplyBranding from "@/components/global/ApplyBranding";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
-import { createUserRefreshDispatcher } from "../utils/applicationForms.branding.utils";
 
+// branding for one form; the website is set from branding management
 const ApplicationFormsBrandingModal = ({ isOpen = false, formId = null, onClose, onApplied }) => {
-  const dispatch = useDispatch();
-  const brandingSetters = getBrandingSettersFromHook(useBranding());
-  const [getUserProfile] = useGetMyProfileFirstTimeMutation();
   const { data: brandings, isLoading: isLoadingBrandings } = useGetAllBrandingsQuery(undefined, { skip: !isOpen });
   const [addFromBranding, { isLoading: isAddingFromBranding }] = useAddBrandingInFormMutation();
   const [selectedBranding, setSelectedBranding] = useState(null);
-  const [onHome, setOnHome] = useState(false);
 
   if (!isOpen) return null;
 
   const handleClose = () => {
     setSelectedBranding(null);
-    setOnHome(false);
     onClose?.();
   };
 
@@ -31,25 +23,13 @@ const ApplicationFormsBrandingModal = ({ isOpen = false, formId = null, onClose,
       toast.error("Select a branding");
       return;
     }
-    if (!formId && !onHome) {
-      toast.error("Choose a form or apply the branding to home");
-      return;
-    }
     try {
       const res = await executeBrandingAssignment({
         addBrandingMutation: addFromBranding,
-        getUserProfile,
-        brandingSetters,
-        dispatchUserRefresh: createUserRefreshDispatcher(dispatch),
-        assignment: {
-          brandingId: selectedBranding,
-          formId: formId || undefined,
-          applyToHome: onHome,
-        },
+        assignment: { brandingId: selectedBranding, formId },
       });
       toast.success(res?.message || "Branding applied successfully");
       setSelectedBranding(null);
-      setOnHome(false);
       onApplied?.();
     } catch (error) {
       console.error("Apply branding error:", error);
@@ -66,8 +46,6 @@ const ApplicationFormsBrandingModal = ({ isOpen = false, formId = null, onClose,
           brandings={brandings?.data}
           setSelectedId={setSelectedBranding}
           selectedId={selectedBranding}
-          setOnHome={setOnHome}
-          onHome={onHome}
         />
       }
       confirmButtonText="Apply Branding"

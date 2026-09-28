@@ -72,9 +72,11 @@ const ApplyBranding = ({
 
   return (
     <section className="flex flex-col gap-4">
-      <p className="text-sm text-gray-500">
-        Choose where this branding should appear. You can pick one or both options.
-      </p>
+      {setOnHome && (
+        <p className="text-sm text-gray-500">
+          Choose where this branding should appear. You can pick one or both options.
+        </p>
+      )}
 
       <div className="border-cardBorder rounded-xl border p-4">
         <label htmlFor={TARGET_SELECT_ID} className="flex items-center gap-3">
