@@ -16,7 +16,6 @@ import { discoverFormFields, domFillField } from "@/utils/discoverFormFields";
 
 // one assistant per app, so its live references sit at module scope
 const screenContextRef = { current: null };
-const lastEndpointRef = { current: null };
 const overlayContextRef = { current: null };
 const currentScreenIdRef = { current: null };
 const formDataVersionRef = { current: { screenId: null, formId: null } };
@@ -103,13 +102,6 @@ const useAiChat = () => {
         }
         if (hasUserChange) dispatch(bumpFieldChangeSignal());
       }
-
-      // a different AI endpoint means a different assistant, so start a fresh conversation
-      const newEndpoint = context?.aiEndpoint || null;
-      if (lastEndpointRef.current && newEndpoint && lastEndpointRef.current !== newEndpoint) {
-        dispatch(clearMessagesAction());
-      }
-      if (newEndpoint) lastEndpointRef.current = newEndpoint;
 
       screenContextRef.current = context;
     },

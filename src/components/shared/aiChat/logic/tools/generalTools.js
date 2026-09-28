@@ -36,6 +36,7 @@ const pickCsvFile = ({ sendMessageRef, say, wt }) => {
 
 const createGeneralTools = ({ bindings, helpers }) => {
   const { popRevertable, getScreenContext, wt, navigate, pendingFollowUpRef, navTimeoutRef, sendMessageRef } = bindings;
+  const { suppressNextScreenGreetingRef } = bindings;
   const { say } = helpers;
 
   return {
@@ -73,11 +74,14 @@ const createGeneralTools = ({ bindings, helpers }) => {
 
       say(`Navigating you to **${label}**. ${reason}`);
 
-      // the screen-change effect sends the follow-up
-      pendingFollowUpRef.current = followUpTask;
+      // the navigation message replaces the page greeting
+      suppressNextScreenGreetingRef.current = true;
+      // the screen-change effect sends any remaining task, unseen
+      pendingFollowUpRef.current = followUpTask ? { content: followUpTask, silent: true } : null;
       if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
       navTimeoutRef.current = setTimeout(() => {
         pendingFollowUpRef.current = null;
+        suppressNextScreenGreetingRef.current = false;
       }, NAV_FOLLOW_UP_TIMEOUT_MS);
 
       setTimeout(() => navigate(route), NAVIGATE_DELAY_MS);
