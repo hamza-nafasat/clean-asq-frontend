@@ -169,7 +169,7 @@ const DropdownCheckbox = memo(
     const dropdownList = (
       <ul
         ref={portalRef}
-        className="shadow-card absolute z-50 mt-1 max-h-50 w-full overflow-y-auto rounded-lg bg-[#f7f7f7]"
+        className="shadow-card absolute z-250 mt-1 max-h-50 w-full overflow-y-auto rounded-lg bg-[#f7f7f7]"
         style={{
           top: dropdownRef.current?.getBoundingClientRect().bottom + window.scrollY,
           left: dropdownRef.current?.getBoundingClientRect().left,
