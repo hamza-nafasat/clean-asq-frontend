@@ -45,23 +45,26 @@ function CustomizationFieldsModal({
   const [formateTextInMarkDown, { isLoading: isFormating }] = useFormateTextInMarkDownMutation();
   const [signatureEnabling, setSignatureEnabling] = useState(false);
 
+  const saveSignatureSettings = () =>
+    updateSection({
+      _id: sectionId,
+      data: {
+        isSignature: signatureData.isSignature,
+        isSignDisplayText: signatureData.isSignDisplayText,
+        isSignAiHelp: signatureData.isSignAiHelp,
+        signDisplayText: signatureData.signDisplayText,
+        signDisplayFormattedText: signatureData.signDisplayFormattedText,
+        signAiPrompt: signatureData.signAiPrompt,
+        signAiResponse: signatureData.signAiResponse,
+        signDisplayTextFormattingInstructions: signatureData.formatingAiInstruction,
+        ...(isOwner ? {} : { isIdMissionQr: isIdMissionQrEnabled }),
+      },
+    }).unwrap();
+
   const handleUpdateSectionForSignature = async () => {
     setSignatureEnabling(true);
     try {
-      const res = await updateSection({
-        _id: sectionId,
-        data: {
-          isSignature: signatureData.isSignature,
-          isSignDisplayText: signatureData.isSignDisplayText,
-          isSignAiHelp: signatureData.isSignAiHelp,
-          signDisplayText: signatureData.signDisplayText,
-          signDisplayFormattedText: signatureData.signDisplayFormattedText,
-          signAiPrompt: signatureData.signAiPrompt,
-          signAiResponse: signatureData.signAiResponse,
-          signDisplayTextFormattingInstructions: signatureData.formatingAiInstruction,
-          ...(isOwner ? {} : { isIdMissionQr: isIdMissionQrEnabled }),
-        },
-      }).unwrap();
+      const res = await saveSignatureSettings();
       if (res.success) {
         await formRefetch();
         toast.success(res.message);
@@ -118,6 +121,8 @@ function CustomizationFieldsModal({
         ? { sectionId, ownerFieldsData: [...fieldsData, ...blockFieldsData] }
         : { sectionId, fieldsData };
       const res = await customizeForm(payload).unwrap();
+      // signature settings save with the form too
+      await saveSignatureSettings();
       if (res.success) {
         await formRefetch();
         toast.success(res.message);
@@ -312,7 +317,7 @@ function CustomizationFieldsModal({
         )}
         <Button variant="standard"
           onClick={() => saveFormHandler()}
-          disabled={isLoading}
+          disabled={isLoading || isUpdatingSection}
           className={
             isOwner ? `bg-primary w-full cursor-pointer text-white` : `bg-primary cursor-pointer text-white ${isArticleForm ? "w-full" : "w-[45%]"}`
           }

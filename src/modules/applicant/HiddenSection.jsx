@@ -10,11 +10,14 @@ import useApplyBranding from "@/hooks/useApplyBranding";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
 import Modal from "@/components/shared/Modal";
+import SignatureBox from "@/components/global/SignatureBox";
 import CustomizationFieldsModal from "./components/ApplicantCustomizeFieldsModal";
 import ApplicantIdMissionQrPanel from "./components/ApplicantIdMissionQrPanel";
 import ApplicantSectionField from "./components/ApplicantSectionField";
 import { EditSectionDisplayTextFromatingModal } from "./components/ApplicantSectionTextModal";
-import { APPLICANT_HOME_PATH } from "./utils/applicant.constants";
+import { APPLICANT_HOME_PATH, FIELD_NAMES } from "./utils/applicant.constants";
+import { uploadSignatureReplacing } from "./utils/applicant.utils12";
+import { isSignatureComplete } from "@/utils/signatureShape";
 import HtmlContent from "@/components/shared/HtmlContent";
 import { PERMISSIONS } from "@/utils/permissions";
 
@@ -48,10 +51,13 @@ const FormHiddenSection = () => {
     loadQrCode,
   } = useApplicantSectionIdMission(sectionKey);
 
-  const requiredFieldsUniqueIds = section?.fields?.filter((field) => field?.required).map((field) => field?.uniqueId);
-  const isAllRequiredFieldsFilled = requiredFieldsUniqueIds?.length
-    ? requiredFieldsUniqueIds.every((field) => form?.[field]?.value)
-    : false;
+  const isSignature = Boolean(section?.isSignature);
+  const requiredFieldsUniqueIds = (section?.fields ?? []).filter((field) => field?.required).map((field) => field?.uniqueId);
+  // a signature-only section can be submitted once signed
+  const isAllRequiredFieldsFilled =
+    (requiredFieldsUniqueIds.length > 0 || isSignature) &&
+    requiredFieldsUniqueIds.every((field) => form?.[field]?.value) &&
+    (!isSignature || isSignatureComplete(form?.signature));
   const canCustomizeForm = usePermission(PERMISSIONS.CUSTOMIZE_FORM);
   const isOwner = Boolean(user?._id) && user?._id === formData?.data?.owner;
   const canCustomize = isOwner && canCustomizeForm;
@@ -79,6 +85,20 @@ const FormHiddenSection = () => {
     }
   }, [accessToken, sectionKey, formId, submitSpecialAccessForm, form, navigate]);
 
+  const handleSignatureUpload = async (file, setIsSaving, stamp) => {
+    try {
+      if (!file) return toast.error("Please select a file");
+      const { res, errorMessage } = await uploadSignatureReplacing(file, form?.signature?.value, stamp);
+      if (errorMessage) return toast.error(errorMessage);
+      setForm((prev) => ({ ...prev, signature: { name: FIELD_NAMES.SIGNATURE, value: res } }));
+      toast.success("Signature uploaded successfully");
+    } catch (error) {
+      console.error("Upload signature error:", error);
+    } finally {
+      setIsSaving?.(false);
+    }
+  };
+
   useEffect(() => {
     const hiddenSection = formData?.data?.sections?.find(
       (item) => item?.key?.toLowerCase() === sectionKey?.toLowerCase() && item?.isHidden,
@@ -99,7 +119,8 @@ const FormHiddenSection = () => {
       const idMissionValue = idMissionVerifiedData?.[field?.name]?.value;
       formFields[field?.uniqueId] = idMissionValue !== undefined ? { name: field?.name, value: idMissionValue } : "";
     });
-    setForm(formFields);
+    // keep a signature already given
+    setForm((prev) => (prev.signature ? { ...formFields, signature: prev.signature } : formFields));
   }, [idMissionVerifiedData, loadQrCode, qrCode, section?.fields, section?.isIdMissionQr]);
 
   if (isLoadingFormData) return <CustomLoading />;
@@ -149,6 +170,12 @@ const FormHiddenSection = () => {
             radioClassName="mt-4 flex flex-col gap-2"
           />
         ))}
+
+      {isSignature && (
+        <div className="mt-4">
+          <SignatureBox step={section} onSave={handleSignatureUpload} signature={form?.signature} />
+        </div>
+      )}
 
       <div className="flex justify-end gap-4 p-4">
         <Button
