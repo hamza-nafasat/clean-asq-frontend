@@ -1,10 +1,13 @@
 import confirmOrCancel from "@/utils/confirmOrCancel";
 import downloadBlob from "@/utils/downloadBlob";
 import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
-import { APPLICANT_TYPE } from "./applications.constants";
-import { getDisplayStatus, getForwardableSections, getFullName } from "./applications.utils";
-
-const isSubmitted = (application) => application?.type === APPLICANT_TYPE.SUBMITTED;
+import {
+  describeApplication,
+  getDisplayStatus,
+  getForwardableSections,
+  getFullName,
+  isSubmitted,
+} from "./applications.utils";
 
 const findSubmittedApplication = (applications, applicationId) => {
   const application = applications.find((item) => item._id === applicationId);
@@ -12,12 +15,14 @@ const findSubmittedApplication = (applications, applicationId) => {
   return application;
 };
 
-const describeApplication = (application) =>
-  `${getFullName(application.user)}'s "${application.form?.name}" ${isSubmitted(application) ? "application" : "draft"}`;
-
 // forms whose sections can be forwarded
 export const getSubmittedFormIds = (applications) => [
-  ...new Set(applications.filter(isSubmitted).map((application) => application.form?._id).filter(Boolean)),
+  ...new Set(
+    applications
+      .filter(isSubmitted)
+      .map((application) => application.form?._id)
+      .filter(Boolean),
+  ),
 ];
 
 export const buildApplicationsScreenState = ({ applications, forms }) => ({
@@ -45,7 +50,7 @@ export const buildApplicationsAssistantActions = ({
   forms,
   deleteApplication,
   giveSpecialAccessToUser,
-  generatePdfForm,
+  generateApplicationPdf,
   askConfirm,
 }) => ({
   [AI_TOOLS.DELETE_APPLICATIONS]: async ({ applicationIds }) => {
@@ -72,10 +77,9 @@ export const buildApplicationsAssistantActions = ({
     });
     await giveSpecialAccessToUser({ formId: form._id, submittedFormId: application._id, email, sectionKey }).unwrap();
   },
-  [AI_TOOLS.DOWNLOAD_APPLICATION_PDF]: async ({ applicationId }) => {
+  [AI_TOOLS.DOWNLOAD_APPLICANT_PDF]: async ({ applicationId }) => {
     const application = findSubmittedApplication(applications, applicationId);
-    const formId = application.form?._id;
-    const blob = await generatePdfForm({ _id: formId, userId: application.user?._id }).unwrap();
-    downloadBlob(blob, `form-${formId}.pdf`);
+    const blob = await generateApplicationPdf({ submissionId: application._id }).unwrap();
+    downloadBlob(blob, `form-${application.form?._id}.pdf`);
   },
 });

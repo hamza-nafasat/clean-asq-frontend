@@ -5,6 +5,7 @@ import { CgSpinner } from "react-icons/cg";
 import { toast } from "react-toastify";
 
 import {
+  useGenerateApplicationPdfMutation,
   useGeneratePdfFormMutation,
   useGetSavedFormByUserIdMutation,
   useGetSingleFormQueryQuery,
@@ -63,6 +64,7 @@ export const ApplicationPdfViewCommonProps = ({
   const dispatch = useDispatch();
   const { logo, appLogoMaxWidth, appLogoMaxHeight } = useBranding();
   const { isDisabledAllFields } = useSelector((state) => state.form);
+  const currentUserId = useSelector((state) => state.auth.user?._id);
   const usesPrefilledData = initialSubmitData != null && typeof initialSubmitData === "object";
   const [submittedFormId, setSubmittedFormId] = useState(submittedFormIdProp);
   const [formInnerData, setFormInnerData] = useState(() => (usesPrefilledData ? initialSubmitData : {}));
@@ -70,11 +72,13 @@ export const ApplicationPdfViewCommonProps = ({
   const [isUpdatingSubmittedForm, setIsUpdatingSubmittedForm] = useState(false);
   const [updateSubmittedForm] = useUpdateSubmittedFormMutation();
   const { data: form, isLoading: formLoading, refetch: formRefetch } = useGetSingleFormQueryQuery(
-    { _id: pdfId },
+    { _id: pdfId, pdfToken: pdfToken || undefined },
     { skip: !pdfId },
   );
   const [getSavedFormData, { isLoading: getSavedFormDataLoading }] = useGetSavedFormByUserIdMutation();
-  const [generatePdfForm, { isLoading: isGeneratingPdf }] = useGeneratePdfFormMutation();
+  const [generatePdfForm, { isLoading: isGeneratingOwnPdf }] = useGeneratePdfFormMutation();
+  const [generateApplicationPdf, { isLoading: isGeneratingApplicationPdf }] = useGenerateApplicationPdfMutation();
+  const isGeneratingPdf = isGeneratingOwnPdf || isGeneratingApplicationPdf;
 
   const handleUpdateSubmittedForm = async () => {
     setIsUpdatingSubmittedForm(true);
@@ -99,7 +103,11 @@ export const ApplicationPdfViewCommonProps = ({
 
   const handleDownload = async (formId, applicantId) => {
     try {
-      const blob = await generatePdfForm({ _id: formId, userId: applicantId, submissionId: submittedFormId }).unwrap();
+      // someone else's application: reviewer route
+      const blob =
+        applicantId === currentUserId
+          ? await generatePdfForm({ _id: formId, userId: applicantId, submissionId: submittedFormId }).unwrap()
+          : await generateApplicationPdf({ submissionId: submittedFormId }).unwrap();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

@@ -7,6 +7,10 @@ export const cn = (...inputs) => {
 };
 
 export const uploadFilesAndReplace = async (data) => {
+  // multi-entry sections: one field map per entry
+  if (Array.isArray(data)) return Promise.all(data.map(uploadFilesAndReplace));
+  // plain values hold no files
+  if (!data || typeof data !== "object") return data;
   let updatedData = { ...data };
   const uploadPromises = Object.entries(data)
     // Support both nested { value: { file } } and accidental { file } shapes

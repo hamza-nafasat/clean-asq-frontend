@@ -62,6 +62,7 @@ export const AI_TOOLS = {
   DELETE_APPLICATIONS: "deleteApplications",
   FORWARD_APPLICATION_SECTION: "forwardApplicationSection",
   DOWNLOAD_APPLICATION_PDF: "downloadApplicationPdf",
+  DOWNLOAD_APPLICANT_PDF: "downloadApplicantPdf",
   DELETE_DRAFTS: "deleteDrafts",
   INVITE_BENEFICIAL_OWNER: "inviteBeneficialOwner",
   CREATE_ROLE: "createRole",

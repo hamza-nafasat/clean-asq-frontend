@@ -1,145 +1,99 @@
-import { useCallback, useState } from "react";
-import { toast } from "react-toastify";
+import { useState } from "react";
 import {
   useDeleteSingleSubmitOrDraftFormMutation,
-  useGeneratePdfFormMutation,
+  useGenerateApplicationPdfMutation,
   useGetAllSubmitOrDraftFormsQuery,
   useGiveSpecialAccessToUserMutation,
 } from "@/redux/apis/form.apis";
+import { useGetAllRolesQuery } from "@/redux/apis/roleManagement.apis";
 import useConfirm from "@/hooks/useConfirm";
 import usePermission from "@/hooks/usePermission";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import useApplicationsForms from "./hooks/useApplicationsForms";
-import { ApplicationPdfViewCommonProps } from "@/components/global/ApplicationPdfView";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
-import Modal from "@/components/shared/Modal";
-import ApplicationsSpecialAccessModal from "./components/ApplicationsSpecialAccessModal";
+import ApplicationsFilter from "./components/ApplicationsFilter";
+import ApplicationsHeading from "./components/ApplicationsHeading";
 import ApplicationsTable from "./components/ApplicationsTable";
 import getEnv from "@/utils/env";
 import { PERMISSIONS } from "@/utils/permissions";
-import { APPLICATIONS_AI_CHAT_PATH, APPLICATIONS_SCREEN_CONTEXT } from "./utils/applications.constants";
+import {
+  APPLICATIONS_AI_CHAT_PATH,
+  APPLICATIONS_SCREEN_CONTEXT,
+  INITIAL_APPLICATION_FILTERS,
+} from "./utils/applications.constants";
 import {
   buildApplicationsAssistantActions,
   buildApplicationsScreenState,
   getSubmittedFormIds,
 } from "./utils/applications.assistant.utils";
+import { buildFilterOptions, filterApplications, isSubmitted } from "./utils/applications.utils";
 
 const SERVER_URL = getEnv("SERVER_URL");
 
-const initialFilters = {
-  dateRange: { start: "", end: "" },
-  status: "",
-  type: "",
-};
-
 const Applications = () => {
-  const { data, isLoading: isLoadingForm, refetch } = useGetAllSubmitOrDraftFormsQuery();
-  const [deleteSubmitForm, { isLoading: isLoadingDelete }] = useDeleteSingleSubmitOrDraftFormMutation();
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [openSpecialAccess, setOpenSpecialAccess] = useState(false);
-  const [selectedIdForSpecialAccessModal, setSelectedIdForSpecialAccessModal] = useState(null);
-  const [selectedFormId, setSelectedFormId] = useState(null);
-  const [pdfData, setPdfData] = useState(null);
-  const [filters, setFilters] = useState(initialFilters);
-  const applicants = data?.data || [];
-
-  const aiConfirm = useConfirm();
-  const canShareApplication = usePermission(PERMISSIONS.SHARE_APPLICATION);
+  const { data, isLoading, isError, refetch } = useGetAllSubmitOrDraftFormsQuery();
+  const [deleteApplication] = useDeleteSingleSubmitOrDraftFormMutation();
   const [giveSpecialAccessToUser] = useGiveSpecialAccessToUserMutation();
-  const [generatePdfForm] = useGeneratePdfFormMutation();
-  const forms = useApplicationsForms(canShareApplication ? getSubmittedFormIds(applicants) : []);
+  const [generateApplicationPdf] = useGenerateApplicationPdfMutation();
+  const canShareApplication = usePermission(PERMISSIONS.SHARE_APPLICATION);
+  const canReadRole = usePermission(PERMISSIONS.READ_ROLE);
+  // every role for the role filter
+  const { data: roles } = useGetAllRolesQuery(undefined, { skip: !canReadRole });
+  const aiConfirm = useConfirm();
+  const [filters, setFilters] = useState(INITIAL_APPLICATION_FILTERS);
+
+  const applications = data?.data ?? [];
+  const forms = useApplicationsForms(canShareApplication ? getSubmittedFormIds(applications) : []);
+  const filteredApplications = filterApplications(applications, filters);
+  const roleNames = (roles?.data ?? []).map((role) => role.name);
+  const { roleOptions, statusOptions } = buildFilterOptions(applications, roleNames);
+  const submittedCount = applications.filter(isSubmitted).length;
+  const hasActiveFilters = Object.values(filters).some(Boolean);
 
   useScreenContext({
     ...APPLICATIONS_SCREEN_CONTEXT,
     aiEndpoint: `${SERVER_URL}${APPLICATIONS_AI_CHAT_PATH}`,
-    currentState: buildApplicationsScreenState({ applications: applicants, forms }),
+    currentState: buildApplicationsScreenState({ applications, forms }),
     actions: buildApplicationsAssistantActions({
-      applications: applicants,
+      applications,
       forms,
-      deleteApplication: deleteSubmitForm,
+      deleteApplication,
       giveSpecialAccessToUser,
-      generatePdfForm,
+      generateApplicationPdf,
       askConfirm: aiConfirm.ask,
     }),
-    deps: { applicationCount: applicants.length, formCount: forms.length },
+    deps: { applicationCount: applications.length, formCount: forms.length },
   });
 
-  const handleViewApplicant = useCallback((row) => {
-    setPdfData(row);
-    setIsModalOpen(true);
-  }, []);
-
-  const handleDeleteApplication = useCallback(
-    async ({ id, type }) => {
-      setIsLoading(true);
-      try {
-        const res = await deleteSubmitForm({ _id: id, type }).unwrap();
-        if (!res?.success) throw new Error(res?.message || "Failed to delete application");
-        toast.success(res?.message || "Application deleted successfully");
-        await refetch();
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [deleteSubmitForm, refetch],
-  );
-
-  const handleFilterChange = useCallback((name, value) => {
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
-  }, []);
-
-  const handleClosePdf = () => {
-    setIsModalOpen(false);
-    setPdfData(null);
   };
 
   return (
-    <>
-      {openSpecialAccess && (
-        <Modal onClose={() => setOpenSpecialAccess(false)}>
-          <ApplicationsSpecialAccessModal
-            formId={selectedFormId}
-            submittedFormId={selectedIdForSpecialAccessModal}
-            setModal={setOpenSpecialAccess}
-          />
-        </Modal>
-      )}
-
-      <div className="bg-backgroundColor rounded-t-md p-4" data-testid="applications-page">
-        <div className="mb-4">
-          <h2 className="text-textPrimary mb-4 text-xl font-semibold">Applicants</h2>
-
-          <ApplicationsTable
-            setSelectedIdForSpecialAccessModal={setSelectedIdForSpecialAccessModal}
-            setSelectedFormId={setSelectedFormId}
-            setOpenSpecialAccess={setOpenSpecialAccess}
-            applicants={applicants}
-            isLoading={isLoading || isLoadingForm}
-            onView={handleViewApplicant}
-            onDeleteApplication={handleDeleteApplication}
-            isLoadingDelete={isLoadingDelete}
-            filters={filters}
-            onFilterChange={handleFilterChange}
-          />
-        </div>
-
-        {/* View Applicant Modal */}
-        {isModalOpen && (pdfData?.form?._id || pdfData?.form) && (
-          <Modal width={"min-w-[80vw] max-w-2xl"} onClose={handleClosePdf} isLoading={isLoading}>
-            <ApplicationPdfViewCommonProps
-              userId={pdfData?.user?._id || pdfData?.user}
-              pdfId={pdfData?.form?._id || pdfData?.form}
-              initialSubmitData={pdfData?.submitData}
-              submittedFormId={pdfData?._id}
-              className="rounded-lg!"
-              isPdf={true}
-              isDownloadAble={true}
-            />
-          </Modal>
-        )}
-      </div>
+    <article
+      className="bg-backgroundColor w-full rounded-t-md p-4 md:p-6 lg:w-[calc(100vw-350px)]"
+      data-testid="applications-page"
+    >
+      <ApplicationsHeading submittedCount={submittedCount} draftCount={applications.length - submittedCount} />
+      <ApplicationsFilter
+        filters={filters}
+        roleOptions={roleOptions}
+        statusOptions={statusOptions}
+        resultCount={filteredApplications.length}
+        totalCount={applications.length}
+        hasActiveFilters={hasActiveFilters}
+        onChange={handleFilterChange}
+        onClear={() => setFilters(INITIAL_APPLICATION_FILTERS)}
+      />
+      <ApplicationsTable
+        applications={filteredApplications}
+        hasApplications={applications.length > 0}
+        forms={forms}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
+      />
 
       <ConfirmationModal
         isOpen={aiConfirm.isOpen}
@@ -149,7 +103,7 @@ const Applications = () => {
         onConfirm={aiConfirm.resolveAsked}
         onClose={aiConfirm.close}
       />
-    </>
+    </article>
   );
 };
 

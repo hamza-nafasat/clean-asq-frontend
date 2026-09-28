@@ -110,7 +110,7 @@ const CompanyInformationPdf = ({
     const curr = formData?.company_lookup_data;
     if (JSON.stringify(prev) === JSON.stringify(curr)) return;
     prevRef.current = curr;
-    if (!curr) return;
+    if (!Array.isArray(curr)) return;
     (async () => {
       const description = curr.find((i) => i?.name === FIELD_NAMES.COMPANY_DESCRIPTION)?.result;
       if (naicsToMccDetails?.NAICS) return;

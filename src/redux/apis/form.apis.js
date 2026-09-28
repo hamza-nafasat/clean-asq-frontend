@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { API_TAGS } from "@/constants";
+import { API_TAGS, PDF_VIEW_PARAMS } from "@/constants";
 import getEnv from "@/utils/env";
 
 const formApis = createApi({
@@ -40,7 +40,12 @@ const formApis = createApi({
     }),
     /////
     getSingleFormQuery: builder.query({
-      query: (data) => ({ url: `single/${data?._id}`, method: "GET" }),
+      // the pdf page's token unlocks hidden sections
+      query: (data) => ({
+        url: `single/${data?._id}`,
+        method: "GET",
+        params: { [PDF_VIEW_PARAMS.PDF_TOKEN]: data?.pdfToken },
+      }),
       providesTags: (result, error, data) => [{ type: API_TAGS.SINGLE_FORM, id: data?._id }],
     }),
     /////
@@ -120,6 +125,15 @@ const formApis = createApi({
       query: ({ _id, userId, submissionId }) => ({
         url: `/generate-pdf/${_id}/${userId}`,
         params: { submissionId: submissionId || undefined },
+        method: "GET",
+        // read the pdf as a blob, not json
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
+    /////
+    generateApplicationPdf: builder.mutation({
+      query: ({ submissionId }) => ({
+        url: `/application-pdf/${submissionId}`,
         method: "GET",
         // read the pdf as a blob, not json
         responseHandler: (response) => response.blob(),
@@ -498,6 +512,7 @@ export const {
   useSaveFormInDraftMutation,
   useGetFormHistoryQuery,
   useGeneratePdfFormMutation,
+  useGenerateApplicationPdfMutation,
   useGetSavedFormMutation,
   useGetSavedFormByUserIdMutation,
   useRemoveSavedFormMutation,

@@ -1,6 +1,4 @@
 export const MY_APPLICATIONS_ROUTES = {
-  VERIFICATION: "/verification",
-  APPLICATION_FORM: "/application-form",
   HIDDEN_FORM: "/hidden",
 };
 

@@ -1,15 +1,12 @@
-export const APPLICATION_STATUS = {
-  draft: "draft",
-  submitted: "submitted",
-};
+import { SUBMISSION_TYPES } from "@/constants";
 
 const META = {
-  [APPLICATION_STATUS.draft]: {
+  [SUBMISSION_TYPES.DRAFT]: {
     label: "Draft",
     description: "Not submitted yet",
     className: "bg-amber-100 text-amber-800 ring-amber-200",
   },
-  [APPLICATION_STATUS.submitted]: {
+  [SUBMISSION_TYPES.SUBMITTED]: {
     label: "Submitted",
     description: "Sent for review",
     className: "bg-green-100 text-green-800 ring-green-200",

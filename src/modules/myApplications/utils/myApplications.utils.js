@@ -18,12 +18,6 @@ export const undimOnLeave = (e) => {
   e.currentTarget.style.opacity = "1";
 };
 
-export const buildVerificationPath = (formId, draftId) =>
-  `${MY_APPLICATIONS_ROUTES.VERIFICATION}?formid=${formId}${draftId ? `&draftId=${draftId}` : ""}`;
-
-export const buildApplicationFormPath = (brandingName, formId, draftId) =>
-  `${MY_APPLICATIONS_ROUTES.APPLICATION_FORM}/${brandingName}/${formId}${draftId ? `?draftId=${draftId}` : ""}`;
-
 export const buildOwnerInvitationPath = (invite) =>
   `${MY_APPLICATIONS_ROUTES.HIDDEN_FORM}/${invite.formId}/${invite.sectionKey}?token=${encodeURIComponent(invite.token)}`;
 

@@ -107,6 +107,8 @@ export const MODAL_MODES = {
 // query names on the pdf view page
 export const PDF_VIEW_PARAMS = { PDF_TOKEN: "pdfToken", SUBMISSION_ID: "submissionId" };
 
+export const VERIFICATION_PARAMS = { FORM_ID: "formid", BRANDING_NAME: "brandingName", DRAFT_ID: "draftId" };
+
 export const SOCKET_EVENTS = {
   CONNECT: "connect",
   REGISTER_USER: "register_user",
@@ -154,6 +156,7 @@ export const LAYOUT_ROUTES = {
   HOME: "/",
   MY_APPLICATIONS: "/submission",
   MY_PROFILE: "/my-profile",
+  VERIFICATION: "/verification",
   APPLICATION_FORM: "/application-form",
   APPLICATION_FORMS: "/application-forms",
   ROLE_MANAGEMENT: "/all-roles",
@@ -171,6 +174,11 @@ export const LAYOUT_ROUTES = {
 
 // tag id of the default branding
 export const DEFAULT_BRANDING_TAG_ID = "default";
+
+export const SUBMISSION_TYPES = {
+  SUBMITTED: "submitted",
+  DRAFT: "draft",
+};
 
 // pages that show the form's branding
 export const FORM_BRANDING_PATHS = ["/application-form", "/singleform", "/hidden", "/verification"];

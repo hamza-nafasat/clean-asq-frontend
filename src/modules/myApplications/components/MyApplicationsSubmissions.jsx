@@ -8,7 +8,7 @@ import Button from "@/components/shared/Button";
 import Modal from "@/components/shared/Modal";
 import MyApplicationsSpecialAccessModal from "./MyApplicationsSpecialAccessModal";
 import MyApplicationsStatusBadge from "./MyApplicationsStatusBadge";
-import { APPLICATION_STATUS } from "@/utils/applicationStatus";
+import { SUBMISSION_TYPES } from "@/constants";
 import { PERMISSIONS } from "@/utils/permissions";
 import {
   CARD_CLASS,
@@ -110,7 +110,7 @@ const MyApplicationsSubmissions = ({ forms = [] }) => {
 
                   <div className="flex shrink-0 items-center gap-2">
                     <MyApplicationsStatusBadge
-                      status={APPLICATION_STATUS.submitted}
+                      status={SUBMISSION_TYPES.SUBMITTED}
                     />
 
                     {canInviteOwner && (

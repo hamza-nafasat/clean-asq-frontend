@@ -1,49 +1,19 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { unwrapResult } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
-import { useGetSavedFormMutation, useRemoveSavedFormMutation } from "@/redux/apis/form.apis";
-import { addSavedFormData, setCurrentDraftId, updateEmailVerified } from "@/redux/slices/form.slice";
+import { useRemoveSavedFormMutation } from "@/redux/apis/form.apis";
+import useResumeDraft from "@/hooks/useResumeDraft";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
 import MyApplicationsStatusBadge from "./MyApplicationsStatusBadge";
-import { APPLICATION_STATUS } from "@/utils/applicationStatus";
+import { SUBMISSION_TYPES } from "@/constants";
 import { CARD_CLASS } from "../utils/myApplications.constants";
-import {
-  buildApplicationFormPath,
-  buildBrandedButtonStyle,
-  buildVerificationPath,
-  dimOnHover,
-  formatLongDate,
-  undimOnLeave,
-} from "../utils/myApplications.utils";
+import { buildBrandedButtonStyle, dimOnHover, formatLongDate, undimOnLeave } from "../utils/myApplications.utils";
 import EmptyState from "@/components/shared/EmptyState";
 
 const MyApplicationsDrafts = ({ forms = [] }) => {
-  const dispatch = useDispatch();
-  const { emailVerified } = useSelector((state) => state.form);
-  const navigate = useNavigate();
-  const [getSavedFormData] = useGetSavedFormMutation();
+  const resumeDraft = useResumeDraft();
   const [removeSavedForm, { isLoading: isDeleting }] = useRemoveSavedFormMutation();
   const [deleteTarget, setDeleteTarget] = useState(null);
-
-  const getSavedData = async (formId, brandingName, draftId) => {
-    try {
-      if (!emailVerified) dispatch(updateEmailVerified(true));
-      if (draftId) dispatch(setCurrentDraftId(draftId));
-      const res = await getSavedFormData({ formId: formId, draftId }).unwrap();
-      if (!res.success) return navigate(buildVerificationPath(formId, draftId));
-      const savedData = res?.data?.savedData || [];
-      const action = await dispatch(addSavedFormData(savedData || []));
-      unwrapResult(action);
-      if (!savedData?.company_lookup_data) return navigate(buildVerificationPath(formId, draftId));
-      return navigate(buildApplicationFormPath(brandingName, formId, draftId));
-    } catch (error) {
-      console.error("Get saved form error:", error);
-      return navigate(buildVerificationPath(formId, draftId));
-    }
-  };
 
   const deleteDraftHandler = async () => {
     if (!deleteTarget) return;
@@ -76,7 +46,7 @@ const MyApplicationsDrafts = ({ forms = [] }) => {
                   </h2>
                   <p className="mt-1 truncate text-xs text-gray-500">Started {formatLongDate(form?.createdAt)}</p>
                 </div>
-                <MyApplicationsStatusBadge status={APPLICATION_STATUS.draft} />
+                <MyApplicationsStatusBadge status={SUBMISSION_TYPES.DRAFT} />
               </div>
 
               {/* Details */}
@@ -106,7 +76,7 @@ const MyApplicationsDrafts = ({ forms = [] }) => {
                   type="button"
                   label="Resume"
                   className="w-full sm:w-auto"
-                  onClick={() => getSavedData(form?._id, form?.branding?.name, form?.draftId)}
+                  onClick={() => resumeDraft({ formId: form?._id, draftId: form?.draftId, brandingName: form?.branding?.name })}
                   style={brandedStyle}
                   onMouseEnter={dimOnHover}
                   onMouseLeave={undimOnLeave}

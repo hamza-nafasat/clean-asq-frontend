@@ -1,29 +1,45 @@
-export const APPLICANT_STATUS = {
+import { FORM_FIELD_TEXT_SOURCES } from "@/constants";
+
+// statuses with their own pill colour
+export const APPLICATION_STATUSES = {
   PENDING: "pending",
   REVIEWING: "reviewing",
   APPROVED: "approved",
   REJECTED: "rejected",
 };
 
-export const APPLICANT_TYPE = {
-  SUBMITTED: "submitted",
-  DRAFT: "draft",
-};
-
-export const APPLICATIONS_ROUTES = {
-  VERIFICATION: "/verification",
-  APPLICATION_FORM: "/application-form",
-  UNDERWRITING: "/underwriting",
-};
-
-export const APPLICANT_FILTER_KEYS = {
+export const APPLICATION_FILTER_FIELDS = {
   NAME: "name",
+  ROLE: "role",
   STATUS: "status",
   TYPE: "type",
-  DATE_RANGE: "dateRange",
+  START_DATE: "startDate",
+  END_DATE: "endDate",
 };
 
-export const BENEFICIAL_SECTION_KEY = "beneficial_information";
+export const INITIAL_APPLICATION_FILTERS = Object.fromEntries(
+  Object.values(APPLICATION_FILTER_FIELDS).map((field) => [field, ""]),
+);
+
+export const FORWARD_FORM_FIELDS = {
+  EMAIL: "email",
+  SECTION_KEY: "sectionKey",
+};
+
+export const INITIAL_FORWARD_FORM = { [FORWARD_FORM_FIELDS.EMAIL]: "", [FORWARD_FORM_FIELDS.SECTION_KEY]: "" };
+
+export const FORWARD_FIELD_PROPS = {
+  labelClassName: "mb-1 block text-sm font-medium text-gray-700",
+  selectBaseClassName:
+    "border-frameColor h-11.25 w-full rounded-lg border bg-fieldBackground px-4 text-sm text-gray-600 outline-none md:h-12.5 md:text-base",
+  selectDefaultClassName: "border-gray-300",
+  placeholderOption: FORM_FIELD_TEXT_SOURCES.LABEL,
+};
+
+export const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// formats a local date as yyyy-mm-dd
+export const LOCAL_DAY_LOCALE = "en-CA";
 
 export const DATE_TIME_OPTIONS = {
   year: "numeric",

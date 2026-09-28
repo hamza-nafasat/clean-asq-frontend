@@ -1,265 +1,214 @@
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { unwrapResult } from "@reduxjs/toolkit";
-import { ArrowRight, Eye, Trash, UserIcon } from "lucide-react";
-import PropTypes from "prop-types";
+import { useSelector } from "react-redux";
+import { useDeleteSingleSubmitOrDraftFormMutation, useGiveSpecialAccessToUserMutation } from "@/redux/apis/form.apis";
+import { FiAlertCircle, FiInbox } from "react-icons/fi";
 import { toast } from "react-toastify";
-import { useGetSavedFormMutation } from "@/redux/apis/form.apis";
-import { addSavedFormData, setCurrentDraftId, updateEmailVerified } from "@/redux/slices/form.slice";
-import useDeleteConfirmation from "@/hooks/useDeleteConfirmation";
-import useRowActionMenu from "@/hooks/useRowActionMenu";
 import usePermission from "@/hooks/usePermission";
+import useResumeDraft from "@/hooks/useResumeDraft";
+import useRowActionMenu from "@/hooks/useRowActionMenu";
+import { ApplicationPdfViewCommonProps } from "@/components/global/ApplicationPdfView";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import AppDataTable from "@/components/shared/AppDataTable";
-import CustomLoading from "@/components/shared/CustomLoading";
-import ApplicationsFilter from "./ApplicationsFilter";
-import { buildApplicantColumns } from "./ApplicationsTableColumns";
+import Button from "@/components/shared/Button";
+import EmptyState from "@/components/shared/EmptyState";
+import LoadingState from "@/components/shared/LoadingState";
+import Modal from "@/components/shared/Modal";
+import ApplicationsForwardModal from "./ApplicationsForwardModal";
+import { LAYOUT_ROUTES } from "@/constants";
 import { PERMISSIONS } from "@/utils/permissions";
-import { APPLICANT_TYPE, APPLICATIONS_ROUTES } from "../utils/applications.constants";
-import { getFullName } from "../utils/applications.utils";
+import { buildColumns, buildRowButtons } from "../utils/applications.columns";
+import { INITIAL_FORWARD_FORM } from "../utils/applications.constants";
+import {
+  describeApplication,
+  getForwardableSections,
+  isSubmitted,
+  validateForwardForm,
+} from "../utils/applications.utils";
 
 const ApplicationsTable = ({
-  applicants = [],
+  applications = [],
+  hasApplications = false,
+  forms = [],
   isLoading = false,
-  isLoadingDelete = false,
-  onView,
-  onDeleteApplication,
-  filters = {},
-  onFilterChange,
-  setOpenSpecialAccess,
-  setSelectedIdForSpecialAccessModal,
-  setSelectedFormId,
+  isError = false,
+  onRetry,
 }) => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const {
-    openRowId: actionMenu,
-    setOpenRowId: setActionMenu,
-    toggleMenu,
-    getRowRef,
-  } = useRowActionMenu({
-    closeOnOutsideClick: true,
-  });
-  const [searchTerm, setSearchTerm] = useState("");
-  const [getSavedFormData] = useGetSavedFormMutation();
-  const user = useSelector((state) => state.auth.user);
-  const canUnderwrite = usePermission(PERMISSIONS.UNDERWRITING);
+  const currentUserId = useSelector((state) => state.auth.user?._id);
   const canDeleteApplication = usePermission(PERMISSIONS.DELETE_APPLICATION);
   const canShareApplication = usePermission(PERMISSIONS.SHARE_APPLICATION);
+  const canUnderwrite = usePermission(PERMISSIONS.UNDERWRITING);
   const canSubmitForm = usePermission(PERMISSIONS.SUBMIT_FORM);
+  const resumeDraft = useResumeDraft();
+  const [deleteApplication, { isLoading: isDeleting }] = useDeleteSingleSubmitOrDraftFormMutation();
+  const [forwardSection, { isLoading: isForwarding }] = useGiveSpecialAccessToUserMutation();
+  const { openRowId, setOpenRowId, toggleMenu, getRowRef } = useRowActionMenu({ closeOnOutsideClick: true });
 
-  // resume draft from where the applicant left off
-  const continueDraftHandler = useCallback(
-    async (row) => {
-      const formId = row?.form?._id || row?.form;
-      const draftId = row?._id;
-      const brandingName = row?.form?.branding?.name;
-      try {
-        dispatch(updateEmailVerified(true));
-        dispatch(setCurrentDraftId(draftId));
-        const res = await getSavedFormData({ formId, draftId }).unwrap();
-        const savedData = res?.data?.savedData || {};
-        const action = await dispatch(addSavedFormData(savedData));
-        unwrapResult(action);
-        const brandingQuery = brandingName ? `&brandingName=${brandingName}` : "";
-        if (!savedData?.company_lookup_data) {
-          return navigate(`${APPLICATIONS_ROUTES.VERIFICATION}?formid=${formId}${brandingQuery}&draftId=${draftId}`);
-        }
-        return navigate(`${APPLICATIONS_ROUTES.APPLICATION_FORM}/${brandingName}/${formId}?draftId=${draftId}`);
-      } catch (error) {
-        console.error("Resume draft error:", error);
-        return navigate(`${APPLICATIONS_ROUTES.VERIFICATION}?formid=${formId}&draftId=${draftId}`);
-      }
-    },
-    [dispatch, getSavedFormData, navigate],
-  );
+  const [rowToView, setRowToView] = useState(null);
+  const [rowToForward, setRowToForward] = useState(null);
+  const [forwardForm, setForwardForm] = useState(INITIAL_FORWARD_FORM);
+  const [forwardErrors, setForwardErrors] = useState({});
+  const [rowToDelete, setRowToDelete] = useState(null);
 
-  const {
-    target: deleteConfirmation,
-    openConfirmation: setDeleteConfirmation,
-    closeConfirmation,
-    handleConfirm: handleDeleteApplicant,
-  } = useDeleteConfirmation({
-    onDelete: async (target) => {
-      try {
-        if (!target?.id || !target?.type) return;
-        await onDeleteApplication?.(target);
-        setActionMenu(null);
-        return true;
-      } catch (error) {
-        console.error("Delete application error:", error);
-        toast.error(error?.data?.message || error?.message || "Failed to delete application");
-      }
-    },
-  });
-
-  const filteredApplicants = useMemo(
-    () =>
-      applicants?.filter((applicant) => {
-        const matchesDateRange =
-          (!filters?.dateRange?.start || applicant?.createdAt >= filters?.dateRange?.start) &&
-          (!filters?.dateRange?.end || applicant?.createdAt <= filters?.dateRange?.end);
-        const matchesStatus = !filters?.status || applicant?.status === filters?.status;
-        const matchesSearch =
-          !searchTerm || applicant?.user?.role?.name?.toLowerCase()?.includes(searchTerm?.toLowerCase() || "");
-        const name = getFullName(applicant?.user);
-        const matchesName = !filters?.name || name?.toLowerCase()?.includes(filters?.name?.toLowerCase() || "");
-        const matchesType = !filters?.type || applicant?.type === filters?.type;
-        return matchesDateRange && matchesStatus && matchesSearch && matchesName && matchesType;
-      }),
-    [applicants, filters, searchTerm],
-  );
-
-  const deleteButton = useMemo(
-    () => ({
-      name: "Delete",
-      icon: <Trash size={16} className="mr-2" />,
-      onClick: (row) => {
-        setDeleteConfirmation({ id: row?._id, type: row?.type });
-        setActionMenu(null);
+  const getRowButtons = useMemo(() => {
+    // close the menu, then act
+    const fromMenu = (action) => (row) => {
+      setOpenRowId(null);
+      action(row);
+    };
+    return buildRowButtons({
+      can: {
+        delete: canDeleteApplication,
+        share: canShareApplication,
+        underwrite: canUnderwrite,
+        continue: canSubmitForm,
       },
-    }),
-    [setDeleteConfirmation, setActionMenu],
-  );
-
-  const continueButton = useMemo(
-    () => ({
-      name: "Continue",
-      icon: <ArrowRight size={16} className="mr-2" />,
-      onClick: (row) => {
-        setActionMenu(null);
-        continueDraftHandler(row);
-      },
-    }),
-    [continueDraftHandler, setActionMenu],
-  );
-
-  const submittedButtons = useMemo(
-    () =>
-      [
-        {
-          name: "View Pdf",
-          icon: <Eye size={16} className="mr-2" />,
-          onClick: (row) => {
-            onView?.(row);
-            setActionMenu(null);
-          },
-        },
-        canDeleteApplication && deleteButton,
-        canShareApplication && {
-          name: "Forward a form",
-          icon: <ArrowRight size={16} className="mr-2" />,
-          onClick: (row) => {
-            setOpenSpecialAccess?.(true);
-            setSelectedIdForSpecialAccessModal?.(row?._id);
-            setSelectedFormId?.(row?.form?._id);
-            setActionMenu(null);
-          },
-        },
-        canUnderwrite && {
-          name: "Underwriting",
-          icon: <UserIcon size={16} className="mr-2" />,
-          onClick: (row) => {
-            navigate(`${APPLICATIONS_ROUTES.UNDERWRITING}/${row?._id}`);
-            setActionMenu(null);
-          },
-        },
-      ].filter(Boolean),
-    [
-      canUnderwrite,
-      canDeleteApplication,
-      canShareApplication,
-      deleteButton,
-      onView,
-      setOpenSpecialAccess,
-      setSelectedIdForSpecialAccessModal,
-      setSelectedFormId,
-      navigate,
-      setActionMenu,
-    ],
-  );
-
-  // only the owner can resume a draft
-  const getRowButtons = useCallback(
-    (row) => {
-      if (row?.type === APPLICANT_TYPE.SUBMITTED) return submittedButtons;
-      const isOwnDraft = (row?.user?._id || row?.user) === user?._id;
-      return [canDeleteApplication && deleteButton, canSubmitForm && isOwnDraft && continueButton].filter(Boolean);
-    },
-    [submittedButtons, canDeleteApplication, deleteButton, canSubmitForm, continueButton, user?._id],
-  );
+      currentUserId,
+      onView: fromMenu(setRowToView),
+      onForward: fromMenu(setRowToForward),
+      onUnderwrite: fromMenu((row) => navigate(`${LAYOUT_ROUTES.UNDERWRITING}/${row._id}`)),
+      onDelete: fromMenu(setRowToDelete),
+      onContinue: fromMenu((row) =>
+        resumeDraft({ formId: row.form?._id, draftId: row._id, brandingName: row.form?.branding?.name }),
+      ),
+    });
+  }, [
+    canDeleteApplication,
+    canShareApplication,
+    canUnderwrite,
+    canSubmitForm,
+    currentUserId,
+    navigate,
+    resumeDraft,
+    setOpenRowId,
+  ]);
 
   const columns = useMemo(
-    () => buildApplicantColumns({ actionMenu, onToggleMenu: toggleMenu, getRowRef, getRowButtons }),
-    [getRowButtons, actionMenu, getRowRef, toggleMenu],
+    () => buildColumns({ openRowId, getRowRef, getRowButtons, onToggleMenu: toggleMenu }),
+    [openRowId, getRowRef, getRowButtons, toggleMenu],
   );
 
-  return (
-    <div>
-      <ApplicationsFilter
-        filters={filters}
-        onFilterChange={onFilterChange}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+  const sectionOptions = getForwardableSections(forms.find((form) => form._id === rowToForward?.form?._id)).map(
+    (section) => ({ value: section.key, label: section.name }),
+  );
+
+  const handleForwardChange = (e) => {
+    const { name, value } = e.target;
+    setForwardForm((prev) => ({ ...prev, [name]: value }));
+    setForwardErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handleCloseForward = () => {
+    setRowToForward(null);
+    setForwardForm(INITIAL_FORWARD_FORM);
+    setForwardErrors({});
+  };
+
+  const handleForward = async () => {
+    const errors = validateForwardForm(forwardForm);
+    if (Object.keys(errors).length) return setForwardErrors(errors);
+    try {
+      const res = await forwardSection({
+        formId: rowToForward.form._id,
+        submittedFormId: rowToForward._id,
+        email: forwardForm.email.trim(),
+        sectionKey: forwardForm.sectionKey,
+      }).unwrap();
+      toast.success(res.message);
+      handleCloseForward();
+    } catch (error) {
+      console.error("Forward section error:", error);
+      toast.error(error?.data?.message || "Failed to forward the section");
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      const res = await deleteApplication({ _id: rowToDelete._id, type: rowToDelete.type }).unwrap();
+      toast.success(res.message);
+      setRowToDelete(null);
+    } catch (error) {
+      console.error("Delete application error:", error);
+      toast.error(error?.data?.message || "Failed to delete the application");
+    }
+  };
+
+  if (isLoading) return <LoadingState title="Loading applications" />;
+  if (isError)
+    return (
+      <EmptyState variant="panel" icon={<FiAlertCircle size={28} />} title="Could not load applications">
+        <Button type="button" label="Try again" onClick={onRetry} />
+      </EmptyState>
+    );
+  if (!hasApplications)
+    return (
+      <EmptyState
+        variant="panel"
+        icon={<FiInbox size={28} />}
+        title="No applications yet"
+        description="Submitted applications and drafts will appear here."
       />
-      <div
-        className="mt-5 w-full h-full overflow-x-auto lg:w-[calc(100vw-350px)]! xl:w-full"
+    );
+
+  return (
+    <>
+      <section
+        className="w-full overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm"
         data-testid="applications-table"
       >
         <AppDataTable
           branded={false}
           columns={columns}
-          data={filteredApplicants}
-          progressPending={isLoading}
-          noDataComponent="No applications yet"
-          emptyDescription="Submitted applications and drafts will appear here."
-          progressPendingMessage={<CustomLoading className="w-10 h-10" />}
+          data={applications}
+          noDataComponent="No applications match these filters"
           highlightOnHover
           fixedHeader
           persistTableHead
           responsive
           pagination
         />
-      </div>
+      </section>
+
+      {rowToView && (
+        <Modal width="min-w-[80vw]" onClose={() => setRowToView(null)}>
+          <ApplicationPdfViewCommonProps
+            userId={rowToView.user?._id ?? rowToView.user}
+            pdfId={rowToView.form?._id}
+            initialSubmitData={rowToView.submitData}
+            submittedFormId={rowToView._id}
+            className="rounded-lg"
+            isPdf
+            isDownloadAble
+          />
+        </Modal>
+      )}
+
+      <ApplicationsForwardModal
+        isOpen={Boolean(rowToForward)}
+        initialData={rowToForward}
+        values={forwardForm}
+        errors={forwardErrors}
+        sectionOptions={sectionOptions}
+        isLoading={isForwarding}
+        onChange={handleForwardChange}
+        onClose={handleCloseForward}
+        onSubmit={handleForward}
+      />
+
       <ConfirmationModal
-        isOpen={deleteConfirmation?.id && deleteConfirmation?.type}
-        onClose={closeConfirmation}
-        onConfirm={handleDeleteApplicant}
-        title="Delete Submit Form"
-        message={`Are you sure you want to delete this submit form?`}
-        isLoading={isLoadingDelete}
+        isOpen={Boolean(rowToDelete)}
+        onClose={() => setRowToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title={isSubmitted(rowToDelete) ? "Delete Application" : "Delete Draft"}
+        message={`Are you sure you want to delete ${describeApplication(rowToDelete)}? This action cannot be undone.`}
+        isLoading={isDeleting}
         confirmButtonText="Delete"
         confirmButtonClassName="bg-red-500 border-none hover:bg-red-600 text-white"
         cancelButtonText="Cancel"
       />
-    </div>
+    </>
   );
-};
-
-ApplicationsTable.propTypes = {
-  applicants: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      name: PropTypes.string.isRequired,
-      application: PropTypes.string.isRequired,
-      email: PropTypes.string.isRequired,
-      dateCreated: PropTypes.string.isRequired,
-      status: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
-  isLoading: PropTypes.bool,
-  onView: PropTypes.func.isRequired,
-  onDeleteApplication: PropTypes.func,
-  filters: PropTypes.shape({
-    dateRange: PropTypes.shape({
-      start: PropTypes.string,
-      end: PropTypes.string,
-    }),
-    status: PropTypes.string,
-    name: PropTypes.string,
-  }).isRequired,
-  onFilterChange: PropTypes.func.isRequired,
 };
 
 export default ApplicationsTable;
