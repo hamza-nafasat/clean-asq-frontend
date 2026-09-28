@@ -17,7 +17,7 @@ export const buildChatPayload = ({ messages, ctx, assistantMode, currentState, f
   if (formLanguage && formLanguage !== DEFAULT_FORM_LANGUAGE) {
     context.formLanguage = formLanguage;
   }
-  // empty means no explicit choice yet
+  // english unless another was chosen
   if (preferredLanguage) context.preferredLanguage = preferredLanguage;
   return { messages, context };
 };

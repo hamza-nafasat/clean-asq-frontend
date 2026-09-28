@@ -5,7 +5,6 @@ import {
   CHAT_ROLES,
   DEFAULT_FORM_LANGUAGE,
 } from "@/components/shared/aiChat/constants/aiChatConstants.js";
-import { FORM_LANG_TO_BCP47 } from "@/components/shared/aiChat/constants/formLanguages.js";
 import { translateForDisplay } from "@/components/shared/aiChat/logic/translateMessage.js";
 import { detectFormLanguage } from "@/components/shared/aiChat/logic/widgetLanguage.js";
 
@@ -120,8 +119,7 @@ const useScreenConversation = ({
       formLanguageRef.current = detectedLang;
       if (detectedLang !== DEFAULT_FORM_LANGUAGE) lastDetectedLanguageRef.current = detectedLang.toLowerCase().slice(0, 2);
       setIntroButtonsDismissed(true);
-      // no chosen language: greet in the form's language
-      announce(buildGreeting(ctx, true), preferredLanguageRef.current || FORM_LANG_TO_BCP47[detectedLang]);
+      announce(buildGreeting(ctx, true));
     } else {
       announce(buildGreeting(ctx, false));
     }

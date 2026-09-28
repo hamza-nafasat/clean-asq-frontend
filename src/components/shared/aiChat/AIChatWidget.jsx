@@ -21,6 +21,7 @@ import useTranslationTooltip from "./hooks/useTranslationTooltip.js";
 import { AI_ASSISTANT_MODES, STORAGE_KEYS, WIDGET_CLOSED_FLAG } from "@/constants";
 import { contrastingIconColor, DEFAULT_AI_VOICE, DEFAULT_FORM_LANGUAGE } from "./constants/aiChatConstants.js";
 import { getWidgetString } from "./logic/widgetLanguage.js";
+import { DEFAULT_LANGUAGE_CODE } from "@/lib/languages.js";
 
 const LOGIN_PATH = "/login";
 const APPLICANT_FORM_PATH_PREFIX = "/application-form/";
@@ -52,8 +53,8 @@ const AIChatWidget = () => {
   const [translationMode, setTranslationMode] = useState(null);
   const [introButtonsDismissed, setIntroButtonsDismissed] = useState(false);
   const [adePanel, setAdePanel] = useState(null);
-  // empty until explicitly chosen
-  const [preferredLanguage, setPreferredLanguage] = useState(user?.preferredLanguage || "");
+  // english until another is chosen
+  const [preferredLanguage, setPreferredLanguage] = useState(user?.preferredLanguage || DEFAULT_LANGUAGE_CODE);
 
   const sendMessageRef = useRef(null);
   const panelRef = useRef(null);
