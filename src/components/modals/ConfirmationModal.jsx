@@ -25,6 +25,8 @@ const ConfirmationModal = ({
       cancelButtonText={cancelButtonText}
       cancelButtonClassName={cancelButtonClassName}
       hideSaveButton={false}
+      // above the ai chat so it can be answered
+      isTopLayer
     >
       <div className="py-4">
         <div className="text-gray-700">{message}</div>

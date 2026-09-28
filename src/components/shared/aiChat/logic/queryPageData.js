@@ -41,11 +41,40 @@ const compareBy = (field, direction) => (a, b) => {
 
 const listNames = (state) => Object.keys(state || {}).filter((key) => Array.isArray(state[key]));
 
+const isPlainObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+
+// every key down the path exists
+const hasPath = (record, path) => {
+  let value = record;
+  for (const key of path.split(".")) {
+    if (!isPlainObject(value) || !Object.hasOwn(value, key)) return false;
+    value = value[key];
+  }
+  return true;
+};
+
+// field names the model can use
+const describeFields = (record) =>
+  Object.entries(record || {}).flatMap(([key, value]) => {
+    if (Array.isArray(value)) return [`${key} (list)`];
+    if (isPlainObject(value)) return Object.keys(value).map((subKey) => `${key}.${subKey}`);
+    return [key];
+  });
+
+const findUnknownFields = (records, paths) => paths.filter((path) => !records.some((record) => hasPath(record, path)));
+
 // exact filter over a page's data
 export const queryPageData = (state, { collection, filters = [], sortBy, sortDirection, fields, limit }) => {
   const records = state?.[collection];
   if (!Array.isArray(records)) {
     return { error: `There is no "${collection}" list on this page. Lists available: ${listNames(state).join(", ") || "none"}.` };
+  }
+  // a wrong field name must not read as "no matches"
+  const unknownFields = records.length ? findUnknownFields(records, [...filters.map((filter) => filter.field), sortBy].filter(Boolean)) : [];
+  if (unknownFields.length) {
+    return {
+      error: `Unknown field(s): ${unknownFields.join(", ")}. Fields in "${collection}": ${describeFields(records[0]).join(", ")}. Retry with these names.`,
+    };
   }
   const matches = records.filter((record) => filters.every((filter) => matchesFilter(record, filter)));
   if (sortBy) matches.sort(compareBy(sortBy, sortDirection));

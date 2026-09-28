@@ -14,10 +14,11 @@ const Modal = memo(
     cancelButtonText = "Cancel",
     hideCancelButton = false,
     hideSaveButton = false,
+    isTopLayer = false,
   }) => {
     return (
       <div
-        className="modal-overlay fixed inset-0 z-50 flex h-full items-center justify-center overflow-auto bg-black/50"
+        className={`modal-overlay fixed inset-0 ${isTopLayer ? "z-400" : "z-50"} flex h-full items-center justify-center overflow-auto bg-black/50`}
       >
         <div className="scroll-0 relative max-h-[70%] w-[90%] max-w-3xl overflow-auto rounded-md bg-white p-6 shadow-lg">
           <div className="mb-4 flex items-center justify-between">
@@ -58,6 +59,7 @@ Modal.propTypes = {
   saveButtonClassName: PropTypes.string,
   cancelButtonClassName: PropTypes.string,
   cancelButtonText: PropTypes.string,
+  isTopLayer: PropTypes.bool,
   hideSaveButton: PropTypes.bool,
 };
 
