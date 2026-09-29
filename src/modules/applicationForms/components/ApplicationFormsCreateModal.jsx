@@ -1,34 +1,24 @@
 import { useState } from "react";
-import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { useAddBrandingInFormMutation } from "@/redux/apis/branding.apis";
 import { useCreateFormMutation, useUpdateFormMutation } from "@/redux/apis/form.apis";
 import useAiChat from "@/hooks/useAiChat";
 import usePermission from "@/hooks/usePermission";
-import { mapHomeBranding } from "@/utils/executeBrandingAssignment";
 import { PERMISSIONS } from "@/utils/permissions";
 import FileUploader from "@/components/global/FileUploader";
 import Button from "@/components/shared/Button";
 import Modal from "@/components/shared/Modal";
 import TextField from "@/components/shared/TextField";
-import { YES_NO_VALUES } from "@/constants";
 import { ASSISTANT_ROLE, FORM_UPLOAD_ACCEPT, FORM_UPLOAD_FIELDS } from "../utils/applicationForms.constants";
 import { getDuplicateFormName, isDuplicateFormError } from "../utils/applicationForms.duplicate.utils";
 
 const ApplicationFormsCreateModal = ({ isOpen = false, onClose }) => {
-  const user = useSelector((state) => state.auth.user);
   const { addMessage, setIsOpen } = useAiChat();
   const [createForm, { isLoading }] = useCreateFormMutation();
   const [updateForm] = useUpdateFormMutation();
-  const [addFromBranding] = useAddBrandingInFormMutation();
   const [file, setFile] = useState(null);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [pendingFormName, setPendingFormName] = useState("");
   const canUpdateForm = usePermission(PERMISSIONS.UPDATE_FORM);
-  const canUpdateBranding = usePermission(PERMISSIONS.UPDATE_BRANDING);
-
-  const homeBranding = mapHomeBranding(user);
-  const shouldApplyBranding = canUpdateBranding && Boolean(homeBranding?._id);
 
   const handleClose = () => {
     setFile(null);
@@ -42,18 +32,15 @@ const ApplicationFormsCreateModal = ({ isOpen = false, onClose }) => {
     if (!form?._id || !form?.name) return;
     try {
       if (canUpdateForm) await updateForm({ _id: form._id, data: { headerText: form.name } }).unwrap();
-      if (shouldApplyBranding) {
-        await addFromBranding({ brandingId: homeBranding._id, formId: form._id, onHome: YES_NO_VALUES.NO }).unwrap();
-      }
     } catch (error) {
       console.error("Finish form setup error:", error);
-      toast.warning("The form was created, but its header or default branding could not be set. Update it from the form menu.");
+      toast.warning("The form was created, but its header could not be set. Update it from the form menu.");
       return;
     }
     setIsOpen(true);
     addMessage({
       role: ASSISTANT_ROLE,
-      content: `Form **"${form.name}"** was created successfully${shouldApplyBranding ? " and the default branding has been applied" : ""}. You can now configure its sections, fields, AI prompts, and email templates — just let me know what you'd like to do next.`,
+      content: `Form **"${form.name}"** was created successfully. You can now configure its sections, fields, AI prompts, and email templates — just let me know what you'd like to do next.`,
     });
   };
 

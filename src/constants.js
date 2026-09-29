@@ -13,6 +13,8 @@ export const API_TAGS = {
   HISTORY: "History",
   USERS: "Users",
   MY_APPLICATIONS: "MyApplications",
+  EMAIL_TEMPLATES: "EmailTemplates",
+  SINGLE_EMAIL_TEMPLATE: "SingleEmailTemplate",
 };
 
 // matches the backend upload field names
@@ -143,6 +145,11 @@ export const FIELD_TYPES = {
 };
 
 export const EMAIL_TEMPLATE_TYPES = {
+  OTP: "otp_email_template",
+  OLD_BENEFICIAL_OWNERS: "old_beneficial_owners_email_template",
+  NEW_BENEFICIAL_OWNERS: "new_beneficial_owners_email_template",
+  FORM_FORWARDED: "form_forwarded_email_template",
+  WELCOME: "welcome_email_template",
   RULE_TRIGGERED: "rule_triggered_email_template",
 };
 

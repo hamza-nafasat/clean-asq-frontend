@@ -3,7 +3,7 @@ import { useGetMyProfileFirstTimeMutation } from "@/redux/apis/auth.apis";
 import { useAttachTemplateToFormMutation } from "@/redux/apis/email.apis";
 import { userExist } from "@/redux/slices/auth.slice";
 import confirmOrCancel from "@/utils/confirmOrCancel";
-import { EMAIL_TYPE_VALUES } from "../utils/email.constants";
+import { EMAIL_TEMPLATE_TYPES } from "@/constants";
 
 // ai toggles the attach to me checkbox
 const useEmailAttachToMe = ({ templates = [], askConfirm }) => {
@@ -14,7 +14,7 @@ const useEmailAttachToMe = ({ templates = [], askConfirm }) => {
   return async ({ templateId, attachToMe }) => {
     const template = templates.find((t) => String(t._id) === String(templateId));
     if (!template) throw new Error("Template not found");
-    if (template.emailType !== EMAIL_TYPE_VALUES.WELCOME) throw new Error("Only a welcome email template can be attached to you");
+    if (template.emailType !== EMAIL_TEMPLATE_TYPES.WELCOME) throw new Error("Only a welcome email template can be attached to you");
     await confirmOrCancel(askConfirm, {
       title: "Attach to Me",
       message: attachToMe

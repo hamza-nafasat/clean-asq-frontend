@@ -1,19 +1,12 @@
-export const EMAIL_TYPE_VALUES = {
-  OTP: "otp_email_template",
-  OLD_BENEFICIAL_OWNERS: "old_beneficial_owners_email_template",
-  NEW_BENEFICIAL_OWNERS: "new_beneficial_owners_email_template",
-  FORM_FORWARDED: "form_forwarded_email_template",
-  WELCOME: "welcome_email_template",
-  RULE_TRIGGERED: "rule_triggered_email_template",
-};
+import { EMAIL_TEMPLATE_TYPES } from "@/constants";
 
 export const EMAIL_TYPES = [
-  { label: "Otp Email Template", value: EMAIL_TYPE_VALUES.OTP },
-  { label: "Old Beneficial Owners Email Template", value: EMAIL_TYPE_VALUES.OLD_BENEFICIAL_OWNERS },
-  { label: "New Beneficial Owners Email Template", value: EMAIL_TYPE_VALUES.NEW_BENEFICIAL_OWNERS },
-  { label: "Form Forwarded Email Template", value: EMAIL_TYPE_VALUES.FORM_FORWARDED },
-  { label: "Welcome Email Template", value: EMAIL_TYPE_VALUES.WELCOME },
-  { label: "Rule Triggered Email Template", value: EMAIL_TYPE_VALUES.RULE_TRIGGERED },
+  { label: "Otp Email Template", value: EMAIL_TEMPLATE_TYPES.OTP },
+  { label: "Old Beneficial Owners Email Template", value: EMAIL_TEMPLATE_TYPES.OLD_BENEFICIAL_OWNERS },
+  { label: "New Beneficial Owners Email Template", value: EMAIL_TEMPLATE_TYPES.NEW_BENEFICIAL_OWNERS },
+  { label: "Form Forwarded Email Template", value: EMAIL_TEMPLATE_TYPES.FORM_FORWARDED },
+  { label: "Welcome Email Template", value: EMAIL_TEMPLATE_TYPES.WELCOME },
+  { label: "Rule Triggered Email Template", value: EMAIL_TEMPLATE_TYPES.RULE_TRIGGERED },
 ];
 
 export const QUILL_MODULES = {
@@ -50,16 +43,54 @@ export const QUILL_FORMATS = [
   "data",
 ];
 
-export const TEMPLATE_KEYWORDS = ["link", "otp", "email", "password", "frontEndUrl", "recipientName", "brandCompanyName"];
+// placeholders the mailer fills, {{name}} in the body
+export const TEMPLATE_KEYWORDS = [
+  "link",
+  "otp",
+  "email",
+  "password",
+  "frontEndUrl",
+  "recipientName",
+  "brandCompanyName",
+];
+
+// rule emails also fill the rule result
+export const RULE_TEMPLATE_KEYWORDS = [...TEMPLATE_KEYWORDS, "data"];
 
 export const TEMPLATE_OPEN_MODES = {
   EDIT: "edit",
   VIEW: "view",
 };
 
+export const TEMPLATE_MODAL_MODES = {
+  VIEW: "view",
+  CREATE: "create",
+  EDIT: "edit",
+};
+
+// screen states the email ai chat reads
+export const EMAIL_SCREEN_STATES = {
+  LIST: "list",
+  CREATE: "create",
+  EDIT: "edit",
+};
+
+export const EMAIL_SCREEN_IDS = {
+  LIST: "email-template-list",
+  NEW: "email-template-new",
+  TEMPLATE_PREFIX: "email-template-",
+};
+
+export const TEMPLATE_FIELDS = {
+  NAME: "templateName",
+  TYPE: "emailType",
+  SUBJECT: "subject",
+  BODY: "body",
+};
+
 export const INITIAL_EDIT_DATA = {
-  templateName: "",
-  subject: "",
-  emailType: "",
-  body: "",
+  [TEMPLATE_FIELDS.NAME]: "",
+  [TEMPLATE_FIELDS.SUBJECT]: "",
+  [TEMPLATE_FIELDS.TYPE]: "",
+  [TEMPLATE_FIELDS.BODY]: "",
 };

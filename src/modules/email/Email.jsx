@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { FiMail } from "react-icons/fi";
 import {
   useAttachTemplateToFormMutation,
   useCreateEmailTemplateMutation,
@@ -11,328 +12,280 @@ import {
 import { useGetMyAllFormsQuery } from "@/redux/apis/form.apis";
 import useConfirm from "@/hooks/useConfirm";
 import usePermission from "@/hooks/usePermission";
-import { useScreenContext } from "@/hooks/useScreenContext";
-import { FiMail } from "react-icons/fi";
-import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
+import useRowActionMenu from "@/hooks/useRowActionMenu";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
 import EmptyState from "@/components/shared/EmptyState";
-import EmailAttachFormsModal from "@/modules/email/components/EmailAttachFormsModal";
-import EmailTemplateCard from "@/modules/email/components/EmailTemplateCard";
-import EmailTemplateModal from "@/modules/email/components/EmailTemplateModal";
-import useEmailAttachToMe from "@/modules/email/hooks/useEmailAttachToMe";
-import { INITIAL_EDIT_DATA, TEMPLATE_KEYWORDS, TEMPLATE_OPEN_MODES } from "@/modules/email/utils/email.constants";
-import getEnv from "@/utils/env";
+import LoadingState from "@/components/shared/LoadingState";
+import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
+import useEmailAttachToMe from "./hooks/useEmailAttachToMe";
+import useEmailScreenContext from "./hooks/useEmailScreenContext";
+import EmailAttachFormsModal from "./components/EmailAttachFormsModal";
+import EmailHeading from "./components/EmailHeading";
+import EmailTemplateCard from "./components/EmailTemplateCard";
+import EmailTemplateModal from "./components/EmailTemplateModal";
+import { INITIAL_EDIT_DATA, TEMPLATE_MODAL_MODES, TEMPLATE_OPEN_MODES } from "./utils/email.constants";
+import { pickTemplateFields, validateTemplate } from "./utils/email.utils";
+import confirmOrCancel from "@/utils/confirmOrCancel";
 import { PERMISSIONS } from "@/utils/permissions";
 
-const SERVER_URL = getEnv("SERVER_URL");
-
 const Email = () => {
-  const menuRef = useRef(null);
   const { user } = useSelector((state) => state.auth);
-  const [viewModalData, setViewModalData] = useState(null);
+  const [modalMode, setModalMode] = useState(null);
+  const [openTemplate, setOpenTemplate] = useState(null);
+  const [values, setValues] = useState(INITIAL_EDIT_DATA);
+  const [errors, setErrors] = useState({});
+  const [templateToAttach, setTemplateToAttach] = useState(null);
 
   const canCreateEmail = usePermission(PERMISSIONS.CREATE_EMAIL);
   const canUpdateEmail = usePermission(PERMISSIONS.UPDATE_EMAIL);
   const canDeleteEmail = usePermission(PERMISSIONS.DELETE_EMAIL);
   const canReadForm = usePermission(PERMISSIONS.READ_FORM);
   const { data: applicationForms } = useGetMyAllFormsQuery(undefined, { skip: !canReadForm });
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [editData, setEditData] = useState(INITIAL_EDIT_DATA);
-  const [isEdit, setIsEdit] = useState(false);
-  const [menuOpenId, setMenuOpenId] = useState(null);
-  const [isReadOnly, setIsReadOnly] = useState(true);
-
-  // latest state for screen context actions
-  const latestRef = useRef({ editData, isEdit, viewModalData });
-  latestRef.current = { editData, isEdit, viewModalData };
-
+  const { data: emailTemplates, isLoading, isError, refetch } = useGetAllEmailTemplatesQuery();
   const [createEmailTemplate] = useCreateEmailTemplateMutation();
   const [updateEmailTemplate] = useUpdateSingleEmailTemplateMutation();
   const [deleteEmailTemplate] = useDeleteSingleEmailTemplateMutation();
-  const { data: emailTemplates, refetch: refetchEmailTemplates } = useGetAllEmailTemplatesQuery();
-  const [isAttachFormModalOpen, setIsAttachFormModalOpen] = useState(false);
   const [attachEmailTemplate] = useAttachTemplateToFormMutation();
+  const { openRowId, toggleMenu, setOpenRowId, getRowRef } = useRowActionMenu({ closeOnOutsideClick: true });
+  const confirm = useConfirm();
 
-  const templates = emailTemplates?.data;
-  const aiConfirm = useConfirm();
-  const attachTemplateToMe = useEmailAttachToMe({ templates, askConfirm: aiConfirm.ask });
+  const templates = emailTemplates?.data ?? [];
+  const attachTemplateToMe = useEmailAttachToMe({ templates, askConfirm: confirm.ask });
+
+  // latest state for ai actions
+  const latestRef = useRef({ values, modalMode, openTemplate });
+  latestRef.current = { values, modalMode, openTemplate };
 
   const findTemplate = (templateId) => {
-    const template = (templates || []).find((t) => String(t._id) === String(templateId));
-    if (!template) throw new Error(`Template not found`);
+    const template = templates.find((item) => String(item._id) === String(templateId));
+    if (!template) throw new Error("Template not found");
     return template;
   };
 
-  const openTemplate = (template, mode) => {
-    if (mode === TEMPLATE_OPEN_MODES.EDIT) {
-      handleEdit(template);
-    } else {
-      handleView(template);
+  const showTemplate = (template, mode) => {
+    setOpenTemplate(template);
+    setValues(pickTemplateFields(template));
+    setErrors({});
+    setModalMode(mode);
+    setOpenRowId(null);
+  };
+
+  const handleView = (template) => showTemplate(template, TEMPLATE_MODAL_MODES.VIEW);
+  const handleEdit = (template) => showTemplate(template, TEMPLATE_MODAL_MODES.EDIT);
+  const openByMode = (template, mode) => (mode === TEMPLATE_OPEN_MODES.EDIT ? handleEdit : handleView)(template);
+
+  const handleCreate = () => {
+    setOpenTemplate(null);
+    setValues(INITIAL_EDIT_DATA);
+    setErrors({});
+    setModalMode(TEMPLATE_MODAL_MODES.CREATE);
+  };
+
+  const handleClose = () => {
+    setModalMode(null);
+    setOpenTemplate(null);
+  };
+
+  const handleChange = (field, value) => {
+    setValues((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const handleInsertKeyword = (keyword) => {
+    setValues((prev) => ({ ...prev, body: `${prev.body} {{${keyword}}}` }));
+  };
+
+  // true once saved; edits ask first
+  const saveTemplate = async () => {
+    const { values: data, modalMode: mode, openTemplate: template } = latestRef.current;
+    const nextErrors = validateTemplate(data);
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length) return false;
+    const isEdit = mode === TEMPLATE_MODAL_MODES.EDIT && template?._id;
+    if (isEdit) {
+      const isConfirmed = await confirm.ask({
+        title: "Save Template",
+        message: `Save the changes to "${data.templateName}"?`,
+        confirmButtonText: "Save",
+      });
+      if (!isConfirmed) return false;
+    }
+    try {
+      const res = isEdit
+        ? await updateEmailTemplate({ id: template._id, ...pickTemplateFields(data) }).unwrap()
+        : await createEmailTemplate(pickTemplateFields(data)).unwrap();
+      toast.success(res.message);
+      handleClose();
+      setValues(INITIAL_EDIT_DATA);
+      return true;
+    } catch (error) {
+      console.error("Save template error:", error);
+      toast.error(error?.data?.message || "Failed to save template");
+      return false;
     }
   };
 
-  // register screen context for the ai chat widget
-  useScreenContext({
-    screenId: viewModalData?._id
-      ? `email-template-${viewModalData._id}`
-      : viewModalData
-        ? "email-template-new"
-        : "email-template-list",
-    screenName: viewModalData?._id
-      ? `Email Template — ${editData.templateName || "Untitled"}`
-      : viewModalData
-        ? "Email Template (New)"
-        : "Email Templates",
-    assistantName: "Email Composition Assistant",
-    description:
-      "The Email Templates screen lets admins create and edit transactional email templates used throughout the onboarding platform. Templates support placeholder variables for personalisation.",
-    aiEndpoint: `${SERVER_URL}/api/ai/email-chat`,
-    greeting: viewModalData
-      ? `Hi! I can see you have **${editData.templateName || "a template"}** open.\n\nI can help you:\n- **Draft** or rewrite the subject line and body\n- **Proofread and enhance** the existing content\n- **Reformat** for clarity and professionalism\n- **Insert variables** like {{recipientName}} or {{link}} where appropriate\n\nWhat would you like me to do?`
-      : `Hi! I'm your email template assistant.\n\nI can help you:\n- **Draft** new email templates from scratch\n- **Proofread and enhance** existing content\n- **Reformat** templates for clarity and professionalism\n\nTo get started, please **open or create an email template** using the list below — I'll be ready to help once you do!`,
-    currentState: {
-      screenState: viewModalData?._id ? "edit" : viewModalData ? "create" : "list",
-      templateName: editData.templateName,
-      emailType: editData.emailType,
-      subject: editData.subject,
-      body: editData.body,
-      isReadOnly,
-      availableVariables: TEMPLATE_KEYWORDS.map((k) => `{{${k}}}`).join(", "),
-      templates: (templates || []).map((t) => ({
-        _id: t._id,
-        templateName: t.templateName,
-        emailType: t.emailType,
-        subject: t.subject,
-        attachedForms: (t.forms || []).map((f) => ({ _id: f._id, name: f.name })),
-        isAttachedToMe: user?.welcomeMail === t._id,
-      })),
-      // derived from the live query so it updates after attach
-      attachedForms: viewModalData?._id
-        ? (templates?.find((t) => t._id === viewModalData._id)?.forms || []).map((f) => ({ _id: f._id, name: f.name }))
-        : [],
-      availableForms: (applicationForms?.data || []).map((f) => ({ _id: f._id, name: f.name })),
-    },
+  const deleteTemplate = async (template) => {
+    const res = await deleteEmailTemplate({ emailTemplateId: template._id }).unwrap();
+    toast.success(res.message);
+  };
+
+  const buildDeleteConfirm = (template) => ({
+    title: "Delete Template",
+    message: `Delete "${template.templateName}"? This can't be undone.`,
+    confirmButtonText: "Delete",
+  });
+
+  // every delete asks first
+  const handleDelete = async (template) => {
+    setOpenRowId(null);
+    if (!(await confirm.ask(buildDeleteConfirm(template)))) return;
+    try {
+      await deleteTemplate(template);
+    } catch (error) {
+      console.error("Delete template error:", error);
+      toast.error(error?.data?.message || "Failed to delete template");
+    }
+  };
+
+  const handleAttach = (template) => {
+    setTemplateToAttach(template);
+    setOpenRowId(null);
+  };
+
+  // keep the owner's welcome mail setting
+  const attachForms = (templateId, formIds) =>
+    attachEmailTemplate({
+      emailTemplateId: templateId,
+      formIds,
+      attachToMe: user?.welcomeMail === templateId,
+    }).unwrap();
+
+  const saveOrThrow = async () => {
+    if (!(await saveTemplate())) throw new Error("The template was not saved");
+  };
+
+  useEmailScreenContext({
+    user,
+    templates,
+    forms: applicationForms?.data ?? [],
+    openTemplate,
+    modalMode,
+    values,
     actions: {
-      subject: (val) => handleChange("subject", val),
-      body: (val) => handleChange("body", val),
-      templateName: (val) => handleChange("templateName", val),
-      emailType: (val) => handleChange("emailType", val),
-      enableEdit: () => {
-        setIsReadOnly(false);
-        if (viewModalData?._id) setIsEdit(true);
-      },
-      saveEmailTemplate: () => handleSave(),
+      subject: (value) => handleChange("subject", value),
+      body: (value) => handleChange("body", value),
+      templateName: (value) => handleChange("templateName", value),
+      emailType: (value) => handleChange("emailType", value),
+      enableEdit: () => setModalMode(openTemplate?._id ? TEMPLATE_MODAL_MODES.EDIT : TEMPLATE_MODAL_MODES.CREATE),
+      saveEmailTemplate: saveOrThrow,
       saveAndAttachToForms: async ({ formIds }) => {
-        const id = latestRef.current.viewModalData?._id;
-        if (!id) throw new Error("No template is currently open");
-        await handleSave();
-        await attachEmailTemplate({ emailTemplateId: id, formIds, attachToMe: user?.welcomeMail === id }).unwrap();
+        const templateId = latestRef.current.openTemplate?._id;
+        if (!templateId) throw new Error("No template is currently open");
+        await saveOrThrow();
+        await attachForms(templateId, formIds);
       },
       attachToForms: async ({ attachments = [] }) => {
         const failedTemplates = [];
         // sequential so earlier detaches free forms
         for (const { templateId, formIds = [] } of attachments) {
-          const id = templateId || viewModalData?._id;
+          const id = templateId || openTemplate?._id;
           try {
             if (!id) throw new Error("No template specified");
-            // keep the owner's welcome mail setting
-            await attachEmailTemplate({ emailTemplateId: id, formIds, attachToMe: user?.welcomeMail === id }).unwrap();
+            await attachForms(id, formIds);
           } catch (error) {
             console.error("Attach template error:", error);
             failedTemplates.push(
-              templates?.find((t) => String(t._id) === String(id))?.templateName || id || "a template",
+              templates.find((item) => String(item._id) === String(id))?.templateName || id || "a template",
             );
           }
         }
         if (failedTemplates.length) throw new Error(`Could not update ${failedTemplates.join(", ")}`);
       },
       [AI_TOOLS.ATTACH_TEMPLATE_TO_ME]: attachTemplateToMe,
-      openTemplate: ({ templateId, mode }) => {
-        openTemplate(findTemplate(templateId), mode);
-      },
-      createTemplate: () => handleCreate(),
-      closeTemplate: () => {
-        setViewModalData(null);
-        setIsEdit(false);
-      },
+      openTemplate: ({ templateId, mode }) => openByMode(findTemplate(templateId), mode),
+      createTemplate: handleCreate,
+      closeTemplate: handleClose,
       saveAndOpenTemplate: async ({ templateId, mode }) => {
-        await handleSave();
-        openTemplate(findTemplate(templateId), mode);
+        await saveOrThrow();
+        openByMode(findTemplate(templateId), mode);
       },
-      switchTemplate: ({ templateId, mode }) => {
-        const template = findTemplate(templateId);
-        setViewModalData(null);
-        setIsEdit(false);
-        openTemplate(template, mode);
-      },
+      switchTemplate: ({ templateId, mode }) => openByMode(findTemplate(templateId), mode),
       deleteTemplate: async ({ templateId }) => {
-        findTemplate(templateId);
-        await deleteEmailTemplate({ emailTemplateId: templateId }).unwrap();
+        const template = findTemplate(templateId);
+        await confirmOrCancel(confirm.ask, buildDeleteConfirm(template));
+        await deleteTemplate(template);
       },
-    },
-    deps: {
-      viewModalOpen: !!viewModalData,
-      viewModalDataId: viewModalData?._id,
-      subject: editData.subject,
-      body: editData.body,
-      templateName: editData.templateName,
-      templatesCount: templates?.length,
-      attachedFormCount: viewModalData?._id
-        ? (templates?.find((t) => t._id === viewModalData._id)?.forms || []).length
-        : 0,
     },
   });
 
-  const handleChange = (field, value) => {
-    setEditData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleInsertKeyword = (keyword) => {
-    setEditData((prev) => ({ ...prev, body: `${prev.body} {{${keyword}}}` }));
-  };
-
-  const handleSave = async () => {
-    // read latest state from the ref
-    const { editData: data, isEdit: edit, viewModalData: vmd } = latestRef.current;
-
-    try {
-      const res = edit
-        ? await updateEmailTemplate({
-            id: vmd?._id,
-            ...data,
-          }).unwrap()
-        : await createEmailTemplate(data).unwrap();
-
-      if (res?.success) {
-        toast.success(res.message);
-      }
-
-      setIsEdit(false);
-      setViewModalData(null);
-      setEditData(INITIAL_EDIT_DATA);
-    } catch (error) {
-      toast.error(error?.data?.message || "Failed to save template");
-    }
-  };
-
-  const handleEdit = (item) => {
-    setIsEdit(true);
-    setIsReadOnly(false);
-    setViewModalData(item);
-    setEditData(item);
-    setMenuOpenId(null);
-  };
-
-  const handleAttachForms = (item) => {
-    setIsAttachFormModalOpen(true);
-    setSelectedTemplate(item);
-    setMenuOpenId(null);
-  };
-
-  const handleView = (item) => {
-    setIsReadOnly(true);
-    setViewModalData(item);
-    setEditData(item);
-  };
-
-  const handleCreate = () => {
-    setIsReadOnly(false);
-    setEditData(INITIAL_EDIT_DATA);
-    setViewModalData({});
-  };
-
-  const handleDelete = async (item) => {
-    try {
-      const res = await deleteEmailTemplate({ emailTemplateId: item?._id }).unwrap();
-      toast.success(res?.message || "Deleted successfully");
-      setMenuOpenId(null);
-    } catch (error) {
-      toast.error(error?.data?.message || "Failed to delete template");
-    }
-  };
-
-  const handleCloseTemplate = () => {
-    setViewModalData(null);
-    setIsEdit(false);
-  };
-
-  const handleToggleMenu = (item) => {
-    setMenuOpenId(menuOpenId === item._id ? null : item._id);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setMenuOpenId(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  return (
-    <div data-testid="email-page">
-      {isAttachFormModalOpen && (
-        <EmailAttachFormsModal
-          refetchTemplates={refetchEmailTemplates}
-          setIsAttachFormModalOpen={setIsAttachFormModalOpen}
-          forms={applicationForms?.data}
-          selectedTemplate={selectedTemplate}
+  const renderTemplates = () => {
+    if (isLoading) return <LoadingState title="Loading email templates" />;
+    if (isError)
+      return (
+        <EmptyState variant="panel" icon={<FiMail size={28} />} title="Could not load email templates">
+          <Button label="Try again" onClick={refetch} />
+        </EmptyState>
+      );
+    if (!templates.length)
+      return (
+        <EmptyState
+          variant="panel"
+          icon={<FiMail size={28} />}
+          title="No email templates yet"
+          description="Create a template to send branded emails."
         />
-      )}
-      {viewModalData && (
-        <EmailTemplateModal
-          template={viewModalData}
-          editData={editData}
-          isReadOnly={isReadOnly}
-          onSave={!isReadOnly ? handleSave : () => setViewModalData(null)}
-          onClose={handleCloseTemplate}
-          onChange={handleChange}
-          onInsertKeyword={handleInsertKeyword}
-        />
-      )}
-      <ConfirmationModal
-        isOpen={aiConfirm.isOpen}
-        title={aiConfirm.pending?.title}
-        message={aiConfirm.pending?.message}
-        confirmButtonText={aiConfirm.pending?.confirmButtonText}
-        onConfirm={aiConfirm.resolveAsked}
-        onClose={aiConfirm.close}
-      />
-
-      <div className="flex items-center justify-between">
-        <h1 className="mb-6 text-2xl font-semibold">Email Templates</h1>
-        {canCreateEmail && (
-          <Button label="Create Email Template" onClick={handleCreate} data-testid="email-create-btn" />
-        )}
-      </div>
-
+      );
+    return (
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {templates?.map((item) => (
+        {templates.map((template) => (
           <EmailTemplateCard
-            key={item?._id}
-            item={item}
-            isMenuOpen={menuOpenId === item._id}
-            menuRef={menuRef}
-            onToggleMenu={handleToggleMenu}
+            key={template._id}
+            item={template}
+            isMenuOpen={openRowId === template._id}
+            menuRef={getRowRef(template._id)}
+            onToggleMenu={() => toggleMenu(template._id)}
             onEdit={canUpdateEmail ? handleEdit : null}
-            onAttach={canUpdateEmail && canReadForm ? handleAttachForms : null}
+            onAttach={canUpdateEmail && canReadForm ? handleAttach : null}
             onDelete={canDeleteEmail ? handleDelete : null}
             onView={handleView}
           />
         ))}
-        {templates && !templates.length && (
-          <EmptyState
-            variant="panel"
-            className="col-span-full"
-            icon={<FiMail size={28} />}
-            title="No email templates yet"
-            description="Create a template to send branded emails."
-          />
-        )}
       </div>
-    </div>
+    );
+  };
+
+  return (
+    <article data-testid="email-page">
+      <EmailAttachFormsModal
+        key={templateToAttach?._id}
+        isOpen={Boolean(templateToAttach)}
+        template={templateToAttach}
+        onClose={() => setTemplateToAttach(null)}
+      />
+      <EmailTemplateModal
+        isOpen={Boolean(modalMode)}
+        mode={modalMode ?? TEMPLATE_MODAL_MODES.VIEW}
+        values={values}
+        errors={errors}
+        onChange={handleChange}
+        onClose={handleClose}
+        onSubmit={saveTemplate}
+        onInsertKeyword={handleInsertKeyword}
+      />
+      <ConfirmationModal
+        isOpen={confirm.isOpen}
+        title={confirm.pending?.title}
+        message={confirm.pending?.message}
+        confirmButtonText={confirm.pending?.confirmButtonText}
+        onConfirm={confirm.resolveAsked}
+        onClose={confirm.close}
+      />
+
+      <EmailHeading canCreate={canCreateEmail} onCreate={handleCreate} />
+      {renderTemplates()}
+    </article>
   );
 };
 
