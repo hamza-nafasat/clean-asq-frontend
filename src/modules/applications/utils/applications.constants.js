@@ -28,8 +28,6 @@ export const FORWARD_FIELD_PROPS = {
   placeholderOption: FORM_FIELD_TEXT_SOURCES.LABEL,
 };
 
-export const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 // formats a local date as yyyy-mm-dd
 export const LOCAL_DAY_LOCALE = "en-CA";
 

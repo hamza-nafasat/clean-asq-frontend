@@ -1,5 +1,12 @@
-import { DATE_LOCALE, formFieldsStaticKeys, formKeys } from "@/constants";
-import { LONG_DATE_OPTIONS, MY_APPLICATIONS_ROUTES } from "./myApplications.constants";
+import {
+  DATE_LOCALE,
+  EMAIL_FORMAT,
+  HIDDEN_SECTION_PARAMS,
+  LAYOUT_ROUTES,
+  formFieldsStaticKeys,
+  formKeys,
+} from "@/constants";
+import { INVITE_FORM_FIELDS, LONG_DATE_OPTIONS } from "./myApplications.constants";
 
 export const formatLongDate = (value) => new Date(value).toLocaleDateString(DATE_LOCALE, LONG_DATE_OPTIONS);
 
@@ -7,27 +14,23 @@ export const buildBrandedButtonStyle = (colors) => ({
   backgroundColor: colors?.primary,
   borderColor: colors?.primary,
   color: colors?.buttonTextPrimary,
-  transition: "all 0.3s ease",
 });
 
-export const dimOnHover = (e) => {
-  e.currentTarget.style.opacity = "0.6";
-};
-
-export const undimOnLeave = (e) => {
-  e.currentTarget.style.opacity = "1";
-};
-
 export const buildOwnerInvitationPath = (invite) =>
-  `${MY_APPLICATIONS_ROUTES.HIDDEN_FORM}/${invite.formId}/${invite.sectionKey}?token=${encodeURIComponent(invite.token)}`;
+  `${LAYOUT_ROUTES.HIDDEN_SECTION}/${invite.formId}/${invite.sectionKey}?${new URLSearchParams({ [HIDDEN_SECTION_PARAMS.TOKEN]: invite.token })}`;
 
 // beneficial owners with an email, and the completed ones
 export const getBeneficialOwners = (form) => {
-  const ownersSection = form?.submitData?.[formKeys.beneficial_owners_key];
-  const additionalOwnerKey = Object.keys(ownersSection ?? {}).find(
-    (key) => ownersSection?.[key]?.name == formFieldsStaticKeys.additional_owners_key,
+  const ownersSection = form?.submitData?.[formKeys.beneficial_owners_key] ?? {};
+  const ownersField = Object.values(ownersSection).find(
+    (field) => field?.name === formFieldsStaticKeys.additional_owners_key,
   );
-  const totalOwners = ownersSection?.[additionalOwnerKey]?.value?.filter((item) => item?.email);
-  const filledOwners = totalOwners?.filter((item) => item?.isCompleted);
-  return { totalOwners, filledOwners };
+  const totalOwners = (Array.isArray(ownersField?.value) ? ownersField.value : []).filter((owner) => owner?.email);
+  return { totalOwners, filledOwners: totalOwners.filter((owner) => owner?.isCompleted) };
+};
+
+export const validateInviteForm = ({ email = "" }) => {
+  if (!email.trim()) return { [INVITE_FORM_FIELDS.EMAIL]: "Enter an email" };
+  if (!EMAIL_FORMAT.test(email.trim())) return { [INVITE_FORM_FIELDS.EMAIL]: "Enter a valid email" };
+  return {};
 };

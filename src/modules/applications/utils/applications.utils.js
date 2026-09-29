@@ -1,5 +1,5 @@
-import { APPLICATION_STATUSES, SUBMISSION_TYPES, formKeys } from "@/constants";
-import { EMAIL_FORMAT, FORWARD_FORM_FIELDS, LOCAL_DAY_LOCALE } from "./applications.constants";
+import { APPLICATION_STATUSES, EMAIL_FORMAT, SUBMISSION_TYPES, formKeys } from "@/constants";
+import { FORWARD_FORM_FIELDS, LOCAL_DAY_LOCALE } from "./applications.constants";
 
 export const capitalize = (value = "") => value.charAt(0).toUpperCase() + value.slice(1);
 

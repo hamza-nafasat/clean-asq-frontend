@@ -39,7 +39,7 @@ const SubmissionSuccessPage = lazy(() =>
 const ApplicationForm = lazy(() => import("@/modules/applicant/ApplicationForm"));
 const ApplicationPdfView = lazy(() => import("@/components/global/ApplicationPdfView"));
 const Verification = lazy(() => import("@/modules/applicant/CompanyVerification"));
-const DraftSubmission = lazy(() => import("@/modules/myApplications/MyApplications"));
+const MyApplications = lazy(() => import("@/modules/myApplications/MyApplications"));
 
 // signed-in dashboard pages
 const AllRoles = lazy(() => import("@/modules/roleManagement/RoleManagement"));
@@ -150,7 +150,7 @@ const App = () => {
           <Route element={<ProtectedRoute user={user} redirect={AUTH_ROUTES.LOGIN} />}>
             <Route path="/" element={<AdminDashboard />}>
               <Route index element={<Navigate to={getHomePath(user)} replace />} />
-              <Route path={LAYOUT_ROUTES.MY_APPLICATIONS} element={<DraftSubmission />} />
+              <Route path={LAYOUT_ROUTES.MY_APPLICATIONS} element={<MyApplications />} />
               <Route path={LAYOUT_ROUTES.MY_PROFILE} element={<MyProfile />} />
               <Route
                 path={`${LAYOUT_ROUTES.MANAGE_RULES}/:formId`}

@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { toast } from "react-toastify";
 import { useRemoveSavedFormMutation } from "@/redux/apis/form.apis";
+import { toast } from "react-toastify";
 import useResumeDraft from "@/hooks/useResumeDraft";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
+import EmptyState from "@/components/shared/EmptyState";
 import MyApplicationsStatusBadge from "./MyApplicationsStatusBadge";
 import { SUBMISSION_TYPES } from "@/constants";
-import { CARD_CLASS } from "../utils/myApplications.constants";
-import { buildBrandedButtonStyle, dimOnHover, formatLongDate, undimOnLeave } from "../utils/myApplications.utils";
-import EmptyState from "@/components/shared/EmptyState";
+import { BRANDED_BUTTON_CLASS, CARD_CLASS } from "../utils/myApplications.constants";
+import { buildBrandedButtonStyle, formatLongDate } from "../utils/myApplications.utils";
 
 const MyApplicationsDrafts = ({ forms = [] }) => {
   const resumeDraft = useResumeDraft();
@@ -30,61 +30,52 @@ const MyApplicationsDrafts = ({ forms = [] }) => {
   return (
     <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
       {forms?.length > 0 ? (
-        forms?.map((form, index) => {
-          const brandedStyle = buildBrandedButtonStyle(form?.branding?.colors);
-
-          return (
-            <div key={form?.draftId || form?._id || index} className={CARD_CLASS}>
-              {/* Header */}
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <h2
-                    title={form?.name}
-                    className="truncate text-base leading-tight font-bold text-gray-800 sm:text-lg"
-                  >
-                    {form?.name}
-                  </h2>
-                  <p className="mt-1 truncate text-xs text-gray-500">Started {formatLongDate(form?.createdAt)}</p>
-                </div>
-                <MyApplicationsStatusBadge status={SUBMISSION_TYPES.DRAFT} />
+        forms?.map((form, index) => (
+          <article key={form?.draftId || form?._id || index} className={CARD_CLASS}>
+            {/* Header */}
+            <header className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <h3 title={form?.name} className="truncate text-base leading-tight font-bold text-gray-800 sm:text-lg">
+                  {form?.name}
+                </h3>
+                <p className="mt-1 truncate text-xs text-gray-500">Started {formatLongDate(form?.draftCreatedAt)}</p>
               </div>
+              <MyApplicationsStatusBadge status={SUBMISSION_TYPES.DRAFT} />
+            </header>
 
-              {/* Details */}
-              <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                <div className="min-w-0">
-                  <dt className="text-xs text-gray-500">Sections</dt>
-                  <dd className="font-medium text-gray-800">{form?.sections?.length ?? 0}</dd>
-                </div>
-                <div className="min-w-0">
-                  <dt className="text-xs text-gray-500">Assistance</dt>
-                  <dd className="truncate font-medium text-gray-800">AI-assisted completion</dd>
-                </div>
-              </dl>
-
-              {/* Actions */}
-              <div className="mt-auto flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
-                <Button
-                  type="button"
-                  label="Delete"
-                  className="w-full sm:w-auto"
-                  onClick={() => setDeleteTarget({ formId: form?._id, draftId: form?.draftId, name: form?.name })}
-                  style={brandedStyle}
-                  onMouseEnter={dimOnHover}
-                  onMouseLeave={undimOnLeave}
-                />
-                <Button
-                  type="button"
-                  label="Resume"
-                  className="w-full sm:w-auto"
-                  onClick={() => resumeDraft({ formId: form?._id, draftId: form?.draftId, brandingName: form?.branding?.name })}
-                  style={brandedStyle}
-                  onMouseEnter={dimOnHover}
-                  onMouseLeave={undimOnLeave}
-                />
+            {/* Details */}
+            <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              <div className="min-w-0">
+                <dt className="text-xs text-gray-500">Sections</dt>
+                <dd className="font-medium text-gray-800">{form?.sections?.length ?? 0}</dd>
               </div>
-            </div>
-          );
-        })
+              <div className="min-w-0">
+                <dt className="text-xs text-gray-500">Last saved</dt>
+                <dd className="truncate font-medium text-gray-800">{formatLongDate(form?.draftUpdatedAt)}</dd>
+              </div>
+            </dl>
+
+            {/* Actions */}
+            <footer className="mt-auto flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                label="Delete"
+                variant="secondary"
+                className="w-full sm:w-auto"
+                onClick={() => setDeleteTarget({ formId: form?._id, draftId: form?.draftId, name: form?.name })}
+              />
+              <Button
+                type="button"
+                label="Resume"
+                className={BRANDED_BUTTON_CLASS}
+                style={buildBrandedButtonStyle(form?.branding?.colors)}
+                onClick={() =>
+                  resumeDraft({ formId: form?._id, draftId: form?.draftId, brandingName: form?.branding?.name })
+                }
+              />
+            </footer>
+          </article>
+        ))
       ) : (
         <EmptyState
           variant="panel"
@@ -94,7 +85,7 @@ const MyApplicationsDrafts = ({ forms = [] }) => {
         />
       )}
       <ConfirmationModal
-        isOpen={!!deleteTarget}
+        isOpen={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
         onConfirm={deleteDraftHandler}
         title="Delete Draft"

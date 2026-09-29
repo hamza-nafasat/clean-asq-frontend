@@ -2,20 +2,21 @@ import { useSelector } from "react-redux";
 import {
   useApplicantGiveSpecialAccessToBeneficialOwnerMutation,
   useGeneratePdfFormMutation,
-  useGetMyAllDraftsAndSubmittionsQuery,
+  useGetMyApplicationsQuery,
   useRemoveSavedFormMutation,
 } from "@/redux/apis/form.apis";
+import { FiAlertCircle, FiLock } from "react-icons/fi";
 import useConfirm from "@/hooks/useConfirm";
 import usePermission from "@/hooks/usePermission";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
-import CustomLoading from "@/components/shared/CustomLoading";
 import EmptyState from "@/components/shared/EmptyState";
-import MyApplicationsTabs from "./components/MyApplicationsTabs";
+import LoadingState from "@/components/shared/LoadingState";
+import MyApplicationsHeading from "./components/MyApplicationsHeading";
+import MyApplicationsList from "./components/MyApplicationsList";
 import getEnv from "@/utils/env";
 import { PERMISSIONS } from "@/utils/permissions";
-import { FiAlertCircle, FiLock } from "react-icons/fi";
 import { MY_APPLICATIONS_AI_CHAT_PATH, MY_APPLICATIONS_SCREEN_CONTEXT } from "./utils/myApplications.constants";
 import {
   buildMyApplicationsAssistantActions,
@@ -26,10 +27,12 @@ const SERVER_URL = getEnv("SERVER_URL");
 
 const MyApplications = () => {
   const aiConfirm = useConfirm();
-  const user = useSelector((state) => state.auth.user);
+  const userId = useSelector((state) => state.auth.user?._id);
   const canSubmitForm = usePermission(PERMISSIONS.SUBMIT_FORM);
-  const { data, isLoading, isError, refetch } = useGetMyAllDraftsAndSubmittionsQuery(undefined, {
+  const { data, isLoading, isError, refetch } = useGetMyApplicationsQuery(undefined, {
     skip: !canSubmitForm,
+    // form changes elsewhere show on every visit
+    refetchOnMountOrArgChange: true,
   });
   const [removeSavedForm] = useRemoveSavedFormMutation();
   const [inviteBeneficialOwner] = useApplicantGiveSpecialAccessToBeneficialOwnerMutation();
@@ -46,7 +49,7 @@ const MyApplications = () => {
     actions: buildMyApplicationsAssistantActions({
       drafts,
       submissions,
-      userId: user?._id,
+      userId,
       removeSavedForm,
       inviteBeneficialOwner,
       generatePdfForm,
@@ -57,19 +60,24 @@ const MyApplications = () => {
 
   if (!canSubmitForm)
     return (
-      <EmptyState variant="panel" icon={<FiLock size={28} />} title="You don't have permission to submit applications" />
+      <EmptyState
+        variant="panel"
+        icon={<FiLock size={28} />}
+        title="You don't have permission to submit applications"
+      />
     );
-  if (isLoading) return <CustomLoading />;
-  if (isError) {
+  if (isLoading) return <LoadingState title="Loading your applications" />;
+  if (isError)
     return (
       <EmptyState variant="panel" icon={<FiAlertCircle size={28} />} title="Could not load your applications">
         <Button type="button" label="Try again" onClick={refetch} />
       </EmptyState>
     );
-  }
+
   return (
-    <div>
-      <MyApplicationsTabs forms={data?.data} invitations={invitations} />
+    <article data-testid="my-applications-page">
+      <MyApplicationsHeading />
+      <MyApplicationsList forms={data?.data} invitations={invitations} />
 
       <ConfirmationModal
         isOpen={aiConfirm.isOpen}
@@ -79,7 +87,7 @@ const MyApplications = () => {
         onConfirm={aiConfirm.resolveAsked}
         onClose={aiConfirm.close}
       />
-    </div>
+    </article>
   );
 };
 

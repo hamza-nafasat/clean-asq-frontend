@@ -1,4 +1,5 @@
 import { createRef, useEffect, useRef, useState } from "react";
+import { KEYBOARD_KEYS } from "@/constants";
 
 // open state and per-row refs for a table's three-dot row menu
 const useRowActionMenu = ({ closeOnOutsideClick = false } = {}) => {
@@ -13,8 +14,15 @@ const useRowActionMenu = ({ closeOnOutsideClick = false } = {}) => {
       );
       if (clickedOutsideAllMenus) setOpenRowId(null);
     };
+    const handleKeyDown = (event) => {
+      if (event.key === KEYBOARD_KEYS.ESCAPE) setOpenRowId(null);
+    };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [openRowId, closeOnOutsideClick]);
 
   const toggleMenu = (rowId) => setOpenRowId((prevRowId) => (prevRowId === rowId ? null : rowId));

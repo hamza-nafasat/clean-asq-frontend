@@ -3,7 +3,7 @@ import MyApplicationsDrafts from "./MyApplicationsDrafts";
 import MyApplicationsOwnerInvitations from "./MyApplicationsOwnerInvitations";
 import MyApplicationsSubmissions from "./MyApplicationsSubmissions";
 
-const MyApplicationsTabs = ({ forms = {}, invitations = [] }) => {
+const MyApplicationsList = ({ forms = {}, invitations = [] }) => {
   const drafts = forms?.saved || [];
   const submitted = forms?.submitted || [];
   const hasNothing = drafts.length === 0 && submitted.length === 0 && invitations.length === 0;
@@ -51,4 +51,4 @@ const MyApplicationsTabs = ({ forms = {}, invitations = [] }) => {
   );
 };
 
-export default MyApplicationsTabs;
+export default MyApplicationsList;

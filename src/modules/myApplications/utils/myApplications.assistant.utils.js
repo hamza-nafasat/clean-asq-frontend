@@ -20,7 +20,8 @@ export const buildMyApplicationsScreenState = ({ drafts, submissions, invitation
     _id: submission.submissionId,
     formName: submission.name,
     submittedAt: submission.submittedAt,
-    beneficialOwners: (getBeneficialOwners(submission).totalOwners || []).map(({ name, email, isCompleted }) => ({
+    status: submission.status,
+    beneficialOwners: getBeneficialOwners(submission).totalOwners.map(({ name, email, isCompleted }) => ({
       name,
       email,
       isCompleted,
@@ -57,11 +58,11 @@ export const buildMyApplicationsAssistantActions = ({
       message: `Email ${email} an invitation to add their details to "${submission.name}"?`,
       confirmButtonText: "Send",
     });
-    await inviteBeneficialOwner({ formId: submission._id, email }).unwrap();
+    await inviteBeneficialOwner({ formId: submission._id, submissionId: submission.submissionId, email }).unwrap();
   },
   [AI_TOOLS.DOWNLOAD_APPLICATION_PDF]: async ({ applicationId }) => {
     const submission = findSubmission(submissions, applicationId);
-    const blob = await generatePdfForm({ _id: submission._id, userId }).unwrap();
+    const blob = await generatePdfForm({ _id: submission._id, userId, submissionId: submission.submissionId }).unwrap();
     downloadBlob(blob, `form-${submission._id}.pdf`);
   },
 });

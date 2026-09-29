@@ -12,6 +12,7 @@ export const API_TAGS = {
   SUBMIT_FORM_VERSIONS: "SubmitFormVersions",
   HISTORY: "History",
   USERS: "Users",
+  MY_APPLICATIONS: "MyApplications",
 };
 
 // matches the backend upload field names
@@ -107,6 +108,8 @@ export const MODAL_MODES = {
 // query names on the pdf view page
 export const PDF_VIEW_PARAMS = { PDF_TOKEN: "pdfToken", SUBMISSION_ID: "submissionId" };
 
+export const HIDDEN_SECTION_PARAMS = { TOKEN: "token" };
+
 export const VERIFICATION_PARAMS = { FORM_ID: "formid", BRANDING_NAME: "brandingName", DRAFT_ID: "draftId" };
 
 export const SOCKET_EVENTS = {
@@ -155,6 +158,7 @@ export const AUTH_ROUTES = {
 export const LAYOUT_ROUTES = {
   HOME: "/",
   MY_APPLICATIONS: "/submission",
+  HIDDEN_SECTION: "/hidden",
   MY_PROFILE: "/my-profile",
   VERIFICATION: "/verification",
   APPLICATION_FORM: "/application-form",
@@ -174,6 +178,8 @@ export const LAYOUT_ROUTES = {
 
 // tag id of the default branding
 export const DEFAULT_BRANDING_TAG_ID = "default";
+
+export const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const DATE_LOCALE = "en-US";
 
@@ -206,7 +212,12 @@ export const SUBMISSION_TYPES = {
 };
 
 // pages that show the form's branding
-export const FORM_BRANDING_PATHS = ["/application-form", "/singleform", "/hidden", "/verification"];
+export const FORM_BRANDING_PATHS = [
+  LAYOUT_ROUTES.APPLICATION_FORM,
+  "/singleform",
+  LAYOUT_ROUTES.HIDDEN_SECTION,
+  LAYOUT_ROUTES.VERIFICATION,
+];
 
 export const HEADER_ALIGNMENTS = {
   LEFT: "left",

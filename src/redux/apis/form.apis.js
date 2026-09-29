@@ -69,7 +69,13 @@ const formApis = createApi({
     /////
     submitForm: builder.mutation({
       query: (data) => ({ url: "/submit", method: "POST", body: data }),
-      invalidatesTags: [API_TAGS.SINGLE_FORM, API_TAGS.FORM, API_TAGS.SUBMIT_FORM, API_TAGS.SUBMIT_FORM_VERSIONS],
+      invalidatesTags: [
+        API_TAGS.SINGLE_FORM,
+        API_TAGS.FORM,
+        API_TAGS.SUBMIT_FORM,
+        API_TAGS.SUBMIT_FORM_VERSIONS,
+        API_TAGS.MY_APPLICATIONS,
+      ],
     }),
     /////
     updateSubmittedForm: builder.mutation({
@@ -78,7 +84,7 @@ const formApis = createApi({
         method: "PUT",
         body: { submittedFormId, formData },
       }),
-      invalidatesTags: [API_TAGS.SUBMIT_FORM, API_TAGS.HISTORY, API_TAGS.SUBMIT_FORM_VERSIONS],
+      invalidatesTags: [API_TAGS.SUBMIT_FORM, API_TAGS.HISTORY, API_TAGS.SUBMIT_FORM_VERSIONS, API_TAGS.MY_APPLICATIONS],
     }),
     /////
     updateApplication: builder.mutation({
@@ -96,12 +102,12 @@ const formApis = createApi({
     }),
     /////
     applicantGiveSpecialAccessToBeneficialOwner: builder.mutation({
-      query: ({ formId, email }) => ({
+      query: ({ formId, submissionId, email }) => ({
         url: `/applicant-give-special-access-to-beneficial-owner/${formId}`,
         method: "POST",
-        body: { email },
+        body: { email, submissionId },
       }),
-      invalidatesTags: [API_TAGS.HISTORY, API_TAGS.SUBMIT_FORM],
+      invalidatesTags: [API_TAGS.HISTORY, API_TAGS.SUBMIT_FORM, API_TAGS.MY_APPLICATIONS],
     }),
     /////
     getSpecialAccessOfSection: builder.query({
@@ -118,12 +124,12 @@ const formApis = createApi({
         method: "PUT",
         body: { sectionKey, formData, token },
       }),
-      invalidatesTags: [API_TAGS.HISTORY],
+      invalidatesTags: [API_TAGS.HISTORY, API_TAGS.MY_APPLICATIONS],
     }),
     /////
     saveFormInDraft: builder.mutation({
       query: (data) => ({ url: "/save-in-draft", method: "POST", body: data }),
-      invalidatesTags: [API_TAGS.SINGLE_FORM, API_TAGS.FORM],
+      invalidatesTags: [API_TAGS.SINGLE_FORM, API_TAGS.FORM, API_TAGS.MY_APPLICATIONS],
     }),
     /////
     generatePdfForm: builder.mutation({
@@ -178,12 +184,12 @@ const formApis = createApi({
         url: `/remove-saved/${formId}${draftId ? `?draftId=${draftId}` : ""}`,
         method: "DELETE",
       }),
-      invalidatesTags: [API_TAGS.SINGLE_FORM, API_TAGS.FORM],
+      invalidatesTags: [API_TAGS.SINGLE_FORM, API_TAGS.FORM, API_TAGS.MY_APPLICATIONS],
     }),
     /////
-    getMyAllDraftsAndSubmittions: builder.query({
-      query: () => ({ url: "/draft-and-submitions", method: "GET" }),
-      providesTags: [API_TAGS.FORM],
+    getMyApplications: builder.query({
+      query: () => ({ url: "/my-applications", method: "GET" }),
+      providesTags: [API_TAGS.MY_APPLICATIONS],
     }),
     /////
     reorderFormSections: builder.mutation({
@@ -529,7 +535,7 @@ export const {
   useGetSavedFormMutation,
   useGetSavedFormByUserIdMutation,
   useRemoveSavedFormMutation,
-  useGetMyAllDraftsAndSubmittionsQuery,
+  useGetMyApplicationsQuery,
   useReorderFormSectionsMutation,
   useAddFormSectionMutation,
   useDeleteFormSectionMutation,
