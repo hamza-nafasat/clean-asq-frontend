@@ -1,28 +1,29 @@
-import ConfirmationModal from "@/components/modals/ConfirmationModal";
-import Checkbox from "@/components/shared/Checkbox";
-import TextField from "@/components/shared/TextField";
-import Button from "@/components/shared/Button";
-import { FIELD_TYPES } from "@/constants";
-import { useFormateTextInMarkDownMutation } from "@/redux/apis/form.apis";
-import DOMPurify from "dompurify";
-import { TrashIcon, XIcon } from "lucide-react";
-import React, { useCallback, useState } from "react";
-import { MdOutlineRestore } from "react-icons/md";
+import { memo, useCallback, useState } from "react";
 import { toast } from "react-toastify";
+import { FiTrash2 } from "react-icons/fi";
+import { MdOutlineRestore } from "react-icons/md";
+import { useFormateTextInMarkDownMutation } from "@/redux/apis/form.apis";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import Button from "@/components/shared/Button";
+import Checkbox from "@/components/shared/Checkbox";
 import HtmlContent from "@/components/shared/HtmlContent";
+import TextField from "@/components/shared/TextField";
+import { FIELD_TYPES } from "@/constants";
+import { CUSTOMIZE_VARIANTS } from "../utils/applicant.constants";
 
-const OWNER_VARIANT = "owner";
+const RANGE_SETTING_LABELS = { minValue: "Min Value", maxValue: "Max Value", defaultValue: "Default Value" };
 
-const MakeFieldDataCustom = ({
+const ApplicantFieldCustomizer = ({
   originalFieldData,
   fieldsData,
   setFieldsData,
   index,
   suggestions,
   isArticleForm = false,
-  variant = "field",
+  variant = CUSTOMIZE_VARIANTS.FIELD,
 }) => {
-  const isOwner = variant === OWNER_VARIANT;
+  const isOwnerVariant = variant === CUSTOMIZE_VARIANTS.OWNER;
   const field = fieldsData[index] || {};
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [formateTextInMarkDown, { isLoading }] = useFormateTextInMarkDownMutation();
@@ -82,7 +83,6 @@ const MakeFieldDataCustom = ({
 
   const updateFieldDataFieldForOptions = useCallback(
     (e, optionIndex) => {
-      if (!isOwner) console.log("e", e.target);
       const { name, value } = e.target;
       setFieldsData((prev) =>
         prev.map((item, idx) =>
@@ -95,7 +95,7 @@ const MakeFieldDataCustom = ({
         ),
       );
     },
-    [setFieldsData, index, isOwner],
+    [setFieldsData, index],
   );
 
   const handleDeleteField = useCallback(() => {
@@ -111,7 +111,6 @@ const MakeFieldDataCustom = ({
     const textForDisplay = field.displayText || "";
     const instructions = field?.displayTextFormattingInstructions || "";
 
-    if (!isOwner) console.log("textForDisplay", textForDisplay, instructions);
     if (!instructions || !textForDisplay) {
       toast.error("Please enter formatting instruction and text to format");
       return;
@@ -122,14 +121,14 @@ const MakeFieldDataCustom = ({
         instructions: instructions,
       }).unwrap();
       if (res.success) {
-        let html = DOMPurify.sanitize(res.data);
+        const html = sanitizeHtml(res.data);
         setFieldsData((prev) => prev.map((item, idx) => (idx !== index ? item : { ...item, ai_formatting: html })));
       }
     } catch (err) {
-      console.error(err);
+      console.error("Format text error:", err);
       toast.error(err?.data?.message || "Failed to format text");
     }
-  }, [field?.displayTextFormattingInstructions, field.displayText, formateTextInMarkDown, index, setFieldsData, isOwner]);
+  }, [field?.displayTextFormattingInstructions, field.displayText, formateTextInMarkDown, index, setFieldsData]);
 
   const getResponseFromAi = useCallback(async () => {
     const aiPrompt = field.aiPrompt?.trim() || "";
@@ -139,12 +138,11 @@ const MakeFieldDataCustom = ({
         text: aiPrompt,
       }).unwrap();
       if (res.success) {
-        let html = DOMPurify.sanitize(res.data);
-        //  update ai_response
+        const html = sanitizeHtml(res.data);
         setFieldsData((prev) => prev.map((item, idx) => (idx !== index ? item : { ...item, aiResponse: html })));
       }
     } catch (err) {
-      console.error(err);
+      console.error("Format text error:", err);
       toast.error(err?.data?.message || "Failed to format text");
     }
   }, [field.aiPrompt, formateTextInMarkDown, index, setFieldsData]);
@@ -181,7 +179,7 @@ const MakeFieldDataCustom = ({
         </div>
         {/* Field Type & Placeholder */}
         <div className="flex items-center justify-between gap-2">
-          {!isArticleForm && !isOwner && (
+          {!isArticleForm && !isOwnerVariant && (
             <div className="flex w-full flex-col items-start gap-2">
               <p className="text-start text-sm lg:text-base">Field Type</p>
               <div className="w-full rounded-lg border border-gray-300 p-1.5">
@@ -211,7 +209,7 @@ const MakeFieldDataCustom = ({
         </div>
 
         {/* for text field add suggestions list */}
-        {!isOwner && field?.type == "text" && (
+        {!isOwnerVariant && field?.type === FIELD_TYPES.TEXT && (
           <div className="flex items-center justify-between gap-2">
             <TextField
               label="Enter suggestions (comma separated)"
@@ -224,10 +222,10 @@ const MakeFieldDataCustom = ({
         {/* Range settings */}
         {rangeFieldType && (
           <div className="flex w-full items-center gap-2">
-            {["minValue", "maxValue", "defaultValue"].map((key) => (
+            {Object.keys(RANGE_SETTING_LABELS).map((key) => (
               <TextField
                 key={key}
-                label={key === "minValue" ? "Min Value" : key === "maxValue" ? "Max Value" : "Default Value"}
+                label={RANGE_SETTING_LABELS[key]}
                 value={field[key] || 0}
                 name={key}
                 onChange={updateFieldDataField}
@@ -291,7 +289,7 @@ const MakeFieldDataCustom = ({
                   name="label"
                   onChange={(e) => updateFieldDataFieldForOptions(e, i)}
                 />
-                {isOwner ? (
+                {isOwnerVariant ? (
                   <TextField label={`Option ${i + 1} Value`} value={opt.value} name="value" />
                 ) : (
                   <TextField
@@ -301,18 +299,19 @@ const MakeFieldDataCustom = ({
                     onChange={(e) => updateFieldDataFieldForOptions(e, i)}
                   />
                 )}
-                {!isOwner && (
+                {!isOwnerVariant && (
                   <Button
                     variant="standard"
                     onClick={() => removeOption(i)}
                     className="mt-8 bg-red-500 hover:bg-red-700"
+                    aria-label={`Remove option ${i + 1}`}
                   >
-                    <TrashIcon className="h-5 w-5 text-white" />
+                    <FiTrash2 size={20} className="text-white" />
                   </Button>
                 )}
               </div>
             ))}
-            {!isOwner && (
+            {!isOwnerVariant && (
               <div className="flex justify-end">
                 <Button variant="standard" onClick={addNewOption} className="mt-4">
                   Add Option
@@ -331,11 +330,11 @@ const MakeFieldDataCustom = ({
               name="displayText"
               onChange={updateFieldDataField}
             />
-            <label htmlFor={isOwner ? "formattingInstructionForAi" : "displayTextFormattingInstructions"}>
+            <label htmlFor={`displayTextFormattingInstructions-${index}`}>
               Enter formatting instruction for AI and click on generate
             </label>
             <textarea
-              id="displayTextFormattingInstructions"
+              id={`displayTextFormattingInstructions-${index}`}
               name="displayTextFormattingInstructions"
               rows={2}
               value={field?.displayTextFormattingInstructions}
@@ -348,12 +347,12 @@ const MakeFieldDataCustom = ({
               </Button>
             </div>
             {field.ai_formatting && (
-              <HtmlContent className={isOwner ? "h-full p-4" : "h-full w-full p-4"} html={field?.ai_formatting} />
+              <HtmlContent className={isOwnerVariant ? "h-full p-4" : "h-full w-full p-4"} html={field?.ai_formatting} />
             )}
           </div>
         )}
       </div>
-      {!isOwner && (
+      {!isOwnerVariant && (
         <>
           <div className="flex w-full justify-end">
             <Button
@@ -380,4 +379,4 @@ const MakeFieldDataCustom = ({
   );
 };
 
-export default React.memo(MakeFieldDataCustom);
+export default memo(ApplicantFieldCustomizer);

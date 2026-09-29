@@ -1,308 +1,135 @@
-import usePermission from "@/hooks/usePermission";
-import DisplayText from "./ApplicantDisplayText";
-import { FIELD_TYPES } from "@/constants";
-import { useEnterToNextField } from "../hooks/useEnterToNextField";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import Button from "@/components/shared/Button";
-import {
-  CheckboxInputType,
-  FileInputType,
-  MultiCheckboxInputType,
-  OtherInputType,
-  RadioInputType,
-  RangeInputType,
-  SelectInputType,
-} from "@/components/global/DynamicField";
-import { EditSectionDisplayTextFromatingModal } from "./ApplicantSectionTextModal";
-import Modal from "@/components/shared/Modal";
-import CustomizationFieldsModal from "./ApplicantCustomizeFieldsModal";
+import usePermission from "@/hooks/usePermission";
 import SignatureBox from "@/components/global/SignatureBox";
-import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
-import { isSignatureComplete, normalizeSignature } from "@/utils/signatureShape";
-import { toast } from "react-toastify";
-
+import Button from "@/components/shared/Button";
+import Modal from "@/components/shared/Modal";
+import useApplicantEnterToNextField from "../hooks/useApplicantEnterToNextField";
+import ApplicantCustomizeFieldsModal from "./ApplicantCustomizeFieldsModal";
+import ApplicantDisplayText from "./ApplicantDisplayText";
+import ApplicantSectionField from "./ApplicantSectionField";
+import ApplicantSectionTextModal from "./ApplicantSectionTextModal";
+import ApplicantStepActions from "./ApplicantStepActions";
+import { buildSignatureUploadHandler } from "../utils/applicant.signature.utils";
+import { isProcessingInfoComplete } from "../utils/applicant.validation.utils";
 import { PERMISSIONS } from "@/utils/permissions";
-function ProcessingInfo({
+import { normalizeSignature } from "@/utils/signatureShape";
+
+// a field's answers plus its "field/subfield" follow-ups
+const buildProcessingForm = (fields, reduxData) => {
+  const initialForm = {};
+  fields.forEach((field) => {
+    initialForm[field.uniqueId] = { name: field.name, value: reduxData?.[field.uniqueId]?.value || "" };
+    field.conditional_fields?.forEach((conditionalField) => {
+      const key = `${field.uniqueId}/${conditionalField?.name}`;
+      initialForm[key] = { name: conditionalField?.name || key, value: reduxData?.[key]?.value ?? "" };
+    });
+  });
+  return initialForm;
+};
+
+const ApplicantProcessingInfo = ({
   sectionKey,
   name,
   handleNext,
   handlePrevious,
-  currentStep,
-  totalSteps,
+  currentStep = 0,
+  totalSteps = 0,
   handleSubmit,
-  formLoading,
-  fields,
+  formLoading = false,
+  fields = [],
   reduxData,
   formRefetch,
   _id,
   saveInProgress,
-  step,
-  isSignature,
-}) {
+  step = {},
+  isSignature = false,
+}) => {
   const { user } = useSelector((state) => state.auth);
   const formContainerRef = useRef(null);
   const submitFromEnterRef = useRef(null);
-  const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
+  const [isSectionTextModalOpen, setIsSectionTextModalOpen] = useState(false);
+  const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [form, setForm] = useState({});
   const [loadingNext, setLoadingNext] = useState(false);
-  const [isAllRequiredFieldsFilled, setIsAllRequiredFieldsFilled] = useState(false);
-  const [customizeModal, setCustomizeModal] = useState(false);
-  const requiredNames = useMemo(
-    () => fields.filter((f) => f.required).map((f) => ({ name: f.name, uniqueId: f.uniqueId })),
-    [fields],
-  );
-  const allNames = useMemo(() => fields.map((f) => ({ name: f.name, uniqueId: f.uniqueId })), [fields]);
 
   const canCustomizeForm = usePermission(PERMISSIONS.CUSTOMIZE_FORM);
   const isOwner = Boolean(user?._id) && user?._id === step?.owner;
   const canCustomize = isOwner && canCustomizeForm;
+  const isComplete = isOwner || isProcessingInfoComplete({ form, fields, isSignature });
+  const isBusy = loadingNext || formLoading;
+  const stepAction = { data: form, name: sectionKey, setLoadingNext };
 
-  const signatureUploadHandler = async (file, setIsSaving, stamp) => {
-    try {
-      if (!file) return toast.error("Please select a file");
-      if (file) {
-        const oldSign = form?.["signature"]?.value;
-        if (oldSign?.publicId) {
-          const result = await deleteImageFromCloudinary(oldSign?.publicId, oldSign?.resourceType);
-          if (!result) return toast.error("File Not Deleted Please Try Again");
-        }
-        const res = await uploadImageOnCloudinary(file);
-        if (!res.publicId || !res.secureUrl || !res.resourceType) {
-          return toast.error("File Not Uploaded Please Try Again");
-        }
-        setForm((prev) => ({ ...prev, signature: { name: "signature", value: { ...res, ...stamp } } }));
-        toast.success("Signature uploaded successfully");
-      }
-    } catch (error) {
-      console.log("error while uploading signature", error);
-    } finally {
-      if (setIsSaving) setIsSaving(false);
-    }
-  };
+  const handleSignatureUpload = buildSignatureUploadHandler({ form, setForm });
 
   useEffect(() => {
-    if (fields && fields.length > 0) {
-      const initialForm = {};
-      fields.forEach((field) => {
-        initialForm[field.uniqueId] = {
-          name: field.name,
-          value: reduxData ? reduxData[field.uniqueId]?.value || "" : "",
-        };
-        if (field?.conditional_fields?.length > 0) {
-          field?.conditional_fields?.forEach((cf) => {
-            const fieldName = `${field.uniqueId}/${cf?.name}`;
-            initialForm[fieldName] = {
-              name: cf?.name || fieldName,
-              value: reduxData?.[fieldName]?.value ?? "",
-            };
-          });
-        }
-      });
-      setForm(initialForm);
-    }
-    if (isSignature) {
-      setForm((prev) => ({
-        ...prev,
-        signature: normalizeSignature(reduxData?.signature),
-      }));
-    }
-  }, [fields, isSignature, name, reduxData]);
-
-  // check required fields
-  useEffect(() => {
-    if (isOwner) {
-      setIsAllRequiredFieldsFilled(true);
-      return;
-    }
-    let allFilled = false;
-    if (requiredNames.length > 0) {
-      allFilled = requiredNames.some(({ uniqueId }) => {
-        const val = form[uniqueId]?.value;
-        if (!val) return false;
-        let allConditionalComplete = true;
-        const conditionalFieldsKeys = Object.keys(form).filter((key) => key?.includes(`${uniqueId}/`));
-        conditionalFieldsKeys.forEach((innerName) => {
-          const innerVal = form[innerName]?.value ?? form[innerName];
-          if (innerVal == null || (typeof innerVal === "string" && innerVal.trim() === "")) {
-            allConditionalComplete = false;
-          }
-        });
-        if (!allConditionalComplete) return false;
-        if (val == null) return false;
-        if (typeof val === "string") return val.trim() !== "";
-        return true;
-      });
-    } else {
-      // if any field is completed then allFilled will be true
-      allFilled = allNames.some(({ uniqueId }) => {
-        const val = form[uniqueId]?.value;
-        if (!val) return false;
-        let allConditionalComplete = true;
-        const conditionalFieldsKeys = Object.keys(form).filter((key) => key?.includes(`${uniqueId}/`));
-        conditionalFieldsKeys.forEach((innerName) => {
-          const innerVal = form[innerName]?.value ?? form[innerName];
-          if (innerVal == null || (typeof innerVal === "string" && innerVal.trim() === "")) {
-            allConditionalComplete = false;
-          }
-        });
-        if (!allConditionalComplete) return false;
-        if (val == null) return false;
-        if (typeof val === "string") return val.trim() !== "";
-        return true;
-      });
-    }
-
-    const isSignatureDone = !isSignature || isSignatureComplete(form?.signature);
-    setIsAllRequiredFieldsFilled(allFilled && isSignatureDone);
-  }, [allNames, form, isOwner, isSignature, requiredNames]);
+    if (fields.length > 0) setForm(buildProcessingForm(fields, reduxData));
+    if (isSignature) setForm((prev) => ({ ...prev, signature: normalizeSignature(reduxData?.signature) }));
+  }, [fields, isSignature, reduxData]);
 
   submitFromEnterRef.current = () => {
-    if (!isAllRequiredFieldsFilled || loadingNext) return;
-    if (currentStep < totalSteps - 1) {
-      handleNext({ data: form, name: sectionKey, setLoadingNext });
-    } else {
-      handleSubmit({ data: form, name: sectionKey, setLoadingNext });
-    }
+    if (!isComplete || isBusy) return;
+    if (currentStep < totalSteps - 1) handleNext(stepAction);
+    else handleSubmit(stepAction);
   };
-
-  useEnterToNextField(formContainerRef, { onLastFieldRef: submitFromEnterRef });
+  useApplicantEnterToNextField(formContainerRef, { onLastFieldRef: submitFromEnterRef });
 
   return (
-    <div ref={formContainerRef} className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
-      <div className="mb-10 flex items-center justify-between">
-        <h3 className="text-textPrimary text-2xl font-semibold" data-ai-display-text>
+    <section ref={formContainerRef} className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
+      <header className="mb-10 flex items-center justify-between">
+        <h2 className="text-textPrimary text-2xl font-semibold" data-ai-display-text>
           {name}
-        </h3>
+        </h2>
         <div className="flex gap-2">
-          <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label={"Save my progress"} />
+          <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label="Save my progress" />
           {canCustomize && (
             <>
-              <Button variant="secondary" onClick={() => setCustomizeModal(true)} label={"Customize"} />
-              <Button onClick={() => setUpdateSectionFromatingModal(true)} label={"Update Display Text"} />
+              <Button variant="secondary" onClick={() => setIsCustomizeModalOpen(true)} label="Customize" />
+              <Button onClick={() => setIsSectionTextModalOpen(true)} label="Update Display Text" />
             </>
           )}
         </div>
-      </div>
-      {updateSectionFromatingModal && (
-        <Modal isOpen={updateSectionFromatingModal} onClose={() => setUpdateSectionFromatingModal(false)}>
-          <EditSectionDisplayTextFromatingModal step={step} setModal={setUpdateSectionFromatingModal} />
+      </header>
+      {isSectionTextModalOpen && (
+        <Modal onClose={() => setIsSectionTextModalOpen(false)}>
+          <ApplicantSectionTextModal section={step} onClose={() => setIsSectionTextModalOpen(false)} />
         </Modal>
       )}
       {(step?.ai_formatting || step?.displayText) && (
-        <div className="mb-4 flex w-full items-end justify-between gap-3">
-          <DisplayText data-ai-display-text html={step?.ai_formatting || step?.displayText} />
+        <ApplicantDisplayText className="mb-4" data-ai-display-text html={step?.ai_formatting || step?.displayText} />
+      )}
+      {fields.map((field) => (
+        <ApplicantSectionField key={field.uniqueId} field={field} form={form} setForm={setForm} />
+      ))}
+      {isSignature && (
+        <div className="mt-4">
+          <SignatureBox step={step} onSave={handleSignatureUpload} signature={form?.signature} />
         </div>
       )}
-      {/* <h5 className="text-textPrimary text-base">Provide average transactions</h5> */}
-      {fields?.map((field, index) => {
-        if (field.type === FIELD_TYPES.SELECT) {
-          return (
-            <div key={index} className="mt-4">
-              <SelectInputType field={field} form={form} setForm={setForm} className={""} />
-            </div>
-          );
-        }
-        if (field.type === FIELD_TYPES.MULTI_CHECKBOX) {
-          return (
-            <div key={index} className="mt-4">
-              <MultiCheckboxInputType field={field} form={form} setForm={setForm} className={""} />
-            </div>
-          );
-        }
-        if (field.type === FIELD_TYPES.RADIO) {
-          return (
-            <div key={index} className="mt-4">
-              <RadioInputType field={field} form={form} setForm={setForm} className={""} />
-            </div>
-          );
-        }
-        if (field.type === FIELD_TYPES.FILE) {
-          return (
-            <div key={index} className="mt-4">
-              <FileInputType field={field} form={form} setForm={setForm} className={""} />
-            </div>
-          );
-        }
-        if (field.type === FIELD_TYPES.RANGE) {
-          return (
-            <div key={index} className="mt-4">
-              <RangeInputType field={field} form={form} setForm={setForm} className={""} />
-            </div>
-          );
-        }
-        if (field.type === FIELD_TYPES.CHECKBOX) {
-          return (
-            <div key={index} className="mt-4">
-              <CheckboxInputType
-                field={field}
-                placeholder={field.placeholder}
-                form={form}
-                setForm={setForm}
-                className={""}
-              />
-            </div>
-          );
-        }
-        return (
-          <div key={index} className="mt-4">
-            <OtherInputType
-              field={field}
-              placeholder={field.placeholder}
-              form={form}
-              setForm={setForm}
-              className={""}
-            />
-          </div>
-        );
-      })}
-      <div className="mt-4">
-        {isSignature && (
-          <SignatureBox
-            step={step}
-            onSave={signatureUploadHandler}
-            signature={form?.signature}
-          />
-        )}
-      </div>
 
-      {/* next Previous buttons  */}
-      <div className="flex justify-end gap-4 p-4">
-        <div className="mt-8 flex justify-end gap-5">
-          {currentStep > 0 && (
-            <Button variant="secondary" label={"Previous"} onClick={handlePrevious} data-testid="form-back-btn" />
-          )}
-          {currentStep < totalSteps - 1 ? (
-            <Button
-              className={`${(!isAllRequiredFieldsFilled || loadingNext) && "pointer-events-none cursor-not-allowed opacity-20"}`}
-              disabled={!isAllRequiredFieldsFilled || loadingNext}
-              label={isAllRequiredFieldsFilled ? "Next" : "Some Required Fields are Missing"}
-              data-testid="form-next-btn"
-              onClick={() => handleNext({ data: form, name: sectionKey, setLoadingNext })}
-            />
-          ) : (
-            <Button
-              disabled={formLoading || loadingNext}
-              className={`${formLoading || loadingNext ? "pinter-events-none cursor-not-allowed opacity-20" : ""}`}
-              label={isAllRequiredFieldsFilled ? "submit" : "Some Required Fields are Missing"}
-              onClick={() => handleSubmit({ data: form, name: sectionKey, setLoadingNext })}
-            />
-          )}
-        </div>
-      </div>
-      {customizeModal && (
-        <Modal onClose={() => setCustomizeModal(false)}>
-          <CustomizationFieldsModal
+      <ApplicantStepActions
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+        isComplete={isComplete}
+        isBusy={isBusy}
+        incompleteLabel="Some Required Fields are Missing"
+        onPrevious={handlePrevious}
+        onNext={() => handleNext(stepAction)}
+        onSubmit={() => handleSubmit(stepAction)}
+      />
+      {isCustomizeModalOpen && (
+        <Modal onClose={() => setIsCustomizeModalOpen(false)}>
+          <ApplicantCustomizeFieldsModal
             sectionId={_id}
             fields={fields}
             section={step}
             formRefetch={formRefetch}
-            onClose={() => setCustomizeModal(false)}
+            onClose={() => setIsCustomizeModalOpen(false)}
           />
         </Modal>
       )}
-    </div>
+    </section>
   );
-}
+};
 
-export default ProcessingInfo;
+export default ApplicantProcessingInfo;

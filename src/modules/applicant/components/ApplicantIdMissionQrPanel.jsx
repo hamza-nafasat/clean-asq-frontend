@@ -1,6 +1,6 @@
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
-import { LoadingWithTimer } from "./ApplicantLoadingWithTimer";
+import ApplicantLoadingWithTimer from "./ApplicantLoadingWithTimer";
 
 const ApplicantIdMissionQrPanel = ({
   qrCode = "",
@@ -11,9 +11,9 @@ const ApplicantIdMissionQrPanel = ({
 }) => (
   <div className="flex items-center justify-center w-full">
     {isProcessing ? (
-      <LoadingWithTimer setIsProcessing={setIsProcessing} />
+      <ApplicantLoadingWithTimer setIsProcessing={setIsProcessing} />
     ) : (
-      <div className="flex flex-col  gap-4">
+      <div className="flex flex-col gap-4">
         <div className="mt-4 flex w-full flex-col items-center gap-4">
           {qrCode ? (
             <img className="h-57.5 w-57.5" src={`data:image/jpeg;base64,${qrCode}`} alt="qr code " />

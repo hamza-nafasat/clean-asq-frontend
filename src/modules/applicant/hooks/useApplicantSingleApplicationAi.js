@@ -1,18 +1,15 @@
-import { useApplicantScreenContext } from "./useApplicantScreenContext";
-import getEnv from "@/utils/env";
-import { findAiFieldEl } from "@/utils/discoverFormFields";
+import useApplicantScreenContext from "./useApplicantScreenContext";
+import { FIELD_TYPES } from "@/constants";
+import { AI_FIELD_IDS, SINGLE_APPLICATION_SCREENS, SINGLE_APPLICATION_STAGES } from "../utils/applicant.constants";
 import { buildPageFaqs } from "@/utils/aiHelpContext";
-import {
-  AI_FIELD_IDS,
-  SINGLE_APPLICATION_SCREENS,
-  SINGLE_APPLICATION_STAGES,
-} from "@/modules/applicant/utils/applicant.constants";
+import { findAiFieldEl } from "@/utils/discoverFormFields";
+import getEnv from "@/utils/env";
 
 const buildEmailStageFields = (email, otp) => [
   {
     id: AI_FIELD_IDS.EMAIL,
     label: "Email Address",
-    type: "email",
+    type: FIELD_TYPES.EMAIL,
     value: email,
     required: true,
     filled: !!email,
@@ -21,7 +18,7 @@ const buildEmailStageFields = (email, otp) => [
   {
     id: AI_FIELD_IDS.OTP,
     label: "OTP Code",
-    type: "text",
+    type: FIELD_TYPES.TEXT,
     value: otp,
     required: true,
     filled: !!otp,

@@ -1,15 +1,16 @@
 import { useEffect, useRef } from "react";
+import { FIELD_TYPES, KEYBOARD_KEYS } from "@/constants";
+import { ENTER_SKIPPED_INPUT_TYPES } from "../utils/applicant.constants";
 
-const NEVER_IN_SEQUENCE = ["radio", "hidden", "file", "button", "submit"];
-
-export const isEnterSequenceType = (type, includeCheckboxes = false) => {
-  const t = type || "text";
-  if (NEVER_IN_SEQUENCE.includes(t)) return false;
-  if (t === "checkbox") return Boolean(includeCheckboxes);
+// enter skips radios, files and buttons
+const isEnterSequenceType = (type, includeCheckboxes = false) => {
+  const t = type || FIELD_TYPES.TEXT;
+  if (ENTER_SKIPPED_INPUT_TYPES.includes(t)) return false;
+  if (t === FIELD_TYPES.CHECKBOX) return Boolean(includeCheckboxes);
   return true;
 };
 
-export const useEnterToNextField = (containerRef, options = {}) => {
+const useApplicantEnterToNextField = (containerRef, options = {}) => {
   const { excludeIds = [], onLastFieldRef, onSpecialEnterRef, includeCheckboxes = false } = options;
   const excludeIdsRef = useRef(excludeIds);
   excludeIdsRef.current = excludeIds;
@@ -19,7 +20,7 @@ export const useEnterToNextField = (containerRef, options = {}) => {
     if (!container) return;
 
     const handler = (e) => {
-      if (e.key !== "Enter" || e.defaultPrevented) return;
+      if (e.key !== KEYBOARD_KEYS.ENTER || e.defaultPrevented) return;
       const active = document.activeElement;
       if (!active || !container.contains(active)) return;
       if (active.tagName?.toLowerCase() !== "input") return;
@@ -27,7 +28,7 @@ export const useEnterToNextField = (containerRef, options = {}) => {
       if (active.disabled || active.readOnly) return;
       if (excludeIdsRef.current.includes(active.id)) return;
 
-      // Let Google Places keep Enter while its suggestion dropdown is open.
+      // keep enter for the open places dropdown
       const pac = document.querySelector(".pac-container");
       if (pac && getComputedStyle(pac).display !== "none" && active.closest("[data-places-input]")) {
         return;
@@ -60,3 +61,5 @@ export const useEnterToNextField = (containerRef, options = {}) => {
     return () => container.removeEventListener("keydown", handler);
   }, [containerRef, includeCheckboxes, onLastFieldRef, onSpecialEnterRef]);
 };
+
+export default useApplicantEnterToNextField;

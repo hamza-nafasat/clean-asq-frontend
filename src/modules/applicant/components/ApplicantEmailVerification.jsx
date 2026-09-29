@@ -1,15 +1,17 @@
 import Button from "@/components/shared/Button";
-import TextField from "@/components/shared/TextField";
-import { AI_FIELD_IDS, KEYBOARD_KEYS } from "../utils/applicant.constants";
-import { formatOtpDisplayHtml } from "../utils/applicant.utils6";
 import HtmlContent from "@/components/shared/HtmlContent";
+import TextField from "@/components/shared/TextField";
+import { KEYBOARD_KEYS } from "@/constants";
+import { AI_FIELD_IDS } from "../utils/applicant.constants";
+import { formatOtpDisplayHtml } from "../utils/applicant.page.utils";
 
 const OTP_ERROR_ID = "verification-otp-error";
 
 const ApplicantEmailVerification = ({
   formDocument = {},
-  canCustomize = false,
+  canEditFormText = false,
   canSkip = false,
+  emailError = "",
   otpError = "",
   isBlocked = false,
   email = "",
@@ -25,7 +27,7 @@ const ApplicantEmailVerification = ({
   onSkip,
 }) => (
   <div className="flex flex-col items-center gap-3 w-full">
-    {canCustomize && (
+    {canEditFormText && (
       <div className="flex w-full items-center justify-end">
         <Button label="Edit OTP Display Text" onClick={onEditDisplayText} />
       </div>
@@ -48,6 +50,7 @@ const ApplicantEmailVerification = ({
         type="email"
         placeholder="Enter your email"
         value={email}
+        error={emailError}
         onChange={(e) => onEmailChange?.(e.target.value)}
         className="max-w-125"
         autoFocus={!otpSent}
@@ -58,7 +61,7 @@ const ApplicantEmailVerification = ({
       <Button
         onClick={onSendOtp}
         disabled={otpLoading || isBlocked}
-        className={`min-w-32.5 py-2 ${(otpLoading || isBlocked) && "cursor-not-allowed opacity-25"}`}
+        className={`min-w-32.5 py-2 ${otpLoading || isBlocked ? "cursor-not-allowed opacity-25" : ""}`}
         label="Send Code"
         data-testid="verification-send-otp-btn"
       />
@@ -84,7 +87,7 @@ const ApplicantEmailVerification = ({
         <Button
           onClick={onVerifyOtp}
           disabled={emailLoading || isBlocked}
-          className={`min-w-32.5 py-2 ${(emailLoading || isBlocked) && "cursor-not-allowed opacity-25"}`}
+          className={`min-w-32.5 py-2 ${emailLoading || isBlocked ? "cursor-not-allowed opacity-25" : ""}`}
           label="Submit Code"
           data-testid="verification-submit-otp-btn"
         />

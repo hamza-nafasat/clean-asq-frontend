@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { socket } from "@/lib/socket";
 import { useGetIdMissionSessionMutation } from "@/redux/apis/applicant.apis";
-import { ID_MISSION_SOCKET_EVENTS } from "@/modules/applicant/utils/applicant.constants";
-import {
-  buildInitialSectionIdMissionData,
-  buildSectionIdMissionData,
-} from "@/modules/applicant/utils/applicant.utils6";
+import { socket } from "@/lib/socket";
+import { ID_MISSION_SOCKET_EVENTS } from "../utils/applicant.constants";
+import { buildInitialSectionIdMissionData, buildSectionIdMissionData } from "../utils/applicant.idMissionSection.utils";
 
 // IDMission QR code and webhook data for a section that embeds the ID check
 const useApplicantSectionIdMission = (sectionKey) => {
@@ -47,13 +44,13 @@ const useApplicantSectionIdMission = (sectionKey) => {
     };
     const onFailed = (data) => {
       if (data?.sectionKey !== sectionKey) return;
-      applyResult(data, { nameField: "name", issuerField: "idIssuer", isRawStreet: true });
+      applyResult(data, { nameField: "name", issuerField: "idIssuer" });
     };
     const onOther = (data) => {
       if (data?.sectionKey !== sectionKey) return;
       setIsIdMissionProcessing(false);
       if (data?.Metadata?.sectionKey !== sectionKey) return;
-      applyResult(data, { isRawStreet: true });
+      applyResult(data);
     };
 
     socket.on(ID_MISSION_SOCKET_EVENTS.PROCESSING_STARTED, onProcessingStarted);

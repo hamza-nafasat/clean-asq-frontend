@@ -1,4 +1,4 @@
-import DisplayText from "./ApplicantDisplayText";
+import ApplicantDisplayText from "./ApplicantDisplayText";
 
 const ApplicantRequiredDocsNotice = ({ isLoading = false, aiResponse = "", onHide }) => (
   <div className="mb-6 rounded-lg bg-blue-50 p-4">
@@ -20,7 +20,7 @@ const ApplicantRequiredDocsNotice = ({ isLoading = false, aiResponse = "", onHid
         <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
       </div>
     ) : aiResponse ? (
-      <DisplayText className="prose mt-2 max-w-none text-sm text-gray-700" html={aiResponse} />
+      <ApplicantDisplayText className="prose mt-2 max-w-none text-sm text-gray-700" html={aiResponse} />
     ) : (
       <p className="mt-2 text-sm text-gray-600">Unable to load document requirements at this time.</p>
     )}

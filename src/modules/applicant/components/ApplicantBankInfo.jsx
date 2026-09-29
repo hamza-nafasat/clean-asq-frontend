@@ -1,34 +1,30 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import { useGetBankLookupMutation } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
-import { CheckCircle, XCircle } from "lucide-react";
-import { useEnterToNextField } from "../hooks/useEnterToNextField";
+import { FiCheckCircle, FiXCircle } from "react-icons/fi";
+import { useGetBankLookupMutation } from "@/redux/apis/form.apis";
 import usePermission from "@/hooks/usePermission";
 import { OtherInputType } from "@/components/global/DynamicField";
 import SignatureBox from "@/components/global/SignatureBox";
+import BankLookupModal from "@/components/modals/BankLookupModal";
 import Button from "@/components/shared/Button";
 import Modal from "@/components/shared/Modal";
-import BankLookupModal from "@/components/modals/BankLookupModal";
-import CustomizationFieldsModal from "./ApplicantCustomizeFieldsModal";
-import DisplayText from "./ApplicantDisplayText";
+import useApplicantEnterToNextField from "../hooks/useApplicantEnterToNextField";
+import ApplicantCustomizeFieldsModal from "./ApplicantCustomizeFieldsModal";
+import ApplicantDisplayText from "./ApplicantDisplayText";
 import ApplicantOwnerSuggestionsModal from "./ApplicantOwnerSuggestionsModal";
 import ApplicantSectionField from "./ApplicantSectionField";
-import { EditSectionDisplayTextFromatingModal } from "./ApplicantSectionTextModal";
-import {
-  BANK_FIELD_KINDS,
-  BANK_LOOKUP_ERROR_MESSAGE,
-  DEFAULT_OWNER_SUGGESTION_KEYS,
-  FIELD_NAMES,
-  KEYBOARD_KEYS,
-} from "../utils/applicant.constants";
-import { collectLookupSuggestions } from "../utils/applicant.utils7";
-import { isRequiredValueFilled } from "../utils/applicant.utils8";
-import { uploadSignatureReplacing } from "../utils/applicant.utils12";
+import ApplicantSectionTextModal from "./ApplicantSectionTextModal";
+import ApplicantStepActions from "./ApplicantStepActions";
+import { FIELD_NAMES, KEYBOARD_KEYS } from "@/constants";
+import { BANK_FIELD_KINDS, BANK_LOOKUP_ERROR_MESSAGE } from "../utils/applicant.constants";
+import { buildSignatureUploadHandler } from "../utils/applicant.signature.utils";
+import { isRequiredValueFilled } from "../utils/applicant.validation.utils";
+import { collectLookupOwners } from "@/utils/lookupOwners";
 import { PERMISSIONS } from "@/utils/permissions";
 import { isSignatureComplete, normalizeSignature } from "@/utils/signatureShape";
 
-const BankInfo = ({
+const ApplicantBankInfo = ({
   sectionKey,
   name,
   handleNext,
@@ -46,15 +42,14 @@ const BankInfo = ({
   isSignature = false,
 }) => {
   const { user } = useSelector((state) => state.auth);
-  const { formData } = useSelector((state) => state?.form);
+  const { formData } = useSelector((state) => state.form);
   const formContainerRef = useRef(null);
   const submitFromEnterRef = useRef(null);
   const onSpecialEnterRef = useRef(null);
-  const lookupTriggerRef = useRef(null);
   const bankModalRef = useRef(null);
-  const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
-  const [ownerSuggesstionsModal, setOwnerSuggesstionsModal] = useState(false);
-  const [customizeModal, setCustomizeModal] = useState(false);
+  const [isSectionTextModalOpen, setIsSectionTextModalOpen] = useState(false);
+  const [isOwnerSuggestionsModalOpen, setIsOwnerSuggestionsModalOpen] = useState(false);
+  const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [form, setForm] = useState({});
   const [loadingNext, setLoadingNext] = useState(false);
   const [bankModal, setBankModal] = useState(null);
@@ -69,14 +64,14 @@ const BankInfo = ({
     [fields],
   );
   const ownersFromLookup = useMemo(
-    () =>
-      formData
-        ? collectLookupSuggestions(formData?.company_lookup_data, step?.ownerSuggesstions || DEFAULT_OWNER_SUGGESTION_KEYS)
-        : [],
+    () => collectLookupOwners(formData, step?.ownerSuggesstions),
     [formData, step?.ownerSuggesstions],
   );
+  const routingFieldId = fields.find((field) => field.name === FIELD_NAMES.BANK_ROUTING_NUMBER)?.uniqueId;
   const accountNumberId = fields.find((field) => field.name === FIELD_NAMES.BANK_ACCOUNT_NUMBER)?.uniqueId;
-  const confirmAccountNumberId = fields.find((field) => field.name === FIELD_NAMES.CONFIRM_BANK_ACCOUNT_NUMBER)?.uniqueId;
+  const confirmAccountNumberId = fields.find(
+    (field) => field.name === FIELD_NAMES.CONFIRM_BANK_ACCOUNT_NUMBER,
+  )?.uniqueId;
   const accMatch =
     form[accountNumberId]?.value &&
     form[confirmAccountNumberId]?.value &&
@@ -85,31 +80,18 @@ const BankInfo = ({
     isOwner ||
     (requiredNames.every(({ uniqueId }) => isRequiredValueFilled(form[uniqueId]?.value)) &&
       (!isSignature || isSignatureComplete(form?.signature)));
-  const isNextBlocked = !isAllRequiredFieldsFilled || loadingNext || (!accMatch && !isOwner);
+  const isComplete = isAllRequiredFieldsFilled && (Boolean(accMatch) || isOwner);
+  const isBusy = loadingNext || formLoading;
+  const stepAction = { data: form, name: sectionKey, setLoadingNext };
 
-  const handleSignatureUpload = async (file, setIsSaving, stamp) => {
-    try {
-      if (!file) return toast.error("Please select a file");
-      const { res, errorMessage } = await uploadSignatureReplacing(file, normalizeSignature(form?.signature).value, stamp);
-      if (errorMessage) return toast.error(errorMessage);
-      setForm((prev) => ({ ...prev, signature: { name: FIELD_NAMES.SIGNATURE, value: res } }));
-      toast.success("Signature uploaded successfully");
-    } catch (error) {
-      console.error("Upload signature error:", error);
-    } finally {
-      setIsSaving?.(false);
-    }
-  };
+  const handleSignatureUpload = buildSignatureUploadHandler({ form, setForm });
 
   const handleRoutingLookup = async (routing) => {
     try {
       const res = await getBankLookup(routing).unwrap();
-      if (res.success && Array.isArray(res?.data?.bankDetailsList) && res?.data?.bankDetailsList?.length > 0) {
-        setBankModal(res?.data?.bankDetailsList?.[0]);
-      } else {
-        setBankModal(null);
-        toast.error(BANK_LOOKUP_ERROR_MESSAGE);
-      }
+      const bankDetails = res?.data?.bankDetailsList?.[0];
+      setBankModal(res.success && bankDetails ? bankDetails : null);
+      if (!res.success || !bankDetails) toast.error(BANK_LOOKUP_ERROR_MESSAGE);
     } catch (error) {
       console.error("Bank lookup error:", error);
       setBankModal(null);
@@ -120,31 +102,32 @@ const BankInfo = ({
   // put the looked up bank name into the bank name field
   const confirmBankLookup = useCallback(() => {
     const modal = bankModalRef.current;
-    if (!modal?.bankName) {
-      setBankModal(null);
-      return;
+    if (modal?.bankName) {
+      setForm((prev) => {
+        const bankNameId = Object.keys(prev).find((key) => prev[key]?.name === FIELD_NAMES.BANK_NAME);
+        if (!bankNameId) return prev;
+        return { ...prev, [bankNameId]: { name: FIELD_NAMES.BANK_NAME, value: modal.bankName } };
+      });
     }
-    setForm((prev) => {
-      const bankNameId = Object.keys(prev).find((key) => prev[key]?.name === FIELD_NAMES.BANK_NAME);
-      if (!bankNameId) return prev;
-      return { ...prev, [bankNameId]: { name: FIELD_NAMES.BANK_NAME, value: modal.bankName } };
-    });
     setBankModal(null);
   }, []);
 
+  const runRoutingLookup = () => {
+    const routing = form[routingFieldId]?.value;
+    if (routing) handleRoutingLookup(routing);
+  };
+
   useEffect(() => {
-    if (fields && fields.length > 0) {
+    if (fields.length > 0) {
       const initialForm = {};
       fields.forEach((field) => {
-        initialForm[field?.uniqueId] = reduxData
-          ? reduxData[field?.uniqueId] || { name: field?.name, value: "" }
-          : { name: field?.name, value: "" };
+        initialForm[field.uniqueId] = reduxData?.[field.uniqueId] || { name: field.name, value: "" };
       });
       setForm(initialForm);
     }
     // flat or nested draft signatures are stored nested
     if (isSignature) setForm((prev) => ({ ...prev, signature: normalizeSignature(reduxData?.signature) }));
-  }, [fields, isSignature, name, reduxData]);
+  }, [fields, isSignature, reduxData]);
 
   // enter answers the open bank modal
   useEffect(() => {
@@ -153,24 +136,16 @@ const BankInfo = ({
       if (e.key !== KEYBOARD_KEYS.ENTER || e.repeat) return;
       e.preventDefault();
       e.stopPropagation();
-      if (bankModal.bankName) confirmBankLookup();
-      else setBankModal(null);
+      confirmBankLookup();
     };
     window.addEventListener("keydown", handleKeyDown, true);
     return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [bankModal, confirmBankLookup]);
 
-  lookupTriggerRef.current = () => {
-    const routingFieldDef = fields.find((f) => f.name === FIELD_NAMES.BANK_ROUTING_NUMBER);
-    if (routingFieldDef && form[routingFieldDef.uniqueId]?.value) {
-      handleRoutingLookup(form[routingFieldDef.uniqueId].value);
-    }
-  };
-
   submitFromEnterRef.current = () => {
-    if (isNextBlocked) return;
-    if (currentStep < totalSteps - 1) handleNext({ data: form, name: sectionKey, setLoadingNext });
-    else handleSubmit({ data: form, name: sectionKey, setLoadingNext });
+    if (!isComplete || isBusy) return;
+    if (currentStep < totalSteps - 1) handleNext(stepAction);
+    else handleSubmit(stepAction);
   };
 
   // enter on routing runs the lookup; with the modal open it means yes
@@ -182,41 +157,39 @@ const BankInfo = ({
     }
     if (active.closest("[data-bank-field]")?.dataset?.bankField === BANK_FIELD_KINDS.ROUTING) {
       e.preventDefault();
-      lookupTriggerRef.current?.();
+      runRoutingLookup();
       return true;
     }
     return false;
   };
 
-  useEnterToNextField(formContainerRef, { onLastFieldRef: submitFromEnterRef, onSpecialEnterRef });
+  useApplicantEnterToNextField(formContainerRef, { onLastFieldRef: submitFromEnterRef, onSpecialEnterRef });
 
-  const renderField = (field, index) => {
+  const renderField = (field) => {
     if (field.name === FIELD_NAMES.BANK_ROUTING_NUMBER) {
       return (
-        <div key={index} data-bank-field={BANK_FIELD_KINDS.ROUTING}>
-          <div className="mt-4 flex items-center gap-2">
-            <OtherInputType field={field} placeholder={field.placeholder} form={form} setForm={setForm} className="flex-1" />
-            <Button
-              label={isLoading ? "Looking Up..." : "Look Up"}
-              className="mt-8"
-              onClick={() => {
-                if (form[field?.uniqueId]) handleRoutingLookup(form?.[field?.uniqueId]?.value);
-              }}
-            />
-          </div>
+        <div key={field.uniqueId} data-bank-field={BANK_FIELD_KINDS.ROUTING} className="mt-4 flex items-center gap-2">
+          <OtherInputType
+            field={field}
+            placeholder={field.placeholder}
+            form={form}
+            setForm={setForm}
+            className="flex-1"
+          />
+          <Button label={isLoading ? "Looking Up..." : "Look Up"} className="mt-8" onClick={runRoutingLookup} />
         </div>
       );
     }
     if (field.name === FIELD_NAMES.BANK_ACCOUNT_NUMBER) {
       return (
-        <div key={index} className="mt-4" data-bank-field={BANK_FIELD_KINDS.ACCOUNT}>
+        <div key={field.uniqueId} className="mt-4" data-bank-field={BANK_FIELD_KINDS.ACCOUNT}>
           <OtherInputType field={field} placeholder={field.placeholder} form={form} setForm={setForm} className="" />
         </div>
       );
     }
     if (field.name === FIELD_NAMES.CONFIRM_BANK_ACCOUNT_NUMBER) {
       return (
-        <div key={index} className="relative mt-4">
+        <div key={field.uniqueId} className="relative mt-4">
           <OtherInputType
             field={field}
             placeholder={field.placeholder}
@@ -226,15 +199,12 @@ const BankInfo = ({
             isConfirmField
           />
           <div className="mt-2 flex items-center gap-2">
-            {form[field?.uniqueId]?.value && (
-              <span className="">
-                {accMatch ? (
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-red-500" />
-                )}
-              </span>
-            )}
+            {form[field.uniqueId]?.value &&
+              (accMatch ? (
+                <FiCheckCircle size={20} className="shrink-0 text-green-500" aria-label="Account numbers match" />
+              ) : (
+                <FiXCircle size={20} className="shrink-0 text-red-500" aria-label="Account numbers do not match" />
+              ))}
             <p className="text-xs text-gray-500">Please type your account number manually (no copy/paste).</p>
           </div>
         </div>
@@ -242,7 +212,7 @@ const BankInfo = ({
     }
     if (field.name === FIELD_NAMES.BANK_ACCOUNT_HOLDER_NAME) {
       return (
-        <div key={index} className="relative mt-4">
+        <div key={field.uniqueId} className="relative mt-4">
           <OtherInputType
             field={field}
             suggestions={ownersFromLookup}
@@ -254,87 +224,75 @@ const BankInfo = ({
         </div>
       );
     }
-    return <ApplicantSectionField key={index} field={field} form={form} setForm={setForm} />;
+    return <ApplicantSectionField key={field.uniqueId} field={field} form={form} setForm={setForm} />;
   };
 
   return (
     <>
-      {ownerSuggesstionsModal && (
-        <Modal title="Owner's Suggestions" onClose={() => setOwnerSuggesstionsModal(false)}>
+      {isOwnerSuggestionsModalOpen && (
+        <Modal title="Owner's Suggestions" onClose={() => setIsOwnerSuggestionsModalOpen(false)}>
           <ApplicantOwnerSuggestionsModal
-            selectedSuggesstions={step?.ownerSuggesstions}
+            selectedSuggestions={step?.ownerSuggesstions}
             sectionId={step?._id}
-            onClose={() => setOwnerSuggesstionsModal(false)}
+            onClose={() => setIsOwnerSuggestionsModalOpen(false)}
           />
         </Modal>
       )}
-      <div ref={formContainerRef} className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
-        <div className="mb-10 flex items-center justify-between">
-          <h3 className="text-textPrimary text-2xl font-semibold" data-ai-display-text>
+      <section ref={formContainerRef} className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
+        <header className="mb-10 flex items-center justify-between">
+          <h2 className="text-textPrimary text-2xl font-semibold" data-ai-display-text>
             {name}
-          </h3>
+          </h2>
           <div className="flex gap-2">
             <Button onClick={() => saveInProgress({ data: form, name: sectionKey })} label="Save my progress" />
             {canCustomize && (
               <>
-                <Button variant="secondary" onClick={() => setCustomizeModal(true)} label="Customize" />
-                <Button onClick={() => setOwnerSuggesstionsModal(true)} label="Owner's Suggestions" />
-                <Button onClick={() => setUpdateSectionFromatingModal(true)} label="Update Display Text" />
+                <Button variant="secondary" onClick={() => setIsCustomizeModalOpen(true)} label="Customize" />
+                <Button onClick={() => setIsOwnerSuggestionsModalOpen(true)} label="Owner's Suggestions" />
+                <Button onClick={() => setIsSectionTextModalOpen(true)} label="Update Display Text" />
               </>
             )}
           </div>
-        </div>
-        {updateSectionFromatingModal && (
-          <Modal onClose={() => setUpdateSectionFromatingModal(false)}>
-            <EditSectionDisplayTextFromatingModal step={step} setModal={setUpdateSectionFromatingModal} />
+        </header>
+        {isSectionTextModalOpen && (
+          <Modal onClose={() => setIsSectionTextModalOpen(false)}>
+            <ApplicantSectionTextModal section={step} onClose={() => setIsSectionTextModalOpen(false)} />
           </Modal>
         )}
         {(step?.ai_formatting || step?.displayText) && (
-          <div className="mb-4 flex w-full items-end justify-between gap-3">
-            <DisplayText data-ai-display-text html={step?.ai_formatting || step?.displayText} />
+          <ApplicantDisplayText
+            className="mb-4 w-full"
+            data-ai-display-text
+            html={step?.ai_formatting || step?.displayText}
+          />
+        )}
+
+        {fields.map(renderField)}
+
+        {isSignature && (
+          <div className="mt-4">
+            <SignatureBox step={step} onSave={handleSignatureUpload} signature={form?.signature} />
           </div>
         )}
 
-        {fields?.length > 0 && fields.map(renderField)}
-
-        <div className="mt-4">
-          {isSignature && (
-            <SignatureBox step={step} onSave={handleSignatureUpload} signature={form?.signature} />
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="flex justify-end gap-4 p-4">
-          <div className="mt-8 flex justify-end gap-5">
-            {currentStep > 0 && (
-              <Button variant="secondary" label="Previous" onClick={handlePrevious} data-testid="form-back-btn" />
-            )}
-            {currentStep < totalSteps - 1 ? (
-              <Button
-                onClick={() => handleNext({ data: form, name: sectionKey, setLoadingNext })}
-                className={`${isNextBlocked && "pointer-events-none cursor-not-allowed opacity-20"}`}
-                disabled={isNextBlocked}
-                label={!isAllRequiredFieldsFilled || (!accMatch && !isOwner) ? "Some Required Fields are Missing" : "Next"}
-                data-testid="form-next-btn"
-              />
-            ) : (
-              <Button
-                disabled={formLoading || !loadingNext}
-                className={`${(formLoading || !loadingNext) && "pinter-events-none cursor-not-allowed opacity-20"}`}
-                label="Submit"
-                onClick={() => handleSubmit({ data: form, name: sectionKey, setLoadingNext })}
-              />
-            )}
-          </div>
-        </div>
-        {customizeModal && (
-          <Modal onClose={() => setCustomizeModal(false)}>
-            <CustomizationFieldsModal
+        <ApplicantStepActions
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          isComplete={isComplete}
+          isBusy={isBusy}
+          incompleteLabel="Some Required Fields are Missing"
+          onPrevious={handlePrevious}
+          onNext={() => handleNext(stepAction)}
+          onSubmit={() => handleSubmit(stepAction)}
+        />
+        {isCustomizeModalOpen && (
+          <Modal onClose={() => setIsCustomizeModalOpen(false)}>
+            <ApplicantCustomizeFieldsModal
               sectionId={_id}
               fields={fields}
               section={step}
               formRefetch={formRefetch}
-              onClose={() => setCustomizeModal(false)}
+              onClose={() => setIsCustomizeModalOpen(false)}
             />
           </Modal>
         )}
@@ -345,9 +303,9 @@ const BankInfo = ({
           onClose={() => setBankModal(null)}
           onConfirm={confirmBankLookup}
         />
-      </div>
+      </section>
     </>
   );
 };
 
-export default BankInfo;
+export default ApplicantBankInfo;

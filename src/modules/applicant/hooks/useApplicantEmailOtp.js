@@ -7,17 +7,19 @@ import { useSendOtpMutation, useVerifyEmailMutation } from "@/redux/apis/applica
 import { userExist, userNotExist } from "@/redux/slices/auth.slice";
 import { updateEmailVerified } from "@/redux/slices/form.slice";
 import { HTTP_STATUSES } from "@/constants";
-import { AI_FIELD_IDS } from "@/modules/applicant/utils/applicant.constants";
-import { getOtpBlockedUntil } from "@/modules/applicant/utils/applicant.otp.utils";
-import { buildVerificationPath } from "@/modules/applicant/utils/applicant.utils6";
+import { buildVerificationPath } from "@/utils/applicationPaths";
+import { AI_FIELD_IDS } from "../utils/applicant.constants";
+import { getOtpBlockedUntil } from "../utils/applicant.otp.utils";
+import { validateEmail } from "../utils/applicant.validation.utils";
 
 // email + one-time code verification for the applicant
-const useApplicantEmailOtp = ({ formId, draftId, brandingName, navigatingAwayRef }) => {
+const useApplicantEmailOtp = ({ formId, draftId, brandingName, onLeave }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [emailError, setEmailError] = useState("");
   const [otpError, setOtpError] = useState("");
   const [blockedUntil, setBlockedUntil] = useState(0);
   const [loadingForValidatingOtp, setLoadingForValidatingOtp] = useState(false);
@@ -44,7 +46,9 @@ const useApplicantEmailOtp = ({ formId, draftId, brandingName, navigatingAwayRef
 
   const handleSendOtp = useCallback(async () => {
     try {
-      if (!email) return toast.error("Please enter your email");
+      const nextEmailError = validateEmail(email);
+      setEmailError(nextEmailError);
+      if (nextEmailError) return;
       const res = await sendOtp({ email, formId }).unwrap();
       if (res.success) {
         setOtpError("");
@@ -67,8 +71,8 @@ const useApplicantEmailOtp = ({ formId, draftId, brandingName, navigatingAwayRef
         await dispatch(updateEmailVerified(true));
         await refreshUserProfile();
         // company verification comes next, it returns here for the QR code
-        navigatingAwayRef.current = true;
-        navigate(buildVerificationPath(formId, brandingName, draftId));
+        onLeave?.();
+        navigate(buildVerificationPath({ formId, brandingName, draftId }));
       }
     } catch (error) {
       console.error("Verify email error:", error);
@@ -83,7 +87,7 @@ const useApplicantEmailOtp = ({ formId, draftId, brandingName, navigatingAwayRef
     email,
     formId,
     navigate,
-    navigatingAwayRef,
+    onLeave,
     otp,
     refreshUserProfile,
     showOtpError,
@@ -105,9 +109,15 @@ const useApplicantEmailOtp = ({ formId, draftId, brandingName, navigatingAwayRef
     if (otpSent) setTimeout(() => document.getElementById(AI_FIELD_IDS.OTP)?.focus(), 50);
   }, [otpSent]);
 
+  const changeEmail = (value) => {
+    setEmail(value);
+    setEmailError("");
+  };
+
   return {
     email,
-    setEmail,
+    setEmail: changeEmail,
+    emailError,
     otp,
     setOtp,
     otpSent,

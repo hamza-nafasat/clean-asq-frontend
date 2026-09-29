@@ -3,24 +3,26 @@ import { Autocomplete } from "@react-google-maps/api";
 import { RadioInputType } from "@/components/global/DynamicField";
 import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";
+import HtmlContent from "@/components/shared/HtmlContent";
 import TextField from "@/components/shared/TextField";
+import useApplicantEnterToNextField from "../hooks/useApplicantEnterToNextField";
 import { ROLE_FILLING_FIELD } from "@/constants";
 import { ADDRESS_AUTOCOMPLETE_OPTIONS, ID_MISSION_DETAIL_FIELDS } from "../utils/applicant.constants";
-import { getIdMissionSignDisplayHtml } from "../utils/applicant.utils5";
-import { stripHtml } from "../utils/applicant.utils6";
-import HtmlContent from "@/components/shared/HtmlContent";
+import { getIdMissionSignDisplayHtml } from "../utils/applicant.idMission.utils";
+import { stripHtml } from "../utils/applicant.page.utils";
 
 const ApplicantIdMissionDetailsForm = ({
   formDocument = {},
   section = {},
   canCustomize = false,
+  canEditFormText = false,
   canSkip = false,
   data = {},
   setData,
   formRef,
   isAllRequiredFieldsFilled = false,
   isSubmitting = false,
-  onKeyDown,
+  submitFromEnterRef,
   onPlaceLoad,
   onPlaceChanged,
   onCustomizeText,
@@ -35,6 +37,7 @@ const ApplicantIdMissionDetailsForm = ({
     stripHtml(formDocument?.idMissionSignDisplayFormatedText) || stripHtml(formDocument?.idMissionSignDisplayText)
   ).slice(0, 500);
   const signatureUrl = data?.signature?.value?.secureUrl || "";
+  useApplicantEnterToNextField(formRef, { onLastFieldRef: submitFromEnterRef });
 
   return (
     <div className="flex w-full flex-col p-2">
@@ -50,10 +53,10 @@ const ApplicantIdMissionDetailsForm = ({
             </h3>
           </div>
         )}
-        {canCustomize && <Button className="self-end" label="Customize Display Text" onClick={onCustomizeText} />}
+        {canEditFormText && <Button className="self-end" label="Customize Display Text" onClick={onCustomizeText} />}
       </div>
 
-      <form ref={formRef} onKeyDown={onKeyDown} className="flex flex-wrap gap-4">
+      <form ref={formRef} className="flex flex-wrap gap-4">
         {ID_MISSION_DETAIL_FIELDS.map(({ hasEmptyFallback, isAddressLookup, ...field }) => {
           const value = data?.[field.name]?.value;
           const input = (

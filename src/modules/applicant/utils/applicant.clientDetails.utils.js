@@ -6,7 +6,7 @@ import {
   sha256hex,
   tryAudioFingerprint,
   tryGetLocalIPs,
-} from "./applicant.utils10";
+} from "./applicant.fingerprint.utils";
 import {
   checkStorage,
   getGeo,
@@ -14,7 +14,7 @@ import {
   getNavigatorInfo,
   getScreenInfo,
   tryGetBattery,
-} from "./applicant.utils9";
+} from "./applicant.browserInfo.utils";
 
 // device, browser and network details saved with a draft
 export const collectClientDetails = async (opts = {}) => {

@@ -9,7 +9,7 @@ const ApplicantAiPromptModal = ({ aiCustomizablePrompt = "", sectionId, companyI
 
   const handleSave = async () => {
     try {
-      if (!prompt) return toast.error("Please enter display text and AI formatting");
+      if (!prompt) return toast.error("Enter a prompt");
       const res = await updateFormSection({ _id: sectionId, data: { aiCustomizablePrompt: prompt } }).unwrap();
       if (res.success) {
         toast.success("Section Updated Successfully");

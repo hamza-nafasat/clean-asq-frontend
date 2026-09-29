@@ -1,12 +1,24 @@
-import { deleteImageFromCloudinary, uploadImageOnCloudinary } from "@/utils/cloudinary";
-import { FIELD_NAMES, ID_MISSION_OPTIONAL_KEYS, ROLE_FILLING_VALUES } from "./applicant.constants";
-import { formatData, makeCompleteName } from "./applicant.utils2";
+import { ID_MISSION_ROLES, SIGNATURE_KEY } from "@/constants";
+import { ID_MISSION_OPTIONAL_KEYS } from "./applicant.constants";
 
-// normalize a date that may be DD/MM/YYYY or already ISO
-export const safeFormatData = (date) => {
+// first + middle + last, else the full name
+export const makeCompleteName = (firstName, middleName, lastName, fullName, name) => {
+  if (firstName && middleName && lastName) return `${firstName} ${middleName} ${lastName}`;
+  if (firstName && lastName) return `${firstName} ${lastName}`;
+  return fullName || name || "";
+};
+
+// DD/MM/YYYY to YYYY-MM-DD
+export const toIsoDate = (date) => {
+  const [day, month, year] = date.split("/");
+  return `${year}-${month}-${day}`;
+};
+
+// a date that may be DD/MM/YYYY or already ISO
+const toSafeIsoDate = (date) => {
   if (!date || typeof date !== "string") return "";
   try {
-    if (date.includes("/")) return formatData(date);
+    if (date.includes("/")) return toIsoDate(date);
     if (/^\d{4}-\d{2}-\d{2}/.test(date)) return date.slice(0, 10);
     return date;
   } catch {
@@ -15,7 +27,7 @@ export const safeFormatData = (date) => {
 };
 
 // map IDMission webhook Form_Data into the details-form shape
-export const mapWebhookToIdMissionData = (f, { emailFallback = "", createdAt } = {}) => ({
+export const mapWebhookToIdMissionData = (f, { emailFallback = "", createdAt, verificationStatus } = {}) => ({
   name: {
     name: "name",
     value: makeCompleteName(f?.First_Name, f?.Middle_Name, f?.Last_Name, f?.FullName, f?.Name),
@@ -29,7 +41,7 @@ export const mapWebhookToIdMissionData = (f, { emailFallback = "", createdAt } =
   idType: { name: "idType", value: f?.DocumentType || "" },
   idExpiryDate: {
     name: "idExpiryDate",
-    value: f?.Expiration_Date ? safeFormatData(f?.Expiration_Date) : "",
+    value: f?.Expiration_Date ? toSafeIsoDate(f?.Expiration_Date) : "",
   },
   streetAddress: {
     name: "streetAddress",
@@ -39,17 +51,18 @@ export const mapWebhookToIdMissionData = (f, { emailFallback = "", createdAt } =
   zipCode: { name: "zipCode", value: f?.ParsedAddressPostalCode || "" },
   dateOfBirth: {
     name: "dateOfBirth",
-    value: f?.Date_of_Birth ? safeFormatData(f?.Date_of_Birth) : "",
+    value: f?.Date_of_Birth ? toSafeIsoDate(f?.Date_of_Birth) : "",
   },
   country: { name: "country", value: f?.Issuing_Country || "" },
   issueDate: {
     name: "issueDate",
-    value: f?.Issue_Date ? safeFormatData(f?.Issue_Date) : "",
+    value: f?.Issue_Date ? toSafeIsoDate(f?.Issue_Date) : "",
   },
   companyTitle: { name: "companyTitle", value: "" },
   state: { name: "state", value: f?.ParsedAddressProvince || "" },
   city: { name: "city", value: f?.ParsedAddressMunicipality || "" },
   data: { name: "data", value: f || "null" },
+  ...(verificationStatus && { verificationStatus }),
   createdAt: createdAt || new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 });
@@ -74,9 +87,9 @@ export const buildInitialIdMissionData = (email) => ({
   country: { name: "country", value: "" },
   roleFillingForCompany: {
     name: "roleFillingForCompany",
-    value: ROLE_FILLING_VALUES.PRIMARY_OPERATOR_AND_CONTROLLER,
+    value: ID_MISSION_ROLES.PRIMARY_OPERATOR_AND_CONTROLLER,
   },
-  signature: { name: "signature", value: { secureUrl: "", publicId: "", resourceType: "" } },
+  signature: { name: SIGNATURE_KEY, value: { secureUrl: "", publicId: "", resourceType: "" } },
   data: { name: "data", value: "null" },
 });
 
@@ -98,11 +111,12 @@ export const buildIdMissionDataFromDraft = (saved, email, { includeAddress2 = fa
   companyTitle: { name: "companyTitle", value: saved?.companyTitle?.value || "" },
   state: { name: "state", value: saved?.state?.value || "" },
   city: { name: "city", value: saved?.city?.value || "" },
-  signature: { name: "signature", value: saved?.signature?.value || "" },
+  signature: { name: SIGNATURE_KEY, value: saved?.signature?.value || "" },
   roleFillingForCompany: {
     name: "roleFillingForCompany",
-    value: saved?.roleFillingForCompany?.value || ROLE_FILLING_VALUES.PRIMARY_OPERATOR_AND_CONTROLLER,
+    value: saved?.roleFillingForCompany?.value || ID_MISSION_ROLES.PRIMARY_OPERATOR_AND_CONTROLLER,
   },
+  ...(saved?.verificationStatus && { verificationStatus: saved.verificationStatus }),
   createdAt: saved?.createdAt || new Date().toISOString(),
   updatedAt: saved?.updatedAt || new Date().toISOString(),
 });
@@ -110,7 +124,8 @@ export const buildIdMissionDataFromDraft = (saved, email, { includeAddress2 = fa
 export const areIdMissionFieldsFilled = (data) =>
   Object.keys(data).every((name) => {
     if (name === ID_MISSION_OPTIONAL_KEYS.ADDRESS_2) return true;
-    if (name === FIELD_NAMES.SIGNATURE) return data[name]?.value?.secureUrl;
+    if (name === ID_MISSION_OPTIONAL_KEYS.VERIFICATION_STATUS) return true;
+    if (name === SIGNATURE_KEY) return data[name]?.value?.secureUrl;
     const val = data[name];
     if (val == null) return false;
     if (typeof val === "string") return val.trim() !== "";
@@ -118,16 +133,6 @@ export const areIdMissionFieldsFilled = (data) =>
       return Object.values(val).every((v) => v?.toString().trim() !== "");
     return true;
   });
-
-// upload a new ID Mission signature after removing the old one
-export const uploadIdMissionSignature = async (file, oldSignature, stamp = {}) => {
-  if (oldSignature?.publicId || oldSignature?.secureUrl) {
-    await deleteImageFromCloudinary(oldSignature?.publicId, oldSignature?.resourceType);
-  }
-  const { secureUrl, publicId, resourceType } = await uploadImageOnCloudinary(file);
-  if (!secureUrl || !publicId) return null;
-  return { secureUrl, publicId, resourceType, ...stamp };
-};
 
 // signature display text, form level first, then the section
 export const getIdMissionSignDisplayHtml = (formDocument, section) =>

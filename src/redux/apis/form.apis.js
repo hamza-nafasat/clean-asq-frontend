@@ -69,13 +69,7 @@ const formApis = createApi({
     /////
     submitForm: builder.mutation({
       query: (data) => ({ url: "/submit", method: "POST", body: data }),
-      invalidatesTags: [
-        API_TAGS.SINGLE_FORM,
-        API_TAGS.FORM,
-        API_TAGS.SUBMIT_FORM,
-        API_TAGS.SUBMIT_FORM_VERSIONS,
-        API_TAGS.MY_APPLICATIONS,
-      ],
+      invalidatesTags: [API_TAGS.SUBMIT_FORM, API_TAGS.SUBMIT_FORM_VERSIONS, API_TAGS.MY_APPLICATIONS],
     }),
     /////
     updateSubmittedForm: builder.mutation({
@@ -129,7 +123,7 @@ const formApis = createApi({
     /////
     saveFormInDraft: builder.mutation({
       query: (data) => ({ url: "/save-in-draft", method: "POST", body: data }),
-      invalidatesTags: [API_TAGS.SINGLE_FORM, API_TAGS.FORM, API_TAGS.MY_APPLICATIONS],
+      invalidatesTags: [API_TAGS.MY_APPLICATIONS],
     }),
     /////
     generatePdfForm: builder.mutation({
@@ -156,7 +150,6 @@ const formApis = createApi({
         url: `/get-saved/${formId}${draftId ? `?draftId=${draftId}` : ""}`,
         method: "GET",
       }),
-      invalidatesTags: [API_TAGS.SUBMIT_FORM],
     }),
     /////
     getFormHistory: builder.query({
@@ -184,7 +177,7 @@ const formApis = createApi({
         url: `/remove-saved/${formId}${draftId ? `?draftId=${draftId}` : ""}`,
         method: "DELETE",
       }),
-      invalidatesTags: [API_TAGS.SINGLE_FORM, API_TAGS.FORM, API_TAGS.MY_APPLICATIONS],
+      invalidatesTags: [API_TAGS.MY_APPLICATIONS],
     }),
     /////
     getMyApplications: builder.query({
@@ -250,21 +243,6 @@ const formApis = createApi({
         url: "/formate-display-text",
         method: "POST",
         body: data,
-      }),
-    }),
-    /////
-    getBeneficialOwnersData: builder.query({
-      query: ({ email, submitId, userId }) => ({
-        url: `/beneficial-owners?email=${email}&submitId=${submitId}&userId=${userId}`,
-        method: "GET",
-      }),
-    }),
-    /////
-    updateBeneficialOwners: builder.mutation({
-      query: ({ submitId, userId, form }) => ({
-        url: `/beneficial-owners?submitId=${submitId}&userId=${userId}`,
-        method: "PUT",
-        body: form,
       }),
     }),
     /////
@@ -543,8 +521,6 @@ export const {
   useUpdateDeleteCreateFormFieldsMutation,
   useAddFormFieldMutation,
   useFormateTextInMarkDownMutation,
-  useGetBeneficialOwnersDataQuery,
-  useUpdateBeneficialOwnersMutation,
   useCreateSearchStrategyMutation,
   useCreateSearchStrategyDefaultMutation,
   useGetAllSearchStrategiesQuery,

@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import useAiChat from "@/hooks/useAiChat";
+import { useScreenContext } from "@/hooks/useScreenContext";
 import { AI_ASSISTANT_MODES, STORAGE_KEYS, WIDGET_CLOSED_FLAG } from "@/constants";
 
 // register an applicant page with the AI widget and switch it to applicant mode
-export const useApplicantScreenContext = (context, { clearOnMount = false, autoOpen = false } = {}) => {
-  const { registerScreenContext, unregisterScreenContext, setAssistantMode, resetSession, setIsOpen } = useAiChat();
+const useApplicantScreenContext = (context, { clearOnMount = false, autoOpen = false } = {}) => {
+  const { setAssistantMode, resetSession, setIsOpen } = useAiChat();
 
   useEffect(() => {
     setAssistantMode(AI_ASSISTANT_MODES.APPLICANT);
@@ -17,9 +18,7 @@ export const useApplicantScreenContext = (context, { clearOnMount = false, autoO
     return () => setAssistantMode(AI_ASSISTANT_MODES.SERVICE_PROVIDER);
   }, [setAssistantMode, resetSession, setIsOpen, clearOnMount, autoOpen]);
 
-  useEffect(() => {
-    registerScreenContext(context);
-    return () => unregisterScreenContext();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [context.deps]);
+  useScreenContext(context);
 };
+
+export default useApplicantScreenContext;

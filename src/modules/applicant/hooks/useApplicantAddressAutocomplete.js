@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { parseAddressComponents, parseAddressResults } from "@/modules/applicant/utils/applicant.utils7";
+import { parseAddressComponents, parseAddressResults } from "../utils/applicant.address.utils";
 
 const NEXT_FIELD_ID = "companyTitle";
 

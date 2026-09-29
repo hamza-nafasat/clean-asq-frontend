@@ -1,13 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { naicsToMcc } from "@/../public/NAICStoMCC.js";
-import { NAICS_FIELD } from "@/constants";
-import {
-  KEYBOARD_KEYS,
-  NAICS_COLUMNS,
-  NAICS_INPUT_ID,
-  NAICS_SUGGESTIONS_FLIP_SPACE,
-} from "../utils/applicant.constants";
-import { filterNaicsSuggestions, formatNaicsSelection } from "../utils/applicant.utils8";
+import { KEYBOARD_KEYS, NAICS_FIELD } from "@/constants";
+import { buildNaicsSelection, filterNaicsSuggestions, NAICS_KEYS } from "@/utils/naicsLookup";
+import { NAICS_INPUT_ID, NAICS_SUGGESTIONS_FLIP_SPACE } from "../utils/applicant.constants";
 
 const ApplicantNaicsInput = ({ value = "", isLoading = false, setNaicsToMccDetails }) => {
   const naicsInputRef = useRef(null);
@@ -28,7 +22,7 @@ const ApplicantNaicsInput = ({ value = "", isLoading = false, setNaicsToMccDetai
     const inputValue = e.target.value;
     setNaicsToMccDetails?.((prev) => ({ ...prev, NAICS: inputValue, NAICS_Description: "", MCC: "", MCC_Description: "" }));
     if (inputValue.length > 0) {
-      const filtered = filterNaicsSuggestions(inputValue, naicsToMcc);
+      const filtered = filterNaicsSuggestions(inputValue);
       setNaicsSuggestions(filtered);
       setShowSuggestions(filtered.length > 0);
     } else {
@@ -38,7 +32,7 @@ const ApplicantNaicsInput = ({ value = "", isLoading = false, setNaicsToMccDetai
   };
 
   const handleSelect = (item) => {
-    setNaicsToMccDetails?.(formatNaicsSelection(item));
+    setNaicsToMccDetails?.(buildNaicsSelection(item));
     setShowSuggestions(false);
     setNaicsHighlight(-1);
   };
@@ -101,8 +95,8 @@ const ApplicantNaicsInput = ({ value = "", isLoading = false, setNaicsToMccDetai
               onMouseEnter={() => setNaicsHighlight(index)}
               onClick={() => handleSelect(item)}
             >
-              <div className="font-medium">{item[NAICS_COLUMNS.NAICS_CODE]}</div>
-              <div className="text-sm text-gray-600">{item[NAICS_COLUMNS.NAICS_DESCRIPTION]}</div>
+              <div className="font-medium">{item[NAICS_KEYS.CODE]}</div>
+              <div className="text-sm text-gray-600">{item[NAICS_KEYS.DESCRIPTION]}</div>
             </div>
           ))}
         </div>

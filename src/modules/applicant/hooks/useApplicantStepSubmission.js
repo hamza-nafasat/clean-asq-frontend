@@ -1,16 +1,25 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import { useSaveFormInDraftMutation, useSubmitFormMutation } from "@/redux/apis/form.apis";
+import { resetApplicationProgress, setCurrentDraftId, updateFormState } from "@/redux/slices/form.slice";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import { uploadFilesAndReplace } from "@/lib/utils";
-import { useSaveFormInDraftMutation, useSubmitFormMutation } from "@/redux/apis/form.apis";
-import { resetApplicationProgress, setCurrentDraftId, updateFormState } from "@/redux/slices/form.slice";
-import { buildSubmissionSuccessPath } from "@/modules/applicant/utils/applicant.utils6";
-import { buildUpdatedBy, resolveCreatedAt } from "@/modules/applicant/utils/applicant.utils8";
+import { STEPPER_PARAMS } from "@/constants";
+import { buildSubmissionSuccessPath } from "@/utils/applicationPaths";
+import { buildUpdatedBy, resolveCreatedAt } from "../utils/applicant.draft.utils";
 
 // next, previous, submit and save-progress handlers for the application stepper
-const useApplicantStepSubmission = ({ formDocumentId, draftId, formData, user, currentStep, stepsCount, setCurrentStep }) => {
+const useApplicantStepSubmission = ({
+  formDocumentId,
+  draftId,
+  formData,
+  user,
+  currentStep,
+  stepsCount,
+  setCurrentStep,
+}) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [formSubmit] = useSubmitFormMutation();
@@ -22,8 +31,8 @@ const useApplicantStepSubmission = ({ formDocumentId, draftId, formData, user, c
       if (!id) return;
       dispatch(setCurrentDraftId(id));
       const params = new URLSearchParams(window.location.search);
-      if (params.get("draftId") === String(id)) return;
-      params.set("draftId", id);
+      if (params.get(STEPPER_PARAMS.DRAFT_ID) === String(id)) return;
+      params.set(STEPPER_PARAMS.DRAFT_ID, id);
       const search = params.toString();
       window.history.replaceState(null, "", `${window.location.pathname}${search ? `?${search}` : ""}`);
     },
@@ -46,6 +55,7 @@ const useApplicantStepSubmission = ({ formDocumentId, draftId, formData, user, c
     if (currentStep > 0) setCurrentStep(currentStep - 1);
   }, [currentStep, setCurrentStep]);
 
+  // move on only once the step is saved
   const handleNext = useCallback(
     async ({ data, name, setLoadingNext }) => {
       try {
@@ -57,16 +67,14 @@ const useApplicantStepSubmission = ({ formDocumentId, draftId, formData, user, c
             draftId,
             formData: { ...formData, [name]: updatedData },
           }).unwrap();
-          if (res.success) {
-            rememberDraftId(res?.data?.draftId);
-            unwrapResult(await dispatch(updateFormState({ data: updatedData, name })));
-          }
+          rememberDraftId(res?.data?.draftId);
+          unwrapResult(await dispatch(updateFormState({ data: updatedData, name })));
         }
+        if (currentStep < stepsCount - 1) setCurrentStep(currentStep + 1);
       } catch (error) {
         console.error("Save step error:", error);
         toast.error(error?.data?.message || "Error while handling next");
       } finally {
-        if (currentStep < stepsCount - 1) setCurrentStep(currentStep + 1);
         setLoadingNext(false);
       }
     },
@@ -98,7 +106,7 @@ const useApplicantStepSubmission = ({ formDocumentId, draftId, formData, user, c
           if (res.success) {
             toast.success(res.message);
             dispatch(resetApplicationProgress());
-            navigate(buildSubmissionSuccessPath(formDocumentId));
+            navigate(buildSubmissionSuccessPath({ formId: formDocumentId, submissionId: res.data?._id }));
           }
         }
       } catch (error) {

@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { X } from "lucide-react";
+import { FiX } from "react-icons/fi";
 import { useGetAllSearchStrategiesQuery, useUpdateFormSectionMutation } from "@/redux/apis/form.apis";
+import usePermission from "@/hooks/usePermission";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
-import usePermission from "@/hooks/usePermission";
 import { PERMISSIONS } from "@/utils/permissions";
 
-const ApplicantOwnerSuggestionsModal = ({ selectedSuggesstions = [], sectionId, onClose }) => {
-  const [selectedOwners, setSelectedOwners] = useState(Array.isArray(selectedSuggesstions) ? selectedSuggesstions : []);
-  const [suggesstions, setSuggesstions] = useState([]);
+const ApplicantOwnerSuggestionsModal = ({ selectedSuggestions = [], sectionId, onClose }) => {
+  const [selectedOwners, setSelectedOwners] = useState(Array.isArray(selectedSuggestions) ? selectedSuggestions : []);
+  const [suggestions, setSuggestions] = useState([]);
   const canReadLookup = usePermission(PERMISSIONS.READ_LOOKUP);
   const { data, isLoading } = useGetAllSearchStrategiesQuery(undefined, { skip: !canReadLookup });
   const [updateFormSection, { isLoading: isUpdating }] = useUpdateFormSectionMutation();
@@ -34,20 +34,20 @@ const ApplicantOwnerSuggestionsModal = ({ selectedSuggesstions = [], sectionId, 
     const value = e.target.value;
     if (value && !selectedOwners.includes(value)) {
       setSelectedOwners((prev) => [...prev, value]);
-      setSuggesstions((prev) => prev.filter((o) => o !== value));
+      setSuggestions((prev) => prev.filter((o) => o !== value));
     }
   };
 
   const handleRemoveOwner = (owner) => {
     setSelectedOwners((prev) => prev.filter((o) => o !== owner));
-    setSuggesstions((prev) => [...prev, owner]);
+    setSuggestions((prev) => [...prev, owner]);
   };
 
   useEffect(() => {
-    if (data?.data && !suggesstions?.length) {
-      setSuggesstions(data?.data?.map((item) => item?.searchObjectKey) || []);
+    if (data?.data && !suggestions?.length) {
+      setSuggestions(data?.data?.map((item) => item?.searchObjectKey) || []);
     }
-  }, [data, suggesstions?.length]);
+  }, [data, suggestions?.length]);
 
   if (isLoading) return <CustomLoading />;
 
@@ -63,7 +63,7 @@ const ApplicantOwnerSuggestionsModal = ({ selectedSuggesstions = [], sectionId, 
           className="mt-2 w-full rounded-md border border-gray-300 p-2 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Choose Owner Keys to Suggest</option>
-          {suggesstions.map((owner, index) => (
+          {suggestions.map((owner, index) => (
             <option key={`owner-${index}`} value={owner}>
               {owner}
             </option>
@@ -81,7 +81,7 @@ const ApplicantOwnerSuggestionsModal = ({ selectedSuggesstions = [], sectionId, 
               onClick={() => handleRemoveOwner(owner)}
               className="cursor-pointer text-blue-600 hover:text-blue-800"
             >
-              <X className="h-4 w-4 text-red-500" />
+              <FiX size={16} className="text-red-500" />
             </button>
           </div>
         ))}

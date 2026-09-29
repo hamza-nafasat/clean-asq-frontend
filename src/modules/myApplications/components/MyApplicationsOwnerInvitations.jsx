@@ -10,7 +10,7 @@ const MyApplicationsOwnerInvitations = ({ invitations = [] }) => {
   return (
     <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
       {invitations.map((invite) => (
-        <article key={`${invite.formId}-${invite.sectionKey}`} className={CARD_CLASS}>
+        <article key={invite.token} className={CARD_CLASS}>
           <h3 title={invite.name} className="truncate text-base leading-tight font-bold text-gray-800 sm:text-lg">
             {invite.name}
           </h3>

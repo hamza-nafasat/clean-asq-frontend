@@ -1,15 +1,16 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetSavedFormMutation, useGetSingleFormQueryQuery } from "@/redux/apis/form.apis";
 import { addSavedFormData, updateFormHeaderAndFooter } from "@/redux/slices/form.slice";
-import { useApplicantScreenContext } from "./hooks/useApplicantScreenContext";
-import useApplicantStepSubmission from "./hooks/useApplicantStepSubmission";
 import useApplyBranding from "@/hooks/useApplyBranding";
-import { usePageDownload } from "./hooks/usePageDownload";
+import ErrorBoundary from "@/components/global/ErrorBoundary";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
 import Stepper from "@/components/stepper/Stepper";
+import useApplicantPageDownload from "./hooks/useApplicantPageDownload";
+import useApplicantScreenContext from "./hooks/useApplicantScreenContext";
+import useApplicantStepSubmission from "./hooks/useApplicantStepSubmission";
 import ApplicantAgreementBlock from "./components/ApplicantAgreementBlock";
 import ApplicantBankInfo from "./components/ApplicantBankInfo";
 import ApplicantCompanyInformation from "./components/ApplicantCompanyInformation";
@@ -17,16 +18,18 @@ import ApplicantCompanyOwners from "./components/ApplicantCompanyOwners";
 import ApplicantCustomSection from "./components/ApplicantCustomSection";
 import ApplicantDocuments from "./components/ApplicantDocuments";
 import ApplicantProcessingInfo from "./components/ApplicantProcessingInfo";
+import { SECTION_TITLES, STEPPER_PARAMS } from "@/constants";
 import {
   DEFAULT_HEADER_FOOTER,
+  DEFAULT_HEADER_TEXT_SIZE,
   RENDERABLE_SECTION_TITLES,
   SECTION_KEYS,
-  SECTION_TITLES,
 } from "./utils/applicant.constants";
-import { buildApplicationFormPath, collectStepFieldRows } from "./utils/applicant.utils6";
-import getEnv from "@/utils/env";
-import { findAiFieldEl } from "@/utils/discoverFormFields";
+import { collectStepFieldRows } from "./utils/applicant.page.utils";
 import { buildPageFaqs } from "@/utils/aiHelpContext";
+import { buildApplicationFormPath } from "@/utils/applicationPaths";
+import { findAiFieldEl } from "@/utils/discoverFormFields";
+import getEnv from "@/utils/env";
 
 const SECTION_COMPONENTS = {
   [SECTION_TITLES.COMPANY_INFORMATION]: ApplicantCompanyInformation,
@@ -40,47 +43,59 @@ const SECTION_COMPONENTS = {
 
 const ApplicationForm = () => {
   const stepContainerRef = useRef(null);
-  const queryParams = new URLSearchParams(window.location.search);
-  const step = queryParams.get("step");
-  const urlDraftId = queryParams.get("draftId");
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { formId } = useParams();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { formData, currentDraftId } = useSelector((state) => state?.form);
-  const draftId = urlDraftId || currentDraftId;
-
-  const [currentStep, setCurrentStep] = useState(step ? parseInt(step) : 0);
-  const [sectionNames, setSectionNames] = useState([]);
-  const [stepsComps, setStepsComps] = useState([]);
-  const [renderedSections, setRenderedSections] = useState([]);
-  const [isSavedApiRun, setIsSavedApiRun] = useState(false);
+  const { formData, currentDraftId } = useSelector((state) => state.form);
+  const draftId = searchParams.get(STEPPER_PARAMS.DRAFT_ID) || currentDraftId;
+  const [currentStep, setCurrentStep] = useState(() => Number(searchParams.get(STEPPER_PARAMS.STEP)) || 0);
+  const [isDraftLoaded, setIsDraftLoaded] = useState(false);
 
   const { data: form, isLoading: formLoading, refetch: formRefetch } = useGetSingleFormQueryQuery({ _id: formId });
   const [getSavedFormData] = useGetSavedFormMutation();
   const { isApplied } = useApplyBranding({ formId });
+  const formDocument = form?.data;
+  const formDocumentId = formDocument?._id;
+  const hasSections = formDocument?.sections?.length > 0;
+
+  // only sections with a step component count towards the stepper
+  const visibleSections = useMemo(() => {
+    if (!hasSections || !isDraftLoaded) return [];
+    const isOwner = Boolean(user?._id) && user._id === formDocument.owner;
+    return formDocument.sections
+      .filter((section) => isOwner || !section.isHidden)
+      .filter((section) => RENDERABLE_SECTION_TITLES.includes(section.title));
+  }, [formDocument, hasSections, isDraftLoaded, user?._id]);
+  const sectionNames = visibleSections.map((section) => section.name);
+  const currentSection = visibleSections[currentStep];
+  const companyInformationStep = formDocument?.sections?.find(
+    (section) => section.key === SECTION_KEYS.COMPANY_INFORMATION,
+  );
+
   const { handleNext, handlePrevious, handleSubmit, saveInProgress } = useApplicantStepSubmission({
-    formDocumentId: form?.data?._id,
+    formDocumentId,
     draftId,
     formData,
     user,
     currentStep,
-    stepsCount: stepsComps.length,
+    stepsCount: visibleSections.length,
     setCurrentStep,
   });
 
   useApplicantScreenContext({
     screenId: `application-form-stepper-${currentStep}`,
     screenName: sectionNames[currentStep] || "Application Form",
-    description: `Multi-step application form. Applicant is on step ${currentStep + 1} of ${stepsComps.length}.`,
+    description: `Multi-step application form. Applicant is on step ${currentStep + 1} of ${visibleSections.length}.`,
     aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
     formRef: stepContainerRef,
     currentState: {
       currentStep,
-      totalSteps: stepsComps.length,
-      canGoNext: currentStep < stepsComps.length - 1,
+      totalSteps: visibleSections.length,
+      canGoNext: currentStep < visibleSections.length - 1,
       canGoPrev: currentStep > 0,
-      pageFaqs: buildPageFaqs(renderedSections[currentStep]),
+      pageFaqs: buildPageFaqs(currentSection),
     },
     actions: {
       scrollToField: ({ fieldId }) => {
@@ -88,92 +103,45 @@ const ApplicationForm = () => {
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
       },
     },
-    deps: [currentStep, stepsComps.length, sectionNames[currentStep], form?.data?._id],
+    deps: [currentStep, visibleSections.length, sectionNames[currentStep], formDocumentId],
   });
 
   // resume only when a draft id was passed
   useEffect(() => {
-    if (form?.data?.sections && form?.data?.sections?.length > 0) {
-      if (!draftId) {
-        setIsSavedApiRun(true);
-      } else {
-        getSavedFormData({ formId: form?.data?._id, draftId })
-          .then((res) => {
-            const data = res?.data?.data?.savedData;
-            if (data) dispatch(addSavedFormData(data));
-          })
-          .finally(() => setIsSavedApiRun(true));
-      }
+    if (!hasSections) return;
+    if (!draftId) {
+      setIsDraftLoaded(true);
+      return;
     }
-    if (form?.data?.footerText || form?.data?.headerText || form?.data?.name) {
+    getSavedFormData({ formId: formDocumentId, draftId })
+      .then((res) => {
+        const data = res?.data?.data?.savedData;
+        if (data) dispatch(addSavedFormData(data));
+      })
+      .finally(() => setIsDraftLoaded(true));
+  }, [dispatch, draftId, formDocumentId, getSavedFormData, hasSections]);
+
+  // header and footer text for the layout
+  useEffect(() => {
+    if (formDocument?.footerText || formDocument?.headerText || formDocument?.name) {
       dispatch(
         updateFormHeaderAndFooter({
-          headerText: form?.data?.headerText || form?.data?.name || "",
-          footerText: form?.data?.footerText || DEFAULT_HEADER_FOOTER.footerText,
-          headerTextSize: form?.data?.headerTextSize || 24,
+          headerText: formDocument?.headerText || formDocument?.name || "",
+          footerText: formDocument?.footerText || DEFAULT_HEADER_FOOTER.footerText,
+          headerTextSize: formDocument?.headerTextSize || DEFAULT_HEADER_TEXT_SIZE,
         }),
       );
     }
     return () => {
       dispatch(updateFormHeaderAndFooter({ ...DEFAULT_HEADER_FOOTER }));
     };
-  }, [dispatch, form, draftId, getSavedFormData]);
+  }, [dispatch, formDocument]);
 
-  // only sections with a step component count towards the stepper
-  useEffect(() => {
-    if (!(form?.data?.sections && form?.data?.sections?.length > 0 && isSavedApiRun)) return;
-    const companyInformationStep = form?.data?.sections.find((item) => item.key === SECTION_KEYS.COMPANY_INFORMATION);
-    const isOwner = user?._id && user?._id === form?.data?.owner;
-    const visibleSections = (
-      isOwner ? form?.data?.sections : form?.data?.sections?.filter((item) => !item?.isHidden)
-    )?.filter((item) => RENDERABLE_SECTION_TITLES.includes(item?.title));
-    const steps = visibleSections.map((item) => {
-      const StepComponent = SECTION_COMPONENTS[item.title];
-      const commonProps = {
-        _id: item._id,
-        sectionKey: item.key || "",
-        name: item.name,
-        title: item.title,
-        fields: item?.fields ?? [],
-        blocks: item?.blocks ?? [],
-        isSignature: item?.isSignature,
-        reduxData: formData?.[item?.key],
-        currentStep,
-        totalSteps: visibleSections?.length,
-        handleNext,
-        handlePrevious,
-        handleSubmit,
-        formLoading,
-        formRefetch,
-        saveInProgress,
-        step: item,
-      };
-      return item.title === SECTION_TITLES.INCORPORATION_ARTICLE ? (
-        <StepComponent {...commonProps} companyInformationStep={companyInformationStep} />
-      ) : (
-        <StepComponent {...commonProps} />
-      );
-    });
-    setStepsComps(steps);
-    setSectionNames(visibleSections.map((item) => item.name));
-    setRenderedSections(visibleSections);
-  }, [
-    currentStep,
-    form?.data?.owner,
-    form?.data?.sections,
-    formData,
-    formLoading,
-    formRefetch,
-    handleNext,
-    handlePrevious,
-    handleSubmit,
-    isSavedApiRun,
-    saveInProgress,
-    user?._id,
-  ]);
-
-  const currentSection = renderedSections[currentStep];
-  const { buttonLabel: downloadLabel, handleDownload, isDownloading } = usePageDownload({
+  const {
+    buttonLabel: downloadLabel,
+    handleDownload,
+    isDownloading,
+  } = useApplicantPageDownload({
     pageName: sectionNames[currentStep] || currentSection?.name || "Page",
     displayHtml: currentSection?.ai_formatting || currentSection?.displayText || "",
     userName: [user?.firstName, user?.lastName].filter(Boolean).join(" ") || null,
@@ -192,13 +160,15 @@ const ApplicationForm = () => {
   });
 
   // redirect from an effect, never during render
-  const mustVerifyFirst = isApplied && !!form?.data?._id && !user?._id;
+  const mustVerifyFirst = isApplied && !!formDocumentId && !user?._id;
   useEffect(() => {
     if (!mustVerifyFirst) return;
-    navigate(buildApplicationFormPath(form?.data?.branding?.name, formId, draftId), { replace: true });
-  }, [mustVerifyFirst, navigate, form?.data?.branding?.name, formId, draftId]);
+    navigate(buildApplicationFormPath({ formId, brandingName: formDocument?.branding?.name, draftId }), {
+      replace: true,
+    });
+  }, [mustVerifyFirst, navigate, formDocument?.branding?.name, formId, draftId]);
 
-  if (!isApplied || !form?.data?._id || mustVerifyFirst)
+  if (!isApplied || !formDocumentId || mustVerifyFirst)
     return (
       <>
         <div data-ai-loading="page" className="hidden" />
@@ -206,24 +176,51 @@ const ApplicationForm = () => {
       </>
     );
 
+  const StepComponent = SECTION_COMPONENTS[currentSection?.title];
+
   return (
-    <div
+    <article
       className="bg-backgroundColor w-full rounded-[10px] px-6 py-6"
       data-testid="application-form"
-      data-ai-loading={!isSavedApiRun ? "page" : undefined}
+      data-ai-loading={!isDraftLoaded ? "page" : undefined}
     >
-      <Stepper
-        steps={sectionNames}
-        currentStep={currentStep}
-        visibleSteps={0}
-        emptyRequiredFields={[]}
-        headerActions={
-          <Button variant="secondary" onClick={handleDownload} label={downloadLabel} disabled={isDownloading} />
-        }
-      >
-        <div ref={stepContainerRef}>{stepsComps[currentStep]}</div>
-      </Stepper>
-    </div>
+      <ErrorBoundary name="ApplicationStepper">
+        <Stepper
+          steps={sectionNames}
+          currentStep={currentStep}
+          visibleSteps={0}
+          emptyRequiredFields={[]}
+          headerActions={
+            <Button variant="secondary" onClick={handleDownload} label={downloadLabel} disabled={isDownloading} />
+          }
+        >
+          <div ref={stepContainerRef}>
+            {StepComponent && (
+              <StepComponent
+                key={currentSection._id}
+                _id={currentSection._id}
+                sectionKey={currentSection.key || ""}
+                name={currentSection.name}
+                title={currentSection.title}
+                fields={currentSection.fields ?? []}
+                isSignature={currentSection.isSignature}
+                reduxData={formData?.[currentSection.key]}
+                currentStep={currentStep}
+                totalSteps={visibleSections.length}
+                handleNext={handleNext}
+                handlePrevious={handlePrevious}
+                handleSubmit={handleSubmit}
+                formLoading={formLoading}
+                formRefetch={formRefetch}
+                saveInProgress={saveInProgress}
+                step={currentSection}
+                companyInformationStep={companyInformationStep}
+              />
+            )}
+          </div>
+        </Stepper>
+      </ErrorBoundary>
+    </article>
   );
 };
 

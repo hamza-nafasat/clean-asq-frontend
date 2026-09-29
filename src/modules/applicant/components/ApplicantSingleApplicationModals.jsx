@@ -1,9 +1,10 @@
 import Modal from "@/components/shared/Modal";
 import ApplicantFormDisplayTextModal from "./ApplicantFormDisplayTextModal";
-import { EditSectionDisplayTextFromatingModal } from "./ApplicantSectionTextModal";
+import ApplicantSectionTextModal from "./ApplicantSectionTextModal";
 import ApplicantSignatureCustomizeModal from "./ApplicantSignatureCustomizeModal";
 import ApplicantSignatureHelpModal from "./ApplicantSignatureHelpModal";
-import { DISPLAY_TEXT_FIELDS, SINGLE_APPLICATION_MODALS } from "../utils/applicant.constants";
+import { FORM_DISPLAY_TEXT_FIELDS } from "@/constants";
+import { SINGLE_APPLICATION_MODALS } from "../utils/applicant.constants";
 
 const ApplicantSingleApplicationModals = ({ activeModal = null, formDocument, section, formRefetch, onClose }) => {
   if (!activeModal) return null;
@@ -13,9 +14,8 @@ const ApplicantSingleApplicationModals = ({ activeModal = null, formDocument, se
       <Modal onClose={onClose}>
         <ApplicantFormDisplayTextModal
           form={formDocument}
-          fieldKeys={DISPLAY_TEXT_FIELDS.OTP}
+          fieldKeys={FORM_DISPLAY_TEXT_FIELDS.OTP}
           previewClassName="w-full text-center"
-          cancelLabel=" Cancel"
           formRefetch={formRefetch}
           onClose={onClose}
         />
@@ -27,8 +27,7 @@ const ApplicantSingleApplicationModals = ({ activeModal = null, formDocument, se
       <Modal onClose={onClose}>
         <ApplicantFormDisplayTextModal
           form={formDocument}
-          fieldKeys={DISPLAY_TEXT_FIELDS.ID_MISSION_DATA}
-          cancelLabel=" Cancel"
+          fieldKeys={FORM_DISPLAY_TEXT_FIELDS.ID_MISSION_DATA}
           formRefetch={formRefetch}
           onClose={onClose}
         />
@@ -52,7 +51,7 @@ const ApplicantSingleApplicationModals = ({ activeModal = null, formDocument, se
   if (activeModal === SINGLE_APPLICATION_MODALS.ID_MISSION_SECTION_TEXT && section) {
     return (
       <Modal onClose={onClose}>
-        <EditSectionDisplayTextFromatingModal step={section} setModal={onClose} />
+        <ApplicantSectionTextModal section={section} onClose={onClose} />
       </Modal>
     );
   }

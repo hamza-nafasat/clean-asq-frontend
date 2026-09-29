@@ -1,7 +1,8 @@
-import Button from "@/components/shared/Button";
 import { useEffect, useState } from "react";
+import Button from "@/components/shared/Button";
 
-export const LoadingWithTimer = ({ setIsProcessing }) => {
+// ID processing wait, cancel stops waiting
+const ApplicantLoadingWithTimer = ({ setIsProcessing }) => {
   const [seconds, setSeconds] = useState(120);
 
   useEffect(() => {
@@ -28,9 +29,9 @@ export const LoadingWithTimer = ({ setIsProcessing }) => {
           {formatTime(seconds)}
         </div>
       </div>
-      <Button variant="standard" className="cursor-pointer" onClick={() => setIsProcessing(false)}>
-        Cancel
-      </Button>
+      <Button variant="standard" onClick={() => setIsProcessing(false)} label="Cancel" />
     </div>
   );
 };
+
+export default ApplicantLoadingWithTimer;

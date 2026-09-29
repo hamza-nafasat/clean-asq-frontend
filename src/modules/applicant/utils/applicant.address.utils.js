@@ -1,5 +1,3 @@
-import { LOOKUP_NOT_FOUND, LOOKUP_SOURCE_KEY_PART } from "./applicant.constants";
-
 const findComponent = (components, types) => {
   const typeList = Array.isArray(types) ? types : [types];
   return components.find((c) => typeList.some((type) => c.types.includes(type)));
@@ -93,29 +91,4 @@ export const parseAddressResults = (results) => {
   }
 
   return { streetAddress, city, state, country, zipCode: suffix ? `${postal}-${suffix}` : postal, lat, lng };
-};
-
-// owner name suggestions from the company lookup data
-export const collectLookupSuggestions = (lookupData, searchFields) => {
-  const founders = [];
-  searchFields.forEach((field) => {
-    const data = lookupData?.find((item) => item?.name === field)?.result;
-    if (Array.isArray(data)) founders.push(...data);
-    else if (typeof data === "string" || typeof data === "number") founders.push(data);
-  });
-  return founders.length ? [...new Set(founders)] : [];
-};
-
-// pair each lookup "source" key with its value key
-export const buildLookupData = (lookupDataObj = {}) => {
-  const entries = Object.entries(lookupDataObj);
-  const sourceEntries = entries.filter(([key]) => key.includes(LOOKUP_SOURCE_KEY_PART));
-  const valueEntries = entries.filter(([key]) => !key.includes(LOOKUP_SOURCE_KEY_PART));
-  return sourceEntries
-    .map(([key, value]) => {
-      const nameEntry = valueEntries.find(([k]) => key?.includes(k));
-      if (value == LOOKUP_NOT_FOUND) return {};
-      return { source: String(value).split(",")[0], name: nameEntry?.[0], result: nameEntry?.[1] };
-    })
-    .filter((item) => item.name !== undefined);
 };

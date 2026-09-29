@@ -28,17 +28,12 @@ const AdminDashboard = lazy(() => import("@/components/layouts/DashboardLayout")
 
 // public and shared application pages
 const SingleApplication = lazy(() => import("@/modules/applicant/SingleApplication"));
-const FormHiddenSection = lazy(() => import("@/modules/applicant/HiddenSection"));
+const HiddenSection = lazy(() => import("@/modules/applicant/HiddenSection"));
 const ManageRules = lazy(() => import("@/modules/applicationForms/ManageRules"));
-const AdditionalOwnersForm = lazy(() => import("@/modules/applicant/AdditionalOwnersForm"));
-const SubmissionSuccessPage = lazy(() =>
-  import("@/modules/applicant/SubmissionSuccess").then((module) => ({
-    default: module.SubmissionSuccessPage,
-  })),
-);
+const SubmissionSuccess = lazy(() => import("@/modules/applicant/SubmissionSuccess"));
 const ApplicationForm = lazy(() => import("@/modules/applicant/ApplicationForm"));
 const ApplicationPdfView = lazy(() => import("@/components/global/ApplicationPdfView"));
-const Verification = lazy(() => import("@/modules/applicant/CompanyVerification"));
+const CompanyVerification = lazy(() => import("@/modules/applicant/CompanyVerification"));
 const MyApplications = lazy(() => import("@/modules/myApplications/MyApplications"));
 
 // signed-in dashboard pages
@@ -104,23 +99,22 @@ const App = () => {
             path="/"
             element={user ? <Navigate to={getHomePath(user)} replace /> : <Navigate to={AUTH_ROUTES.LOGIN} replace />}
           />
-          <Route path="singleform/pdf-view/:pdfId/:userId" element={<ApplicationPdfView />} />
+          <Route path={`${LAYOUT_ROUTES.PDF_VIEW}/:pdfId/:userId`} element={<ApplicationPdfView />} />
 
           {/* public routes */}
           <Route path="/" element={<AdminDashboard />}>
             <Route
-              path="application-form/:brandingName/:formId"
+              path={`${LAYOUT_ROUTES.APPLICATION_FORM}/:brandingName/:formId`}
               element={
                 <ApplicantSubmitPermissionGate>
                   <SingleApplication />
                 </ApplicantSubmitPermissionGate>
               }
             />
-            <Route path="hidden/:formId/:sectionKey" element={<FormHiddenSection />} />
-            <Route path="singleForm/owner" element={<AdditionalOwnersForm />} />
-            <Route path="submited-successfully/:formId" element={<SubmissionSuccessPage />} />
+            <Route path={`${LAYOUT_ROUTES.HIDDEN_SECTION}/:formId/:sectionKey`} element={<HiddenSection />} />
+            <Route path={`${LAYOUT_ROUTES.SUBMISSION_SUCCESS}/:formId`} element={<SubmissionSuccess />} />
             <Route
-              path="singleform/stepper/:formId"
+              path={`${LAYOUT_ROUTES.STEPPER}/:formId`}
               element={
                 <ApplicantSubmitPermissionGate>
                   <ApplicationForm />
@@ -128,10 +122,10 @@ const App = () => {
               }
             />
             <Route
-              path="verification"
+              path={LAYOUT_ROUTES.VERIFICATION}
               element={
                 <ApplicantSubmitPermissionGate>
-                  <Verification />
+                  <CompanyVerification />
                 </ApplicantSubmitPermissionGate>
               }
             />

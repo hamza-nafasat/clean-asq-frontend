@@ -1,17 +1,33 @@
-import { additionalOwnersFields, formFieldsStaticKeys } from "@/constants";
-import { isSignatureComplete, normalizeSignature } from "@/utils/signatureShape";
 import {
-  EMAIL_PATTERN,
-  FIELD_BLOCK_TYPE,
+  additionalOwnersFields,
+  EMAIL_FORMAT,
   FIELD_NAMES,
+  FORM_BLOCK_TYPE,
+  formFieldsStaticKeys,
+  ID_MISSION_ROLES,
   OWNER_ROLES,
-  ROLE_FILLING_VALUES,
+  YES_NO_VALUES,
+} from "@/constants";
+import {
   ROLLING_OWNER_IS_OWNER_FIELD,
   ROLLING_OWNER_PERCENTAGE_FIELD,
   ROLLING_OWNER_SSN_FIELD,
-  YES_NO,
 } from "./applicant.constants";
-import { findFieldKeyByName } from "./applicant.utils3";
+import { isSignatureComplete, normalizeSignature } from "@/utils/signatureShape";
+
+export const findFieldKeyByName = (form, name) => {
+  if (!form || typeof form !== "object" || !name) return undefined;
+  return Object.keys(form).find((key) => form[key]?.name === name);
+};
+
+// a primary contact must name other operators
+export const requiresOtherOperators = (idMissionRoleValue) => idMissionRoleValue === ID_MISSION_ROLES.PRIMARY_CONTACT;
+
+export const resolveOtherOperatorsAnswer = (currentValue, mustHaveOtherOperators) => {
+  if (!mustHaveOtherOperators) return currentValue ?? "";
+  if (!currentValue || currentValue === YES_NO_VALUES.NO) return YES_NO_VALUES.YES;
+  return currentValue;
+};
 
 const REQUIRED_OWNER_KEYS = ["name", "email", "role", "have_detail"];
 
@@ -27,19 +43,19 @@ export const makeBlankOwner = () =>
   }, {});
 
 export const isAdditionalOwnersBlock = (field) =>
-  field?.type === FIELD_BLOCK_TYPE && field?.name === formFieldsStaticKeys.additional_owners_key;
+  field?.type === FORM_BLOCK_TYPE && field?.name === formFieldsStaticKeys.additional_owners_key;
 
 const isOperatorRole = (roleValue) =>
-  roleValue === ROLE_FILLING_VALUES.PRIMARY_OPERATOR_AND_CONTROLLER || roleValue === ROLE_FILLING_VALUES.BOTH;
+  roleValue === ID_MISSION_ROLES.PRIMARY_OPERATOR_AND_CONTROLLER || roleValue === ID_MISSION_ROLES.BOTH;
 
 // rolling-owner questions depend on the role picked in the ID Mission step
 export const buildOwnerFormFields = (fields, idMissionRoleValue, isRollingOwner, mustHaveOtherOperators) => {
   const base = (Array.isArray(fields) ? fields : []).map((f) => {
     if (!mustHaveOtherOperators) return f;
-    if (!f?.name?.includes(FIELD_NAMES.ADDITIONAL_OWNERS_25_PERCENT)) return f;
+    if (!f?.name?.includes(FIELD_NAMES.ADDITIONAL_OWNERS_OWN_25_PERCENT)) return f;
     return {
       ...f,
-      options: (f.options || []).map((o) => (o.value === YES_NO.NO ? { ...o, disabled: true } : o)),
+      options: (f.options || []).map((o) => (o.value === YES_NO_VALUES.NO ? { ...o, disabled: true } : o)),
     };
   });
   if (isOperatorRole(idMissionRoleValue)) {
@@ -47,7 +63,7 @@ export const buildOwnerFormFields = (fields, idMissionRoleValue, isRollingOwner,
       ? [ROLLING_OWNER_SSN_FIELD, ROLLING_OWNER_IS_OWNER_FIELD, ROLLING_OWNER_PERCENTAGE_FIELD, ...base]
       : [ROLLING_OWNER_SSN_FIELD, ROLLING_OWNER_IS_OWNER_FIELD, ...base];
   }
-  if (idMissionRoleValue === ROLE_FILLING_VALUES.PRIMARY_CONTACT) {
+  if (idMissionRoleValue === ID_MISSION_ROLES.PRIMARY_CONTACT) {
     return isRollingOwner
       ? [ROLLING_OWNER_IS_OWNER_FIELD, ROLLING_OWNER_SSN_FIELD, ROLLING_OWNER_PERCENTAGE_FIELD, ...base]
       : [ROLLING_OWNER_IS_OWNER_FIELD, ...base];
@@ -55,14 +71,15 @@ export const buildOwnerFormFields = (fields, idMissionRoleValue, isRollingOwner,
   return [...base];
 };
 
-export const buildOwnersInitialForm = (formFields, reduxData, isSignature) => {
+// accounts that can't invite start with no owner row
+export const buildOwnersInitialForm = (formFields, reduxData, isSignature, canInviteOwner = true) => {
   const initialForm = {};
   formFields.forEach((field) => {
     if (isAdditionalOwnersBlock(field)) {
       const saved = reduxData?.[field?.uniqueId]?.value;
       initialForm[field.uniqueId] = {
         name: field.name,
-        value: Array.isArray(saved) && saved.length ? saved : [makeBlankOwner()],
+        value: Array.isArray(saved) && saved.length ? saved : canInviteOwner ? [makeBlankOwner()] : [],
       };
     } else {
       initialForm[field.uniqueId] = { name: field.name, value: reduxData?.[field?.uniqueId]?.value || "" };
@@ -85,10 +102,10 @@ export const mergeFormShape = (prev, initialForm) => {
 const isOwnerComplete = (owner) => REQUIRED_OWNER_KEYS.every((key) => String(owner?.[key] ?? "").trim() !== "");
 
 export const getOwnersValidation = ({ form, owners, requiredNames, isSignature, idMissionRoleValue }) => {
-  const get25Key = findFieldKeyByName(form, FIELD_NAMES.ADDITIONAL_OWNERS_25_PERCENT);
-  const hasOwnersWith25 = get25Key ? form?.[get25Key]?.value === YES_NO.YES : false;
+  const get25Key = findFieldKeyByName(form, FIELD_NAMES.ADDITIONAL_OWNERS_OWN_25_PERCENT);
+  const hasOwnersWith25 = get25Key ? form?.[get25Key]?.value === YES_NO_VALUES.YES : false;
   const rollingOwnerKey = findFieldKeyByName(form, FIELD_NAMES.ROLLING_OWNER_IS_ALSO_OWNER);
-  const isApplicantAlsoOwner = rollingOwnerKey ? form?.[rollingOwnerKey]?.value === YES_NO.YES : false;
+  const isApplicantAlsoOwner = rollingOwnerKey ? form?.[rollingOwnerKey]?.value === YES_NO_VALUES.YES : false;
 
   const allFilled = requiredNames.every(({ uniqueId }) => {
     const val = form[uniqueId]?.value;
@@ -99,7 +116,7 @@ export const getOwnersValidation = ({ form, owners, requiredNames, isSignature, 
   const isSignatureDone = !isSignature || isSignatureComplete(form?.signature);
   const areOwnersComplete = !hasOwnersWith25 || owners.every(isOwnerComplete);
   const isEmailValidated =
-    !hasOwnersWith25 || !owners.length || owners.every((o) => EMAIL_PATTERN.test(String(o?.email ?? "").toLowerCase()));
+    !hasOwnersWith25 || !owners.length || owners.every((o) => EMAIL_FORMAT.test(String(o?.email ?? "").toLowerCase()));
   // an added owner counts as operator only by role; no recorded role falls back to the applicant answer
   const hasOperatorOwner = owners.some((o) => [OWNER_ROLES.PRIMARY_OPERATOR, OWNER_ROLES.BOTH].includes(o?.role ?? ""));
   const isOperatorExist =

@@ -4,19 +4,7 @@ import { useDispatch } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { useGetSavedFormMutation } from "@/redux/apis/form.apis";
 import { addSavedFormData, setCurrentDraftId, updateEmailVerified } from "@/redux/slices/form.slice";
-import { LAYOUT_ROUTES, VERIFICATION_PARAMS } from "@/constants";
-
-const buildVerificationPath = ({ formId, draftId, brandingName }) => {
-  const params = new URLSearchParams({ [VERIFICATION_PARAMS.FORM_ID]: formId });
-  if (brandingName) params.set(VERIFICATION_PARAMS.BRANDING_NAME, brandingName);
-  if (draftId) params.set(VERIFICATION_PARAMS.DRAFT_ID, draftId);
-  return `${LAYOUT_ROUTES.VERIFICATION}?${params}`;
-};
-
-const buildApplicationFormPath = ({ formId, draftId, brandingName }) => {
-  const query = draftId ? `?${new URLSearchParams({ [VERIFICATION_PARAMS.DRAFT_ID]: draftId })}` : "";
-  return `${LAYOUT_ROUTES.APPLICATION_FORM}/${encodeURIComponent(brandingName)}/${formId}${query}`;
-};
+import { buildApplicationFormPath, buildVerificationPath } from "@/utils/applicationPaths";
 
 // reopen a draft where it was left
 const useResumeDraft = () => {

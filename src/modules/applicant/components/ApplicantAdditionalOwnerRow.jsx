@@ -2,8 +2,8 @@ import { Autocomplete } from "@react-google-maps/api";
 import { SimpleRadioInputType } from "@/components/global/DynamicField";
 import Button from "@/components/shared/Button";
 import TextField from "@/components/shared/TextField";
-import { OWNER_CARD_FIELDS, STATE_SUGGESTIONS } from "@/constants";
-import { OWNER_ADDRESS_AUTOCOMPLETE_OPTIONS, OWNER_ROLES, YES_NO } from "../utils/applicant.constants";
+import { OWNER_CARD_FIELDS, OWNER_ROLES, STATE_SUGGESTIONS, YES_NO_VALUES } from "@/constants";
+import { OWNER_ADDRESS_AUTOCOMPLETE_OPTIONS } from "../utils/applicant.constants";
 
 const HAVE_DETAIL_FIELD = {
   ...OWNER_CARD_FIELDS.HAVE_DETAIL,
@@ -81,7 +81,7 @@ const ApplicantAdditionalOwnerRow = ({
           </div>
         )}
 
-        {haveDetail === YES_NO.YES && (
+        {haveDetail === YES_NO_VALUES.YES && (
           <div className="flex w-full flex-col gap-4">
             <div className="grid grid-cols-3 gap-4">
               <TextField {...bindField(OWNER_CARD_FIELDS.SSN)} isMasked={true} className="w-full" />

@@ -1,34 +1,32 @@
-import MakeFieldDataCustom from "./ApplicantFieldCustomizer";
-import Checkbox from "@/components/shared/Checkbox";
-import TextField from "@/components/shared/TextField";
-import Button from "@/components/shared/Button";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import {
   useFormateTextInMarkDownMutation,
   useUpdateDeleteCreateFormFieldsMutation,
   useUpdateFormSectionMutation,
 } from "@/redux/apis/form.apis";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import DOMPurify from "dompurify";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import Button from "@/components/shared/Button";
+import Checkbox from "@/components/shared/Checkbox";
 import HtmlContent from "@/components/shared/HtmlContent";
+import TextField from "@/components/shared/TextField";
+import ApplicantFieldCustomizer from "./ApplicantFieldCustomizer";
+import { FIELD_TYPES } from "@/constants";
+import { CUSTOMIZE_VARIANTS } from "../utils/applicant.constants";
 
-const OWNER_VARIANT = "owner";
-
-function CustomizationFieldsModal({
+const ApplicantCustomizeFieldsModal = ({
   onClose,
-  fields,
-  blocks,
+  fields = [],
   sectionId,
   formRefetch,
   suggestions,
-  isArticleForm,
+  isArticleForm = false,
   section,
-  variant = "field",
-}) {
-  const isOwner = variant === OWNER_VARIANT;
+  variant = CUSTOMIZE_VARIANTS.FIELD,
+}) => {
+  const isOwnerVariant = variant === CUSTOMIZE_VARIANTS.OWNER;
   const [fieldsData, setFieldsData] = useState([]);
   const [originalFieldData, setOriginalFieldData] = useState([]);
-  const [blockFieldsData, setBlockFieldsData] = useState([]);
   const [customizeForm, { isLoading }] = useUpdateDeleteCreateFormFieldsMutation();
   const [updateSection, { isLoading: isUpdatingSection }] = useUpdateFormSectionMutation();
   const [isIdMissionQrEnabled, setIsIdMissionQrEnabled] = useState(section?.isIdMissionQr || false);
@@ -57,7 +55,7 @@ function CustomizationFieldsModal({
         signAiPrompt: signatureData.signAiPrompt,
         signAiResponse: signatureData.signAiResponse,
         signDisplayTextFormattingInstructions: signatureData.formatingAiInstruction,
-        ...(isOwner ? {} : { isIdMissionQr: isIdMissionQrEnabled }),
+        ...(isOwnerVariant ? {} : { isIdMissionQr: isIdMissionQrEnabled }),
       },
     }).unwrap();
 
@@ -70,7 +68,7 @@ function CustomizationFieldsModal({
         toast.success(res.message);
       }
     } catch (error) {
-      console.log("Error while updating signature", error);
+      console.error("Update signature settings error:", error);
     } finally {
       setSignatureEnabling(false);
     }
@@ -87,11 +85,11 @@ function CustomizationFieldsModal({
         instructions: signatureData?.formatingAiInstruction,
       }).unwrap();
       if (res.success) {
-        let html = DOMPurify.sanitize(res.data);
+        const html = sanitizeHtml(res.data);
         setSignatureData((prev) => ({ ...prev, signDisplayFormattedText: html }));
       }
     } catch (err) {
-      console.error(err);
+      console.error("Format text error:", err);
       toast.error(err?.data?.message || "Failed to format text");
     }
   }, [formateTextInMarkDown, signatureData?.formatingAiInstruction, signatureData.signDisplayText]);
@@ -103,23 +101,20 @@ function CustomizationFieldsModal({
         text: signatureData?.signAiPrompt,
       }).unwrap();
       if (res.success) {
-        let html = DOMPurify.sanitize(res.data);
-        //  update ai_response
+        const html = sanitizeHtml(res.data);
         setSignatureData((prev) => ({ ...prev, signAiResponse: html }));
       }
     } catch (err) {
-      console.error(err);
+      console.error("Format text error:", err);
       toast.error(err?.data?.message || "Failed to format text");
     }
   }, [formateTextInMarkDown, signatureData?.signAiPrompt]);
 
-  const addNewFieldHandler = () => setFieldsData((prev) => [...prev, { label: "", name: "", type: "text" }]);
+  const addNewFieldHandler = () => setFieldsData((prev) => [...prev, { label: "", name: "", type: FIELD_TYPES.TEXT }]);
 
   const saveFormHandler = async () => {
     try {
-      const payload = isOwner
-        ? { sectionId, ownerFieldsData: [...fieldsData, ...blockFieldsData] }
-        : { sectionId, fieldsData };
+      const payload = isOwnerVariant ? { sectionId, ownerFieldsData: fieldsData } : { sectionId, fieldsData };
       const res = await customizeForm(payload).unwrap();
       // signature settings save with the form too
       await saveSignatureSettings();
@@ -129,27 +124,15 @@ function CustomizationFieldsModal({
         onClose();
       }
     } catch (error) {
-      console.log("Error while updating form fields", error);
+      console.error("Update form fields error:", error);
     }
   };
 
   useEffect(() => {
-    if (fields?.length > 0) {
-      setFieldsData(fields);
-      setOriginalFieldData(fields);
-    }
-    if (blocks?.length > 0) {
-      const allFieldsData = [];
-      blocks?.forEach((block) => {
-        block?.fields?.forEach((field) => {
-          allFieldsData.push(field);
-        });
-      });
-      setBlockFieldsData(allFieldsData);
-    }
-  }, [blocks, fields]);
-
-  let fieldIndex = 0;
+    if (!fields.length) return;
+    setFieldsData(fields);
+    setOriginalFieldData(fields);
+  }, [fields]);
 
   return (
     <>
@@ -158,7 +141,7 @@ function CustomizationFieldsModal({
       {fieldsData?.length > 0 &&
         fieldsData?.map((field, index) => (
           <div key={index} className="mt-6 flex flex-col gap-4">
-            <MakeFieldDataCustom
+            <ApplicantFieldCustomizer
               isArticleForm={isArticleForm}
               field={field}
               originalFieldData={originalFieldData}
@@ -170,38 +153,7 @@ function CustomizationFieldsModal({
             />
           </div>
         ))}
-      {isOwner && blocks?.length > 0 && (
-        <div className="my-6 bg-[#E0E0E0] p-4">
-          <h3 className="bg-primary py-2 text-center text-2xl font-medium text-white">Update Fields For Blocks</h3>
-          <div className="flex flex-col gap-8">
-            {blocks?.map((block, index) => {
-              return (
-                <div key={index} className="my-5 bg-yellow-50 py-2">
-                  <p className="text-textPrimary text-center text-2xl font-medium capitalize">
-                    {block?.name?.replaceAll("_", " ")}
-                  </p>
-                  <p className="text-center text-base font-normal">{block?.description}</p>
-                  {block?.fields?.map((f, i) => {
-                    if (i !== index) fieldIndex++;
-                    return (
-                      <div key={i} className="mt-6 flex flex-col gap-4">
-                        <MakeFieldDataCustom
-                          fieldsData={blockFieldsData}
-                          setFieldsData={setBlockFieldsData}
-                          index={fieldIndex}
-                          variant={variant}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* signature Data  */}
+      {/* Signature */}
       <div className="flex flex-col gap-2 border-2 p-2 pb-4">
         <div className="flex gap-2 pb-4">
           <Checkbox
@@ -229,7 +181,7 @@ function CustomizationFieldsModal({
             onChange={(e) => setSignatureData((prev) => ({ ...prev, isSignAiHelp: e.target.checked }))}
           />
         </div>
-        {/* display text  */}
+        {/* Display text */}
         {signatureData?.isSignDisplayText && (
           <div className="flex w-full flex-col gap-2 pb-4">
             <TextField
@@ -260,7 +212,7 @@ function CustomizationFieldsModal({
             )}
           </div>
         )}
-        {/* aiHelp  */}
+        {/* AI help */}
         {signatureData?.isSignAiHelp && (
           <div className="flex w-full flex-col items-center gap-2">
             <div className="flex w-full items-center gap-2">
@@ -283,8 +235,8 @@ function CustomizationFieldsModal({
             )}
           </div>
         )}
-        {/* id mission qr  */}
-        {!isOwner && (
+        {/* ID Mission QR */}
+        {!isOwnerVariant && (
         <div className="flex gap-2 pb-4">
           <Checkbox
             id="idMissionQr"
@@ -292,10 +244,7 @@ function CustomizationFieldsModal({
             checked={isIdMissionQrEnabled}
             disabled={isUpdatingSection}
             className={`${signatureEnabling ? "pointer-events-none opacity-30" : ""}`}
-            onChange={(e) => {
-              console.log("e.target.checked is", e.target.checked);
-              setIsIdMissionQrEnabled(e.target.checked);
-            }}
+            onChange={(e) => setIsIdMissionQrEnabled(e.target.checked)}
           />
         </div>
         )}
@@ -309,8 +258,8 @@ function CustomizationFieldsModal({
           </Button>
         </div>
       </div>
-      <div className={isOwner ? "mt-6 flex w-full justify-between gap-2" : "mt-6 flex w-full items-center justify-between gap-2"}>
-        {!isOwner && !isArticleForm && (
+      <div className={isOwnerVariant ? "mt-6 flex w-full justify-between gap-2" : "mt-6 flex w-full items-center justify-between gap-2"}>
+        {!isOwnerVariant && !isArticleForm && (
           <Button variant="standard" className="bg-primary w-[45%] cursor-pointer text-white" onClick={addNewFieldHandler}>
             Add New Field
           </Button>
@@ -319,7 +268,7 @@ function CustomizationFieldsModal({
           onClick={() => saveFormHandler()}
           disabled={isLoading || isUpdatingSection}
           className={
-            isOwner ? `bg-primary w-full cursor-pointer text-white` : `bg-primary cursor-pointer text-white ${isArticleForm ? "w-full" : "w-[45%]"}`
+            isOwnerVariant ? `bg-primary w-full cursor-pointer text-white` : `bg-primary cursor-pointer text-white ${isArticleForm ? "w-full" : "w-[45%]"}`
           }
         >
           Save Form
@@ -327,6 +276,6 @@ function CustomizationFieldsModal({
       </div>
     </>
   );
-}
+};
 
-export default CustomizationFieldsModal;
+export default ApplicantCustomizeFieldsModal;

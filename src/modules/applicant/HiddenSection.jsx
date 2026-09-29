@@ -1,45 +1,60 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useGetSpecialAccessOfSectionQuery, useSubmitSpecialAccessFormMutation } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
+import { FiLock } from "react-icons/fi";
+import { useGetSpecialAccessOfSectionQuery, useSubmitSpecialAccessFormMutation } from "@/redux/apis/form.apis";
 import { uploadFilesAndReplace } from "@/lib/utils";
-import usePermission from "@/hooks/usePermission";
-import useApplicantSectionIdMission from "./hooks/useApplicantSectionIdMission";
 import useApplyBranding from "@/hooks/useApplyBranding";
+import usePermission from "@/hooks/usePermission";
+import SignatureBox from "@/components/global/SignatureBox";
 import Button from "@/components/shared/Button";
 import CustomLoading from "@/components/shared/CustomLoading";
+import EmptyState from "@/components/shared/EmptyState";
+import HtmlContent from "@/components/shared/HtmlContent";
 import Modal from "@/components/shared/Modal";
-import SignatureBox from "@/components/global/SignatureBox";
-import CustomizationFieldsModal from "./components/ApplicantCustomizeFieldsModal";
+import useApplicantSectionIdMission from "./hooks/useApplicantSectionIdMission";
+import ApplicantCustomizeFieldsModal from "./components/ApplicantCustomizeFieldsModal";
 import ApplicantIdMissionQrPanel from "./components/ApplicantIdMissionQrPanel";
 import ApplicantSectionField from "./components/ApplicantSectionField";
-import { EditSectionDisplayTextFromatingModal } from "./components/ApplicantSectionTextModal";
-import { APPLICANT_HOME_PATH, FIELD_NAMES } from "./utils/applicant.constants";
-import { uploadSignatureReplacing } from "./utils/applicant.utils12";
-import { isSignatureComplete } from "@/utils/signatureShape";
-import HtmlContent from "@/components/shared/HtmlContent";
+import ApplicantSectionTextModal from "./components/ApplicantSectionTextModal";
+import { AUTH_ROUTES, HIDDEN_SECTION_PARAMS, LAYOUT_ROUTES } from "@/constants";
+import { buildSignatureUploadHandler } from "./utils/applicant.signature.utils";
 import { PERMISSIONS } from "@/utils/permissions";
+import { isSignatureComplete } from "@/utils/signatureShape";
 
-const FormHiddenSection = () => {
+// scanned ID values fill fields, typed answers stay
+const mergeIdMissionValues = (prev, fields, idMissionData) => {
+  const next = { ...prev };
+  fields.forEach((field) => {
+    const idMissionValue = idMissionData?.[field.name]?.value;
+    if (idMissionValue) next[field.uniqueId] = { name: field.name, value: idMissionValue };
+    else next[field.uniqueId] = prev[field.uniqueId] ?? "";
+  });
+  return next;
+};
+
+const HiddenSection = () => {
   const navigate = useNavigate();
-  const params = useParams();
-  const formId = params.formId;
-  const accessToken = useSearchParams()?.[0]?.get("token");
-  const sectionKey = params.sectionKey?.toLowerCase();
+  const { formId, sectionKey: rawSectionKey } = useParams();
+  const [searchParams] = useSearchParams();
+  const accessToken = searchParams.get(HIDDEN_SECTION_PARAMS.TOKEN);
+  const sectionKey = rawSectionKey?.toLowerCase();
   const { user } = useSelector((state) => state.auth);
-  const [customizeModal, setCustomizeModal] = useState(false);
-  const [updateSectionFromatingModal, setUpdateSectionFromatingModal] = useState(false);
+  const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
+  const [isSectionTextModalOpen, setIsSectionTextModalOpen] = useState(false);
   const [form, setForm] = useState({});
-  const [section, setSection] = useState({});
   useApplyBranding({ formId });
   const {
     data: formData,
     refetch: formRefetch,
     isLoading: isLoadingFormData,
     error: formError,
-  } = useGetSpecialAccessOfSectionQuery({ formId, token: accessToken, sectionKey }, { skip: !formId || !sectionKey });
-  const [submitSpecialAccessForm, { isLoading: isSubmittingSpecialAccessForm }] = useSubmitSpecialAccessFormMutation();
+  } = useGetSpecialAccessOfSectionQuery(
+    { formId, token: accessToken, sectionKey },
+    { skip: !formId || !sectionKey || !user },
+  );
+  const [submitSpecialAccessForm, { isLoading: isSubmitting }] = useSubmitSpecialAccessFormMutation();
   const {
     idMissionVerifiedData,
     qrCode,
@@ -51,19 +66,23 @@ const FormHiddenSection = () => {
     loadQrCode,
   } = useApplicantSectionIdMission(sectionKey);
 
-  const isSignature = Boolean(section?.isSignature);
-  const requiredFieldsUniqueIds = (section?.fields ?? []).filter((field) => field?.required).map((field) => field?.uniqueId);
+  const section = useMemo(
+    () => formData?.data?.sections?.find((item) => item?.key?.toLowerCase() === sectionKey && item?.isHidden) ?? {},
+    [formData?.data?.sections, sectionKey],
+  );
+  const sectionFields = useMemo(() => section.fields ?? [], [section.fields]);
+  const isSignature = Boolean(section.isSignature);
+  const requiredFieldIds = sectionFields.filter((field) => field?.required).map((field) => field?.uniqueId);
   // a signature-only section can be submitted once signed
   const isAllRequiredFieldsFilled =
-    (requiredFieldsUniqueIds.length > 0 || isSignature) &&
-    requiredFieldsUniqueIds.every((field) => form?.[field]?.value) &&
+    (requiredFieldIds.length > 0 || isSignature) &&
+    requiredFieldIds.every((fieldId) => form?.[fieldId]?.value) &&
     (!isSignature || isSignatureComplete(form?.signature));
   const canCustomizeForm = usePermission(PERMISSIONS.CUSTOMIZE_FORM);
   const isOwner = Boolean(user?._id) && user?._id === formData?.data?.owner;
   const canCustomize = isOwner && canCustomizeForm;
-  const isSubmitDisabled = isSubmittingSpecialAccessForm || !isAllRequiredFieldsFilled;
 
-  const handleSubmitSpecialAccessForm = useCallback(async () => {
+  const handleSubmit = async () => {
     try {
       if (!accessToken || !sectionKey || !formId) return toast.error("Please provide all the required fields");
       const updatedFormData = await uploadFilesAndReplace(form);
@@ -73,85 +92,70 @@ const FormHiddenSection = () => {
         sectionKey,
         formData: updatedFormData,
       }).unwrap();
-      if (res.success) {
-        toast.success(res.message);
-        navigate(APPLICANT_HOME_PATH);
-      } else {
-        toast.error(res.message || "Error while submitting special access form");
-      }
+      toast.success(res.message);
+      navigate(LAYOUT_ROUTES.HOME);
     } catch (error) {
       console.error("Submit special access form error:", error);
       toast.error(error?.data?.message || "Error while submitting special access form");
     }
-  }, [accessToken, sectionKey, formId, submitSpecialAccessForm, form, navigate]);
-
-  const handleSignatureUpload = async (file, setIsSaving, stamp) => {
-    try {
-      if (!file) return toast.error("Please select a file");
-      const { res, errorMessage } = await uploadSignatureReplacing(file, form?.signature?.value, stamp);
-      if (errorMessage) return toast.error(errorMessage);
-      setForm((prev) => ({ ...prev, signature: { name: FIELD_NAMES.SIGNATURE, value: res } }));
-      toast.success("Signature uploaded successfully");
-    } catch (error) {
-      console.error("Upload signature error:", error);
-    } finally {
-      setIsSaving?.(false);
-    }
   };
 
+  const handleSignatureUpload = buildSignatureUploadHandler({ form, setForm });
+
   useEffect(() => {
-    const hiddenSection = formData?.data?.sections?.find(
-      (item) => item?.key?.toLowerCase() === sectionKey?.toLowerCase() && item?.isHidden,
+    if (section.isIdMissionQr && !qrCode) loadQrCode();
+  }, [loadQrCode, qrCode, section.isIdMissionQr]);
+
+  useEffect(() => {
+    if (sectionFields.length) setForm((prev) => mergeIdMissionValues(prev, sectionFields, idMissionVerifiedData));
+  }, [idMissionVerifiedData, sectionFields]);
+
+  if (!user)
+    return (
+      <EmptyState
+        variant="panel"
+        className="mt-14"
+        icon={<FiLock size={28} />}
+        title="Please log in to open this section"
+      >
+        <Button label="Log in" onClick={() => navigate(AUTH_ROUTES.LOGIN)} />
+      </EmptyState>
     );
-    if (hiddenSection) setSection(hiddenSection);
-  }, [formData?.data?.sections, sectionKey]);
-
-  useEffect(() => {
-    if (formError) toast.error(formError?.data?.message || "Error while fetching form data");
-  }, [formError]);
-
-  // load the QR code and prefill fields from the IDMission data
-  useEffect(() => {
-    if (!qrCode && section?.isIdMissionQr) loadQrCode();
-    if (!section?.fields?.length) return;
-    const formFields = {};
-    section.fields.forEach((field) => {
-      const idMissionValue = idMissionVerifiedData?.[field?.name]?.value;
-      formFields[field?.uniqueId] = idMissionValue !== undefined ? { name: field?.name, value: idMissionValue } : "";
-    });
-    // keep a signature already given
-    setForm((prev) => (prev.signature ? { ...formFields, signature: prev.signature } : formFields));
-  }, [idMissionVerifiedData, loadQrCode, qrCode, section?.fields, section?.isIdMissionQr]);
-
   if (isLoadingFormData) return <CustomLoading />;
+  if (formError)
+    return (
+      <EmptyState
+        variant="panel"
+        className="mt-14"
+        icon={<FiLock size={28} />}
+        title="This link can't be opened"
+        description={formError?.data?.message || "Error while fetching form data"}
+      >
+        <Button label="Try again" onClick={formRefetch} />
+      </EmptyState>
+    );
 
   return (
-    <div className="mt-14">
-      {updateSectionFromatingModal && (
-        <Modal onClose={() => setUpdateSectionFromatingModal(false)}>
-          <EditSectionDisplayTextFromatingModal step={section} setModal={setUpdateSectionFromatingModal} />
+    <section className="mt-14">
+      {isSectionTextModalOpen && (
+        <Modal onClose={() => setIsSectionTextModalOpen(false)}>
+          <ApplicantSectionTextModal section={section} onClose={() => setIsSectionTextModalOpen(false)} />
         </Modal>
       )}
 
-      <div className="mb-10 flex items-center justify-between">
-        <p className="text-textPrimary text-2xl font-semibold">{section?.name}</p>
-        <div className="flex gap-2">
-          {canCustomize && (
-            <>
-              <Button variant="secondary" onClick={() => setCustomizeModal(true)} label="Customize" />
-              <Button onClick={() => setUpdateSectionFromatingModal(true)} label="Update Display Text" />
-            </>
-          )}
-        </div>
-      </div>
+      <header className="mb-10 flex items-center justify-between">
+        <h1 className="text-textPrimary text-2xl font-semibold">{section.name}</h1>
+        {canCustomize && (
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => setIsCustomizeModalOpen(true)} label="Customize" />
+            <Button onClick={() => setIsSectionTextModalOpen(true)} label="Update Display Text" />
+          </div>
+        )}
+      </header>
 
-      {section?.ai_formatting && (
-        <div className="mb-4 flex w-full items-end gap-3">
-          <HtmlContent className="w-full" html={section?.ai_formatting} />
-        </div>
-      )}
+      {section.ai_formatting && <HtmlContent className="mb-4 w-full" html={section.ai_formatting} />}
 
-      {section?.isIdMissionQr && (
+      {section.isIdMissionQr && (
         <ApplicantIdMissionQrPanel
           qrCode={qrCode}
           isProcessing={isIdMissionProcessing}
@@ -160,16 +164,15 @@ const FormHiddenSection = () => {
           onRefresh={getQrAndWebLink}
         />
       )}
-      {section?.fields?.length > 0 &&
-        section.fields.map((field, index) => (
-          <ApplicantSectionField
-            key={index}
-            field={field}
-            form={form}
-            setForm={setForm}
-            radioClassName="mt-4 flex flex-col gap-2"
-          />
-        ))}
+      {sectionFields.map((field) => (
+        <ApplicantSectionField
+          key={field.uniqueId}
+          field={field}
+          form={form}
+          setForm={setForm}
+          radioClassName="mt-4 flex flex-col gap-2"
+        />
+      ))}
 
       {isSignature && (
         <div className="mt-4">
@@ -177,28 +180,27 @@ const FormHiddenSection = () => {
         </div>
       )}
 
-      <div className="flex justify-end gap-4 p-4">
+      <footer className="flex justify-end gap-4 p-4">
         <Button
-          className={`${isSubmitDisabled ? "pinter-events-none opacity-50" : ""} cursor-not-allowed`}
-          disabled={isSubmitDisabled}
-          onClick={handleSubmitSpecialAccessForm}
+          disabled={isSubmitting || !isAllRequiredFieldsFilled}
+          onClick={handleSubmit}
           label={isAllRequiredFieldsFilled ? "Submit" : "Fill All Required Fields"}
         />
-      </div>
-      {customizeModal && (
-        <Modal onClose={() => setCustomizeModal(false)}>
-          <CustomizationFieldsModal
-            sectionId={section?._id}
-            fields={section?.fields}
+      </footer>
+      {isCustomizeModalOpen && (
+        <Modal onClose={() => setIsCustomizeModalOpen(false)}>
+          <ApplicantCustomizeFieldsModal
+            sectionId={section._id}
+            fields={sectionFields}
             formRefetch={formRefetch}
-            isSignature={section?.isSignature}
+            isSignature={section.isSignature}
             section={section}
-            onClose={() => setCustomizeModal(false)}
+            onClose={() => setIsCustomizeModalOpen(false)}
           />
         </Modal>
       )}
-    </div>
+    </section>
   );
 };
 
-export default FormHiddenSection;
+export default HiddenSection;

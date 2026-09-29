@@ -1,15 +1,15 @@
 import { useMemo, useState } from "react";
-import { AI_ASSISTANT_MODES } from "@/constants";
 import { toast } from "react-toastify";
-import useAiChat from "@/hooks/useAiChat";
-import { extractHttpLinks } from "@/utils/extractHttpLinks";
 import { buildPagePdf } from "@/lib/pdf";
+import useAiChat from "@/hooks/useAiChat";
+import { AI_ASSISTANT_MODES } from "@/constants";
+import { extractHttpLinks } from "@/utils/extractHttpLinks";
 import getEnv from "@/utils/env";
 
 const SERVER_URL = getEnv("SERVER_URL");
 
 // shared hook that powers the "Download this page" / "Download this page & agreements" button
-export const usePageDownload = ({ pageName, displayHtml, getFieldRows, signatureUrl, getHasFields, userName, userEmail, signDisplayHtml }) => {
+const useApplicantPageDownload = ({ pageName, displayHtml, getFieldRows, signatureUrl, getHasFields, userName, userEmail, signDisplayHtml }) => {
   const { assistantMode } = useAiChat();
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -91,3 +91,5 @@ export const usePageDownload = ({ pageName, displayHtml, getFieldRows, signature
 
   return { buttonLabel, hasAgreements, hasFields, shouldShow, isDownloading, handleDownload };
 };
+
+export default useApplicantPageDownload;

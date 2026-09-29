@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
-import DOMPurify from "dompurify";
 import { useFormateTextInMarkDownMutation, useUpdateFormSectionMutation } from "@/redux/apis/form.apis";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import Button from "@/components/shared/Button";
 import TextField from "@/components/shared/TextField";
 import HtmlContent from "@/components/shared/HtmlContent";
@@ -10,7 +10,7 @@ const ApplicantSignatureHelpModal = ({ section = {}, formRefetch, onClose }) => 
   const [updateSection, { isLoading: isUpdatingSection }] = useUpdateFormSectionMutation();
   const [formateTextInMarkDown, { isLoading: isFormatting }] = useFormateTextInMarkDownMutation();
   const [helpData, setHelpData] = useState({
-    isSignAiHelp: section?.isSignAiHelp || true,
+    isSignAiHelp: true,
     signAiPrompt: section?.signAiPrompt || "",
     signAiResponse: section?.signAiResponse || "",
   });
@@ -30,13 +30,13 @@ const ApplicantSignatureHelpModal = ({ section = {}, formRefetch, onClose }) => 
 
   const handleGetResponse = async () => {
     if (!helpData.signAiPrompt) {
-      toast.error("Please enter prompt to first");
+      toast.error("Please enter a prompt first");
       return;
     }
     try {
       const res = await formateTextInMarkDown({ text: helpData.signAiPrompt }).unwrap();
       if (res.success) {
-        const html = DOMPurify.sanitize(res.data);
+        const html = sanitizeHtml(res.data);
         setHelpData((prev) => ({ ...prev, signAiResponse: html }));
       }
     } catch (error) {

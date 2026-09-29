@@ -112,6 +112,10 @@ export const HIDDEN_SECTION_PARAMS = { TOKEN: "token" };
 
 export const VERIFICATION_PARAMS = { FORM_ID: "formid", BRANDING_NAME: "brandingName", DRAFT_ID: "draftId" };
 
+export const STEPPER_PARAMS = { STEP: "step", DRAFT_ID: "draftId" };
+
+export const SUBMISSION_SUCCESS_PARAMS = { SUBMISSION_ID: "submissionId" };
+
 export const SOCKET_EVENTS = {
   CONNECT: "connect",
   REGISTER_USER: "register_user",
@@ -162,6 +166,9 @@ export const LAYOUT_ROUTES = {
   MY_PROFILE: "/my-profile",
   VERIFICATION: "/verification",
   APPLICATION_FORM: "/application-form",
+  STEPPER: "/singleform/stepper",
+  SUBMISSION_SUCCESS: "/submited-successfully",
+  PDF_VIEW: "/singleform/pdf-view",
   APPLICATION_FORMS: "/application-forms",
   ROLE_MANAGEMENT: "/all-roles",
   USER_MANAGEMENT: "/all-users",
@@ -314,6 +321,7 @@ export const FIELD_NAMES = {
   BANK_ROUTING_NUMBER: "bank_routing_number",
   BANK_ACCOUNT_NUMBER: "bank_account_number",
   CONFIRM_BANK_ACCOUNT_NUMBER: "confirm_bank_account_number",
+  WEBSITE_URL: "website_url",
   BANK_ACCOUNT_HOLDER_NAME: "bank_account_holder_name",
   BANK_NAME: "bank_name",
   COMPANY_DESCRIPTION: "companydescription",
@@ -617,4 +625,8 @@ export const HTTP_STATUSES = {
 
 export const KEYBOARD_KEYS = {
   ESCAPE: "Escape",
+  ENTER: "Enter",
+  TAB: "Tab",
+  ARROW_UP: "ArrowUp",
+  ARROW_DOWN: "ArrowDown",
 };

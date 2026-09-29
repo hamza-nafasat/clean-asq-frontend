@@ -2,25 +2,21 @@ import { useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
-import { socket } from "@/lib/socket";
 import { useGetMyProfileFirstTimeMutation, useUpdateMyProfileMutation } from "@/redux/apis/auth.apis";
 import { userExist } from "@/redux/slices/auth.slice";
 import { updateFormState } from "@/redux/slices/form.slice";
-import {
-  ID_MISSION_SOCKET_EVENTS,
-  ID_MISSION_VERIFICATION_RESULTS,
-  SECTION_KEYS,
-} from "@/modules/applicant/utils/applicant.constants";
+import { socket } from "@/lib/socket";
+import { ID_MISSION_SOCKET_EVENTS, ID_MISSION_VERIFICATION_RESULTS, SECTION_KEYS } from "../utils/applicant.constants";
 import {
   hasUsableIdMissionData,
   mapWebhookToIdMissionData,
   splitIdMissionName,
-} from "@/modules/applicant/utils/applicant.utils5";
+} from "../utils/applicant.idMission.utils";
 
 // IDMission webhook events for the ID Mission step, attached once on mount
 const useApplicantIdMissionSocket = ({
   idMissionScanAppliedRef,
-  idMissionManualEntryRef,
+  setIsManualEntry,
   setIdMissionVerifiedData,
   setIdMissionVerified,
   setIdMissionDetailsReady,
@@ -41,15 +37,19 @@ const useApplicantIdMissionSocket = ({
 
   useEffect(() => {
     const mapPayload = (data) =>
-      mapWebhookToIdMissionData(data?.Form_Data, { emailFallback: userRef.current?.email || "" });
+      mapWebhookToIdMissionData(data?.Form_Data, {
+        emailFallback: userRef.current?.email || "",
+        // kept so reviewers see a failed scan
+        verificationStatus: data?.Form_Status,
+      });
 
     // reveal details only when the payload has identity fields
     const revealDetailsWithData = (mapped) => {
       if (!hasUsableIdMissionData(mapped)) return false;
       idMissionScanAppliedRef.current = true;
-      idMissionManualEntryRef.current = false;
       // data, flags and loading exit in one paint
       flushSync(() => {
+        setIsManualEntry(false);
         setIdMissionVerifiedData((prev) => ({
           ...prev,
           ...mapped,
@@ -57,9 +57,9 @@ const useApplicantIdMissionSocket = ({
             name: "email",
             value: mapped?.email?.value || prev?.email?.value || userRef.current?.email || "",
           },
-          signature: mapped?.signature ?? prev?.signature,
-          roleFillingForCompany: mapped?.roleFillingForCompany ?? prev?.roleFillingForCompany,
-          address2: mapped?.address2 ?? prev?.address2,
+          signature: prev?.signature,
+          roleFillingForCompany: prev?.roleFillingForCompany,
+          address2: prev?.address2,
         }));
         setIdMissionVerified(true);
         setIdMissionDetailsReady(true);
@@ -126,7 +126,7 @@ const useApplicantIdMissionSocket = ({
       socket.off(ID_MISSION_SOCKET_EVENTS.OTHER, handleOther);
     };
   }, [
-    idMissionManualEntryRef,
+    setIsManualEntry,
     idMissionScanAppliedRef,
     setIdMissionDetailsReady,
     setIdMissionVerified,

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
-import DOMPurify from "dompurify";
 import { useFormateTextInMarkDownMutation } from "@/redux/apis/form.apis";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import Button from "@/components/shared/Button";
 import TextField from "@/components/shared/TextField";
 import HtmlContent from "@/components/shared/HtmlContent";
@@ -32,7 +32,7 @@ const ApplicantDisplayTextEditor = ({
     try {
       const res = await formateTextInMarkDown({ text: values.text, instructions: values.instructions }).unwrap();
       if (res.success) {
-        const html = DOMPurify.sanitize(res.data);
+        const html = sanitizeHtml(res.data);
         setValues((prev) => ({ ...prev, formatted: html }));
       }
     } catch (error) {

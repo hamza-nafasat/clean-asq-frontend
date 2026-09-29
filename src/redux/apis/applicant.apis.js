@@ -1,17 +1,13 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import getEnv from "@/utils/env";
 
-const idMissionApis = createApi({
-  reducerPath: "idMissionApi",
+const applicantApis = createApi({
+  reducerPath: "applicantApi",
   baseQuery: fetchBaseQuery({ baseUrl: `${getEnv("SERVER_URL")}/api/id-mission`, credentials: "include" }),
-  tagTypes: ["idMission"],
   endpoints: (builder) => ({
     /////
     getIdMissionSession: builder.mutation({
-      query: (data) => ({
-        url: `/get-session?sectionKey=${data?.sectionKey || ""}`,
-        method: "GET",
-      }),
+      query: (data) => ({ url: "/get-session", method: "GET", params: { sectionKey: data?.sectionKey || "" } }),
     }),
     /////
     sendOtp: builder.mutation({
@@ -32,5 +28,5 @@ const idMissionApis = createApi({
   }),
 });
 
-export const { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } = idMissionApis;
-export default idMissionApis;
+export const { useGetIdMissionSessionMutation, useSendOtpMutation, useVerifyEmailMutation } = applicantApis;
+export default applicantApis;
