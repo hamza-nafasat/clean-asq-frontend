@@ -8,7 +8,6 @@ const initialState = {
   currentScreenId: null,
   formDataSignal: 0,
   widgetResetSignal: 0,
-  autoMessageSignal: 0,
   assistantMode: AI_ASSISTANT_MODES.SERVICE_PROVIDER,
   fieldChangeSignal: 0,
 };
@@ -48,10 +47,6 @@ const aiChatSlice = createSlice({
     bumpFieldChangeSignal: (state) => {
       state.fieldChangeSignal += 1;
     },
-    openWithAutoMessage: (state) => {
-      state.isOpen = true;
-      state.autoMessageSignal += 1;
-    },
   },
 });
 
@@ -65,7 +60,6 @@ export const {
   resetSession,
   bumpFormDataSignal,
   bumpFieldChangeSignal,
-  openWithAutoMessage,
 } = aiChatSlice.actions;
 
 export default aiChatSlice;

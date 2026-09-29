@@ -10,7 +10,6 @@ import aiChatSlice from "@/redux/slices/aiChat.slice";
 import authSlice from "@/redux/slices/auth.slice";
 import brandingSlice from "@/redux/slices/branding.slice";
 import companySlice from "@/redux/slices/company.slice";
-import demoSlice from "@/redux/slices/demo.slice";
 import formSlice from "@/redux/slices/form.slice";
 
 const store = configureStore({
@@ -21,7 +20,6 @@ const store = configureStore({
     [formSlice.name]: formSlice.reducer,
     [companySlice.name]: companySlice.reducer,
     [aiChatSlice.name]: aiChatSlice.reducer,
-    [demoSlice.name]: demoSlice.reducer,
 
     // apis
     [authApis.reducerPath]: authApis.reducer,

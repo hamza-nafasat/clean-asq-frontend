@@ -68,7 +68,7 @@ names in the examples. The rest applies unchanged.
 | `applicant` | the application flow — email code, company lookup, ID check, stepper, success | — |
 | `myApplications` | the account's own drafts, submissions, and owner invitations | — |
 | `myProfile` | the account's own profile and password | — |
-| `testing` · `demo` | internal tools | — |
+| `testing` | internal tools | — |
 
 ## Roles
 

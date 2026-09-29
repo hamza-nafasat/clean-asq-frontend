@@ -25,7 +25,6 @@ import { DEFAULT_LANGUAGE_CODE } from "@/lib/languages.js";
 
 const LOGIN_PATH = "/login";
 const APPLICANT_FORM_PATH_PREFIX = "/application-form/";
-const AUTO_MESSAGE_DELAY_MS = 400;
 const INPUT_FOCUS_DELAY_MS = 100;
 const MODE_EXIT_DELAY_MS = 150;
 
@@ -33,7 +32,7 @@ const AIChatWidget = () => {
   const aiChat = useAiChat();
   const { isOpen, setIsOpen, messages, addMessage, isLoading, setIsLoading, getScreenContext, currentScreenId } = aiChat;
   const { formDataSignal, widgetResetSignal, pushRevertable, popRevertable, signalContinuationPending } = aiChat;
-  const { autoMessageSignal, pendingAutoMessageRef, assistantMode } = aiChat;
+  const { assistantMode } = aiChat;
   const { user } = useSelector((s) => s.auth);
   const dispatch = useDispatch();
   const [updateMyProfile] = useUpdateMyProfileMutation();
@@ -118,14 +117,6 @@ const AIChatWidget = () => {
     refs.initialGreetingShownRef.current = false;
     refs.lastAnnouncedScreenIdRef.current = null;
   }, [widgetResetSignal]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // send a queued message such as "Build live action" from the demo page
-  useEffect(() => {
-    if (!autoMessageSignal || !pendingAutoMessageRef?.current) return;
-    const text = pendingAutoMessageRef.current;
-    pendingAutoMessageRef.current = null;
-    setTimeout(() => sendMessageRef.current?.(text), AUTO_MESSAGE_DELAY_MS);
-  }, [autoMessageSignal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const scrollToBottom = useCallback((instant = false) => {
     const el = messagesContainerRef.current;

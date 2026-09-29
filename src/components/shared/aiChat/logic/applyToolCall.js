@@ -8,7 +8,6 @@ import createFormEditorTools from "./tools/formEditorTools.js";
 import createFormListTools from "./tools/formListTools.js";
 import createGeneralTools from "./tools/generalTools.js";
 import createLogoTools from "./tools/logoTools.js";
-import createDemoTools from "./tools/demoTools.js";
 
 const NO_SCREEN_CONTEXT = Object.freeze({ actions: {} });
 
@@ -21,7 +20,6 @@ const TOOL_GROUPS = [
   createFormListTools,
   createFormEditorTools,
   createApplicantTools,
-  createDemoTools,
 ];
 
 // tool-call handler bound to the chat widget's state and actions

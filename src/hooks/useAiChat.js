@@ -5,7 +5,6 @@ import {
   bumpFieldChangeSignal,
   bumpFormDataSignal,
   clearMessages as clearMessagesAction,
-  openWithAutoMessage,
   resetSession as resetSessionAction,
   setAssistantMode as setAssistantModeAction,
   setCurrentScreenId,
@@ -22,7 +21,6 @@ const formDataVersionRef = { current: { screenId: null, formId: null } };
 const prevFieldValuesRef = { current: {} };
 const continuationPendingRef = { current: false };
 const actionLogRef = { current: [] };
-const pendingAutoMessageRef = { current: null };
 
 const resolveValue = (value, current) => (typeof value === "function" ? value(current) : value);
 
@@ -141,15 +139,6 @@ const useAiChat = () => {
     continuationPendingRef.current = true;
   }, []);
 
-  // open the widget and send a message as if the user typed it
-  const triggerAutoMessage = useCallback(
-    (text) => {
-      pendingAutoMessageRef.current = text;
-      dispatch(openWithAutoMessage());
-    },
-    [dispatch],
-  );
-
   return {
     ...aiChat,
     setIsOpen,
@@ -165,8 +154,6 @@ const useAiChat = () => {
     pushRevertable,
     popRevertable,
     signalContinuationPending,
-    triggerAutoMessage,
-    pendingAutoMessageRef,
     setAssistantMode,
   };
 };

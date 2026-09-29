@@ -48,11 +48,6 @@ export const PERMISSIONS = Object.freeze({
   READ_EMAIL: "read_email",
   UPDATE_EMAIL: "update_email",
   DELETE_EMAIL: "delete_email",
-  CREATE_DEMO: "create_demo",
-  READ_DEMO: "read_demo",
-  UPDATE_DEMO: "update_demo",
-  DELETE_DEMO: "delete_demo",
-  PRESENT_DEMO: "present_demo",
   ACCESS_SIDEBAR: "access_sidebar",
 });
 
@@ -135,16 +130,6 @@ export const PERMISSION_GROUPS = Object.freeze([
   {
     name: "Email Templates",
     permissions: [PERMISSIONS.READ_EMAIL, PERMISSIONS.CREATE_EMAIL, PERMISSIONS.UPDATE_EMAIL, PERMISSIONS.DELETE_EMAIL],
-  },
-  {
-    name: "Demos",
-    permissions: [
-      PERMISSIONS.READ_DEMO,
-      PERMISSIONS.CREATE_DEMO,
-      PERMISSIONS.UPDATE_DEMO,
-      PERMISSIONS.DELETE_DEMO,
-      PERMISSIONS.PRESENT_DEMO,
-    ],
   },
 ]);
 

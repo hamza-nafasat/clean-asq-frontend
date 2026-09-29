@@ -109,11 +109,4 @@ export const AI_TOOLS = {
   OPEN_FIELD_PANEL: "openFieldPanel",
   SCROLL_TO_FIELD: "scrollToField",
   ENTER_TRANSLATION_MODE: "enterTranslationMode",
-  // demo builder
-  UPDATE_BUILDER_STEPS: "updateBuilderSteps",
-  ADD_STEP_TO_BUILDER: "addStepToBuilder",
-  BUILD_DEMO_ACTION: "buildDemoAction",
-  SAVE_DEMO_ACTION: "saveDemoAction",
-  SELECT_FEATURES: "selectFeatures",
-  SET_NARRATION_INSTRUCTIONS: "setNarrationInstructions",
 };
