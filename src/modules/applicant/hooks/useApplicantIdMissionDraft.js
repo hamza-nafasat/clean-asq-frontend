@@ -38,7 +38,7 @@ const useApplicantIdMissionDraft = ({
       const savedData = res.data?.savedData || {};
       const savedIdMission = savedData[SECTION_KEYS.ID_MISSION];
       unwrapResult(await dispatch(addSavedFormData(savedData)));
-      if (res.data?._id) dispatch(setCurrentDraftId(res.data._id));
+      if (res.data?._id) dispatch(setCurrentDraftId({ draftId: res.data._id, formId }));
       // keep fields already filled by an IDMission scan
       if (!idMissionScanAppliedRef.current) {
         const draftEmail = email || savedIdMission?.email?.value || user?.email || "";

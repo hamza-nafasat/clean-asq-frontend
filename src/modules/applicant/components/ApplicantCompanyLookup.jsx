@@ -55,8 +55,8 @@ const ApplicantCompanyLookup = ({ formId, brandingName, draftId }) => {
   const store = useStore();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  const { formData, currentDraftId } = useSelector((state) => state.form);
-  const activeDraftId = draftId || currentDraftId;
+  const { formData, currentDraftId, currentDraftFormId } = useSelector((state) => state.form);
+  const activeDraftId = draftId || (currentDraftFormId === formId ? currentDraftId : null);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", url: "", noWebsite: false });
   const [errors, setErrors] = useState({});
@@ -86,7 +86,7 @@ const ApplicantCompanyLookup = ({ formId, brandingName, draftId }) => {
           const res = await saveFormInDraft({ formId, formData: formData || {} }).unwrap();
           id = res?.data?.draftId;
         }
-        if (id) dispatch(setCurrentDraftId(id));
+        if (id) dispatch(setCurrentDraftId({ draftId: id, formId }));
         return navigate(buildApplicationFormPath({ formId, brandingName, draftId: id }));
       } catch (error) {
         console.error("Create draft error:", error);
@@ -110,7 +110,7 @@ const ApplicantCompanyLookup = ({ formId, brandingName, draftId }) => {
         draftId: lookupDraftId,
         formData: store.getState().form.formData,
       }).unwrap();
-      if (res.success && res?.data?.draftId) dispatch(setCurrentDraftId(res.data.draftId));
+      if (res.success && res?.data?.draftId) dispatch(setCurrentDraftId({ draftId: res.data.draftId, formId }));
       toast.success("Company lookup successfully completed");
     } catch (error) {
       console.error("Lookup company error:", error);
@@ -150,7 +150,7 @@ const ApplicantCompanyLookup = ({ formId, brandingName, draftId }) => {
         const res = await saveFormInDraft({ formId, formData: formData || {} }).unwrap();
         id = res?.data?.draftId;
       }
-      if (id) dispatch(setCurrentDraftId(id));
+      if (id) dispatch(setCurrentDraftId({ draftId: id, formId }));
       // lookup keeps running after the redirect
       companyLookup(id);
       return navigate(buildApplicationFormPath({ formId, brandingName, draftId: id }));

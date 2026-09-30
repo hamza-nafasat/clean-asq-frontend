@@ -57,9 +57,10 @@ const SingleApplication = () => {
   const { formId } = useParams();
   const [searchParams] = useSearchParams();
   const { user } = useSelector((state) => state.auth);
-  const { emailVerified, currentDraftId } = useSelector((state) => state.form);
+  const { emailVerified, currentDraftId, currentDraftFormId } = useSelector((state) => state.form);
   // each application writes to its own draft
-  const draftId = searchParams.get(VERIFICATION_PARAMS.DRAFT_ID) || currentDraftId;
+  const draftId =
+    searchParams.get(VERIFICATION_PARAMS.DRAFT_ID) || (currentDraftFormId === formId ? currentDraftId : null);
   const [isIdMissionProcessing, setIsIdMissionProcessing] = useState(false);
   const [idMissionVerified, setIdMissionVerified] = useState(false);
   // details show only after their data is committed

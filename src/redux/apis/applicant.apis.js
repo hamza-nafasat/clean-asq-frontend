@@ -1,9 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { createBaseQuery } from "@/redux/store.utils";
 import getEnv from "@/utils/env";
 
 const applicantApis = createApi({
   reducerPath: "applicantApi",
-  baseQuery: fetchBaseQuery({ baseUrl: `${getEnv("SERVER_URL")}/api/id-mission`, credentials: "include" }),
+  baseQuery: createBaseQuery(`${getEnv("SERVER_URL")}/api/id-mission`),
   endpoints: (builder) => ({
     /////
     getIdMissionSession: builder.mutation({

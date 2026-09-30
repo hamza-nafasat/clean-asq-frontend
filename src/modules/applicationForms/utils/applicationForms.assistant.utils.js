@@ -96,7 +96,8 @@ const mapAssistantSection = (s) => ({
 });
 
 const mapDetailedForm = ({ formData, pendingFormEdits, formStrategies, formId, ruleCount }) => {
-  const effectiveData = applyPendingEdits(formData, pendingFormEdits);
+  const edits = pendingFormEdits?.formId === formId ? pendingFormEdits : null;
+  const effectiveData = applyPendingEdits(formData, edits);
   const linkedStrategy = findLinkedStrategy(formStrategies, formId);
   const strategyLookupKeys = (linkedStrategy?.searchStrategies || []).map((s) => s.searchObjectKey).filter(Boolean);
   return {
@@ -109,7 +110,8 @@ const mapDetailedForm = ({ formData, pendingFormEdits, formStrategies, formId, r
     idMissionDataDisplayText: effectiveData.idMissionDataDisplayText || "",
     idMissionDataDisplayFormatingInstructions: effectiveData.idMissionDataDisplayFormatingInstructions || "",
     companyVerificationDisplayText: effectiveData.companyVerificationDisplayText || "",
-    companyVerificationDisplayFormatingInstructions: effectiveData.companyVerificationDisplayFormatingInstructions || "",
+    companyVerificationDisplayFormatingInstructions:
+      effectiveData.companyVerificationDisplayFormatingInstructions || "",
     ruleCount,
     linkedStrategy: linkedStrategy
       ? {

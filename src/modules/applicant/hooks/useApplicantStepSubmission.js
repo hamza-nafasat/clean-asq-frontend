@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useSaveFormInDraftMutation, useSubmitFormMutation } from "@/redux/apis/form.apis";
@@ -24,19 +24,21 @@ const useApplicantStepSubmission = ({
   const navigate = useNavigate();
   const [formSubmit] = useSubmitFormMutation();
   const [saveFormInDraft] = useSaveFormInDraftMutation();
+  // one save or submit at a time
+  const isBusyRef = useRef(false);
 
   // keep the draft id in redux and the url
   const rememberDraftId = useCallback(
     (id) => {
       if (!id) return;
-      dispatch(setCurrentDraftId(id));
+      dispatch(setCurrentDraftId({ draftId: id, formId: formDocumentId }));
       const params = new URLSearchParams(window.location.search);
       if (params.get(STEPPER_PARAMS.DRAFT_ID) === String(id)) return;
       params.set(STEPPER_PARAMS.DRAFT_ID, id);
       const search = params.toString();
       window.history.replaceState(null, "", `${window.location.pathname}${search ? `?${search}` : ""}`);
     },
-    [dispatch],
+    [dispatch, formDocumentId],
   );
 
   // upload files and stamp created, updated and updatedBy
@@ -58,6 +60,8 @@ const useApplicantStepSubmission = ({
   // move on only once the step is saved
   const handleNext = useCallback(
     async ({ data, name, setLoadingNext }) => {
+      if (isBusyRef.current) return;
+      isBusyRef.current = true;
       try {
         setLoadingNext(true);
         if (data && name) {
@@ -75,6 +79,7 @@ const useApplicantStepSubmission = ({
         console.error("Save step error:", error);
         toast.error(error?.data?.message || "Error while handling next");
       } finally {
+        isBusyRef.current = false;
         setLoadingNext(false);
       }
     },
@@ -94,25 +99,22 @@ const useApplicantStepSubmission = ({
 
   const handleSubmit = useCallback(
     async ({ data, name, setLoadingNext }) => {
+      if (isBusyRef.current) return;
+      isBusyRef.current = true;
       try {
         setLoadingNext(true);
-        if (data && name) {
-          const updatedData = await prepareSectionData(data, name);
-          const res = await formSubmit({
-            formId: formDocumentId,
-            draftId,
-            formData: { ...formData, [name]: updatedData },
-          }).unwrap();
-          if (res.success) {
-            toast.success(res.message);
-            dispatch(resetApplicationProgress());
-            navigate(buildSubmissionSuccessPath({ formId: formDocumentId, submissionId: res.data?._id }));
-          }
-        }
+        // a step without its own data submits the saved form as is
+        const submitData = name ? { ...formData, [name]: await prepareSectionData(data || {}, name) } : formData;
+        const res = await formSubmit({ formId: formDocumentId, draftId, formData: submitData }).unwrap();
+        if (!res.success) return toast.error(res.message || "Your application could not be submitted");
+        toast.success(res.message);
+        dispatch(resetApplicationProgress());
+        navigate(buildSubmissionSuccessPath({ formId: formDocumentId, submissionId: res.data?._id }));
       } catch (error) {
         console.error("Submit form error:", error);
-        toast.error(error?.data?.message || "Error while submitting form");
+        toast.error(error?.data?.message || "Your application could not be submitted, please try again");
       } finally {
+        isBusyRef.current = false;
         setLoadingNext(false);
       }
     },
@@ -121,6 +123,8 @@ const useApplicantStepSubmission = ({
 
   const saveInProgress = useCallback(
     async ({ data, name }) => {
+      if (isBusyRef.current) return;
+      isBusyRef.current = true;
       try {
         if (data && name) {
           const updatedData = await uploadFilesAndReplace(data);
@@ -144,6 +148,8 @@ const useApplicantStepSubmission = ({
       } catch (error) {
         console.error("Save draft error:", error);
         toast.error(error?.data?.message || "Error while saving form in draft");
+      } finally {
+        isBusyRef.current = false;
       }
     },
     [dispatch, draftId, formData, formDocumentId, rememberDraftId, saveFormInDraft, user],

@@ -139,6 +139,7 @@ export const commitPendingFormEdits = async ({ edits, getSections, mutations, fo
     if (deleted.includes(String(sectionId))) continue;
     try {
       const currentSection = findSection(getSections(), sectionId);
+      if (!currentSection) throw new Error("Section not found on this form");
       const payload = await buildSectionPayload({ update, currentSection, formatText });
       const res = await updateFormSection({
         _id: sectionId,
@@ -151,12 +152,15 @@ export const commitPendingFormEdits = async ({ edits, getSections, mutations, fo
     }
   }
 
-  const fieldSectionIds = new Set([...Object.keys(edits.fieldUpdates || {}), ...Object.keys(edits.deletedFields || {})]);
+  const fieldSectionIds = new Set([
+    ...Object.keys(edits.fieldUpdates || {}),
+    ...Object.keys(edits.deletedFields || {}),
+  ]);
   for (const sectionId of fieldSectionIds) {
     if (deleted.includes(String(sectionId))) continue;
     try {
       const section = findSection(getSections(), sectionId);
-      if (!section) continue;
+      if (!section) throw new Error("Section not found on this form");
       const fieldMap = edits.fieldUpdates?.[sectionId] || {};
       const deletedFieldIds = edits.deletedFields?.[sectionId] || [];
       // fields left out are deleted

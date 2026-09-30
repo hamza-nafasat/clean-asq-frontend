@@ -1,4 +1,5 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { createBaseQuery } from "@/redux/store.utils";
 import getEnv from "@/utils/env";
 
 const ROLE_TAGS = {
@@ -8,7 +9,7 @@ const ROLE_TAGS = {
 
 const roleApis = createApi({
   reducerPath: "roleApi",
-  baseQuery: fetchBaseQuery({ baseUrl: `${getEnv("SERVER_URL")}/api/role`, credentials: "include" }),
+  baseQuery: createBaseQuery(`${getEnv("SERVER_URL")}/api/role`),
   tagTypes: [ROLE_TAGS.ROLE, ROLE_TAGS.PERMISSION],
   endpoints: (builder) => ({
     /////

@@ -48,10 +48,11 @@ const ApplicationForm = () => {
   const { formId } = useParams();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { formData, currentDraftId } = useSelector((state) => state.form);
-  const draftId = searchParams.get(STEPPER_PARAMS.DRAFT_ID) || currentDraftId;
+  const { formData, currentDraftId, currentDraftFormId } = useSelector((state) => state.form);
+  const draftId = searchParams.get(STEPPER_PARAMS.DRAFT_ID) || (currentDraftFormId === formId ? currentDraftId : null);
   const [currentStep, setCurrentStep] = useState(() => Number(searchParams.get(STEPPER_PARAMS.STEP)) || 0);
   const [isDraftLoaded, setIsDraftLoaded] = useState(false);
+  const loadedDraftIdRef = useRef(null);
 
   const { data: form, isLoading: formLoading, refetch: formRefetch } = useGetSingleFormQueryQuery({ _id: formId });
   const [getSavedFormData] = useGetSavedFormMutation();
@@ -108,18 +109,21 @@ const ApplicationForm = () => {
 
   // resume only when a draft id was passed
   useEffect(() => {
-    if (!hasSections) return;
-    if (!draftId) {
+    if (!hasSections || (draftId && draftId === loadedDraftIdRef.current)) return;
+    // a draft our own first save created is already in redux
+    if (!draftId || (isDraftLoaded && !loadedDraftIdRef.current)) {
+      loadedDraftIdRef.current = draftId;
       setIsDraftLoaded(true);
       return;
     }
+    loadedDraftIdRef.current = draftId;
     getSavedFormData({ formId: formDocumentId, draftId })
       .then((res) => {
         const data = res?.data?.data?.savedData;
         if (data) dispatch(addSavedFormData(data));
       })
       .finally(() => setIsDraftLoaded(true));
-  }, [dispatch, draftId, formDocumentId, getSavedFormData, hasSections]);
+  }, [dispatch, draftId, formDocumentId, getSavedFormData, hasSections, isDraftLoaded]);
 
   // header and footer text for the layout
   useEffect(() => {
@@ -188,7 +192,6 @@ const ApplicationForm = () => {
         <Stepper
           steps={sectionNames}
           currentStep={currentStep}
-          visibleSteps={0}
           emptyRequiredFields={[]}
           headerActions={
             <Button variant="secondary" onClick={handleDownload} label={downloadLabel} disabled={isDownloading} />

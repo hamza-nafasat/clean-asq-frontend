@@ -32,6 +32,7 @@ const EmailTemplateModal = ({
   onClose,
   onSubmit,
   onInsertKeyword,
+  isLoading = false,
 }) => {
   if (!isOpen) return null;
 
@@ -46,6 +47,7 @@ const EmailTemplateModal = ({
       saveButtonText={isReadOnly ? "Close" : "Save"}
       title={MODAL_TITLES[mode]}
       onClose={onClose}
+      isLoading={isLoading}
     >
       <div className="mt-4 space-y-4 overflow-auto">
         <TextField

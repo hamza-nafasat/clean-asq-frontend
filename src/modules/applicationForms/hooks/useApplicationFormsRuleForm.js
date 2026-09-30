@@ -37,8 +37,15 @@ const useApplicationFormsRuleForm = ({ mode, formId, initialData, onClose }) => 
     try {
       const { prompt, name, category, order } = rule;
       const res = await getRuleFromAi({ formId, prompt, name, category, ...(isEdit && { order }) }).unwrap();
-      const { name: aiName, handler, formula, example, explanation, order: aiOrder, category: aiCategory } =
-        res?.data || {};
+      const {
+        name: aiName,
+        handler,
+        formula,
+        example,
+        explanation,
+        order: aiOrder,
+        category: aiCategory,
+      } = res?.data || {};
       setRule((prev) => ({
         ...prev,
         name: aiName ?? prev.name,

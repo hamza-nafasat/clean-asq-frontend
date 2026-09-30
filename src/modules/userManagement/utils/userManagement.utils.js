@@ -1,11 +1,27 @@
 import { MODAL_MODES } from "@/constants";
-import { PROMISE_STATUSES } from "./userManagement.constants";
+import { PROMISE_STATUSES, USER_FORM_FIELDS } from "./userManagement.constants";
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_LENGTH = 8;
 
 // returns an error message per field name
 export const validateUserForm = (formData, mode) => {
   const errors = {};
+  const email = formData[USER_FORM_FIELDS.EMAIL]?.trim();
+  const password = formData[USER_FORM_FIELDS.PASSWORD] ?? "";
 
-  // TODO(human): fill errors for the add and edit form
+  if (!formData[USER_FORM_FIELDS.FIRST_NAME]?.trim()) errors[USER_FORM_FIELDS.FIRST_NAME] = "Enter a first name";
+  if (!formData[USER_FORM_FIELDS.LAST_NAME]?.trim()) errors[USER_FORM_FIELDS.LAST_NAME] = "Enter a last name";
+  if (!email) errors[USER_FORM_FIELDS.EMAIL] = "Enter an email";
+  else if (!EMAIL_PATTERN.test(email)) errors[USER_FORM_FIELDS.EMAIL] = "Enter a valid email";
+  if (!formData[USER_FORM_FIELDS.ROLE]) errors[USER_FORM_FIELDS.ROLE] = "Choose a role";
+
+  // only new users set a password
+  if (mode === MODAL_MODES.ADD) {
+    if (!password) errors[USER_FORM_FIELDS.PASSWORD] = "Enter a password";
+    else if (password.length < MIN_PASSWORD_LENGTH)
+      errors[USER_FORM_FIELDS.PASSWORD] = `Use at least ${MIN_PASSWORD_LENGTH} characters`;
+  }
 
   return errors;
 };

@@ -111,6 +111,7 @@ const Brandings = () => {
           }
           confirmButtonText="Apply Branding"
           onConfirm={apply.confirmApply}
+          isLoading={apply.isApplying}
           onClose={apply.closeApplyModal}
           title="Apply Branding"
         />

@@ -36,7 +36,9 @@ const ApplicationFormsLocationModal = ({ isOpen = false, onClose, initialData = 
   if (!isOpen) return null;
 
   const handleChange = ({ target: { name, value } }) => {
-    setValues((prev) => ({ ...prev, [name]: value }));
+    // changed text needs a new format
+    const isSourceText = name === LOCATION_FIELDS.MESSAGE || name === LOCATION_FIELDS.INSTRUCTIONS;
+    setValues((prev) => ({ ...prev, [name]: value, ...(isSourceText && canFormat && { [LOCATION_FIELDS.FORMATTED_MESSAGE]: "" }) }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 

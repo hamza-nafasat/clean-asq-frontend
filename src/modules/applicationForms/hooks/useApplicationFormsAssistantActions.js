@@ -11,6 +11,7 @@ import {
   useDeleteFormSectionMutation,
   useDeleteSingleFormMutation,
   useFormateTextInMarkDownMutation,
+  useLazyGetSingleFormQueryQuery,
   useReorderFormSectionsMutation,
   useUpdateDeleteCreateFormFieldsMutation,
   useUpdateFormLocationMutation,
@@ -35,7 +36,12 @@ import {
   mergeFieldUpdates,
   mergeSectionUpdates,
 } from "../utils/applicationForms.pendingEdits.utils";
-import { collectFailures, commitPendingFormEdits, toStatusError, updateTemplateForms } from "../utils/applicationForms.save.utils";
+import {
+  collectFailures,
+  commitPendingFormEdits,
+  toStatusError,
+  updateTemplateForms,
+} from "../utils/applicationForms.save.utils";
 
 // screen actions the assistant may call
 const useApplicationFormsAssistantActions = ({
@@ -70,6 +76,7 @@ const useApplicationFormsAssistantActions = ({
   const [addFormField] = useAddFormFieldMutation();
   const [reorderFormSectionsMutation] = useReorderFormSectionsMutation();
   const [deleteFormSectionMutation] = useDeleteFormSectionMutation();
+  const [fetchSingleForm] = useLazyGetSingleFormQueryQuery();
 
   const getForms = () => latestDataRef.current.forms;
   const findForm = (formId) => getForms()?.find((form) => form._id === formId);
@@ -84,7 +91,10 @@ const useApplicationFormsAssistantActions = ({
   const confirmFormsUpdate = (updates, action) =>
     confirmOrCancel({
       title: "Update Forms",
-      message: `${action} on ${getFormNames(getForms(), updates.map((update) => update.formId))}?`,
+      message: `${action} on ${getFormNames(
+        getForms(),
+        updates.map((update) => update.formId),
+      )}?`,
       confirmButtonText: "Update",
     });
 
@@ -115,7 +125,10 @@ const useApplicationFormsAssistantActions = ({
   };
 
   return {
-    selectFormForEditing: ({ formId }) => reloadSelectedForm(formId),
+    selectFormForEditing: ({ formId }) => {
+      if (pending.ref.current?.formId !== formId) pending.set(null);
+      reloadSelectedForm(formId);
+    },
     updateSectionSettings: ({ updates }) => pending.set(mergeSectionUpdates(pending.getBase(), updates)),
     updateFieldSettings: ({ updates }) => pending.set(mergeFieldUpdates(pending.getBase(), updates)),
     reorderSections: ({ sectionOrder }) => pending.set({ ...pending.getBase(), sectionOrder }),
@@ -143,13 +156,15 @@ const useApplicationFormsAssistantActions = ({
       if (!edits) return { saved: false };
       await confirmOrCancel({
         title: "Save Form Changes",
-        message: `Save these changes to the live form: ${describePendingEdits(edits)}?`,
+        message: `Save these changes to ${getFormNames(getForms(), [edits.formId])}: ${describePendingEdits(edits)}?`,
         confirmButtonText: "Save",
       });
+      // sections of the edited form
+      const editedForm = await fetchSingleForm({ _id: edits.formId }).unwrap();
       const errors = await commitPendingFormEdits({
         edits,
         formatText: canFormat ? formatText : null,
-        getSections: () => latestDataRef.current.singleForm?.sections,
+        getSections: () => editedForm.data?.sections,
         mutations: {
           deleteFormSection: deleteFormSectionMutation,
           reorderFormSections: reorderFormSectionsMutation,
@@ -220,7 +235,11 @@ const useApplicationFormsAssistantActions = ({
     cloneForm: async ({ sourceFormId, newName }) => {
       const res = await cloneFormMutation({ sourceFormId, name: newName }).unwrap();
       if (!res?.success) throw new Error(res?.message);
-      await Promise.all([refetch(), canReadEmail && refetchEmailTemplates(), canReadStrategy && refetchFormStrategies()]);
+      await Promise.all([
+        refetch(),
+        canReadEmail && refetchEmailTemplates(),
+        canReadStrategy && refetchFormStrategies(),
+      ]);
       return res.data;
     },
     cloneRules: async ({ sourceFormId, targetFormId }) => {

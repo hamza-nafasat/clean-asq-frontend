@@ -10,9 +10,13 @@ const authSlice = createSlice({
     userNotExist: state => {
       state.user = null;
     },
+    // store.js clears the rest of the session
+    sessionCleared: state => {
+      state.user = null;
+    },
   },
 });
 
-export const { userExist, userNotExist } = authSlice.actions;
+export const { userExist, userNotExist, sessionCleared } = authSlice.actions;
 
 export default authSlice;

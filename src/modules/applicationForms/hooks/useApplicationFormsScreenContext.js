@@ -43,12 +43,16 @@ const useApplicationFormsScreenContext = ({ onOpenCreateForm, askConfirm }) => {
   const { data: formStrategies, refetch: refetchFormStrategies } = useGetAllFormStrategiesQuery(undefined, {
     skip: !canReadStrategy,
   });
-  const { data: singleFormData, isError: singleFormError } = useGetSingleFormQueryQuery(
+  const {
+    data: singleFormData,
+    isError: singleFormError,
+    refetch: refetchSingleForm,
+  } = useGetSingleFormQueryQuery(
     { _id: selectedFormForEditing },
     { skip: !selectedFormForEditing, refetchOnMountOrArgChange: true },
   );
   const [fetchSingleForm] = useLazyGetSingleFormQueryQuery();
-  const { data: formRulesData } = useGetAllFormRulesQuery(
+  const { data: formRulesData, refetch: refetchFormRules } = useGetAllFormRulesQuery(
     { formId: selectedFormForEditing },
     { skip: !selectedFormForEditing || !canReadRule, refetchOnMountOrArgChange: true },
   );
@@ -61,10 +65,11 @@ const useApplicationFormsScreenContext = ({ onOpenCreateForm, askConfirm }) => {
     };
   }, [forms, allEmailTemplates, singleFormData]);
 
-  // clear selection to refetch the form
+  // refetch in place, never clear selection
   const reloadSelectedForm = (formId) => {
-    setSelectedFormForEditing(null);
-    setTimeout(() => setSelectedFormForEditing(formId), 0);
+    if (formId !== selectedFormForEditing) return setSelectedFormForEditing(formId);
+    refetchSingleForm();
+    if (canReadRule) refetchFormRules();
   };
 
   const pending = {
@@ -73,7 +78,11 @@ const useApplicationFormsScreenContext = ({ onOpenCreateForm, askConfirm }) => {
       pendingFormEditsRef.current = next;
       setPendingFormEdits(next);
     },
-    getBase: () => pendingFormEditsRef.current || createEmptyPendingEdits(selectedFormForEditing),
+    // edits of another form start fresh
+    getBase: () =>
+      pendingFormEditsRef.current?.formId === selectedFormForEditing
+        ? pendingFormEditsRef.current
+        : createEmptyPendingEdits(selectedFormForEditing),
   };
 
   // preview built from data, not written by the model

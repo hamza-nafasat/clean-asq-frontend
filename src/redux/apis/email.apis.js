@@ -1,10 +1,11 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { createBaseQuery } from "@/redux/store.utils";
 import { API_TAGS } from "@/constants";
 import getEnv from "@/utils/env";
 
 const emailApis = createApi({
   reducerPath: "emailTemplateApi",
-  baseQuery: fetchBaseQuery({ baseUrl: `${getEnv("SERVER_URL")}/api/email-templates`, credentials: "include" }),
+  baseQuery: createBaseQuery(`${getEnv("SERVER_URL")}/api/email-templates`),
   tagTypes: [API_TAGS.EMAIL_TEMPLATES, API_TAGS.SINGLE_EMAIL_TEMPLATE],
   endpoints: (builder) => ({
     /////

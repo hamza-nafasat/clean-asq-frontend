@@ -32,7 +32,8 @@ const useBrandingEditorSave = ({ brandingId, values, branding }) => {
   const validateBranding = () => {
     setSubmittedErrors(missingErrors);
     if (!Object.keys(missingErrors).length) return true;
-    if (BRANDING_REQUIRED_FIELDS_WITHOUT_INPUT.some((field) => missingErrors[field])) toast.error(MISSING_FIELDS_MESSAGE);
+    if (BRANDING_REQUIRED_FIELDS_WITHOUT_INPUT.some((field) => missingErrors[field]))
+      toast.error(MISSING_FIELDS_MESSAGE);
     return false;
   };
 
@@ -59,19 +60,25 @@ const useBrandingEditorSave = ({ brandingId, values, branding }) => {
       const updateRes = await updateBranding({ brandingId, data: buildBrandingFormData(values) }).unwrap();
       applySavedAiToGlobal(updateRes.data, branding);
 
+      toast.success(updateRes?.message || "Branding updated successfully!");
+    } catch (error) {
+      toast.error(error?.data?.message || "Failed to update branding. Please try again.");
+      throw error;
+    }
+
+    // saved already, refresh failure is not
+    try {
       const profileRes = await getUserProfile().unwrap();
       if (profileRes?.data?.branding?.colors) {
         applyUserBrandingToGlobal(profileRes.data.branding, branding);
         dispatch(userExist(profileRes.data));
       }
-
-      toast.success(updateRes?.message || "Branding updated successfully!");
-      if (!skipNavigation) navigate(BRANDING_ROUTES.LIST);
-      return brandingId;
     } catch (error) {
-      toast.error(error?.data?.message || "Failed to update branding. Please try again.");
-      throw error;
+      console.error("Refresh user profile error:", error);
     }
+
+    if (!skipNavigation) navigate(BRANDING_ROUTES.LIST);
+    return brandingId;
   };
 
   const handleSave = async () => {

@@ -1,13 +1,11 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { createBaseQuery } from "@/redux/store.utils";
 import { API_TAGS, PDF_VIEW_PARAMS } from "@/constants";
 import getEnv from "@/utils/env";
 
 const formApis = createApi({
   reducerPath: "formApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${getEnv("SERVER_URL")}/api/form`,
-    credentials: "include",
-  }),
+  baseQuery: createBaseQuery(`${getEnv("SERVER_URL")}/api/form`),
   tagTypes: Object.values(API_TAGS),
   endpoints: (builder) => ({
     /////

@@ -46,7 +46,7 @@ const useApplicantIdMissionSubmit = ({ formId, draftId, idMissionVerifiedData, s
         toast.success(res.message);
         // a draft created just now carries its id into the stepper
         const effectiveDraftId = draftId || res.data?.draftId;
-        if (effectiveDraftId) dispatch(setCurrentDraftId(effectiveDraftId));
+        if (effectiveDraftId) dispatch(setCurrentDraftId({ draftId: effectiveDraftId, formId }));
         dispatch(updateEmailVerified(false));
         navigate(buildStepperPath({ formId, draftId: effectiveDraftId }));
       } catch (error) {

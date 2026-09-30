@@ -4,7 +4,7 @@ import { IoLogOutOutline, IoPersonOutline } from "react-icons/io5";
 import { toast } from "react-toastify";
 
 import { useLogoutMutation } from "@/redux/apis/auth.apis";
-import { userNotExist } from "@/redux/slices/auth.slice";
+import { sessionCleared } from "@/redux/slices/auth.slice";
 import useAiChat from "@/hooks/useAiChat";
 import { Applications } from "@/assets/svgs/icon";
 import { AUTH_ROUTES, LAYOUT_ROUTES } from "@/constants";
@@ -21,7 +21,7 @@ const HeaderProfileMenu = ({ setIsProfileOpen }) => {
       const res = await logout().unwrap();
       if (res.success) {
         setIsOpen(false);
-        await dispatch(userNotExist());
+        dispatch(sessionCleared());
         toast.success(res.message);
         return navigate(AUTH_ROUTES.LOGIN);
       }

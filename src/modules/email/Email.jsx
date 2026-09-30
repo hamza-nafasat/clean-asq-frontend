@@ -43,8 +43,8 @@ const Email = () => {
   const canReadForm = usePermission(PERMISSIONS.READ_FORM);
   const { data: applicationForms } = useGetMyAllFormsQuery(undefined, { skip: !canReadForm });
   const { data: emailTemplates, isLoading, isError, refetch } = useGetAllEmailTemplatesQuery();
-  const [createEmailTemplate] = useCreateEmailTemplateMutation();
-  const [updateEmailTemplate] = useUpdateSingleEmailTemplateMutation();
+  const [createEmailTemplate, { isLoading: isCreating }] = useCreateEmailTemplateMutation();
+  const [updateEmailTemplate, { isLoading: isUpdating }] = useUpdateSingleEmailTemplateMutation();
   const [deleteEmailTemplate] = useDeleteSingleEmailTemplateMutation();
   const [attachEmailTemplate] = useAttachTemplateToFormMutation();
   const { openRowId, toggleMenu, setOpenRowId, getRowRef } = useRowActionMenu({ closeOnOutsideClick: true });
@@ -273,6 +273,7 @@ const Email = () => {
         onClose={handleClose}
         onSubmit={saveTemplate}
         onInsertKeyword={handleInsertKeyword}
+        isLoading={isCreating || isUpdating}
       />
       <ConfirmationModal
         isOpen={confirm.isOpen}

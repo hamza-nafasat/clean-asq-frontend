@@ -1,9 +1,10 @@
 import getEnv from "@/utils/env";
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { createBaseQuery } from "@/redux/store.utils";
 
 const authApis = createApi({
   reducerPath: "authApi",
-  baseQuery: fetchBaseQuery({ baseUrl: `${getEnv("SERVER_URL")}/api/auth`, credentials: "include" }),
+  baseQuery: createBaseQuery(`${getEnv("SERVER_URL")}/api/auth`),
 
   endpoints: (builder) => ({
     /////

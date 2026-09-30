@@ -9,10 +9,7 @@ import {
 } from "@/redux/apis/branding.apis";
 import { userExist, userNotExist } from "@/redux/slices/auth.slice";
 import useBranding from "@/hooks/useBranding";
-import {
-  executeBrandingAssignments,
-  getBrandingSettersFromHook,
-} from "@/utils/executeBrandingAssignment";
+import { executeBrandingAssignments, getBrandingSettersFromHook } from "@/utils/executeBrandingAssignment";
 
 // apply branding to forms or home
 const useBrandingListApply = () => {
@@ -22,6 +19,7 @@ const useBrandingListApply = () => {
   const [selectedFormIds, setSelectedFormIds] = useState([]);
   const [onHome, setOnHome] = useState(false);
   const [isDefault, setIsDefault] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
   const [addBrandingInForm] = useAddBrandingInFormMutation();
   const [setDefaultBranding] = useSetDefaultBrandingMutation();
   const [clearDefaultBranding] = useClearDefaultBrandingMutation();
@@ -67,6 +65,7 @@ const useBrandingListApply = () => {
     });
 
   const confirmApply = async () => {
+    if (isApplying) return;
     const brandingId = applyRow?._id;
     if (!brandingId) {
       toast.error("Branding ID is missing");
@@ -77,16 +76,17 @@ const useBrandingListApply = () => {
       toast.error("Choose a form, the website or the default");
       return;
     }
+    setIsApplying(true);
     try {
       const assignmentRes =
-        (selectedFormIds.length || onHome) &&
-        (await applyToTargets({ brandingId, formIds: selectedFormIds, onHome }));
+        (selectedFormIds.length || onHome) && (await applyToTargets({ brandingId, formIds: selectedFormIds, onHome }));
       const defaultRes = await updateDefaultBranding(brandingId);
       toast.success(defaultRes?.message || assignmentRes?.message || "Branding applied successfully");
     } catch (error) {
       console.error("Apply branding error:", error);
       toast.error(error?.message || error?.data?.message || "Failed to apply branding");
     } finally {
+      setIsApplying(false);
       closeApplyModal();
     }
   };
@@ -96,6 +96,7 @@ const useBrandingListApply = () => {
     openApplyModal,
     closeApplyModal,
     confirmApply,
+    isApplying,
     brandingId: applyRow?._id,
     selectedFormIds,
     setSelectedFormIds,

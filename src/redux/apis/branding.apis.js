@@ -1,14 +1,22 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { createBaseQuery } from "@/redux/store.utils";
 import formApis from "@/redux/apis/form.apis";
 import { API_TAGS, DEFAULT_BRANDING_TAG_ID } from "@/constants";
 import getEnv from "@/utils/env";
 
+// forms show their branding, so refresh them too
+const refreshFormsOnSuccess = async (_arg, { dispatch, queryFulfilled }) => {
+  try {
+    await queryFulfilled;
+    dispatch(formApis.util.invalidateTags([API_TAGS.FORM, API_TAGS.SINGLE_FORM]));
+  } catch (error) {
+    console.error("Refresh forms error:", error);
+  }
+};
+
 const brandingApis = createApi({
   reducerPath: "brandingApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${getEnv("SERVER_URL")}/api/branding`,
-    credentials: "include",
-  }),
+  baseQuery: createBaseQuery(`${getEnv("SERVER_URL")}/api/branding`),
   tagTypes: [API_TAGS.BRANDINGS, API_TAGS.SINGLE_BRANDING],
 
   endpoints: (builder) => ({
@@ -38,6 +46,7 @@ const brandingApis = createApi({
         { type: API_TAGS.SINGLE_BRANDING, id: brandingId },
         { type: API_TAGS.SINGLE_BRANDING, id: DEFAULT_BRANDING_TAG_ID },
       ],
+      onQueryStarted: refreshFormsOnSuccess,
     }),
     /////
     deleteSingleBranding: builder.mutation({
@@ -47,6 +56,7 @@ const brandingApis = createApi({
         { type: API_TAGS.SINGLE_BRANDING, id: brandingId },
         { type: API_TAGS.SINGLE_BRANDING, id: DEFAULT_BRANDING_TAG_ID },
       ],
+      onQueryStarted: refreshFormsOnSuccess,
     }),
     /////
     getAllBrandings: builder.query({
@@ -64,15 +74,7 @@ const brandingApis = createApi({
         API_TAGS.BRANDINGS,
         { type: API_TAGS.SINGLE_BRANDING, id: brandingId },
       ],
-      // also refresh the form list
-      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
-        try {
-          await queryFulfilled;
-          dispatch(formApis.util.invalidateTags([API_TAGS.FORM, API_TAGS.SINGLE_FORM]));
-        } catch (error) {
-          console.error("Add branding in form error:", error);
-        }
-      },
+      onQueryStarted: refreshFormsOnSuccess,
     }),
     /////
     getDefaultBranding: builder.query({

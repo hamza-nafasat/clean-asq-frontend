@@ -624,7 +624,12 @@ export const DELETE_CLOSE_MODES = {
   RESULT: "result",
 };
 
+export const TOAST_IDS = {
+  SESSION_EXPIRED: "session-expired",
+};
+
 export const HTTP_STATUSES = {
+  UNAUTHORIZED: 401,
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   TOO_MANY_REQUESTS: 429,

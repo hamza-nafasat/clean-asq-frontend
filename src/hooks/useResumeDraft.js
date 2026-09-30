@@ -17,7 +17,7 @@ const useResumeDraft = () => {
       const draft = { formId, draftId, brandingName };
       try {
         dispatch(updateEmailVerified(true));
-        if (draftId) dispatch(setCurrentDraftId(draftId));
+        if (draftId) dispatch(setCurrentDraftId({ draftId, formId }));
         const res = await getSavedForm({ formId, draftId }).unwrap();
         const savedData = res.data?.savedData ?? {};
         unwrapResult(await dispatch(addSavedFormData(savedData)));

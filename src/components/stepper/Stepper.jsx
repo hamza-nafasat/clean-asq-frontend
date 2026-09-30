@@ -1,9 +1,9 @@
 import { Fragment, useEffect, useState } from "react";
 
 const WIDE_SCREEN_WIDTH = 1440;
-const WIDE_SCREEN_MAX_STEPS = 14;
 const MIN_STEPS_PER_SCREEN = 3;
 const PIXELS_PER_STEP = 200;
+const WIDE_PIXELS_PER_STEP = 100;
 
 const getStepCircleClasses = (actualIndex, currentStep, isEmptyRequired) => {
   if (actualIndex < currentStep) return `border-accent ${isEmptyRequired ? "bg-[#974748]" : "bg-accent"}`;
@@ -11,10 +11,17 @@ const getStepCircleClasses = (actualIndex, currentStep, isEmptyRequired) => {
   return `border-gray-300 ${isEmptyRequired ? "bg-[#974748]/30" : "bg-white"}`;
 };
 
-const Stepper = ({ steps = [], currentStep, visibleSteps = 5, children, emptyRequiredFields = [], headerActions }) => {
-  const [visibleStepRange, setVisibleStepRange] = useState({ start: 0, end: visibleSteps });
+// window of steps around the current one
+const getVisibleStepRange = (windowWidth, currentStep, totalSteps) => {
+  const pixelsPerStep = windowWidth >= WIDE_SCREEN_WIDTH ? WIDE_PIXELS_PER_STEP : PIXELS_PER_STEP;
+  const stepsPerScreen = Math.max(MIN_STEPS_PER_SCREEN, Math.floor(windowWidth / pixelsPerStep));
+  const maxStart = Math.max(0, totalSteps - stepsPerScreen);
+  const start = Math.min(maxStart, Math.max(0, currentStep - Math.floor(stepsPerScreen / 2)));
+  return { start, end: Math.min(totalSteps, start + stepsPerScreen) };
+};
+
+const Stepper = ({ steps = [], currentStep, children, emptyRequiredFields = [], headerActions }) => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const totalSteps = steps.length;
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -22,23 +29,7 @@ const Stepper = ({ steps = [], currentStep, visibleSteps = 5, children, emptyReq
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // keep the current step inside the visible range
-  useEffect(() => {
-    if (windowWidth >= WIDE_SCREEN_WIDTH) {
-      setVisibleStepRange({ start: 0, end: Math.min(totalSteps, WIDE_SCREEN_MAX_STEPS) });
-      return;
-    }
-    const stepsPerScreen = Math.max(MIN_STEPS_PER_SCREEN, Math.floor(windowWidth / PIXELS_PER_STEP));
-
-    let start = Math.max(0, currentStep - Math.floor(stepsPerScreen / 2));
-    let end = Math.min(totalSteps, start + stepsPerScreen);
-
-    if (end === totalSteps) start = Math.max(0, end - stepsPerScreen);
-    if (start === 0) end = Math.min(totalSteps, start + stepsPerScreen);
-
-    setVisibleStepRange({ start, end });
-  }, [currentStep, totalSteps, windowWidth]);
-
+  const visibleStepRange = getVisibleStepRange(windowWidth, currentStep, steps.length);
   const displayedSteps = steps.slice(visibleStepRange.start, visibleStepRange.end);
 
   return (

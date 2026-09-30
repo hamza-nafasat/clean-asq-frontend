@@ -5,6 +5,7 @@ const formSlice = createSlice({
   initialState: {
     formData: {},
     currentDraftId: null,
+    currentDraftFormId: null,
     emailVerified: false,
     formHeaderText: "",
     formFooterText: "",
@@ -23,8 +24,10 @@ const formSlice = createSlice({
     addSavedFormData: (state, action) => {
       state.formData = action.payload;
     },
+    // the draft id only counts for its own form
     setCurrentDraftId: (state, action) => {
-      state.currentDraftId = action.payload || null;
+      state.currentDraftId = action.payload?.draftId || null;
+      state.currentDraftFormId = action.payload?.formId || null;
     },
     updateFormHeaderAndFooter: (state, action) => {
       state.formHeaderText = action.payload.headerText;
@@ -38,6 +41,7 @@ const formSlice = createSlice({
     resetApplicationProgress: (state) => {
       state.formData = {};
       state.currentDraftId = null;
+      state.currentDraftFormId = null;
       state.emailVerified = false;
     },
   },
