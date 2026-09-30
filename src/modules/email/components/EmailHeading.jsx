@@ -1,10 +1,13 @@
 import Button from "@/components/shared/Button";
+import PageHeading from "@/components/global/PageHeading";
 
 const EmailHeading = ({ canCreate = false, onCreate }) => (
-  <header className="flex items-center justify-between">
-    <h1 className="mb-6 text-2xl font-semibold">Email Templates</h1>
-    {canCreate && <Button label="Create Email Template" onClick={onCreate} data-testid="email-create-btn" />}
-  </header>
+  <PageHeading
+    className="mb-6"
+    title="Email Templates"
+    description="The emails sent to applicants, owners and reviewers, and the forms that use them."
+    actions={canCreate && <Button label="Create Email Template" onClick={onCreate} data-testid="email-create-btn" />}
+  />
 );
 
 export default EmailHeading;

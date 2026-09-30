@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import Button from "@/components/shared/Button";
 import StrategiesFormModal from "./StrategiesFormModal";
 import { MODAL_MODES } from "@/constants";
+import PageHeading from "@/components/global/PageHeading";
 
 const StrategiesHeading = ({ canCreateStrategy = false, formOptions = [], lookupOptions = [] }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,12 +25,16 @@ const StrategiesHeading = ({ canCreateStrategy = false, formOptions = [], lookup
 
   return (
     <>
-      <header className="mb-5 flex items-center justify-between">
-        <h1 className="text-textPrimary text-xl font-semibold">Strategies</h1>
-        {canCreateStrategy && (
-          <Button icon={FiPlus} label="Add Strategy" onClick={() => setIsModalOpen(true)} disabled={isCreating} />
-        )}
-      </header>
+      <PageHeading
+        className="mb-5"
+        title="Strategies"
+        description="Bundle lookup keys into a strategy and link it to your application forms."
+        actions={
+          canCreateStrategy && (
+            <Button icon={FiPlus} label="Add Strategy" onClick={() => setIsModalOpen(true)} disabled={isCreating} />
+          )
+        }
+      />
 
       <StrategiesFormModal
         isOpen={isModalOpen}

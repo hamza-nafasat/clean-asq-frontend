@@ -1,15 +1,19 @@
 import Button from "@/components/shared/Button";
+import PageHeading from "@/components/global/PageHeading";
 
 const ApplicationFormsRulesHeading = ({ isOrderChanged = false, isSavingOrder = false, onSaveOrder, onResetOrder }) => (
-  <header className="flex flex-row items-center justify-between gap-4">
-    <h1 className="text-textPrimary text-lg font-semibold">Manage Rules</h1>
-    {isOrderChanged && (
-      <div className="flex items-center gap-2">
-        <Button label="Update Order" variant="primary" loading={isSavingOrder} onClick={onSaveOrder} />
-        <Button label="Reset Order" variant="secondary" onClick={onResetOrder} />
-      </div>
-    )}
-  </header>
+  <PageHeading
+    title="Manage Rules"
+    description="Rules run on each submission to set its status or send emails, in the order listed."
+    actions={
+      isOrderChanged && (
+        <>
+          <Button label="Update Order" variant="primary" loading={isSavingOrder} onClick={onSaveOrder} />
+          <Button label="Reset Order" variant="secondary" onClick={onResetOrder} />
+        </>
+      )
+    }
+  />
 );
 
 export default ApplicationFormsRulesHeading;

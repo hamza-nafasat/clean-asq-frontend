@@ -3,6 +3,7 @@ import { FiPlus } from "react-icons/fi";
 import { toast } from "react-toastify";
 import usePermission from "@/hooks/usePermission";
 import Button from "@/components/shared/Button";
+import PageHeading from "@/components/global/PageHeading";
 import LookupManagementAddEditModal from "./LookupManagementAddEditModal";
 import { MODAL_MODES } from "@/constants";
 import { PERMISSIONS } from "@/utils/permissions";
@@ -37,20 +38,24 @@ const LookupManagementHeading = ({ addModal = null, onOpenAdd, onCloseAdd }) => 
 
   return (
     <>
-      <header className="mb-5 flex items-center justify-between gap-3">
-        <h1 className="text-textPrimary text-xl font-semibold">Lookup Management</h1>
-        {canCreateLookup && (
-          <div className="flex gap-3">
-            <Button
-              variant="secondary"
-              label="Create Default"
-              onClick={handleCreateDefault}
-              loading={isCreatingDefault}
-            />
-            <Button icon={FiPlus} label="Add Lookup Key" onClick={() => onOpenAdd?.()} disabled={isCreating} />
-          </div>
-        )}
-      </header>
+      <PageHeading
+        className="mb-5"
+        title="Lookup Management"
+        description="Choose what company data is looked up and how it is extracted from each application."
+        actions={
+          canCreateLookup && (
+            <>
+              <Button
+                variant="secondary"
+                label="Create Default"
+                onClick={handleCreateDefault}
+                loading={isCreatingDefault}
+              />
+              <Button icon={FiPlus} label="Add Lookup Key" onClick={() => onOpenAdd?.()} disabled={isCreating} />
+            </>
+          )
+        }
+      />
 
       <LookupManagementAddEditModal
         isOpen={Boolean(addModal)}

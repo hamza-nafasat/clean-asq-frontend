@@ -9,6 +9,7 @@ import { MODAL_MODES } from "@/constants";
 import { PERMISSIONS } from "@/utils/permissions";
 import { INITIAL_USER_FORM } from "../utils/userManagement.constants";
 import { validateUserForm } from "../utils/userManagement.utils";
+import PageHeading from "@/components/global/PageHeading";
 
 const UserManagementHeading = ({ roleOptions = [] }) => {
   const canCreateUser = usePermission(PERMISSIONS.CREATE_USER);
@@ -46,19 +47,24 @@ const UserManagementHeading = ({ roleOptions = [] }) => {
 
   return (
     <>
-      <header className="mb-5 flex items-center justify-between">
-        <h1 className="text-textPrimary text-xl font-semibold">User Table</h1>
-        {canCreateUser && canReadRole && (
-          <Button
-            type="button"
-            icon={IoMdPersonAdd}
-            label="Add User"
-            onClick={() => setIsModalOpen(true)}
-            disabled={isCreatingUser}
-            data-testid="invite-user-btn"
-          />
-        )}
-      </header>
+      <PageHeading
+        className="mb-5"
+        title="User Management"
+        description="Add people to your workspace and choose the role each one has."
+        actions={
+          canCreateUser &&
+          canReadRole && (
+            <Button
+              type="button"
+              icon={IoMdPersonAdd}
+              label="Add User"
+              onClick={() => setIsModalOpen(true)}
+              disabled={isCreatingUser}
+              data-testid="invite-user-btn"
+            />
+          )
+        }
+      />
 
       <UserManagementAddEditModal
         isOpen={isModalOpen}

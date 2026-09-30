@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import PageHeading from "@/components/global/PageHeading";
 import { FiArrowLeft } from "react-icons/fi";
 import ApplicationStatusPill from "@/components/global/ApplicationStatusPill";
 import { LAYOUT_ROUTES } from "@/constants";
@@ -16,19 +17,17 @@ const UnderwritingHeading = ({ submission = null }) => {
         <FiArrowLeft size={16} />
         Back to Applications
       </Link>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-textPrimary text-xl font-semibold">Underwriting</h1>
-          <p className="mt-1 truncate text-sm text-gray-500">
-            {applicantName || submission?.user?.email} · {submission?.form?.name}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-          <span>Submitted {formatDateTime(submission?.createdAt)}</span>
-          <span>Updated {formatDateTime(submission?.updatedAt)}</span>
-          <ApplicationStatusPill status={submission?.status} className="text-sm" />
-        </div>
-      </div>
+      <PageHeading
+        title="Underwriting"
+        description={`${applicantName || submission?.user?.email || ""} · ${submission?.form?.name || ""}`}
+        actions={
+          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+            <span>Submitted {formatDateTime(submission?.createdAt)}</span>
+            <span>Updated {formatDateTime(submission?.updatedAt)}</span>
+            <ApplicationStatusPill status={submission?.status} className="text-sm" />
+          </div>
+        }
+      />
     </header>
   );
 };

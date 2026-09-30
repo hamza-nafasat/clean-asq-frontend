@@ -9,6 +9,7 @@ import useListFilter from "@/hooks/useListFilter";
 import usePermission from "@/hooks/usePermission";
 import ApplyBranding from "@/components/global/ApplyBranding";
 import ListFilter from "@/components/global/ListFilter";
+import PageHeading from "@/components/global/PageHeading";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
 import EmptyState from "@/components/shared/EmptyState";
@@ -151,11 +152,16 @@ const Brandings = () => {
         onConfirm={onConfirmDelete}
         onClose={deleteConfirm.close}
       />
-      {canCreateBranding && (
-        <header className="mb-4 flex justify-end">
-          <Button label="Create Branding" onClick={openCreateBranding} data-testid="branding-create-btn" />
-        </header>
-      )}
+      <PageHeading
+        className="mb-5"
+        title="Brandings"
+        description="Colours, logos and emails that style your application forms and website."
+        actions={
+          canCreateBranding && (
+            <Button label="Create Branding" onClick={openCreateBranding} data-testid="branding-create-btn" />
+          )
+        }
+      />
       <section className="mt-5 h-full w-full overflow-y-auto lg:w-[calc(100vw-350px)] xl:w-full">
         {!brandingList.length ? (
           <EmptyState

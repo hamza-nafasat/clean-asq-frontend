@@ -1,27 +1,20 @@
 import Button from "@/components/shared/Button";
 import usePermission from "@/hooks/usePermission";
 import { PERMISSIONS } from "@/utils/permissions";
+import PageHeading from "@/components/global/PageHeading";
 
 const ApplicationFormsHeading = ({ onCreateForm }) => {
   const canCreateForm = usePermission(PERMISSIONS.CREATE_FORM);
 
   return (
-    <header className="mb-6 flex items-center justify-between">
-      <div>
-        <h1 className="text-textPrimary text-base font-medium md:text-2xl">Financial Services Application Platform</h1>
-        <p className="text-textPrimary mt-5 text-base font-normal md:text-lg">
-          Dynamic application forms with AI-assisted completion and automated data lookup
-        </p>
-      </div>
-      {canCreateForm && (
-        <Button
-          label="Create Form"
-          onClick={() => onCreateForm?.()}
-          className="mt-10 truncate text-sm md:mt-0 md:text-base"
-          data-testid="forms-create-btn"
-        />
-      )}
-    </header>
+    <PageHeading
+      className="mb-6"
+      title="Financial Services Application Platform"
+      description="Dynamic application forms with AI-assisted completion and automated data lookup"
+      actions={
+        canCreateForm && <Button label="Create Form" onClick={() => onCreateForm?.()} data-testid="forms-create-btn" />
+      }
+    />
   );
 };
 

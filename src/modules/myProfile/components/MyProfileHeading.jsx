@@ -1,27 +1,26 @@
 import Button from "@/components/shared/Button";
 import MyProfileActions from "./MyProfileActions";
 import { MY_PROFILE_FORM_ID } from "../utils/myProfile.constants";
+import PageHeading from "@/components/global/PageHeading";
 
 const MyProfileHeading = ({ isEditing = false, isUpdating = false, onEdit, onCancel }) => (
-  <header className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-    <div>
-      <h1 className="text-textPrimary text-3xl font-bold">My Profile</h1>
-      <p className="mt-1 max-w-2xl text-sm text-gray-500">
-        View your account details. Click Edit to update your personal information. Email and role stay read-only.
-      </p>
-    </div>
-
-    {!isEditing ? (
-      <Button type="button" label="Edit" onClick={() => onEdit?.()} size="lg" />
-    ) : (
-      <MyProfileActions
-        className="flex flex-wrap gap-3"
-        formId={MY_PROFILE_FORM_ID}
-        isUpdating={isUpdating}
-        onCancel={onCancel}
-      />
-    )}
-  </header>
+  <PageHeading
+    className="mb-6"
+    title="My Profile"
+    description="View your account details. Click Edit to update your personal information. Email and role stay read-only."
+    actions={
+      !isEditing ? (
+        <Button type="button" label="Edit" onClick={() => onEdit?.()} />
+      ) : (
+        <MyProfileActions
+          className="flex flex-wrap gap-3"
+          formId={MY_PROFILE_FORM_ID}
+          isUpdating={isUpdating}
+          onCancel={onCancel}
+        />
+      )
+    }
+  />
 );
 
 export default MyProfileHeading;
