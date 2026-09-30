@@ -8,7 +8,7 @@ import {
   getCheckableField,
   isNoWebsiteControl,
   isWebsiteText,
-} from "@/components/shared/aiChat/utils/fieldErrorUtils.js";
+} from "@/components/shared/aiChat/utils/aiChat.fieldError.utils.js";
 
 // silently checks applicant fields and asks to confirm obvious typos
 const useFieldErrorMonitor = ({ assistantMode, getScreenContext, inputRef, dodgeForField }) => {

@@ -4,7 +4,7 @@ import { DEFAULT_LANGUAGE_CODE, LANGUAGES } from "@/lib/languages.js";
 import {
   LANGUAGE_LABEL_ROTATE_MS,
   PREFERRED_LANGUAGE_LABELS,
-} from "@/components/shared/aiChat/constants/preferredLanguageLabels.js";
+} from "@/components/shared/aiChat/utils/aiChat.languageLabels.constants.js";
 
 const LANGUAGE_OPTIONS = LANGUAGES.map((lang) => ({
   value: lang.code,

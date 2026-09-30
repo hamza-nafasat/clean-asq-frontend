@@ -1,5 +1,5 @@
 import confirmOrCancel from "@/utils/confirmOrCancel";
-import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
+import { AI_TOOLS } from "@/components/shared/aiChat/utils/aiChat.toolNames.constants.js";
 import { MY_PROFILE_FIELDS } from "./myProfile.constants";
 import { buildProfileFormData, buildProfileFromUser, validateProfile } from "./myProfile.utils";
 

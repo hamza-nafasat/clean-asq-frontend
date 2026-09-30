@@ -1,6 +1,6 @@
 import confirmOrCancel from "@/utils/confirmOrCancel";
 import downloadBlob from "@/utils/downloadBlob";
-import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
+import { AI_TOOLS } from "@/components/shared/aiChat/utils/aiChat.toolNames.constants.js";
 import { getBeneficialOwners } from "./myApplications.utils";
 
 const findSubmission = (submissions, applicationId) => {

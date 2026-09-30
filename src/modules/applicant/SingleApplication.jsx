@@ -152,14 +152,11 @@ const SingleApplication = () => {
 
   useApplicantSingleApplicationAi({
     ...otpFlow,
+    formId,
     aiStage,
     formRef: idMissionFormRef,
     emailVerified,
     webLink,
-    idMissionDetailsReady,
-    idMissionDetailsVisible,
-    idMissionVerifiedData,
-    isIdMissionProcessing,
     idMissionSection,
   });
 

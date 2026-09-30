@@ -28,6 +28,7 @@ const buildEmailStageFields = (email, otp) => [
 
 // register the email and ID Mission screens with the AI assistant
 const useApplicantSingleApplicationAi = ({
+  formId,
   aiStage,
   formRef,
   emailVerified,
@@ -35,10 +36,6 @@ const useApplicantSingleApplicationAi = ({
   otp,
   otpSent,
   webLink,
-  idMissionDetailsReady,
-  idMissionDetailsVisible,
-  idMissionVerifiedData,
-  isIdMissionProcessing,
   setEmail,
   setOtp,
   idMissionSection,
@@ -51,6 +48,7 @@ const useApplicantSingleApplicationAi = ({
       screenName: SINGLE_APPLICATION_SCREENS[aiStage].screenName,
       description: SINGLE_APPLICATION_SCREENS[aiStage].description,
       aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
+      formId,
       formRef: aiStage === SINGLE_APPLICATION_STAGES.IDMISSION_DETAILS ? formRef : null,
       currentState: {
         ...(isEmailStage && { otpSent, fields: buildEmailStageFields(email, otp) }),
@@ -70,16 +68,6 @@ const useApplicantSingleApplicationAi = ({
           },
         }),
       },
-      deps: [
-        aiStage,
-        email,
-        otp,
-        webLink,
-        idMissionDetailsReady,
-        idMissionDetailsVisible,
-        idMissionVerifiedData,
-        isIdMissionProcessing,
-      ],
     },
     { clearOnMount: !emailVerified, autoOpen: false },
   );

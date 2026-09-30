@@ -43,7 +43,6 @@ const UserManagement = () => {
       sendPasswordResetLink,
       toastError: toast.error,
     }),
-    deps: { userCount: userRows.length, roleCount: roleRows.length },
   });
 
   return (

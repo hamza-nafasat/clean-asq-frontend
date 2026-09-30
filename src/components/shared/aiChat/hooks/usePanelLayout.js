@@ -8,8 +8,8 @@ import {
   PANEL_MIN_HEIGHT,
   PANEL_MIN_WIDTH,
   PANEL_WIDTH,
-} from "@/components/shared/aiChat/constants/aiChatConstants.js";
-import { computeDodgeLayout } from "@/components/shared/aiChat/utils/panelDodge.js";
+} from "@/components/shared/aiChat/utils/aiChat.constants.js";
+import { computeDodgeLayout } from "@/components/shared/aiChat/utils/aiChat.panelDodge.utils.js";
 
 const HEADER_SELECTOR = ".bg-header";
 const FALLBACK_HEADER_BOTTOM = 80;

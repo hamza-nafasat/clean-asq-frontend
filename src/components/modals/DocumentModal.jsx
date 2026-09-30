@@ -4,7 +4,7 @@ import { IoCheckmarkCircle } from "react-icons/io5";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 
-import useAiChat from "@/hooks/useAiChat";
+import useAiChat, { getActiveFormId } from "@/hooks/useAiChat";
 import useBranding from "@/hooks/useBranding";
 import { DOCUMENT_STATUSES } from "@/constants";
 import { getContrastColor } from "@/utils/contrastColor";
@@ -50,7 +50,7 @@ const DocumentModal = ({ url, title, onClose }) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, formId: getActiveFormId() }),
       });
       const data = await res.json();
       if (data.success && data.data?.text) text = data.data.text;

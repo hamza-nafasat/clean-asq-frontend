@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { DEFAULT_AI_VOICE } from "@/components/shared/aiChat/constants/aiChatConstants";
+import { DEFAULT_AI_VOICE } from "@/components/shared/aiChat/utils/aiChat.constants";
 import { DEFAULT_BRANDING_TEXT, HEADER_ALIGNMENTS } from "@/constants";
 import { EFFECT_NAMES } from "@/utils/effectPresets";
 

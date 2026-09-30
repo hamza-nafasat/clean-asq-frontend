@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { AI_ASSISTANT_MODES } from "@/constants";
-import { SERVER_URL } from "@/components/shared/aiChat/constants/aiChatConstants.js";
+import { SERVER_URL } from "@/components/shared/aiChat/utils/aiChat.constants.js";
+import { getActiveFormId } from "@/hooks/useAiChat";
 
 // speech recognition (PTT) and text-to-speech for the AI chat widget
 export const useAiVoice = ({ assistantMode, voice, sendMessageRef }) => {
@@ -115,7 +116,7 @@ export const useAiVoice = ({ assistantMode, voice, sendMessageRef }) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ text: plain, voice }),
+          body: JSON.stringify({ text: plain, voice, formId: getActiveFormId() }),
         });
         if (!res.ok) throw new Error("TTS unavailable");
         const blob = await res.blob();

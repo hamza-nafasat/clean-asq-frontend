@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AI_ASSISTANT_MODES } from "@/constants";
-import { FIELD_MODES } from "@/components/shared/aiChat/constants/aiChatConstants.js";
-import { getLiveFields, isFieldLoading } from "@/components/shared/aiChat/utils/preFillUtils.js";
+import { FIELD_MODES } from "@/components/shared/aiChat/utils/aiChat.constants.js";
+import { getLiveFields, isFieldLoading } from "@/components/shared/aiChat/utils/aiChat.preFill.utils.js";
 
 const FLOOR_MS = 150;
 const QUIET_MS = 100;

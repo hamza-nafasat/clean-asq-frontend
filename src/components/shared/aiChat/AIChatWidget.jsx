@@ -1,43 +1,40 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useUpdateMyProfileMutation } from "@/redux/apis/auth.apis";
-import { userExist } from "@/redux/slices/auth.slice";
+import { useSelector } from "react-redux";
 import useAiChat from "@/hooks/useAiChat";
 import useBranding from "@/hooks/useBranding";
 import ChatFab from "./components/ChatFab.jsx";
 import ChatOverlays from "./components/ChatOverlays.jsx";
 import ChatPanel from "./components/ChatPanel.jsx";
 import useAdePanel from "./hooks/useAdePanel.js";
+import useApplicantModeExit from "./hooks/useApplicantModeExit.js";
 import { useAiVoice } from "./hooks/useAiVoice.js";
 import useChatMessaging from "./hooks/useChatMessaging.js";
+import useChatScrollFocus from "./hooks/useChatScrollFocus.js";
 import useFabNudge from "./hooks/useFabNudge.js";
 import useFieldErrorMonitor from "./hooks/useFieldErrorMonitor.js";
 import useFieldFocusDodge from "./hooks/useFieldFocusDodge.js";
 import usePanelLayout from "./hooks/usePanelLayout.js";
+import usePreferredLanguage from "./hooks/usePreferredLanguage.js";
 import usePreFillReview from "./hooks/usePreFillReview.js";
 import useScreenConversation from "./hooks/useScreenConversation.js";
 import useTranslationTooltip from "./hooks/useTranslationTooltip.js";
 import { AI_ASSISTANT_MODES, STORAGE_KEYS, WIDGET_CLOSED_FLAG } from "@/constants";
-import { contrastingIconColor, DEFAULT_AI_VOICE, DEFAULT_FORM_LANGUAGE } from "./constants/aiChatConstants.js";
-import { getWidgetString } from "./logic/widgetLanguage.js";
-import { DEFAULT_LANGUAGE_CODE } from "@/lib/languages.js";
+import { contrastingIconColor, DEFAULT_AI_VOICE, DEFAULT_FORM_LANGUAGE } from "./utils/aiChat.constants.js";
+import { getWidgetString } from "./utils/aiChat.language.utils.js";
 
 const LOGIN_PATH = "/login";
 const APPLICANT_FORM_PATH_PREFIX = "/application-form/";
-const INPUT_FOCUS_DELAY_MS = 100;
-const MODE_EXIT_DELAY_MS = 150;
 
 const AIChatWidget = () => {
   const aiChat = useAiChat();
-  const { isOpen, setIsOpen, messages, addMessage, isLoading, setIsLoading, getScreenContext, currentScreenId } = aiChat;
+  const { isOpen, setIsOpen, messages, addMessage, isLoading, setIsLoading, getScreenContext, currentScreenId } =
+    aiChat;
   const { formDataSignal, widgetResetSignal, pushRevertable, popRevertable, signalContinuationPending } = aiChat;
   const { assistantMode } = aiChat;
   const { user } = useSelector((s) => s.auth);
-  const dispatch = useDispatch();
-  const [updateMyProfile] = useUpdateMyProfileMutation();
   const branding = useBranding();
-  const { accentColor, secondaryColor, buttonTextSecondary, fontFamily, aiVoice, aiCustomPrompt } = branding;
+  const { accentColor, secondaryColor, buttonTextSecondary, fontFamily, aiVoice } = branding;
   const { aiLaunchButtonColor, aiHeaderColor, aiBannerColor, aiBannerTextColor, primaryColor } = branding;
   const { buttonTextPrimary, aiUseCustomIcon } = branding;
   const isApplicant = assistantMode === AI_ASSISTANT_MODES.APPLICANT;
@@ -52,8 +49,7 @@ const AIChatWidget = () => {
   const [translationMode, setTranslationMode] = useState(null);
   const [introButtonsDismissed, setIntroButtonsDismissed] = useState(false);
   const [adePanel, setAdePanel] = useState(null);
-  // english until another is chosen
-  const [preferredLanguage, setPreferredLanguage] = useState(user?.preferredLanguage || DEFAULT_LANGUAGE_CODE);
+  const { preferredLanguage, handleSelectPreferredLanguage } = usePreferredLanguage(user);
 
   const sendMessageRef = useRef(null);
   const panelRef = useRef(null);
@@ -82,36 +78,23 @@ const AIChatWidget = () => {
   // set when a tool focuses a field, so the chat input does not steal focus
   const suppressChatFocusRef = useRef(false);
   const userFocusedChatRef = useRef(false);
-  const openedByApplicantRef = useRef(false);
-  const modeExitTimerRef = useRef(null);
   const isOpenRef = useRef(isOpen);
   isOpenRef.current = isOpen;
-
-  // adopt the account's saved language
-  useEffect(() => {
-    if (user?.preferredLanguage) setPreferredLanguage(user.preferredLanguage);
-  }, [user?.preferredLanguage]);
-
-  const handleSelectPreferredLanguage = (code) => {
-    setPreferredLanguage(code);
-    if (user?._id) {
-      updateMyProfile({ preferredLanguage: code })
-        .unwrap()
-        .then(() => dispatch(userExist({ ...user, preferredLanguage: code })))
-        .catch((error) => console.error("Save preferred language error:", error));
-    }
-  };
 
   const voiceControls = useAiVoice({ assistantMode, voice: aiVoice || DEFAULT_AI_VOICE, sendMessageRef });
   const { speak, stopSpeaking, stopListening, setIsVoiceMode, isVoiceModeRef, pendingListenRef } = voiceControls;
 
-  // a new applicant session resets voice and the greeting
-  useEffect(() => {
-    if (!widgetResetSignal) return;
+  const stopVoice = () => {
     stopSpeaking();
     stopListening();
     isVoiceModeRef.current = false;
     setIsVoiceMode(false);
+  };
+
+  // a new applicant session resets voice and the greeting
+  useEffect(() => {
+    if (!widgetResetSignal) return;
+    stopVoice();
     pendingListenRef.current = false;
     refs.lastDetectedLanguageRef.current = null;
     refs.initialGreetingShownRef.current = false;
@@ -135,41 +118,17 @@ const AIChatWidget = () => {
     getScreenContext,
   });
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // reopen at the latest message
-  useEffect(() => {
-    if (isOpen) scrollToBottom(true);
-  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // applicants type into the form, so only other modes focus the chat input
-  useEffect(() => {
-    if (isOpen && !isApplicant) setTimeout(() => inputRef.current?.focus(), INPUT_FOCUS_DELAY_MS);
-  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!isLoading && isOpen && (!suppressChatFocusRef.current || userFocusedChatRef.current)) {
-      inputRef.current?.focus();
-    }
-  }, [isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // close the widget when leaving the applicant flow
-  useEffect(() => {
-    if (isApplicant) {
-      clearTimeout(modeExitTimerRef.current);
-      modeExitTimerRef.current = null;
-      openedByApplicantRef.current = true;
-    } else if (openedByApplicantRef.current) {
-      modeExitTimerRef.current = setTimeout(() => {
-        openedByApplicantRef.current = false;
-        setIsOpen(false);
-        preFillShownRef.current.clear();
-        sessionStorage.removeItem(STORAGE_KEYS.AI_WIDGET_USER_CLOSED);
-      }, MODE_EXIT_DELAY_MS);
-    }
-  }, [assistantMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  useChatScrollFocus({
+    isOpen,
+    isLoading,
+    isApplicant,
+    messages,
+    scrollToBottom,
+    inputRef,
+    suppressChatFocusRef,
+    userFocusedChatRef,
+  });
+  useApplicantModeExit({ isApplicant, assistantMode, setIsOpen, preFillShownRef });
 
   const fabNudged = useFabNudge({ isOpen, currentScreenId, fabRef });
 
@@ -198,7 +157,6 @@ const AIChatWidget = () => {
     addMessage,
     getScreenContext,
     formDataSignal,
-    aiCustomPrompt,
     wt,
     speak,
     isVoiceModeRef,
@@ -234,7 +192,11 @@ const AIChatWidget = () => {
   // conversation-mode callbacks always call the latest send
   sendMessageRef.current = sendMessage;
 
-  const translationTooltip = useTranslationTooltip({ translationMode, panelRef, tooltipCacheRef: refs.tooltipCacheRef });
+  const translationTooltip = useTranslationTooltip({
+    translationMode,
+    panelRef,
+    tooltipCacheRef: refs.tooltipCacheRef,
+  });
   const { handleAdePanelComplete, handleAdePanelCancel } = useAdePanel({
     adePanel,
     setAdePanel,
@@ -265,10 +227,7 @@ const AIChatWidget = () => {
   const handleClosePanel = () => {
     if (isApplicant) sessionStorage.setItem(STORAGE_KEYS.AI_WIDGET_USER_CLOSED, WIDGET_CLOSED_FLAG);
     setIsOpen(false);
-    stopSpeaking();
-    stopListening();
-    isVoiceModeRef.current = false;
-    setIsVoiceMode(false);
+    stopVoice();
   };
 
   // hidden when signed out, except on public applicant form routes

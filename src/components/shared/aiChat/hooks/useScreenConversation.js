@@ -4,9 +4,9 @@ import {
   AI_ENDPOINTS,
   CHAT_ROLES,
   DEFAULT_FORM_LANGUAGE,
-} from "@/components/shared/aiChat/constants/aiChatConstants.js";
-import { translateForDisplay } from "@/components/shared/aiChat/logic/translateMessage.js";
-import { detectFormLanguage } from "@/components/shared/aiChat/logic/widgetLanguage.js";
+} from "@/components/shared/aiChat/utils/aiChat.constants.js";
+import { requestTranslation, translateForDisplay } from "@/components/shared/aiChat/utils/aiChat.translate.utils.js";
+import { detectFormLanguage } from "@/components/shared/aiChat/utils/aiChat.language.utils.js";
 
 const APPLICANT_ANNOUNCE_DELAY_MS = 600;
 const FOLLOW_UP_SEND_DELAY_MS = 800;
@@ -73,19 +73,8 @@ const useScreenConversation = ({
   const announceScreen = async (name) => {
     const tm = translationModeRef.current;
     if (!tm) return;
-    try {
-      const res = await fetch(AI_ENDPOINTS.TRANSLATE, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: name, targetLang: tm.lang, targetLangName: tm.langName }),
-      });
-      const data = await res.json();
-      if (data.success && data.data?.translation) {
-        addMessage({ role: CHAT_ROLES.ASSISTANT, content: `*(${tm.langName}: **${data.data.translation}**)* ` });
-      }
-    } catch {
-      // the english announcement is already posted
-    }
+    const translation = await requestTranslation({ text: name, targetLang: tm.lang, targetLangName: tm.langName });
+    if (translation) addMessage({ role: CHAT_ROLES.ASSISTANT, content: `*(${tm.langName}: **${translation}**)* ` });
   };
 
   // announce a screen the transcript has not seen; returns the added message

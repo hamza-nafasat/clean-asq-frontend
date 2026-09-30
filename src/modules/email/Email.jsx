@@ -17,7 +17,7 @@ import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
 import EmptyState from "@/components/shared/EmptyState";
 import LoadingState from "@/components/shared/LoadingState";
-import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
+import { AI_TOOLS } from "@/components/shared/aiChat/utils/aiChat.toolNames.constants.js";
 import useEmailAttachToMe from "./hooks/useEmailAttachToMe";
 import useEmailScreenContext from "./hooks/useEmailScreenContext";
 import EmailAttachFormsModal from "./components/EmailAttachFormsModal";

@@ -57,11 +57,6 @@ const Strategies = () => {
       deleteFormStrategy,
       askConfirm: aiConfirm.ask,
     }),
-    deps: {
-      strategyCount: formStrategies.length,
-      lookupCount: lookupData?.data?.length,
-      formCount: formData?.data?.length,
-    },
   });
 
   return (

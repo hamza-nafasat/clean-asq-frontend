@@ -55,7 +55,6 @@ const MyApplications = () => {
       generatePdfForm,
       askConfirm: aiConfirm.ask,
     }),
-    deps: { draftCount: drafts.length, submissionCount: submissions.length, invitationCount: invitations.length },
   });
 
   if (!canSubmitForm)

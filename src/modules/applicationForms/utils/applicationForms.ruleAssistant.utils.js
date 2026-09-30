@@ -1,5 +1,5 @@
 import confirmOrCancel from "@/utils/confirmOrCancel";
-import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
+import { AI_TOOLS } from "@/components/shared/aiChat/utils/aiChat.toolNames.constants.js";
 import { EMAIL_TEMPLATE_TYPES, HTTP_STATUSES } from "@/constants";
 import { INITIAL_RULE, RECIPIENT_EMAIL_OPTIONS, RULE_CATEGORIES_FIELD, RULE_FIELDS } from "./applicationForms.constants";
 import { validateRule } from "./applicationForms.validation.utils";

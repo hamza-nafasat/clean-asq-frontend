@@ -51,7 +51,6 @@ const useApplicationFormsRuleAssistant = ({ formId, rules = [] }) => {
       askConfirm: aiConfirm.ask,
       mutations: { createRule, getRuleFromAi, updateRule, updateStatusRule, updateRulesOrder, deleteRule },
     }),
-    deps: { rules, formData, sampleData, emailTemplateData, canReadEmail },
   });
 
   return aiConfirm;

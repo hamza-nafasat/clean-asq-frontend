@@ -68,15 +68,6 @@ const useEmailScreenContext = ({ user, templates = [], forms = [], openTemplate,
       availableForms: toFormRefs(forms),
     },
     actions,
-    deps: {
-      viewModalOpen: isModalOpen,
-      viewModalDataId: openTemplateId,
-      subject: values.subject,
-      body: values.body,
-      templateName: values.templateName,
-      templatesCount: templates.length,
-      attachedFormCount: liveOpenTemplate?.forms?.length ?? 0,
-    },
   });
 };
 

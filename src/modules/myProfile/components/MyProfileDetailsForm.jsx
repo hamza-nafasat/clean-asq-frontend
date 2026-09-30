@@ -92,7 +92,6 @@ const MyProfileDetailsForm = ({ user = null }) => {
       onProfileSaved: applySavedUser,
       askConfirm: aiConfirm.ask,
     }),
-    deps: { user },
   });
 
   const handleConfirmUpdate = async () => {

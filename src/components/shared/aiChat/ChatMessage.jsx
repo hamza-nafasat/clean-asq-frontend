@@ -1,12 +1,16 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import FormPreview from "./FormPreview";
-import { CHAT_ROLES } from "./constants/aiChatConstants.js";
-import { AI_TOOLS } from "./constants/aiToolNames.js";
+import ChatColorSwatch from "./components/ChatColorSwatch.jsx";
+import ChatCsvButton from "./components/ChatCsvButton.jsx";
+import ChatSuggestedColors from "./components/ChatSuggestedColors.jsx";
+import { CHAT_ROLES, DEFAULT_ACCENT_COLOR, DEFAULT_ACCENT_TEXT_COLOR } from "./utils/aiChat.constants.js";
+import { PALETTE_LABELS } from "./utils/aiChat.paletteLabels.constants.js";
+import { AI_TOOLS } from "./utils/aiChat.toolNames.constants.js";
 
 const mdComponents = {
   table: ({ children }) => (
-    <div className="overflow-x-auto my-2">
+    <div className="my-2 overflow-x-auto">
       <table className="w-full border-collapse text-xs">{children}</table>
     </div>
   ),
@@ -14,9 +18,11 @@ const mdComponents = {
   tbody: ({ children }) => <tbody>{children}</tbody>,
   tr: ({ children }) => <tr className="border-b border-gray-200">{children}</tr>,
   th: ({ children }) => (
-    <th className="px-2 py-1 text-left font-semibold text-gray-700 border border-gray-200 whitespace-nowrap">{children}</th>
+    <th className="border border-gray-200 px-2 py-1 text-left font-semibold whitespace-nowrap text-gray-700">
+      {children}
+    </th>
   ),
-  td: ({ children }) => <td className="px-2 py-1 text-gray-600 border border-gray-200">{children}</td>,
+  td: ({ children }) => <td className="border border-gray-200 px-2 py-1 text-gray-600">{children}</td>,
   h3: ({ children }) => <h3 className="mt-3 mb-1 text-[15px] font-bold text-gray-900">{children}</h3>,
   // smaller detail text under a heading
   blockquote: ({ children }) => (
@@ -26,75 +32,10 @@ const mdComponents = {
   ),
 };
 
-const ColorSwatch = ({ color, label }) => (
-  <div className="flex items-center gap-2 text-xs text-gray-600">
-    <div className="h-5 w-5 rounded border border-gray-200 shrink-0" style={{ backgroundColor: color }} title={color} />
-    <span className="font-mono">{color}</span>
-    {label && <span className="text-gray-400">— {label}</span>}
-  </div>
-);
-
-const PALETTE_LABELS = {
-  headerBackground:       "Header Background",
-  headerText:             "Header Text",
-  primaryColor:           "Primary Button Color",
-  buttonBorderPrimary:    "Primary Button Border Color",
-  buttonTextPrimary:      "Primary Button Text Color",
-  secondaryColor:         "Secondary Button Color",
-  buttonBorderSecondary:  "Secondary Button Border Color",
-  buttonTextSecondary:    "Secondary Button Text Color",
-  accentColor:            "Accent Color",
-  backgroundColor:        "Form Background Color",
-  textColor:              "Form Text Color",
-  linkColor:              "Link Color",
-  frameColor:             "Frame Color",
-  highlightingColor:      "Highlighting Color",
-  footerBackground:       "Footer Background",
-  footerText:             "Footer Text",
-  emailHeaderColor:       "Email Header Background",
-  emailHeaderTextColor:   "Email Header Text Color",
-  emailTextColor:         "Email Body Text Color",
-  emailBodyColor:         "Email Body Background",
-  emailFooterColor:       "Email Footer Background",
-  emailFooterTextColor:   "Email Footer Text Color",
-  aiLaunchButtonColor:    "AI Launch Button Color",
-  aiHeaderColor:          "AI Header Color",
-  aiBannerColor:          "AI Banner Background",
-  aiBannerTextColor:      "AI Banner Text Color",
-  aiSliderColor:          "AI Slider Color",
-};
-
-const handleCsvSave = async (csvDownload) => {
-  const { csvContent, filename } = csvDownload;
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  try {
-    if (window.showSaveFilePicker) {
-      const handle = await window.showSaveFilePicker({
-        suggestedName: `${filename}.csv`,
-        types: [{ description: "CSV File", accept: { "text/csv": [".csv"] } }],
-      });
-      const writable = await handle.createWritable();
-      await writable.write(blob);
-      await writable.close();
-    } else {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${filename}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-  } catch (err) {
-    if (err?.name !== "AbortError") console.error("CSV save failed", err);
-  }
-};
-
 const ChatMessage = ({
   message,
-  accentColor = "#6366f1",
-  accentTextColor = "#ffffff",
+  accentColor = DEFAULT_ACCENT_COLOR,
+  accentTextColor = DEFAULT_ACCENT_TEXT_COLOR,
   onAction,
   introButtonsDismissed = false,
 }) => {
@@ -121,9 +62,9 @@ const ChatMessage = ({
   return (
     <div className="flex justify-start" data-testid="ai-message-assistant">
       <div
-        className={`max-w-[90%] rounded-2xl rounded-bl-sm px-3 py-2 text-sm shadow-sm ${isError ? "bg-red-50 border-2 border-red-400 text-red-800" : "bg-white border border-gray-100 text-gray-700"}`}
+        className={`max-w-[90%] rounded-2xl rounded-bl-sm px-3 py-2 text-sm shadow-sm ${isError ? "border-2 border-red-400 bg-red-50 text-red-800" : "border border-gray-100 bg-white text-gray-700"}`}
       >
-        <div className="prose prose-sm max-w-none prose-p:my-1 prose-headings:my-1 prose-ul:my-1 prose-li:my-0">
+        <div className="prose prose-sm prose-p:my-1 prose-headings:my-1 prose-ul:my-1 prose-li:my-0 max-w-none">
           <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
             {message.content}
           </ReactMarkdown>
@@ -136,55 +77,22 @@ const ChatMessage = ({
               .filter(([, v]) => /^#/.test(v))
               .sort(([a], [b]) => {
                 const order = Object.keys(PALETTE_LABELS);
-                const ai = order.indexOf(a); const bi = order.indexOf(b);
+                const ai = order.indexOf(a);
+                const bi = order.indexOf(b);
                 return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
               })
               .map(([key, value]) => (
-                <ColorSwatch key={key} color={value} label={PALETTE_LABELS[key] || key} />
+                <ChatColorSwatch key={key} color={value} label={PALETTE_LABELS[key] || key} />
               ))}
           </div>
         )}
 
-        {/* Suggested colors — shown before user applies them */}
-        {isSuggest && message.toolCall?.colors?.length > 0 && (
-          <div className="mt-3 flex flex-col gap-1.5">
-            {message.toolCall.colors.map((item, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs text-gray-600">
-                <div
-                  className="h-5 w-5 shrink-0 rounded border border-gray-200"
-                  style={{ backgroundColor: item.hex }}
-                  title={item.hex}
-                />
-                <span className="font-mono text-gray-500">{item.hex}</span>
-                <span className="font-medium text-gray-700">
-                  {item.targetProperty ? PALETTE_LABELS[item.targetProperty] || item.targetProperty : item.name}
-                </span>
-                {item.purpose && <span className="text-gray-400">— {item.purpose}</span>}
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Suggested colors */}
+        {isSuggest && message.toolCall?.colors?.length > 0 && <ChatSuggestedColors colors={message.toolCall.colors} />}
 
-        {/* CSV download button */}
-        {message.csvDownload && (
-          <div className="mt-2">
-            <button
-              onClick={() => handleCsvSave(message.csvDownload)}
-              className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 active:bg-indigo-800 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Save {message.csvDownload.filename}.csv
-            </button>
-          </div>
-        )}
+        {message.csvDownload && <ChatCsvButton csvDownload={message.csvDownload} />}
 
-        {/* Intro action buttons — shown until user clicks or timer fires */}
+        {/* Intro action buttons */}
         {message.introButtons?.length > 0 && !introButtonsDismissed && (
           <div className="mt-3 flex flex-wrap gap-2">
             {message.introButtons.map((btn) => (
@@ -205,14 +113,14 @@ const ChatMessage = ({
           <FormPreview formName={message.formPreview.formName} sections={message.formPreview.sections} />
         )}
 
-        {/* Palette preview — colors are auto-applied, swatches shown for reference */}
+        {/* Palette preview */}
         {isPalette && message.toolCall?.palette && (
           <div className="mt-3">
             <div className="grid grid-cols-2 gap-1">
               {Object.entries(message.toolCall.palette)
                 .filter(([, v]) => /^#/.test(v))
                 .map(([key, value]) => (
-                  <ColorSwatch key={key} color={value} label={PALETTE_LABELS[key]} />
+                  <ChatColorSwatch key={key} color={value} label={PALETTE_LABELS[key]} />
                 ))}
             </div>
           </div>

@@ -89,6 +89,7 @@ const ApplicationForm = () => {
     screenName: sectionNames[currentStep] || "Application Form",
     description: `Multi-step application form. Applicant is on step ${currentStep + 1} of ${visibleSections.length}.`,
     aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
+    formId: formDocumentId,
     formRef: stepContainerRef,
     currentState: {
       currentStep,
@@ -103,7 +104,6 @@ const ApplicationForm = () => {
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
       },
     },
-    deps: [currentStep, visibleSections.length, sectionNames[currentStep], formDocumentId],
   });
 
   // resume only when a draft id was passed

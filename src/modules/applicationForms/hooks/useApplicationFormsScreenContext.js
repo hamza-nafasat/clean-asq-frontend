@@ -16,33 +16,10 @@ import { PERMISSIONS } from "@/utils/permissions";
 import useApplicationFormsAssistantActions from "./useApplicationFormsAssistantActions";
 import { APPLICATION_FORMS_SCREEN } from "../utils/applicationForms.constants";
 import { buildFormsAssistantState } from "../utils/applicationForms.assistant.utils";
-import { applyPendingEdits, countDeletedFields, createEmptyPendingEdits } from "../utils/applicationForms.pendingEdits.utils";
+import { applyPendingEdits, createEmptyPendingEdits } from "../utils/applicationForms.pendingEdits.utils";
 import { toFormPreview } from "../utils/applicationForms.preview.utils";
 
 const SERVER_URL = getEnv("SERVER_URL");
-
-const countKeys = (value) => Object.keys(value || {}).length;
-
-// values that re-register the screen
-const buildScreenContextDeps = ({ forms, brandings, emailTemplates, searchStrategies, formStrategies, ...rest }) =>
-  JSON.stringify({
-    formsCount: forms?.length ?? 0,
-    brandingsCount: brandings?.length ?? 0,
-    selectedFormId: rest.selectedFormId ?? "",
-    detailedFormId: rest.singleForm?._id ?? "",
-    detailedFormSectionCount: rest.singleForm?.sections?.length ?? 0,
-    singleFormLoadError: Boolean(rest.singleFormError),
-    formRulesCount: rest.formRules?.length ?? 0,
-    searchStrategiesCount: searchStrategies?.length ?? 0,
-    formStrategiesCount: formStrategies?.length ?? 0,
-    emailTemplateFormLinkCount: (emailTemplates || []).reduce((sum, t) => sum + (t.forms || []).length, 0),
-    pendingEditsFormId: rest.pendingFormEdits?.formId ?? "",
-    pendingSectionUpdateCount: countKeys(rest.pendingFormEdits?.sectionUpdates),
-    pendingFieldUpdateCount: countKeys(rest.pendingFormEdits?.fieldUpdates),
-    pendingHasSectionOrder: Boolean(rest.pendingFormEdits?.sectionOrder),
-    pendingDeletedSectionCount: rest.pendingFormEdits?.deletedSections?.length ?? 0,
-    pendingDeletedFieldCount: countDeletedFields(rest.pendingFormEdits),
-  });
 
 const useApplicationFormsScreenContext = ({ onOpenCreateForm, askConfirm }) => {
   const [selectedFormForEditing, setSelectedFormForEditing] = useState(null);
@@ -139,7 +116,6 @@ const useApplicationFormsScreenContext = ({ onOpenCreateForm, askConfirm }) => {
     greeting: APPLICATION_FORMS_SCREEN.GREETING,
     currentState: buildFormsAssistantState(screenData),
     actions: { ...actions, previewForm },
-    deps: buildScreenContextDeps(screenData),
   });
 };
 

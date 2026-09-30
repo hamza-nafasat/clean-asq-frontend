@@ -5,7 +5,7 @@ import {
   useSetDefaultBrandingMutation,
 } from "@/redux/apis/branding.apis";
 import { useScreenContext } from "@/hooks/useScreenContext";
-import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
+import { AI_TOOLS } from "@/components/shared/aiChat/utils/aiChat.toolNames.constants.js";
 import confirmOrCancel from "@/utils/confirmOrCancel";
 import getEnv from "@/utils/env";
 import { BRANDING_AI_PATHS, BRANDING_LIST_SCREEN_CONTEXT } from "../utils/branding.constants";
@@ -110,7 +110,6 @@ const useBrandingListAssistant = ({
       openEditBranding: ({ brandingId }) => openBranding(brandingId),
       openCreateBranding,
     },
-    deps: [brandings.length, forms.length],
   });
 };
 

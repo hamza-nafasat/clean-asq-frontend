@@ -52,7 +52,6 @@ const LookupManagement = () => {
       onOpenCreateModal: openAddModal,
       askConfirm: aiConfirm.ask,
     }),
-    deps: { lookupCount: lookups.length },
   });
 
   return (

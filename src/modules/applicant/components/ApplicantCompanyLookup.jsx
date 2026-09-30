@@ -180,6 +180,7 @@ const ApplicantCompanyLookup = ({ formId, brandingName, draftId }) => {
       "The applicant enters their company's full legal name and website URL themselves, then clicks Continue to submit. " +
       'If their company has no website, tell them to check the "This company has no website" checkbox themselves — this removes the URL requirement.',
     aiEndpoint: `${getEnv("SERVER_URL")}/api/ai/applicant-chat`,
+    formId,
     formRef: companyFormRef,
     currentState: {},
     actions: {
@@ -188,7 +189,6 @@ const ApplicantCompanyLookup = ({ formId, brandingName, draftId }) => {
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
       },
     },
-    deps: [form],
   });
 
   // header and footer text for the layout

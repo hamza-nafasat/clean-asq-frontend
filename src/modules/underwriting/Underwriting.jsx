@@ -48,7 +48,6 @@ const Underwriting = () => {
     aiEndpoint: `${SERVER_URL}${UNDERWRITING_AI_CHAT_PATH}`,
     currentState: buildUnderwritingScreenState({ submission }),
     actions: buildUnderwritingAssistantActions({ requestApplyRules }),
-    deps: { submission },
   });
 
   const handleApplyRules = async () => {

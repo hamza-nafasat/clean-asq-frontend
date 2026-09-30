@@ -1,7 +1,9 @@
 import { IoClose, IoCheckmarkCircle } from "react-icons/io5";
-import { CgSpinner } from "react-icons/cg";
+import PreFillFieldList from "./components/PreFillFieldList.jsx";
+import PreFillRemainingList from "./components/PreFillRemainingList.jsx";
+import { DEFAULT_ACCENT_COLOR, DEFAULT_ACCENT_TEXT_COLOR } from "./utils/aiChat.constants.js";
 
-// pre-fill notification — shown when the DB has pre-populated fields on a new
+// pre-filled fields notice
 const PreFillModal = ({
   preFilled = [],
   remaining = [],
@@ -17,11 +19,11 @@ const PreFillModal = ({
   onSkip,
 }) => {
   const dismiss = onDismiss || onConfirm || onSkip || (() => {});
-  const accent    = accentColor    || "#6366f1";
-  const hBg       = headerBg       || accent;
-  const hText     = headerTextColor || "#ffffff";
-  const btnBg     = buttonColor     || accent;
-  const btnText   = buttonTextColor || "#ffffff";
+  const accent = accentColor || DEFAULT_ACCENT_COLOR;
+  const hBg = headerBg || accent;
+  const hText = headerTextColor || DEFAULT_ACCENT_TEXT_COLOR;
+  const btnBg = buttonColor || accent;
+  const btnText = buttonTextColor || DEFAULT_ACCENT_TEXT_COLOR;
   const fontStack = fontFamily ? `"${fontFamily}", sans-serif` : "inherit";
 
   return (
@@ -57,14 +59,16 @@ const PreFillModal = ({
         }}
       >
         {/* Header */}
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "13px 16px 11px",
-          backgroundColor: hBg,
-          flexShrink: 0,
-        }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "13px 16px 11px",
+            backgroundColor: hBg,
+            flexShrink: 0,
+          }}
+        >
           <div>
             <div style={{ fontWeight: 700, fontSize: "14px", color: hText }} id="pfm-title">
               Some fields have been pre-filled
@@ -77,9 +81,15 @@ const PreFillModal = ({
             onClick={dismiss}
             aria-label="Close"
             style={{
-              background: "none", border: "none", cursor: "pointer",
-              color: hText, opacity: 0.8, padding: "4px",
-              display: "flex", alignItems: "center", flexShrink: 0,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: hText,
+              opacity: 0.8,
+              padding: "4px",
+              display: "flex",
+              alignItems: "center",
+              flexShrink: 0,
             }}
           >
             <IoClose size={18} />
@@ -89,63 +99,24 @@ const PreFillModal = ({
         {/* Body */}
         <div style={{ overflowY: "auto", flex: 1, padding: "16px" }}>
           <p style={{ margin: "0 0 12px", fontSize: "13px", color: "#374151", lineHeight: 1.5 }}>
-            The following information was filled in automatically. Take a moment to confirm it looks right — if anything needs updating, close this and edit the field directly on the form.
+            The following information was filled in automatically. Take a moment to confirm it looks right — if anything
+            needs updating, close this and edit the field directly on the form.
           </p>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-            {preFilled.map((field) => (
-              <div key={field.id} style={{
-                padding: "8px 12px",
-                backgroundColor: "#f9fafb",
-                border: "1px solid #e5e7eb",
-                borderRadius: "8px",
-              }}>
-                <div style={{ fontSize: "11px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "2px" }}>
-                  {field.label}
-                </div>
-                {field.isLoading ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#9ca3af" }}>
-                    <CgSpinner style={{ animation: "pfm-spin 0.8s linear infinite", flexShrink: 0 }} size={14} />
-                    <em style={{ fontSize: "13px" }}>Loading…</em>
-                  </div>
-                ) : (
-                  <div style={{ fontSize: "13px", color: "#111827", fontWeight: 500 }}>
-                    {field.value || <em style={{ color: "#9ca3af", fontWeight: 400 }}>—</em>}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          <PreFillFieldList fields={preFilled} />
 
-          {remaining.length > 0 && (
-            <div style={{
-              padding: "12px 14px",
-              backgroundColor: "#f8f9ff",
-              border: "1px solid #e0e7ff",
-              borderRadius: "8px",
-            }}>
-              <p style={{ margin: "0 0 8px", fontSize: "12px", fontWeight: 600, color: "#374151" }}>
-                Still to complete ({remaining.length} field{remaining.length !== 1 ? "s" : ""}):
-              </p>
-              <ul style={{ margin: 0, padding: "0 0 0 16px", fontSize: "12px", color: "#6b7280", lineHeight: 1.8 }}>
-                {remaining.map((f) => (
-                  <li key={f.id}>
-                    {f.label}
-                    {f.required && <span style={{ color: "#ef4444", marginLeft: "3px" }}>*</span>}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {remaining.length > 0 && <PreFillRemainingList remaining={remaining} />}
         </div>
 
         {/* Footer */}
-        <div style={{
-          padding: "12px 16px",
-          borderTop: "1px solid #e5e7eb",
-          flexShrink: 0,
-          backgroundColor: "#fff",
-        }}>
+        <div
+          style={{
+            padding: "12px 16px",
+            borderTop: "1px solid #e5e7eb",
+            flexShrink: 0,
+            backgroundColor: "#fff",
+          }}
+        >
           <button
             onClick={dismiss}
             style={{

@@ -1,4 +1,4 @@
-import { PANEL_HEIGHT, PANEL_WIDTH } from "@/components/shared/aiChat/constants/aiChatConstants.js";
+import { PANEL_HEIGHT, PANEL_WIDTH } from "@/components/shared/aiChat/utils/aiChat.constants.js";
 
 export { PANEL_WIDTH, PANEL_HEIGHT };
 

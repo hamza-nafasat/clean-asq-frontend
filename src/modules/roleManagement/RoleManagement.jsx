@@ -85,7 +85,6 @@ const RoleManagement = () => {
     aiEndpoint: `${SERVER_URL}${ROLE_AI_CHAT_PATH}`,
     currentState: buildRoleScreenState(roles, permissions),
     actions: buildRoleScreenActions({ roles, permissions, createRole, editRole, deleteRole, toastError: toast.error }),
-    deps: { roleCount: roles.length, permissionCount: permissions.length },
   });
 
   const handleOpenAdd = () => {

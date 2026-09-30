@@ -1,44 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { IoClose } from "react-icons/io5";
-import { FIELD_TYPES } from "@/constants";
-
-// "Confirm or Change" dialog shown when the silent field-error monitor detects
-// ── Shared button styles ───────────────────────────────────────────────────
-const primaryBtn = (accent) => ({
-  width: "100%",
-  padding: "9px 14px",
-  borderRadius: "7px",
-  border: "none",
-  background: accent,
-  color: "#fff",
-  fontSize: "13px",
-  fontWeight: 600,
-  cursor: "pointer",
-  textAlign: "center",
-});
-
-const secondaryBtn = {
-  padding: "8px 14px",
-  borderRadius: "7px",
-  border: "1px solid #d1d5db",
-  background: "#f9fafb",
-  color: "#374151",
-  fontSize: "13px",
-  fontWeight: 500,
-  cursor: "pointer",
-};
-
-const ghostBtn = {
-  width: "100%",
-  padding: "7px 14px",
-  borderRadius: "7px",
-  border: "1px solid #e5e7eb",
-  background: "transparent",
-  color: "#6b7280",
-  fontSize: "12px",
-  cursor: "pointer",
-  textAlign: "center",
-};
+import FieldErrorChoices from "./components/FieldErrorChoices.jsx";
+import FieldErrorDetails from "./components/FieldErrorDetails.jsx";
+import FieldErrorEditForm from "./components/FieldErrorEditForm.jsx";
+import { DEFAULT_ACCENT_COLOR, DEFAULT_ACCENT_TEXT_COLOR } from "./utils/aiChat.constants.js";
 
 const FieldErrorModal = ({
   fieldLabel,
@@ -54,10 +19,10 @@ const FieldErrorModal = ({
   onKeep,
   onSave,
 }) => {
-  const accent     = accentColor || "#6366f1";
-  const hBg        = headerBg    || accent;
-  const hText      = headerTextColor || "#ffffff";
-  const fontStack  = fontFamily  ? `"${fontFamily}", sans-serif` : "inherit";
+  const accent = accentColor || DEFAULT_ACCENT_COLOR;
+  const hBg = headerBg || accent;
+  const hText = headerTextColor || DEFAULT_ACCENT_TEXT_COLOR;
+  const fontStack = fontFamily ? `"${fontFamily}", sans-serif` : "inherit";
 
   const [changing, setChanging] = useState(false);
   const [editValue, setEditValue] = useState(suggestion ?? currentValue ?? "");
@@ -70,7 +35,10 @@ const FieldErrorModal = ({
 
   useEffect(() => {
     if (changing) {
-      const t = setTimeout(() => { inputRef.current?.focus(); inputRef.current?.select(); }, 60);
+      const t = setTimeout(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }, 60);
       return () => clearTimeout(t);
     }
   }, [changing]);
@@ -78,8 +46,14 @@ const FieldErrorModal = ({
   const handleSave = () => onSave(editValue.trim() || currentValue);
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter")  { e.preventDefault(); handleSave(); }
-    if (e.key === "Escape") { e.preventDefault(); onKeep(); }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSave();
+    }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      onKeep();
+    }
   };
 
   return (
@@ -110,7 +84,7 @@ const FieldErrorModal = ({
           fontFamily: fontStack,
         }}
       >
-        {/* Header — brand colours */}
+        {/* Header */}
         <div
           style={{
             display: "flex",
@@ -120,19 +94,21 @@ const FieldErrorModal = ({
             backgroundColor: hBg,
           }}
         >
-          <span
-            id="fem-title"
-            style={{ fontWeight: 700, fontSize: "14px", color: hText }}
-          >
+          <span id="fem-title" style={{ fontWeight: 700, fontSize: "14px", color: hText }}>
             Check this entry
           </span>
           <button
             onClick={onKeep}
             aria-label="Dismiss"
             style={{
-              background: "none", border: "none", cursor: "pointer",
-              color: hText, opacity: 0.8, padding: "2px",
-              display: "flex", alignItems: "center",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: hText,
+              opacity: 0.8,
+              padding: "2px",
+              display: "flex",
+              alignItems: "center",
             }}
           >
             <IoClose size={18} />
@@ -141,123 +117,35 @@ const FieldErrorModal = ({
 
         {/* Body */}
         <div style={{ padding: "14px 16px 16px" }}>
+          <FieldErrorDetails
+            fieldLabel={fieldLabel}
+            description={description}
+            retryNote={retryNote}
+            currentValue={currentValue}
+          />
 
-          {/* Field label + error description */}
-          <p style={{ margin: "0 0 10px", fontSize: "13px", color: "#374151", lineHeight: "1.5" }}>
-            <strong style={{ color: "#111827" }}>{fieldLabel}:</strong>{" "}
-            {description}
-          </p>
-
-          {/* Retry advisory (email fields only) */}
-          {retryNote && (
-            <p style={{
-              margin: "0 0 12px",
-              padding: "8px 10px",
-              backgroundColor: "#fffbeb",
-              border: "1px solid #fde68a",
-              borderRadius: "6px",
-              fontSize: "12px",
-              color: "#92400e",
-              lineHeight: "1.5",
-            }}>
-              {retryNote}
-            </p>
-          )}
-
-          {/* Current value pill */}
-          <div style={{ marginBottom: "14px" }}>
-            <span style={{ fontSize: "11px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-              You entered
-            </span>
-            <div style={{
-              marginTop: "4px",
-              padding: "6px 10px",
-              backgroundColor: "#fef2f2",
-              border: "1px solid #fecaca",
-              borderRadius: "6px",
-              fontSize: "13px",
-              color: "#7f1d1d",
-              wordBreak: "break-all",
-            }}>
-              {currentValue}
-            </div>
-          </div>
-
-          {/* Change mode — editable input */}
           {changing ? (
-            <>
-              <label
-                htmlFor="fem-input"
-                style={{ display: "block", fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}
-              >
-                {fieldType === FIELD_TYPES.DATE ? "Select the correct date:" : "Type the correct value:"}
-              </label>
-              <input
-                id="fem-input"
-                ref={inputRef}
-                type={fieldType === FIELD_TYPES.DATE ? "date" : "text"}
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={fieldType === FIELD_TYPES.DATE ? undefined : (suggestion || currentValue)}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  boxSizing: "border-box",
-                  padding: "8px 10px",
-                  border: `1.5px solid ${accent}`,
-                  borderRadius: "7px",
-                  fontSize: "14px",
-                  color: "#111827",
-                  outline: "none",
-                  marginBottom: "12px",
-                  fontFamily: fontStack,
-                }}
-              />
-              <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-                <button onClick={() => setChanging(false)} style={secondaryBtn}>Back</button>
-                <button onClick={handleSave} style={primaryBtn(accent)}>Save</button>
-              </div>
-            </>
-
+            <FieldErrorEditForm
+              inputRef={inputRef}
+              fieldType={fieldType}
+              editValue={editValue}
+              setEditValue={setEditValue}
+              suggestion={suggestion}
+              currentValue={currentValue}
+              accent={accent}
+              fontStack={fontStack}
+              onKeyDown={handleKeyDown}
+              onBack={() => setChanging(false)}
+              onSave={handleSave}
+            />
           ) : (
-            /* Default mode — action buttons */
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-
-              {suggestion && (
-                <div style={{ marginBottom: "4px" }}>
-                  <span style={{ fontSize: "11px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                    Did you mean?
-                  </span>
-                  <div style={{
-                    marginTop: "4px",
-                    padding: "6px 10px",
-                    backgroundColor: "#f0fdf4",
-                    border: "1px solid #bbf7d0",
-                    borderRadius: "6px",
-                    fontSize: "13px",
-                    color: "#14532d",
-                    wordBreak: "break-all",
-                  }}>
-                    {suggestion}
-                  </div>
-                </div>
-              )}
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "7px", marginTop: "4px" }}>
-                {suggestion && (
-                  <button onClick={() => onSave(suggestion)} style={primaryBtn(accent)}>
-                    Yes, use this correction
-                  </button>
-                )}
-                <button onClick={() => setChanging(true)} style={suggestion ? secondaryBtn : primaryBtn(accent)}>
-                  Type a different value
-                </button>
-                <button onClick={onKeep} style={ghostBtn}>
-                  Keep as entered
-                </button>
-              </div>
-            </div>
+            <FieldErrorChoices
+              suggestion={suggestion}
+              accent={accent}
+              onUseSuggestion={() => onSave(suggestion)}
+              onChange={() => setChanging(true)}
+              onKeep={onKeep}
+            />
           )}
         </div>
       </div>

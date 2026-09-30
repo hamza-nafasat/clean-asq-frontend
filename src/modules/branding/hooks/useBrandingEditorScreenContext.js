@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useFetchWebsiteBrandingMutation } from "@/redux/apis/branding.apis";
 import { useScreenContext } from "@/hooks/useScreenContext";
-import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
+import { AI_TOOLS } from "@/components/shared/aiChat/utils/aiChat.toolNames.constants.js";
 import confirmOrCancel from "@/utils/confirmOrCancel";
 import { toHttpsUrl } from "@/utils/websiteUrl";
 import getEnv from "@/utils/env";
@@ -126,12 +126,6 @@ const useBrandingEditorScreenContext = ({
     },
     logos: values.logos.map((l) => ({ url: l.url || l.preview, isFavicon: !!l.isFavicon })).filter((l) => l.url),
     colorPalette: values.colorPalette.map((c) => (typeof c === "string" ? c : c?.hex)).filter(Boolean),
-    deps: {
-      brandingId,
-      ...pickFields(values, BRANDING_AI_DEP_FIELDS),
-      logosCount: values.logos.length,
-      formsCount: forms.length,
-    },
   });
 };
 

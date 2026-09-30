@@ -62,7 +62,6 @@ const Applications = () => {
       generateApplicationPdf,
       askConfirm: aiConfirm.ask,
     }),
-    deps: { applicationCount: applications.length, formCount: forms.length },
   });
 
   const handleFilterChange = (e) => {

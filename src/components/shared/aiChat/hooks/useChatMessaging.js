@@ -5,17 +5,17 @@ import {
   AI_RESPONSE_TYPES,
   CHAT_ROLES,
   getDefaultChatEndpoint,
-} from "@/components/shared/aiChat/constants/aiChatConstants.js";
-import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
-import { FORM_LANG_TO_BCP47 } from "@/components/shared/aiChat/constants/formLanguages.js";
-import { createApplyToolCall } from "@/components/shared/aiChat/logic/applyToolCall.js";
-import { buildSendHistory, requestChat } from "@/components/shared/aiChat/logic/chatRequest.js";
-import { getBlockedMessageKey } from "@/components/shared/aiChat/logic/toolHelpers.js";
-import { findFieldElement } from "@/components/shared/aiChat/logic/fieldValueUtils.js";
-import { buildToolResultEntries, formatFormList } from "@/components/shared/aiChat/logic/formContextUtils.js";
-import { getLanguageName } from "@/components/shared/aiChat/logic/widgetLanguage.js";
-import { createSay } from "@/components/shared/aiChat/logic/translateMessage.js";
-import { buildChatPayload } from "@/components/shared/aiChat/utils/buildChatPayload.js";
+} from "@/components/shared/aiChat/utils/aiChat.constants.js";
+import { AI_TOOLS } from "@/components/shared/aiChat/utils/aiChat.toolNames.constants.js";
+import { FORM_LANG_TO_BCP47 } from "@/components/shared/aiChat/utils/aiChat.formLanguages.constants.js";
+import { createApplyToolCall } from "@/components/shared/aiChat/utils/aiChat.applyToolCall.utils.js";
+import { buildSendHistory, requestChat } from "@/components/shared/aiChat/utils/aiChat.request.utils.js";
+import { getBlockedMessageKey } from "@/components/shared/aiChat/utils/aiChat.toolHelpers.utils.js";
+import { findFieldElement } from "@/components/shared/aiChat/utils/aiChat.fieldValue.utils.js";
+import { buildToolResultEntries, formatFormList } from "@/components/shared/aiChat/utils/aiChat.formContext.utils.js";
+import { getLanguageName } from "@/components/shared/aiChat/utils/aiChat.language.utils.js";
+import { createSay } from "@/components/shared/aiChat/utils/aiChat.translate.utils.js";
+import { buildChatPayload } from "@/components/shared/aiChat/utils/aiChat.payload.utils.js";
 
 const DEFAULT_LANGUAGE_CODE = "en";
 const NEXT_FIELD_DODGE_DELAY_MS = 150;
@@ -42,7 +42,6 @@ const useChatMessaging = ({
   addMessage,
   getScreenContext,
   formDataSignal,
-  aiCustomPrompt,
   wt,
   speak,
   isVoiceModeRef,
@@ -144,7 +143,6 @@ const useChatMessaging = ({
             currentState: ctx.currentState,
             logos: ctx.logos,
             colorPalette: ctx?.colorPalette || undefined,
-            customPrompt: aiCustomPrompt || undefined,
           },
         });
         if (data.type === AI_RESPONSE_TYPES.TOOL_CALL) {

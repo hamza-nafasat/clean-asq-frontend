@@ -1,5 +1,5 @@
 import confirmOrCancel from "@/utils/confirmOrCancel";
-import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
+import { AI_TOOLS } from "@/components/shared/aiChat/utils/aiChat.toolNames.constants.js";
 
 export const buildUnderwritingScreenState = ({ submission }) => ({
   applicationId: submission?._id,

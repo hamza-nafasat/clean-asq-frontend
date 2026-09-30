@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { buildPagePdf } from "@/lib/pdf";
-import useAiChat from "@/hooks/useAiChat";
+import useAiChat, { getActiveFormId } from "@/hooks/useAiChat";
 import { AI_ASSISTANT_MODES } from "@/constants";
 import { extractHttpLinks } from "@/utils/extractHttpLinks";
 import getEnv from "@/utils/env";
@@ -54,7 +54,7 @@ const useApplicantPageDownload = ({ pageName, displayHtml, getFieldRows, signatu
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
-            body: JSON.stringify({ url }),
+            body: JSON.stringify({ url, formId: getActiveFormId() }),
           });
           const data = await res.json();
           if (!data.success) throw new Error(`Failed to fetch agreement from ${url}`);

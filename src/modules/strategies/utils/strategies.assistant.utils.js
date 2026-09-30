@@ -1,6 +1,6 @@
 import { toast } from "react-toastify";
 import confirmOrCancel from "@/utils/confirmOrCancel";
-import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
+import { AI_TOOLS } from "@/components/shared/aiChat/utils/aiChat.toolNames.constants.js";
 import { getLookupIds } from "./strategies.utils";
 
 const UPDATE_CONFIRM_TEXT = "Update";

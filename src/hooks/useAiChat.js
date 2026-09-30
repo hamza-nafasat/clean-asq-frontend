@@ -22,6 +22,9 @@ const prevFieldValuesRef = { current: {} };
 const continuationPendingRef = { current: false };
 const actionLogRef = { current: [] };
 
+// form of the open screen or overlay
+export const getActiveFormId = () => overlayContextRef.current?.formId ?? screenContextRef.current?.formId;
+
 const resolveValue = (value, current) => (typeof value === "function" ? value(current) : value);
 
 const useAiChat = () => {

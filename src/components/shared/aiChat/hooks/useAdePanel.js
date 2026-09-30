@@ -3,10 +3,10 @@ import {
   AI_FIELD_TYPES,
   FIELD_MODES,
   getDefaultChatEndpoint,
-} from "@/components/shared/aiChat/constants/aiChatConstants.js";
-import { AI_TOOLS } from "@/components/shared/aiChat/constants/aiToolNames.js";
-import { findFieldElement, readDomField } from "@/components/shared/aiChat/logic/fieldValueUtils.js";
-import { buildConfirmedBlock, withFields } from "@/components/shared/aiChat/logic/formContextUtils.js";
+} from "@/components/shared/aiChat/utils/aiChat.constants.js";
+import { AI_TOOLS } from "@/components/shared/aiChat/utils/aiChat.toolNames.constants.js";
+import { findFieldElement, readDomField } from "@/components/shared/aiChat/utils/aiChat.fieldValue.utils.js";
+import { buildConfirmedBlock, withFields } from "@/components/shared/aiChat/utils/aiChat.formContext.utils.js";
 
 const PLACES_SETTLE_MS = 400;
 const SECURE_VALUE_PLACEHOLDER = "[secure]";

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AI_ENDPOINTS } from "@/components/shared/aiChat/constants/aiChatConstants.js";
+import { requestTranslation } from "@/components/shared/aiChat/utils/aiChat.translate.utils.js";
 
 const HOVER_DELAY_MS = 400;
 const TOOLTIP_OFFSET_Y = 12;
@@ -61,20 +61,10 @@ const useTranslationTooltip = ({ translationMode, panelRef, tooltipCacheRef }) =
           return;
         }
 
-        try {
-          const res = await fetch(AI_ENDPOINTS.TRANSLATE, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text, targetLang: lang, targetLangName: langName }),
-          });
-          const data = await res.json();
-          if (data.success && data.data?.translation) {
-            tooltipCacheRef.current[text] = data.data.translation;
-            if (tooltipTargetRef.current === label) setTranslationTooltip({ text: data.data.translation, x, y });
-          }
-        } catch {
-          // the tooltip is optional, so failures stay silent
-        }
+        const translation = await requestTranslation({ text, targetLang: lang, targetLangName: langName });
+        if (!translation) return;
+        tooltipCacheRef.current[text] = translation;
+        if (tooltipTargetRef.current === label) setTranslationTooltip({ text: translation, x, y });
       }, HOVER_DELAY_MS);
     };
 
