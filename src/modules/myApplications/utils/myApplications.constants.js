@@ -24,3 +24,15 @@ export const MY_APPLICATIONS_SCREEN_CONTEXT = {
     "The My Applications screen lists this account's own drafts, submitted applications with their review status, and applications where it was added as a beneficial owner. From here the account can resume or delete a draft, download a submitted application's PDF, and invite beneficial owners by email.",
   greeting: `Hi! I'm your **Applications Assistant**.\n\nI can help you:\n- **Check** your drafts and submitted applications\n- **Download** a submitted application's PDF\n- **Invite a beneficial owner** to add their details\n- **Delete** drafts you no longer need\n\nWhat would you like to do?`,
 };
+
+export const MY_APPLICATION_FILTER_KEYS = {
+  SEARCH: "search",
+  STATUS: "status",
+  TYPE: "type",
+};
+
+export const INITIAL_MY_APPLICATION_FILTERS = {
+  [MY_APPLICATION_FILTER_KEYS.SEARCH]: "",
+  [MY_APPLICATION_FILTER_KEYS.STATUS]: "",
+  [MY_APPLICATION_FILTER_KEYS.TYPE]: "",
+};

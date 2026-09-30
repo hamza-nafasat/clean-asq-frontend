@@ -3,10 +3,12 @@ import { useDeleteSingleBrandingMutation, useGetAllBrandingsQuery } from "@/redu
 import { useGetMyAllFormsQuery } from "@/redux/apis/form.apis";
 import { toast } from "react-toastify";
 import { FaExchangeAlt } from "react-icons/fa";
-import { FiAlertCircle, FiEdit2, FiDroplet, FiTrash2 } from "react-icons/fi";
+import { FiAlertCircle, FiEdit2, FiDroplet, FiSearch, FiTrash2 } from "react-icons/fi";
 import useConfirm from "@/hooks/useConfirm";
+import useListFilter from "@/hooks/useListFilter";
 import usePermission from "@/hooks/usePermission";
 import ApplyBranding from "@/components/global/ApplyBranding";
+import ListFilter from "@/components/global/ListFilter";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
 import EmptyState from "@/components/shared/EmptyState";
@@ -15,7 +17,14 @@ import BrandingTable from "./components/BrandingTable";
 import useBrandingListApply from "./hooks/useBrandingListApply";
 import useBrandingListAssistant from "./hooks/useBrandingListAssistant";
 import { PERMISSIONS } from "@/utils/permissions";
-import { BRANDING_ROUTES, BRANDING_ROW_ACTIONS } from "./utils/branding.constants";
+import {
+  BRANDING_FILTER_KEYS,
+  BRANDING_FILTER_FIELDS,
+  BRANDING_ROUTES,
+  BRANDING_ROW_ACTIONS,
+  INITIAL_BRANDING_FILTERS,
+} from "./utils/branding.constants";
+import { filterBrandings } from "./utils/branding.utils";
 
 const Brandings = () => {
   const navigate = useNavigate();
@@ -31,6 +40,15 @@ const Brandings = () => {
   const aiConfirm = useConfirm();
   const apply = useBrandingListApply();
   const brandingList = brandings?.data || [];
+  const forms = allFormsData?.data || [];
+  const { filters, handleChange, clearFilters, hasActiveFilters } = useListFilter(INITIAL_BRANDING_FILTERS);
+  const filteredBrandings = filterBrandings(brandingList, forms, filters);
+  // applied filter needs the forms list
+  const filterFields = canReadForm
+    ? BRANDING_FILTER_FIELDS
+    : BRANDING_FILTER_FIELDS.filter((field) => field.name !== BRANDING_FILTER_KEYS.APPLIED_TO_FORMS).map((field) =>
+        field.name === BRANDING_FILTER_KEYS.SEARCH ? { ...field, className: "sm:col-span-2 lg:col-span-9" } : field,
+      );
 
   const openBranding = (brandingId) => navigate(`${BRANDING_ROUTES.SINGLE}/${brandingId}`);
   const openCreateBranding = () => navigate(BRANDING_ROUTES.CREATE);
@@ -74,7 +92,7 @@ const Brandings = () => {
 
   useBrandingListAssistant({
     brandings: brandingList,
-    forms: allFormsData?.data || [],
+    forms,
     deleteBranding,
     askToDelete: (rows) => deleteConfirm.ask({ rows }),
     askConfirm: aiConfirm.ask,
@@ -138,16 +156,35 @@ const Brandings = () => {
           <Button label="Create Branding" onClick={openCreateBranding} data-testid="branding-create-btn" />
         </header>
       )}
-      <section className="mt-5 w-full h-full overflow-y-auto lg:w-[calc(100vw-350px)] xl:w-full">
-        {brandingList.length ? (
-          <BrandingTable brandings={brandingList} rowButtons={rowButtons} />
-        ) : (
+      <section className="mt-5 h-full w-full overflow-y-auto lg:w-[calc(100vw-350px)] xl:w-full">
+        {!brandingList.length ? (
           <EmptyState
             variant="panel"
             icon={<FiDroplet size={28} />}
             title="No brandings yet"
             description="Create a branding to style your forms and website."
           />
+        ) : (
+          <>
+            <ListFilter
+              className="mb-5"
+              fields={filterFields}
+              filters={filters}
+              hasActiveFilters={hasActiveFilters}
+              onChange={handleChange}
+              onClear={clearFilters}
+            />
+            {filteredBrandings.length ? (
+              <BrandingTable brandings={filteredBrandings} rowButtons={rowButtons} />
+            ) : (
+              <EmptyState
+                variant="panel"
+                icon={<FiSearch size={28} />}
+                title="No brandings match your filters"
+                description="Try a different search or clear the filters."
+              />
+            )}
+          </>
         )}
       </section>
     </article>

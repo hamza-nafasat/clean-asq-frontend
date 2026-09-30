@@ -6,7 +6,18 @@ import {
   BRANDING_HEADER_ALIGNMENTS,
 } from "./branding.constants";
 
-export const BRANDING_COLOR_LABELS = ["Black", "White", "Gray", "Red", "Yellow", "Orange", "Blue", "Purple", "Green", "Custom"];
+export const BRANDING_COLOR_LABELS = [
+  "Black",
+  "White",
+  "Gray",
+  "Red",
+  "Yellow",
+  "Orange",
+  "Blue",
+  "Purple",
+  "Green",
+  "Custom",
+];
 
 export const BRANDING_SLIDER_ENDS = [
   ["Pure Black", "Dark Gray"],

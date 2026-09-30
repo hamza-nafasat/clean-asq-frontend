@@ -3,10 +3,10 @@ import MyApplicationsDrafts from "./MyApplicationsDrafts";
 import MyApplicationsOwnerInvitations from "./MyApplicationsOwnerInvitations";
 import MyApplicationsSubmissions from "./MyApplicationsSubmissions";
 
-const MyApplicationsList = ({ forms = {}, invitations = [] }) => {
-  const drafts = forms?.saved || [];
-  const submitted = forms?.submitted || [];
-  const hasNothing = drafts.length === 0 && submitted.length === 0 && invitations.length === 0;
+const MyApplicationsList = ({ drafts = [], submitted = [], invitations = [], hasActiveFilters = false }) => {
+  const hasNoApplications = drafts.length === 0 && submitted.length === 0;
+  const hasNothing = hasNoApplications && invitations.length === 0 && !hasActiveFilters;
+  const hasNoMatches = hasNoApplications && hasActiveFilters;
 
   return (
     <div className="w-full space-y-8">
@@ -15,6 +15,14 @@ const MyApplicationsList = ({ forms = {}, invitations = [] }) => {
           variant="panel"
           title="You have no applications yet"
           description="Once you start an application it will appear here, whether it is finished or not."
+        />
+      )}
+
+      {hasNoMatches && (
+        <EmptyState
+          variant="panel"
+          title="No applications match your filters"
+          description="Try changing or clearing the filters."
         />
       )}
 

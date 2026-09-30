@@ -11,7 +11,7 @@ import usePermission from "@/hooks/usePermission";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import useApplicationsForms from "./hooks/useApplicationsForms";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
-import ApplicationsFilter from "./components/ApplicationsFilter";
+import ListFilter from "@/components/global/ListFilter";
 import ApplicationsHeading from "./components/ApplicationsHeading";
 import ApplicationsTable from "./components/ApplicationsTable";
 import getEnv from "@/utils/env";
@@ -26,7 +26,7 @@ import {
   buildApplicationsScreenState,
   getSubmittedFormIds,
 } from "./utils/applications.assistant.utils";
-import { buildFilterOptions, filterApplications, isSubmitted } from "./utils/applications.utils";
+import { buildApplicationFilterFields, filterApplications, isSubmitted } from "./utils/applications.utils";
 
 const SERVER_URL = getEnv("SERVER_URL");
 
@@ -46,7 +46,6 @@ const Applications = () => {
   const forms = useApplicationsForms(canShareApplication ? getSubmittedFormIds(applications) : []);
   const filteredApplications = filterApplications(applications, filters);
   const roleNames = (roles?.data ?? []).map((role) => role.name);
-  const { roleOptions, statusOptions } = buildFilterOptions(applications, roleNames);
   const submittedCount = applications.filter(isSubmitted).length;
   const hasActiveFilters = Object.values(filters).some(Boolean);
 
@@ -75,13 +74,11 @@ const Applications = () => {
       data-testid="applications-page"
     >
       <ApplicationsHeading submittedCount={submittedCount} draftCount={applications.length - submittedCount} />
-      <ApplicationsFilter
+      <ListFilter
+        fields={buildApplicationFilterFields(applications, roleNames)}
         filters={filters}
-        roleOptions={roleOptions}
-        statusOptions={statusOptions}
-        resultCount={filteredApplications.length}
-        totalCount={applications.length}
         hasActiveFilters={hasActiveFilters}
+        className="mb-5"
         onChange={handleFilterChange}
         onClear={() => setFilters(INITIAL_APPLICATION_FILTERS)}
       />

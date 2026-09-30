@@ -8,11 +8,12 @@ import EmptyState from "@/components/shared/EmptyState";
 import LoadingState from "@/components/shared/LoadingState";
 import ApplicationFormsCards from "./components/ApplicationFormsCards";
 import ApplicationFormsCreateModal from "./components/ApplicationFormsCreateModal";
-import ApplicationFormsFilter from "./components/ApplicationFormsFilter";
+import ListFilter from "@/components/global/ListFilter";
+import ApplicationFormsSearchModes from "./components/ApplicationFormsSearchModes";
 import ApplicationFormsHeading from "./components/ApplicationFormsHeading";
 import useApplicationFormsScreenContext from "./hooks/useApplicationFormsScreenContext";
-import { INITIAL_FORM_FILTERS } from "./utils/applicationForms.constants";
-import { filterForms, hasActiveFormFilters } from "./utils/applicationForms.filter.utils";
+import { FORM_FILTER_KEYS, INITIAL_FORM_FILTERS } from "./utils/applicationForms.constants";
+import { buildFormFilterFields, filterForms, hasActiveFormFilters } from "./utils/applicationForms.filter.utils";
 
 const ApplicationForms = () => {
   const { data: forms, isLoading, isError, refetch } = useGetMyAllFormsQuery();
@@ -34,6 +35,7 @@ const ApplicationForms = () => {
     );
 
   const filteredForms = filterForms(forms?.data, filters);
+  const handleFilterChange = ({ target: { name, value } }) => setFilters((prev) => ({ ...prev, [name]: value }));
 
   return (
     <article className="bg-backgroundColor rounded-md p-5 shadow" data-testid="forms-page">
@@ -48,7 +50,20 @@ const ApplicationForms = () => {
       <ApplicationFormsCreateModal isOpen={isCreateFormOpen} onClose={() => setIsCreateFormOpen(false)} />
 
       <ApplicationFormsHeading onCreateForm={() => setIsCreateFormOpen(true)} />
-      <ApplicationFormsFilter filters={filters} setFilters={setFilters} />
+      <ListFilter
+        fields={buildFormFilterFields(
+          filters,
+          <ApplicationFormsSearchModes
+            searchMode={filters[FORM_FILTER_KEYS.SEARCH_MODE]}
+            onChange={handleFilterChange}
+          />,
+        )}
+        filters={filters}
+        hasActiveFilters={hasActiveFormFilters(filters)}
+        className="mb-5"
+        onChange={handleFilterChange}
+        onClear={() => setFilters(INITIAL_FORM_FILTERS)}
+      />
 
       <ApplicationFormsCards forms={filteredForms} isFiltering={hasActiveFormFilters(filters)} />
     </article>

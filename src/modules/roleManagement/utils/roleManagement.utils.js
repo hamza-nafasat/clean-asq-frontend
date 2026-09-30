@@ -1,13 +1,32 @@
 import { FIELD_TYPES } from "@/constants";
 import { PERMISSION_GROUPS, SYSTEM_ROLES } from "@/utils/permissions";
 import { DATE_LOCALE } from "@/constants";
-import { CREATED_DATE_OPTIONS, OTHER_PERMISSION_GROUP } from "./roleManagement.constants";
+import { matchesOption, matchesText } from "@/utils/listFilter";
+import { CREATED_DATE_OPTIONS, OTHER_PERMISSION_GROUP, ROLE_FILTER_KEYS, ROLE_TYPES } from "./roleManagement.constants";
 
 export const isSystemRole = (role) => Object.values(SYSTEM_ROLES).includes(role?.name);
 
 export const isAdminRole = (role) => role?.name === SYSTEM_ROLES.ADMIN;
 
-export const formatCreatedDate = (date) => (date ? new Date(date).toLocaleDateString(DATE_LOCALE, CREATED_DATE_OPTIONS) : "");
+export const getRoleType = (role) => (isSystemRole(role) ? ROLE_TYPES.SYSTEM : ROLE_TYPES.CUSTOM);
+
+// role has any permission in the group
+const hasPermissionGroup = (role, groupName) => {
+  if (!groupName) return true;
+  const groupPermissions = PERMISSION_GROUPS.find((group) => group.name === groupName)?.permissions ?? [];
+  return (role.permissions ?? []).some((permission) => groupPermissions.includes(permission.name));
+};
+
+export const filterRoles = (roles, filters) =>
+  roles.filter(
+    (role) =>
+      matchesText([role.name], filters[ROLE_FILTER_KEYS.SEARCH]) &&
+      matchesOption(getRoleType(role), filters[ROLE_FILTER_KEYS.TYPE]) &&
+      hasPermissionGroup(role, filters[ROLE_FILTER_KEYS.PERMISSION_GROUP]),
+  );
+
+export const formatCreatedDate = (date) =>
+  date ? new Date(date).toLocaleDateString(DATE_LOCALE, CREATED_DATE_OPTIONS) : "";
 
 export const getPermissionPercent = (count, total) => (total ? Math.min(100, Math.round((count / total) * 100)) : 0);
 
@@ -68,7 +87,14 @@ export const buildRoleScreenState = (roles = [], permissions = []) => ({
   availablePermissions: permissions.map((permission) => ({ _id: permission._id, name: permission.name })),
 });
 
-export const buildRoleScreenActions = ({ roles = [], permissions = [], createRole, editRole, deleteRole, toastError }) => ({
+export const buildRoleScreenActions = ({
+  roles = [],
+  permissions = [],
+  createRole,
+  editRole,
+  deleteRole,
+  toastError,
+}) => ({
   createRole: ({ name, permissionNames }) =>
     runRoleAction(
       () => createRole({ name, permissions: getPermissionIds(permissions, permissionNames) }).unwrap(),

@@ -96,7 +96,8 @@ export const buildBrandingFormData = (values) => {
   append("aiBannerTextColor", values.aiBannerTextColor || values.headerText);
   append("aiUseCustomIcon", String(values.aiUseCustomIcon));
   EFFECT_FORM_FIELDS.forEach((field) => append(field, values[field]));
-  if (values.websiteImage && values.websiteImage.startsWith(URL_PREFIXES.HTTPS)) append("screenshotUrl", values.websiteImage);
+  if (values.websiteImage && values.websiteImage.startsWith(URL_PREFIXES.HTTPS))
+    append("screenshotUrl", values.websiteImage);
   values.extraLogos.forEach((file) => append(UPLOAD_FIELD_NAMES.MULTIPLE, file));
 
   return formData;
@@ -109,7 +110,12 @@ const callSetters = (branding, source, keys, test) =>
 
 // saved ai colours to theme
 export const applySavedAiToGlobal = (saved, branding) => {
-  callSetters(branding, saved, ["aiLaunchButtonColor", "aiHeaderColor", "aiBannerColor", "aiBannerTextColor"], isDefined);
+  callSetters(
+    branding,
+    saved,
+    ["aiLaunchButtonColor", "aiHeaderColor", "aiBannerColor", "aiBannerTextColor"],
+    isDefined,
+  );
   branding.setAiUseCustomIcon(saved?.aiUseCustomIcon !== false);
   callSetters(branding, saved, ["favicon", "tabTitle"], isDefined);
 };

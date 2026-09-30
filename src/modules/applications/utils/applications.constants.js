@@ -1,6 +1,6 @@
 import { FORM_FIELD_TEXT_SOURCES } from "@/constants";
 
-export const APPLICATION_FILTER_FIELDS = {
+export const APPLICATION_FILTER_KEYS = {
   NAME: "name",
   ROLE: "role",
   STATUS: "status",
@@ -10,7 +10,7 @@ export const APPLICATION_FILTER_FIELDS = {
 };
 
 export const INITIAL_APPLICATION_FILTERS = Object.fromEntries(
-  Object.values(APPLICATION_FILTER_FIELDS).map((field) => [field, ""]),
+  Object.values(APPLICATION_FILTER_KEYS).map((field) => [field, ""]),
 );
 
 export const FORWARD_FORM_FIELDS = {

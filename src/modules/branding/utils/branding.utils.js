@@ -1,4 +1,6 @@
-import { FONT_OPTIONS } from "@/constants";
+import { FONT_OPTIONS, YES_NO_VALUES } from "@/constants";
+import { matchesOption, matchesText } from "@/utils/listFilter";
+import { BRANDING_FILTER_KEYS } from "./branding.constants";
 
 // clipboard api with execCommand fallback
 export const copyTextToClipboard = (text) => {
@@ -32,7 +34,11 @@ export const toSenderEmail = (value) => {
   return localPart && emailDomain ? `${localPart}@${emailDomain}` : localPart;
 };
 
-const toFontKey = (name) => name.trim().toLowerCase().replace(/[\s_]+/g, "-");
+const toFontKey = (name) =>
+  name
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, "-");
 
 // match stored font to option name
 export const normalizeFontFamily = (value) => {
@@ -40,4 +46,17 @@ export const normalizeFontFamily = (value) => {
   const key = toFontKey(value);
   const match = FONT_OPTIONS.find((font) => toFontKey(font.value) === key || font.slug === key);
   return match?.value ?? value;
+};
+
+const toYesNo = (value) => (value ? YES_NO_VALUES.YES : YES_NO_VALUES.NO);
+
+// brandings matching every filter
+export const filterBrandings = (brandings, forms, filters) => {
+  const appliedIds = new Set(forms.map((form) => String(form?.branding?._id ?? form?.branding ?? "")));
+  return brandings.filter(
+    (branding) =>
+      matchesText([branding?.name, branding?.url], filters[BRANDING_FILTER_KEYS.SEARCH]) &&
+      matchesOption(toYesNo(branding?.isDefault), filters[BRANDING_FILTER_KEYS.DEFAULT]) &&
+      matchesOption(toYesNo(appliedIds.has(String(branding?._id))), filters[BRANDING_FILTER_KEYS.APPLIED_TO_FORMS]),
+  );
 };

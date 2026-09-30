@@ -17,7 +17,9 @@ const buildColumns = ({ totalPermissions, openRowId, getRowRef, getRowActions, o
       <span className="flex min-w-0 items-center gap-2">
         <span className="text-textPrimary truncate font-medium capitalize">{row.name}</span>
         {isSystemRole(row) && (
-          <span className="bg-primary/10 text-primary shrink-0 rounded-full px-2 py-0.5 text-xs font-medium">System</span>
+          <span className="bg-primary/10 text-primary shrink-0 rounded-full px-2 py-0.5 text-xs font-medium">
+            System
+          </span>
         )}
       </span>
     ),
@@ -53,6 +55,7 @@ const buildColumns = ({ totalPermissions, openRowId, getRowRef, getRowActions, o
 
 const RoleManagementTable = ({
   roles = [],
+  isFiltered = false,
   totalPermissions = 0,
   isLoading = false,
   isError = false,
@@ -93,8 +96,10 @@ const RoleManagementTable = ({
       pagination
       highlightOnHover
       progressPending={isLoading}
-      noDataComponent="No roles yet"
-      emptyDescription="Create a role to control what people can do."
+      noDataComponent={isFiltered ? "No roles match your filters" : "No roles yet"}
+      emptyDescription={
+        isFiltered ? "Try changing or clearing the filters." : "Create a role to control what people can do."
+      }
       className="rounded-t-xl!"
     />
   );

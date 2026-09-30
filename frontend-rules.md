@@ -195,7 +195,7 @@ The module name tells a reader which module a file belongs to once it is open in
 | Page | `modules/<module>/<Page>.jsx` | `auth/Login.jsx`, `branding/Brandings.jsx` |
 | Module component | `components/<Module><Part>.jsx` | `auth/components/AuthHeading.jsx` |
 | Heading | `<Module>Heading.jsx` | `BrandingHeading.jsx` |
-| Filter | `<Module>Filter.jsx` | `BrandingFilter.jsx` |
+| Filter | none — pass a fields config to `components/global/ListFilter` | `BRANDING_FILTER_FIELDS` |
 | Table | `<Module>Table.jsx` | `BrandingTable.jsx` |
 | Module modal | `components/<Module><Purpose>Modal.jsx` | `BrandingAddEditModal.jsx` |
 | Module helpers | `utils/<module>.utils.js` · `utils/<module>.<topic>.utils.js` | `branding.utils.js`, `branding.color.utils.js` |
@@ -383,7 +383,7 @@ const Feature = () => {
   return (
     <article className="flex flex-col gap-4">
       <FeatureHeading heading="…" subheading="…" />
-      <FeatureFilter filters={filters} setFilters={setFilters} options={options} />
+      <ListFilter fields={FEATURE_FILTER_FIELDS} filters={filters} onChange={handleFilterChange} />
       <FeatureTable rows={filteredRows} />
     </article>
   );

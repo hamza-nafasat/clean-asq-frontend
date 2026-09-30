@@ -2,7 +2,15 @@ import { captureElementToCanvas } from "@/lib/screenshot";
 import { BRANDING_SCREENSHOT_ELEMENT_ID, BRANDING_STORAGE_KEYS } from "./branding.constants";
 
 // screenshot branding source area
-export const captureBrandingScreenshot = async ({ e, setSSLoading, setColorPicker, colorPicker, setImage, setShowSSButton, setColor }) => {
+export const captureBrandingScreenshot = async ({
+  e,
+  setSSLoading,
+  setColorPicker,
+  colorPicker,
+  setImage,
+  setShowSSButton,
+  setColor,
+}) => {
   setSSLoading(true);
   setColorPicker(e.target.value);
 

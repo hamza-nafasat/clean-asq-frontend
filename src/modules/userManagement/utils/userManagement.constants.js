@@ -40,3 +40,13 @@ export const USER_FORM_FIELD_PROPS = {
   placeholderOption: FORM_FIELD_TEXT_SOURCES.LABEL,
   checkboxVariant: FORM_FIELD_CHECKBOX_VARIANTS.SHARED,
 };
+
+export const USER_FILTER_KEYS = {
+  SEARCH: "search",
+  ROLE: "role",
+};
+
+export const INITIAL_USER_FILTERS = {
+  [USER_FILTER_KEYS.SEARCH]: "",
+  [USER_FILTER_KEYS.ROLE]: "",
+};

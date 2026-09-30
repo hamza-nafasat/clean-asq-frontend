@@ -1,4 +1,5 @@
-import { TEMPLATE_FIELDS } from "./email.constants";
+import { matchesOption, matchesText } from "@/utils/listFilter";
+import { EMAIL_FILTER_KEYS, EMAIL_FORM_FILTER_NONE, TEMPLATE_FIELDS } from "./email.constants";
 
 // quill leaves "<p><br></p>" when empty
 const isEmptyHtml = (html = "") => !html.replace(/<[^>]*>/g, "").trim();
@@ -20,3 +21,29 @@ export const pickTemplateFields = (values) => ({
   [TEMPLATE_FIELDS.SUBJECT]: values[TEMPLATE_FIELDS.SUBJECT] ?? "",
   [TEMPLATE_FIELDS.BODY]: values[TEMPLATE_FIELDS.BODY] ?? "",
 });
+
+// not attached, then each attached form
+export const buildFormFilterOptions = (templates) => {
+  const forms = new Map(templates.flatMap((template) => template.forms ?? []).map((form) => [form?._id, form?.name]));
+  forms.delete(undefined);
+  return [
+    { value: EMAIL_FORM_FILTER_NONE, label: "Not attached" },
+    ...[...forms].map(([value, label]) => ({ value, label: label || value })),
+  ];
+};
+
+const matchesForm = (template, selected) => {
+  const formIds = (template.forms ?? []).map((form) => String(form?._id));
+  if (!selected) return true;
+  if (selected === EMAIL_FORM_FILTER_NONE) return !formIds.length;
+  return formIds.includes(String(selected));
+};
+
+// templates matching every filter
+export const filterTemplates = (templates, filters) =>
+  templates.filter(
+    (template) =>
+      matchesText([template.templateName, template.subject], filters[EMAIL_FILTER_KEYS.SEARCH]) &&
+      matchesOption(template.emailType, filters[EMAIL_FILTER_KEYS.TYPE]) &&
+      matchesForm(template, filters[EMAIL_FILTER_KEYS.FORM]),
+  );

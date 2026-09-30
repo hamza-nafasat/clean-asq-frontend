@@ -9,10 +9,12 @@ import {
 } from "@/redux/apis/roleManagement.apis";
 import { FiEdit2, FiEye, FiTrash2 } from "react-icons/fi";
 import { toast } from "react-toastify";
+import useListFilter from "@/hooks/useListFilter";
 import useDeleteConfirmation from "@/hooks/useDeleteConfirmation";
 import usePermission from "@/hooks/usePermission";
 import { useScreenContext } from "@/hooks/useScreenContext";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import ListFilter from "@/components/global/ListFilter";
 import RoleManagementAddEditModal from "./components/RoleManagementAddEditModal";
 import RoleManagementHeading from "./components/RoleManagementHeading";
 import RoleManagementTable from "./components/RoleManagementTable";
@@ -20,7 +22,9 @@ import RoleManagementViewModal from "./components/RoleManagementViewModal";
 import getEnv from "@/utils/env";
 import { PERMISSIONS } from "@/utils/permissions";
 import {
+  INITIAL_ROLE_FILTERS,
   INITIAL_ROLE_FORM,
+  ROLE_FILTER_FIELDS,
   ROLE_ACTION_NAMES,
   ROLE_AI_CHAT_PATH,
   ROLE_MODAL_MODES,
@@ -30,6 +34,7 @@ import {
   applyRoleFormChange,
   buildRoleScreenActions,
   buildRoleScreenState,
+  filterRoles,
   getPermissionsError,
   getRoleNameError,
   isAdminRole,
@@ -58,6 +63,13 @@ const RoleManagement = () => {
   const roles = rolesQuery.data?.data ?? [];
   const permissions = permissionsQuery.data?.data ?? [];
   const isEditMode = modalMode === ROLE_MODAL_MODES.EDIT;
+  const {
+    filters,
+    handleChange: handleFilterChange,
+    clearFilters,
+    hasActiveFilters,
+  } = useListFilter(INITIAL_ROLE_FILTERS);
+  const filteredRoles = filterRoles(roles, filters);
   const roleBeingEdited = roles.find((role) => role._id === roleForm._id);
 
   const {
@@ -118,7 +130,9 @@ const RoleManagement = () => {
 
     const body = { name: roleForm.roleName, permissions: roleForm.permissions };
     try {
-      const res = isEditMode ? await editRole({ _id: roleForm._id, ...body }).unwrap() : await createRole(body).unwrap();
+      const res = isEditMode
+        ? await editRole({ _id: roleForm._id, ...body }).unwrap()
+        : await createRole(body).unwrap();
       if (res?.success) {
         toast.success(res.message);
         setModalMode(null);
@@ -137,12 +151,22 @@ const RoleManagement = () => {
   // backend refuses the hidden actions
   const getRowActions = (role) => {
     const isOwnRole = role._id === user?.role?._id;
-    const actions = [{ name: ROLE_ACTION_NAMES.VIEW, icon: <FiEye size={16} className="mr-2" />, onClick: setRoleToView }];
+    const actions = [
+      { name: ROLE_ACTION_NAMES.VIEW, icon: <FiEye size={16} className="mr-2" />, onClick: setRoleToView },
+    ];
     if (canUpdateRole && !isOwnRole && !isAdminRole(role)) {
-      actions.push({ name: ROLE_ACTION_NAMES.EDIT, icon: <FiEdit2 size={16} className="mr-2" />, onClick: handleOpenEdit });
+      actions.push({
+        name: ROLE_ACTION_NAMES.EDIT,
+        icon: <FiEdit2 size={16} className="mr-2" />,
+        onClick: handleOpenEdit,
+      });
     }
     if (canDeleteRole && !isOwnRole && !isSystemRole(role)) {
-      actions.push({ name: ROLE_ACTION_NAMES.DELETE, icon: <FiTrash2 size={16} className="mr-2" />, onClick: openDeleteConfirmation });
+      actions.push({
+        name: ROLE_ACTION_NAMES.DELETE,
+        icon: <FiTrash2 size={16} className="mr-2" />,
+        onClick: openDeleteConfirmation,
+      });
     }
     return actions;
   };
@@ -151,8 +175,18 @@ const RoleManagement = () => {
     <article className="mt-5 w-full" data-testid="roles-page">
       <RoleManagementHeading canCreateRole={canCreateRole} isCreating={isCreatingRole} onAddRole={handleOpenAdd} />
 
+      <ListFilter
+        className="mb-5"
+        fields={ROLE_FILTER_FIELDS}
+        filters={filters}
+        hasActiveFilters={hasActiveFilters}
+        onChange={handleFilterChange}
+        onClear={clearFilters}
+      />
+
       <RoleManagementTable
-        roles={roles}
+        roles={filteredRoles}
+        isFiltered={hasActiveFilters}
         totalPermissions={permissions.length}
         isLoading={rolesQuery.isLoading || permissionsQuery.isLoading}
         isError={rolesQuery.isError || permissionsQuery.isError}

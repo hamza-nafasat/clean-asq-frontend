@@ -1,6 +1,10 @@
+import { LIST_FILTER_TYPES } from "@/constants";
 import { FORM_FILTER_KEYS, RULE_FILTER_KEYS, RULE_STATUSES, SEARCH_MODES } from "./applicationForms.constants";
 
-const includesText = (value, query) => String(value ?? "").toLowerCase().includes(query.trim().toLowerCase());
+const includesText = (value, query) =>
+  String(value ?? "")
+    .toLowerCase()
+    .includes(query.trim().toLowerCase());
 
 // client# matches id or branding
 const matchesFormQuery = (form, filters) => {
@@ -25,9 +29,9 @@ export const filterForms = (forms = [], filters = {}) =>
 export const hasActiveFormFilters = (filters = {}) =>
   Boolean(
     filters[FORM_FILTER_KEYS.CLIENT_QUERY]?.trim() ||
-      filters[FORM_FILTER_KEYS.NAME_QUERY]?.trim() ||
-      filters[FORM_FILTER_KEYS.DATE_FROM] ||
-      filters[FORM_FILTER_KEYS.DATE_TO],
+    filters[FORM_FILTER_KEYS.NAME_QUERY]?.trim() ||
+    filters[FORM_FILTER_KEYS.DATE_FROM] ||
+    filters[FORM_FILTER_KEYS.DATE_TO],
   );
 
 export const matchesRuleFilters = (rule, filters) => {
@@ -44,3 +48,30 @@ export const matchesRuleFilters = (rule, filters) => {
 };
 
 export const hasActiveRuleFilters = (filters = {}) => Object.values(RULE_FILTER_KEYS).some((key) => filters[key]);
+
+// search follows the chosen mode
+export const buildFormFilterFields = (filters, searchModes) => {
+  const isClientMode = filters[FORM_FILTER_KEYS.SEARCH_MODE] === SEARCH_MODES.CLIENT;
+  return [
+    {
+      type: LIST_FILTER_TYPES.SEARCH,
+      name: isClientMode ? FORM_FILTER_KEYS.CLIENT_QUERY : FORM_FILTER_KEYS.NAME_QUERY,
+      label: "Advance search",
+      placeholder: isClientMode ? "Search by client #" : "Search by form name",
+      addon: searchModes,
+      className: "sm:col-span-2 lg:col-span-6",
+    },
+    {
+      type: LIST_FILTER_TYPES.DATE,
+      name: FORM_FILTER_KEYS.DATE_FROM,
+      placeholder: "From date",
+      className: "lg:col-span-3",
+    },
+    {
+      type: LIST_FILTER_TYPES.DATE,
+      name: FORM_FILTER_KEYS.DATE_TO,
+      placeholder: "To date",
+      className: "lg:col-span-3",
+    },
+  ];
+};

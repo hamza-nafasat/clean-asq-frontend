@@ -42,7 +42,14 @@ const buildColumns = ({ openRowId, getRowRef, buttons, onToggleMenu }) => [
     : []),
 ];
 
-const UserManagementTable = ({ users = [], roleOptions = [], isLoading = false, isError = false, onRetry }) => {
+const UserManagementTable = ({
+  users = [],
+  isFiltered = false,
+  roleOptions = [],
+  isLoading = false,
+  isError = false,
+  onRetry,
+}) => {
   const canUpdateUser = usePermission(PERMISSIONS.UPDATE_USER);
   const canDeleteUser = usePermission(PERMISSIONS.DELETE_USER);
   // role picker needs the roles list
@@ -137,6 +144,15 @@ const UserManagementTable = ({ users = [], roleOptions = [], isLoading = false, 
       <EmptyState variant="panel" icon={<FiAlertCircle size={28} />} title="Could not load users">
         <Button type="button" label="Try again" onClick={onRetry} />
       </EmptyState>
+    );
+  if (!users.length && isFiltered)
+    return (
+      <EmptyState
+        variant="panel"
+        icon={<FiUsers size={28} />}
+        title="No users match your filters"
+        description="Try changing or clearing the filters."
+      />
     );
   if (!users.length)
     return (

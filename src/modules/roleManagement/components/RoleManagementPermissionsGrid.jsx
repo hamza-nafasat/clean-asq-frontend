@@ -1,7 +1,13 @@
 import RoleManagementPermissionGroup from "./RoleManagementPermissionGroup";
 import { groupPermissions } from "../utils/roleManagement.utils";
 
-const RoleManagementPermissionsGrid = ({ allPermissions = [], permissionIds = [], error = "", onChange, onToggleMany }) => {
+const RoleManagementPermissionsGrid = ({
+  allPermissions = [],
+  permissionIds = [],
+  error = "",
+  onChange,
+  onToggleMany,
+}) => {
   const groups = groupPermissions(allPermissions);
   const allIds = allPermissions.map((permission) => permission._id);
 

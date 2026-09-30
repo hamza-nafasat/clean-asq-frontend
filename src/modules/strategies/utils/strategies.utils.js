@@ -1,4 +1,5 @@
-import { INITIAL_STRATEGY_FORM, STRATEGY_FORM_FIELDS } from "./strategies.constants";
+import { matchesText } from "@/utils/listFilter";
+import { INITIAL_STRATEGY_FORM, STRATEGY_FILTER_KEYS, STRATEGY_FORM_FIELDS } from "./strategies.constants";
 
 export const toFormOptions = (forms) => forms?.map((item) => ({ label: item?.name, value: item?._id })) || [];
 
@@ -34,3 +35,22 @@ export const validateStrategyForm = (form) => ({
   [STRATEGY_FORM_FIELDS.NAME]: form.name?.trim() ? "" : "Enter a strategy name",
   [STRATEGY_FORM_FIELDS.SEARCH_STRATEGIES]: form.searchStrategies?.length ? "" : "Choose at least one lookup key",
 });
+
+// linked forms found in the strategies
+export const getStrategyFilterFormOptions = (strategies) => {
+  const formsById = new Map(
+    (strategies || []).flatMap((strategy) =>
+      (strategy?.forms || []).filter((form) => form?._id).map((form) => [String(form._id), form]),
+    ),
+  );
+  return [...formsById.values()].map((form) => ({ value: String(form._id), label: form.name || form.headerText }));
+};
+
+export const filterStrategies = (strategies, filters) => {
+  const form = filters[STRATEGY_FILTER_KEYS.FORM];
+  return strategies.filter(
+    (strategy) =>
+      matchesText([strategy?.name], filters[STRATEGY_FILTER_KEYS.SEARCH]) &&
+      (!form || (strategy?.forms || []).some((item) => String(item?._id) === form)),
+  );
+};

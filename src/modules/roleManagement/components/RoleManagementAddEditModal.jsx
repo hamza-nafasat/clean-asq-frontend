@@ -20,7 +20,12 @@ const RoleManagementAddEditModal = ({
   const isEditMode = mode === ROLE_MODAL_MODES.EDIT;
 
   return (
-    <SaveCancelModal title={isEditMode ? "Edit Role" : "Add Role"} onClose={onClose} onSave={onSubmit} isLoading={isLoading}>
+    <SaveCancelModal
+      title={isEditMode ? "Edit Role" : "Add Role"}
+      onClose={onClose}
+      onSave={onSubmit}
+      isLoading={isLoading}
+    >
       <TextField
         label="Role Name"
         name={ROLE_FORM_FIELDS.ROLE_NAME}

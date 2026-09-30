@@ -7,14 +7,21 @@ import {
   useUpdateSingleUserMutation,
 } from "@/redux/apis/userManagement.apis";
 import { toast } from "react-toastify";
+import useListFilter from "@/hooks/useListFilter";
 import usePermission from "@/hooks/usePermission";
 import { useScreenContext } from "@/hooks/useScreenContext";
+import ListFilter from "@/components/global/ListFilter";
 import UserManagementHeading from "./components/UserManagementHeading";
 import UserManagementTable from "./components/UserManagementTable";
 import getEnv from "@/utils/env";
 import { PERMISSIONS } from "@/utils/permissions";
-import { USER_AI_CHAT_PATH, USER_SCREEN_CONTEXT } from "./utils/userManagement.constants";
-import { buildUserScreenActions, buildUserScreenState } from "./utils/userManagement.utils";
+import { INITIAL_USER_FILTERS, USER_AI_CHAT_PATH, USER_SCREEN_CONTEXT } from "./utils/userManagement.constants";
+import {
+  buildUserFilterFields,
+  buildUserScreenActions,
+  buildUserScreenState,
+  filterUsers,
+} from "./utils/userManagement.utils";
 
 const SERVER_URL = getEnv("SERVER_URL");
 
@@ -30,6 +37,8 @@ const UserManagement = () => {
   const userRows = users?.data ?? [];
   const roleRows = roles?.data ?? [];
   const roleOptions = roleRows.map((role) => ({ value: role._id, label: role.name }));
+  const { filters, handleChange, clearFilters, hasActiveFilters } = useListFilter(INITIAL_USER_FILTERS);
+  const filteredUsers = filterUsers(userRows, filters);
 
   useScreenContext({
     ...USER_SCREEN_CONTEXT,
@@ -48,8 +57,17 @@ const UserManagement = () => {
   return (
     <article className="mt-5" data-testid="users-page">
       <UserManagementHeading roleOptions={roleOptions} />
+      <ListFilter
+        className="mb-5"
+        fields={buildUserFilterFields(roleOptions)}
+        filters={filters}
+        hasActiveFilters={hasActiveFilters}
+        onChange={handleChange}
+        onClear={clearFilters}
+      />
       <UserManagementTable
-        users={userRows}
+        users={filteredUsers}
+        isFiltered={hasActiveFilters}
         roleOptions={roleOptions}
         isLoading={isLoadingUsers || isLoadingRoles}
         isError={isError}

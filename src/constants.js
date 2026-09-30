@@ -128,6 +128,12 @@ export const AI_ASSISTANT_MODES = {
   APPLICANT: "applicant",
 };
 
+export const LIST_FILTER_TYPES = {
+  SEARCH: "search",
+  SELECT: "select",
+  DATE: "date",
+};
+
 export const FIELD_TYPES = {
   TEXT: "text",
   DATE: "date",

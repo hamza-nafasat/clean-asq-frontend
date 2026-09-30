@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { FiMail } from "react-icons/fi";
+import { FiMail, FiSearch } from "react-icons/fi";
 import {
   useAttachTemplateToFormMutation,
   useCreateEmailTemplateMutation,
@@ -11,8 +11,10 @@ import {
 } from "@/redux/apis/email.apis";
 import { useGetMyAllFormsQuery } from "@/redux/apis/form.apis";
 import useConfirm from "@/hooks/useConfirm";
+import useListFilter from "@/hooks/useListFilter";
 import usePermission from "@/hooks/usePermission";
 import useRowActionMenu from "@/hooks/useRowActionMenu";
+import ListFilter from "@/components/global/ListFilter";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
 import EmptyState from "@/components/shared/EmptyState";
@@ -24,8 +26,15 @@ import EmailAttachFormsModal from "./components/EmailAttachFormsModal";
 import EmailHeading from "./components/EmailHeading";
 import EmailTemplateCard from "./components/EmailTemplateCard";
 import EmailTemplateModal from "./components/EmailTemplateModal";
-import { INITIAL_EDIT_DATA, TEMPLATE_MODAL_MODES, TEMPLATE_OPEN_MODES } from "./utils/email.constants";
-import { pickTemplateFields, validateTemplate } from "./utils/email.utils";
+import {
+  EMAIL_FILTER_KEYS,
+  EMAIL_FILTER_FIELDS,
+  INITIAL_EDIT_DATA,
+  INITIAL_EMAIL_FILTERS,
+  TEMPLATE_MODAL_MODES,
+  TEMPLATE_OPEN_MODES,
+} from "./utils/email.constants";
+import { buildFormFilterOptions, filterTemplates, pickTemplateFields, validateTemplate } from "./utils/email.utils";
 import confirmOrCancel from "@/utils/confirmOrCancel";
 import { PERMISSIONS } from "@/utils/permissions";
 
@@ -51,6 +60,17 @@ const Email = () => {
   const confirm = useConfirm();
 
   const templates = emailTemplates?.data ?? [];
+  const {
+    filters,
+    handleChange: handleFilterChange,
+    clearFilters,
+    hasActiveFilters,
+  } = useListFilter(INITIAL_EMAIL_FILTERS);
+  const filteredTemplates = filterTemplates(templates, filters);
+  const formFilterOptions = buildFormFilterOptions(templates);
+  const filterFields = EMAIL_FILTER_FIELDS.map((field) =>
+    field.name === EMAIL_FILTER_KEYS.FORM ? { ...field, options: formFilterOptions } : field,
+  );
   const attachTemplateToMe = useEmailAttachToMe({ templates, askConfirm: confirm.ask });
 
   // latest state for ai actions
@@ -238,23 +258,46 @@ const Email = () => {
         />
       );
     return (
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {templates.map((template) => (
-          <EmailTemplateCard
-            key={template._id}
-            item={template}
-            isMenuOpen={openRowId === template._id}
-            menuRef={getRowRef(template._id)}
-            onToggleMenu={() => toggleMenu(template._id)}
-            onEdit={canUpdateEmail ? handleEdit : null}
-            onAttach={canUpdateEmail && canReadForm ? handleAttach : null}
-            onDelete={canDeleteEmail ? handleDelete : null}
-            onView={handleView}
+      <>
+        <ListFilter
+          className="mb-5"
+          fields={filterFields}
+          filters={filters}
+          hasActiveFilters={hasActiveFilters}
+          onChange={handleFilterChange}
+          onClear={clearFilters}
+        />
+        {filteredTemplates.length ? (
+          renderGrid()
+        ) : (
+          <EmptyState
+            variant="panel"
+            icon={<FiSearch size={28} />}
+            title="No templates match your filters"
+            description="Try a different search or clear the filters."
           />
-        ))}
-      </div>
+        )}
+      </>
     );
   };
+
+  const renderGrid = () => (
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {filteredTemplates.map((template) => (
+        <EmailTemplateCard
+          key={template._id}
+          item={template}
+          isMenuOpen={openRowId === template._id}
+          menuRef={getRowRef(template._id)}
+          onToggleMenu={() => toggleMenu(template._id)}
+          onEdit={canUpdateEmail ? handleEdit : null}
+          onAttach={canUpdateEmail && canReadForm ? handleAttach : null}
+          onDelete={canDeleteEmail ? handleDelete : null}
+          onView={handleView}
+        />
+      ))}
+    </div>
+  );
 
   return (
     <article data-testid="email-page">

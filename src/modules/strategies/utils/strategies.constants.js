@@ -1,4 +1,4 @@
-import { FORM_FIELD_CHANGE_SHAPES } from "@/constants";
+import { FORM_FIELD_CHANGE_SHAPES, LIST_FILTER_TYPES } from "@/constants";
 
 export const STRATEGIES_SCREEN_CONTEXT = {
   screenId: "strategies",
@@ -36,3 +36,31 @@ export const INITIAL_STRATEGY_FORM = {
   [STRATEGY_FORM_FIELDS.FORM]: [],
   [STRATEGY_FORM_FIELDS.SEARCH_STRATEGIES]: [],
 };
+
+export const STRATEGY_FILTER_KEYS = {
+  SEARCH: "search",
+  FORM: "form",
+};
+
+export const INITIAL_STRATEGY_FILTERS = {
+  [STRATEGY_FILTER_KEYS.SEARCH]: "",
+  [STRATEGY_FILTER_KEYS.FORM]: "",
+};
+
+// form options are added from the data
+export const STRATEGY_FILTER_FIELDS = [
+  {
+    type: LIST_FILTER_TYPES.SEARCH,
+    name: STRATEGY_FILTER_KEYS.SEARCH,
+    label: "Strategy",
+    placeholder: "Search by strategy name",
+    className: "sm:col-span-2 lg:col-span-6",
+  },
+  {
+    type: LIST_FILTER_TYPES.SELECT,
+    name: STRATEGY_FILTER_KEYS.FORM,
+    label: "Form",
+    allLabel: "All forms",
+    className: "sm:col-span-2 lg:col-span-6",
+  },
+];

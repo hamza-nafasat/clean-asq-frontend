@@ -1,3 +1,4 @@
+import { LIST_FILTER_TYPES, YES_NO_VALUES } from "@/constants";
 import { EFFECT_NAMES } from "@/utils/effectPresets";
 
 export const BRANDING_ROUTES = {
@@ -323,3 +324,51 @@ export const BRANDING_ON_HOME = {
   YES: "yes",
   NO: "no",
 };
+
+export const BRANDING_FILTER_KEYS = {
+  SEARCH: "search",
+  DEFAULT: "isDefault",
+  APPLIED_TO_FORMS: "appliedToForms",
+};
+
+export const INITIAL_BRANDING_FILTERS = {
+  [BRANDING_FILTER_KEYS.SEARCH]: "",
+  [BRANDING_FILTER_KEYS.DEFAULT]: "",
+  [BRANDING_FILTER_KEYS.APPLIED_TO_FORMS]: "",
+};
+
+const DEFAULT_OPTIONS = [
+  { value: YES_NO_VALUES.YES, label: "Default" },
+  { value: YES_NO_VALUES.NO, label: "Not default" },
+];
+
+const APPLIED_OPTIONS = [
+  { value: YES_NO_VALUES.YES, label: "Applied to forms" },
+  { value: YES_NO_VALUES.NO, label: "Not applied" },
+];
+
+export const BRANDING_FILTER_FIELDS = [
+  {
+    type: LIST_FILTER_TYPES.SEARCH,
+    name: BRANDING_FILTER_KEYS.SEARCH,
+    label: "Branding",
+    placeholder: "Search by name or website",
+    className: "sm:col-span-2 lg:col-span-6",
+  },
+  {
+    type: LIST_FILTER_TYPES.SELECT,
+    name: BRANDING_FILTER_KEYS.DEFAULT,
+    label: "Default",
+    allLabel: "Default or not",
+    options: DEFAULT_OPTIONS,
+    className: "lg:col-span-3",
+  },
+  {
+    type: LIST_FILTER_TYPES.SELECT,
+    name: BRANDING_FILTER_KEYS.APPLIED_TO_FORMS,
+    label: "Applied to forms",
+    allLabel: "Applied or not",
+    options: APPLIED_OPTIONS,
+    className: "lg:col-span-3",
+  },
+];

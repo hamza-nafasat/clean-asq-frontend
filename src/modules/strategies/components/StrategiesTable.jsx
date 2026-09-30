@@ -18,6 +18,8 @@ import { getAvailableFormOptions } from "../utils/strategies.utils";
 
 const StrategiesTable = ({
   strategies = [],
+  visibleStrategies = strategies,
+  hasActiveFilters = false,
   forms = null,
   lookupOptions = [],
   canUpdateStrategy = false,
@@ -89,15 +91,19 @@ const StrategiesTable = ({
   return (
     <>
       <AppDataTable
-        data={strategies}
+        data={visibleStrategies}
         columns={columns}
         pagination
         wrapperRadius={TABLE_WRAPPER_RADII.TOP_XL}
         highlightOnHover
         persistTableHead
         responsive
-        noDataComponent="No strategies yet"
-        emptyDescription="Create a strategy to bundle lookup keys for your forms."
+        noDataComponent={hasActiveFilters ? "No strategies match your filters" : "No strategies yet"}
+        emptyDescription={
+          hasActiveFilters
+            ? "Try changing or clearing the filters."
+            : "Create a strategy to bundle lookup keys for your forms."
+        }
       />
 
       <StrategiesFormModal

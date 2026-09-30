@@ -1,5 +1,6 @@
-import { APPLICATION_STATUSES, EMAIL_FORMAT, SUBMISSION_TYPES, formKeys } from "@/constants";
-import { FORWARD_FORM_FIELDS, LOCAL_DAY_LOCALE } from "./applications.constants";
+import { toCapitalizedOptions } from "@/utils/listFilter";
+import { APPLICATION_STATUSES, EMAIL_FORMAT, LIST_FILTER_TYPES, SUBMISSION_TYPES, formKeys } from "@/constants";
+import { APPLICATION_FILTER_KEYS, FORWARD_FORM_FIELDS, LOCAL_DAY_LOCALE } from "./applications.constants";
 
 export const capitalize = (value = "") => value.charAt(0).toUpperCase() + value.slice(1);
 
@@ -29,23 +30,73 @@ const includesText = (value, search) => !search || value.toLowerCase().includes(
 export const filterApplications = (applications, filters) =>
   applications.filter(
     (application) =>
-      isWithinDateRange(application.updatedAt, filters.startDate, filters.endDate) &&
-      includesText(getFullName(application.user), filters.name) &&
-      (!filters.role || application.user?.role?.name === filters.role) &&
-      (!filters.status || application.status === filters.status) &&
-      (!filters.type || application.type === filters.type),
+      isWithinDateRange(
+        application.updatedAt,
+        filters[APPLICATION_FILTER_KEYS.START_DATE],
+        filters[APPLICATION_FILTER_KEYS.END_DATE],
+      ) &&
+      includesText(getFullName(application.user), filters[APPLICATION_FILTER_KEYS.NAME]) &&
+      (!filters[APPLICATION_FILTER_KEYS.ROLE] ||
+        application.user?.role?.name === filters[APPLICATION_FILTER_KEYS.ROLE]) &&
+      (!filters[APPLICATION_FILTER_KEYS.STATUS] || application.status === filters[APPLICATION_FILTER_KEYS.STATUS]) &&
+      (!filters[APPLICATION_FILTER_KEYS.TYPE] || application.type === filters[APPLICATION_FILTER_KEYS.TYPE]),
   );
 
 const uniqueValues = (values) => [...new Set(values.filter(Boolean))];
 
-// every known value, plus any in the rows
-export const buildFilterOptions = (applications, roleNames = []) => ({
-  roleOptions: uniqueValues([...roleNames, ...applications.map((application) => application.user?.role?.name)]),
-  statusOptions: uniqueValues([
-    ...Object.values(APPLICATION_STATUSES),
-    ...applications.filter(isSubmitted).map((application) => application.status),
-  ]),
-});
+// filter fields; role and status options come from the rows
+export const buildApplicationFilterFields = (applications, roleNames = []) => [
+  {
+    type: LIST_FILTER_TYPES.SEARCH,
+    name: APPLICATION_FILTER_KEYS.NAME,
+    label: "Applicant",
+    placeholder: "Search by applicant name",
+    className: "sm:col-span-2 lg:col-span-6",
+  },
+  {
+    type: LIST_FILTER_TYPES.SELECT,
+    name: APPLICATION_FILTER_KEYS.ROLE,
+    label: "Role",
+    allLabel: "All roles",
+    options: toCapitalizedOptions(
+      uniqueValues([...roleNames, ...applications.map((application) => application.user?.role?.name)]),
+    ),
+    className: "lg:col-span-3",
+  },
+  {
+    type: LIST_FILTER_TYPES.SELECT,
+    name: APPLICATION_FILTER_KEYS.STATUS,
+    label: "Status",
+    allLabel: "All statuses",
+    options: toCapitalizedOptions(
+      uniqueValues([
+        ...Object.values(APPLICATION_STATUSES),
+        ...applications.filter(isSubmitted).map((application) => application.status),
+      ]),
+    ),
+    className: "lg:col-span-3",
+  },
+  {
+    type: LIST_FILTER_TYPES.SELECT,
+    name: APPLICATION_FILTER_KEYS.TYPE,
+    label: "Type",
+    allLabel: "All types",
+    options: toCapitalizedOptions(Object.values(SUBMISSION_TYPES)),
+    className: "sm:col-span-2 lg:col-span-4",
+  },
+  {
+    type: LIST_FILTER_TYPES.DATE,
+    name: APPLICATION_FILTER_KEYS.START_DATE,
+    placeholder: "From date",
+    className: "lg:col-span-4",
+  },
+  {
+    type: LIST_FILTER_TYPES.DATE,
+    name: APPLICATION_FILTER_KEYS.END_DATE,
+    placeholder: "To date",
+    className: "lg:col-span-4",
+  },
+];
 
 export const validateForwardForm = ({ email = "", sectionKey = "" }) => {
   const errors = {};

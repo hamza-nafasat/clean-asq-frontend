@@ -13,7 +13,12 @@ export const pickFields = (source, fields) => Object.fromEntries(fields.map((fie
 
 // value and setter prop pairs
 export const toFieldProps = (values, setters, fields) =>
-  Object.fromEntries(fields.flatMap((field) => [[field, values[field]], [toSetterName(field), setters[field]]]));
+  Object.fromEntries(
+    fields.flatMap((field) => [
+      [field, values[field]],
+      [toSetterName(field), setters[field]],
+    ]),
+  );
 
 const copyWhen = (patch, source, keys, test) =>
   keys.forEach((key) => {
@@ -42,7 +47,14 @@ export const mapExtractedBranding = (data) => {
   copyWhen(
     patch,
     colors,
-    ["buttonBorderPrimary", "buttonBorderSecondary", "headerBackground", "headerText", "footerBackground", "footerText"],
+    [
+      "buttonBorderPrimary",
+      "buttonBorderSecondary",
+      "headerBackground",
+      "headerText",
+      "footerBackground",
+      "footerText",
+    ],
     isTruthy,
   );
   if (colors?.headerBackground) patch.emailHeaderColor = colors.headerBackground;
@@ -101,12 +113,7 @@ export const mapSingleBranding = (branding) => {
   };
   copyWhen(patch, branding, ["applicationFooterTextSize", "appHeaderPadding", "appFooterPadding"], isTruthy);
   copyWhen(patch, colors, ["buttonBorderPrimary", "buttonBorderSecondary"], isTruthy);
-  copyWhen(
-    patch,
-    branding,
-    BRANDING_EMAIL_CONTENT_FIELDS,
-    () => true,
-  );
+  copyWhen(patch, branding, BRANDING_EMAIL_CONTENT_FIELDS, () => true);
   copyWhen(
     patch,
     branding,

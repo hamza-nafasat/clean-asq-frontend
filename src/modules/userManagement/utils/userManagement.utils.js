@@ -1,5 +1,6 @@
-import { MODAL_MODES } from "@/constants";
-import { PROMISE_STATUSES, USER_FORM_FIELDS } from "./userManagement.constants";
+import { LIST_FILTER_TYPES, MODAL_MODES } from "@/constants";
+import { matchesOption, matchesText } from "@/utils/listFilter";
+import { PROMISE_STATUSES, USER_FILTER_KEYS, USER_FORM_FIELDS } from "./userManagement.constants";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
@@ -39,6 +40,32 @@ export const formatDateAndTime = (date) => {
 
 export const getUserFullName = (user) => `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim();
 
+export const filterUsers = (users, filters) =>
+  users.filter(
+    (user) =>
+      matchesText([getUserFullName(user), user.email], filters[USER_FILTER_KEYS.SEARCH]) &&
+      matchesOption(user.role?._id, filters[USER_FILTER_KEYS.ROLE]),
+  );
+
+// role options come from the roles list
+export const buildUserFilterFields = (roleOptions) => [
+  {
+    type: LIST_FILTER_TYPES.SEARCH,
+    name: USER_FILTER_KEYS.SEARCH,
+    label: "User",
+    placeholder: "Search by name or email",
+    className: "sm:col-span-2 lg:col-span-6",
+  },
+  {
+    type: LIST_FILTER_TYPES.SELECT,
+    name: USER_FILTER_KEYS.ROLE,
+    label: "Role",
+    allLabel: "All roles",
+    options: roleOptions,
+    className: "sm:col-span-2 lg:col-span-6",
+  },
+];
+
 const runUserAction = async (request, fallbackMessage, toastError) => {
   try {
     const res = await request();
@@ -62,7 +89,14 @@ export const buildUserScreenState = (users = [], roles = []) => ({
   availableRoles: roles.map((r) => ({ _id: r._id, name: r.name })),
 });
 
-export const buildUserScreenActions = ({ users = [], createUser, updateUser, deleteUser, sendPasswordResetLink, toastError }) => ({
+export const buildUserScreenActions = ({
+  users = [],
+  createUser,
+  updateUser,
+  deleteUser,
+  sendPasswordResetLink,
+  toastError,
+}) => ({
   createUser: ({ firstName, lastName, email, roleId, password }) =>
     runUserAction(
       () => createUser({ firstName, lastName, email, role: roleId, password }).unwrap(),

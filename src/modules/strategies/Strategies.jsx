@@ -7,16 +7,28 @@ import {
   useUpdateFormStrategyMutation,
 } from "@/redux/apis/form.apis";
 import useConfirm from "@/hooks/useConfirm";
+import useListFilter from "@/hooks/useListFilter";
 import usePermission from "@/hooks/usePermission";
 import { useScreenContext } from "@/hooks/useScreenContext";
+import ListFilter from "@/components/global/ListFilter";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import StrategiesHeading from "./components/StrategiesHeading";
 import StrategiesTable from "./components/StrategiesTable";
 import getEnv from "@/utils/env";
 import { PERMISSIONS } from "@/utils/permissions";
-import { STRATEGIES_SCREEN_CONTEXT } from "./utils/strategies.constants";
+import {
+  INITIAL_STRATEGY_FILTERS,
+  STRATEGIES_SCREEN_CONTEXT,
+  STRATEGY_FILTER_KEYS,
+  STRATEGY_FILTER_FIELDS,
+} from "./utils/strategies.constants";
 import { buildStrategiesScreenState, buildStrategyAssistantActions } from "./utils/strategies.assistant.utils";
-import { getAvailableFormOptions, toLookupOptions } from "./utils/strategies.utils";
+import {
+  filterStrategies,
+  getAvailableFormOptions,
+  getStrategyFilterFormOptions,
+  toLookupOptions,
+} from "./utils/strategies.utils";
 
 const SERVER_URL = getEnv("SERVER_URL");
 
@@ -41,6 +53,13 @@ const Strategies = () => {
   const formStrategies = strategyData?.data || [];
   const forms = canReadForm ? formData?.data : null;
   const lookupOptions = toLookupOptions(lookupData?.data);
+  const { filters, handleChange, clearFilters, hasActiveFilters } = useListFilter(INITIAL_STRATEGY_FILTERS);
+  const filteredStrategies = filterStrategies(formStrategies, filters);
+  const filterFields = STRATEGY_FILTER_FIELDS.map((field) =>
+    field.name === STRATEGY_FILTER_KEYS.FORM
+      ? { ...field, options: getStrategyFilterFormOptions(formStrategies) }
+      : field,
+  );
 
   useScreenContext({
     ...STRATEGIES_SCREEN_CONTEXT,
@@ -66,8 +85,20 @@ const Strategies = () => {
         formOptions={getAvailableFormOptions(formStrategies, forms)}
         lookupOptions={lookupOptions}
       />
+      {!isLoading && !isError && formStrategies.length > 0 && (
+        <ListFilter
+          className="mb-5"
+          fields={filterFields}
+          filters={filters}
+          hasActiveFilters={hasActiveFilters}
+          onChange={handleChange}
+          onClear={clearFilters}
+        />
+      )}
       <StrategiesTable
         strategies={formStrategies}
+        visibleStrategies={filteredStrategies}
+        hasActiveFilters={hasActiveFilters}
         forms={forms}
         lookupOptions={lookupOptions}
         canUpdateStrategy={canUpdateStrategy}

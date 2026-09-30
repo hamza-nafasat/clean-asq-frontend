@@ -1,4 +1,4 @@
-import { EMAIL_TEMPLATE_TYPES } from "@/constants";
+import { EMAIL_TEMPLATE_TYPES, LIST_FILTER_TYPES } from "@/constants";
 
 export const EMAIL_TYPES = [
   { label: "Otp Email Template", value: EMAIL_TEMPLATE_TYPES.OTP },
@@ -94,3 +94,43 @@ export const INITIAL_EDIT_DATA = {
   [TEMPLATE_FIELDS.TYPE]: "",
   [TEMPLATE_FIELDS.BODY]: "",
 };
+
+export const EMAIL_FILTER_KEYS = {
+  SEARCH: "search",
+  TYPE: "emailType",
+  FORM: "form",
+};
+
+export const INITIAL_EMAIL_FILTERS = {
+  [EMAIL_FILTER_KEYS.SEARCH]: "",
+  [EMAIL_FILTER_KEYS.TYPE]: "",
+  [EMAIL_FILTER_KEYS.FORM]: "",
+};
+
+// form filter value for templates on no form
+export const EMAIL_FORM_FILTER_NONE = "none";
+
+export const EMAIL_FILTER_FIELDS = [
+  {
+    type: LIST_FILTER_TYPES.SEARCH,
+    name: EMAIL_FILTER_KEYS.SEARCH,
+    label: "Template",
+    placeholder: "Search by name or subject",
+    className: "sm:col-span-2 lg:col-span-4",
+  },
+  {
+    type: LIST_FILTER_TYPES.SELECT,
+    name: EMAIL_FILTER_KEYS.TYPE,
+    label: "Email type",
+    allLabel: "All email types",
+    options: EMAIL_TYPES,
+    className: "lg:col-span-4",
+  },
+  {
+    type: LIST_FILTER_TYPES.SELECT,
+    name: EMAIL_FILTER_KEYS.FORM,
+    label: "Attached form",
+    allLabel: "All attached forms",
+    className: "lg:col-span-4",
+  },
+];

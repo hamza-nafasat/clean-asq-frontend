@@ -7,8 +7,10 @@ import {
 } from "@/redux/apis/form.apis";
 import { FiAlertCircle, FiLock } from "react-icons/fi";
 import useConfirm from "@/hooks/useConfirm";
+import useListFilter from "@/hooks/useListFilter";
 import usePermission from "@/hooks/usePermission";
 import { useScreenContext } from "@/hooks/useScreenContext";
+import ListFilter from "@/components/global/ListFilter";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import Button from "@/components/shared/Button";
 import EmptyState from "@/components/shared/EmptyState";
@@ -17,7 +19,12 @@ import MyApplicationsHeading from "./components/MyApplicationsHeading";
 import MyApplicationsList from "./components/MyApplicationsList";
 import getEnv from "@/utils/env";
 import { PERMISSIONS } from "@/utils/permissions";
-import { MY_APPLICATIONS_AI_CHAT_PATH, MY_APPLICATIONS_SCREEN_CONTEXT } from "./utils/myApplications.constants";
+import {
+  INITIAL_MY_APPLICATION_FILTERS,
+  MY_APPLICATIONS_AI_CHAT_PATH,
+  MY_APPLICATIONS_SCREEN_CONTEXT,
+} from "./utils/myApplications.constants";
+import { buildMyApplicationFilterFields, filterDrafts, filterSubmissions } from "./utils/myApplications.utils";
 import {
   buildMyApplicationsAssistantActions,
   buildMyApplicationsScreenState,
@@ -40,6 +47,10 @@ const MyApplications = () => {
   const drafts = data?.data?.saved || [];
   const submissions = data?.data?.submitted || [];
   const invitations = data?.data?.pendingOwnerForms || [];
+  const { filters, handleChange, clearFilters, hasActiveFilters } = useListFilter(INITIAL_MY_APPLICATION_FILTERS);
+  const filteredDrafts = filterDrafts(drafts, filters);
+  const filteredSubmissions = filterSubmissions(submissions, filters);
+  const totalCount = drafts.length + submissions.length;
 
   useScreenContext({
     ...MY_APPLICATIONS_SCREEN_CONTEXT,
@@ -76,7 +87,22 @@ const MyApplications = () => {
   return (
     <article data-testid="my-applications-page">
       <MyApplicationsHeading />
-      <MyApplicationsList forms={data?.data} invitations={invitations} />
+      {totalCount > 0 && (
+        <ListFilter
+          className="mb-5"
+          fields={buildMyApplicationFilterFields()}
+          filters={filters}
+          hasActiveFilters={hasActiveFilters}
+          onChange={handleChange}
+          onClear={clearFilters}
+        />
+      )}
+      <MyApplicationsList
+        drafts={filteredDrafts}
+        submitted={filteredSubmissions}
+        invitations={invitations}
+        hasActiveFilters={hasActiveFilters}
+      />
 
       <ConfirmationModal
         isOpen={aiConfirm.isOpen}
