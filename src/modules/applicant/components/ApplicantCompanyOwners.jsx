@@ -214,7 +214,7 @@ const ApplicantCompanyOwners = ({
       )}
 
       <div className="mt-5 pb-3">
-        <div className="rounded-xl border border-[#F0F0F0] p-4">
+        <div className="rounded-xl border border-softBorder p-4">
           {formFields.map((field, index) =>
             field.name === FIELD_NAMES.MAIN_OWNER_OWN_25_PERCENT || field.type === FORM_BLOCK_TYPE ? null : (
               <ApplicantSectionField key={field.uniqueId || index} field={field} form={form} setForm={setForm} />
