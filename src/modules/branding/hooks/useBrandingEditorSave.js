@@ -105,6 +105,7 @@ const useBrandingEditorSave = ({ brandingId, values, branding }) => {
     createBrandingHandler,
     updateBrandingHandler,
     isSaving: isCreateLoading || isUpdateLoading,
+    isComplete: !Object.keys(missingErrors).length,
   };
 };
 

@@ -22,13 +22,15 @@ const createLogoTools = ({ bindings, helpers }) => {
   const { say } = helpers;
 
   // post a logo job, add the result to the logo panel, and confirm
-  const runLogoJob = async ({ url, body, failureMessage, doneText, errorPrefix }) => {
+  const runLogoJob = async ({ url, body, failureMessage, doneText, errorPrefix, shouldSelect = false, isFavicon = false }) => {
     setIsLoading(true);
     try {
       const data = await postJson(url, body);
       if (!data.success) throw new Error(data.message || failureMessage);
       const freshCtx = getScreenContext();
-      if (freshCtx?.actions?.addLogo) freshCtx.actions.addLogo(data.data?.url);
+      if (isFavicon) freshCtx?.actions?.favicon?.(data.data?.url);
+      else if (freshCtx?.actions?.addLogo) freshCtx.actions.addLogo(data.data?.url);
+      if (shouldSelect && !isFavicon) freshCtx?.actions?.selectedLogo?.(data.data?.url);
       await say(doneText);
     } catch (err) {
       await say(`${errorPrefix}: ${err.message || "please try again."}`);
@@ -60,6 +62,20 @@ const createLogoTools = ({ bindings, helpers }) => {
         doneText:
           "Done! The modified logo has been added to your available logos — you can now select it from the logo panel.",
         errorPrefix: "Sorry, I couldn't edit the logo",
+      });
+    },
+    [AI_TOOLS.GENERATE_LOGO]: async ({ instructions, isFavicon = false, explanation }) => {
+      await say(`${explanation} — this may take up to 30 seconds…`);
+      await runLogoJob({
+        url: AI_ENDPOINTS.LOGO_GENERATE,
+        body: { instructions, isFavicon },
+        failureMessage: "Logo generation failed",
+        doneText: isFavicon
+          ? "Done! The new favicon has been set as the browser tab icon."
+          : "Done! The new logo has been added and selected.",
+        errorPrefix: "Sorry, I couldn't create the logo",
+        shouldSelect: true,
+        isFavicon,
       });
     },
     ...Object.fromEntries(Object.keys(LOGO_PROCESSING_PATHS).map((tool) => [tool, processLogo(tool)])),

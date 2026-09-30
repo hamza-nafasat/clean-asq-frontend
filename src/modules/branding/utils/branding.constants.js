@@ -151,6 +151,8 @@ export const BRANDING_EMAIL_SIZE_FIELDS = [
 ];
 
 // fields required before saving
+export const PALETTE_SOURCES = Object.freeze({ AI: "AI suggested" });
+
 export const BRANDING_REQUIRED_FIELDS = [
   "companyName",
   "websiteUrl",

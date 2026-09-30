@@ -14,6 +14,7 @@ import {
   BRANDING_LOGO_TYPES,
   BRANDING_ON_HOME,
   BRANDING_ROUTES,
+  PALETTE_SOURCES,
 } from "../utils/branding.constants";
 import { BRANDING_EDITOR_ASSISTANT_COPY } from "../utils/branding.data";
 import { getLogoUrl } from "../utils/branding.logo.utils";
@@ -89,6 +90,7 @@ const useBrandingEditorScreenContext = ({
       selectedLogo: setters.selectedLogo,
       selectedEmailLogo: setters.selectedEmailLogo,
       setSuggestedColors: setters.suggestedColors,
+      colorPalette: (hexes = []) => setters.colorPalette(hexes.map((hex) => ({ hex, source: PALETTE_SOURCES.AI }))),
       addLogo: (url) => setters.logos((prev) => [...prev, { url, type: BRANDING_LOGO_TYPES.IMAGE, invert: false }]),
       setLogos: setters.logos,
       [AI_TOOLS.REMOVE_LOGOS]: removeLogos,
@@ -124,7 +126,8 @@ const useBrandingEditorScreenContext = ({
         else navigate(BRANDING_ROUTES.LIST);
       },
     },
-    logos: values.logos.map((l) => ({ url: l.url || l.preview, isFavicon: !!l.isFavicon })).filter((l) => l.url),
+    // browser-only previews can't be edited
+    logos: values.logos.filter((l) => l.url).map((l) => ({ url: l.url, isFavicon: !!l.isFavicon })),
     colorPalette: values.colorPalette.map((c) => (typeof c === "string" ? c : c?.hex)).filter(Boolean),
   });
 };

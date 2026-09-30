@@ -191,10 +191,10 @@ const createBrandingTools = ({ bindings, helpers, getApplyToolCall }) => {
       );
     },
 
-    [AI_TOOLS.SUGGEST_COLORS]: async (args, { ctx }) => {
+    [AI_TOOLS.SUGGEST_COLORS]: async (args, { tool, ctx }) => {
       const { colors, explanation } = args;
       if (ctx.actions.setSuggestedColors) ctx.actions.setSuggestedColors(colors);
-      say(explanation, { toolCall: { tool: AI_TOOLS.SUGGEST_COLORS, colors } });
+      await say(explanation, { toolCall: { tool, colors } });
     },
 
     [AI_TOOLS.SAVE_BRANDING]: async (args, { tool, ctx, chatEndpoint, currentHistory }) => {

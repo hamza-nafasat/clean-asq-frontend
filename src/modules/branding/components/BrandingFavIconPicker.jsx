@@ -31,7 +31,8 @@ const BrandingFavIconPicker = ({ logos = NO_LOGOS, value = "", onChange }) => {
   const [isChecked, setIsChecked] = useState(false);
 
   useEffect(() => {
-    const urls = [...new Set(logos.map(getLogoSource).filter(Boolean))];
+    // current favicon shows even if not a logo
+    const urls = [...new Set([value, ...logos.map(getLogoSource)].filter(Boolean))];
     if (urls.length === 0) {
       setCandidates([]);
       setIsChecked(true);
@@ -49,7 +50,7 @@ const BrandingFavIconPicker = ({ logos = NO_LOGOS, value = "", onChange }) => {
     return () => {
       isCancelled = true;
     };
-  }, [logos]);
+  }, [logos, value]);
 
   return (
     <div className="flex flex-col gap-2" data-testid="branding-favicon-picker">

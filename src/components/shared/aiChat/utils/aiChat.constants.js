@@ -57,6 +57,7 @@ export const AI_ENDPOINTS = {
   TRANSLATE: `${SERVER_URL}/api/ai/translate`,
   EXTRACT_BRANDING_FROM_CONTENT: `${SERVER_URL}/api/branding/extraction/extract-branding-from-content`,
   LOGO_EDIT: `${SERVER_URL}/api/ai/logo-edit`,
+  LOGO_GENERATE: `${SERVER_URL}/api/ai/logo-generate`,
 };
 
 export const getDefaultChatEndpoint = (assistantMode) =>

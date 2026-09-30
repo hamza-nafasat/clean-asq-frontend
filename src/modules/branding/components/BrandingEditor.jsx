@@ -230,7 +230,7 @@ const BrandingEditor = ({ brandingId }) => {
           <Button variant="secondary" label="Cancel" onClick={() => navigate(BRANDING_ROUTES.LIST)} />
           {canSave && (
             <Button
-              disabled={save.isSaving}
+              disabled={save.isSaving || !save.isComplete}
               label={brandingId ? "Update Branding" : "Create Branding"}
               onClick={save.handleSave}
             />

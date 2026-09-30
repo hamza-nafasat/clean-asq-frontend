@@ -23,6 +23,7 @@ export const AI_TOOLS = {
   CLEAR_DEFAULT_BRANDING: "clearDefaultBranding",
   // logos
   EDIT_LOGO: "editLogo",
+  GENERATE_LOGO: "generateLogo",
   RESIZE_LOGO: "resizeLogo",
   CROP_LOGO: "cropLogo",
   ROUND_LOGO_CORNERS: "roundLogoCorners",

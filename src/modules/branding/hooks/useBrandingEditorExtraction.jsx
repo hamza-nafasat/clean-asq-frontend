@@ -78,7 +78,7 @@ const useBrandingEditorExtraction = ({ values, setters, patchValues }) => {
       const res = await extractColorsFromLogos(formData).unwrap();
       if (!res?.data) return;
       toast.success(res.message);
-      setters.colorPalette((prev) => [...new Set([...prev, ...res.data])]);
+      setters.colorPalette((prev) => [...prev, ...res.data.filter((color) => !prev.some((entry) => entry.hex === color.hex))]);
     } catch (error) {
       console.error("Extract colors from logos error:", error);
     }
