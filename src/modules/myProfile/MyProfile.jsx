@@ -6,7 +6,7 @@ const MyProfile = () => {
   const { user } = useSelector((state) => state.auth);
 
   return (
-    <article className="mx-auto w-full max-w-5xl px-4 py-8">
+    <article className="mt-5 w-full">
       <MyProfileDetailsForm key={user?._id} user={user} />
       <MyProfilePasswordForm />
     </article>

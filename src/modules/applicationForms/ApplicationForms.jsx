@@ -38,7 +38,7 @@ const ApplicationForms = () => {
   const handleFilterChange = ({ target: { name, value } }) => setFilters((prev) => ({ ...prev, [name]: value }));
 
   return (
-    <article className="bg-backgroundColor rounded-md p-5 shadow" data-testid="forms-page">
+    <article className="mt-5 w-full" data-testid="forms-page">
       <ConfirmationModal
         isOpen={aiConfirm.isOpen}
         title={aiConfirm.pending?.title}

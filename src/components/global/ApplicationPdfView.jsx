@@ -177,7 +177,7 @@ export const ApplicationPdfViewCommonProps = ({
         </div>
       )}
 
-      <div className={`h-full w-full space-y-12 overflow-visible bg-white px-6 py-8 ${className}`}>
+      <div className={`w-full space-y-12 overflow-visible bg-white px-6 py-8 ${className}`}>
         {isEditAble && isDisabledAllFields && (
           <div className="flex justify-end">
             <Button label="Edit" variant="secondary" onClick={() => dispatch(updateIsDisabledAllFields(false))} />

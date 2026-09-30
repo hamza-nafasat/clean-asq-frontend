@@ -72,7 +72,7 @@ const Underwriting = () => {
     );
 
   return (
-    <article className="bg-backgroundColor rounded-t-md p-4 md:p-6" data-testid="underwriting-page">
+    <article className="mt-5 w-full" data-testid="underwriting-page">
       <UnderwritingHeading submission={submission} />
       <div className="mb-5">
         <Tabs variant="button" tabs={UNDERWRITING_TAB_BUTTONS} activeTab={activeTab} onTabChange={setActiveTab} />

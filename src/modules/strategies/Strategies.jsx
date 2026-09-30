@@ -79,7 +79,7 @@ const Strategies = () => {
   });
 
   return (
-    <article className="mt-5">
+    <article className="mt-5 w-full">
       <StrategiesHeading
         canCreateStrategy={canCreateStrategy}
         formOptions={getAvailableFormOptions(formStrategies, forms)}

@@ -300,7 +300,7 @@ const Email = () => {
   );
 
   return (
-    <article data-testid="email-page">
+    <article className="mt-5 w-full" data-testid="email-page">
       <EmailAttachFormsModal
         key={templateToAttach?._id}
         isOpen={Boolean(templateToAttach)}

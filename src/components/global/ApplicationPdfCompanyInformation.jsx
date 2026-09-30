@@ -137,7 +137,7 @@ const CompanyInformationPdf = ({
   }, []);
 
   return (
-    <div className="mt-14 h-full overflow-auto">
+    <div className="mt-14 overflow-auto">
       <div className="mb-10 flex items-center justify-between">
         <p className="text-textPrimary text-2xl font-semibold">{name}</p>
       </div>

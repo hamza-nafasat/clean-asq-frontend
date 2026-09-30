@@ -108,7 +108,7 @@ const ManageRules = () => {
     );
 
   return (
-    <article className="flex w-full flex-col gap-6 p-4">
+    <article className="mt-5 flex w-full flex-col gap-6">
       <ApplicationFormsRuleModal
         key={createCount}
         isOpen={isCreateOpen}

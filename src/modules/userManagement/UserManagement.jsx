@@ -55,7 +55,7 @@ const UserManagement = () => {
   });
 
   return (
-    <article className="mt-5" data-testid="users-page">
+    <article className="mt-5 w-full" data-testid="users-page">
       <UserManagementHeading roleOptions={roleOptions} />
       <ListFilter
         className="mb-5"

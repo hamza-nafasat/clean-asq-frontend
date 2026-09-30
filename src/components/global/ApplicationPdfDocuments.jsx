@@ -6,7 +6,7 @@ import { uploadSectionSignature } from "@/utils/sectionSignature";
 import HtmlContent from "@/components/shared/HtmlContent";
 
 const DocumentsPdf = ({ name, fields, step, isSignature, formInnerData, setFormInnerData, sectionKey }) => (
-  <div className="mt-14 h-full w-full overflow-auto rounded-lg border p-6 shadow-md">
+  <div className="mt-14 w-full overflow-auto rounded-lg border p-6 shadow-md">
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-textPrimary text-2xl font-semibold">{name}</h1>

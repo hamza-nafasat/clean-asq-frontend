@@ -85,7 +85,7 @@ const MyApplications = () => {
     );
 
   return (
-    <article data-testid="my-applications-page">
+    <article className="mt-5 w-full" data-testid="my-applications-page">
       <MyApplicationsHeading />
       {totalCount > 0 && (
         <ListFilter

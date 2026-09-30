@@ -149,7 +149,7 @@ const CompanyOwnersPdf = ({ name, reduxData, fields, step, isSignature, formInne
     ]?.value === YES_NO_VALUES.YES;
 
   return (
-    <div className="h-full w-full overflow-auto">
+    <div className="w-full overflow-auto">
       <div className="mb-10 flex items-center justify-between">
         <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
       </div>
@@ -159,7 +159,7 @@ const CompanyOwnersPdf = ({ name, reduxData, fields, step, isSignature, formInne
         </div>
       )}
       <div className="mt-5">
-        <div className="h-full overflow-auto pb-3">
+        <div className="overflow-auto pb-3">
           <div className="rounded-xl border border-[#F0F0F0] p-4">
             {formFields?.map((field, index) => {
               if (field.name === FIELD_NAMES.MAIN_OWNER_OWN_25_PERCENT || field.type === FORM_BLOCK_TYPE) return null;

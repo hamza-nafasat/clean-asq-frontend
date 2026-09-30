@@ -70,7 +70,7 @@ const Applications = () => {
 
   return (
     <article
-      className="bg-backgroundColor w-full rounded-t-md p-4 md:p-6 lg:w-[calc(100vw-350px)]"
+      className="mt-5 w-full lg:w-[calc(100vw-350px)] xl:w-full"
       data-testid="applications-page"
     >
       <ApplicationsHeading submittedCount={submittedCount} draftCount={applications.length - submittedCount} />

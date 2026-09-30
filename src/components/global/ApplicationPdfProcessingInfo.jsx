@@ -5,7 +5,7 @@ import { uploadSectionSignature } from "@/utils/sectionSignature";
 import HtmlContent from "@/components/shared/HtmlContent";
 
 const ProcessingInfoPdf = ({ name, fields, step, isSignature, formInnerData, setFormInnerData, sectionKey }) => (
-  <div className="mt-14 h-full overflow-auto rounded-lg border p-6 shadow-md">
+  <div className="mt-14 overflow-auto rounded-lg border p-6 shadow-md">
     <div className="mb-10 flex items-center justify-between">
       <h3 className="text-textPrimary text-2xl font-semibold">{name}</h3>
     </div>

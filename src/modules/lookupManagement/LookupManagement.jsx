@@ -55,7 +55,7 @@ const LookupManagement = () => {
   });
 
   return (
-    <article className="mt-5">
+    <article className="mt-5 w-full">
       <LookupManagementHeading addModal={addModal} onOpenAdd={openAddModal} onCloseAdd={() => setAddModal(null)} />
       <Tabs variant="pill" tabs={LOOKUP_TAB_LIST} activeTab={activeTab} onTabChange={setActiveTab} />
       <section className="mt-5">
