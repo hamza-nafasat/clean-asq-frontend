@@ -9,15 +9,15 @@ import LoadingState from "@/components/shared/LoadingState";
 import ApplicationFormsCards from "./components/ApplicationFormsCards";
 import ApplicationFormsCreateModal from "./components/ApplicationFormsCreateModal";
 import ListFilter from "@/components/global/ListFilter";
-import ApplicationFormsSearchModes from "./components/ApplicationFormsSearchModes";
 import ApplicationFormsHeading from "./components/ApplicationFormsHeading";
 import useApplicationFormsScreenContext from "./hooks/useApplicationFormsScreenContext";
-import { FORM_FILTER_KEYS, INITIAL_FORM_FILTERS } from "./utils/applicationForms.constants";
-import { buildFormFilterFields, filterForms, hasActiveFormFilters } from "./utils/applicationForms.filter.utils";
+import { FORM_FILTER_FIELDS, INITIAL_FORM_FILTERS } from "./utils/applicationForms.constants";
+import { filterForms } from "./utils/applicationForms.filter.utils";
+import useListFilter from "@/hooks/useListFilter";
 
 const ApplicationForms = () => {
   const { data: forms, isLoading, isError, refetch } = useGetMyAllFormsQuery();
-  const [filters, setFilters] = useState(INITIAL_FORM_FILTERS);
+  const { filters, handleChange, clearFilters, hasActiveFilters } = useListFilter(INITIAL_FORM_FILTERS);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const aiConfirm = useConfirm();
 
@@ -35,7 +35,6 @@ const ApplicationForms = () => {
     );
 
   const filteredForms = filterForms(forms?.data, filters);
-  const handleFilterChange = ({ target: { name, value } }) => setFilters((prev) => ({ ...prev, [name]: value }));
 
   return (
     <article className="mt-5 w-full" data-testid="forms-page">
@@ -51,21 +50,15 @@ const ApplicationForms = () => {
 
       <ApplicationFormsHeading onCreateForm={() => setIsCreateFormOpen(true)} />
       <ListFilter
-        fields={buildFormFilterFields(
-          filters,
-          <ApplicationFormsSearchModes
-            searchMode={filters[FORM_FILTER_KEYS.SEARCH_MODE]}
-            onChange={handleFilterChange}
-          />,
-        )}
+        fields={FORM_FILTER_FIELDS}
         filters={filters}
-        hasActiveFilters={hasActiveFormFilters(filters)}
+        hasActiveFilters={hasActiveFilters}
         className="mb-5"
-        onChange={handleFilterChange}
-        onClear={() => setFilters(INITIAL_FORM_FILTERS)}
+        onChange={handleChange}
+        onClear={clearFilters}
       />
 
-      <ApplicationFormsCards forms={filteredForms} isFiltering={hasActiveFormFilters(filters)} />
+      <ApplicationFormsCards forms={filteredForms} isFiltering={hasActiveFilters} />
     </article>
   );
 };

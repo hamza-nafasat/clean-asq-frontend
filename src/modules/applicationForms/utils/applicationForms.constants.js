@@ -1,4 +1,4 @@
-import { FORM_RULE_CATEGORIES } from "@/constants";
+import { FORM_RULE_CATEGORIES, LIST_FILTER_TYPES } from "@/constants";
 
 export const APPLICATION_FORMS_SCREEN = {
   ID: "application-forms",
@@ -8,26 +8,34 @@ export const APPLICATION_FORMS_SCREEN = {
   GREETING: `Hi! I'm your **Form Management Assistant**.\n\nI can help you:\n- **Create, clone or delete forms**\n- **Preview a form** and **check its readiness**\n- **Change branding** on forms or your website, plus **email templates, header text, redirect URLs, location settings and step display texts**\n- **Edit a form's content** — add, reorder or delete sections and fields; change display text, signature settings, field labels, types, options, required and AI prompts\n\nContent edits are previewed first — say **save** to apply them.\n\nWhat would you like to do?`,
 };
 
-export const SEARCH_MODES = {
-  CLIENT: "client",
-  NAME: "name",
-};
-
 export const FORM_FILTER_KEYS = {
-  CLIENT_QUERY: "clientQuery",
   NAME_QUERY: "nameQuery",
-  SEARCH_MODE: "searchMode",
   DATE_FROM: "dateFrom",
   DATE_TO: "dateTo",
 };
 
 export const INITIAL_FORM_FILTERS = {
-  [FORM_FILTER_KEYS.CLIENT_QUERY]: "",
   [FORM_FILTER_KEYS.NAME_QUERY]: "",
   [FORM_FILTER_KEYS.DATE_FROM]: "",
   [FORM_FILTER_KEYS.DATE_TO]: "",
-  [FORM_FILTER_KEYS.SEARCH_MODE]: SEARCH_MODES.CLIENT,
 };
+
+export const FORM_FILTER_FIELDS = [
+  {
+    type: LIST_FILTER_TYPES.SEARCH,
+    name: FORM_FILTER_KEYS.NAME_QUERY,
+    label: "Form name",
+    placeholder: "Search by form name",
+    className: "sm:col-span-2 lg:col-span-6",
+  },
+  {
+    type: LIST_FILTER_TYPES.DATE,
+    name: FORM_FILTER_KEYS.DATE_FROM,
+    placeholder: "From date",
+    className: "lg:col-span-3",
+  },
+  { type: LIST_FILTER_TYPES.DATE, name: FORM_FILTER_KEYS.DATE_TO, placeholder: "To date", className: "lg:col-span-3" },
+];
 
 export const DEFAULT_HEADER_TEXT_SIZE = 24;
 
